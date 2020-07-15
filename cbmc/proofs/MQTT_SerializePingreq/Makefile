@@ -2,13 +2,13 @@
 # SPDX-License-Identifier: Apache-2.0
 
 HARNESS_ENTRY=harness
-HARNESS_FILE=MQTT_SerializeConnect_harness
+HARNESS_FILE=MQTT_SerializePingreq_harness
 
 DEFINES +=
 INCLUDES +=
 
 REMOVE_FUNCTION_BODY +=
-UNWINDSET += encodeRemainingLength.0:3
+UNWINDSET +=
 
 PROOF_SOURCES += $(PROOFDIR)/$(HARNESS_FILE).c
 PROOF_SOURCES += $(SRCDIR)/libraries/standard/mqtt/cbmc/sources/mqtt_cbmc_state.c

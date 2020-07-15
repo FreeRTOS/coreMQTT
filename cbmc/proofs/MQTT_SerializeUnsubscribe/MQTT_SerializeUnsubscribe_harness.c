@@ -20,51 +20,58 @@
  */
 
 /**
- * @file MQTT_SerializeConnect_harness.c
- * @brief Implements the proof harness for MQTT_SerializeConnect function.
+ * @file MQTT_SerializeUnsubscribe_harness.c
+ * @brief Implements the proof harness for MQTT_SerializeUnsubscribe function.
  */
 #include "mqtt.h"
 #include "mqtt_cbmc_state.h"
 
 void harness()
 {
-    MQTTConnectInfo_t * pConnectInfo;
-    MQTTPublishInfo_t * pWillInfo;
+    MQTTSubscribeInfo_t * pSubscriptionList;
+    size_t subscriptionCount;
     size_t remainingLength;
-    MQTTFixedBuffer_t * pFixedBuffer;
+    uint16_t packetId;
+
+    /* This variable is not used but is needed for MQTT_GetUnsubscribePacketSize()
+     * to verify the pSubscriptionList. */
     size_t packetSize;
+    MQTTFixedBuffer_t * pFixedBuffer;
     MQTTStatus_t status = MQTTSuccess;
 
-    pConnectInfo = allocateMqttConnectInfo( NULL );
-    __CPROVER_assume( isValidMqttConnectInfo( pConnectInfo ) );
+    __CPROVER_assume( subscriptionCount < SUBSCRIPTION_COUNT_MAX );
 
-    pWillInfo = allocateMqttPublishInfo( NULL );
-    __CPROVER_assume( isValidMqttPublishInfo( pWillInfo ) );
+    pSubscriptionList = allocateMqttSubscriptionList( NULL, subscriptionCount );
+    __CPROVER_assume( isValidMqttSubscriptionList( pSubscriptionList, subscriptionCount ) );
 
     pFixedBuffer = allocateMqttFixedBuffer( NULL );
     __CPROVER_assume( isValidMqttFixedBuffer( pFixedBuffer ) );
 
-    /* Before calling MQTT_SerializeConnect() it is up to the application to make
-     * sure that the information in MQTTConnectInfo_t and MQTTPublishInfo_t can
-     * fit into the MQTTFixedBuffer_t. It is a violation of the API to call
-     * MQTT_SerializeConnect() without first calling MQTT_GetConnectPacketSize(). */
-    if( pConnectInfo != NULL )
+    /* Before calling MQTT_SerializeUnsubscribe() it is up to the application to
+     * make sure that the information in the list of MQTTSubscribeInfo_t can fit
+     * into the MQTTFixedBuffer_t. It is a violation of the API to call
+     * MQTT_SerializeUnsubscribe() without first calling MQTT_GetUnsubscribePacketSize(). */
+    if( pSubscriptionList != NULL )
     {
         /* The output parameter pPacketSize of the function MQTT_GetConnectPacketSize()
          * must not be NULL. packetSize returned is not used in this proof, but 
          * is used normally by the application to verify the size of their 
          * MQTTFixedBuffer_t. MQTT_SerializeConnect() will use the remainingLength 
          * to recalculate the packetSize. */
-        status = MQTT_GetConnectPacketSize( pConnectInfo,
-                                            pWillInfo,
-                                            &remainingLength,
-                                            &packetSize );
+        status = MQTT_GetUnsubscribePacketSize( pSubscriptionList,
+                                                subscriptionCount,
+                                                &remainingLength,
+                                                &packetSize );
     }
 
     if( status == MQTTSuccess )
     {
-        /* For coverage, it is expected that a NULL pConnectInfo will reach this
-         * function. */
-        MQTT_SerializeConnect( pConnectInfo, pWillInfo, remainingLength, pFixedBuffer );
+        /* For coverage it is expected that a NULL pSubscriptionList could
+         * reach this function. */
+        MQTT_SerializeUnsubscribe( pSubscriptionList,
+                                   subscriptionCount,
+                                   packetId,
+                                   remainingLength,
+                                   pFixedBuffer );
     }
 }

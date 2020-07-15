@@ -1,7 +1,7 @@
-MQTT_DeserializeAck proof
+MQTT_SerializeSubscribe proof
 ==============
 
-This directory contains a memory safety proof for MQTT_DeserializeAck.
+This directory contains a memory safety proof for MQTT_SerializeSubscribe.
 
 To run the proof.
 * Add cbmc, goto-cc, goto-instrument, goto-analyzer, and cbmc-viewer

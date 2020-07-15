@@ -20,28 +20,18 @@
  */
 
 /**
- * @file MQTT_GetIncomingPacketTypeAndLength_harness.c
- * @brief Implements the proof harness for MQTT_GetIncomingPacketTypeAndLength function.
+ * @file MQTT_SerializeDisconnect_harness.c
+ * @brief Implements the proof harness for MQTT_SerializeDisconnect function.
  */
 #include "mqtt.h"
-#include "network_interface_stubs.h"
 #include "mqtt_cbmc_state.h"
 
 void harness()
 {
-    /* NetworkContext_t is an application defined network interface context. It
-     * is passed through to the readFunc parameter of
-     * MQTT_GetIncomingPacketTypeAndLength(). */
-    NetworkContext_t networkContext;
+    MQTTFixedBuffer_t * pFixedBuffer;
 
-    /* MQTT_GetIncomingPacketTypeAndLength() will set only the remainingLength
-     * field in the input MQTTPacketInfo_t structure. */
-    MQTTPacketInfo_t * pIncomingPacket;
+    pFixedBuffer = allocateMqttFixedBuffer( NULL );
+    __CPROVER_ASSUME( isValidMqttFixedBuffer( pFixedBuffer ) );
 
-    pIncomingPacket = allocateMqttPacketInfo( NULL );
-    __CPROVER_assume( isValidMqttPacketInfo( pIncomingPacket ) );
-
-    MQTT_GetIncomingPacketTypeAndLength( NetworkInterfaceReceiveStub,
-                                         &networkContext,
-                                         pIncomingPacket );
+    MQTT_SerializeDisconnect( pFixedBuffer );
 }

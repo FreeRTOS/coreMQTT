@@ -1,7 +1,7 @@
-MQTT_DeserializeAck proof
+MQTT_SerializePingreq proof
 ==============
 
-This directory contains a memory safety proof for MQTT_DeserializeAck.
+This directory contains a memory safety proof for MQTT_SerializePingreq.
 
 To run the proof.
 * Add cbmc, goto-cc, goto-instrument, goto-analyzer, and cbmc-viewer
