@@ -1,17 +1,10 @@
-## My Project
+# MQTT Client Library
 
-TODO: Fill this README out!
+## Generating documentation
 
-Be sure to:
+The Doxygen references were created using Doxygen version 1.8.20. To generate the
+Doxygen pages, please run the following command from the root of this repository:
 
-* Change the title in this README
-* Edit your repository description on GitHub
-
-## Security
-
-See [CONTRIBUTING](CONTRIBUTING.md#security-issue-notifications) for more information.
-
-## License
-
-This library is licensed under the MIT-0 License. See the LICENSE file.
-
+```shell
+doxygen doc/doxygen/config.doxyfile
+```
