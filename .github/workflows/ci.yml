@@ -11,7 +11,16 @@ jobs:
   unittest:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout Parent Repo
+        uses: actions/checkout@v2
+        with:
+          ref: development
+          repository: aws/aws-iot-device-sdk-embedded-C
+      - run: rm -r libraries/standard/mqtt
+      - name: Clone This Repo
+        uses: actions/checkout@v2
+        with:
+          path: libraries/standard/mqtt
       - name: Build
         run: |
           cmake -S . -B build/ -DBUILD_TESTS=1 -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_FLAGS='--coverage -DLIBRARY_LOG_LEVEL=LOG_DEBUG' -DDOWNLOAD_CERTS=0
