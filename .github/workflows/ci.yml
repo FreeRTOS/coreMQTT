@@ -35,7 +35,10 @@ jobs:
           -DROOT_CA_CERT_PATH="-"
           make -C build/ all
       - name: Test
-        run: make -C build/ test CTEST_OUTPUT_ON_FAILURE=TRUE
+        run: |
+          cd build/
+          ctest -E system --output-on-failure
+          cd ..
       - name: Coverage
         run: make -C build/ coverage
       - name: lcov-cop
