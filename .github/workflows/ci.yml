@@ -23,7 +23,16 @@ jobs:
           path: libraries/standard/mqtt
       - name: Build
         run: |
-          cmake -S . -B build/ -DBUILD_TESTS=1 -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_FLAGS='--coverage -DLIBRARY_LOG_LEVEL=LOG_DEBUG' -DDOWNLOAD_CERTS=0
+          cmake -S . -B build/ \
+          -DBUILD_TESTS=1 \
+          -G "Unix Makefiles" \
+          -DCMAKE_BUILD_TYPE=Debug \
+          -DCMAKE_C_FLAGS='--coverage -DLIBRARY_LOG_LEVEL=LOG_DEBUG -Wall -Wextra -DNDEBUG' \
+          -DDOWNLOAD_CERTS=0 \
+          -DBROKER_ENDPOINT="-" \
+          -DCLIENT_CERT_PATH="-" \
+          -DCLIENT_PRIVATE_KEY_PATH="-" \
+          -DROOT_CA_CERT_PATH="-"
           make -C build/ all
       - name: Test
         run: make -C build/ test CTEST_OUTPUT_ON_FAILURE=TRUE
