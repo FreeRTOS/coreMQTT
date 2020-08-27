@@ -23,6 +23,7 @@ jobs:
           path: libraries/standard/mqtt
       - name: Build
         run: |
+          sudo apt-get install -y lcov
           cmake -S . -B build/ \
           -DBUILD_TESTS=1 \
           -G "Unix Makefiles" \
@@ -44,7 +45,7 @@ jobs:
       - name: lcov-cop
         uses: ChicagoFlutter/lcov-cop@v1.0.2
         with:
-          path: "./build/coverage.info"
+          path: "build/coverage.info"
           min_coverage: 99
           exclude: "**/*test*"
   complexity:
