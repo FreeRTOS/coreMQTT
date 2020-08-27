@@ -17,7 +17,7 @@ set( LIGHTWEIGHT_MQTT_SOURCES
 # MQTT library Public Include directories.
 set( MQTT_INCLUDE_PUBLIC_DIRS
      "${MODULES_DIR}/standard/mqtt/source/include"
-     "${PLATFORM_DIR}/include" )
+     "${MODULES_DIR}/standard/mqtt/source/portable" )
 
 # MQTT library Private Include directories.
 set( MQTT_INCLUDE_PRIVATE_DIRS
