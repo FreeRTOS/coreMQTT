@@ -29,8 +29,8 @@
  * file. The MQTT library requires an mqtt_config.h file to build.
  */
 
-#ifndef MQTT_CONFIG_DEFAULTS_H_
-#define MQTT_CONFIG_DEFAULTS_H_
+#ifndef CORE_MQTT_CONFIG_DEFAULTS_H_
+#define CORE_MQTT_CONFIG_DEFAULTS_H_
 
 /**
  * @brief Determines the maximum number of MQTT PUBLISH messages, pending
@@ -97,7 +97,7 @@
  *
  * @note This logging macro is called in the MQTT library with parameters wrapped in
  * double parentheses to be ISO C89/C90 standard compliant. For an example
- * implementation of the logging macros, refer to mqtt_config.h files in the MQTT 
+ * implementation of the logging macros, refer to mqtt_config.h files in the MQTT
  * demo folder and the reference implementation of the logging-stack in demos.
  *
  * <b>Default value</b>: Error logging is turned off, and no code is generated for calls
@@ -116,7 +116,7 @@
  *
  * @note This logging macro is called in the MQTT library with parameters wrapped in
  * double parentheses to be ISO C89/C90 standard compliant. For an example
- * implementation of the logging macros, refer to mqtt_config.h files in the MQTT 
+ * implementation of the logging macros, refer to mqtt_config.h files in the MQTT
  * demo folder and the reference implementation of the logging-stack in demos.
  *
  * <b>Default value</b>: Warning logs are turned off, and no code is generated for calls
@@ -135,7 +135,7 @@
  *
  * @note This logging macro is called in the MQTT library with parameters wrapped in
  * double parentheses to be ISO C89/C90 standard compliant. For an example
- * implementation of the logging macros, refer to mqtt_config.h files in the MQTT 
+ * implementation of the logging macros, refer to mqtt_config.h files in the MQTT
  * demo folder and the reference implementation of the logging-stack in demos.
  *
  * <b>Default value</b>: Info logging is turned off, and no code is generated for calls
@@ -154,7 +154,7 @@
  *
  * @note This logging macro is called in the MQTT library with parameters wrapped in
  * double parentheses to be ISO C89/C90 standard compliant. For an example
- * implementation of the logging macros, refer to mqtt_config.h files in the MQTT 
+ * implementation of the logging macros, refer to mqtt_config.h files in the MQTT
  * demo folder and the reference implementation of the logging-stack in demos.
  *
  * <b>Default value</b>: Debug logging is turned off, and no code is generated for calls
@@ -164,4 +164,4 @@
     #define LogDebug( message )
 #endif
 
-#endif /* ifndef MQTT_CONFIG_DEFAULTS_H_ */
+#endif /* ifndef CORE_MQTTCONFIG_DEFAULTS_H_ */

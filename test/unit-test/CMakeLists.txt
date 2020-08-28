@@ -3,14 +3,14 @@ project ("mqtt unit test")
 cmake_minimum_required (VERSION 3.13)
 
 # ====================  Define your project name (edit) ========================
-set(project_name "mqtt")
+set(project_name "core_mqtt")
 
 # =====================  Create your mock here  (edit)  ========================
 
 # list the files to mock here
 list(APPEND mock_list
-            "${MODULE_ROOT_DIR}/source/include/mqtt_lightweight.h"
-            "${MODULE_ROOT_DIR}/source/include/mqtt_state.h"
+            "${MODULE_ROOT_DIR}/source/include/core_mqtt_lightweight.h"
+            "${MODULE_ROOT_DIR}/source/include/core_mqtt_state.h"
         )
 # list the directories your mocks need
 list(APPEND mock_include_list

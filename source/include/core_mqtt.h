@@ -23,18 +23,18 @@
  * @file mqtt.h
  * @brief User-facing functions of the MQTT 3.1.1 library.
  */
-#ifndef MQTT_H
-#define MQTT_H
+#ifndef CORE_MQTT_H
+#define CORE_MQTT_H
 
 /* Include main config file before other headers. */
-#include "mqtt_config.h"
+#include "core_mqtt_config.h"
 
 /* Include config defaults file after main config file to get
  * default values of configs not defined in main config file. */
-#include "mqtt_config_defaults.h"
+#include "core_mqtt_config_defaults.h"
 
 /* Include lightweight MQTT library. */
-#include "mqtt_lightweight.h"
+#include "core_mqtt_lightweight.h"
 
 /* Include transport interface. */
 #include "transport_interface.h"
@@ -843,4 +843,4 @@ MQTTStatus_t MQTT_GetSubAckStatusCodes( const MQTTPacketInfo_t * pSubackPacket,
 const char * MQTT_Status_strerror( MQTTStatus_t status );
 /* @[declare_mqtt_status_strerror] */
 
-#endif /* ifndef MQTT_H */
+#endif /* ifndef CORE_MQTTH */

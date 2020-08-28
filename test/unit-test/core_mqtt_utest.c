@@ -4,10 +4,10 @@
 #include "unity.h"
 
 /* Include paths for public enums, structures, and macros. */
-#include "mqtt.h"
+#include "core_mqtt.h"
 
-#include "mock_mqtt_lightweight.h"
-#include "mock_mqtt_state.h"
+#include "core_mqtt_lightweight.h"
+#include "core_mqtt_state.h"
 
 /**
  * @brief A valid starting packet ID per MQTT spec. Start from 1.

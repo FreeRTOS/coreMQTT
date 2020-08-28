@@ -40,19 +40,19 @@ set( CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib )
 include( mqttFilePaths.cmake )
 
 # MQTT library target.
-add_library( mqtt
+add_library( core_mqtt
              ${MQTT_SOURCES} )
 
 # MQTT public include path.
-target_include_directories( mqtt PUBLIC ${MQTT_INCLUDE_PUBLIC_DIRS} )
+target_include_directories( core_mqtt PUBLIC ${MQTT_INCLUDE_PUBLIC_DIRS} )
 
 # MQTT private include path.
-target_include_directories( mqtt PRIVATE ${MQTT_INCLUDE_PRIVATE_DIRS} 
+target_include_directories( core_mqtt PRIVATE ${MQTT_INCLUDE_PRIVATE_DIRS} 
                                          ${MODULE_ROOT_DIR}/test/unit-test )
 
 # Organization of MQTT in IDE projects.
-set_target_properties( mqtt PROPERTIES FOLDER libraries/standard )
-source_group( include FILES source/include/mqtt.h source/include/mqtt_lightweight.h source/include/mqtt_state.h )
+set_target_properties( core_mqtt PROPERTIES FOLDER source )
+source_group( include FILES source/include/core_mqtt.h source/include/core_mqtt_lightweight.h source/include/core_mqtt_state.h )
 source_group( source FILES ${MQTT_SOURCES} )
 
 # Include CMock build configuration.

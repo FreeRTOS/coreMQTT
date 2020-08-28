@@ -23,10 +23,10 @@
  * @file mqtt_state.h
  * @brief Function to keep state of MQTT PUBLISH packet deliveries.
  */
-#ifndef MQTT_STATE_H
-#define MQTT_STATE_H
+#ifndef CORE_MQTT_STATE_H
+#define CORE_MQTT_STATE_H
 
-#include "mqtt.h"
+#include "core_mqtt.h"
 
 /**
  * @ingroup mqtt_constants
@@ -64,6 +64,7 @@ typedef enum MQTTStateOperation
  *
  * @return MQTTSuccess, MQTTNoMemory, or MQTTStateCollision.
  */
+
 /**
  * @cond DOXYGEN_IGNORE
  * Doxygen should ignore this definition, this function is private.
@@ -82,6 +83,7 @@ MQTTStatus_t MQTT_ReserveState( MQTTContext_t * pMqttContext,
  *
  * @return The calculated state.
  */
+
 /**
  * @cond DOXYGEN_IGNORE
  * Doxygen should ignore this definition, this function is private.
@@ -103,6 +105,7 @@ MQTTPublishState_t MQTT_CalculateStatePublish( MQTTStateOperation_t opType,
  * @return #MQTTBadParameter, #MQTTIllegalState, #MQTTStateCollision or
  * #MQTTSuccess.
  */
+
 /**
  * @cond DOXYGEN_IGNORE
  * Doxygen should ignore this definition, this function is private.
@@ -124,6 +127,7 @@ MQTTStatus_t MQTT_UpdateStatePublish( MQTTContext_t * pMqttContext,
  *
  * @return The calculated state.
  */
+
 /**
  * @cond DOXYGEN_IGNORE
  * Doxygen should ignore this definition, this function is private.
@@ -148,6 +152,7 @@ MQTTPublishState_t MQTT_CalculateStateAck( MQTTPubAckType_t packetType,
  * #MQTTIllegalState if the requested update would result in an illegal transition;
  * #MQTTSuccess otherwise.
  */
+
 /**
  * @cond DOXYGEN_IGNORE
  * Doxygen should ignore this definition, this function is private.
@@ -172,6 +177,7 @@ MQTTStatus_t MQTT_UpdateStateAck( MQTTContext_t * pMqttContext,
  * @param[in,out] pCursor Index at which to start searching.
  * @param[out] pState State indicating that PUBREL packet need to be sent.
  */
+
 /**
  * @cond DOXYGEN_IGNORE
  * Doxygen should ignore this definition, this function is private.
@@ -260,6 +266,7 @@ uint16_t MQTT_PublishToResend( const MQTTContext_t * pMqttContext,
  *
  * @return The string representation of the state.
  */
+
 /**
  * @cond DOXYGEN_IGNORE
  * Doxygen should ignore this definition, this function is private.
@@ -267,4 +274,4 @@ uint16_t MQTT_PublishToResend( const MQTTContext_t * pMqttContext,
 const char * MQTT_State_strerror( MQTTPublishState_t state );
 /** @endcond */
 
-#endif /* ifndef MQTT_STATE_H */
+#endif /* ifndef CORE_MQTTSTATE_H */

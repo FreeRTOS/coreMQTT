@@ -3,7 +3,7 @@
 #include "unity.h"
 
 /* Include paths for public enums, structures, and macros. */
-#include "mqtt_lightweight.h"
+#include "core_mqtt_lightweight.h"
 
 #define MQTT_MAX_REMAINING_LENGTH                   ( 268435455UL )
 #define MQTT_PACKET_CONNACK_REMAINING_LENGTH        ( ( uint8_t ) 2U )    /**< @brief A CONNACK packet always has a "Remaining length" of 2. */

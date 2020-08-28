@@ -25,8 +25,8 @@
  * packets. This header should be included for building a lightweight MQTT
  * client bypassing the managed CSDK MQTT library API in mqtt.h.
  */
-#ifndef MQTT_LIGHTWEIGHT_H
-#define MQTT_LIGHTWEIGHT_H
+#ifndef CORE_MQTT_LIGHTWEIGHT_H
+#define CORE_MQTT_LIGHTWEIGHT_H
 
 #include <stddef.h>
 #include <stdint.h>
@@ -47,11 +47,11 @@
 /** @endcond */
 
 /* Include main config file before other headers. */
-#include "mqtt_config.h"
+#include "core_mqtt_config.h"
 
 /* Include config defaults file after main config file to get
  * default values of configs not defined in main config file. */
-#include "mqtt_config_defaults.h"
+#include "core_mqtt_config_defaults.h"
 
 #include "transport_interface.h"
 
@@ -1178,4 +1178,4 @@ MQTTStatus_t MQTT_GetIncomingPacketTypeAndLength( TransportRecv_t readFunc,
                                                   MQTTPacketInfo_t * pIncomingPacket );
 /* @[declare_mqtt_getincomingpackettypeandlength] */
 
-#endif /* ifndef MQTT_LIGHTWEIGHT_H */
+#endif /* ifndef CORE_MQTTLIGHTWEIGHT_H */

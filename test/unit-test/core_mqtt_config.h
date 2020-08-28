@@ -1,5 +1,5 @@
-#ifndef MQTT_CONFIG_H_
-#define MQTT_CONFIG_H_
+#ifndef CORE_MQTT_CONFIG_H_
+#define CORE_MQTT_CONFIG_H_
 
 #include <stdint.h>
 
@@ -46,4 +46,4 @@ struct NetworkContext
     uint8_t ** buffer;
 };
 
-#endif /* ifndef MQTT_CONFIG_H_ */
+#endif /* ifndef CORE_MQTTCONFIG_H_ */
