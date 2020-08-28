@@ -79,4 +79,5 @@ jobs:
       - name: Run Doxygen
         run: doxygen docs/doxygen/config.doxyfile | tee doxyoutput.txt
       - name: Test that Doxygen Command Output is Empty
+        # -s checks if the file is non-zero. Inverted to make sure file is empty.
         run: bash -c "[ ! -s doxoutput.txt ]"
