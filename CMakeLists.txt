@@ -65,7 +65,7 @@ if( NOT EXISTS ${ROOT_DIR}/test/CMock/src )
         find_package( Git REQUIRED )
 
         message( "Cloning submodule CMock." )
-        execute_process( COMMAND ${GIT_EXECUTABLE} submodule update --init --recursive libraries/3rdparty/CMock
+        execute_process( COMMAND ${GIT_EXECUTABLE} submodule update --init --recursive test/CMock
                             WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
                             RESULT_VARIABLE CMOCK_CLONE_RESULT )
 
