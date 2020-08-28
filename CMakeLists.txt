@@ -58,7 +58,8 @@ set_target_properties( mqtt PROPERTIES FOLDER libraries/standard )
 source_group( include FILES source/include/mqtt.h source/include/mqtt_lightweight.h source/include/mqtt_state.h )
 source_group( source FILES ${MQTT_SOURCES} )
 
-# Check if the CMock source directory exists.
+# Check if the CMock source directory exists, and if not present, clone the submodule
+#if BUILD_CLONE_SUBMODULES configuration is enabled. 
 if( NOT EXISTS ${MODULE_ROOT_DIR}/test/CMock/src )
     # Attempt to clone CMock.
     if( ${BUILD_CLONE_SUBMODULES} )
@@ -77,18 +78,14 @@ if( NOT EXISTS ${MODULE_ROOT_DIR}/test/CMock/src )
     endif()
 endif()
 
+# Include CMock build configuration.
+include( test/cmock_build.cmake )
+
+# Add function to enable CMOck based tests and coverage.
 include("${MODULE_ROOT_DIR}/tools/cmock/create_test.cmake")
 
-include_directories("${MODULE_ROOT_DIR}/test/CMock/vendor/unity/src/"
-                    "${MODULE_ROOT_DIR}/test/CMock/vendor/unity/extras/fixture/src"
-                    "${MODULE_ROOT_DIR}/test/CMock/vendor/unity/extras/memory/src"
-                    "${MODULE_ROOT_DIR}/test/CMock/src"
-        )
-link_directories("${CMAKE_BINARY_DIR}/lib"
-        )
-
-# Include CMock build configuration.
-include( test/cmock.cmake )
+# Include build configuration for unit tests of MQTT.
+add_subdirectory( test )
 
 # Add a target for running coverage on tests.
 add_custom_target(coverage
@@ -96,6 +93,4 @@ add_custom_target(coverage
     DEPENDS cmock unity mqtt_utest mqtt_lightweight_utest mqtt_state_utest
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
 )
-
-add_subdirectory( test )
 
