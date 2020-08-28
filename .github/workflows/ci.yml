@@ -1,0 +1,70 @@
+name: CI Checks
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: [master]
+  workflow_dispatch:
+
+jobs:
+  unittest:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Parent Repo
+        uses: actions/checkout@v2
+        with:
+          ref: development
+          repository: aws/aws-iot-device-sdk-embedded-C
+      - run: rm -r libraries/standard/mqtt
+      - name: Clone This Repo
+        uses: actions/checkout@v2
+        with:
+          path: libraries/standard/mqtt
+      - name: Build
+        run: |
+          sudo apt-get install -y lcov
+          cmake -S . -B build/ \
+          -DBUILD_TESTS=1 \
+          -G "Unix Makefiles" \
+          -DCMAKE_BUILD_TYPE=Debug \
+          -DCMAKE_C_FLAGS='--coverage -DLIBRARY_LOG_LEVEL=LOG_DEBUG -Wall -Wextra -DNDEBUG' \
+          -DDOWNLOAD_CERTS=0 \
+          -DBROKER_ENDPOINT="-" \
+          -DCLIENT_CERT_PATH="-" \
+          -DCLIENT_PRIVATE_KEY_PATH="-" \
+          -DROOT_CA_CERT_PATH="-"
+          make -C build/ all
+      - name: Test
+        run: |
+          cd build/
+          ctest -E system --output-on-failure
+          cd ..
+      - name: Coverage
+        run: |
+          make -C build/ coverage
+          lcov --rc lcov_branch_coverage=1 --remove build/coverage.info '*test*' --output-file build/coverage.info
+          lcov --rc lcov_branch_coverage=1 --remove build/coverage.info '*CMakeCCompilerId*' --output-file build/coverage.info
+          lcov --rc lcov_branch_coverage=1 --remove build/coverage.info '*3rdparty*' --output-file build/coverage.info
+          lcov --rc lcov_branch_coverage=1 --remove build/coverage.info '*third_party*' --output-file build/coverage.info
+          lcov --rc lcov_branch_coverage=1 --remove build/coverage.info '*demo*' --output-file build/coverage.info
+          lcov --rc lcov_branch_coverage=1 --remove build/coverage.info '*platform*' --output-file build/coverage.info
+          lcov --rc lcov_branch_coverage=1 --remove build/coverage.info '*shadow*' --output-file build/coverage.info
+          lcov --rc lcov_branch_coverage=1 --remove build/coverage.info '*json*' --output-file build/coverage.info
+          lcov --list build/coverage.info
+      - name: lcov-cop
+        uses: ChicagoFlutter/lcov-cop@v1.0.2
+        with:
+          path: "build/coverage.info"
+          min_coverage: 99
+          exclude: "**/*test*"
+  complexity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup
+        run: sudo apt-get install complexity
+      - name: Complexity
+        run: |
+          find source/ -iname '*.c' |\
+          xargs complexity --scores --threshold=0 --horrid-threshold=8
