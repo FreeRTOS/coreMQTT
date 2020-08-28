@@ -2,7 +2,8 @@
 macro( clone_cmock )
         find_package( Git REQUIRED )
         message( "Cloning submodule CMock." )
-        execute_process( COMMAND ${GIT_EXECUTABLE} submodule update --init --recursive ${MODULE_ROOT_DIR}/test/CMock
+        execute_process( COMMAND rm -rf ${MODULE_ROOT_DIR}/test/CMock
+                         COMMAND ${GIT_EXECUTABLE} submodule update --init --recursive ${MODULE_ROOT_DIR}/test/CMock
                         WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
                         RESULT_VARIABLE CMOCK_CLONE_RESULT )
 
