@@ -68,3 +68,15 @@ jobs:
         run: |
           find source/ -iname '*.c' |\
           xargs complexity --scores --threshold=0 --horrid-threshold=8
+  doxygen:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install Doxygen
+        run: |
+          wget -qO- "http://doxygen.nl/files/doxygen-1.8.20.linux.bin.tar.gz" | sudo tar --strip-components=1 -xz -C /usr/local
+          sudo apt-get install -y libclang-9-dev
+      - name: Run Doxygen
+        run: |
+          doxygen docs/doxygen/config.doxyfile | tee doxyoutput.txt
+          [ ! -s doxoutput.txt ]
