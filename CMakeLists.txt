@@ -18,6 +18,6 @@ source_group( include FILES include/mqtt.h include/mqtt_lightweight.h include/mq
 source_group( src FILES ${MQTT_SOURCES} )
 
 if(BUILD_TESTS)
-    add_subdirectory( utest )
+    add_subdirectory( test )
     add_subdirectory( integration-test )
 endif()
