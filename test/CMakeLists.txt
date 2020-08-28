@@ -43,7 +43,6 @@ list(APPEND test_include_directories
             .
             ${MQTT_INCLUDE_PUBLIC_DIRS}
             ${MQTT_INCLUDE_PRIVATE_DIRS}
-            #${CMOCK_INCLUDE_DIRS}
         )
 
 # =============================  (end edit)  ===================================
