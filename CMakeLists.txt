@@ -59,7 +59,7 @@ source_group( include FILES source/include/mqtt.h source/include/mqtt_lightweigh
 source_group( source FILES ${MQTT_SOURCES} )
 
 # Check if the CMock source directory exists, and if not present, clone the submodule
-#if BUILD_CLONE_SUBMODULES configuration is enabled. 
+# if BUILD_CLONE_SUBMODULES configuration is enabled. 
 if( NOT EXISTS ${MODULE_ROOT_DIR}/test/CMock/src )
     # Attempt to clone CMock.
     if( ${BUILD_CLONE_SUBMODULES} )
