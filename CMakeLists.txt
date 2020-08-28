@@ -70,7 +70,7 @@ if( NOT EXISTS ${MODULE_ROOT_DIR}/test/CMock/src )
 endif()
 
 # Add unit test and coverage configuration only if CMock directory exists.
-if( NOT EXISTS ${MODULE_ROOT_DIR}/test/CMock/src )
+if( EXISTS ${MODULE_ROOT_DIR}/test/CMock/src )
 
     # Add build targets for CMock and Unit, required for unit testing.
     add_cmock_targets()
