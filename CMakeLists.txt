@@ -48,7 +48,7 @@ target_include_directories( mqtt PUBLIC ${MQTT_INCLUDE_PUBLIC_DIRS} )
 
 # MQTT private include path.
 target_include_directories( mqtt PRIVATE ${MQTT_INCLUDE_PRIVATE_DIRS} 
-                                         ${MODULE_ROOT_DIR}/test )
+                                         ${MODULE_ROOT_DIR}/test/unit-test )
 
 # Organization of MQTT in IDE projects.
 set_target_properties( mqtt PROPERTIES FOLDER libraries/standard )
@@ -60,7 +60,7 @@ include( test/cmock_build.cmake )
 
 # Check if the CMock source directory exists, and if not present, clone the submodule
 # if BUILD_CLONE_SUBMODULES configuration is enabled. 
-if( NOT EXISTS ${MODULE_ROOT_DIR}/test/CMock/src )
+if( NOT EXISTS ${MODULE_ROOT_DIR}/test/unit-test/CMock/src )
     # Attempt to clone CMock.
     if( ${BUILD_CLONE_SUBMODULES} )
         clone_cmock()
@@ -70,7 +70,7 @@ if( NOT EXISTS ${MODULE_ROOT_DIR}/test/CMock/src )
 endif()
 
 # Add unit test and coverage configuration only if CMock directory exists.
-if( EXISTS ${MODULE_ROOT_DIR}/test/CMock/src )
+if( EXISTS ${MODULE_ROOT_DIR}/test/unit-test/CMock/src )
 
     # Use CTest utility for managing test runs. This has to be added BEFORE
     # definiting test targets with add_test()
@@ -83,7 +83,7 @@ if( EXISTS ${MODULE_ROOT_DIR}/test/CMock/src )
     include("${MODULE_ROOT_DIR}/tools/cmock/create_test.cmake")
 
     # Include build configuration for unit tests of MQTT.
-    add_subdirectory( test )
+    add_subdirectory( test/unit-test )
     
     # Add a target for running coverage on tests.
     add_custom_target(coverage
