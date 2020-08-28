@@ -77,6 +77,7 @@ jobs:
           wget -qO- "http://doxygen.nl/files/doxygen-1.8.20.linux.bin.tar.gz" | sudo tar --strip-components=1 -xz -C /usr/local
           sudo apt-get install -y libclang-9-dev
       - name: Run Doxygen
-        run: |
-          doxygen docs/doxygen/config.doxyfile | tee doxyoutput.txt
-          [ ! -s doxoutput.txt ]
+        run: doxygen docs/doxygen/config.doxyfile | tee doxyoutput.txt
+      - name: Test that Doxygen Command Output is Empty
+        # -s checks if the file is non-zero. Inverted to make sure file is empty.
+        run: bash -c "[ ! -s doxoutput.txt ]"
