@@ -72,6 +72,10 @@ endif()
 # Add unit test and coverage configuration only if CMock directory exists.
 if( EXISTS ${MODULE_ROOT_DIR}/test/CMock/src )
 
+    # Use CTest utility for managing test runs. This has to be added BEFORE
+    # definiting test targets with add_test()
+    enable_testing()
+
     # Add build targets for CMock and Unit, required for unit testing.
     add_cmock_targets()
 
@@ -80,9 +84,6 @@ if( EXISTS ${MODULE_ROOT_DIR}/test/CMock/src )
 
     # Include build configuration for unit tests of MQTT.
     add_subdirectory( test )
-
-    # Use CTest utility for managing test runs.
-    enable_testing()
     
     # Add a target for running coverage on tests.
     add_custom_target(coverage
