@@ -17,8 +17,8 @@ if( ${PROJECT_SOURCE_DIR} STREQUAL ${PROJECT_BINARY_DIR} )
 endif()
 
 # Set global path variables.
-get_filename_component(__root_dir "${CMAKE_CURRENT_LIST_DIR}" ABSOLUTE)
-set(ROOT_DIR ${__root_dir} CACHE INTERNAL "MQTT source root.")
+get_filename_component(__MODULE_ROOT_DIR "${CMAKE_CURRENT_LIST_DIR}" ABSOLUTE)
+set(MODULE_ROOT_DIR ${__MODULE_ROOT_DIR} CACHE INTERNAL "MQTT source root.")
 
 # Configure options to always show in CMake GUI.
 option( BUILD_CLONE_SUBMODULES
@@ -51,7 +51,7 @@ target_include_directories( mqtt PUBLIC ${MQTT_INCLUDE_PUBLIC_DIRS} )
 
 # MQTT private include path.
 target_include_directories( mqtt PRIVATE ${MQTT_INCLUDE_PRIVATE_DIRS} 
-                                         ${ROOT_DIR}/test )
+                                         ${MODULE_ROOT_DIR}/test )
 
 # Organization of MQTT in IDE projects.
 set_target_properties( mqtt PROPERTIES FOLDER libraries/standard )
@@ -59,7 +59,7 @@ source_group( include FILES source/include/mqtt.h source/include/mqtt_lightweigh
 source_group( source FILES ${MQTT_SOURCES} )
 
 # Check if the CMock source directory exists.
-if( NOT EXISTS ${ROOT_DIR}/test/CMock/src )
+if( NOT EXISTS ${MODULE_ROOT_DIR}/test/CMock/src )
     # Attempt to clone CMock.
     if( ${BUILD_CLONE_SUBMODULES} )
         find_package( Git REQUIRED )
@@ -77,12 +77,12 @@ if( NOT EXISTS ${ROOT_DIR}/test/CMock/src )
     endif()
 endif()
 
-include("${ROOT_DIR}/tools/cmock/create_test.cmake")
+include("${MODULE_ROOT_DIR}/tools/cmock/create_test.cmake")
 
-include_directories("${ROOT_DIR}/test/CMock/vendor/unity/src/"
-                    "${ROOT_DIR}/test/CMock/vendor/unity/extras/fixture/src"
-                    "${ROOT_DIR}/test/CMock/vendor/unity/extras/memory/src"
-                    "${ROOT_DIR}/test/CMock/src"
+include_directories("${MODULE_ROOT_DIR}/test/CMock/vendor/unity/src/"
+                    "${MODULE_ROOT_DIR}/test/CMock/vendor/unity/extras/fixture/src"
+                    "${MODULE_ROOT_DIR}/test/CMock/vendor/unity/extras/memory/src"
+                    "${MODULE_ROOT_DIR}/test/CMock/src"
         )
 link_directories("${CMAKE_BINARY_DIR}/lib"
         )

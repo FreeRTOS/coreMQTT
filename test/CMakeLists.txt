@@ -9,8 +9,8 @@ set(project_name "mqtt")
 
 # list the files to mock here
 list(APPEND mock_list
-            "${ROOT_DIR}/source/include/mqtt_lightweight.h"
-            "${ROOT_DIR}/source/include/mqtt_state.h"
+            "${MODULE_ROOT_DIR}/source/include/mqtt_lightweight.h"
+            "${MODULE_ROOT_DIR}/source/include/mqtt_state.h"
         )
 # list the directories your mocks need
 list(APPEND mock_include_list
@@ -52,7 +52,7 @@ set(real_name "${project_name}_real")
 
 create_mock_list(${mock_name}
                 "${mock_list}"
-                "${ROOT_DIR}/tools/cmock/project.yml"
+                "${MODULE_ROOT_DIR}/tools/cmock/project.yml"
                 "${mock_include_list}"
                 "${mock_define_list}"
         )
