@@ -19,7 +19,7 @@ jobs:
           cmake -S . -B build/ \
           -G "Unix Makefiles" \
           -DCMAKE_BUILD_TYPE=Debug \
-          -DCMAKE_C_FLAGS='--coverage -Wall -Wextra -Werror -DNDEBUG' \
+          -DCMAKE_C_FLAGS='--coverage -Wall -Wextra -Werror -DNDEBUG'
           make -C build/ all
       - name: Test
         run: |
