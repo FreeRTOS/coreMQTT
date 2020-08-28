@@ -81,6 +81,9 @@ if( EXISTS ${MODULE_ROOT_DIR}/test/CMock/src )
     # Include build configuration for unit tests of MQTT.
     add_subdirectory( test )
 
+    # Use CTest utility for managing test runs.
+    enable_testing()
+    
     # Add a target for running coverage on tests.
     add_custom_target(coverage
         COMMAND ${CMAKE_COMMAND} -P ${CMAKE_SOURCE_DIR}/tools/cmock/coverage.cmake
