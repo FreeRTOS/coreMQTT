@@ -66,5 +66,5 @@ jobs:
         run: sudo apt-get install complexity
       - name: Complexity
         run: |
-          find src/ -iname '*.c' |\
+          find source/ -iname '*.c' |\
           xargs complexity --scores --threshold=0 --horrid-threshold=8
