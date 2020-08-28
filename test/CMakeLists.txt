@@ -9,14 +9,13 @@ set(project_name "mqtt")
 
 # list the files to mock here
 list(APPEND mock_list
-            "${MODULES_DIR}/standard/mqtt/include/mqtt_lightweight.h"
-            "${MODULES_DIR}/standard/mqtt/include/mqtt_state.h"
+            "${ROOT_DIR}/source/include/mqtt_lightweight.h"
+            "${ROOT_DIR}/source/include/mqtt_state.h"
         )
 # list the directories your mocks need
 list(APPEND mock_include_list
             .
             ${MQTT_INCLUDE_PUBLIC_DIRS}
-            ${LOGGING_INCLUDE_DIRS}
         )
 #list the definitions of your mocks to control what to be included
 list(APPEND mock_define_list
@@ -35,7 +34,6 @@ list(APPEND real_include_directories
             .
             ${MQTT_INCLUDE_PUBLIC_DIRS}
             ${MQTT_INCLUDE_PRIVATE_DIRS}
-            ${LOGGING_INCLUDE_DIRS}
         )
 
 # =====================  Create UnitTest Code here (edit)  =====================
@@ -45,7 +43,6 @@ list(APPEND test_include_directories
             .
             ${MQTT_INCLUDE_PUBLIC_DIRS}
             ${MQTT_INCLUDE_PRIVATE_DIRS}
-            ${LOGGING_INCLUDE_DIRS}
         )
 
 # =============================  (end edit)  ===================================

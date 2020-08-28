@@ -7,18 +7,18 @@
 
 # MQTT library source files.
 set( MQTT_SOURCES
-     "${MODULES_DIR}/standard/mqtt/source/mqtt.c"
-     "${MODULES_DIR}/standard/mqtt/source/mqtt_state.c" )
+     "${ROOT_DIR}/source/mqtt.c"
+     "${ROOT_DIR}/source/mqtt_state.c" )
 
 # Lightweight MQTT library source files.
 set( LIGHTWEIGHT_MQTT_SOURCES
-     "${MODULES_DIR}/standard/mqtt/source/mqtt_lightweight.c" )
+     "${ROOT_DIR}/source/mqtt_lightweight.c" )
 
 # MQTT library Public Include directories.
 set( MQTT_INCLUDE_PUBLIC_DIRS
-     "${MODULES_DIR}/standard/mqtt/source/include"
-     "${MODULES_DIR}/standard/mqtt/source/portable" )
+     "${ROOT_DIR}/source/include"
+     "${ROOT_DIR}/source/portable" )
 
 # MQTT library Private Include directories.
 set( MQTT_INCLUDE_PRIVATE_DIRS
-     "${MODULES_DIR}/standard/mqtt/source" )
+     "${ROOT_DIR}/source" )

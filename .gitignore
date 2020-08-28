@@ -1,0 +1,13 @@
+# Ignore documentation output.
+**/docs/**/output/*
+
+# Ignore CMake build directory.
+build/
+
+# Ignore build artifacts
+*.o
+
+# Ignore code coverage artifacts
+*.gcda
+*.gcno
+*.gcov
