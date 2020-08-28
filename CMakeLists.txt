@@ -25,9 +25,6 @@ option( BUILD_CLONE_SUBMODULES
         "Set this to ON to automatically clone any required Git submodules. When OFF, submodules must be manually cloned."
         ON )
 
-# Unity test framework does not export the correct symbols for DLLs.
-set( ALLOW_SHARED_LIBRARIES ON )
-    
 include( CMakeDependentOption )
 CMAKE_DEPENDENT_OPTION( BUILD_SHARED_LIBS
                         "Set this to ON to build all libraries as shared libraries. When OFF, libraries build as static libraries."
@@ -58,39 +55,36 @@ set_target_properties( mqtt PROPERTIES FOLDER libraries/standard )
 source_group( include FILES source/include/mqtt.h source/include/mqtt_lightweight.h source/include/mqtt_state.h )
 source_group( source FILES ${MQTT_SOURCES} )
 
+# Include CMock build configuration.
+include( test/cmock_build.cmake )
+
 # Check if the CMock source directory exists, and if not present, clone the submodule
 # if BUILD_CLONE_SUBMODULES configuration is enabled. 
 if( NOT EXISTS ${MODULE_ROOT_DIR}/test/CMock/src )
     # Attempt to clone CMock.
     if( ${BUILD_CLONE_SUBMODULES} )
-        find_package( Git REQUIRED )
-
-        message( "Cloning submodule CMock." )
-        execute_process( COMMAND ${GIT_EXECUTABLE} submodule update --init --recursive test/CMock
-                            WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
-                            RESULT_VARIABLE CMOCK_CLONE_RESULT )
-
-        if( NOT ${CMOCK_CLONE_RESULT} STREQUAL "0" )
-            message( FATAL_ERROR "Failed to clone CMock submodule." )
-        endif()
+        clone_cmock()
     else()
         message( FATAL_ERROR "The required submodule CMock does not exist. Either clone it manually, or set BUILD_CLONE_SUBMODULES to 1 to automatically clone it during build." )
     endif()
 endif()
 
-# Include CMock build configuration.
-include( test/cmock_build.cmake )
+# Add unit test and coverage configuration only if CMock directory exists.
+if( NOT EXISTS ${MODULE_ROOT_DIR}/test/CMock/src )
 
-# Add function to enable CMOck based tests and coverage.
-include("${MODULE_ROOT_DIR}/tools/cmock/create_test.cmake")
+    # Add build targets for CMock and Unit, required for unit testing.
+    add_cmock_targets()
 
-# Include build configuration for unit tests of MQTT.
-add_subdirectory( test )
+    # Add function to enable CMOck based tests and coverage.
+    include("${MODULE_ROOT_DIR}/tools/cmock/create_test.cmake")
 
-# Add a target for running coverage on tests.
-add_custom_target(coverage
-    COMMAND ${CMAKE_COMMAND} -P ${CMAKE_SOURCE_DIR}/tools/cmock/coverage.cmake
-    DEPENDS cmock unity mqtt_utest mqtt_lightweight_utest mqtt_state_utest
-    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-)
+    # Include build configuration for unit tests of MQTT.
+    add_subdirectory( test )
 
+    # Add a target for running coverage on tests.
+    add_custom_target(coverage
+        COMMAND ${CMAKE_COMMAND} -P ${CMAKE_SOURCE_DIR}/tools/cmock/coverage.cmake
+        DEPENDS cmock unity mqtt_utest mqtt_lightweight_utest mqtt_state_utest
+        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+    )
+endif()
