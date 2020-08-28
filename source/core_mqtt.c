@@ -1545,6 +1545,11 @@ static MQTTStatus_t handleSessionResumption( MQTTContext_t * pContext,
 
     assert( pContext != NULL );
 
+    /* Regardless of whether or not a session is re-established, the library
+     * should not be waiting for a PINGRESP. */
+    pContext->waitingForPingResp = false;
+    pContext->pingReqSendTimeMs = 0UL;
+
     if( sessionPresent == true )
     {
         /* Get the next packet ID for which a PUBREL need to be resent. */
