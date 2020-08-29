@@ -274,4 +274,4 @@ uint16_t MQTT_PublishToResend( const MQTTContext_t * pMqttContext,
 const char * MQTT_State_strerror( MQTTPublishState_t state );
 /** @endcond */
 
-#endif /* ifndef CORE_MQTTSTATE_H */
+#endif /* ifndef CORE_MQTT_STATE_H */

@@ -843,4 +843,4 @@ MQTTStatus_t MQTT_GetSubAckStatusCodes( const MQTTPacketInfo_t * pSubackPacket,
 const char * MQTT_Status_strerror( MQTTStatus_t status );
 /* @[declare_mqtt_status_strerror] */
 
-#endif /* ifndef CORE_MQTTH */
+#endif /* ifndef CORE_MQTT_H */

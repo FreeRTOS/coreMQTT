@@ -46,4 +46,4 @@ struct NetworkContext
     uint8_t ** buffer;
 };
 
-#endif /* ifndef CORE_MQTTCONFIG_H_ */
+#endif /* ifndef CORE_MQTT_CONFIG_H_ */

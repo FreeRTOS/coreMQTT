@@ -1178,4 +1178,4 @@ MQTTStatus_t MQTT_GetIncomingPacketTypeAndLength( TransportRecv_t readFunc,
                                                   MQTTPacketInfo_t * pIncomingPacket );
 /* @[declare_mqtt_getincomingpackettypeandlength] */
 
-#endif /* ifndef CORE_MQTTLIGHTWEIGHT_H */
+#endif /* ifndef CORE_MQTT_LIGHTWEIGHT_H */

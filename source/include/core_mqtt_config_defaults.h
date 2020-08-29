@@ -164,4 +164,4 @@
     #define LogDebug( message )
 #endif
 
-#endif /* ifndef CORE_MQTTCONFIG_DEFAULTS_H_ */
+#endif /* ifndef CORE_MQTT_CONFIG_DEFAULTS_H_ */
