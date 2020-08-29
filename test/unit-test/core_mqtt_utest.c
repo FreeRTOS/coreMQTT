@@ -6,8 +6,8 @@
 /* Include paths for public enums, structures, and macros. */
 #include "core_mqtt.h"
 
-#include "core_mqtt_lightweight.h"
-#include "core_mqtt_state.h"
+#include "mock_core_mqtt_lightweight.h"
+#include "mock_core_mqtt_state.h"
 
 /**
  * @brief A valid starting packet ID per MQTT spec. Start from 1.
