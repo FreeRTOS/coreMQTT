@@ -1790,8 +1790,8 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
     {
         LogInfo( ( "MQTT connection established with the broker." ) );
         pContext->connectStatus = MQTTConnected;
+        /* Initialize keep-alive fields after a successful connection. */
         pContext->keepAliveIntervalSec = pConnectInfo->keepAliveSeconds;
-        /* Reset PINGRESP flag in case this is a reused context. */
         pContext->waitingForPingResp = false;
         pContext->pingReqSendTimeMs = 0UL;
     }
