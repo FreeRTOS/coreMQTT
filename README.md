@@ -10,7 +10,7 @@ This repository contains an ISO C89/C90 compliant MQTT client library designed f
 
 - A supported operating system. The ports provided with this repo are expected to work with all recent versions of the following operating systems, although we cannot guarantee the behavior on all systems.
 
-## Build Steps
+### Build Steps
 
 1. Go to the root directory of this repository.
 
@@ -20,9 +20,13 @@ This repository contains an ISO C89/C90 compliant MQTT client library designed f
 
 1. Run this command to build the library and unit tests: `make all`
 
-1. The library will be present in `build/lib`, and test executables will be present in `build/bin/tests`.
+1. The generated library will be present in `build/lib`, and the test executables will be present in `build/bin/tests`.
 
-1. Run `ctest` to run all tests and view the result summary.
+1. Run `ctest` to execute all tests and view the test run summary.
+
+## Reference examples
+
+The AWS IoT Embedded C-SDK repository contains demos of using the MQTT client library [here](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/development/demos/mqtt) in a POSIX platform. These can be as reference examples for use of the library API.
 
 ## Generating documentation
 
