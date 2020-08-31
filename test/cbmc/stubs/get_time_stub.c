@@ -19,7 +19,7 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include "mqtt.h"
+#include "core_mqtt.h"
 #include "get_time_stub.h"
 
 uint32_t GetCurrentTimeStub( void )

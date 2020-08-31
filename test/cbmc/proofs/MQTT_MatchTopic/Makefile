@@ -31,12 +31,12 @@ DEFINES += -DMAX_TOPIC_NAME_FILTER_LENGTH=$(MAX_TOPIC_NAME_FILTER_LENGTH)
 INCLUDES +=
 
 REMOVE_FUNCTION_BODY +=
-UNWINDSET += __CPROVER_file_local_mqtt_c_matchTopicFilter.0:$(MAX_TOPIC_NAME_FILTER_LENGTH)
+UNWINDSET += __CPROVER_file_local_core_mqtt_c_matchTopicFilter.0:$(MAX_TOPIC_NAME_FILTER_LENGTH)
 UNWINDSET += strncmp.0:$(MAX_TOPIC_NAME_FILTER_LENGTH)
-UNWINDSET += __CPROVER_file_local_mqtt_c_matchWildcards.0:$(MAX_TOPIC_NAME_FILTER_LENGTH)
+UNWINDSET += __CPROVER_file_local_core_mqtt_c_matchWildcards.0:$(MAX_TOPIC_NAME_FILTER_LENGTH)
 
 PROOF_SOURCES += $(PROOFDIR)/$(HARNESS_FILE).c
-PROOF_SOURCES += $(SRCDIR)/libraries/standard/mqtt/cbmc/sources/mqtt_cbmc_state.c
-PROJECT_SOURCES += $(SRCDIR)/libraries/standard/mqtt/src/mqtt.c
+PROOF_SOURCES += $(SRCDIR)/test/cbmc/sources/mqtt_cbmc_state.c
+PROJECT_SOURCES += $(SRCDIR)/source/core_mqtt.c
 
 include ../Makefile.common

@@ -23,7 +23,7 @@
  * @file MQTT_SerializePublish_harness.c
  * @brief Implements the proof harness for MQTT_SerializePublish function.
  */
-#include "mqtt.h"
+#include "core_mqtt.h"
 #include "mqtt_cbmc_state.h"
 
 void harness()

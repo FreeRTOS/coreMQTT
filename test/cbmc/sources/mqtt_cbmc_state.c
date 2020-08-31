@@ -20,7 +20,7 @@
  */
 #include <stdint.h>
 #include <stdlib.h>
-#include "mqtt.h"
+#include "core_mqtt.h"
 #include "mqtt_cbmc_state.h"
 #include "network_interface_stubs.h"
 #include "get_time_stub.h"

@@ -3,5 +3,5 @@
 
   ],
   "proof-name": "MQTT_SerializeDisconnect",
-  "proof-root": "libraries/standard/mqtt/cbmc/proofs"
+  "proof-root": "test/cbmc/proofs"
 }
