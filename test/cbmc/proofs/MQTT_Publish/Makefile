@@ -22,10 +22,10 @@
 HARNESS_ENTRY=harness
 HARNESS_FILE=MQTT_Publish_harness
 
-# Please see libraries/standard/mqtt/cbmc/stubs/network_interface_subs.c for
+# Please see test/cbmc/stubs/network_interface_subs.c for
 # more information on MAX_NETWORK_SEND_TRIES.
 MAX_NETWORK_SEND_TRIES=3
-# Please see libraries/standard/mqtt/cbmc/include/mqtt_config.h for more
+# Please see test/cbmc/include/mqtt_config.h for more
 # information.
 MQTT_STATE_ARRAY_MAX_COUNT=11
 DEFINES += -DMAX_NETWORK_SEND_TRIES=$(MAX_NETWORK_SEND_TRIES)
@@ -40,7 +40,7 @@ REMOVE_FUNCTION_BODY +=
 # information.
 UNWINDSET += __CPROVER_file_local_mqtt_c_sendPacket.0:$(MAX_NETWORK_SEND_TRIES)
 # These loops will run for the maximum number of publishes pending acknowledgement.
-# This is set in libraries/standard/mqtt/cbmc/include/mqtt_config.h.
+# This is set in test/cbmc/include/mqtt_config.h.
 UNWINDSET += __CPROVER_file_local_mqtt_state_c_addRecord.0:$(MQTT_STATE_ARRAY_MAX_COUNT)
 UNWINDSET += __CPROVER_file_local_mqtt_state_c_findInRecord.0:$(MQTT_STATE_ARRAY_MAX_COUNT)
 # The encodeRemainingLength loop is unwound 5 times because encodeRemainingLength()
@@ -49,12 +49,12 @@ UNWINDSET += __CPROVER_file_local_mqtt_state_c_findInRecord.0:$(MQTT_STATE_ARRAY
 UNWINDSET += __CPROVER_file_local_mqtt_lightweight_c_encodeRemainingLength.0:5
 
 PROOF_SOURCES += $(PROOFDIR)/$(HARNESS_FILE).c
-PROOF_SOURCES += $(SRCDIR)/libraries/standard/mqtt/cbmc/sources/mqtt_cbmc_state.c
-PROOF_SOURCES += $(SRCDIR)/libraries/standard/mqtt/cbmc/stubs/network_interface_stubs.c
-PROOF_SOURCES += $(SRCDIR)/libraries/standard/mqtt/cbmc/stubs/get_time_stub.c
-PROOF_SOURCES += $(SRCDIR)/libraries/standard/mqtt/cbmc/stubs/event_callback_stub.c
-PROJECT_SOURCES += $(SRCDIR)/libraries/standard/mqtt/src/mqtt.c
-PROJECT_SOURCES += $(SRCDIR)/libraries/standard/mqtt/src/mqtt_lightweight.c
-PROJECT_SOURCES += $(SRCDIR)/libraries/standard/mqtt/src/mqtt_state.c
+PROOF_SOURCES += $(SRCDIR)/test/cbmc/sources/mqtt_cbmc_state.c
+PROOF_SOURCES += $(SRCDIR)/test/cbmc/stubs/network_interface_stubs.c
+PROOF_SOURCES += $(SRCDIR)/test/cbmc/stubs/get_time_stub.c
+PROOF_SOURCES += $(SRCDIR)/test/cbmc/stubs/event_callback_stub.c
+PROJECT_SOURCES += $(SRCDIR)/source/core_mqtt.c
+PROJECT_SOURCES += $(SRCDIR)/source/core_mqtt_lightweight.c
+PROJECT_SOURCES += $(SRCDIR)/source/core_mqtt_state.c
 
 include ../Makefile.common

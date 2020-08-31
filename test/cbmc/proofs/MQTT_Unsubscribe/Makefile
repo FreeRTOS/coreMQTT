@@ -22,7 +22,7 @@
 HARNESS_ENTRY=harness
 HARNESS_FILE=MQTT_Unsubscribe_harness
 
-# Please see libraries/standard/mqtt/cbmc/stubs/network_interface_subs.c for
+# Please see test/cbmc/stubs/network_interface_subs.c for
 # more information on MAX_NETWORK_SEND_TRIES.
 MAX_NETWORK_SEND_TRIES=3
 # Bound on the the subscription count. Please see the default value in 
@@ -51,12 +51,12 @@ UNWINDSET += MQTT_SerializeUnsubscribe.0:$(SUBSCRIPTION_COUNT_MAX)
 UNWINDSET += __CPROVER_file_local_mqtt_lightweight_c_encodeRemainingLength.0:5
 
 PROOF_SOURCES += $(PROOFDIR)/$(HARNESS_FILE).c
-PROOF_SOURCES += $(SRCDIR)/libraries/standard/mqtt/cbmc/sources/mqtt_cbmc_state.c
-PROOF_SOURCES += $(SRCDIR)/libraries/standard/mqtt/cbmc/stubs/network_interface_stubs.c
-PROOF_SOURCES += $(SRCDIR)/libraries/standard/mqtt/cbmc/stubs/get_time_stub.c
-PROOF_SOURCES += $(SRCDIR)/libraries/standard/mqtt/cbmc/stubs/event_callback_stub.c
-PROJECT_SOURCES += $(SRCDIR)/libraries/standard/mqtt/src/mqtt.c
-PROJECT_SOURCES += $(SRCDIR)/libraries/standard/mqtt/src/mqtt_lightweight.c
-PROJECT_SOURCES += $(SRCDIR)/libraries/standard/mqtt/src/mqtt_state.c
+PROOF_SOURCES += $(SRCDIR)/test/cbmc/sources/mqtt_cbmc_state.c
+PROOF_SOURCES += $(SRCDIR)/test/cbmc/stubs/network_interface_stubs.c
+PROOF_SOURCES += $(SRCDIR)/test/cbmc/stubs/get_time_stub.c
+PROOF_SOURCES += $(SRCDIR)/test/cbmc/stubs/event_callback_stub.c
+PROJECT_SOURCES += $(SRCDIR)/source/core_mqtt.c
+PROJECT_SOURCES += $(SRCDIR)/source/core_mqtt_lightweight.c
+PROJECT_SOURCES += $(SRCDIR)/source/core_mqtt_state.c
 
 include ../Makefile.common

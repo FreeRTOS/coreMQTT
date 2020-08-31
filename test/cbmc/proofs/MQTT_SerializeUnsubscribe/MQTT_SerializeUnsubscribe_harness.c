@@ -23,7 +23,7 @@
  * @file MQTT_SerializeUnsubscribe_harness.c
  * @brief Implements the proof harness for MQTT_SerializeUnsubscribe function.
  */
-#include "mqtt.h"
+#include "core_mqtt.h"
 #include "mqtt_cbmc_state.h"
 
 void harness()

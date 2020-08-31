@@ -23,7 +23,7 @@
  * @file MQTT_Subscribe_harness.c
  * @brief Implements the proof harness for MQTT_Subscribe function.
  */
-#include "mqtt.h"
+#include "core_mqtt.h"
 #include "mqtt_cbmc_state.h"
 
 void harness()

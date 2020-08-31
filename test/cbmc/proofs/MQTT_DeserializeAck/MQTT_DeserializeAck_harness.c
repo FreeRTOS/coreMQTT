@@ -23,7 +23,7 @@
  * @file MQTT_DeserializeAck_harness.c
  * @brief Implements the proof harness for MQTT_DeserializeAck function.
  */
-#include "mqtt.h"
+#include "core_mqtt.h"
 #include "mqtt_cbmc_state.h"
 
 void harness()

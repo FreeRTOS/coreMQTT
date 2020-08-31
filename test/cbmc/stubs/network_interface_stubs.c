@@ -19,7 +19,7 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include "mqtt.h"
+#include "core_mqtt.h"
 #include "network_interface_stubs.h"
 
 /* An exclusive bound on the times that the NetworkInterfaceSendStub will be
