@@ -38,7 +38,7 @@ UNWINDSET += __CPROVER_file_local_mqtt_c_sendPacket.0:$(MAX_NETWORK_SEND_TRIES)
 # divides a size_t variable by 128 until it reaches zero to stop the loop.
 # log128(SIZE_MAX) = 4.571...
 UNWINDSET += __CPROVER_file_local_mqtt_lightweight_c_getRemainingLength.0:5
-# These loops will run for the maximum number of publishes pending acknowledgement.
+# These loops will run for the maximum number of publishes pending acknowledgment.
 # This is set in libraries/standard/mqtt/cbmc/include/mqtt_config.h.
 UNWINDSET += __CPROVER_file_local_mqtt_state_c_addRecord.0:$(MQTT_STATE_ARRAY_MAX_COUNT)
 UNWINDSET += __CPROVER_file_local_mqtt_state_c_findInRecord.0:$(MQTT_STATE_ARRAY_MAX_COUNT)
