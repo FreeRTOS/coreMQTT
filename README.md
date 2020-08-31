@@ -1,14 +1,12 @@
 # MQTT Client Library
 
-This repository contains an ISO C89/C90 compliant MQTT client library designed for embedded platforms.
+This repository contains an ISO C90 compliant MQTT client library designed for embedded platforms.
 
 ## Building Library and Unit Tests.
 
 ### Prerequisites
 
 - CMake 3.13.0 or later and a C90 compiler.
-
-- A supported operating system. The ports provided with this repo are expected to work with all recent versions of the following operating systems, although we cannot guarantee the behavior on all systems.
 
 ### Build Steps
 
@@ -26,7 +24,7 @@ This repository contains an ISO C89/C90 compliant MQTT client library designed f
 
 ## Reference examples
 
-The AWS IoT Embedded C-SDK repository contains demos of using the MQTT client library [here](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/development/demos/mqtt) in a POSIX platform. These can be as reference examples for use of the library API.
+The AWS IoT Embedded C-SDK repository contains demos of using the MQTT client library [here](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/development/demos/mqtt) on a POSIX platform. These can be used as reference examples for the library API.
 
 ## Generating documentation
 
