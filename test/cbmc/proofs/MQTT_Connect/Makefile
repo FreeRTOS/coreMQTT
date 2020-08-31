@@ -66,7 +66,7 @@ UNWINDSET += __CPROVER_file_local_mqtt_c_sendPacket.0:$(MAX_NETWORK_SEND_TRIES)
 UNWINDSET += __CPROVER_file_local_mqtt_lightweight_c_encodeRemainingLength.0:5
 UNWINDSET += __CPROVER_file_local_mqtt_lightweight_c_getRemainingLength.0:5
 # This loop will run for the maximum number of publishes pending
-# acknowledgements plus one. This value is set in
+# acknowledgments plus one. This value is set in
 # libraries/standard/mqtt/cbmc/include/mqtt_config.h.
 UNWINDSET += __CPROVER_file_local_mqtt_state_c_stateSelect.0:$(MQTT_STATE_ARRAY_MAX_COUNT)
 

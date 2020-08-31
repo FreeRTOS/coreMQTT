@@ -39,7 +39,7 @@ REMOVE_FUNCTION_BODY +=
 # libraries\standard\mqtt\cbmc\stubs\network_interface_stubs.c for more 
 # information.
 UNWINDSET += __CPROVER_file_local_mqtt_c_sendPacket.0:$(MAX_NETWORK_SEND_TRIES)
-# These loops will run for the maximum number of publishes pending acknowledgement.
+# These loops will run for the maximum number of publishes pending acknowledgment.
 # This is set in libraries/standard/mqtt/cbmc/include/mqtt_config.h.
 UNWINDSET += __CPROVER_file_local_mqtt_state_c_addRecord.0:$(MQTT_STATE_ARRAY_MAX_COUNT)
 UNWINDSET += __CPROVER_file_local_mqtt_state_c_findInRecord.0:$(MQTT_STATE_ARRAY_MAX_COUNT)
