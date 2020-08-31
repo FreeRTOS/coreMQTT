@@ -40,9 +40,13 @@
 #if defined( __cplusplus ) || ( defined( __STDC_VERSION__ ) && ( __STDC_VERSION__ >= 199901L ) )
     #include <stdbool.h>
 #elif !defined( bool )
-    #define bool     int8_t
-    #define false    ( int8_t ) 0
-    #define true     ( int8_t ) 1
+    #define bool         int8_t
+    #if !defined( false )
+        #define false    ( int8_t ) 0
+    #endif
+    #if !defined( true )
+        #define true     ( int8_t ) 1
+    #endif
 #endif
 /** @endcond */
 
