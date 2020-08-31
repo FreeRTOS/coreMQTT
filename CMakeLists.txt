@@ -56,7 +56,7 @@ source_group( include FILES source/include/core_mqtt.h source/include/core_mqtt_
 source_group( source FILES ${MQTT_SOURCES} )
 
 # Include CMock build configuration.
-include( test/cmock_build.cmake )
+include( test/unit-test/cmock_build.cmake )
 
 # Check if the CMock source directory exists, and if not present, clone the submodule
 # if BUILD_CLONE_SUBMODULES configuration is enabled. 
