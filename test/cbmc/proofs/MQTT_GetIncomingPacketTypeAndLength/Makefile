@@ -29,7 +29,7 @@ REMOVE_FUNCTION_BODY +=
 # The getRemainingLength loop is unwound 5 times because getRemainingLength()
 # divides a size_t variable by 128 until it reaches zero to stop the loop.
 # log128(SIZE_MAX) = 4.571...
-UNWINDSET += __CPROVER_file_local_mqtt_lightweight_c_getRemainingLength.0:5
+UNWINDSET += __CPROVER_file_local_core_mqtt_lightweight_c_getRemainingLength.0:5
 
 PROOF_SOURCES += $(PROOFDIR)/$(HARNESS_FILE).c
 PROOF_SOURCES += $(SRCDIR)/test/cbmc/sources/mqtt_cbmc_state.c
