@@ -1041,6 +1041,8 @@ void test_MQTT_Connect_happy_path()
     mqttContext.outgoingPublishRecords[ 0 ].qos = MQTTQoS2;
     mqttContext.outgoingPublishRecords[ 0 ].publishState = MQTTPublishSend;
     mqttContext.incomingPublishRecords[ MQTT_STATE_ARRAY_MAX_COUNT - 1 ].packetId = 1;
+    /* Set ping resp flag to true to ensure it will be cleared. */
+    mqttContext.waitingForPingResp = true;
     MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_GetIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
     MQTT_DeserializeAck_ExpectAnyArgsAndReturn( MQTTSuccess );
@@ -1049,6 +1051,7 @@ void test_MQTT_Connect_happy_path()
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
     TEST_ASSERT_EQUAL_INT( MQTTConnected, mqttContext.connectStatus );
     TEST_ASSERT_EQUAL_INT( connectInfo.keepAliveSeconds, mqttContext.keepAliveIntervalSec );
+    TEST_ASSERT_FALSE( mqttContext.waitingForPingResp );
     TEST_ASSERT_FALSE( sessionPresent );
     /* Test old records were cleared. */
     TEST_ASSERT_EQUAL_MEMORY( cleanRecords, mqttContext.outgoingPublishRecords, sizeof( cleanRecords ) );
@@ -1058,6 +1061,7 @@ void test_MQTT_Connect_happy_path()
      * from broker. */
     mqttContext.connectStatus = MQTTNotConnected;
     mqttContext.keepAliveIntervalSec = 0;
+    mqttContext.waitingForPingResp = true;
     connectInfo.cleanSession = false;
     sessionPresentExpected = true;
     MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
@@ -1070,6 +1074,7 @@ void test_MQTT_Connect_happy_path()
     TEST_ASSERT_EQUAL_INT( MQTTConnected, mqttContext.connectStatus );
     TEST_ASSERT_EQUAL_INT( connectInfo.keepAliveSeconds, mqttContext.keepAliveIntervalSec );
     TEST_ASSERT_TRUE( sessionPresent );
+    TEST_ASSERT_FALSE( mqttContext.waitingForPingResp );
 
     /* CONNACK receive with timeoutMs=0. Retry logic will be used. */
     mqttContext.connectStatus = MQTTNotConnected;
@@ -1084,6 +1089,7 @@ void test_MQTT_Connect_happy_path()
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
     TEST_ASSERT_EQUAL_INT( MQTTConnected, mqttContext.connectStatus );
     TEST_ASSERT_EQUAL_INT( connectInfo.keepAliveSeconds, mqttContext.keepAliveIntervalSec );
+    TEST_ASSERT_FALSE( mqttContext.waitingForPingResp );
 
     /* CONNACK receive with timeoutMs=0. Retry logic will be used.
      * #MQTTNoDataAvailable for first #MQTT_GetIncomingPacketTypeAndLength
@@ -1100,6 +1106,7 @@ void test_MQTT_Connect_happy_path()
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
     TEST_ASSERT_EQUAL_INT( MQTTConnected, mqttContext.connectStatus );
     TEST_ASSERT_EQUAL_INT( connectInfo.keepAliveSeconds, mqttContext.keepAliveIntervalSec );
+    TEST_ASSERT_FALSE( mqttContext.waitingForPingResp );
 }
 
 /* ========================================================================== */

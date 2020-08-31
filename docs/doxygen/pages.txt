@@ -23,8 +23,8 @@ The configurations for memory estimation are defined <a href="https://github.com
     </tr>
     <tr>
         <td><b>File</b></td>
-        <td><b>With -O1 Optimisation</b></td>
-        <td><b>With -Os Optimisation</b></td>
+        <td><b>With -O1 Optimization</b></td>
+        <td><b>With -Os Optimization</b></td>
     </tr>
     <tr>
         <td>mqtt.c</td>
