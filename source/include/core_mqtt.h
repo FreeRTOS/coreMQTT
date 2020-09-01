@@ -20,7 +20,7 @@
  */
 
 /**
- * @file mqtt.h
+ * @file core_mqtt.h
  * @brief User-facing functions of the MQTT 3.1.1 library.
  */
 #ifndef CORE_MQTT_H

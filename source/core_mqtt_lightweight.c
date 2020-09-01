@@ -20,7 +20,7 @@
  */
 
 /**
- * @file mqtt_lightweight.c
+ * @file core_mqtt_lightweight.c
  * @brief Implements the user-facing functions in mqtt_lightweight.h.
  */
 #include <string.h>
