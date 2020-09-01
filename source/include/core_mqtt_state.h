@@ -20,7 +20,7 @@
  */
 
 /**
- * @file mqtt_state.h
+ * @file core_mqtt_state.h
  * @brief Function to keep state of MQTT PUBLISH packet deliveries.
  */
 #ifndef CORE_MQTT_STATE_H

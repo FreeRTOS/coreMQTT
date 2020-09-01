@@ -20,7 +20,7 @@
  */
 
 /**
- * @file mqtt_lightweight.h
+ * @file core_mqtt_lightweight.h
  * @brief User-facing functions for serializing and deserializing MQTT 3.1.1
  * packets. This header should be included for building a lightweight MQTT
  * client bypassing the managed CSDK MQTT library API in mqtt.h.

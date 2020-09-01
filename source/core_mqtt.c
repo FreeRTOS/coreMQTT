@@ -20,7 +20,7 @@
  */
 
 /**
- * @file mqtt.c
+ * @file core_mqtt.c
  * @brief Implements the user-facing functions in mqtt.h.
  */
 #include <string.h>

@@ -20,7 +20,7 @@
  */
 
 /**
- * @file mqtt_state.c
+ * @file core_mqtt_state.c
  * @brief Implements the functions in mqtt_state.h.
  */
 #include <assert.h>
