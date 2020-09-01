@@ -4,3 +4,6 @@
 [submodule "test/cbmc/aws-templates-for-cbmc-proofs"]
 	path = test/cbmc/aws-templates-for-cbmc-proofs
 	url = https://github.com/awslabs/aws-templates-for-cbmc-proofs.git
+[submodule "test/cbmc/litani"]
+	path = test/cbmc/litani
+	url = https://github.com/awslabs/aws-build-accumulator
