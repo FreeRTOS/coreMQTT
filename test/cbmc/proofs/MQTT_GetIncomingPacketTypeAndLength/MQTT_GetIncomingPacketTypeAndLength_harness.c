@@ -27,7 +27,7 @@
 #include "network_interface_stubs.h"
 #include "mqtt_cbmc_state.h"
 
-void harness()
+void MQTT_GetIncomingPacketTypeAndLength_harness()
 {
     /* NetworkContext_t is an application defined network interface context. It
      * is passed through to the readFunc parameter of

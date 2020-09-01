@@ -26,7 +26,7 @@
 #include "core_mqtt.h"
 #include "mqtt_cbmc_state.h"
 
-void harness()
+void MQTT_ProcessLoop_harness()
 {
     MQTTContext_t * pContext;
     uint32_t timeoutMs;

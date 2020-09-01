@@ -26,7 +26,7 @@
 #include "core_mqtt.h"
 #include "mqtt_cbmc_state.h"
 
-void harness()
+void MQTT_SerializePublishHeader_harness()
 {
     MQTTPublishInfo_t * pPublishInfo;
     uint16_t packetId;

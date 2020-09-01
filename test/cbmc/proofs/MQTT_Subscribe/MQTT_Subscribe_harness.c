@@ -26,7 +26,7 @@
 #include "core_mqtt.h"
 #include "mqtt_cbmc_state.h"
 
-void harness()
+void MQTT_Subscribe_harness()
 {
     MQTTContext_t * pContext;
     MQTTSubscribeInfo_t * pSubscriptionList;

@@ -27,7 +27,7 @@
 #include "core_mqtt.h"
 #include "mqtt_cbmc_state.h"
 
-void harness()
+void MQTT_GetPacketId_harness()
 {
     /* The MQTTContext_t is allocated such that we can test a NULL input.
      * MQTT_GetPacketId() touches only the nextPacketId field in MQTTContext_t.

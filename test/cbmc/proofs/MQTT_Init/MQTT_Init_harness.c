@@ -27,7 +27,7 @@
 #include "core_mqtt.h"
 #include "mqtt_cbmc_state.h"
 
-void harness()
+void MQTT_Init_harness()
 {
     MQTTContext_t * pContext;
     TransportInterface_t * pTransportInterface;

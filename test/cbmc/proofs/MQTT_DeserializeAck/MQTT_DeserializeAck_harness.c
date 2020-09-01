@@ -26,7 +26,7 @@
 #include "core_mqtt.h"
 #include "mqtt_cbmc_state.h"
 
-void harness()
+void MQTT_DeserializeAck_harness()
 {
     MQTTPacketInfo_t * pIncomingPacket;
     uint16_t * pPacketId;
