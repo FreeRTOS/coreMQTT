@@ -27,7 +27,7 @@
 #include "core_mqtt.h"
 #include "mqtt_cbmc_state.h"
 
-void harness()
+void MQTT_SerializePingreq_harness()
 {
     MQTTFixedBuffer_t * pFixedBuffer;
 

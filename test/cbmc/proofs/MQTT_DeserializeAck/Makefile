@@ -19,8 +19,8 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 
-HARNESS_ENTRY=harness
-HARNESS_FILE=MQTT_DeserializeAck_harness
+HARNESS_ENTRY=MQTT_DeserializeAck_harness
+HARNESS_FILE=$(HARNESS_ENTRY).c
 
 # The maximum remaining length is bounded for MQTT_DeserializeAck() in order to
 # place a limit on the number of iterations in deserializing a SUBACK. Please
@@ -32,7 +32,7 @@ INCLUDES +=
 REMOVE_FUNCTION_BODY +=
 UNWINDSET += __CPROVER_file_local_core_mqtt_serializer_c_readSubackStatus.0:$(REMAINING_LENGTH_MAX)
 
-PROOF_SOURCES += $(PROOFDIR)/$(HARNESS_FILE).c
+PROOF_SOURCES += $(PROOFDIR)/$(HARNESS_FILE)
 PROOF_SOURCES += $(SRCDIR)/test/cbmc/sources/mqtt_cbmc_state.c
 PROJECT_SOURCES += $(SRCDIR)/source/core_mqtt_serializer.c
 

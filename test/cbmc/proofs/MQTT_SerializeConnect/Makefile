@@ -19,8 +19,8 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 
-HARNESS_ENTRY=harness
-HARNESS_FILE=MQTT_SerializeConnect_harness
+HARNESS_ENTRY=MQTT_SerializeConnect_harness
+HARNESS_FILE=$(HARNESS_ENTRY).c
 
 DEFINES +=
 INCLUDES +=
@@ -35,7 +35,7 @@ REMOVE_FUNCTION_BODY += MQTT_GetIncomingPacketTypeAndLength
 # log128(SIZE_MAX) = 4.571...
 UNWINDSET += __CPROVER_file_local_core_mqtt_serializer_c_encodeRemainingLength.0:5
 
-PROOF_SOURCES += $(PROOFDIR)/$(HARNESS_FILE).c
+PROOF_SOURCES += $(PROOFDIR)/$(HARNESS_FILE)
 PROOF_SOURCES += $(SRCDIR)/test/cbmc/sources/mqtt_cbmc_state.c
 PROOF_SOURCES += $(SRCDIR)/test/cbmc/stubs/memcpy.c
 PROJECT_SOURCES += $(SRCDIR)/source/core_mqtt_serializer.c
