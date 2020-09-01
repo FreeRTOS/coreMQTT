@@ -11,8 +11,8 @@ A list of all the configurations and their default values are defined in [core_m
 To provide custom values for the configuration macros, a custom config file named `core_mqtt_config.h` can be
 provided to the library.
 
-By default, the `core_mqtt_config.h` custom config is required to build the library. To disable the requirement
-and build the library with the default configuration values, provide the `mqttDO_NOT_USE_CUSTOM_CONFIG` as a compile time preprocessor macro.
+By default, the `core_mqtt_config.h` custom config is required to build the library. To disable this requirement
+and build the library with default configuration values, provide `mqttDO_NOT_USE_CUSTOM_CONFIG` as a compile time preprocessor macro.
 
 ### Platform Prerequisites
 
