@@ -7,12 +7,12 @@ The MQTT library has been redesigned in v4 as a solely single-threaded library. 
 The features of the MQTT libraries in v3 and v4 are defined by the common MQTT 3.1.1 spec; therefore, the two versions are similar.
 
 @section migration_mqtt_removed Removed features
-@brief The following features which were present in v3 were removed in v4.
-- Auto-reconnect <br>
+@brief The following features were present in v3, but removed in v4.
+- <u>Auto-reconnect</u> <br>
   Version 3 has an auto-reconnect feature triggered through a call to `aws_iot_mqtt_yield`. In version 4, `aws_iot_mqtt_yield` has been removed, as well as the auto-reconnect feature. <br>
   <b>Workaround:</b> When a version 4 API call does not return @ref MQTTSuccess, the application should re-establish
   the underlying transport connection and then call @ref MQTT_Connect. The application should employ an exponential backoff strategy when re-establishing connections.
-- Thread support <br>
+- <u>Thread support</u> <br>
   Version 3 has an `_ENABLE_THREAD_SUPPORT_` macro for multi-threading use cases. Version 4 has been redesigned to use only a single execution thread, and is
   not thread-safe.
 
