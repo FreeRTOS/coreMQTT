@@ -50,7 +50,7 @@ target_include_directories( core_mqtt PUBLIC ${MQTT_INCLUDE_PUBLIC_DIRS} )
 target_include_directories( core_mqtt PRIVATE ${MQTT_INCLUDE_PRIVATE_DIRS} )
 
 # Build MQTT library with default config values.
-target_compile_definitions( core_mqtt PUBLIC mqttDO_NOT_USE_CUSTOM_CONFIG=1 )
+target_compile_definitions( core_mqtt PUBLIC MQTT_DO_NOT_USE_CUSTOM_CONFIG=1 )
 
 # Organization of MQTT in IDE projects.
 set_target_properties( core_mqtt PROPERTIES FOLDER source )

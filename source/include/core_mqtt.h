@@ -26,10 +26,10 @@
 #ifndef CORE_MQTT_H
 #define CORE_MQTT_H
 
-/* mqttDO_NOT_USE_CUSTOM_CONFIG allows building the MQTT library
+/* MQTT_DO_NOT_USE_CUSTOM_CONFIG allows building the MQTT library
  * without a custom config. If a custom config is provided, the
- * mqttDO_NOT_USE_CUSTOM_CONFIG macro should not be defined. */
-#ifndef mqttDO_NOT_USE_CUSTOM_CONFIG
+ * MQTT_DO_NOT_USE_CUSTOM_CONFIG macro should not be defined. */
+#ifndef MQTT_DO_NOT_USE_CUSTOM_CONFIG
     /* Include custom config file before other headers. */
     #include "core_mqtt_config.h"
 #endif

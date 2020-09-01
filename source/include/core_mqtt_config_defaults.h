@@ -27,7 +27,7 @@
  * @note This file SHOULD NOT be modified. If custom values are needed for
  * any configuration macro, a core_mqtt_config.h file should be provided to
  * the MQTT library to override the default values defined in this file.
- * To use the custom config file, the mqttDO_NOT_USE_CUSTOM_CONFIG preprocess
+ * To use the custom config file, the MQTT_DO_NOT_USE_CUSTOM_CONFIG preprocess
  * macro should NOT be set.
  */
 
