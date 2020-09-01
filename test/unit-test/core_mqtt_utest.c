@@ -1041,7 +1041,7 @@ void test_MQTT_Connect_happy_path()
     mqttContext.outgoingPublishRecords[ 0 ].qos = MQTTQoS2;
     mqttContext.outgoingPublishRecords[ 0 ].publishState = MQTTPublishSend;
     mqttContext.incomingPublishRecords[ MQTT_STATE_ARRAY_MAX_COUNT - 1 ].packetId = 1;
-    /* Set ping resp flag to true to ensure it will be cleared. */
+    /* Set ping response flag to true to ensure it will be cleared. */
     mqttContext.waitingForPingResp = true;
     MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_GetIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
