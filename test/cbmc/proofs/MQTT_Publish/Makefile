@@ -19,8 +19,8 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 
-HARNESS_ENTRY=harness
-HARNESS_FILE=MQTT_Publish_harness
+HARNESS_ENTRY=MQTT_Publish_harness
+HARNESS_FILE=$(HARNESS_ENTRY).c
 
 # Please see test/cbmc/stubs/network_interface_subs.c for
 # more information on MAX_NETWORK_SEND_TRIES.
@@ -48,7 +48,7 @@ UNWINDSET += __CPROVER_file_local_core_mqtt_state_c_findInRecord.0:$(MQTT_STATE_
 # log128(SIZE_MAX) = 4.571...
 UNWINDSET += __CPROVER_file_local_core_mqtt_serializer_c_encodeRemainingLength.0:5
 
-PROOF_SOURCES += $(PROOFDIR)/$(HARNESS_FILE).c
+PROOF_SOURCES += $(PROOFDIR)/$(HARNESS_FILE)
 PROOF_SOURCES += $(SRCDIR)/test/cbmc/sources/mqtt_cbmc_state.c
 PROOF_SOURCES += $(SRCDIR)/test/cbmc/stubs/network_interface_stubs.c
 PROOF_SOURCES += $(SRCDIR)/test/cbmc/stubs/get_time_stub.c

@@ -19,8 +19,8 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 
-HARNESS_ENTRY=harness
-HARNESS_FILE=MQTT_SerializeSubscribe_harness
+HARNESS_ENTRY=MQTT_SerializeSubscribe_harness
+HARNESS_FILE=$(HARNESS_ENTRY).c
 
 # Bound on the the subscription count. Please see the default value in
 # mqtt_cbmc_state.c for more information on this bound. This is set to 2
@@ -39,7 +39,7 @@ UNWINDSET += MQTT_SerializeSubscribe.0:$(SUBSCRIPTION_COUNT_MAX)
 # log128(SIZE_MAX) = 4.571...
 UNWINDSET += __CPROVER_file_local_core_mqtt_serializer_c_encodeRemainingLength.0:5
 
-PROOF_SOURCES += $(PROOFDIR)/$(HARNESS_FILE).c
+PROOF_SOURCES += $(PROOFDIR)/$(HARNESS_FILE)
 PROOF_SOURCES += $(SRCDIR)/test/cbmc/sources/mqtt_cbmc_state.c
 PROJECT_SOURCES += $(SRCDIR)/source/core_mqtt_serializer.c
 
