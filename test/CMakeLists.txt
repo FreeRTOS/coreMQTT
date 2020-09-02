@@ -41,7 +41,7 @@ include( ${MODULE_ROOT_DIR}/test/unit-test/cmock_build.cmake )
 
 # Check if the CMock source directory exists, and if not present, clone the submodule
 # if BUILD_CLONE_SUBMODULES configuration is enabled. 
-if( NOT EXISTS ${MODULE_ROOT_DIR}/test/unit-test/CMock/src )
+if( NOT EXISTS ${CMOCK_DIR}/src )
     # Attempt to clone CMock.
     if( ${BUILD_CLONE_SUBMODULES} )
         clone_cmock()
@@ -51,7 +51,7 @@ if( NOT EXISTS ${MODULE_ROOT_DIR}/test/unit-test/CMock/src )
 endif()
 
 # Add unit test and coverage configuration only if CMock directory exists.
-if( EXISTS ${MODULE_ROOT_DIR}/test/unit-test/CMock/src )
+if( EXISTS ${CMOCK_DIR}/src )
 
     # Use CTest utility for managing test runs. This has to be added BEFORE
     # definiting test targets with add_test()
