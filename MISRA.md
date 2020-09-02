@@ -1,10 +1,10 @@
-#MISRA Compliance
+# MISRA Compliance
 
 The MQTT library files conform to the [MISRA C:2012](https://www.misra.org.uk/MISRAHome/MISRAC2012/tabid/196/Default.aspx)
 guidelines, with some noted exceptions. Compliance is checked with Coverity static analysis.
 Deviations from the MISRA standard are listed below:
 
-###Ignored by Coverity Configuration
+### Ignored by Coverity Configuration
 | Deviation | Category | Justification |
 | :-: | :-: | :-: |
 | Directive 4.5 | Advisory | Allow names that MISRA considers ambiguous (such as LogInfo and LogError) |
@@ -17,10 +17,10 @@ Deviations from the MISRA standard are listed below:
 | Rule 21.1 | Required | Allow use of all macro names. For compatibility, some macros introduced in C99 are defined for use with C90 compilers. |
 | Rule 21.2 | Required | Allow use of all macro and identifier names. For compatibility, some macros introduced in C99 are defined for use with C90 compilers. |
 
-###Flagged by Coverity
+### Flagged by Coverity
 | Deviation | Category | Justification |
 | :-: | :-: | :-: |
 | Rule 8.7 | Advisory | API functions are not used by the library outside of the files they are defined; however, they must be externally visible in order to be used by an application. |
 
-###Suppressed with Coverity Comments
+### Suppressed with Coverity Comments
 *None.*
