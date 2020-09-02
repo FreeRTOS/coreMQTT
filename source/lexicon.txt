@@ -130,7 +130,6 @@ mqttstatenull
 mqttstateoperation
 mqttstatus
 mqttsubackfailure
-mqttsubackstatus
 mqttsubacksuccessqos
 mqttsubscribeinfo
 mqttsuccess

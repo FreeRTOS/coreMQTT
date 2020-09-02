@@ -2626,10 +2626,10 @@ void test_MQTT_GetSubAckStatusCodes( void )
     status = MQTT_GetSubAckStatusCodes( &mqttPacketInfo, &pPayloadStart, &payloadSize );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
     TEST_ASSERT_EQUAL_PTR( &buffer[ 2 ], pPayloadStart );
-    TEST_ASSERT_EQUAL_INT( MQTTSubAckSuccessQos0, pPayloadStart[ 0 ] );
-    TEST_ASSERT_EQUAL_INT( MQTTSubAckSuccessQos1, pPayloadStart[ 1 ] );
-    TEST_ASSERT_EQUAL_INT( MQTTSubAckSuccessQos2, pPayloadStart[ 2 ] );
-    TEST_ASSERT_EQUAL_INT( MQTTSubAckFailure, pPayloadStart[ 3 ] );
+    TEST_ASSERT_EQUAL_INT( MQTT_SUBACK_STATUS_SUCCESS_QOS_0, pPayloadStart[ 0 ] );
+    TEST_ASSERT_EQUAL_INT( MQTT_SUBACK_STATUS_SUCCESS_QOS_1, pPayloadStart[ 1 ] );
+    TEST_ASSERT_EQUAL_INT( MQTT_SUBACK_STATUS_SUCCESS_QOS_2, pPayloadStart[ 2 ] );
+    TEST_ASSERT_EQUAL_INT( MQTT_SUBACK_STATUS_FAILURE, pPayloadStart[ 3 ] );
     TEST_ASSERT_EQUAL_INT( 4, payloadSize );
 
     /* Packet is NULL. */

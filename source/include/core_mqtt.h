@@ -769,7 +769,11 @@ MQTTStatus_t MQTT_MatchTopic( const char * pTopicName,
  *  - 0x01 - Success - Maximum QoS 1
  *  - 0x02 - Success - Maximum QoS 2
  *  - 0x80 - Failure
- * Refer to #MQTTSubAckStatus_t for the status codes.
+ * The above status can be used through the following macro constants:
+ * #MQTT_SUBACK_STATUS_SUCCESS_QOS_0
+ * #MQTT_SUBACK_STATUS_SUCCESS_QOS_1
+ * #MQTT_SUBACK_STATUS_SUCCESS_QOS_2
+ * #MQTT_SUBACK_STATUS_FAILURE
  *
  * @param[in] pSubackPacket The SUBACK packet whose payload is to be parsed.
  * @param[out] pPayloadStart This is populated with the starting address
