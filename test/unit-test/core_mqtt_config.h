@@ -25,6 +25,17 @@
 /* Standard include. */
 #include <stdint.h>
 
+/**
+ * @brief Retry count for reading CONNACK from network.
+ *
+ * #MQTT_Connect() can be using retries. If timeout passed as 0 to MQTT_Connect(),
+ * retries are used to attempt to read from network. The maximum retry count is
+ * specified by this config.
+ * 
+ * These unit tests expect retrying only twice.
+ */
+#define MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT    ( 2U )
+
 /* Set network context to double pointer to buffer (uint8_t**). */
 struct NetworkContext
 {
