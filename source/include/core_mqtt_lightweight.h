@@ -55,7 +55,7 @@
 #endif
 
 /* Include config defaults header to get default values of configs not
- * defined in custom main config file. */
+ * defined in core_mqtt_config.h file. */
 #include "core_mqtt_config_defaults.h"
 
 #include "transport_interface.h"
