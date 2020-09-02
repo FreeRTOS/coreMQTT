@@ -51,25 +51,25 @@
  * @ingroup mqtt_constants
  * @brief The success status code for QoS 0 in the SUBACK response to a subscription request.
  */
-#define MQTT_SUBACK_STATUS_SUCCESS_QOS_0    0x00
+#define MQTT_SUBACK_STATUS_SUCCESS_QOS_0    ( ( uint8_t ) 0x00U )
 
 /**
  * @ingroup mqtt_constants
  * @brief The success status code for QoS 1 in the SUBACK response to a subscription request.
  */
-#define MQTT_SUBACK_STATUS_SUCCESS_QOS_1    0x01
+#define MQTT_SUBACK_STATUS_SUCCESS_QOS_1    ( ( uint8_t ) 0x01U )
 
 /**
  * @ingroup mqtt_constants
  * @brief The success status code for QoS 2 in the SUBACK response to a subscription request.
  */
-#define MQTT_SUBACK_STATUS_SUCCESS_QOS_2    0x02
+#define MQTT_SUBACK_STATUS_SUCCESS_QOS_2    ( ( uint8_t ) 0x02U )
 
 /**
  * @ingroup mqtt_constants
  * @brief The failure status code in the SUBACK response to a subscription request.
  */
-#define MQTT_SUBACK_STATUS_FAILURE          0x80
+#define MQTT_SUBACK_STATUS_FAILURE          ( ( uint8_t ) 0x80U )
 
 
 /* Structures defined in this file. */
