@@ -109,6 +109,10 @@ do
         then
             continue
         fi
+        if [[ $file == *"aws-templates-for-cbmc-proofs"* ]]
+        then
+            continue
+        fi
         # Disable errexit here, extract-comments can return non-zero
         set +e
         #
