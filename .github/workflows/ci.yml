@@ -31,6 +31,7 @@ jobs:
           make -C build/ coverage
           lcov --rc lcov_branch_coverage=1 --remove build/coverage.info '*test*' --output-file build/coverage.info
           lcov --rc lcov_branch_coverage=1 --remove build/coverage.info '*CMakeCCompilerId*' --output-file build/coverage.info
+          lcov --rc lcov_branch_coverage=1 --remove build/coverage.info '*mocks*' --output-file build/coverage.info
           lcov --list build/coverage.info
       - name: lcov-cop
         uses: ChicagoFlutter/lcov-cop@v1.0.2

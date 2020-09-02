@@ -39,6 +39,7 @@ handleincomingpublish
 handlekeepalive
 hasn
 ifndef
+inc
 incomingpublish
 init
 int
@@ -73,6 +74,7 @@ mqttstatecollision
 mqttstatenull
 mqttsuccess
 msb
+noninfringement
 packetsize
 param
 paramters
@@ -125,6 +127,7 @@ strerror
 struct
 structs
 suback
+sublicense
 tcp
 tcpsocket
 testcase
