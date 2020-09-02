@@ -6,6 +6,7 @@ bytestoread
 bytestowrite
 cb
 cmock
+com
 config
 connack
 connectinfo
