@@ -45,7 +45,32 @@
  *
  * Zero is an invalid packet identifier as per MQTT v3.1.1 spec.
  */
-#define MQTT_PACKET_ID_INVALID    ( ( uint16_t ) 0U )
+#define MQTT_PACKET_ID_INVALID              ( ( uint16_t ) 0U )
+
+/**
+ * @ingroup mqtt_constants
+ * @brief The success status code for QoS 0 in the SUBACK response to a subscription request.
+ */
+#define MQTT_SUBACK_STATUS_SUCCESS_QOS_0    0x00
+
+/**
+ * @ingroup mqtt_constants
+ * @brief The success status code for QoS 1 in the SUBACK response to a subscription request.
+ */
+#define MQTT_SUBACK_STATUS_SUCCESS_QOS_1    0x01
+
+/**
+ * @ingroup mqtt_constants
+ * @brief The success status code for QoS 2 in the SUBACK response to a subscription request.
+ */
+#define MQTT_SUBACK_STATUS_SUCCESS_QOS_2    0x02
+
+/**
+ * @ingroup mqtt_constants
+ * @brief The failure status code in the SUBACK response to a subscription request.
+ */
+#define MQTT_SUBACK_STATUS_FAILURE          0x80
+
 
 /* Structures defined in this file. */
 struct MQTTPubAckInfo;
@@ -118,18 +143,6 @@ typedef enum MQTTPubAckType
     MQTTPubrel, /**< @brief PUBRELs are sent in response to a PUBREC. */
     MQTTPubcomp /**< @brief PUBCOMPs are sent in response to a PUBREL. */
 } MQTTPubAckType_t;
-
-/**
- * @ingroup mqtt_enum_types
- * @brief The status codes in the SUBACK response to a subscription request.
- */
-typedef enum MQTTSubAckStatus
-{
-    MQTTSubAckSuccessQos0 = 0x00, /**< @brief Success with a maximum delivery at QoS 0 . */
-    MQTTSubAckSuccessQos1 = 0x01, /**< @brief Success with a maximum delivery at QoS 1. */
-    MQTTSubAckSuccessQos2 = 0x02, /**< @brief Success with a maximum delivery at QoS 2. */
-    MQTTSubAckFailure = 0x80      /**< @brief Failure. */
-} MQTTSubAckStatus_t;
 
 /**
  * @ingroup mqtt_struct_types
