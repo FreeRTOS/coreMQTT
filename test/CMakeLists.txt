@@ -18,7 +18,7 @@ endif()
 
 # Set global path variables.
 get_filename_component(__MODULE_ROOT_DIR "${CMAKE_CURRENT_LIST_DIR}" ABSOLUTE)
-set(MODULE_ROOT_DIR ${__MODULE_ROOT_DIR} CACHE INTERNAL "MQTT source root.")
+set(MODULE_ROOT_DIR "${__MODULE_ROOT_DIR}/../" CACHE INTERNAL "MQTT source root.")
 
 # Configure options to always show in CMake GUI.
 option( BUILD_CLONE_SUBMODULES
@@ -36,27 +36,8 @@ set( CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin )
 set( CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib )
 set( CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib )
 
-# Include filepaths for source and include.
-include( mqttFilePaths.cmake )
-
-# MQTT library target.
-add_library( core_mqtt
-             ${MQTT_SOURCES} )
-
-# MQTT public include path.
-target_include_directories( core_mqtt PUBLIC ${MQTT_INCLUDE_PUBLIC_DIRS} )
-
-# MQTT private include path.
-target_include_directories( core_mqtt PRIVATE ${MQTT_INCLUDE_PRIVATE_DIRS} 
-                                         ${MODULE_ROOT_DIR}/test/unit-test )
-
-# Organization of MQTT in IDE projects.
-set_target_properties( core_mqtt PROPERTIES FOLDER source )
-source_group( include FILES source/include/core_mqtt.h source/include/core_mqtt_lightweight.h source/include/core_mqtt_state.h )
-source_group( source FILES ${MQTT_SOURCES} )
-
 # Include CMock build configuration.
-include( test/unit-test/cmock_build.cmake )
+include( ${MODULE_ROOT_DIR}/test/unit-test/cmock_build.cmake )
 
 # Check if the CMock source directory exists, and if not present, clone the submodule
 # if BUILD_CLONE_SUBMODULES configuration is enabled. 
@@ -83,11 +64,11 @@ if( EXISTS ${MODULE_ROOT_DIR}/test/unit-test/CMock/src )
     include("${MODULE_ROOT_DIR}/tools/cmock/create_test.cmake")
 
     # Include build configuration for unit tests of MQTT.
-    add_subdirectory( test/unit-test )
+    add_subdirectory( ${MODULE_ROOT_DIR}/test/unit-test )
     
     # Add a target for running coverage on tests.
     add_custom_target(coverage
-        COMMAND ${CMAKE_COMMAND} -P ${CMAKE_SOURCE_DIR}/tools/cmock/coverage.cmake
+        COMMAND ${CMAKE_COMMAND} -P ${MODULE_ROOT_DIR}/tools/cmock/coverage.cmake
         DEPENDS cmock unity core_mqtt_utest core_mqtt_lightweight_utest core_mqtt_state_utest
         WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
     )
