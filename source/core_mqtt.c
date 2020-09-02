@@ -50,7 +50,7 @@ static int32_t sendPacket( MQTTContext_t * pContext,
  *
  * @note In C, the operands are promoted to signed integers in subtraction.
  * Using this function avoids the need to cast the result of subtractions back
- * to uint32_t.
+ * to uint32_t. gkdfkgjldf jdkfgjdf busssinesses
  *
  * @param[in] later The later time stamp, in milliseconds.
  * @param[in] start The earlier time stamp, in milliseconds.
