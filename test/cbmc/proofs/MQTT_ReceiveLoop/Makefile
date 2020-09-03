@@ -4,10 +4,10 @@
 HARNESS_ENTRY=harness
 HARNESS_FILE=MQTT_ReceiveLoop_harness
 
-# Bound on the timeout in MQTT_ProcessLoop. This timeout is bounded because 
+# Bound on the timeout in MQTT_ProcessLoop. This timeout is bounded because
 # memory saftey can be proven in a only a few iteration of the MQTT operations.
 # Each iteration will try to receive a single packet in its entirety. With a time
-# out of 2 we can get coverage of the entire function. Another iteration will 
+# out of 2 we can get coverage of the entire function. Another iteration will
 # performed unnecessarily duplicating of the proof.
 MQTT_RECEIVE_TIMEOUT=3
 # Please see test/cbmc/stubs/network_interface_subs.c for
@@ -30,8 +30,8 @@ UNWINDSET += __CPROVER_file_local_core_mqtt_c_discardPacket.0:$(MQTT_RECEIVE_TIM
 UNWINDSET += __CPROVER_file_local_core_mqtt_c_recvExact.0:$(MQTT_RECEIVE_TIMEOUT)
 # Unlike recvExact, sendPacket is not bounded by the timeout. The loop in
 # sendPacket will continue until all the bytes are sent or a network error
-# occurs. Please see NetworkInterfaceReceiveStub in 
-# libraries\standard\mqtt\cbmc\stubs\network_interface_stubs.c for more 
+# occurs. Please see NetworkInterfaceReceiveStub in
+# libraries\standard\mqtt\cbmc\stubs\network_interface_stubs.c for more
 # information.
 UNWINDSET += __CPROVER_file_local_core_mqtt_c_sendPacket.0:$(MAX_NETWORK_SEND_TRIES)
 # The getRemainingLength loop is unwound 5 times because getRemainingLength()

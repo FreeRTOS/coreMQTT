@@ -13,7 +13,7 @@
 
 # How to create a lexicon.txt for a new directory.
 
-1. Ensure there does not exist a file called "lexicon.txt" in the directory. Run the following command to create a lexicon.txt for the directory:  
+1. Ensure there does not exist a file called "lexicon.txt" in the directory. Run the following command to create a lexicon.txt for the directory:
    ```shell
    find-unknown-comment-words -d <PATH>/<TO>/<DIRECTORY> > <PATH>/<TO>/<DIRECTORY>/lexicon.txt
    ```

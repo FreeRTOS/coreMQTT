@@ -1,6 +1,6 @@
 cmake_minimum_required ( VERSION 3.13.0 )
 project ( "CoreMQTT unit test"
-          VERSION 1.0.0 
+          VERSION 1.0.0
           LANGUAGES C )
 
 # Allow the project to be organized into folders.
@@ -36,7 +36,7 @@ set( CMOCK_DIR ${MODULE_ROOT_DIR}/test/unit-test/CMock CACHE INTERNAL "CMock lib
 include( cmock_build.cmake )
 
 # Check if the CMock source directory exists, and if not present, clone the submodule
-# if BUILD_CLONE_SUBMODULES configuration is enabled. 
+# if BUILD_CLONE_SUBMODULES configuration is enabled.
 if( NOT EXISTS ${CMOCK_DIR}/src )
     # Attempt to clone CMock.
     if( ${BUILD_CLONE_SUBMODULES} )

@@ -25,8 +25,8 @@ HARNESS_FILE=MQTT_Subscribe_harness
 # Please see test/cbmc/stubs/network_interface_subs.c for
 # more information on MAX_NETWORK_SEND_TRIES.
 MAX_NETWORK_SEND_TRIES=3
-# Bound on the the subscription count. Please see the default value in 
-# mqtt_cbmc_state.c for more information on this bound. This is set to 2 
+# Bound on the the subscription count. Please see the default value in
+# mqtt_cbmc_state.c for more information on this bound. This is set to 2
 # currently to have the proof run quickly.
 SUBSCRIPTION_COUNT_MAX=2
 
@@ -37,8 +37,8 @@ INCLUDES +=
 REMOVE_FUNCTION_BODY +=
 # Unlike recvExact, sendPacket is not bounded by the timeout. The loop in
 # sendPacket will continue until all the bytes are sent or a network error
-# occurs. Please see NetworkInterfaceReceiveStub in 
-# libraries\standard\mqtt\cbmc\stubs\network_interface_stubs.c for more 
+# occurs. Please see NetworkInterfaceReceiveStub in
+# libraries\standard\mqtt\cbmc\stubs\network_interface_stubs.c for more
 # information.
 UNWINDSET += __CPROVER_file_local_core_mqtt_c_sendPacket.0:$(MAX_NETWORK_SEND_TRIES)
 UNWINDSET += allocateMqttSubscriptionList.0:$(SUBSCRIPTION_COUNT_MAX)
