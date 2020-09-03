@@ -73,3 +73,18 @@ jobs:
         run: |
           PATH=$PATH:$PWD/tools/spell
           for lexfile in `find . -name lexicon.txt`; do dir=${lexfile%/lexicon.txt}; find-unknown-comment-words --directory $dir; if [ $? -ne "0" ]; then exit 1; fi; done;
+  fmt:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install Uncrustify
+        run: sudo apt-get install uncrustify
+      - name: Run Uncrustify
+        run: find . -iname "*.c" -exec uncrustify --check -c tools/uncrustify.cfg {} +
+      - name: Check For Trailing Whitespace
+        run: |
+          grep -rnI -e "[[:blank:]]$" .
+          if [ "$?" -ne "1" ]; then
+            echo "Files have trailing whitespace."
+            exit 1
+          fi
