@@ -73,7 +73,7 @@ jobs:
         run: |
           PATH=$PATH:$PWD/tools/spell
           for lexfile in `find . -name lexicon.txt`; do dir=${lexfile%/lexicon.txt}; find-unknown-comment-words --directory $dir; if [ $? -ne "0" ]; then exit 1; fi; done;
-  fmt:
+  formatting:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
