@@ -80,7 +80,7 @@ jobs:
       - name: Install Uncrustify
         run: sudo apt-get install uncrustify
       - name: Run Uncrustify
-        run: find . -iname "*.c" -exec uncrustify --check -c tools/uncrustify.cfg {} +
+        run: find . -iname "*.[hc]" -exec uncrustify --check -c tools/uncrustify.cfg {} +
       - name: Check For Trailing Whitespace
         run: |
           set +e
