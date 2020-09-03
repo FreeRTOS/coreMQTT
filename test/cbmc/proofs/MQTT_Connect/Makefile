@@ -63,8 +63,8 @@ UNWINDSET += __CPROVER_file_local_core_mqtt_c_sendPacket.0:$(MAX_NETWORK_SEND_TR
 # The loops are unwound 5 times because these functions divides a size_t
 # variable by 128 until it reaches zero to stop the loop.
 # log128(SIZE_MAX) = 4.571...
-UNWINDSET += __CPROVER_file_local_core_mqtt_lightweight_c_encodeRemainingLength.0:5
-UNWINDSET += __CPROVER_file_local_core_mqtt_lightweight_c_getRemainingLength.0:5
+UNWINDSET += __CPROVER_file_local_core_mqtt_serializer_c_encodeRemainingLength.0:5
+UNWINDSET += __CPROVER_file_local_core_mqtt_serializer_c_getRemainingLength.0:5
 # This loop will run for the maximum number of publishes pending
 # acknowledgements plus one. This value is set in
 # test/cbmc/include/mqtt_config.h.
@@ -77,7 +77,7 @@ PROOF_SOURCES += $(SRCDIR)/test/cbmc/stubs/get_time_stub.c
 PROOF_SOURCES += $(SRCDIR)/test/cbmc/stubs/event_callback_stub.c
 PROOF_SOURCES += $(SRCDIR)/test/cbmc/stubs/memcpy.c
 PROJECT_SOURCES += $(SRCDIR)/source/core_mqtt.c
-PROJECT_SOURCES += $(SRCDIR)/source/core_mqtt_lightweight.c
+PROJECT_SOURCES += $(SRCDIR)/source/core_mqtt_serializer.c
 PROJECT_SOURCES += $(SRCDIR)/source/core_mqtt_state.c
 
 include ../Makefile.common
