@@ -22,8 +22,8 @@
 HARNESS_ENTRY=harness
 HARNESS_FILE=MQTT_SerializeUnsubscribe_harness
 
-# Bound on the the subscription count. Please see the default value in 
-# mqtt_cbmc_state.c for more information on this bound. This is set to 2 
+# Bound on the the subscription count. Please see the default value in
+# mqtt_cbmc_state.c for more information on this bound. This is set to 2
 # currently to have the proof run quickly.
 SUBSCRIPTION_COUNT_MAX=2
 DEFINES += -DSUBSCRIPTION_COUNT_MAX=$(SUBSCRIPTION_COUNT_MAX)
