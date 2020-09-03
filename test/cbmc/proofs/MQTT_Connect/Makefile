@@ -60,7 +60,7 @@ UNWINDSET += __CPROVER_file_local_core_mqtt_c_receiveConnack.0:$(MQTT_MAX_CONNAC
 # libraries\standard\mqtt\cbmc\stubs\network_interface_stubs.c for more
 # information.
 UNWINDSET += __CPROVER_file_local_core_mqtt_c_sendPacket.0:$(MAX_NETWORK_SEND_TRIES)
-# The loops are unwound 5 times because these functions divides a size_t 
+# The loops are unwound 5 times because these functions divides a size_t
 # variable by 128 until it reaches zero to stop the loop.
 # log128(SIZE_MAX) = 4.571...
 UNWINDSET += __CPROVER_file_local_core_mqtt_lightweight_c_encodeRemainingLength.0:5

@@ -35,8 +35,8 @@ REMOVE_FUNCTION_BODY +=
 REMOVE_FUNCTION_BODY +=
 # Unlike recvExact, sendPacket is not bounded by the timeout. The loop in
 # sendPacket will continue until all the bytes are sent or a network error
-# occurs. Please see NetworkInterfaceReceiveStub in 
-# libraries\standard\mqtt\cbmc\stubs\network_interface_stubs.c for more 
+# occurs. Please see NetworkInterfaceReceiveStub in
+# libraries\standard\mqtt\cbmc\stubs\network_interface_stubs.c for more
 # information.
 UNWINDSET += __CPROVER_file_local_core_mqtt_c_sendPacket.0:$(MAX_NETWORK_SEND_TRIES)
 # These loops will run for the maximum number of publishes pending acknowledgement.
