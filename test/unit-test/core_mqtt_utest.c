@@ -27,7 +27,7 @@
 /* Include paths for public enums, structures, and macros. */
 #include "core_mqtt.h"
 
-#include "mock_core_mqtt_lightweight.h"
+#include "mock_core_mqtt_serializer.h"
 #include "mock_core_mqtt_state.h"
 
 /**

@@ -8,7 +8,7 @@ set(project_name "core_mqtt")
 
 # list the files to mock here
 list(APPEND mock_list
-            "${MODULE_ROOT_DIR}/source/include/core_mqtt_lightweight.h"
+            "${MODULE_ROOT_DIR}/source/include/core_mqtt_serializer.h"
             "${MODULE_ROOT_DIR}/source/include/core_mqtt_state.h"
         )
 # list the directories your mocks need
@@ -26,7 +26,7 @@ list(APPEND mock_define_list
 # list the files you would like to test here
 list(APPEND real_source_files
             ${MQTT_SOURCES}
-            ${LIGHTWEIGHT_MQTT_SOURCES}
+            ${MQTT_SERIALIZER_SOURCES}
         )
 # list the directories the module under test includes
 list(APPEND real_include_directories
@@ -97,9 +97,9 @@ create_test(${utest_name}
             "${test_include_directories}"
         )
 
-# mqtt_lightweight_utest
-set(utest_name "${project_name}_lightweight_utest")
-set(utest_source "${project_name}_lightweight_utest.c")
+# mqtt_serializer_utest
+set(utest_name "${project_name}_serializer_utest")
+set(utest_source "${project_name}_serializer_utest.c")
 
 set(utest_link_list "")
 list(APPEND utest_link_list

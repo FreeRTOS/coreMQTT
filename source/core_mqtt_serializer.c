@@ -20,13 +20,13 @@
  */
 
 /**
- * @file core_mqtt_lightweight.c
- * @brief Implements the user-facing functions in mqtt_lightweight.h.
+ * @file core_mqtt_serializer.c
+ * @brief Implements the user-facing functions in mqtt_serializer.h.
  */
 #include <string.h>
 #include <assert.h>
 
-#include "core_mqtt_lightweight.h"
+#include "core_mqtt_serializer.h"
 
 /**
  * @brief MQTT protocol version 3.1.1.

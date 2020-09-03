@@ -64,6 +64,6 @@ include( unit_test_build.cmake )
 # Add a target for running coverage on tests.
 add_custom_target( coverage
     COMMAND ${CMAKE_COMMAND} -P ${MODULE_ROOT_DIR}/tools/cmock/coverage.cmake
-    DEPENDS cmock unity core_mqtt_utest core_mqtt_lightweight_utest core_mqtt_state_utest
+    DEPENDS cmock unity core_mqtt_utest core_mqtt_serializer_utest core_mqtt_state_utest
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
 )
