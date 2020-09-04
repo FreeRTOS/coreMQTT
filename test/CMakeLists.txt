@@ -45,10 +45,10 @@ target_compile_definitions( core_mqtt PUBLIC MQTT_DO_NOT_USE_CUSTOM_CONFIG=1 )
 target_include_directories( core_mqtt PUBLIC ${MQTT_INCLUDE_PUBLIC_DIRS} )
 
 # MQTT private include path.
-target_include_directories( core_mqtt PRIVATE ${MQTT_INCLUDE_PRIVATE_DIRS} 
+target_include_directories( core_mqtt PRIVATE ${MQTT_INCLUDE_PRIVATE_DIRS}
                                          ${MODULE_ROOT_DIR}/test/unit-test )
 
-#  ====================================  Test and coverage configurations ========================================                                          
+#  ====================================  Test and coverage configurations ========================================
 
 # Define a CMock resource path.
 set( CMOCK_DIR ${MODULE_ROOT_DIR}/test/unit-test/CMock CACHE INTERNAL "CMock library source directory." )
