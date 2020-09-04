@@ -15,8 +15,8 @@ By default, a `core_mqtt_config.h` custom config is required to build the librar
 and build the library with default configuration values, provide `MQTT_DO_NOT_USE_CUSTOM_CONFIG` as a compile time preprocessor macro.
 
 **Thus, the MQTT library can be built by either**:
-* Defining a `core_mqtt_config.h` file in the application, and adding it to the include directories list of the library
- OR 
+* Defining a `core_mqtt_config.h` file in the application, and adding it to the include directories list of the library  
+**OR**
 * Defining the `MQTT_DO_NOT_USE_CUSTOM_CONFIG` preprocessor macro for the library build.
 
 ### Platform Prerequisites
