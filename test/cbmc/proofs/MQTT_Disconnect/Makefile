@@ -31,8 +31,8 @@ INCLUDES +=
 REMOVE_FUNCTION_BODY +=
 # Unlike recvExact, sendPacket is not bounded by the timeout. The loop in
 # sendPacket will continue until all the bytes are sent or a network error
-# occurs. Please see NetworkInterfaceReceiveStub in 
-# libraries\standard\mqtt\cbmc\stubs\network_interface_stubs.c for more 
+# occurs. Please see NetworkInterfaceReceiveStub in
+# libraries\standard\mqtt\cbmc\stubs\network_interface_stubs.c for more
 # information.
 UNWINDSET += __CPROVER_file_local_core_mqtt_c_sendPacket.0:$(MAX_NETWORK_SEND_TRIES)
 
@@ -42,7 +42,7 @@ PROOF_SOURCES += $(SRCDIR)/test/cbmc/stubs/network_interface_stubs.c
 PROOF_SOURCES += $(SRCDIR)/test/cbmc/stubs/get_time_stub.c
 PROOF_SOURCES += $(SRCDIR)/test/cbmc/stubs/event_callback_stub.c
 PROJECT_SOURCES += $(SRCDIR)/source/core_mqtt.c
-PROJECT_SOURCES += $(SRCDIR)/source/core_mqtt_lightweight.c
+PROJECT_SOURCES += $(SRCDIR)/source/core_mqtt_serializer.c
 PROJECT_SOURCES += $(SRCDIR)/source/core_mqtt_state.c
 
 include ../Makefile.common

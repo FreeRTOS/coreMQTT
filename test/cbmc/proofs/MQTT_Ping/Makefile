@@ -40,6 +40,6 @@ PROOF_SOURCES += $(SRCDIR)/test/cbmc/sources/mqtt_cbmc_state.c
 PROOF_SOURCES += $(SRCDIR)/test/cbmc/stubs/network_interface_stubs.c
 PROOF_SOURCES += $(SRCDIR)/test/cbmc/stubs/get_time_stub.c
 PROJECT_SOURCES += $(SRCDIR)/source/core_mqtt.c
-PROJECT_SOURCES += $(SRCDIR)/source/core_mqtt_lightweight.c
+PROJECT_SOURCES += $(SRCDIR)/source/core_mqtt_serializer.c
 
 include ../Makefile.common

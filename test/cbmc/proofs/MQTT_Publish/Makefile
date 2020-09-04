@@ -35,8 +35,8 @@ REMOVE_FUNCTION_BODY +=
 REMOVE_FUNCTION_BODY +=
 # Unlike recvExact, sendPacket is not bounded by the timeout. The loop in
 # sendPacket will continue until all the bytes are sent or a network error
-# occurs. Please see NetworkInterfaceReceiveStub in 
-# libraries\standard\mqtt\cbmc\stubs\network_interface_stubs.c for more 
+# occurs. Please see NetworkInterfaceReceiveStub in
+# libraries\standard\mqtt\cbmc\stubs\network_interface_stubs.c for more
 # information.
 UNWINDSET += __CPROVER_file_local_core_mqtt_c_sendPacket.0:$(MAX_NETWORK_SEND_TRIES)
 # These loops will run for the maximum number of publishes pending acknowledgement.
@@ -46,7 +46,7 @@ UNWINDSET += __CPROVER_file_local_core_mqtt_state_c_findInRecord.0:$(MQTT_STATE_
 # The encodeRemainingLength loop is unwound 5 times because encodeRemainingLength()
 # divides a size_t variable by 128 until it reaches zero to stop the loop.
 # log128(SIZE_MAX) = 4.571...
-UNWINDSET += __CPROVER_file_local_core_mqtt_lightweight_c_encodeRemainingLength.0:5
+UNWINDSET += __CPROVER_file_local_core_mqtt_serializer_c_encodeRemainingLength.0:5
 
 PROOF_SOURCES += $(PROOFDIR)/$(HARNESS_FILE).c
 PROOF_SOURCES += $(SRCDIR)/test/cbmc/sources/mqtt_cbmc_state.c
@@ -54,7 +54,7 @@ PROOF_SOURCES += $(SRCDIR)/test/cbmc/stubs/network_interface_stubs.c
 PROOF_SOURCES += $(SRCDIR)/test/cbmc/stubs/get_time_stub.c
 PROOF_SOURCES += $(SRCDIR)/test/cbmc/stubs/event_callback_stub.c
 PROJECT_SOURCES += $(SRCDIR)/source/core_mqtt.c
-PROJECT_SOURCES += $(SRCDIR)/source/core_mqtt_lightweight.c
+PROJECT_SOURCES += $(SRCDIR)/source/core_mqtt_serializer.c
 PROJECT_SOURCES += $(SRCDIR)/source/core_mqtt_state.c
 
 include ../Makefile.common

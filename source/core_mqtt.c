@@ -1793,7 +1793,7 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
         /* Initialize keep-alive fields after a successful connection. */
         pContext->keepAliveIntervalSec = pConnectInfo->keepAliveSeconds;
         pContext->waitingForPingResp = false;
-        pContext->pingReqSendTimeMs = 0UL;
+        pContext->pingReqSendTimeMs = 0U;
     }
     else
     {

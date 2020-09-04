@@ -22,8 +22,8 @@
 HARNESS_ENTRY=harness
 HARNESS_FILE=MQTT_SerializeSubscribe_harness
 
-# Bound on the the subscription count. Please see the default value in 
-# mqtt_cbmc_state.c for more information on this bound. This is set to 2 
+# Bound on the the subscription count. Please see the default value in
+# mqtt_cbmc_state.c for more information on this bound. This is set to 2
 # currently to have the proof run quickly.
 SUBSCRIPTION_COUNT_MAX=2
 DEFINES += -DSUBSCRIPTION_COUNT_MAX=$(SUBSCRIPTION_COUNT_MAX)
@@ -32,15 +32,15 @@ INCLUDES +=
 REMOVE_FUNCTION_BODY +=
 UNWINDSET += allocateMqttSubscriptionList.0:$(SUBSCRIPTION_COUNT_MAX)
 UNWINDSET += isValidMqttSubscriptionList.0:$(SUBSCRIPTION_COUNT_MAX)
-UNWINDSET += __CPROVER_file_local_core_mqtt_lightweight_c_calculateSubscriptionPacketSize.0:$(SUBSCRIPTION_COUNT_MAX)
+UNWINDSET += __CPROVER_file_local_core_mqtt_serializer_c_calculateSubscriptionPacketSize.0:$(SUBSCRIPTION_COUNT_MAX)
 UNWINDSET += MQTT_SerializeSubscribe.0:$(SUBSCRIPTION_COUNT_MAX)
 # The encodeRemainingLength loop is unwound 5 times because encodeRemainingLength()
 # divides a size_t variable by 128 until it reaches zero to stop the loop.
 # log128(SIZE_MAX) = 4.571...
-UNWINDSET += __CPROVER_file_local_core_mqtt_lightweight_c_encodeRemainingLength.0:5
+UNWINDSET += __CPROVER_file_local_core_mqtt_serializer_c_encodeRemainingLength.0:5
 
 PROOF_SOURCES += $(PROOFDIR)/$(HARNESS_FILE).c
 PROOF_SOURCES += $(SRCDIR)/test/cbmc/sources/mqtt_cbmc_state.c
-PROJECT_SOURCES += $(SRCDIR)/source/core_mqtt_lightweight.c
+PROJECT_SOURCES += $(SRCDIR)/source/core_mqtt_serializer.c
 
 include ../Makefile.common

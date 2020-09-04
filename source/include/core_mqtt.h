@@ -38,8 +38,8 @@
  * defined in core_mqtt_config.h file. */
 #include "core_mqtt_config_defaults.h"
 
-/* Include lightweight MQTT library. */
-#include "core_mqtt_lightweight.h"
+/* Include MQTT serializer library. */
+#include "core_mqtt_serializer.h"
 
 /* Include transport interface. */
 #include "transport_interface.h"
