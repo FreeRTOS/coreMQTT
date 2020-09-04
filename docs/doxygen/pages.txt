@@ -8,7 +8,7 @@
 This MQTT library implements the client side of the MQTT 3.1.1 protocol. This library is optimized for resource constrained embedded devices. Features of this library include:
 - Fully synchronous API, to allow applications to completely manage their concurrency and multi-threading method.
 - Operations on fixed buffers, so that applications may control their memory allocation strategy.
-- Scalable performance and footprint. The [configuration settings](@ref mqtt_config) allow this library to be tailored to a system's resources.
+- Scalable performance and footprint. The [configuration settings](@ref core_mqtt_config) allow this library to be tailored to a system's resources.
 
 Please see https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/development/demos/mqtt for example code demonstrating integration with TLS.
 
@@ -55,35 +55,29 @@ MQTT Library Design
 */
 
 /**
-@page mqtt_config Configurations
+@page core_mqtt_config Configurations
 @brief Configurations of the MQTT Library.
 <!-- @par configpagestyle allows the @section titles to be styled according to style.css -->
 @par configpagestyle
 
-Configuration settings are C pre-processor constants. They can be set with a \#define in the config file (mqtt_config.h) or by using a compiler option such as -D in gcc.
+Some configuration settings are C pre-processor constants and some are function-like macros for logging. They can be set with a `\#define` in the config file (**core_mqtt_config.h**) or by using a compiler option such as -D in gcc.
 
 @section MQTT_STATE_ARRAY_MAX_COUNT
-<br>
 @copydoc MQTT_STATE_ARRAY_MAX_COUNT
 
 @section MQTT_PINGRESP_TIMEOUT_MS
-<br>
 @copydoc MQTT_PINGRESP_TIMEOUT_MS
 
 @section MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT
-<br>
 @copydoc MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT
 
 @section LogError
-<br>
 @copydoc LogError
 
 @section LogWarn
-<br>
 @copydoc LogWarn
 
 @section LogInfo
-<br>
 @copydoc LogInfo
 */
 
