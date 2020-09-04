@@ -60,7 +60,7 @@ MQTT Library Design
 <!-- @par configpagestyle allows the @section titles to be styled according to style.css -->
 @par configpagestyle
 
-Some configuration settings are C pre-processor constants and some are function-like macros for logging. They can be set with a `\#define` in the config file (**core_mqtt_config.h**) or by using a compiler option such as -D in gcc.
+Some configuration settings are C pre-processor constants, and some are function-like macros for logging. They can be set with a `\#define` in the config file (**core_mqtt_config.h**) or by using a compiler option such as -D in gcc.
 
 @section MQTT_STATE_ARRAY_MAX_COUNT
 @copydoc MQTT_STATE_ARRAY_MAX_COUNT
