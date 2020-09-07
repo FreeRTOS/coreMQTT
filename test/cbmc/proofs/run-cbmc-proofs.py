@@ -20,8 +20,10 @@ import logging
 import math
 import os
 import pathlib
+import shutil
 import subprocess
 import sys
+import textwrap
 
 
 DESCRIPTION = "Configure and run all CBMC proofs in parallel"
@@ -37,9 +39,9 @@ The tool is roughly equivalent to doing this:
 
         litani init --project "FreeRTOS coreMQTT";
 
-        for proof in $(find . -name cbmc-marker.txt); do
+        find . -name cbmc-batch.yaml | while read -r proof; do
             pushd $(dirname ${proof});
-            make report;
+            make _report;
             popd;
         done
 
@@ -81,6 +83,10 @@ def get_args():
             "metavar": "NAME",
             "default": "FreeRTOS coreMQTT",
             "help": "Project name for report. Default: %(default)s",
+    }, {
+            "flags": ["--use-native-solver"],
+            "action": "store_true",
+            "help": "Use CBMC's native SAT solver (proofs will run for longer)",
     }, {
             "flags": ["--verbose"],
             "action": "store_true",
@@ -136,7 +142,7 @@ def get_proof_dirs(proof_root, proof_list):
         sys.exit(1)
 
 
-def run_build(litani, jobs, proofs):
+def run_build(litani, jobs):
     cmd = [str(litani), "run-build"]
     if jobs:
         cmd.extend(["-j", str(jobs)])
@@ -163,19 +169,46 @@ def get_litani_path(proof_root):
     return proc.stdout.strip()
 
 
-async def configure_proof_dirs(queue, counter):
+async def configure_proof_dirs(queue, counter, kissat_path):
     while True:
         print_counter(counter)
         path = str(await queue.get())
 
+        # The starter kit Makefile uses this environment variable to figure out
+        # which external SAT solver CBMC should call out to.
+        env = dict(os.environ)
+        if kissat_path is not None:
+            env.update({
+                "EXTERNAL_SAT_SOLVER": kissat_path,
+            })
+
         proc = await asyncio.create_subprocess_exec(
-            "nice", "-n", "15", "make", "-B", "--quiet", "_report", cwd=path)
+            "nice", "-n", "15", "make", "-B", "--quiet", "_report", cwd=path,
+            env=env)
         await proc.wait()
         counter["fail" if proc.returncode else "pass"].append(path)
         counter["complete"] += 1
 
         print_counter(counter)
         queue.task_done()
+
+
+def get_kissat_path(use_native_solver):
+    if use_native_solver:
+        return None
+    kissat_path = shutil.which("kissat")
+    if kissat_path is None:
+        logging.error(textwrap.dedent("""\
+            Could not find 'kissat' executable. Either install kissat or
+            pass the '--use-native-solver' flag (not recommended).
+
+            By default, MQTT uses the 'kissat' SAT solver to run the CBMC
+            proofs, as this is much faster than CBMC's default solver. You will
+            need to build kissat and put it in your $PATH.  You can get kissat
+            from https://github.com/arminbiere/kissat
+            """))
+        sys.exit(1)
+    return kissat_path
 
 
 async def main():
@@ -210,9 +243,12 @@ async def main():
         "width": int(math.log10(len(proof_dirs))) + 1
     }
 
+    kissat_path = get_kissat_path(args.use_native_solver)
+
     tasks = []
     for _ in range(task_pool_size()):
-        task = asyncio.create_task(configure_proof_dirs(proof_queue, counter))
+        task = asyncio.create_task(configure_proof_dirs(
+            proof_queue, counter, kissat_path))
         tasks.append(task)
 
     await proof_queue.join()
@@ -226,7 +262,7 @@ async def main():
                 [str(f) for f in counter["fail"]]))
 
     if not args.no_standalone:
-        run_build(litani, args.parallel_jobs, args.proofs)
+        run_build(litani, args.parallel_jobs)
 
 
 if __name__ == "__main__":
