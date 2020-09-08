@@ -4,6 +4,7 @@ acks
 addrecord
 addtogroup
 api
+apis
 app
 aws
 bool
@@ -67,6 +68,7 @@ gettimestampms
 getunsubscribepacketsize
 github
 headersize
+http
 https
 ifndef
 inc
@@ -139,6 +141,10 @@ mqttsubackstatus
 mqttsubacksuccessqos
 mqttsubscribeinfo
 mqttsuccess
+mynetworkrecvimplementation
+mynetworksendimplementation
+mytcpsocketcontext
+mytlscontext
 networkbuffer
 networkcontext
 networkrecv
@@ -175,6 +181,7 @@ pingreqsendtimems
 pingresp
 pingresps
 pismatch
+plaintext
 pmatch
 pmqttcontext
 pnameindex
@@ -276,12 +283,19 @@ subscriptionlist
 subscriptiontype
 sys
 tcp
+tcpsocketcontext
 timeoutms
+tls
+tlscontext
+tlsrecv
+tlssend
 topicfilterlength
 topicnamelength
+transportcallback
 transportinterface
 transportrecv
 transportsend
+transportstruct
 uint
 un
 unsuback
