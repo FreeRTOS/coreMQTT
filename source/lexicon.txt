@@ -4,7 +4,9 @@ acks
 addrecord
 addtogroup
 api
+apis
 app
+aws
 bool
 br
 bytesreceived
@@ -64,7 +66,10 @@ gettime
 gettimefunction
 gettimestampms
 getunsubscribepacketsize
+github
 headersize
+http
+https
 ifndef
 inc
 incomingpacket
@@ -74,6 +79,7 @@ initializeconnectinfo
 initializesubscribeinfo
 initializewillinfo
 int
+iot
 isn
 iso
 keepaliveintervalsec
@@ -135,6 +141,10 @@ mqttsubackstatus
 mqttsubacksuccessqos
 mqttsubscribeinfo
 mqttsuccess
+mynetworkrecvimplementation
+mynetworksendimplementation
+mytcpsocketcontext
+mytlscontext
 networkbuffer
 networkcontext
 networkrecv
@@ -171,6 +181,7 @@ pingreqsendtimems
 pingresp
 pingresps
 pismatch
+plaintext
 pmatch
 pmqttcontext
 pnameindex
@@ -178,6 +189,7 @@ pnetworkbuffer
 pnetworkcontext
 pnetworkinterface
 pnewstate
+posix
 ppacketid
 ppacketidentifier
 ppacketinfo
@@ -238,6 +250,7 @@ remainingtimems
 resending
 reservestate
 responsecode
+sdk
 searchstates
 serializeack
 serializeconnect
@@ -270,12 +283,19 @@ subscriptionlist
 subscriptiontype
 sys
 tcp
+tcpsocketcontext
 timeoutms
+tls
+tlscontext
+tlsrecv
+tlssend
 topicfilterlength
 topicnamelength
+transportcallback
 transportinterface
 transportrecv
 transportsend
+transportstruct
 uint
 un
 unsuback
