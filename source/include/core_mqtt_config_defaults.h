@@ -24,9 +24,11 @@
  * @brief This represents the default values for the configuration macros
  * for the MQTT library.
  *
- * @note This file SHOULD NOT be modified. This file can be used as a reference
- * to all configuration macros of the MQTT library for creating an core_mqtt_config.h
- * file. The MQTT library requires an core_mqtt_config.h file to build.
+ * @note This file SHOULD NOT be modified. If custom values are needed for
+ * any configuration macro, a core_mqtt_config.h file should be provided to
+ * the MQTT library to override the default values defined in this file.
+ * To use the custom config file, the MQTT_DO_NOT_USE_CUSTOM_CONFIG preprocessor
+ * macro SHOULD NOT be set.
  */
 
 #ifndef CORE_MQTT_CONFIG_DEFAULTS_H_

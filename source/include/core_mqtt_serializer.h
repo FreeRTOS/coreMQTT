@@ -47,11 +47,16 @@
 #endif
 /** @endcond */
 
-/* Include main config file before other headers. */
-#include "core_mqtt_config.h"
+/* MQTT_DO_NOT_USE_CUSTOM_CONFIG allows building the MQTT library
+ * without a custom config. If a custom config is provided, the
+ * MQTT_DO_NOT_USE_CUSTOM_CONFIG macro should not be defined. */
+#ifndef MQTT_DO_NOT_USE_CUSTOM_CONFIG
+    /* Include custom config file before other headers. */
+    #include "core_mqtt_config.h"
+#endif
 
-/* Include config defaults file after main config file to get
- * default values of configs not defined in main config file. */
+/* Include config defaults header to get default values of configs not
+ * defined in core_mqtt_config.h file. */
 #include "core_mqtt_config_defaults.h"
 
 #include "transport_interface.h"
