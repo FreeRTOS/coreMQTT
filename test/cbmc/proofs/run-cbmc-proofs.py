@@ -84,9 +84,14 @@ def get_args():
             "default": "FreeRTOS coreMQTT",
             "help": "Project name for report. Default: %(default)s",
     }, {
+
+    # PROJECT SPECIFIC
+    # This flag exists because we wish to use an external SAT solver for this
+    # project by default, both locally and in CI. This flag is provided to make
+    # it easy to invoke the native solver if needed.
             "flags": ["--use-native-solver"],
             "action": "store_true",
-            "help": "Use CBMC's native SAT solver (proofs will run for longer)",
+            "help": "Use CBMC's native SAT solver instead of kissat (proofs will run for longer)",
     }, {
             "flags": ["--verbose"],
             "action": "store_true",
@@ -174,6 +179,7 @@ async def configure_proof_dirs(queue, counter, kissat_path):
         print_counter(counter)
         path = str(await queue.get())
 
+        # PROJECT SPECIFIC
         # The starter kit Makefile uses this environment variable to figure out
         # which external SAT solver CBMC should call out to.
         env = dict(os.environ)
@@ -193,6 +199,9 @@ async def configure_proof_dirs(queue, counter, kissat_path):
         queue.task_done()
 
 
+# PROJECT SPECIFIC
+# This is here because MQTT requires that CBMC use an external solver called
+# Kissat to ensure timely proof runs.
 def get_kissat_path(use_native_solver):
     if use_native_solver:
         return None
