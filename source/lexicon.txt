@@ -6,6 +6,7 @@ addtogroup
 api
 apis
 app
+aws
 bool
 br
 bytesreceived
@@ -65,8 +66,10 @@ gettime
 gettimefunction
 gettimestampms
 getunsubscribepacketsize
+github
 headersize
 http
+https
 ifndef
 inc
 incomingpacket
@@ -76,6 +79,7 @@ initializeconnectinfo
 initializesubscribeinfo
 initializewillinfo
 int
+iot
 isn
 iso
 keepaliveintervalsec
@@ -185,6 +189,7 @@ pnetworkbuffer
 pnetworkcontext
 pnetworkinterface
 pnewstate
+posix
 ppacketid
 ppacketidentifier
 ppacketinfo
@@ -245,6 +250,7 @@ remainingtimems
 resending
 reservestate
 responsecode
+sdk
 searchstates
 serializeack
 serializeconnect
