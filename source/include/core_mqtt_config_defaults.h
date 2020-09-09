@@ -170,4 +170,16 @@
     #define LogDebug( message )
 #endif
 
+/* This macro definition is for Doxygen documentation only. */
+/**
+ * @brief Define this macro to build the MQTT library without the custom config
+ * file core_mqtt_config.h.
+ * 
+ * If a custom config is provided, then MQTT_DO_NOT_USE_CUSTOM_CONFIG should not
+ * be defined.
+ */
+#ifdef DOXYGEN
+    #define MQTT_DO_NOT_USE_CUSTOM_CONFIG
+#endif
+
 #endif /* ifndef CORE_MQTT_CONFIG_DEFAULTS_H_ */

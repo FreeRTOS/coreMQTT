@@ -71,6 +71,9 @@ Some configuration settings are C pre-processor constants, and some are function
 @section MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT
 @copydoc MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT
 
+@section MQTT_DO_NOT_USE_CUSTOM_CONFIG
+@copydoc MQTT_DO_NOT_USE_CUSTOM_CONFIG
+
 @section LogError
 @copydoc LogError
 
@@ -79,6 +82,9 @@ Some configuration settings are C pre-processor constants, and some are function
 
 @section LogInfo
 @copydoc LogInfo
+
+@section LogDebug
+@copydoc LogDebug
 */
 
 /**
