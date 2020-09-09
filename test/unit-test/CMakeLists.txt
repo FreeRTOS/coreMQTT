@@ -1,69 +1,114 @@
-cmake_minimum_required ( VERSION 3.13.0 )
-project ( "CoreMQTT unit test"
-          VERSION 1.0.0
-          LANGUAGES C )
+# Include filepaths for source and include.
+include( ${MODULE_ROOT_DIR}/mqttFilePaths.cmake )
 
-# Allow the project to be organized into folders.
-set_property( GLOBAL PROPERTY USE_FOLDERS ON )
+# ====================  Define your project name (edit) ========================
+set(project_name "core_mqtt")
 
-# Use C90.
-set( CMAKE_C_STANDARD 90 )
-set( CMAKE_C_STANDARD_REQUIRED ON )
+# =====================  Create your mock here  (edit)  ========================
 
-# Do not allow in-source build.
-if( ${PROJECT_SOURCE_DIR} STREQUAL ${PROJECT_BINARY_DIR} )
-    message( FATAL_ERROR "In-source build is not allowed. Please build in a separate directory, such as ${PROJECT_SOURCE_DIR}/build." )
-endif()
+# list the files to mock here
+list(APPEND mock_list
+            "${MODULE_ROOT_DIR}/source/include/core_mqtt_serializer.h"
+            "${MODULE_ROOT_DIR}/source/include/core_mqtt_state.h"
+        )
+# list the directories your mocks need
+list(APPEND mock_include_list
+            .
+            ${MQTT_INCLUDE_PUBLIC_DIRS}
+        )
+#list the definitions of your mocks to control what to be included
+list(APPEND mock_define_list
+            ""
+       )
 
-# Set global path variables.
-get_filename_component(__MODULE_ROOT_DIR "${CMAKE_CURRENT_LIST_DIR}/../.." ABSOLUTE)
-set(MODULE_ROOT_DIR ${__MODULE_ROOT_DIR} CACHE INTERNAL "coreMQTT repository root.")
+# ================= Create the library under test here (edit) ==================
 
-# Configure options to always show in CMake GUI.
-option( BUILD_CLONE_SUBMODULES
-        "Set this to ON to automatically clone any required Git submodules. When OFF, submodules must be manually cloned."
-        ON )
+# list the files you would like to test here
+list(APPEND real_source_files
+            ${MQTT_SOURCES}
+            ${MQTT_SERIALIZER_SOURCES}
+        )
+# list the directories the module under test includes
+list(APPEND real_include_directories
+            .
+            ${MQTT_INCLUDE_PUBLIC_DIRS}
+            ${MQTT_INCLUDE_PRIVATE_DIRS}
+        )
 
-# Set output directories.
-set( CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin )
-set( CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib )
-set( CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib )
+# =====================  Create UnitTest Code here (edit)  =====================
 
-# Define a CMock resource path.
-set( CMOCK_DIR ${MODULE_ROOT_DIR}/test/unit-test/CMock CACHE INTERNAL "CMock library source directory." )
+# list the directories your test needs to include
+list(APPEND test_include_directories
+            .
+            ${MQTT_INCLUDE_PUBLIC_DIRS}
+            ${MQTT_INCLUDE_PRIVATE_DIRS}
+        )
 
-# Include CMock build configuration.
-include( cmock_build.cmake )
+# =============================  (end edit)  ===================================
 
-# Check if the CMock source directory exists, and if not present, clone the submodule
-# if BUILD_CLONE_SUBMODULES configuration is enabled.
-if( NOT EXISTS ${CMOCK_DIR}/src )
-    # Attempt to clone CMock.
-    if( ${BUILD_CLONE_SUBMODULES} )
-        clone_cmock()
-    else()
-        message( FATAL_ERROR "The required submodule CMock does not exist. Either clone it manually, or set BUILD_CLONE_SUBMODULES to 1 to automatically clone it during build." )
-    endif()
-endif()
+set(mock_name "${project_name}_mock")
+set(real_name "${project_name}_real")
 
-# Add unit test and coverage configuration.
+create_mock_list(${mock_name}
+                "${mock_list}"
+                "${MODULE_ROOT_DIR}/tools/cmock/project.yml"
+                "${mock_include_list}"
+                "${mock_define_list}"
+        )
 
-# Use CTest utility for managing test runs. This has to be added BEFORE
-# defining test targets with add_test()
-enable_testing()
+create_real_library(${real_name}
+                    "${real_source_files}"
+                    "${real_include_directories}"
+                    "${mock_name}"
+        )
 
-# Add build targets for CMock and Unit, required for unit testing.
-add_cmock_targets()
+list(APPEND utest_link_list
+            -l${mock_name}
+            lib${real_name}.a
+        )
 
-# Add function to enable CMock based tests and coverage.
-include( ${MODULE_ROOT_DIR}/tools/cmock/create_test.cmake )
+list(APPEND utest_dep_list
+            ${real_name}
+        )
 
-# Include build configuration for unit tests.
-include( unit_test_build.cmake )
+set(utest_name "${project_name}_utest")
+set(utest_source "${project_name}_utest.c")
+create_test(${utest_name}
+            ${utest_source}
+            "${utest_link_list}"
+            "${utest_dep_list}"
+            "${test_include_directories}"
+        )
 
-# Add a target for running coverage on tests.
-add_custom_target( coverage
-    COMMAND ${CMAKE_COMMAND} -P ${MODULE_ROOT_DIR}/tools/cmock/coverage.cmake
-    DEPENDS cmock unity core_mqtt_utest core_mqtt_serializer_utest core_mqtt_state_utest
-    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-)
+# need to redefine because the tests below don't use any mocks
+set(utest_link_list "")
+list(APPEND utest_link_list
+                lib${real_name}.a
+        )
+
+# mqtt_state_utest
+set(utest_name "${project_name}_state_utest")
+set(utest_source "${project_name}_state_utest.c")
+
+create_test(${utest_name}
+            ${utest_source}
+            "${utest_link_list}"
+            "${utest_dep_list}"
+            "${test_include_directories}"
+        )
+
+# mqtt_serializer_utest
+set(utest_name "${project_name}_serializer_utest")
+set(utest_source "${project_name}_serializer_utest.c")
+
+set(utest_link_list "")
+list(APPEND utest_link_list
+            lib${real_name}.a
+        )
+
+create_test(${utest_name}
+            ${utest_source}
+            "${utest_link_list}"
+            "${utest_dep_list}"
+            "${test_include_directories}"
+        )
