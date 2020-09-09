@@ -59,10 +59,10 @@ This MQTT client library provides a fully synchronous implementation of the MQTT
 @section mqtt_interfaces Interfaces and Callbacks
 
 The MQTT library relies on interfaces to dissociate itself from platform specific areas,
-such as the transport layer or maintaining time. Interfaces used by MQTT are simply function signatures coupled
+such as the transport layer or maintaining time. Interfaces used by MQTT are simply function callbacks
 with expectations of behavior.
 
-The MQTT library expects the following interfaces and callback functions:
+The MQTT library expects the following interfaces:
 
 <table>
     <tr>
@@ -90,8 +90,8 @@ The MQTT library expects the following interfaces and callback functions:
 @section mqtt_serializers Serializers and Deserializers
 
 The managed MQTT API in @ref core_mqtt.h uses a set of serialization and deserialization functions
-declared in @ref core_mqtt_lightweight.h These low-level functions are able to be used directly by
-a user who wishes to directly execute MQTT operations without any overhead from the managed API:
+declared in @ref core_mqtt_serializer.h. If a user wishes to avoid the overhead form the managed API,
+these low-level functions can be used directly:
 
 - @ref mqtt_getconnectpacketsize_function <br>
 - @ref mqtt_serializeconnect_function <br>
@@ -120,7 +120,7 @@ These states are stored in the arrays @ref MQTTContext_t.outgoingPublishRecords 
 the length of each of these arrays can be configured with @ref MQTT_STATE_ARRAY_MAX_COUNT.
 This library does not store any subscription information, nor any information for QoS 0 publishes.
 
-When resuming a persistent session, the client library will resend PUBRELs for all PUBRECs had been received
+When resuming a persistent session, the client library will resend PUBRELs for all PUBRECs that had been received
 for incomplete outgoing QoS 2 publishes. If the broker does not resume the session, then all state information
 in the client will be reset.
 
@@ -139,11 +139,11 @@ The exception is @ref mqtt_connect_function; since a connection cannot be consid
 the function waits until the CONNACK is received.
 
 @subsection mqtt_receivetimeout Timeouts
-@ref mqtt_connect_function, @ref mqtt_processloop_function, and @ref mqtt_receiveloop_function all accept timeout parameters for packet reception.
-For the connect function, if this value is set to 0, then instead of a time-based loop, it will attempt to call the transport receive function up
+@ref mqtt_connect_function, @ref mqtt_processloop_function, and @ref mqtt_receiveloop_function all accept timeout parameters for packet reception.<br>
+For the @ref mqtt_connect_function, if this value is set to 0, then instead of a time-based loop, it will attempt to call the transport receive function up
 to a fixed maximum number of times, which is defined by @ref MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT.
 
-For the loop functions, the timeout value represents the <i>minimum</i> duration that will be spent in the function, provided there are no network errors.
+For @ref mqtt_processloop_function and @ref mqtt_receiveloop_function, the timeout value represents the <i>minimum</i> duration that will be spent in the function, provided there are no network errors.
 Should the timeout be set to 0, then the loop will run for a single iteration. A single iteration of a loop consists of an attempt to receive a single byte from the network,
 followed by the reception of the entire packet if the receive was successful, and finally deserialization of the packet received and a call to the application callback. If the first read did not succeed,
 then instead the library checks if a ping request needs to be sent (only for the process loop).
