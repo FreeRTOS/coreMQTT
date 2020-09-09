@@ -31,17 +31,17 @@ void setUp( void )
 {
 }
 
-/* Called before each testcase. */
+/* called before each testcase */
 void tearDown( void )
 {
 }
 
-/* Called at the beginning of the whole suite. */
+/* called at the beginning of the whole suite */
 void suiteSetUp()
 {
 }
 
-/* Called at the end of the whole suite. */
+/* called at the end of the whole suite */
 int suiteTearDown( int numFailures )
 {
     return numFailures;
@@ -164,7 +164,7 @@ void test_MQTT_ReserveState_compactRecords( void )
     const uint16_t PACKET_ID = 1;
     const uint16_t PACKET_ID2 = 2;
 
-    /* Consider the state of the array with 2 states. 1 indicates a non empty bussinesses.
+    /* Consider the state of the array with 2 states. 1 indicates a non empty
      * spot and 0 an empty spot. Size of the array is 10.
      * Pre condition - 0 0 0 0 0 0 0 0 0 1.
      * Add an element will try to compact the array and the resulting state
