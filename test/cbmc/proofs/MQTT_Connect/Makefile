@@ -31,7 +31,7 @@ MAX_NETWORK_SEND_TRIES=3
 # time out of 3 we can get coverage of the entire function. Another iteration
 # performed will unnecessarily duplicate the proof.
 MQTT_RECEIVE_TIMEOUT=3
-# Please see test/cbmc/include/mqtt_config.h for more
+# Please see test/cbmc/include/core_mqtt_config.h for more
 # information on these defines.
 MQTT_STATE_ARRAY_MAX_COUNT=11
 MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT=3
@@ -67,7 +67,7 @@ UNWINDSET += __CPROVER_file_local_core_mqtt_serializer_c_encodeRemainingLength.0
 UNWINDSET += __CPROVER_file_local_core_mqtt_serializer_c_getRemainingLength.0:5
 # This loop will run for the maximum number of publishes pending
 # acknowledgements plus one. This value is set in
-# test/cbmc/include/mqtt_config.h.
+# test/cbmc/include/core_mqtt_config.h.
 UNWINDSET += __CPROVER_file_local_core_mqtt_state_c_stateSelect.0:$(MQTT_STATE_ARRAY_MAX_COUNT)
 
 PROOF_SOURCES += $(PROOFDIR)/$(HARNESS_FILE).c

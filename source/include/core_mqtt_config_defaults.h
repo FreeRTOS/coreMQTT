@@ -98,9 +98,10 @@
  * application-specific logging implementation that supports error logging.
  *
  * @note This logging macro is called in the MQTT library with parameters wrapped in
- * double parentheses to be ISO C89/C90 standard compliant. For an example
- * implementation of the logging macros, refer to mqtt_config.h files in the MQTT
- * demo folder and the reference implementation of the logging-stack in demos.
+ * double parentheses to be ISO C89/C90 standard compliant. For a reference
+ * POSIX implementation of the logging macros, refer to core_mqtt_config.h files, and the
+ * logging-stack in demos folder of the
+ * [AWS IoT Embedded C SDK repository](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/master).
  *
  * <b>Default value</b>: Error logging is turned off, and no code is generated for calls
  * to the macro in the MQTT library on compilation.
@@ -117,9 +118,10 @@
  * application-specific logging implementation that supports warning logging.
  *
  * @note This logging macro is called in the MQTT library with parameters wrapped in
- * double parentheses to be ISO C89/C90 standard compliant. For an example
- * implementation of the logging macros, refer to mqtt_config.h files in the MQTT
- * demo folder and the reference implementation of the logging-stack in demos.
+ * double parentheses to be ISO C89/C90 standard compliant. For a reference
+ * POSIX implementation of the logging macros, refer to core_mqtt_config.h files, and the
+ * logging-stack in demos folder of the
+ * [AWS IoT Embedded C SDK repository](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/master).
  *
  * <b>Default value</b>: Warning logs are turned off, and no code is generated for calls
  * to the macro in the MQTT library on compilation.
@@ -136,9 +138,10 @@
  * application-specific logging implementation that supports info logging.
  *
  * @note This logging macro is called in the MQTT library with parameters wrapped in
- * double parentheses to be ISO C89/C90 standard compliant. For an example
- * implementation of the logging macros, refer to mqtt_config.h files in the MQTT
- * demo folder and the reference implementation of the logging-stack in demos.
+ * double parentheses to be ISO C89/C90 standard compliant. For a reference
+ * POSIX implementation of the logging macros, refer to core_mqtt_config.h files, and the
+ * logging-stack in demos folder of the
+ * [AWS IoT Embedded C SDK repository](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/master).
  *
  * <b>Default value</b>: Info logging is turned off, and no code is generated for calls
  * to the macro in the MQTT library on compilation.
@@ -155,9 +158,10 @@
  * application-specific logging implementation that supports debug logging.
  *
  * @note This logging macro is called in the MQTT library with parameters wrapped in
- * double parentheses to be ISO C89/C90 standard compliant. For an example
- * implementation of the logging macros, refer to mqtt_config.h files in the MQTT
- * demo folder and the reference implementation of the logging-stack in demos.
+ * double parentheses to be ISO C89/C90 standard compliant. For a reference
+ * POSIX implementation of the logging macros, refer to core_mqtt_config.h files, and the
+ * logging-stack in demos folder of the
+ * [AWS IoT Embedded C SDK repository](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/master).
  *
  * <b>Default value</b>: Debug logging is turned off, and no code is generated for calls
  * to the macro in the MQTT library on compilation.
