@@ -28,7 +28,7 @@
 #include "core_mqtt.h"
 #include "mqtt_cbmc_state.h"
 
-void MQTT_MatchTopic_harness()
+void harness()
 {
     const char * pTopicName;
     uint16_t nameLength;

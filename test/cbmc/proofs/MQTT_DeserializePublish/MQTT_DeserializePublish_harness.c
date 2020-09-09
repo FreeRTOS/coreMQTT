@@ -28,7 +28,7 @@
 #include "core_mqtt.h"
 #include "mqtt_cbmc_state.h"
 
-void MQTT_DeserializePublish_harness()
+void harness()
 {
     MQTTPacketInfo_t * pIncomingPacket;
     MQTTPublishInfo_t * pPublishInfo;

@@ -27,7 +27,7 @@
 #include "core_mqtt.h"
 #include "mqtt_cbmc_state.h"
 
-void MQTT_Disconnect_harness()
+void harness()
 {
     MQTTContext_t * pContext;
 

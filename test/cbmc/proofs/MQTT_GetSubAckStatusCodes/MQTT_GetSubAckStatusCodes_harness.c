@@ -28,7 +28,7 @@
 #include "core_mqtt.h"
 #include "mqtt_cbmc_state.h"
 
-void MQTT_GetSubAckStatusCodes_harness()
+void harness()
 {
     MQTTPacketInfo_t * pSubackPacket;
     uint8_t ** pPayloadStart;
