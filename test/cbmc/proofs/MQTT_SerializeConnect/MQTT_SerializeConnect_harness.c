@@ -27,7 +27,7 @@
 #include "core_mqtt.h"
 #include "mqtt_cbmc_state.h"
 
-void MQTT_SerializeConnect_harness()
+void harness()
 {
     MQTTConnectInfo_t * pConnectInfo;
     MQTTPublishInfo_t * pWillInfo;
