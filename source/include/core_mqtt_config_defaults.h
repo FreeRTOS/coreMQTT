@@ -34,7 +34,7 @@
 #ifndef CORE_MQTT_CONFIG_DEFAULTS_H_
 #define CORE_MQTT_CONFIG_DEFAULTS_H_
 
-/* The macro definition for MQTT_DO_NOT_USE_CUSTOM_CONFIG is for Doxygen 
+/* The macro definition for MQTT_DO_NOT_USE_CUSTOM_CONFIG is for Doxyge
  * documentation only. */
 
 /**
