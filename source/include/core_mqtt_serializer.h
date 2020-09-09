@@ -20,13 +20,14 @@
  */
 
 /**
- * @file core_mqtt_lightweight.h
+ * @file core_mqtt_serializer.h
  * @brief User-facing functions for serializing and deserializing MQTT 3.1.1
- * packets. This header should be included for building a lightweight MQTT
- * client bypassing the managed CSDK MQTT library API in mqtt.h.
+ * packets. This header should be included for building a lighter weight MQTT
+ * client than the managed CSDK MQTT library API in mqtt.h, by using the serializer
+ * and de-serializer functions exposed in this file's API.
  */
-#ifndef CORE_MQTT_LIGHTWEIGHT_H
-#define CORE_MQTT_LIGHTWEIGHT_H
+#ifndef CORE_MQTT_SERIALIZER_H
+#define CORE_MQTT_SERIALIZER_H
 
 #include <stddef.h>
 #include <stdint.h>
@@ -46,11 +47,16 @@
 #endif
 /** @endcond */
 
-/* Include main config file before other headers. */
-#include "core_mqtt_config.h"
+/* MQTT_DO_NOT_USE_CUSTOM_CONFIG allows building the MQTT library
+ * without a custom config. If a custom config is provided, the
+ * MQTT_DO_NOT_USE_CUSTOM_CONFIG macro should not be defined. */
+#ifndef MQTT_DO_NOT_USE_CUSTOM_CONFIG
+    /* Include custom config file before other headers. */
+    #include "core_mqtt_config.h"
+#endif
 
-/* Include config defaults file after main config file to get
- * default values of configs not defined in main config file. */
+/* Include config defaults header to get default values of configs not
+ * defined in core_mqtt_config.h file. */
 #include "core_mqtt_config_defaults.h"
 
 #include "transport_interface.h"
@@ -1178,4 +1184,4 @@ MQTTStatus_t MQTT_GetIncomingPacketTypeAndLength( TransportRecv_t readFunc,
                                                   MQTTPacketInfo_t * pIncomingPacket );
 /* @[declare_mqtt_getincomingpackettypeandlength] */
 
-#endif /* ifndef CORE_MQTT_LIGHTWEIGHT_H */
+#endif /* ifndef CORE_MQTT_SERIALIZER_H */

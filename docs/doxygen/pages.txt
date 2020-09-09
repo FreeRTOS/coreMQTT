@@ -8,7 +8,7 @@
 This MQTT library implements the client side of the MQTT 3.1.1 protocol. This library is optimized for resource constrained embedded devices. Features of this library include:
 - Fully synchronous API, to allow applications to completely manage their concurrency and multi-threading method.
 - Operations on fixed buffers, so that applications may control their memory allocation strategy.
-- Scalable performance and footprint. The [configuration settings](@ref mqtt_config) allow this library to be tailored to a system's resources.
+- Scalable performance and footprint. The [configuration settings](@ref core_mqtt_config) allow this library to be tailored to a system's resources.
 
 Please see https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/development/demos/mqtt for example code demonstrating integration with TLS.
 
@@ -37,7 +37,7 @@ The configurations for memory estimation are defined <a href="https://github.com
         <td>1.6K</td>
     </tr>
     <tr>
-        <td>core_mqtt_lightweight.c</td>
+        <td>core_mqtt_serializer.c</td>
         <td>3.5K</td>
         <td>2.9K</td>
     </tr>
@@ -55,35 +55,29 @@ MQTT Library Design
 */
 
 /**
-@page mqtt_config Configurations
+@page core_mqtt_config Configurations
 @brief Configurations of the MQTT Library.
 <!-- @par configpagestyle allows the @section titles to be styled according to style.css -->
 @par configpagestyle
 
-Configuration settings are C pre-processor constants. They can be set with a \#define in the config file (mqtt_config.h) or by using a compiler option such as -D in gcc.
+Some configuration settings are C pre-processor constants, and some are function-like macros for logging. They can be set with a `\#define` in the config file (**core_mqtt_config.h**) or by using a compiler option such as -D in gcc.
 
 @section MQTT_STATE_ARRAY_MAX_COUNT
-<br>
 @copydoc MQTT_STATE_ARRAY_MAX_COUNT
 
 @section MQTT_PINGRESP_TIMEOUT_MS
-<br>
 @copydoc MQTT_PINGRESP_TIMEOUT_MS
 
 @section MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT
-<br>
 @copydoc MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT
 
 @section LogError
-<br>
 @copydoc LogError
 
 @section LogWarn
-<br>
 @copydoc LogWarn
 
 @section LogInfo
-<br>
 @copydoc LogInfo
 */
 
@@ -104,7 +98,7 @@ Configuration settings are C pre-processor constants. They can be set with a \#d
 @subpage mqtt_status_strerror_function <br>
 @subpage mqtt_publishtoresend_function <br><br>
 
-Lightweight functions of the MQTT library:<br><br>
+Serializer functions of the MQTT library:<br><br>
 @subpage mqtt_getconnectpacketsize_function <br>
 @subpage mqtt_serializeconnect_function <br>
 @subpage mqtt_getsubscribepacketsize_function <br>
@@ -176,71 +170,71 @@ Lightweight functions of the MQTT library:<br><br>
 @copydoc MQTT_PublishToResend
 
 @page mqtt_getconnectpacketsize_function MQTT_GetConnectPacketSize
-@snippet core_mqtt_lightweight.h declare_mqtt_getconnectpacketsize
+@snippet core_mqtt_serializer.h declare_mqtt_getconnectpacketsize
 @copydoc MQTT_GetConnectPacketSize
 
 @page mqtt_serializeconnect_function MQTT_SerializeConnect
-@snippet core_mqtt_lightweight.h declare_mqtt_serializeconnect
+@snippet core_mqtt_serializer.h declare_mqtt_serializeconnect
 @copydoc MQTT_SerializeConnect
 
 @page mqtt_getsubscribepacketsize_function MQTT_GetSubscribePacketSize
-@snippet core_mqtt_lightweight.h declare_mqtt_getsubscribepacketsize
+@snippet core_mqtt_serializer.h declare_mqtt_getsubscribepacketsize
 @copydoc MQTT_GetSubscribePacketSize
 
 @page mqtt_serializesubscribe_function MQTT_SerializeSubscribe
-@snippet core_mqtt_lightweight.h declare_mqtt_serializesubscribe
+@snippet core_mqtt_serializer.h declare_mqtt_serializesubscribe
 @copydoc MQTT_SerializeSubscribe
 
 @page mqtt_getunsubscribepacketsize_function MQTT_GetUnsubscribePacketSize
-@snippet core_mqtt_lightweight.h declare_mqtt_getunsubscribepacketsize
+@snippet core_mqtt_serializer.h declare_mqtt_getunsubscribepacketsize
 @copydoc MQTT_GetUnsubscribePacketSize
 
 @page mqtt_serializeunsubscribe_function MQTT_SerializeUnsubscribe
-@snippet core_mqtt_lightweight.h declare_mqtt_serializeunsubscribe
+@snippet core_mqtt_serializer.h declare_mqtt_serializeunsubscribe
 @copydoc MQTT_SerializeUnsubscribe
 
 @page mqtt_getpublishpacketsize_function MQTT_GetPublishPacketSize
-@snippet core_mqtt_lightweight.h declare_mqtt_getpublishpacketsize
+@snippet core_mqtt_serializer.h declare_mqtt_getpublishpacketsize
 @copydoc MQTT_GetPublishPacketSize
 
 @page mqtt_serializepublish_function MQTT_SerializePublish
-@snippet core_mqtt_lightweight.h declare_mqtt_serializepublish
+@snippet core_mqtt_serializer.h declare_mqtt_serializepublish
 @copydoc MQTT_SerializePublish
 
 @page mqtt_serializepublishheader_function MQTT_SerializePublishHeader
-@snippet core_mqtt_lightweight.h declare_mqtt_serializepublishheader
+@snippet core_mqtt_serializer.h declare_mqtt_serializepublishheader
 @copydoc MQTT_SerializePublishHeader
 
 @page mqtt_serializeack_function MQTT_SerializeAck
-@snippet core_mqtt_lightweight.h declare_mqtt_serializeack
+@snippet core_mqtt_serializer.h declare_mqtt_serializeack
 @copydoc MQTT_SerializeAck
 
 @page mqtt_getdisconnectpacketsize_function MQTT_GetDisconnectPacketSize
-@snippet core_mqtt_lightweight.h declare_mqtt_getdisconnectpacketsize
+@snippet core_mqtt_serializer.h declare_mqtt_getdisconnectpacketsize
 @copydoc MQTT_GetDisconnectPacketSize
 
 @page mqtt_serializedisconnect_function MQTT_SerializeDisconnect
-@snippet core_mqtt_lightweight.h declare_mqtt_serializedisconnect
+@snippet core_mqtt_serializer.h declare_mqtt_serializedisconnect
 @copydoc MQTT_SerializeDisconnect
 
 @page mqtt_getpingreqpacketsize_function MQTT_GetPingreqPacketSize
-@snippet core_mqtt_lightweight.h declare_mqtt_getpingreqpacketsize
+@snippet core_mqtt_serializer.h declare_mqtt_getpingreqpacketsize
 @copydoc MQTT_GetPingreqPacketSize
 
 @page mqtt_serializepingreq_function MQTT_SerializePingreq
-@snippet core_mqtt_lightweight.h declare_mqtt_serializepingreq
+@snippet core_mqtt_serializer.h declare_mqtt_serializepingreq
 @copydoc MQTT_SerializePingreq
 
 @page mqtt_deserializepublish_function MQTT_DeserializePublish
-@snippet core_mqtt_lightweight.h declare_mqtt_deserializepublish
+@snippet core_mqtt_serializer.h declare_mqtt_deserializepublish
 @copydoc MQTT_DeserializePublish
 
 @page mqtt_deserializeack_function MQTT_DeserializeAck
-@snippet core_mqtt_lightweight.h declare_mqtt_deserializeack
+@snippet core_mqtt_serializer.h declare_mqtt_deserializeack
 @copydoc MQTT_DeserializeAck
 
 @page mqtt_getincomingpackettypeandlength_function MQTT_GetIncomingPacketTypeAndLength
-@snippet core_mqtt_lightweight.h declare_mqtt_getincomingpackettypeandlength
+@snippet core_mqtt_serializer.h declare_mqtt_getincomingpackettypeandlength
 @copydoc MQTT_GetIncomingPacketTypeAndLength
 */
 

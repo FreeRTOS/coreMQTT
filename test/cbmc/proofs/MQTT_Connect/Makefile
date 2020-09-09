@@ -31,7 +31,7 @@ MAX_NETWORK_SEND_TRIES=3
 # time out of 3 we can get coverage of the entire function. Another iteration
 # performed will unnecessarily duplicate the proof.
 MQTT_RECEIVE_TIMEOUT=3
-# Please see test/cbmc/include/mqtt_config.h for more
+# Please see test/cbmc/include/core_mqtt_config.h for more
 # information on these defines.
 MQTT_STATE_ARRAY_MAX_COUNT=11
 MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT=3
@@ -60,14 +60,14 @@ UNWINDSET += __CPROVER_file_local_core_mqtt_c_receiveConnack.0:$(MQTT_MAX_CONNAC
 # libraries\standard\mqtt\cbmc\stubs\network_interface_stubs.c for more
 # information.
 UNWINDSET += __CPROVER_file_local_core_mqtt_c_sendPacket.0:$(MAX_NETWORK_SEND_TRIES)
-# The loops are unwound 5 times because these functions divides a size_t 
+# The loops are unwound 5 times because these functions divides a size_t
 # variable by 128 until it reaches zero to stop the loop.
 # log128(SIZE_MAX) = 4.571...
-UNWINDSET += __CPROVER_file_local_core_mqtt_lightweight_c_encodeRemainingLength.0:5
-UNWINDSET += __CPROVER_file_local_core_mqtt_lightweight_c_getRemainingLength.0:5
+UNWINDSET += __CPROVER_file_local_core_mqtt_serializer_c_encodeRemainingLength.0:5
+UNWINDSET += __CPROVER_file_local_core_mqtt_serializer_c_getRemainingLength.0:5
 # This loop will run for the maximum number of publishes pending
 # acknowledgements plus one. This value is set in
-# test/cbmc/include/mqtt_config.h.
+# test/cbmc/include/core_mqtt_config.h.
 UNWINDSET += __CPROVER_file_local_core_mqtt_state_c_stateSelect.0:$(MQTT_STATE_ARRAY_MAX_COUNT)
 
 PROOF_SOURCES += $(PROOFDIR)/$(HARNESS_FILE).c
@@ -77,7 +77,7 @@ PROOF_SOURCES += $(SRCDIR)/test/cbmc/stubs/get_time_stub.c
 PROOF_SOURCES += $(SRCDIR)/test/cbmc/stubs/event_callback_stub.c
 PROOF_SOURCES += $(SRCDIR)/test/cbmc/stubs/memcpy.c
 PROJECT_SOURCES += $(SRCDIR)/source/core_mqtt.c
-PROJECT_SOURCES += $(SRCDIR)/source/core_mqtt_lightweight.c
+PROJECT_SOURCES += $(SRCDIR)/source/core_mqtt_serializer.c
 PROJECT_SOURCES += $(SRCDIR)/source/core_mqtt_state.c
 
 include ../Makefile.common

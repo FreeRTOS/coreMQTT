@@ -2,25 +2,40 @@
 
 This repository contains an ISO C90 compliant MQTT client library designed for embedded platforms.
 
-## Building Library and Unit Tests.
+## Building Unit Tests.
 
-### Prerequisites
+### MQTT Config File
+
+The MQTT client library exposes build configuration macros that are required for building the library.
+A list of all the configurations and their default values are defined in [core_mqtt_config_defaults.h](https://github.com/FreeRTOS/coreMQTT/blob/master/source/include/core_mqtt_config_defaults.h). 
+To provide custom values for the configuration macros, a custom config file named `core_mqtt_config.h` can be
+provided by the application to the library.
+
+By default, a `core_mqtt_config.h` custom config is required to build the library. To disable this requirement
+and build the library with default configuration values, provide `MQTT_DO_NOT_USE_CUSTOM_CONFIG` as a compile time preprocessor macro.
+
+**Thus, the MQTT library can be built by either**:
+* Defining a `core_mqtt_config.h` file in the application, and adding it to the include directories list of the library  
+**OR**
+* Defining the `MQTT_DO_NOT_USE_CUSTOM_CONFIG` preprocessor macro for the library build.
+
+### Platform Prerequisites
 
 - For building the library, CMake 3.13.0 or later and a C90 compiler.
 - For running unit tests, Ruby 2.0.0 or later is additionally required for the CMock test framework (that we use).
 - For running the coverage target, gcov is additionally required.
 
-### Build Steps
+### Steps to build Unit Tests
 
 1. Go to the root directory of this repository.
 
 1. Create build directory: `mkdir build && cd build`
 
-1. Run *cmake* while inside build directory: `cmake .. `
+1. Run *cmake* while inside build directory: `cmake -S ../test/unit-test `
 
 1. Run this command to build the library and unit tests: `make all`
 
-1. The generated library will be present in `build/lib`, and the test executables will be present in `build/bin/tests`.
+1. The generated test executables will be present in `build/bin/tests` folder.
 
 1. Run `ctest` to execute all tests and view the test run summary.
 

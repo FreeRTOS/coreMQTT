@@ -38,7 +38,7 @@ PROJECT_NAME           = "MQTT"
 # could be handy for archiving the generated documentation or if some version
 # control system is used.
 
-PROJECT_NUMBER         = "LTS rc1"
+PROJECT_NUMBER         = "v1.0.0"
 
 # Using the PROJECT_BRIEF tag one can provide an optional one line description
 # for a project that appears at the top of each page and should give viewer a
@@ -846,6 +846,7 @@ WARN_LOGFILE           =
 
 INPUT                  = ./docs/doxygen \
                          ./source/include \
+                         ./source/portable \
                          ./source \
 
 # This tag can be used to specify the character encoding of the source files
@@ -2232,7 +2233,7 @@ TAGFILES               =
 # tag file that is based on the input files it reads. See section "Linking to
 # external documentation" for more information about the usage of tag files.
 
-GENERATE_TAGFILE       =
+GENERATE_TAGFILE       = docs/doxygen/output/mqtt.tag
 
 # If the ALLEXTERNALS tag is set to YES, all external class will be listed in
 # the class index. If set to NO, only the inherited external classes will be
@@ -2564,3 +2565,8 @@ GENERATE_LEGEND        = YES
 # This tag requires that the tag HAVE_DOT is set to YES.
 
 DOT_CLEANUP            = YES
+
+# Aliases
+
+ALIASES += transportcallback="@ingroup mqtt_callback_types"
+ALIASES += transportstruct="@ingroup mqtt_struct_types"
