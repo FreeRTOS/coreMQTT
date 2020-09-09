@@ -39,13 +39,13 @@ add_library( coverity_analysis
              ${MQTT_SOURCES} )
 
 # Build MQTT library target without custom config dependency.
-target_compile_definitions( core_mqtt PUBLIC MQTT_DO_NOT_USE_CUSTOM_CONFIG=1 )
+target_compile_definitions( coverity_analysis PUBLIC MQTT_DO_NOT_USE_CUSTOM_CONFIG=1 )
 
 # MQTT public include path.
-target_include_directories( core_mqtt PUBLIC ${MQTT_INCLUDE_PUBLIC_DIRS} )
+target_include_directories( coverity_analysis PUBLIC ${MQTT_INCLUDE_PUBLIC_DIRS} )
 
 # MQTT private include path.
-target_include_directories( core_mqtt PRIVATE ${MQTT_INCLUDE_PRIVATE_DIRS} )
+target_include_directories( coverity_analysis PRIVATE ${MQTT_INCLUDE_PRIVATE_DIRS} )
 
 #  ====================================  Test Configuration ========================================
 
