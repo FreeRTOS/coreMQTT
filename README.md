@@ -21,21 +21,19 @@ and build the library with default configuration values, provide `MQTT_DO_NOT_US
 
 ### Platform Prerequisites
 
-- For building the library, CMake 3.13.0 or later and a C90 compiler.
+- For building the library, **CMake 3.13.0 or later** and a **C90 compiler**.
 - For running unit tests, Ruby 2.0.0 or later is additionally required for the CMock test framework (that we use).
 - For running the coverage target, gcov is additionally required.
 
-### Steps to build Unit Tests
+### Steps to build **Library** and **Unit Tests**
 
 1. Go to the root directory of this repository.
 
-1. Create build directory: `mkdir build && cd build`
+1. Run *cmake* while inside build directory: `cmake -S ../test -B build -DBUILD_CLONE_SUBMODULES=ON `
 
-1. Run *cmake* while inside build directory: `cmake -S ../test/unit-test `
+1. Run this command to build the library and unit tests: `make -C build all`
 
-1. Run this command to build the library and unit tests: `make all`
-
-1. The generated test executables will be present in `build/bin/tests` folder.
+1. The built library will be present in `build/lib` folder, and generated test executables will be present in `build/bin/tests` folder.
 
 1. Run `ctest` to execute all tests and view the test run summary.
 
