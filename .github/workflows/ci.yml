@@ -16,7 +16,7 @@ jobs:
       - name: Build
         run: |
           sudo apt-get install -y lcov
-          cmake -S test/unit-test -B build/ \
+          cmake -S test -B build/ \
           -G "Unix Makefiles" \
           -DCMAKE_BUILD_TYPE=Debug \
           -DCMAKE_C_FLAGS='--coverage -Wall -Wextra -Werror -DNDEBUG'
