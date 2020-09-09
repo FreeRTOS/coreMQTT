@@ -29,13 +29,13 @@ set( CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin )
 set( CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib )
 set( CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib )
 
-# ===================================== Library Configuration =================================================
+# ===================================== Coverity Analysis Configuration =================================================
 
 # Include filepaths for source and include.
 include( ${MODULE_ROOT_DIR}/mqttFilePaths.cmake )
 
-# MQTT library target.
-add_library( core_mqtt
+# Target for Coverity analysis that builds the library.
+add_library( coverity_analysis
              ${MQTT_SOURCES} )
 
 # Build MQTT library target without custom config dependency.
@@ -45,10 +45,9 @@ target_compile_definitions( core_mqtt PUBLIC MQTT_DO_NOT_USE_CUSTOM_CONFIG=1 )
 target_include_directories( core_mqtt PUBLIC ${MQTT_INCLUDE_PUBLIC_DIRS} )
 
 # MQTT private include path.
-target_include_directories( core_mqtt PRIVATE ${MQTT_INCLUDE_PRIVATE_DIRS}
-                                         ${MODULE_ROOT_DIR}/test/unit-test )
+target_include_directories( core_mqtt PRIVATE ${MQTT_INCLUDE_PRIVATE_DIRS} )
 
-#  ====================================  Test and coverage configurations ========================================
+#  ====================================  Test Configuration ========================================
 
 # Define a CMock resource path.
 set( CMOCK_DIR ${MODULE_ROOT_DIR}/test/unit-test/CMock CACHE INTERNAL "CMock library source directory." )
@@ -81,6 +80,8 @@ include( ${MODULE_ROOT_DIR}/tools/cmock/create_test.cmake )
 
 # Include build configuration for unit tests.
 add_subdirectory( unit-test )
+
+#  ==================================== Coverage Analysis configuration ========================================
 
 # Add a target for running coverage on tests.
 add_custom_target( coverage
