@@ -62,6 +62,9 @@ MQTT Library Design
 
 Some configuration settings are C pre-processor constants, and some are function-like macros for logging. They can be set with a `\#define` in the config file (**core_mqtt_config.h**) or by using a compiler option such as -D in gcc.
 
+@section MQTT_DO_NOT_USE_CUSTOM_CONFIG
+@copydoc MQTT_DO_NOT_USE_CUSTOM_CONFIG
+
 @section MQTT_STATE_ARRAY_MAX_COUNT
 @copydoc MQTT_STATE_ARRAY_MAX_COUNT
 
@@ -79,6 +82,9 @@ Some configuration settings are C pre-processor constants, and some are function
 
 @section LogInfo
 @copydoc LogInfo
+
+@section LogDebug
+@copydoc LogDebug
 */
 
 /**
