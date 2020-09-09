@@ -39,7 +39,7 @@
 
 /**
  * @brief Define this macro to build the MQTT library without the custom config
- * file core_mqtt_config.h. 
+ * file core_mqtt_config.h.
  *
  * Without the custom config, the MQTT library builds with
  * default values of config macros defined in core_mqtt_config_defaults.h file.
