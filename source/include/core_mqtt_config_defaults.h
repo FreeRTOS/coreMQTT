@@ -34,6 +34,23 @@
 #ifndef CORE_MQTT_CONFIG_DEFAULTS_H_
 #define CORE_MQTT_CONFIG_DEFAULTS_H_
 
+/* The macro definition for MQTT_DO_NOT_USE_CUSTOM_CONFIG is for Doxygen 
+ * documentation only. */
+
+/**
+ * @brief Define this macro to build the MQTT library without the custom config
+ * file core_mqtt_config.h. 
+ *
+ * Without the custom config, the MQTT library builds with
+ * default values of config macros defined in core_mqtt_config_defaults.h file.
+ *
+ * If a custom config is provided, then MQTT_DO_NOT_USE_CUSTOM_CONFIG should not
+ * be defined.
+ */
+#ifdef DOXYGEN
+    #define MQTT_DO_NOT_USE_CUSTOM_CONFIG
+#endif
+
 /**
  * @brief Determines the maximum number of MQTT PUBLISH messages, pending
  * acknowledgment at a time, that are supported for incoming and outgoing
@@ -168,22 +185,6 @@
  */
 #ifndef LogDebug
     #define LogDebug( message )
-#endif
-
-/* This macro definition is for Doxygen documentation only. */
-
-/**
- * @brief Define this macro to build the MQTT library without the custom config
- * file core_mqtt_config.h. 
- *
- * Without the custom config, the MQTT library builds with
- * default values of config macros defined in core_mqtt_config_defaults.h file.
- *
- * If a custom config is provided, then MQTT_DO_NOT_USE_CUSTOM_CONFIG should not
- * be defined.
- */
-#ifdef DOXYGEN
-    #define MQTT_DO_NOT_USE_CUSTOM_CONFIG
 #endif
 
 #endif /* ifndef CORE_MQTT_CONFIG_DEFAULTS_H_ */
