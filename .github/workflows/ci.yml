@@ -68,7 +68,7 @@ jobs:
         uses: actions/checkout@v2
         with:
           ref: spelling
-          repository: sarena/aws-iot-device-sdk-embedded-C
+          repository: sarenameas/aws-iot-device-sdk-embedded-C
       - run: rm -r libraries/standard/coreMQTT
       - name: Clone This Repo
         uses: actions/checkout@v2
