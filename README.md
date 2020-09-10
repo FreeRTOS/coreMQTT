@@ -47,7 +47,7 @@ For a CMake example of building the MQTT library with the `mqttFilePaths.cmake` 
 
 ## Reference examples
 
-The AWS IoT Embedded C-SDK repository contains demos of using the MQTT client library [here](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/development/demos/mqtt) on a POSIX platform. These can be used as reference examples for the library API.
+The AWS IoT Embedded C-SDK repository contains demos of using the MQTT client library [here](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/master/demos/mqtt) on a POSIX platform. These can be used as reference examples for the library API.
 
 ## Generating documentation
 
