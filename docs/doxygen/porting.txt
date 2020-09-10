@@ -29,7 +29,7 @@ In addition, the following logging macros are used throughout the library:
 @brief The MQTT library relies on an underlying transport interface API that must be implemented
 in order to send and receive packets on a network.
 
-@see [Transport Interface](@ref transport_interface)
+@see [Transport Interface](@ref mqtt_transport_interface)
 
 The transport interface API used by MQTT is defined in @ref transport_interface.h.
 A port must implement functions corresponding to the following functions pointers:
