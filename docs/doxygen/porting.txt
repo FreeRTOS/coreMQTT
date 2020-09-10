@@ -8,12 +8,11 @@ A port to a new system must provide the following components:
 3. [Time Function](@ref porting_time)
 
 @section porting_config Configuration Macros
-@brief Settings that must be set as macros in the config header `core_mqtt_config.h`, or passed in as compiler options
+@brief Settings that must be set as macros in the config header `core_mqtt_config.h`, or passed in as compiler options.
+
+@note If a custom configuration header `core_mqtt_config.h` is not provided, then the @ref MQTT_DO_NOT_USE_CUSTOM_CONFIG macro must be defined.
 
 @see [Configurations](@ref core_mqtt_config)
-
-@note Regardless of whether the following macros are defined in `core_mqtt_config.h` or passed as compiler options,
-the `core_mqtt_config.h` file must be included to build the MQTT library.
 
 The following macros can be configured for the managed MQTT library:
  - @ref MQTT_STATE_ARRAY_MAX_COUNT <br>
