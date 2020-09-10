@@ -2570,3 +2570,6 @@ DOT_CLEANUP            = YES
 
 ALIASES += transportcallback="@ingroup mqtt_callback_types"
 ALIASES += transportstruct="@ingroup mqtt_struct_types"
+ALIASES += transportpage="@page mqtt_transport_interface Transport Interface"
+ALIASES += transportsectionimplementation="@section mqtt_transport_interface_implementation Implementing the Transport Interface"
+ALIASES += transportsectionoverview="@section mqtt_transport_interface_overview Transport Interface Overview"
