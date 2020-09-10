@@ -17,9 +17,9 @@ and build the library with default configuration values, provide `MQTT_DO_NOT_US
 **OR**
 * Defining the `MQTT_DO_NOT_USE_CUSTOM_CONFIG` preprocessor macro for the library build.
 
-## Building Library
+## Building the Library
 
-The [mqttFilePaths.cmake](https://github.com/FreeRTOS/coreMQTT/blob/master/mqttFilePaths.cmake) file contains the information of all source files and the header include path required to build the NQTT library.
+The [mqttFilePaths.cmake](https://github.com/FreeRTOS/coreMQTT/blob/master/mqttFilePaths.cmake) file contains the information of all source files and the header include path required to build the MQTT library.
 
 As mentioned in the previous section, either a custom config file (i.e. `core_mqtt_config.h`) OR `MQTT_DO_NOT_USE_CUSTOM_CONFIG` macro needs to be provided to build the MQTT library.
 
