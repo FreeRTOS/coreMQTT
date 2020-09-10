@@ -30,14 +30,14 @@ For a CMake example of building the MQTT library with the `mqttFilePaths.cmake` 
 ### Platform Prerequisites
 
 - For building the library, **CMake 3.13.0 or later** and a **C90 compiler**.
-- For running unit tests, Ruby 2.0.0 or later is additionally required for the CMock test framework (that we use).
-- For running the coverage target, gcov is additionally required.
+- For running unit tests, **Ruby 2.0.0** or later is additionally required for the CMock test framework (that we use).
+- For running the coverage target, **gcov** and **lcov** are additionally required.
 
 ### Steps to build **Unit Tests**
 
 1. Go to the root directory of this repository.
 
-1. Run *cmake* while inside build directory: `cmake -S ../test -B build -DBUILD_CLONE_SUBMODULES=ON `
+1. Run the *cmake* command: `cmake -S ../test -B build -DBUILD_CLONE_SUBMODULES=ON `
 
 1. Run this command to build the library and unit tests: `make -C build all`
 
