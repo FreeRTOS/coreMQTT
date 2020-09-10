@@ -148,6 +148,11 @@ Should the timeout be set to 0, then the loop will run for a single iteration. A
 followed by the reception of the entire packet if the receive was successful, and finally deserialization of the packet received and a call to the application callback. If the first read did not succeed,
 then instead the library checks if a ping request needs to be sent (only for the process loop).
 
+See the below diagrams for a representation of the above flows:
+| MQTT Connect Diagram | MQTT ProcessLoop Diagram | MQTT ReceiveLoop Diagram |
+| :--: | :--: | :--: |
+|<img src="mqtt_connect_design.png" alt="MQTT Connect" width=100% /> |<img src="mqtt_processloop_design.png" alt="MQTT Process Loop" width=100% /> |<img src="mqtt_receiveloop_design.png" alt="MQTT Receive Loop" width=100% /> |
+
 @section mqtt_keepalive Keep-Alive
 
 The MQTT standard specifies a keep-alive mechanism to detect half-open or otherwise unusable network connections.
