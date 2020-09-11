@@ -1,8 +1,8 @@
 # MQTT Client Library
 
-This repository contains the coreMQTT Client library that has been optimized for a low memory footprint.  The coreMQTT Client library implements the complete [MQTT 3.1.1](http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/mqtt-v3.1.1.html) standard.  It has no dependencies on any additional libraries other than the standard C library and a customer-implemented network transport interface. 
+This repository contains the coreMQTT Client library that has been optimized for a low memory footprint, and it is distributed under the [MIT License](LICENSE)..  The coreMQTT Client library implements the complete [MQTT 3.1.1](http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/mqtt-v3.1.1.html) standard.  It has no dependencies on any additional libraries other than the standard C library and a customer-implemented network transport interface. 
 
-This library has gone through code quality checks including for [GNU Complexity](https://www.gnu.org/software/complexity/manual/complexity.html), [MISRA coding standard](https://freertos.org/FreeRTOS-Coding-Standard-and-Style-Guide.html#CodingStandard), [Coverity statical analysis](https://scan.coverity.com/), and [AWS CBMC automated reasoning tool](https://www.youtube.com/watch?v=YwQHAPRhQkI&feature=youtu.be&t=1721) to ensure memory safety, thread safety and functional correctness proof.  It is distributed under the [MIT License](LICENSE).
+This library has gone through code quality checks including for [GNU Complexity](https://www.gnu.org/software/complexity/manual/complexity.html), [MISRA coding standard](https://www.misra.org.uk/MISRAHome/MISRAC2012/tabid/196/Default.aspx), [Coverity statical analysis](https://scan.coverity.com/), and [AWS CBMC automated reasoning tool](https://www.youtube.com/watch?v=YwQHAPRhQkI&feature=youtu.be&t=1721) to ensure memory safety, thread safety and functional correctness proof.  Deviations to the MISRA C:2012 guidelines are documented under [MISRA Deviations](MISRA). 
 
 ## Building Unit Tests.
 
