@@ -22,7 +22,7 @@
 
 /**
  * @file mqtt_cbmc_state.c
- * @brief Allocator and validator functions for CBMC proofs.
+ * @brief Implements the functions defined in mqtt_cbmc_state.h.
  */
 #include <stdint.h>
 #include <stdlib.h>
