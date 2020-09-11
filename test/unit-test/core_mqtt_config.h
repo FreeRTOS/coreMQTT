@@ -20,6 +20,10 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+/**
+ * @file core_mqtt_config.h
+ * @brief This header sets configuration macros for the MQTT library.
+ */
 #ifndef CORE_MQTT_CONFIG_H_
 #define CORE_MQTT_CONFIG_H_
 

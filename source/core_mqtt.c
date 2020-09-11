@@ -22,7 +22,7 @@
 
 /**
  * @file core_mqtt.c
- * @brief Implements the user-facing functions in mqtt.h.
+ * @brief Implements the user-facing functions in core_mqtt.h.
  */
 #include <string.h>
 #include <assert.h>

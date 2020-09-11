@@ -22,7 +22,7 @@
 
 /**
  * @file core_mqtt_serializer.c
- * @brief Implements the user-facing functions in mqtt_serializer.h.
+ * @brief Implements the user-facing functions in core_mqtt_serializer.h.
  */
 #include <string.h>
 #include <assert.h>

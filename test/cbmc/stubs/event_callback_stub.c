@@ -19,6 +19,12 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
+/**
+ * @file event_callback_stub.c
+ * @brief A stub for the event callback.
+ */
+
 #include "core_mqtt.h"
 #include "event_callback_stub.h"
 

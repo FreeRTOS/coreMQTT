@@ -20,6 +20,10 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+/**
+ * @file core_mqtt_serializer_utest.c
+ * @brief Unit tests for functions in core_mqtt_serializer.h.
+ */
 #include <string.h>
 
 #include "unity.h"

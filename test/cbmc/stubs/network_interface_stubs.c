@@ -20,6 +20,11 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+/**
+ * @file network_interface_stubs.c
+ * @brief Stubs to mock sending and receiving over a network interface.
+ */
+
 #include "core_mqtt.h"
 #include "network_interface_stubs.h"
 

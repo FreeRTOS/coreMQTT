@@ -22,7 +22,7 @@
 
 /**
  * @file core_mqtt_state.c
- * @brief Implements the functions in mqtt_state.h.
+ * @brief Implements the functions in core_mqtt_state.h.
  */
 #include <assert.h>
 #include <string.h>

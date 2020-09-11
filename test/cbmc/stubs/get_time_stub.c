@@ -20,6 +20,11 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+/**
+ * @file get_time_stub.c
+ * @brief A stub to mock the retrieval of current time.
+ */
+
 #include "core_mqtt.h"
 #include "get_time_stub.h"
 

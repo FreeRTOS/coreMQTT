@@ -19,6 +19,11 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
+/**
+ * @file mqtt_cbmc_state.c
+ * @brief Allocator and validator functions for CBMC proofs.
+ */
 #include <stdint.h>
 #include <stdlib.h>
 #include "core_mqtt.h"
@@ -230,7 +235,7 @@ MQTTContext_t * allocateMqttContext( MQTTContext_t * pContext )
     {
         /* The possibility that recv and send callbacks are NULL is tested in the
          * MQTT_Init proof. MQTT_Init is required to be called before any other
-         * function in mqtt.h. */
+         * function in core_mqtt.h. */
         pTransportInterface->recv = NetworkInterfaceReceiveStub;
         pTransportInterface->send = NetworkInterfaceSendStub;
     }
@@ -239,7 +244,7 @@ MQTTContext_t * allocateMqttContext( MQTTContext_t * pContext )
     __CPROVER_assume( isValidMqttFixedBuffer( pNetworkBuffer ) );
 
     /* It is part of the API contract to call MQTT_Init() with the MQTTContext_t
-     * before any other function in mqtt.h. */
+     * before any other function in core_mqtt.h. */
     if( pContext != NULL )
     {
         status = MQTT_Init( pContext,

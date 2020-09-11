@@ -24,8 +24,8 @@
  * @file core_mqtt_serializer.h
  * @brief User-facing functions for serializing and deserializing MQTT 3.1.1
  * packets. This header should be included for building a lighter weight MQTT
- * client than the managed CSDK MQTT library API in mqtt.h, by using the serializer
- * and de-serializer functions exposed in this file's API.
+ * client than the managed CSDK MQTT library API in core_mqtt.h, by using the
+ * serializer and de-serializer functions exposed in this file's API.
  */
 #ifndef CORE_MQTT_SERIALIZER_H
 #define CORE_MQTT_SERIALIZER_H
