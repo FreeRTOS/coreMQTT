@@ -29,23 +29,23 @@ The configurations for memory estimation are defined <a href="https://github.com
     </tr>
     <tr>
         <td>core_mqtt.c</td>
-        <td>3.3K</td>
-        <td>2.9K</td>
+        <td>6.9K</td>
+        <td>6.3K</td>
     </tr>
     <tr>
         <td>core_mqtt_state.c</td>
-        <td>2.1K</td>
-        <td>1.6K</td>
+        <td>3.0K</td>
+        <td>2.3K</td>
     </tr>
     <tr>
         <td>core_mqtt_serializer.c</td>
-        <td>3.5K</td>
-        <td>2.9K</td>
+        <td>5.6K</td>
+        <td>5.1K</td>
     </tr>
     <tr>
         <td><b>Total estimates</b></td>
-        <td>8.9K</td>
-        <td>7.4K</td>
+        <td>15.5K</td>
+        <td>13.7K</td>
     </tr>
 </table>
  */
