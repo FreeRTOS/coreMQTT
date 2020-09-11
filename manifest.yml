@@ -1,12 +1,12 @@
-name : "coreMQTT"  
-version: "1.0.0"                              
-description: |-                                  
+name : "coreMQTT"
+version: "1.0.0"
+description: |-
   "Client implementation of the MQTT 3.1.1 specification for embedded devices . \n
   \n"
 dependencies:
- - name: "CMock"                                
-   version: "2.5.2"                             
+ - name: "CMock"
+   version: "2.5.2"
    repository:
-     type: "git"                
+     type: "git"
      url:  "https://github.com/ThrowTheSwitch/CMock"
-license: "MIT" 
+license: "MIT"
