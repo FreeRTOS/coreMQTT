@@ -1,27 +1,8 @@
 # MQTT Client Library
 
-This repository contains the coreMQTT Client library that has been optimized for a low memory footprint, and it is distributed under the [MIT License](LICENSE)..  The coreMQTT Client library implements the complete [MQTT 3.1.1](http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/mqtt-v3.1.1.html) standard.  It has no dependencies on any additional libraries other than the standard C library and a customer-implemented network transport interface. 
+This repository contains the coreMQTT Client library that has been optimized for a low memory footprint, and it is distributed under the [MIT License](LICENSE).  The coreMQTT Client library implements the complete [MQTT 3.1.1](http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/mqtt-v3.1.1.html) standard.  It has no dependencies on any additional libraries other than the standard C library and a customer-implemented network transport interface. 
 
 This library has gone through code quality checks including for [GNU Complexity](https://www.gnu.org/software/complexity/manual/complexity.html), [MISRA coding standard](https://www.misra.org.uk/MISRAHome/MISRAC2012/tabid/196/Default.aspx), [Coverity statical analysis](https://scan.coverity.com/), and [AWS CBMC automated reasoning tool](https://www.youtube.com/watch?v=YwQHAPRhQkI&feature=youtu.be&t=1721) to ensure memory safety, thread safety and functional correctness proof.  Deviations to the MISRA C:2012 guidelines are documented under [MISRA Deviations](MISRA.md). 
-
-## Metrics
-
-Users have the ability to report Operating System, Hardware Platform and MQTT Client information to AWS IoT by sending a specially formatted string in the username field of the MQTT CONNECT packet.  These metrics are enabled by default.  
-
-### Format
-
-The format of the username string with metrics is:
-```
-<Actual_Username>?SDK=<OS_Name>&Version=<OS_Version>&Platform=<Hardware_Platform>&MQTTLib=<MQTT_Library_name>@<MQTT_Library_version>
-```
-where
-
-* **Actual_Username** is the actual username used for authentication (if username and password are used for authentication).
-* **OS_Name** is the Operating System the application is running on.
-* **OS_Version** is the version number of the Operating System.
-* **Hardware_Platform** is the Hardware Platform the application is running on.
-* **MQTT_Library_name** is the MQTT Client library being used.
-* **MQTT_Library_version** is the version of the MQTT Client library being used.
 
 ## Building Unit Tests
 
