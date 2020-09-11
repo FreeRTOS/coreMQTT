@@ -124,7 +124,7 @@ When resuming a persistent session, the client library will resend PUBRELs for a
 for incomplete outgoing QoS 2 publishes. If the broker does not resume the session, then all state information
 in the client will be reset.
 
-@note The library stores only the <i>state</i> of incomplete publishes and not the publishes themselves.
+@note The library stores only the <i>state</i> of incomplete publishes and not the publish payloads. It is the responsibility of the user application to save publish payloads until the publish is complete.
 If a persistent session is resumed, then @ref mqtt_publishtoresend_function should be called to obtain the
 packet identifiers of incomplete publishes, followed by a call to @ref mqtt_publish_function to resend the
 unacknowledged publish.
@@ -139,7 +139,7 @@ The exception is @ref mqtt_connect_function; since a MQTT session cannot be cons
 the function waits until the CONNACK is received.
 
 @subsection mqtt_receivetimeout Timeouts
-@ref mqtt_connect_function, @ref mqtt_processloop_function, and @ref mqtt_receiveloop_function all accept timeout parameters for packet reception.<br>
+@ref mqtt_connect_function, @ref mqtt_processloop_function, and @ref mqtt_receiveloop_function all accept a timeout parameter for packet reception.<br>
 For the @ref mqtt_connect_function, if this value is set to 0, then instead of a time-based loop, it will attempt to call the transport receive function up
 to a fixed maximum number of times, which is defined by @ref MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT.
 
@@ -160,7 +160,7 @@ An MQTT client will send periodic ping requests (PINGREQ) to the server if the c
 
 In this library, @ref mqtt_processloop_function handles sending of PINGREQs and processing corresponding PINGRESPs to comply with the keep-alive interval set in @ref MQTTContext_t.keepAliveIntervalSec.
 
-The standard does not specify the time duration within which the server has to respond to a ping request, noting only a "reasonable amount of time". If the response to a ping request is not received withtin @ref MQTT_PINGRESP_TIMEOUT_MS, this library assumes that the connection is dead.
+The standard does not specify the time duration within which the server has to respond to a ping request, noting only a "reasonable amount of time". If the response to a ping request is not received within @ref MQTT_PINGRESP_TIMEOUT_MS, this library assumes that the connection is dead.
 
 If @ref mqtt_receiveloop_function is used instead of @ref mqtt_processloop_function, then no ping requests are sent. The application must ensure the connection does not remain idle for more than the keep-alive interval by calling @ref mqtt_ping_function to send ping requests.
 The timestamp in @ref MQTTContext_t.lastPacketTime indicates when a packet was last sent by the library.
