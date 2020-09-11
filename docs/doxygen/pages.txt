@@ -54,7 +54,7 @@ The configurations for memory estimation are defined <a href="https://github.com
 @page mqtt_design Design
 @brief Architecture of the MQTT library.
 
-This MQTT client library provides a fully synchronous implementation of the MQTT 3.1.1 standard, and uses only static memory.
+This MQTT client library provides a fully compliant implementation of the MQTT 3.1.1 spec. It is optimized for resource constrained devices and does not allocate any memory.
 
 @section mqtt_interfaces Interfaces and Callbacks
 
@@ -83,14 +83,14 @@ The MQTT library expects the following interfaces:
     </tr>
     <tr>
         <td>@ref MQTTEventCallback_t</td>
-        <td>Returning packets received from the network to the user after deserialization.</td>
+        <td>Returning packets received from the network to the user application after deserialization.</td>
     </tr>
 </table>
 
 @section mqtt_serializers Serializers and Deserializers
 
 The managed MQTT API in @ref core_mqtt.h uses a set of serialization and deserialization functions
-declared in @ref core_mqtt_serializer.h. If a user wishes to avoid the overhead form the managed API,
+declared in @ref core_mqtt_serializer.h. If a user does not want to use the functionality provided by the managed API,
 these low-level functions can be used directly:
 
 - @ref mqtt_getconnectpacketsize_function <br>
@@ -131,11 +131,11 @@ unacknowledged publish.
 
 @section mqtt_receivepackets Packet Reception
 
-MQTT Packets are received from the network with calls to @ref mqtt_processloop_function or @ref mqtt_receiveloop_function. The functions are mostly identical,
-with the exception of keep-alive; the former sends ping requests and processes ping responses to ensure the keep-alive interval does not expire, while the latter does not.
+MQTT Packets are received from the network with calls to @ref mqtt_processloop_function or @ref mqtt_receiveloop_function. These functions are mostly identical,
+with the exception of keep-alive; the former sends ping requests and processes ping responses to ensure the MQTT session does not remain idle for more than the keep-alive interval, while the latter does not.
 Since calls to @ref mqtt_publish_function, @ref mqtt_subscribe_function, and @ref mqtt_unsubscribe_function only send packets and do not
 wait for acknowledgments, a call to @ref mqtt_processloop_function or @ref mqtt_receiveloop_function must follow in order to receive any expected acknowledgment.
-The exception is @ref mqtt_connect_function; since a connection cannot be considered established until the server accepts a CONNECT packet with a CONNACK,
+The exception is @ref mqtt_connect_function; since a MQTT session cannot be considered established until the server acknowledges a CONNECT packet with a CONNACK,
 the function waits until the CONNACK is received.
 
 @subsection mqtt_receivetimeout Timeouts
@@ -158,11 +158,11 @@ See the below diagrams for a representation of the above flows:
 The MQTT standard specifies a keep-alive mechanism to detect half-open or otherwise unusable network connections.
 An MQTT client will send periodic ping requests (PINGREQ) to the server if the connection is idle. The MQTT server must respond to ping requests with a ping response (PINGRESP).
 
-In this library, @ref mqtt_processloop_function handles the sending of PINGREQs and checking of PINGRESPs to comply with the keep-alive interval set in @ref MQTTContext_t.keepAliveIntervalSec.
+In this library, @ref mqtt_processloop_function handles sending of PINGREQs and processing corresponding PINGRESPs to comply with the keep-alive interval set in @ref MQTTContext_t.keepAliveIntervalSec.
 
-The standard does not specify how long the server has to respond to a ping request, noting only a "reasonable amount of time". In this library, the amount of time a server has to respond to a ping request is set with @ref MQTT_PINGRESP_TIMEOUT_MS.
+The standard does not specify the time duration within which the server has to respond to a ping request, noting only a "reasonable amount of time". If the response to a ping request is not received withtin @ref MQTT_PINGRESP_TIMEOUT_MS, this library assumes that the connection is dead.
 
-If @ref mqtt_receiveloop_function is used instead of @ref mqtt_processloop_function, then no such keep-alive checks are performed, and the application must ensure the keep-alive interval is obeyed by calling @ref mqtt_ping_function whenever control packets have not been sent for some period of time.
+If @ref mqtt_receiveloop_function is used instead of @ref mqtt_processloop_function, then no ping requests are sent. The application must ensure the connection does not remain idle for more than the keep-alive interval by calling @ref mqtt_ping_function to send ping requests.
 The timestamp in @ref MQTTContext_t.lastPacketTime indicates when a packet was last sent by the library.
 
 Sending any ping request sets the @ref MQTTContext_t.waitingForPingResp flag. This flag is cleared by @ref mqtt_processloop_function when a ping response is received. If @ref mqtt_receiveloop_function is used instead, then this flag must be cleared manually by the application's callback.
