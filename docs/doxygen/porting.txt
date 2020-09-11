@@ -3,11 +3,11 @@
 @brief Guide for porting MQTT to a new platform.
 
 A port to a new platform must provide the following components:
-1. [Configuration Macros](@ref porting_config)
-2. [Transport Interface](@ref porting_transport)
-3. [Time Function](@ref porting_time)
+1. [Configuration Macros](@ref mqtt_porting_config)
+2. [Transport Interface](@ref mqtt_porting_transport)
+3. [Time Function](@ref mqtt_porting_time)
 
-@section porting_config Configuration Macros
+@section mqtt_porting_config Configuration Macros
 @brief Settings that must be set as macros in the config header `core_mqtt_config.h`, or passed in as compiler options.
 
 @note If a custom configuration header `core_mqtt_config.h` is not provided, then the @ref MQTT_DO_NOT_USE_CUSTOM_CONFIG macro must be defined.
@@ -25,7 +25,7 @@ In addition, the following logging macros are used throughout the library:
  - @ref LogInfo
  - @ref LogDebug
 
-@section porting_transport Transport Interface
+@section mqtt_porting_transport Transport Interface
 @brief The MQTT library relies on an underlying transport interface API that must be implemented
 in order to send and receive packets on a network.
 
@@ -56,7 +56,7 @@ struct NetworkContext {
 };
 @endcode
 
-@section porting_time Time Function
+@section mqtt_porting_time Time Function
 @brief The MQTT library relies on a function to generate millisecond timestamps, for the
 purpose of calculating durations and timeouts, as well as maintaining the keep-alive mechanism
 of the MQTT protocol.
