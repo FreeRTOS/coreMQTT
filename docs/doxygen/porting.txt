@@ -2,7 +2,7 @@
 @page mqtt_porting Porting Guide
 @brief Guide for porting MQTT to a new platform.
 
-A port to a new system must provide the following components:
+A port to a new platform must provide the following components:
 1. [Configuration Macros](@ref porting_config)
 2. [Transport Interface](@ref porting_transport)
 3. [Time Function](@ref porting_time)
@@ -33,7 +33,7 @@ in order to send and receive packets on a network.
 
 The transport interface API used by MQTT is defined in @ref transport_interface.h.
 A port must implement functions corresponding to the following functions pointers:
- - [Transport Receive](@ref TransportRecv_t): A function to receive bytes from the network.
+ - [Transport Receive](@ref TransportRecv_t): A function to receive bytes from a network.
  @code
  int32_t (* TransportRecv_t )(
      const NetworkContext_t * pNetworkContext, void * pBuffer, size_t bytesToRecv
