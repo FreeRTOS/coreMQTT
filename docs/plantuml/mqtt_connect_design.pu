@@ -1,0 +1,18 @@
+@startuml
+skinparam dpi 300
+skinparam ArrowFontSize 18
+
+start
+: Send CONNECT packet;
+: count = 0;
+
+repeat
+	: Receive single byte;
+repeat while (No network data AND \ncount < MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT) is (yes)
+-> no or timeout == 0;
+
+: Get rest of CONNACK packet;
+: Deserialize CONNACK packet;
+stop
+
+@enduml
