@@ -54,7 +54,7 @@ The configurations for memory estimation are defined <a href="https://github.com
 @page mqtt_design Design
 @brief Architecture of the MQTT library.
 
-This MQTT client library provides a fully compliant implementation of the MQTT 3.1.1 spec. It is optimized for resource constrained devices and does not allocate any memory.
+This MQTT client library provides an implementation of the [MQTT 3.1.1 specification](http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html). It is optimized for resource constrained devices and does not allocate any memory.
 
 @section mqtt_interfaces Interfaces and Callbacks
 
