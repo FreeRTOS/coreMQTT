@@ -20,7 +20,7 @@ The configurations for memory estimation are defined <a href="https://github.com
 
 <table>
     <tr>
-        <td colspan="3"><b>Code Size of MQTT LTS rc1(example generated with GCC for ARM Cortex-M)</b></td>
+        <td colspan="3"><b>Code Size of coreMQTT (example generated with GCC for ARM Cortex-M)</b></td>
     </tr>
     <tr>
         <td><b>File</b></td>
