@@ -968,6 +968,7 @@ static MQTTStatus_t deserializeConnack( const MQTTPacketInfo_t * pConnack,
         else
         {
             LogInfo( ( "CONNACK session present bit not set." ) );
+            *pSessionPresent = false;
         }
     }
 
