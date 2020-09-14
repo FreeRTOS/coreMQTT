@@ -24,23 +24,27 @@ The configurations for memory estimation are defined <a href="https://github.com
     </tr>
     <tr>
         <td><b>File</b></td>
-        <td><b>With -O1 Optimization</b></td>
-        <td><b>With -Os Optimization</b></td>
+        <td><b>No Optimisation (asserts enabled)</b></td>
+        <td><b>With -O1 Optimisation (asserts disabled)</b></td>
+        <td><b>With -Os Optimisation (asserts disabled)</b></td>
     </tr>
     <tr>
         <td>core_mqtt.c</td>
-        <td>6.7K</td>
-        <td>6.2K</td>
+        <td>13.3K</td>
+        <td>5.1K</td>
+        <td>4.6K</td>
     </tr>
     <tr>
         <td>core_mqtt_state.c</td>
-        <td>2.9K</td>
-        <td>2.3K</td>
+        <td>5.9K</td>
+        <td>2.2K</td>
+        <td>1.8K</td>
     </tr>
     <tr>
         <td>core_mqtt_serializer.c</td>
-        <td>5.5K</td>
-        <td>4.9K</td>
+        <td>12.0K</td>
+        <td>4.2K</td>
+        <td>3.7K</td>
     </tr>
     <tr>
         <td><b>Total estimates</b></td>
