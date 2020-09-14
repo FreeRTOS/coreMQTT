@@ -20,7 +20,7 @@ The configurations for memory estimation are defined <a href="https://github.com
 
 <table>
     <tr>
-        <td colspan="3"><b>Code Size of coreMQTT (example generated with GCC for ARM Cortex-M)</b></td>
+        <td colspan="4"><center><b>Code Size of coreMQTT library files (sizes generated with [GCC for ARM Cortex-M toolchain 20191025](https://developer.arm.com/tools-and-software/open-source-software/developer-tools/gnu-toolchain/gnu-rm/downloads))</b></center></td>
     </tr>
     <tr>
         <td><b>File</b></td>
