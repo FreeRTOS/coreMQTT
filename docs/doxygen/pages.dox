@@ -24,9 +24,9 @@ The configurations for memory estimation are defined <a href="https://github.com
     </tr>
     <tr>
         <td><b>File</b></td>
-        <td><b>No Optimisation (asserts enabled)</b></td>
-        <td><b>With -O1 Optimisation (asserts disabled)</b></td>
-        <td><b>With -Os Optimisation (asserts disabled)</b></td>
+        <td><b>No Optimization (asserts enabled)</b></td>
+        <td><b>With -O1 Optimization (asserts disabled)</b></td>
+        <td><b>With -Os Optimization (asserts disabled)</b></td>
     </tr>
     <tr>
         <td>core_mqtt.c</td>
