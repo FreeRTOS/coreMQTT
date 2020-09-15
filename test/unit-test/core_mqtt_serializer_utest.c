@@ -1360,7 +1360,7 @@ void test_MQTT_DeserializeAck_connack( void )
 {
     MQTTPacketInfo_t mqttPacketInfo;
     uint16_t packetIdentifier;
-    bool sessionPresent;
+    bool sessionPresent = true;
     MQTTStatus_t status = MQTTSuccess;
     uint8_t buffer[ 10 ];
 
@@ -1413,11 +1413,19 @@ void test_MQTT_DeserializeAck_connack( void )
     status = MQTT_DeserializeAck( &mqttPacketInfo, NULL, &sessionPresent );
     TEST_ASSERT_EQUAL_INT( MQTTServerRefused, status );
 
-    /* Valid packet with success code. */
-    buffer[ 0 ] = 1;
+    /* Valid packet with success code when session present bit is set. */
+    buffer[ 0 ] = MQTT_PACKET_CONNACK_SESSION_PRESENT_MASK;
     buffer[ 1 ] = 0;
+    sessionPresent = false;
     status = MQTT_DeserializeAck( &mqttPacketInfo, NULL, &sessionPresent );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
+    TEST_ASSERT_EQUAL_INT( true, sessionPresent );
+
+    /* Valid packet with success code when session present bit is not set. */
+    buffer[ 0 ] = 0;
+    status = MQTT_DeserializeAck( &mqttPacketInfo, NULL, &sessionPresent );
+    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
+    TEST_ASSERT_EQUAL_INT( false, sessionPresent );
 }
 
 /**
