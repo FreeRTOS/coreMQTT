@@ -37,6 +37,7 @@ connack
 connectinfo
 connectpacketsize
 const
+coremqtt
 csdk
 currentstate
 de
@@ -332,7 +333,10 @@ topicfilterlength
 topicnamelength
 transportcallback
 transportinterface
+transportpage
 transportrecv
+transportsectionimplementation
+transportsectionoverview
 transportsend
 transportstruct
 uint
@@ -346,6 +350,7 @@ usercallback
 usernamelength
 utf
 validatesubscribeunsubscribeparams
+validator
 waitingforpingresp
 willinfo
 xa

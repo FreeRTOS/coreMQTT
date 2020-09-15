@@ -1,4 +1,5 @@
 /*
+ * coreMQTT V1.0.0
  * Copyright (C) 2020 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -21,7 +22,7 @@
 
 /**
  * @file core_mqtt_serializer.c
- * @brief Implements the user-facing functions in mqtt_serializer.h.
+ * @brief Implements the user-facing functions in core_mqtt_serializer.h.
  */
 #include <string.h>
 #include <assert.h>
@@ -967,6 +968,7 @@ static MQTTStatus_t deserializeConnack( const MQTTPacketInfo_t * pConnack,
         else
         {
             LogInfo( ( "CONNACK session present bit not set." ) );
+            *pSessionPresent = false;
         }
     }
 

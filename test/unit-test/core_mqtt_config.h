@@ -1,4 +1,5 @@
 /*
+ * coreMQTT V1.0.0
  * Copyright (C) 2020 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -19,6 +20,10 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+/**
+ * @file core_mqtt_config.h
+ * @brief This header sets configuration macros for the MQTT library.
+ */
 #ifndef CORE_MQTT_CONFIG_H_
 #define CORE_MQTT_CONFIG_H_
 
