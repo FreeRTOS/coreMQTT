@@ -1,0 +1,22 @@
+@startuml
+skinparam dpi 300
+skinparam ArrowFontSize 18
+
+start
+
+repeat
+	: Receive single byte;
+    if( success ) then (yes)
+     	: Get rest of packet;
+    	: Deserialize packet;
+        : Application callback;
+    else (no)
+    	: Manage Keep-Alive;
+    endif
+
+repeat while (**timeout** reached) is (no)
+-> yes or timeout == 0;
+
+stop
+
+@enduml

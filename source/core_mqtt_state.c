@@ -1,4 +1,5 @@
 /*
+ * coreMQTT V1.0.0
  * Copyright (C) 2020 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -21,7 +22,7 @@
 
 /**
  * @file core_mqtt_state.c
- * @brief Implements the functions in mqtt_state.h.
+ * @brief Implements the functions in core_mqtt_state.h.
  */
 #include <assert.h>
 #include <string.h>

@@ -4,9 +4,7 @@ This repository contains the coreMQTT library that has been optimized for a low 
 
 This library has gone through code quality checks including for [GNU Complexity](https://www.gnu.org/software/complexity/manual/complexity.html) and [MISRA coding standard](https://www.misra.org.uk/MISRAHome/MISRAC2012/tabid/196/Default.aspx).  Deviations to the MISRA C:2012 guidelines are documented under [MISRA Deviations](MISRA.md). This library has also undergone both static code analysis from [Coverity statical analysis](https://scan.coverity.com/) and validation of memory safety and functional correctness proof through the [AWS CBMC automated reasoning tool](https://www.youtube.com/watch?v=YwQHAPRhQkI&feature=youtu.be&t=1721).  
 
-## Building Unit Tests
-
-### MQTT Config File
+## MQTT Config File
 
 The MQTT client library exposes build configuration macros that are required for building the library.
 A list of all the configurations and their default values are defined in [core_mqtt_config_defaults.h](https://github.com/FreeRTOS/coreMQTT/blob/master/source/include/core_mqtt_config_defaults.h). 
@@ -21,27 +19,37 @@ and build the library with default configuration values, provide `MQTT_DO_NOT_US
 **OR**
 * Defining the `MQTT_DO_NOT_USE_CUSTOM_CONFIG` preprocessor macro for the library build.
 
+## Building the Library
+
+The [mqttFilePaths.cmake](https://github.com/FreeRTOS/coreMQTT/blob/master/mqttFilePaths.cmake) file contains the information of all source files and the header include path required to build the MQTT library.
+
+As mentioned in the previous section, either a custom config file (i.e. `core_mqtt_config.h`) OR `MQTT_DO_NOT_USE_CUSTOM_CONFIG` macro needs to be provided to build the MQTT library.
+
+For a CMake example of building the MQTT library with the `mqttFilePaths.cmake` file, refer to the `coverity_analysis` library target in [test/CMakeLists.txt](https://github.com/FreeRTOS/coreMQTT/blob/master/test/CMakeLists.txt) file.
+
+## Building Unit Tests
+
 ### Platform Prerequisites
 
 - For building the library, **CMake 3.13.0 or later** and a **C90 compiler**.
-- For running unit tests, Ruby 2.0.0 or later is additionally required for the CMock test framework (that we use).
-- For running the coverage target, gcov is additionally required.
+- For running unit tests, **Ruby 2.0.0** or later is additionally required for the CMock test framework (that we use).
+- For running the coverage target, **gcov** and **lcov** are additionally required.
 
-### Steps to build **Library** and **Unit Tests**
+### Steps to build **Unit Tests**
 
 1. Go to the root directory of this repository.
 
-1. Run *cmake* while inside build directory: `cmake -S ../test -B build -DBUILD_CLONE_SUBMODULES=ON `
+1. Run the *cmake* command: `cmake -S test -B build -DBUILD_CLONE_SUBMODULES=ON `
 
 1. Run this command to build the library and unit tests: `make -C build all`
 
-1. The built library will be present in `build/lib` folder, and generated test executables will be present in `build/bin/tests` folder.
+1. The generated test executables will be present in `build/bin/tests` folder.
 
-1. Run `ctest` to execute all tests and view the test run summary.
+1. Run `cd build && ctest` to execute all tests and view the test run summary.
 
 ## Reference examples
 
-The AWS IoT Embedded C-SDK repository contains demos of using the MQTT client library [here](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/development/demos/mqtt) on a POSIX platform. These can be used as reference examples for the library API.
+The AWS IoT Embedded C-SDK repository contains demos of using the MQTT client library [here](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/master/demos/mqtt) on a POSIX platform. These can be used as reference examples for the library API.
 
 ## Generating documentation
 
