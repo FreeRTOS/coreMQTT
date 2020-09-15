@@ -37,13 +37,13 @@ For a CMake example of building the MQTT library with the `mqttFilePaths.cmake` 
 
 1. Go to the root directory of this repository.
 
-1. Run the *cmake* command: `cmake -S ../test -B build -DBUILD_CLONE_SUBMODULES=ON `
+1. Run the *cmake* command: `cmake -S test -B build -DBUILD_CLONE_SUBMODULES=ON `
 
 1. Run this command to build the library and unit tests: `make -C build all`
 
 1. The generated test executables will be present in `build/bin/tests` folder.
 
-1. Run `ctest` to execute all tests and view the test run summary.
+1. Run `cd build && ctest` to execute all tests and view the test run summary.
 
 ## Reference examples
 
