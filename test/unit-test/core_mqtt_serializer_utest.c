@@ -1401,13 +1401,6 @@ void test_MQTT_DeserializeAck_connack( void )
     buffer[ 1 ] = 1;
     status = MQTT_DeserializeAck( &mqttPacketInfo, &packetIdentifier, &sessionPresent );
     TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
-    TEST_ASSERT_EQUAL_INT( true, sessionPresent );
-
-    /* Session present not set but nonzero return code. */
-    buffer[ 0 ] = MQTT_PACKET_CONNACK_SESSION_PRESENT_MASK;
-    buffer[ 1 ] = 1;
-    status = MQTT_DeserializeAck( &mqttPacketInfo, &packetIdentifier, &sessionPresent );
-    TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
 
     /* Invalid response code. */
     buffer[ 0 ] = 0;
@@ -1428,7 +1421,7 @@ void test_MQTT_DeserializeAck_connack( void )
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
     TEST_ASSERT_EQUAL_INT( true, sessionPresent );
 
-    /* Valid packet with success code when session present bit is set. */
+    /* Valid packet with success code when session present bit is not set. */
     buffer[ 0 ] = 0;
     status = MQTT_DeserializeAck( &mqttPacketInfo, NULL, &sessionPresent );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
