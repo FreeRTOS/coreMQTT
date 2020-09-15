@@ -37,6 +37,7 @@ connack
 connectinfo
 connectpacketsize
 const
+coremqtt
 csdk
 currentstate
 de
@@ -349,6 +350,7 @@ usercallback
 usernamelength
 utf
 validatesubscribeunsubscribeparams
+validator
 waitingforpingresp
 willinfo
 xa
