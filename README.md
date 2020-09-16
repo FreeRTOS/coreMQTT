@@ -4,7 +4,6 @@ This repository contains the coreMQTT library that has been optimized for a low 
 
 This library has gone through code quality checks including for overly-complex functions that have a [GNU Complexity](https://www.gnu.org/software/complexity/manual/complexity.html) score over 8 and for deviations to the [MISRA coding standard](https://www.misra.org.uk/MISRAHome/MISRAC2012/tabid/196/Default.aspx).  Deviations from the MISRA C:2012 guidelines are documented under [MISRA Deviations](MISRA.md). This library has also undergone both static code analysis from [Coverity static analysis](https://scan.coverity.com/) and validation of memory safety and functional correctness proof through the  [CBMC automated reasoning tool](https://www.youtube.com/watch?v=YwQHAPRhQkI&feature=youtu.be&t=1721).  
 
-
 ## MQTT Config File
 
 The MQTT client library exposes build configuration macros that are required for building the library.
