@@ -16,36 +16,39 @@ Please see https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/master/demo
 @section mqtt_memory_requirements Memory Requirements
 @brief Memory requirements of the MQTT library.
 
-The configurations for memory estimation are defined <a href="https://github.com/FreeRTOS/FreeRTOS/tree/lts-development/tools/memory_estimator" target="_blank" rel="noopener noreferrer">here</a>.
-
 <table>
     <tr>
-        <td colspan="3"><b>Code Size of MQTT LTS rc1(example generated with GCC for ARM Cortex-M)</b></td>
+        <td colspan="4"><center><b>Code Size of coreMQTT library files (sizes generated with [GCC for ARM Cortex-M toolchain 20191025](https://developer.arm.com/tools-and-software/open-source-software/developer-tools/gnu-toolchain/gnu-rm/downloads/9-2019-q4-major))</b></center></td>
     </tr>
     <tr>
         <td><b>File</b></td>
-        <td><b>With -O1 Optimization</b></td>
-        <td><b>With -Os Optimization</b></td>
+        <td><b>No Optimization (asserts enabled)</b></td>
+        <td><b>With -O1 Optimization (asserts disabled)</b></td>
+        <td><b>With -Os Optimization (asserts disabled)</b></td>
     </tr>
     <tr>
         <td>core_mqtt.c</td>
-        <td>3.3K</td>
-        <td>2.9K</td>
+        <td>13.3K</td>
+        <td>5.1K</td>
+        <td>4.6K</td>
     </tr>
     <tr>
         <td>core_mqtt_state.c</td>
-        <td>2.1K</td>
-        <td>1.6K</td>
+        <td>5.9K</td>
+        <td>2.2K</td>
+        <td>1.8K</td>
     </tr>
     <tr>
         <td>core_mqtt_serializer.c</td>
-        <td>3.5K</td>
-        <td>2.9K</td>
+        <td>12.0K</td>
+        <td>4.2K</td>
+        <td>3.7K</td>
     </tr>
     <tr>
         <td><b>Total estimates</b></td>
-        <td>8.9K</td>
-        <td>7.4K</td>
+        <td>31.2K</td>
+        <td>11.5K</td>
+        <td>10.1K</td>
     </tr>
 </table>
  */
