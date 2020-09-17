@@ -85,7 +85,7 @@ add_subdirectory( unit-test )
 #  ==================================== Coverage Analysis configuration ========================================
 
 # Add a target for running coverage on tests.
-add_custom_target(coverage
+add_custom_target( coverage
     COMMAND ${CMAKE_COMMAND} -DCMOCK_DIR=${CMOCK_DIR}
     -P ${MODULE_ROOT_DIR}/tools/cmock/coverage.cmake
     DEPENDS cmock unity core_mqtt_utest core_mqtt_serializer_utest core_mqtt_state_utest
