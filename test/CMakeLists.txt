@@ -88,6 +88,6 @@ add_subdirectory( unit-test )
 add_custom_target(coverage
     COMMAND ${CMAKE_COMMAND} -DCMOCK_DIR=${CMOCK_DIR}
     -P ${MODULE_ROOT_DIR}/tools/cmock/coverage.cmake
-    DEPENDS cmock unity core_json_utest
+    DEPENDS cmock unity core_mqtt_utest core_mqtt_serializer_utest core_mqtt_state_utest
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
 )
