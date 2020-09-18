@@ -1298,7 +1298,7 @@ static MQTTStatus_t deserializePublish( const MQTTPacketInfo_t * pIncomingPacket
         }
 
         /* Set payload if it exists. */
-        pPublishInfo->pPayload = ( pPublishInfo->payloadLength != 0 ) ? pPacketIdentifierHigh : NULL;
+        pPublishInfo->pPayload = ( pPublishInfo->payloadLength != 0U ) ? pPacketIdentifierHigh : NULL;
 
         LogDebug( ( "Payload length %lu.", ( unsigned long ) pPublishInfo->payloadLength ) );
     }
