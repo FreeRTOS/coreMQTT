@@ -1,10 +1,11 @@
+name: Test Upload Release Asset
+
 on:
   push:
     # Sequence of patterns matched against refs/tags
     tags:
     - 'vtest' # Push events to matching v*, i.e. v1.0, v20.15.10
 
-name: Upload Release Asset Test
 
 jobs:
   build:
