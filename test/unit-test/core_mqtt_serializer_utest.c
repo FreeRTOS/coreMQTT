@@ -284,19 +284,19 @@ static void setupConnectInfo( MQTTConnectInfo_t * const pConnectInfo )
 }
 
 /**
- * @brief Initialize pWillInfo using test-defined macros.
+ * @brief Initialize pPublishInfo using test-defined macros.
  *
- * @param[in] pWillInfo Last Will and Testament.
+ * @param[in] pPublishInfo Publish information.
  */
-static void setupWillInfo( MQTTPublishInfo_t * const pWillInfo )
+static void setupPublishInfo( MQTTPublishInfo_t * pPublishInfo )
 {
-    pWillInfo->pPayload = MQTT_SAMPLE_PAYLOAD;
-    pWillInfo->payloadLength = MQTT_SAMPLE_PAYLOAD_LEN;
-    pWillInfo->pTopicName = MQTT_CLIENT_IDENTIFIER;
-    pWillInfo->topicNameLength = MQTT_CLIENT_IDENTIFIER_LEN;
-    pWillInfo->dup = true;
-    pWillInfo->qos = MQTTQoS0;
-    pWillInfo->retain = true;
+    pPublishInfo->pTopicName = TEST_TOPIC_NAME;
+    pPublishInfo->topicNameLength = TEST_TOPIC_NAME_LENGTH;
+    pPublishInfo->pPayload = MQTT_SAMPLE_PAYLOAD;
+    pPublishInfo->payloadLength = MQTT_SAMPLE_PAYLOAD_LEN;
+    pPublishInfo->qos = MQTTQoS0;
+    pPublishInfo->dup = false;
+    pPublishInfo->retain = false;
 }
 
 /**
@@ -1654,10 +1654,7 @@ void test_MQTT_DeserializePublish( void )
 
     /* Create a PUBLISH packet to test. */
     memset( &publishInfo, 0x00, sizeof( publishInfo ) );
-    publishInfo.pTopicName = TEST_TOPIC_NAME;
-    publishInfo.topicNameLength = TEST_TOPIC_NAME_LENGTH;
-    publishInfo.pPayload = MQTT_SAMPLE_PAYLOAD;
-    publishInfo.payloadLength = MQTT_SAMPLE_PAYLOAD_LEN;
+    setupPublishInfo( &publishInfo );
 
     /* Test serialization and deserialization of a QoS 0 PUBLISH. */
     publishInfo.qos = MQTTQoS0;
@@ -1689,11 +1686,7 @@ void test_MQTT_DeserializePublish( void )
 
     memset( ( void * ) &mqttPacketInfo, 0x00, sizeof( mqttPacketInfo ) );
     /* Reset publish info since its pointers now point to our serialized buffer. */
-    memset( &publishInfo, 0x00, sizeof( publishInfo ) );
-    publishInfo.pTopicName = TEST_TOPIC_NAME;
-    publishInfo.topicNameLength = TEST_TOPIC_NAME_LENGTH;
-    publishInfo.pPayload = MQTT_SAMPLE_PAYLOAD;
-    publishInfo.payloadLength = MQTT_SAMPLE_PAYLOAD_LEN;
+    setupPublishInfo( &publishInfo );
 
     /* Test serialization and deserialization of a QoS 1 PUBLISH. */
     publishInfo.qos = MQTTQoS1;
@@ -1721,11 +1714,7 @@ void test_MQTT_DeserializePublish( void )
     TEST_ASSERT_EQUAL_MEMORY( MQTT_SAMPLE_PAYLOAD, publishInfo.pPayload, MQTT_SAMPLE_PAYLOAD_LEN );
 
     /* QoS 2 PUBLISH. */
-    memset( &publishInfo, 0x00, sizeof( publishInfo ) );
-    publishInfo.pTopicName = TEST_TOPIC_NAME;
-    publishInfo.topicNameLength = TEST_TOPIC_NAME_LENGTH;
-    publishInfo.pPayload = MQTT_SAMPLE_PAYLOAD;
-    publishInfo.payloadLength = MQTT_SAMPLE_PAYLOAD_LEN;
+    setupPublishInfo( &publishInfo );
     publishInfo.qos = MQTTQoS2;
     /* Remaining length and packet size should be same as before. */
     status = MQTT_SerializePublish( &publishInfo,
@@ -2332,7 +2321,9 @@ void test_MQTT_SerializeConnect_Happy_Paths()
     /* Fill structs to pass into methods to be tested. */
     setupNetworkBuffer( &networkBuffer );
     setupConnectInfo( &connectInfo );
-    setupWillInfo( &willInfo );
+    setupPublishInfo( &willInfo );
+    willInfo.dup = true;
+    willInfo.retain = true;
 
     /* Get MQTT connect packet size and remaining length. */
     mqttStatus = MQTT_GetConnectPacketSize( &connectInfo,
