@@ -1,3 +1,5 @@
+name: Release test
+
 on:
   push:
     # Sequence of patterns matched against refs/tags
