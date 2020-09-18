@@ -51,7 +51,7 @@
 #define CLIENT_IDENTIFIER_LENGTH                    ( ( uint16_t ) ( sizeof( CLIENT_IDENTIFIER ) - 1 ) ) /**< @brief Length of client identifier. */
 
 /*
- * Will topic name and length to use for the MQTT API tests.
+ * Topic name and length to use for the MQTT API tests.
  */
 #define TEST_TOPIC_NAME                             ( "/test/topic" )                                  /**< @brief An arbitrary topic name. */
 #define TEST_TOPIC_NAME_LENGTH                      ( ( uint16_t ) ( sizeof( TEST_TOPIC_NAME ) - 1 ) ) /**< @brief Length of topic name. */
@@ -1725,6 +1725,36 @@ void test_MQTT_DeserializePublish( void )
     mqttPacketInfo.pRemainingData = &buffer[ 2 ];
     status = MQTT_DeserializePublish( &mqttPacketInfo, &packetIdentifier, &publishInfo );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
+
+    /* Zero length payload. */
+    memset( &publishInfo, 0x00, sizeof( publishInfo ) );
+    publishInfo.pTopicName = TEST_TOPIC_NAME;
+    publishInfo.topicNameLength = TEST_TOPIC_NAME_LENGTH;
+    publishInfo.payloadLength = 0;
+    publishInfo.qos = MQTTQoS0;
+
+    /* Generate packet. */
+    status = MQTT_GetPublishPacketSize( &publishInfo, &remainingLength, &packetSize );
+    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
+    TEST_ASSERT_GREATER_OR_EQUAL( packetSize, bufferSize );
+
+    status = MQTT_SerializePublish( &publishInfo,
+                                    0,
+                                    remainingLength,
+                                    &fixedBuffer );
+    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
+
+    /* Deserialize packet. */
+    mqttPacketInfo.type = buffer[ 0 ];
+    mqttPacketInfo.remainingLength = ( size_t ) buffer[ 1 ];
+    mqttPacketInfo.pRemainingData = &buffer[ 2 ];
+    memset( &publishInfo, 0x00, sizeof( publishInfo ) );
+    status = MQTT_DeserializePublish( &mqttPacketInfo, &packetIdentifier, &publishInfo );
+    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
+    TEST_ASSERT_EQUAL_INT( TEST_TOPIC_NAME_LENGTH, publishInfo.topicNameLength );
+    TEST_ASSERT_EQUAL_STRING( TEST_TOPIC_NAME, publishInfo.pTopicName );
+    TEST_ASSERT_EQUAL_INT( 0, publishInfo.payloadLength );
+    TEST_ASSERT_NULL( publishInfo.pPayload );
 }
 
 /* ========================================================================== */
