@@ -45,9 +45,6 @@ target_compile_definitions( coverity_analysis PUBLIC MQTT_DO_NOT_USE_CUSTOM_CONF
 # MQTT public include path.
 target_include_directories( coverity_analysis PUBLIC ${MQTT_INCLUDE_PUBLIC_DIRS} )
 
-# MQTT private include path.
-target_include_directories( coverity_analysis PRIVATE ${MQTT_INCLUDE_PRIVATE_DIRS} )
-
 #  ====================================  Test Configuration ========================================
 
 # Define a CMock resource path.

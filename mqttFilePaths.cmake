@@ -18,7 +18,3 @@ set( MQTT_SERIALIZER_SOURCES
 set( MQTT_INCLUDE_PUBLIC_DIRS
      "${CMAKE_CURRENT_LIST_DIR}/source/include"
      "${CMAKE_CURRENT_LIST_DIR}/source/portable" )
-
-# MQTT library Private Include directories.
-set( MQTT_INCLUDE_PRIVATE_DIRS
-     "${CMAKE_CURRENT_LIST_DIR}/source" )
