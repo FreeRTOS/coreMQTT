@@ -29,6 +29,14 @@ For a CMake example of building the MQTT library with the `mqttFilePaths.cmake` 
 
 ## Building Unit Tests
 
+### Checkout CMock Submodule
+By default, the submodules in this repository are configured with `update=none` in [.gitmodules](.gitmodules) to avoid increasing clone time and disk space usage of other repositories (like [amazon-freertos](https://github.com/aws/amazon-freertos) that submodule this repository.
+
+To build unit tests, the submodule dependency of CMock is required. Use the following command to clone the submodule:
+```
+git submodule update --checkout --init --recursive --test/unit-test/CMock
+```
+
 ### Platform Prerequisites
 
 - For running unit tests
@@ -39,7 +47,7 @@ For a CMake example of building the MQTT library with the `mqttFilePaths.cmake` 
 
 ### Steps to build **Unit Tests**
 
-1. Go to the root directory of this repository.
+1. Go to the root directory of this repository. (Make sure that the **CMock** submodule is cloned as described [above](#checkout-cmock-submodule))
 
 1. Run the *cmake* command: `cmake -S test -B build -DBUILD_CLONE_SUBMODULES=ON `
 

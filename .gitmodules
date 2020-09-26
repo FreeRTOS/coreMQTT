@@ -1,9 +1,12 @@
 [submodule "test/unit-test/CMock"]
 	path = test/unit-test/CMock
 	url = https://github.com/ThrowTheSwitch/CMock
+	update = none
 [submodule "test/cbmc/aws-templates-for-cbmc-proofs"]
 	path = test/cbmc/aws-templates-for-cbmc-proofs
 	url = https://github.com/awslabs/aws-templates-for-cbmc-proofs.git
+	update = none
 [submodule "test/cbmc/litani"]
 	path = test/cbmc/litani
 	url = https://github.com/awslabs/aws-build-accumulator
+	update = none
