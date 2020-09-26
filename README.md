@@ -47,7 +47,7 @@ git submodule update --checkout --init --recursive --test/unit-test/CMock
 
 ### Steps to build **Unit Tests**
 
-1. Go to the root directory of this repository. (Make sure that the **CMock** submodule is cloned as described [above]())
+1. Go to the root directory of this repository. (Make sure that the **CMock** submodule is cloned as described [above](#checkout-cmock-submodule))
 
 1. Run the *cmake* command: `cmake -S test -B build -DBUILD_CLONE_SUBMODULES=ON `
 
