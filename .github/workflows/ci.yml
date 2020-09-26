@@ -14,7 +14,7 @@ jobs:
       - name: Clone This Repo
         uses: actions/checkout@v2
       - name: Checkout CMock submodule
-        run: git submodule update --init --checkout test/unit-test/CMock
+        run: git submodule update --checkout --init --recursive test/unit-test/CMock
       - name: Build
         run: |
           sudo apt-get install -y lcov
