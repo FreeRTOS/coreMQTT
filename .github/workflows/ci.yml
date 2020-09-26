@@ -13,7 +13,7 @@ jobs:
     steps:
       - name: Clone This Repo
         uses: actions/checkout@v2
-        run: git submodule update --checkout
+      - run: git submodule update --checkout
       - name: Build
         run: |
           sudo apt-get install -y lcov
