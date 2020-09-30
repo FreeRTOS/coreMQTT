@@ -25,6 +25,7 @@ import subprocess
 import sys
 import textwrap
 
+PROOF_TOUCH_FILE_NAME = "wellspring.txt"
 
 DESCRIPTION = "Configure and run all CBMC proofs in parallel"
 # Keep this hard-wrapped at 70 characters, as it gets printed verbatim
@@ -39,7 +40,7 @@ The tool is roughly equivalent to doing this:
 
         litani init --project "FreeRTOS coreMQTT";
 
-        find . -name cbmc-batch.yaml | while read -r proof; do
+        find . -name wellspring.txt | while read -r proof; do
             pushd $(dirname ${proof});
             make _report;
             popd;
@@ -137,7 +138,7 @@ def get_proof_dirs(proof_root, proof_list):
             continue
         if proof_list and proof_name in proofs_remaining:
             proofs_remaining.remove(proof_name)
-        if "cbmc-batch.yaml" in fyles:
+        if PROOF_TOUCH_FILE_NAME in fyles:
             yield root
 
     if proofs_remaining:
