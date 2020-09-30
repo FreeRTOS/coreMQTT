@@ -1,5 +1,5 @@
 /*
- * coreMQTT V1.0.0
+ * coreMQTT v1.0.0
  * Copyright (C) 2020 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -1274,6 +1274,9 @@ static MQTTStatus_t deserializePublish( const MQTTPacketInfo_t * pIncomingPacket
 
             LogDebug( ( "Packet identifier %hu.", *pPacketId ) );
 
+            /* Advance pointer two bytes to start of payload as in the QoS 0 case. */
+            pPacketIdentifierHigh += sizeof( uint16_t );
+
             /* Packet identifier cannot be 0. */
             if( *pPacketId == 0U )
             {
@@ -1286,16 +1289,16 @@ static MQTTStatus_t deserializePublish( const MQTTPacketInfo_t * pIncomingPacket
     {
         /* Calculate the length of the payload. QoS 1 or 2 PUBLISH packets contain
          * a packet identifier, but QoS 0 PUBLISH packets do not. */
-        if( pPublishInfo->qos == MQTTQoS0 )
+        pPublishInfo->payloadLength = pIncomingPacket->remainingLength - pPublishInfo->topicNameLength - sizeof( uint16_t );
+
+        if( pPublishInfo->qos != MQTTQoS0 )
         {
-            pPublishInfo->payloadLength = ( pIncomingPacket->remainingLength - pPublishInfo->topicNameLength - sizeof( uint16_t ) );
-            pPublishInfo->pPayload = pPacketIdentifierHigh;
+            /* Two more bytes for the packet identifier. */
+            pPublishInfo->payloadLength -= sizeof( uint16_t );
         }
-        else
-        {
-            pPublishInfo->payloadLength = ( pIncomingPacket->remainingLength - pPublishInfo->topicNameLength - 2U * sizeof( uint16_t ) );
-            pPublishInfo->pPayload = pPacketIdentifierHigh + sizeof( uint16_t );
-        }
+
+        /* Set payload if it exists. */
+        pPublishInfo->pPayload = ( pPublishInfo->payloadLength != 0U ) ? pPacketIdentifierHigh : NULL;
 
         LogDebug( ( "Payload length %lu.", ( unsigned long ) pPublishInfo->payloadLength ) );
     }

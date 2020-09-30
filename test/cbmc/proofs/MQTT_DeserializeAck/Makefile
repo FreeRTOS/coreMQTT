@@ -21,6 +21,7 @@
 
 HARNESS_ENTRY=harness
 HARNESS_FILE=MQTT_DeserializeAck_harness
+PROOF_UID=MQTT_DeserializeAck
 
 # The maximum remaining length is bounded for MQTT_DeserializeAck() in order to
 # place a limit on the number of iterations in deserializing a SUBACK. Please

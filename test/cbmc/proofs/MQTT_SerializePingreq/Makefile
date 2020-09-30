@@ -21,6 +21,7 @@
 
 HARNESS_ENTRY=harness
 HARNESS_FILE=MQTT_SerializePingreq_harness
+PROOF_UID=MQTT_SerializePingreq
 
 DEFINES +=
 INCLUDES +=

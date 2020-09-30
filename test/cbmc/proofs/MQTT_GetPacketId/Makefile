@@ -21,6 +21,7 @@
 
 HARNESS_ENTRY=harness
 HARNESS_FILE=MQTT_GetPacketId_harness
+PROOF_UID=MQTT_GetPacketId
 
 DEFINES +=
 INCLUDES +=

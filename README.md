@@ -1,6 +1,8 @@
-# MQTT Client Library
+# coreMQTT Client Library
 
-This repository contains an ISO C90 compliant MQTT client library designed for embedded platforms.
+This repository contains the coreMQTT library that has been optimized for a low memory footprint.  The coreMQTT library is fully compliant with the [MQTT 3.1.1](http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/mqtt-v3.1.1.html) standard.  It has no dependencies on any additional libraries other than the standard C library, a customer-implemented network transport interface, and *optionally* a user-implemented platform time function.  This library is distributed under the [MIT Open Source License](LICENSE).
+
+This library has gone through code quality checks including verification that no function has a [GNU Complexity](https://www.gnu.org/software/complexity/manual/complexity.html) score over 8, and checks against deviations from mandatory rules in the [MISRA coding standard](https://www.misra.org.uk/MISRAHome/MISRAC2012/tabid/196/Default.aspx).  Deviations from the MISRA C:2012 guidelines are documented under [MISRA Deviations](MISRA.md). This library has also undergone both static code analysis from [Coverity static analysis](https://scan.coverity.com/), and validation of memory safety and proof of functional correctness through the [CBMC automated reasoning tool](https://www.cprover.org/cbmc/).
 
 ## MQTT Config File
 
@@ -27,23 +29,33 @@ For a CMake example of building the MQTT library with the `mqttFilePaths.cmake` 
 
 ## Building Unit Tests
 
+### Checkout CMock Submodule
+By default, the submodules in this repository are configured with `update=none` in [.gitmodules](.gitmodules) to avoid increasing clone time and disk space usage of other repositories (like [amazon-freertos](https://github.com/aws/amazon-freertos) that submodule this repository.
+
+To build unit tests, the submodule dependency of CMock is required. Use the following command to clone the submodule:
+```
+git submodule update --checkout --init --recursive test/unit-test/CMock
+```
+
 ### Platform Prerequisites
 
-- For building the library, **CMake 3.13.0 or later** and a **C90 compiler**.
-- For running unit tests, **Ruby 2.0.0** or later is additionally required for the CMock test framework (that we use).
+- For running unit tests
+    - **C90 compiler** like gcc
+    - **CMake 3.13.0 or later**
+    - **Ruby 2.0.0 or later** is additionally required for the CMock test framework (that we use).
 - For running the coverage target, **gcov** and **lcov** are additionally required.
 
 ### Steps to build **Unit Tests**
 
-1. Go to the root directory of this repository.
+1. Go to the root directory of this repository. (Make sure that the **CMock** submodule is cloned as described [above](#checkout-cmock-submodule))
 
-1. Run the *cmake* command: `cmake -S ../test -B build -DBUILD_CLONE_SUBMODULES=ON `
+1. Run the *cmake* command: `cmake -S test -B build`
 
 1. Run this command to build the library and unit tests: `make -C build all`
 
 1. The generated test executables will be present in `build/bin/tests` folder.
 
-1. Run `ctest` to execute all tests and view the test run summary.
+1. Run `cd build && ctest` to execute all tests and view the test run summary.
 
 ## Reference examples
 

@@ -22,7 +22,7 @@ set(MODULE_ROOT_DIR ${__MODULE_ROOT_DIR} CACHE INTERNAL "coreMQTT repository roo
 # Configure options to always show in CMake GUI.
 option( BUILD_CLONE_SUBMODULES
         "Set this to ON to automatically clone any required Git submodules. When OFF, submodules must be manually cloned."
-        ON )
+        OFF )
 
 # Set output directories.
 set( CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin )
@@ -44,9 +44,6 @@ target_compile_definitions( coverity_analysis PUBLIC MQTT_DO_NOT_USE_CUSTOM_CONF
 
 # MQTT public include path.
 target_include_directories( coverity_analysis PUBLIC ${MQTT_INCLUDE_PUBLIC_DIRS} )
-
-# MQTT private include path.
-target_include_directories( coverity_analysis PRIVATE ${MQTT_INCLUDE_PRIVATE_DIRS} )
 
 #  ====================================  Test Configuration ========================================
 
@@ -86,7 +83,8 @@ add_subdirectory( unit-test )
 
 # Add a target for running coverage on tests.
 add_custom_target( coverage
-    COMMAND ${CMAKE_COMMAND} -P ${MODULE_ROOT_DIR}/tools/cmock/coverage.cmake
+    COMMAND ${CMAKE_COMMAND} -DCMOCK_DIR=${CMOCK_DIR}
+    -P ${MODULE_ROOT_DIR}/tools/cmock/coverage.cmake
     DEPENDS cmock unity core_mqtt_utest core_mqtt_serializer_utest core_mqtt_state_utest
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
 )

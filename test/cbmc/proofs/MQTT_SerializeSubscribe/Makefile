@@ -21,6 +21,7 @@
 
 HARNESS_ENTRY=harness
 HARNESS_FILE=MQTT_SerializeSubscribe_harness
+PROOF_UID=MQTT_SerializeSubscribe
 
 # Bound on the the subscription count. Please see the default value in
 # mqtt_cbmc_state.c for more information on this bound. This is set to 2
