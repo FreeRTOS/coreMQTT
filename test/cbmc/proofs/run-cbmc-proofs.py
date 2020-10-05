@@ -25,7 +25,7 @@ import subprocess
 import sys
 import textwrap
 
-PROOF_TOUCH_FILE_NAME = "wellspring.txt"
+PROOF_TOUCH_FILE_NAME = "cbmc-proof.txt"
 
 DESCRIPTION = "Configure and run all CBMC proofs in parallel"
 # Keep this hard-wrapped at 70 characters, as it gets printed verbatim
