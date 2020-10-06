@@ -1054,7 +1054,7 @@ static MQTTStatus_t handleIncomingPublish( MQTTContext_t * pContext,
          *       state engine. This will be handled by ignoring the
          *       #MQTTStateCollision status from the state engine. The publish
          *       data is not passed to the application. */
-        else if( ( status == MQTTStateCollision ) && ( publishInfo.dup == true ) )
+        else if( status == MQTTStateCollision )
         {
             status = MQTTSuccess;
             duplicatePublish = true;
