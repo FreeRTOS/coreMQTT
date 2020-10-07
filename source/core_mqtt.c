@@ -1054,7 +1054,7 @@ static MQTTStatus_t handleIncomingPublish( MQTTContext_t * pContext,
          *       state engine. This will be handled by ignoring the
          *       #MQTTStateCollision status from the state engine. The publish
          *       data is not passed to the application. */
-        else if( ( status == MQTTStateCollision ) && ( publishInfo.dup == true ) )
+        else if( status == MQTTStateCollision )
         {
             status = MQTTSuccess;
             duplicatePublish = true;
@@ -1063,8 +1063,14 @@ static MQTTStatus_t handleIncomingPublish( MQTTContext_t * pContext,
              * for the duplicate incoming publish. */
             publishRecordState = MQTT_CalculateStatePublish( MQTT_RECEIVE,
                                                              publishInfo.qos );
+
             LogDebug( ( "Incoming publish packet with packet id %u already exists.",
                         packetIdentifier ) );
+
+            if( publishInfo.dup == false )
+            {
+                LogError( ( "DUP flag is 0 for duplicate packet (MQTT-3.3.1.-1)." ) );
+            }
         }
         else
         {
