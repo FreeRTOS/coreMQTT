@@ -1069,7 +1069,7 @@ static MQTTStatus_t handleIncomingPublish( MQTTContext_t * pContext,
 
             if( publishInfo.dup == false )
             {
-                LogError( ( "DUP flag is 0 for duplicate incoming publish packet." ) );
+                LogError( ( "DUP flag is 0 for duplicate packet (MQTT-3.3.1.-1)." ) );
             }
         }
         else
