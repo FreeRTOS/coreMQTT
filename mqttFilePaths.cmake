@@ -18,3 +18,10 @@ set( MQTT_SERIALIZER_SOURCES
 set( MQTT_INCLUDE_PUBLIC_DIRS
      "${CMAKE_CURRENT_LIST_DIR}/source/include"
      "${CMAKE_CURRENT_LIST_DIR}/source/portable" )
+
+# MQTT library header files.
+set( MQTT_HEADER_FILES
+     "${CMAKE_CURRENT_LIST_DIR}/source/include/core_mqtt.h"
+     "${CMAKE_CURRENT_LIST_DIR}/source/include/core_mqtt_serializer.h"
+     "${CMAKE_CURRENT_LIST_DIR}/source/include/core_mqtt_state.h"
+     "${CMAKE_CURRENT_LIST_DIR}/source/portable/transport_interface.h" )
