@@ -1,17 +1,7 @@
 #!/usr/bin/env python3
 #
 # Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License"). You may not
-# use this file except in compliance with the License. A copy of the License is
-# located at
-#
-#     http://aws.amazon.com/apache2.0/
-#
-# or in the "license" file accompanying this file. This file is distributed on
-# an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
-# or implied. See the License for the specific language governing permissions
-# and limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 
 import argparse
@@ -20,16 +10,14 @@ import logging
 import math
 import os
 import pathlib
-import shutil
 import subprocess
 import sys
-import textwrap
 
-PROOF_TOUCH_FILE_NAME = "wellspring.txt"
 
 DESCRIPTION = "Configure and run all CBMC proofs in parallel"
-# Keep this hard-wrapped at 70 characters, as it gets printed verbatim
-# in the terminal. 70 characters stops here -----------------------> |
+
+# Keep the epilog hard-wrapped at 70 characters, as it gets printed
+# verbatim in the terminal. 70 characters stops here --------------> |
 EPILOG = """
 This tool automates the process of running `make report` in each of
 the CBMC proof directories. The tool calculates the dependency graph
@@ -38,11 +26,15 @@ executes these tasks in parallel.
 
 The tool is roughly equivalent to doing this:
 
-        litani init --project "FreeRTOS coreMQTT";
+        litani init --project "my-cool-project";
 
-        find . -name wellspring.txt | while read -r proof; do
+        find . -name cbmc-proof.txt | while read -r proof; do
             pushd $(dirname ${proof});
+
+            # The `make _report` rule adds a single proof to litani
+            # without running it
             make _report;
+
             popd;
         done
 
@@ -50,7 +42,8 @@ The tool is roughly equivalent to doing this:
 
 except that it is much faster and provides some convenience options.
 The CBMC CI runs this script with no arguments to build and run all
-proofs in parallel.
+proofs in parallel. The value of "my-cool-project" is taken from the
+PROJECT_NAME variable in Makefile-project-defines.
 
 The --no-standalone argument omits the `litani init` and `litani
 run-build`; use it when you want to add additional proof jobs, not
@@ -59,6 +52,26 @@ yourself; then run `run-cbmc-proofs --no-standalone`; add any
 additional jobs that you want to execute with `litani add-job`; and
 finally run `litani run-build`.
 """
+
+
+def get_project_name():
+    cmd = [
+        "make",
+        "-f", "Makefile.common",
+        "echo-project-name",
+    ]
+    logging.debug(" ".join(cmd))
+    proc = subprocess.run(cmd, universal_newlines=True, stdout=subprocess.PIPE)
+    if proc.returncode:
+        logging.warning("could not run make to determine project name")
+        sys.exit(1)
+    if not proc.stdout.strip():
+        logging.warning(
+            "project name has not been set; using generic name instead. "
+            "Set the PROJECT_NAME value in Makefile-project-defines to "
+            "remove this warning")
+        return "<PROJECT NAME HERE>"
+    return proc.stdout.strip()
 
 
 def get_args():
@@ -82,17 +95,15 @@ def get_args():
     }, {
             "flags": ["--project-name"],
             "metavar": "NAME",
-            "default": "FreeRTOS coreMQTT",
-            "help": "Project name for report. Default: %(default)s",
+            "default": get_project_name(),
+            "help": "project name for report. Default: %(default)s",
     }, {
-
-    # PROJECT SPECIFIC
-    # This flag exists because we wish to use an external SAT solver for this
-    # project by default, both locally and in CI. This flag is provided to make
-    # it easy to invoke the native solver if needed.
-            "flags": ["--use-native-solver"],
-            "action": "store_true",
-            "help": "Use CBMC's native SAT solver instead of kissat (proofs will run for longer)",
+            "flags": ["--proof-marker"],
+            "metavar": "FILE",
+            "default": "cbmc-proof.txt",
+            "help": (
+                "name of file that marks proof directories. Default: "
+                "%(default)s"),
     }, {
             "flags": ["--verbose"],
             "action": "store_true",
@@ -126,7 +137,7 @@ def print_counter(counter):
             **counter), end="", file=sys.stderr)
 
 
-def get_proof_dirs(proof_root, proof_list):
+def get_proof_dirs(proof_root, proof_list, proof_marker):
     if proof_list is not None:
         proofs_remaining = list(proof_list)
     else:
@@ -138,7 +149,7 @@ def get_proof_dirs(proof_root, proof_list):
             continue
         if proof_list and proof_name in proofs_remaining:
             proofs_remaining.remove(proof_name)
-        if PROOF_TOUCH_FILE_NAME in fyles:
+        if proof_marker in fyles:
             yield root
 
     if proofs_remaining:
@@ -175,50 +186,19 @@ def get_litani_path(proof_root):
     return proc.stdout.strip()
 
 
-async def configure_proof_dirs(queue, counter, kissat_path):
+async def configure_proof_dirs(queue, counter):
     while True:
         print_counter(counter)
         path = str(await queue.get())
 
-        # PROJECT SPECIFIC
-        # The starter kit Makefile uses this environment variable to figure out
-        # which external SAT solver CBMC should call out to.
-        env = dict(os.environ)
-        if kissat_path is not None:
-            env.update({
-                "EXTERNAL_SAT_SOLVER": kissat_path,
-            })
-
         proc = await asyncio.create_subprocess_exec(
-            "nice", "-n", "15", "make", "-B", "--quiet", "_report", cwd=path,
-            env=env)
+            "nice", "-n", "15", "make", "-B", "--quiet", "_report", cwd=path)
         await proc.wait()
         counter["fail" if proc.returncode else "pass"].append(path)
         counter["complete"] += 1
 
         print_counter(counter)
         queue.task_done()
-
-
-# PROJECT SPECIFIC
-# This is here because MQTT requires that CBMC use an external solver called
-# Kissat to ensure timely proof runs.
-def get_kissat_path(use_native_solver):
-    if use_native_solver:
-        return None
-    kissat_path = shutil.which("kissat")
-    if kissat_path is None:
-        logging.error(textwrap.dedent("""\
-            Could not find 'kissat' executable. Either install kissat or
-            pass the '--use-native-solver' flag (not recommended).
-
-            By default, MQTT uses the 'kissat' SAT solver to run the CBMC
-            proofs, as this is much faster than CBMC's default solver. You will
-            need to build kissat and put it in your $PATH.  You can get kissat
-            from https://github.com/arminbiere/kissat
-            """))
-        sys.exit(1)
-    return kissat_path
 
 
 async def main():
@@ -236,7 +216,8 @@ async def main():
             logging.error("Failed to run litani init")
             sys.exit(1)
 
-    proof_dirs = list(get_proof_dirs(proof_root, args.proofs))
+    proof_dirs = list(get_proof_dirs(
+        proof_root, args.proofs, args.proof_marker))
     if not proof_dirs:
         logging.error("No proof directories found")
         sys.exit(1)
@@ -253,12 +234,10 @@ async def main():
         "width": int(math.log10(len(proof_dirs))) + 1
     }
 
-    kissat_path = get_kissat_path(args.use_native_solver)
-
     tasks = []
     for _ in range(task_pool_size()):
         task = asyncio.create_task(configure_proof_dirs(
-            proof_queue, counter, kissat_path))
+            proof_queue, counter))
         tasks.append(task)
 
     await proof_queue.join()
