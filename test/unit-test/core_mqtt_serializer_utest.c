@@ -177,7 +177,7 @@ int suiteTearDown( int numFailures )
 /**
  * @brief Mock successful transport receive by reading data from a buffer.
  */
-static int32_t mockReceive( const NetworkContext_t * pNetworkContext,
+static int32_t mockReceive( NetworkContext_t * pNetworkContext,
                             void * pBuffer,
                             size_t bytesToRecv )
 {
@@ -203,7 +203,7 @@ static int32_t mockReceive( const NetworkContext_t * pNetworkContext,
 /**
  * @brief Mock transport receive with no data available.
  */
-static int32_t mockReceiveNoData( const NetworkContext_t * pNetworkContext,
+static int32_t mockReceiveNoData( NetworkContext_t * pNetworkContext,
                                   void * pBuffer,
                                   size_t bytesToRecv )
 {
@@ -218,7 +218,7 @@ static int32_t mockReceiveNoData( const NetworkContext_t * pNetworkContext,
 /**
  * @brief Mock transport receive failure.
  */
-static int32_t mockReceiveFailure( const NetworkContext_t * pNetworkContext,
+static int32_t mockReceiveFailure( NetworkContext_t * pNetworkContext,
                                    void * pBuffer,
                                    size_t bytesToRecv )
 {
@@ -233,7 +233,7 @@ static int32_t mockReceiveFailure( const NetworkContext_t * pNetworkContext,
 /**
  * @brief Mock transport receive that succeeds once, then fails.
  */
-static int32_t mockReceiveSucceedThenFail( const NetworkContext_t * pNetworkContext,
+static int32_t mockReceiveSucceedThenFail( NetworkContext_t * pNetworkContext,
                                            void * pBuffer,
                                            size_t bytesToRecv )
 {
