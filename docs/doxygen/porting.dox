@@ -36,13 +36,13 @@ A port must implement functions corresponding to the following functions pointer
  - [Transport Receive](@ref TransportRecv_t): A function to receive bytes from a network.
  @code
  int32_t (* TransportRecv_t )(
-     const NetworkContext_t * pNetworkContext, void * pBuffer, size_t bytesToRecv
+     NetworkContext_t * pNetworkContext, void * pBuffer, size_t bytesToRecv
  );
  @endcode
  - [Transport Send](@ref TransportSend_t): A function to send bytes over a network.
  @code
  int32_t (* TransportSend_t )(
-     const NetworkContext_t * pNetworkContext, const void * pBuffer, size_t bytesToSend
+     NetworkContext_t * pNetworkContext, const void * pBuffer, size_t bytesToSend
  );
  @endcode
 
