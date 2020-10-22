@@ -164,6 +164,7 @@ typedef struct NetworkContext NetworkContext_t;
  * @param[in] bytesToRecv Number of bytes requested from the network.
  *
  * @return The number of bytes received or a negative error code.
+ * The negative error code is specific to the implementation of this function.
  */
 /* @[define_transportrecv] */
 typedef int32_t ( * TransportRecv_t )( NetworkContext_t * pNetworkContext,
@@ -180,6 +181,7 @@ typedef int32_t ( * TransportRecv_t )( NetworkContext_t * pNetworkContext,
  * @param[in] bytesToSend Number of bytes to send over the network.
  *
  * @return The number of bytes sent or a negative error code.
+ * The negative error code is specific to the implementation of this function.
  */
 /* @[define_transportsend] */
 typedef int32_t ( * TransportSend_t )( NetworkContext_t * pNetworkContext,
