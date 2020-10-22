@@ -31,6 +31,25 @@ INCLUDES += -I$(SRCDIR)/source/portable
 # Preprocessor definitions -D...
 DEFINES += -Dmqtt_EXPORTS
 
-# Ensure that all assumptions are sound by checking that "all pointers
-# in pointer primitives are valid or null"
-CHECKFLAGS += --pointer-primitive-check
+################################################################
+# Use the external solver kissat for property checking when it is
+# available.  The kissat solver cannot be used for coverage checking,
+# because coverage checking requires an incremental solver.
+#
+# The kissat solver is usually faster than the default solver minisat.
+# If you encounter a proof for which minisat is actually faster, you
+# can add the definition
+#
+#         EXTERNAL_SAT_SOLVER_KISSAT =
+#
+# to the proof makefile to force the use of minisat for that proof.
+# The kissat solver cannot be used to speed up coverage checking
+# because that requires an incremental sat solver.
+
+ifeq ($(shell which kissat),)
+  EXTERNAL_SAT_SOLVER_KISSAT ?=
+else
+  EXTERNAL_SAT_SOLVER_KISSAT ?= --external-sat-solver kissat
+endif
+
+CHECKFLAGS += $(EXTERNAL_SAT_SOLVER_KISSAT)
