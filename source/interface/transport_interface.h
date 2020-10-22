@@ -82,7 +82,13 @@
  * @snippet this define_transportrecv
  * <br>
  * This function is expected to populate a buffer, with bytes received from the
- * transport, and return the number of bytes placed in the buffer.
+ * transport, and return the number of bytes placed in the buffer. However, if a
+ * socket error occurs while trying to receive a message, then a negative error
+ * code will be returned. The specific error code depends on the implementation
+ * of the function used. It is also possible to have a return value that is less
+ * than the size of the payload such as when the TCP receive buffer is not large
+ * enough. As such, it is recommended to check the return value and repeatedly
+ * invoke this function in a loop until all bytes are sent.
  * In the case of TLS over TCP, @ref TransportRecv_t is typically implemented by
  * calling the TLS layer function to receive data. In case of plaintext TCP
  * without TLS, it is typically implemented by calling the TCP layer receive
@@ -114,7 +120,13 @@
  * @snippet this define_transportsend
  * <br>
  * This function is expected to send the bytes, in the given buffer over the
- * transport, and return the number of bytes sent.
+ * transport, and return the number of bytes sent. However, if a socket error
+ * occurs while trying to send a message, then a negative error code will be
+ * returned. The specific error code depends on the implementation of the function
+ * used. It is also possible to have a return value that is less than the size
+ * of the payload such as when the TCP send buffer is not large enough.
+ * As such, it is recommended to check the return value and repeatedly invoke
+ * this function in a loop until all bytes are sent.
  * In the case of TLS over TCP, @ref TransportSend_t is typically implemented by
  * calling the TLS layer function to send data. In case of plaintext TCP
  * without TLS, it is typically implemented by calling the TCP layer send
@@ -164,7 +176,6 @@ typedef struct NetworkContext NetworkContext_t;
  * @param[in] bytesToRecv Number of bytes requested from the network.
  *
  * @return The number of bytes received or a negative error code.
- * The negative error code is specific to the implementation of this function.
  */
 /* @[define_transportrecv] */
 typedef int32_t ( * TransportRecv_t )( NetworkContext_t * pNetworkContext,
@@ -181,7 +192,6 @@ typedef int32_t ( * TransportRecv_t )( NetworkContext_t * pNetworkContext,
  * @param[in] bytesToSend Number of bytes to send over the network.
  *
  * @return The number of bytes sent or a negative error code.
- * The negative error code is specific to the implementation of this function.
  */
 /* @[define_transportsend] */
 typedef int32_t ( * TransportSend_t )( NetworkContext_t * pNetworkContext,
