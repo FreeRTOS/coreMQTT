@@ -88,7 +88,7 @@
  * of the function used. It is also possible to have a return value that is less
  * than the size of the payload such as when the TCP receive buffer is not large
  * enough. As such, it is recommended to check the return value and repeatedly
- * invoke this function in a loop until all bytes are sent.
+ * invoke this function in a loop until all bytes are received.
  * In the case of TLS over TCP, @ref TransportRecv_t is typically implemented by
  * calling the TLS layer function to receive data. In case of plaintext TCP
  * without TLS, it is typically implemented by calling the TCP layer receive
