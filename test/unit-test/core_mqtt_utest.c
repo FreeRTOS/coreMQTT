@@ -517,13 +517,9 @@ static void expectProcessLoopCalls( MQTTContext_t * const pContext,
                     break;
 
                 case MQTTStateCollision:
-                    expectMoreCalls = pPubInfo->dup;
-
-                    if( pPubInfo->dup == true )
-                    {
-                        MQTT_CalculateStatePublish_ExpectAnyArgsAndReturn( stateAfterDeserialize );
-                    }
-
+                    /* Execution will continue regardless of the dup flag. */
+                    expectMoreCalls = true;
+                    MQTT_CalculateStatePublish_ExpectAnyArgsAndReturn( stateAfterDeserialize );
                     break;
 
                 default:
@@ -1497,7 +1493,18 @@ void test_MQTT_ProcessLoop_handleIncomingPublish_Happy_Paths( void )
     currentPacketType = MQTT_PACKET_TYPE_PUBLISH;
     pubInfo.qos = MQTTQoS2;
     isEventCallbackInvoked = false;
-    /* No loop statuses have changed from before, no need to reset. */
+    /* Only changes are for QoS 2, no need to reset. */
+    expectParams.stateAfterDeserialize = MQTTPubRecSend;
+    expectParams.stateAfterSerialize = MQTTPubRelPending;
+    expectProcessLoopCalls( &context, &expectParams );
+    TEST_ASSERT_FALSE( isEventCallbackInvoked );
+
+    /* A publish is received when already a state record exists, but dup
+     * flag is not set. */
+    pubInfo.dup = false;
+    currentPacketType = MQTT_PACKET_TYPE_PUBLISH;
+    isEventCallbackInvoked = false;
+    /* No loop statuses have changed from before. */
     expectProcessLoopCalls( &context, &expectParams );
     TEST_ASSERT_FALSE( isEventCallbackInvoked );
 
@@ -1506,6 +1513,7 @@ void test_MQTT_ProcessLoop_handleIncomingPublish_Happy_Paths( void )
      * incomingPublish=true, stateAfterDeserialize=MQTTPubRecSend,
      * updateStateStatus=MQTTSuccess and pPubInfo is passed with
      * dup flag set. The event callback should be invoked. */
+    pubInfo.dup = true;
     currentPacketType = MQTT_PACKET_TYPE_PUBLISH;
     isEventCallbackInvoked = false;
     /* The only expect parameter to change is the update status. */
@@ -1549,33 +1557,18 @@ void test_MQTT_ProcessLoop_handleIncomingPublish_Error_Paths( void )
     expectParams.incomingPublish = true;
     expectProcessLoopCalls( &context, &expectParams );
 
-    /* A publish is received when already a state record exists, but dup
-     * flag is not set. */
-    publishInfo.dup = false;
-    publishInfo.qos = MQTTQoS0;
-    currentPacketType = MQTT_PACKET_TYPE_PUBLISH;
-    isEventCallbackInvoked = false;
-    /* Set expected return values in the loop. */
-    resetProcessLoopParams( &expectParams );
-    expectParams.deserializeStatus = MQTTSuccess;
-    expectParams.stateAfterDeserialize = MQTTPubRecSend;
-    expectParams.deserializeStatus = MQTTStateCollision;
-    expectParams.processLoopStatus = MQTTStateCollision;
-    expectParams.incomingPublish = true;
-    expectParams.pPubInfo = &publishInfo;
-    /* The other loop parameter fields are irrelevant. */
-    expectProcessLoopCalls( &context, &expectParams );
-    TEST_ASSERT_FALSE( isEventCallbackInvoked );
-
     /* A publish is received and dup flag is set, but state update failed. */
     publishInfo.dup = true;
     publishInfo.qos = MQTTQoS2;
     currentPacketType = MQTT_PACKET_TYPE_PUBLISH;
     isEventCallbackInvoked = false;
-    /* Don't need to reset since most fields are the same. */
+    resetProcessLoopParams( &expectParams );
     expectParams.stateAfterDeserialize = MQTTPubAckSend;
-    expectParams.deserializeStatus = MQTTIllegalState;
+    expectParams.updateStateStatus = MQTTIllegalState;
     expectParams.processLoopStatus = MQTTIllegalState;
+    expectParams.incomingPublish = true;
+    expectParams.pPubInfo = &publishInfo;
+    /* The other loop parameter fields are irrelevant. */
     expectProcessLoopCalls( &context, &expectParams );
     TEST_ASSERT_FALSE( isEventCallbackInvoked );
 }
