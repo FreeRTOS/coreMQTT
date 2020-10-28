@@ -26,7 +26,7 @@ LINK_FLAGS =
 INCLUDES += -I$(SRCDIR)/test/cbmc/include
 INCLUDES += -I$(SRCDIR)/source/include
 INCLUDES += -I$(SRCDIR)/source/src
-INCLUDES += -I$(SRCDIR)/source/portable
+INCLUDES += -I$(SRCDIR)/source/interface
 
 # Preprocessor definitions -D...
 DEFINES += -Dmqtt_EXPORTS
