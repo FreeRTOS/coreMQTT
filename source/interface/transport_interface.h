@@ -63,12 +63,12 @@
  * -# Implementing @ref NetworkContext_t<br><br>
  * @snippet this define_networkcontext
  * <br>
- * @ref NetworkContext_t is the incomplete type <b>struct NetworkContext</b>.
- * The implemented struct NetworkContext must contain all of the information
- * that is needed to receive and send data with the @ref TransportRecv_t
- * and the @ref TransportSend_t implementations.<br>
- * In the case of TLS over TCP, struct NetworkContext is typically implemented
- * with the TCP socket context and a TLS context.<br><br>
+ * The @ref NetworkContext is an incomplete type. An implementation of this
+ * interface must define `struct NetworkContext` for the system's requirements.
+ * For example, a plain-text implemention of the NetworkContext type might
+ * include a socket, and a TLS implementation might add a TLS context. This
+ * context is passed into the @ref TransportRecv_t and the @ref TransportSend_t
+ * functions.<br><br>
  * <b>Example code:</b>
  * @code{c}
  * struct NetworkContext
@@ -82,13 +82,12 @@
  * @snippet this define_transportrecv
  * <br>
  * This function is expected to populate a buffer, with bytes received from the
- * transport, and return the number of bytes placed in the buffer. However, if a
- * socket error occurs while trying to receive a message, then a negative error
+ * transport, and return the number of bytes placed in the buffer. However, if an
+ * error occurs while trying to receive the payload, then a negative error
  * code will be returned. The specific error code depends on the implementation
  * of the function used. It is also possible to have a return value that is less
- * than the size of the payload such as when the TCP receive buffer is not large
- * enough. As such, it is recommended to check the return value and repeatedly
- * invoke this function in a loop until all bytes are received.
+ * than the size requested. As such, it is recommended to check the return value
+ * and repeatedly invoke this function in a loop until all bytes are received.
  * In the case of TLS over TCP, @ref TransportRecv_t is typically implemented by
  * calling the TLS layer function to receive data. In case of plaintext TCP
  * without TLS, it is typically implemented by calling the TCP layer receive
@@ -120,13 +119,12 @@
  * @snippet this define_transportsend
  * <br>
  * This function is expected to send the bytes, in the given buffer over the
- * transport, and return the number of bytes sent. However, if a socket error
- * occurs while trying to send a message, then a negative error code will be
+ * transport, and return the number of bytes sent. However, if an error
+ * occurs while trying to send the payload, then a negative error code will be
  * returned. The specific error code depends on the implementation of the function
  * used. It is also possible to have a return value that is less than the size
- * of the payload such as when the TCP send buffer is not large enough.
- * As such, it is recommended to check the return value and repeatedly invoke
- * this function in a loop until all bytes are sent.
+ * of the size requested. As such, it is recommended to check the return value
+ * and repeatedly invoke this function in a loop until all bytes are sent.
  * In the case of TLS over TCP, @ref TransportSend_t is typically implemented by
  * calling the TLS layer function to send data. In case of plaintext TCP
  * without TLS, it is typically implemented by calling the TCP layer send
