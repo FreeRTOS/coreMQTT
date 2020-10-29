@@ -2791,6 +2791,56 @@ void test_MQTT_GetSubAckStatusCodes( void )
  */
 void test_MQTT_Status_strerror( void )
 {
+    MQTTStatus_t status;
+    const char * str = NULL;
+
+    status = MQTTSuccess;
+    str = MQTT_Status_strerror( status );
+    TEST_ASSERT_EQUAL_STRING( "MQTTSuccess", str );
+
+    status = MQTTBadParameter;
+    str = MQTT_Status_strerror( status );
+    TEST_ASSERT_EQUAL_STRING( "MQTTBadParameter", str );
+
+    status = MQTTNoMemory;
+    str = MQTT_Status_strerror( status );
+    TEST_ASSERT_EQUAL_STRING( "MQTTNoMemory", str );
+
+    status = MQTTSendFailed;
+    str = MQTT_Status_strerror( status );
+    TEST_ASSERT_EQUAL_STRING( "MQTTSendFailed", str );
+
+    status = MQTTRecvFailed;
+    str = MQTT_Status_strerror( status );
+    TEST_ASSERT_EQUAL_STRING( "MQTTRecvFailed", str );
+
+    status = MQTTBadResponse;
+    str = MQTT_Status_strerror( status );
+    TEST_ASSERT_EQUAL_STRING( "MQTTBadResponse", str );
+
+    status = MQTTServerRefused;
+    str = MQTT_Status_strerror( status );
+    TEST_ASSERT_EQUAL_STRING( "MQTTServerRefused", str );
+
+    status = MQTTNoDataAvailable;
+    str = MQTT_Status_strerror( status );
+    TEST_ASSERT_EQUAL_STRING( "MQTTNoDataAvailable", str );
+
+    status = MQTTIllegalState;
+    str = MQTT_Status_strerror( status );
+    TEST_ASSERT_EQUAL_STRING( "MQTTIllegalState", str );
+
+    status = MQTTStateCollision;
+    str = MQTT_Status_strerror( status );
+    TEST_ASSERT_EQUAL_STRING( "MQTTStateCollision", str );
+
+    status = MQTTKeepAliveTimeout;
+    str = MQTT_Status_strerror( status );
+    TEST_ASSERT_EQUAL_STRING( "MQTTKeepAliveTimeout", str );
+
+    status = MQTTKeepAliveTimeout + 1;
+    str = MQTT_Status_strerror( status );
+    TEST_ASSERT_EQUAL_STRING( "Invalid MQTT Status code", str );
 }
 
 /* ========================================================================== */
