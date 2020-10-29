@@ -30,16 +30,17 @@ jobs:
       - name: Run Coverage
         run: |
           make -C build/ coverage
-          lcov --rc lcov_branch_coverage=1 --remove build/coverage.info '*test*' --output-file build/coverage.info
-          lcov --rc lcov_branch_coverage=1 --remove build/coverage.info '*CMakeCCompilerId*' --output-file build/coverage.info
-          lcov --rc lcov_branch_coverage=1 --remove build/coverage.info '*mocks*' --output-file build/coverage.info
+          declare -a filters=("*test*" "*CMakeCCompilerId*" "*mocks*" "**/*test*")
+          for i in "${filters[@]}"
+          do
+            lcov --rc lcov_branch_coverage=1 --remove build/coverage.info '$i' --output-file build/coverage.info
+          done
           lcov --rc lcov_branch_coverage=1 --list build/coverage.info
       - name: Check Coverage
         uses: ChicagoFlutter/lcov-cop@v1.0.2
         with:
           path: "build/coverage.info"
           min_coverage: 100
-          exclude: "**/*test*"
   complexity:
     runs-on: ubuntu-latest
     steps:
