@@ -33,10 +33,7 @@ jobs:
           EXCLUDE: ("*test*" "*CMakeCCompilerId*" "*mocks*" "**/*test*")
         run: |
           make -C build/ coverage
-          for i in "${EXCLUDE[@]}"
-          do
-            lcov --rc lcov_branch_coverage=1 --remove build/coverage.info ${i} --output-file build/coverage.info
-          done
+          echo ${EXCLUDE[@]} | xargs lcov --rc lcov_branch_coverage=1 -r build/coverage.info '$i' -o build/coverage.info
           lcov --rc lcov_branch_coverage=1 --list build/coverage.info
           CODE_COVERAGE=$(lcov --rc lcov_branch_coverage=1 --list build/coverage.info | sed -n "s/.*Total:|.*|\([^%]*\)%.*/\1/p")
           echo "Minumum Coverage Required: ${MIN_COVERAGE}%"
