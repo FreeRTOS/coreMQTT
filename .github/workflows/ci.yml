@@ -32,7 +32,7 @@ jobs:
           MIN_COVERAGE: 100
         run: |
           make -C build/ coverage
-          declare -a EXCLUDE=("*test*" "*CMakeCCompilerId*" "*mocks*" "**/*test*")
+          declare -a EXCLUDE=("\*test\*" "*CMakeCCompilerId*" "*mocks*" "**/*test*")
           for i in "${EXCLUDE[@]}"
           do
             echo $i
