@@ -35,10 +35,10 @@ jobs:
           make -C build/ coverage
           for i in "${EXCLUDE[@]}"
           do
-            lcov --rc lcov_branch_coverage=1 --remove build/coverage.info $i --output-file build/coverage.info
+            lcov --rc lcov_branch_coverage=1 --remove build/coverage.info '$i' --output-file build/coverage.info
           done
           lcov --rc lcov_branch_coverage=1 --list build/coverage.info
-          CODE_COVERAGE=$(lcov --rc lcov_branch_coverage=1 --list build/coverage.info | sed -n "s/.*Total:|\([^%]*\)%.*/\1/p")
+          CODE_COVERAGE=$(lcov --rc lcov_branch_coverage=1 --list build/coverage.info | sed -n "s/.*Total:|.*|\([^%]*\)%.*/\1/p")
           echo "Minumum Coverage Required: ${MIN_COVERAGE}%"
           echo "Current Code Coverage: ${CODE_COVERAGE}%"
           if (( $(echo "$CODE_COVERAGE < $2" | bc) )); then exit 1; fi
