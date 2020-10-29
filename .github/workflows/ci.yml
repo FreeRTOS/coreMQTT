@@ -30,9 +30,9 @@ jobs:
       - name: Check Coverage
         env:
           MIN_COVERAGE: 100
-          EXCLUDE: ["\*test\*", "\*CMakeCCompilerId\*", "\*mocks\*"]
         run: |
           make -C build/ coverage
+          declare -a EXCLUDE=("\*test\*" "\*CMakeCCompilerId\*" "\*mocks\*")
           echo ${EXCLUDE[@]} | xargs lcov --rc lcov_branch_coverage=1 -r build/coverage.info -o build/coverage.info
           lcov --rc lcov_branch_coverage=1 --list build/coverage.info
           CUR_COVERAGE=$(lcov --rc lcov_branch_coverage=1 --list build/coverage.info | sed -n "s/.*Total:|.*|\([^%]*\)%.*/\1/p")
