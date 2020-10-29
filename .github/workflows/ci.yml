@@ -39,6 +39,7 @@ jobs:
           set -x
           LINE_COVERAGE=$(lcov --list build/coverage.info | cut -d '|' -f 2 | sed -n "s/\([^%]*\)%.*/\1/p")
           BRANCH_COVERAGE=$(lcov --rc lcov_branch_coverage=1 --list build/coverage.info | cut -d '|' -f 4 | sed -n "s/\([^%]*\)%.*/\1/p")
+          echo "$LINE_COVERAGE < 100" 
           RESULT=0
           if (( $(echo "$LINE_COVERAGE < 100" | bc) )); then
             echo "Line Coverage is too low: $LINE_COVERAGE"
