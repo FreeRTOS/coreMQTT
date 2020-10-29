@@ -27,7 +27,7 @@ jobs:
           cd build/
           ctest -E system --output-on-failure
           cd ..
-      - name: Check Coverage
+      - name: Run Coverage
         env:
           MIN_COVERAGE: 100
         run: |
@@ -35,10 +35,12 @@ jobs:
           declare -a EXCLUDE=("\*test\*" "\*CMakeCCompilerId\*" "\*mocks\*")
           echo ${EXCLUDE[@]} | xargs lcov --rc lcov_branch_coverage=1 -r build/coverage.info -o build/coverage.info
           lcov --rc lcov_branch_coverage=1 --list build/coverage.info
-          CUR_COVERAGE=$(lcov --rc lcov_branch_coverage=1 --list build/coverage.info | sed -n "s/.*Total:|.*|\([^%]*\)%.*/\1/p")
-          echo "Minumum Coverage Required: ${MIN_COVERAGE}%"
-          echo "Current Code Coverage: ${CUR_COVERAGE}%"
-          if (( $(echo "$CUR_COVERAGE < $MIN_COVERAGE" | bc) )); then exit 1; fi
+      - name: Check Coverage
+        uses: ChicagoFlutter/lcov-cop@v1.0.2
+        with:
+          path: "build/coverage.info"
+          min_coverage: 100
+          exclude: "**/*test*"
   complexity:
     runs-on: ubuntu-latest
     steps:
