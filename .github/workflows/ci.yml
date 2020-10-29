@@ -31,13 +31,14 @@ jobs:
         env:
           MIN_COVERAGE: 100
           EXCLUDE: ("*test*" "*CMakeCCompilerId*" "*mocks*" "**/*test*")
+          LCOV_PATH: build/coverage.info
         run: |
           make -C build/ coverage
           for i in "${EXCLUDE[@]}"
           do
-            lcov --rc lcov_branch_coverage=1 --remove build/coverage.info $i --output-file build/coverage.info
+            lcov --rc lcov_branch_coverage=1 --remove ${LCOV_PATH} $i --output-file ${LCOV_PATH}
           done
-          lcov --rc lcov_branch_coverage=1 --list build/coverage.info
+          lcov --rc lcov_branch_coverage=1 --list ${LCOV_PATH}
           CODE_COVERAGE=$(lcov --list ${LCOV_PATH} | sed -n "s/.*Total:|\([^%]*\)%.*/\1/p")
           echo "Minumum Coverage Required: ${MIN_COVERAGE}%"
           echo "Current Code Coverage: ${CODE_COVERAGE}%"
