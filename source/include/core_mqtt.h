@@ -231,8 +231,9 @@ typedef struct MQTTDeserializedInfo
  * @note The #MQTTGetCurrentTimeFunc_t callback function must be defined. If
  * there is no time implementation, it is the responsibility of the application
  * to provide a dummy function to always return 0, and provide 0 timeouts for
- * functions. This will ensure all time based functions will run for a single
- * iteration.
+ * all calls to #MQTT_Connect, #MQTT_ProcessLoop, and #MQTT_ReceiveLoop. This
+ * will result in loop functions running for a single iteration, and #MQTT_Connect
+ * relying on #MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT to receive the CONNACK packet.
  *
  * @param[in] pContext The context to initialize.
  * @param[in] pTransportInterface The transport interface to use with the context.
