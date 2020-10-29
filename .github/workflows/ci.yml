@@ -28,8 +28,6 @@ jobs:
           ctest -E system --output-on-failure
           cd ..
       - name: Run Coverage
-        env:
-          MIN_COVERAGE: 100
         run: |
           make -C build/ coverage
           declare -a EXCLUDE=("\*test\*" "\*CMakeCCompilerId\*" "\*mocks\*")
