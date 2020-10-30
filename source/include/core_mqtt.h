@@ -310,6 +310,9 @@ MQTTStatus_t MQTT_Init( MQTTContext_t * pContext,
  *    The network receive for CONNACK is retried up to the number of times
  *    configured by #MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT.
  *
+ * @note If a dummy #MQTTGetCurrentTimeFunc_t was passed to #MQTT_Init, then the
+ * timeout MUST be set to 0.
+ *
  * @param[in] pContext Initialized MQTT context.
  * @param[in] pConnectInfo MQTT CONNECT packet information.
  * @param[in] pWillInfo Last Will and Testament. Pass NULL if Last Will and
@@ -592,6 +595,10 @@ MQTTStatus_t MQTT_Disconnect( MQTTContext_t * pContext );
  * @brief Loop to receive packets from the transport interface. Handles keep
  * alive.
  *
+ * @note Passing a timeout value of 0 will run the loop for a single iteration.
+ * If a dummy #MQTTGetCurrentTimeFunc_t was passed to #MQTT_Init, then this
+ * timeout MUST be set to 0.
+ *
  * @param[in] pContext Initialized and connected MQTT context.
  * @param[in] timeoutMs Minimum time in milliseconds that the receive loop will
  * run, unless an error occurs.
@@ -641,6 +648,8 @@ MQTTStatus_t MQTT_ProcessLoop( MQTTContext_t * pContext,
  * keep alive.
  *
  * @note Passing a timeout value of 0 will run the loop for a single iteration.
+ * If a dummy #MQTTGetCurrentTimeFunc_t was passed to #MQTT_Init, then this
+ * timeout MUST be set to 0.
  *
  * @param[in] pContext Initialized and connected MQTT context.
  * @param[in] timeoutMs Minimum time in milliseconds that the receive loop will
