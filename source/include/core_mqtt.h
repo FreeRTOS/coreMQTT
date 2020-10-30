@@ -231,8 +231,9 @@ typedef struct MQTTDeserializedInfo
  * @note The #MQTTGetCurrentTimeFunc_t callback function must be defined. If
  * there is no time implementation, it is the responsibility of the application
  * to provide a dummy function to always return 0, and provide 0 timeouts for
- * functions. This will ensure all time based functions will run for a single
- * iteration.
+ * all calls to #MQTT_Connect, #MQTT_ProcessLoop, and #MQTT_ReceiveLoop. This
+ * will result in loop functions running for a single iteration, and #MQTT_Connect
+ * relying on #MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT to receive the CONNACK packet.
  *
  * @param[in] pContext The context to initialize.
  * @param[in] pTransportInterface The transport interface to use with the context.
@@ -308,6 +309,9 @@ MQTTStatus_t MQTT_Init( MQTTContext_t * pContext,
  * 2. If @p timeoutMs is 0:
  *    The network receive for CONNACK is retried up to the number of times
  *    configured by #MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT.
+ *
+ * @note If a dummy #MQTTGetCurrentTimeFunc_t was passed to #MQTT_Init, then the
+ * timeout MUST be set to 0.
  *
  * @param[in] pContext Initialized MQTT context.
  * @param[in] pConnectInfo MQTT CONNECT packet information.
@@ -591,6 +595,10 @@ MQTTStatus_t MQTT_Disconnect( MQTTContext_t * pContext );
  * @brief Loop to receive packets from the transport interface. Handles keep
  * alive.
  *
+ * @note Passing a timeout value of 0 will run the loop for a single iteration.
+ * If a dummy #MQTTGetCurrentTimeFunc_t was passed to #MQTT_Init, then this
+ * timeout MUST be set to 0.
+ *
  * @param[in] pContext Initialized and connected MQTT context.
  * @param[in] timeoutMs Minimum time in milliseconds that the receive loop will
  * run, unless an error occurs.
@@ -640,6 +648,8 @@ MQTTStatus_t MQTT_ProcessLoop( MQTTContext_t * pContext,
  * keep alive.
  *
  * @note Passing a timeout value of 0 will run the loop for a single iteration.
+ * If a dummy #MQTTGetCurrentTimeFunc_t was passed to #MQTT_Init, then this
+ * timeout MUST be set to 0.
  *
  * @param[in] pContext Initialized and connected MQTT context.
  * @param[in] timeoutMs Minimum time in milliseconds that the receive loop will
