@@ -59,7 +59,14 @@ git submodule update --checkout --init --recursive test/unit-test/CMock
 
 ## Reference examples
 
-The AWS IoT Embedded C-SDK repository contains demos of using the MQTT client library [here](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/master/demos/mqtt) on a POSIX platform. These can be used as reference examples for the library API.
+Please refer to the demos of the MQTT client library in the following locations for reference examples on POSIX and FreeRTOS platforms:
+
+| Platform | Location | Transport Interface Implementation |
+| :-: | :-: | :-: |
+| POSIX | [AWS IoT Device SDK for Embedded C](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/master/demos/mqtt) | POSIX sockets for TCP/IP and OpenSSL for TLS stack
+| FreeRTOS | [FreeRTOS/FreeRTOS](https://github.com/FreeRTOS/FreeRTOS/tree/master/FreeRTOS-Plus/Demo) | FreeRTOS+TCP for TCP/IP and mbedTLS for TLS stack |
+| FreeRTOS | [FreeRTOS AWS Reference Integrations](https://github.com/aws/amazon-freertos/tree/master/demos/coreMQTT) | Based on Secure Sockets Abstraction |
+
 
 ## Generating documentation
 
