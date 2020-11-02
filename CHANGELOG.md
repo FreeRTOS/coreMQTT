@@ -1,4 +1,4 @@
-# Change Log for coreMQTT Client Library
+# Changelog for coreMQTT Client Library
 
 ## v1.0.1 (November 2020)
 
