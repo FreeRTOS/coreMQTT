@@ -47,6 +47,12 @@ REMOVE_FUNCTION_BODY += MQTT_ProcessLoop
 REMOVE_FUNCTION_BODY += MQTT_ReceiveLoop
 REMOVE_FUNCTION_BODY += __CPROVER_file_local_core_mqtt_c_handleIncomingPublish
 REMOVE_FUNCTION_BODY += __CPROVER_file_local_core_mqtt_c_handleKeepAlive
+# This function body is removed to be replaced with the defined stub so that the
+# proof runs faster. The memcpy stub simply checks that the destination is
+# writable and that the source is readable, for the copy length specified. This
+# is safe to do because the results of the copy are not used later in the
+# function.
+REMOVE_FUNCTION_BODY += memcpy
 
 # The loops below are unwound once more than the timeout. The loops below use
 # the user passed in timeout to break the loop.
