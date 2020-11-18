@@ -11,7 +11,7 @@ This MQTT library implements the client side of the MQTT 3.1.1 protocol. This li
 - Operations on fixed buffers, so that applications may control their memory allocation strategy.
 - Scalable performance and footprint. The [configuration settings](@ref core_mqtt_config) allow this library to be tailored to a system's resources.
 
-Please see https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/master/demos/mqtt for example code demonstrating integration with TLS.
+Please see https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/main/demos/mqtt for example code demonstrating integration with TLS.
 
 @section mqtt_memory_requirements Memory Requirements
 @brief Memory requirements of the MQTT library.
