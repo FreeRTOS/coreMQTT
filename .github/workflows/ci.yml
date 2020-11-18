@@ -4,7 +4,7 @@ on:
   push:
     branches: ["**"]
   pull_request:
-    branches: [master]
+    branches: [main]
   workflow_dispatch:
 
 jobs:
@@ -80,7 +80,7 @@ jobs:
       - name: Checkout Parent Repo
         uses: actions/checkout@v2
         with:
-          ref: master
+          ref: main
           repository: aws/aws-iot-device-sdk-embedded-C
       - run: rm -r libraries/standard/coreMQTT
       - name: Clone This Repo
