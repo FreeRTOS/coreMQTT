@@ -9,7 +9,7 @@ See memory requirements for this library [here](https://docs.aws.amazon.com/embe
 ## MQTT Config File
 
 The MQTT client library exposes build configuration macros that are required for building the library.
-A list of all the configurations and their default values are defined in [core_mqtt_config_defaults.h](https://github.com/FreeRTOS/coreMQTT/blob/master/source/include/core_mqtt_config_defaults.h). 
+A list of all the configurations and their default values are defined in [core_mqtt_config_defaults.h](source/include/core_mqtt_config_defaults.h). 
 To provide custom values for the configuration macros, a custom config file named `core_mqtt_config.h` can be
 provided by the application to the library.
 
@@ -23,11 +23,11 @@ and build the library with default configuration values, provide `MQTT_DO_NOT_US
 
 ## Building the Library
 
-The [mqttFilePaths.cmake](https://github.com/FreeRTOS/coreMQTT/blob/master/mqttFilePaths.cmake) file contains the information of all source files and the header include path required to build the MQTT library.
+The [mqttFilePaths.cmake](mqttFilePaths.cmake) file contains the information of all source files and the header include path required to build the MQTT library.
 
 As mentioned in the previous section, either a custom config file (i.e. `core_mqtt_config.h`) OR `MQTT_DO_NOT_USE_CUSTOM_CONFIG` macro needs to be provided to build the MQTT library.
 
-For a CMake example of building the MQTT library with the `mqttFilePaths.cmake` file, refer to the `coverity_analysis` library target in [test/CMakeLists.txt](https://github.com/FreeRTOS/coreMQTT/blob/master/test/CMakeLists.txt) file.
+For a CMake example of building the MQTT library with the `mqttFilePaths.cmake` file, refer to the `coverity_analysis` library target in [test/CMakeLists.txt](test/CMakeLists.txt) file.
 
 ## Building Unit Tests
 
@@ -65,7 +65,7 @@ Please refer to the demos of the MQTT client library in the following locations 
 
 | Platform | Location | Transport Interface Implementation |
 | :-: | :-: | :-: |
-| POSIX | [AWS IoT Device SDK for Embedded C](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/master/demos/mqtt) | POSIX sockets for TCP/IP and OpenSSL for TLS stack
+| POSIX | [AWS IoT Device SDK for Embedded C](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/main/demos/mqtt) | POSIX sockets for TCP/IP and OpenSSL for TLS stack
 | FreeRTOS | [FreeRTOS/FreeRTOS](https://github.com/FreeRTOS/FreeRTOS/tree/master/FreeRTOS-Plus/Demo) | FreeRTOS+TCP for TCP/IP and mbedTLS for TLS stack |
 | FreeRTOS | [FreeRTOS AWS Reference Integrations](https://github.com/aws/amazon-freertos/tree/master/demos/coreMQTT) | Based on Secure Sockets Abstraction |
 
