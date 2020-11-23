@@ -950,7 +950,7 @@ static MQTTStatus_t sendPublishAcks( MQTTContext_t * pContext,
             LogError( ( "Failed to send ACK packet: PacketType=%02x, "
                         "SentBytes=%d, "
                         "PacketSize=%lu.",
-                        packetTypeByte,
+                        ( int ) packetTypeByte,
                         ( int ) bytesSent,
                         MQTT_PUBLISH_ACK_PACKET_SIZE ) );
             status = MQTTSendFailed;
@@ -1198,7 +1198,7 @@ static MQTTStatus_t handleIncomingAck( MQTTContext_t * pContext,
 
     appCallback = pContext->appCallback;
 
-    LogDebug( ( "Received packet of type %02x.", pIncomingPacket->type ) );
+    LogDebug( ( "Received packet of type %02x.", ( int ) pIncomingPacket->type ) );
 
     switch( pIncomingPacket->type )
     {
@@ -1233,7 +1233,7 @@ static MQTTStatus_t handleIncomingAck( MQTTContext_t * pContext,
         default:
             /* Bad response from the server. */
             LogError( ( "Unexpected packet type from server: PacketType=%02x.",
-                        pIncomingPacket->type ) );
+                        ( int ) pIncomingPacket->type ) );
             status = MQTTBadResponse;
             break;
     }
@@ -1501,8 +1501,8 @@ static MQTTStatus_t receiveConnack( const MQTTContext_t * pContext,
         {
             LogError( ( "Incorrect packet type %X received while expecting"
                         " CONNACK(%X).",
-                        pIncomingPacket->type,
-                        MQTT_PACKET_TYPE_CONNACK ) );
+                        ( int ) pIncomingPacket->type,
+                        ( int ) MQTT_PACKET_TYPE_CONNACK ) );
             status = MQTTBadResponse;
         }
     }
@@ -2356,7 +2356,8 @@ MQTTStatus_t MQTT_GetSubAckStatusCodes( const MQTTPacketInfo_t * pSubackPacket,
     {
         LogError( ( "Invalid parameter: Input packet is not a SUBACK packet: "
                     "ExpectedType=%02x, InputType=%02x",
-                    MQTT_PACKET_TYPE_SUBACK, pSubackPacket->type ) );
+                    ( int ) MQTT_PACKET_TYPE_SUBACK,
+                    ( int ) pSubackPacket->type ) );
         status = MQTTBadParameter;
     }
     else if( pSubackPacket->pRemainingData == NULL )

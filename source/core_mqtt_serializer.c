@@ -1150,7 +1150,7 @@ static MQTTStatus_t deserializeSuback( const MQTTPacketInfo_t * pSuback,
         *pPacketIdentifier = UINT16_DECODE( pVariableHeader );
 
         LogDebug( ( "Packet identifier %hu.",
-                    ( unsigned short int ) *pPacketIdentifier ) );
+                    ( unsigned short ) *pPacketIdentifier ) );
 
         status = readSubackStatus( remainingLength - sizeof( uint16_t ),
                                    pVariableHeader + sizeof( uint16_t ) );
@@ -1264,7 +1264,7 @@ static MQTTStatus_t deserializePublish( const MQTTPacketInfo_t * pIncomingPacket
         /* Parse the topic. */
         pPublishInfo->pTopicName = ( const char * ) ( pVariableHeader + sizeof( uint16_t ) );
         LogDebug( ( "Topic name length %hu: %.*s",
-                    ( unsigned short int ) pPublishInfo->topicNameLength,
+                    ( unsigned short ) pPublishInfo->topicNameLength,
                     pPublishInfo->topicNameLength,
                     pPublishInfo->pTopicName ) );
 
@@ -1277,7 +1277,7 @@ static MQTTStatus_t deserializePublish( const MQTTPacketInfo_t * pIncomingPacket
             *pPacketId = UINT16_DECODE( pPacketIdentifierHigh );
 
             LogDebug( ( "Packet identifier %hu.",
-                        ( unsigned short int ) *pPacketId ) );
+                        ( unsigned short ) *pPacketId ) );
 
             /* Advance pointer two bytes to start of payload as in the QoS 0 case. */
             pPacketIdentifierHigh += sizeof( uint16_t );
@@ -1336,7 +1336,7 @@ static MQTTStatus_t deserializeSimpleAck( const MQTTPacketInfo_t * pAck,
         *pPacketIdentifier = UINT16_DECODE( pAck->pRemainingData );
 
         LogDebug( ( "Packet identifier %hu.",
-                    ( unsigned short int ) *pPacketIdentifier ) );
+                    ( unsigned short ) *pPacketIdentifier ) );
 
         /* Packet identifier cannot be 0. */
         if( *pPacketIdentifier == 0U )
@@ -2095,7 +2095,7 @@ MQTTStatus_t MQTT_SerializeAck( const MQTTFixedBuffer_t * pFixedBuffer,
 
             default:
                 LogError( ( "Packet type is not a publish ACK: Packet type=%02x",
-                            packetType ) );
+                            ( int ) packetType ) );
                 status = MQTTBadParameter;
                 break;
         }
@@ -2250,7 +2250,7 @@ MQTTStatus_t MQTT_DeserializePublish( const MQTTPacketInfo_t * pIncomingPacket,
     else if( ( pIncomingPacket->type & 0xF0U ) != MQTT_PACKET_TYPE_PUBLISH )
     {
         LogError( ( "Packet is not publish. Packet type: %02x.",
-                    pIncomingPacket->type ) );
+                    ( int ) pIncomingPacket->type ) );
         status = MQTTBadParameter;
     }
     else if( pIncomingPacket->pRemainingData == NULL )
@@ -2288,7 +2288,7 @@ MQTTStatus_t MQTT_DeserializeAck( const MQTTPacketInfo_t * pIncomingPacket,
                ( pIncomingPacket->type != MQTT_PACKET_TYPE_PINGRESP ) ) )
     {
         LogError( ( "pPacketId cannot be NULL for packet type %02x.",
-                    pIncomingPacket->type ) );
+                    ( int ) pIncomingPacket->type ) );
         status = MQTTBadParameter;
     }
     /* Pointer for session present cannot be NULL for CONNACK. */
@@ -2335,7 +2335,7 @@ MQTTStatus_t MQTT_DeserializeAck( const MQTTPacketInfo_t * pIncomingPacket,
             /* Any other packet type is invalid. */
             default:
                 LogError( ( "IotMqtt_DeserializeResponse() called with unknown packet type:(%02x).",
-                            pIncomingPacket->type ) );
+                            ( int ) pIncomingPacket->type ) );
                 status = MQTTBadResponse;
                 break;
         }
