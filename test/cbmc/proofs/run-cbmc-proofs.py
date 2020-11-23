@@ -191,8 +191,12 @@ async def configure_proof_dirs(queue, counter):
         print_counter(counter)
         path = str(await queue.get())
 
+        env = dict(os.environ)
+        env["EXTERNAL_SAT_SOLVER"] = ""
+
         proc = await asyncio.create_subprocess_exec(
-            "nice", "-n", "15", "make", "-B", "--quiet", "_report", cwd=path)
+            "nice", "-n", "15", "make", "-B", "--quiet", "_report", cwd=path,
+            env=env)
         await proc.wait()
         counter["fail" if proc.returncode else "pass"].append(path)
         counter["complete"] += 1
