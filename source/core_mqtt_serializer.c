@@ -2095,7 +2095,7 @@ MQTTStatus_t MQTT_SerializeAck( const MQTTFixedBuffer_t * pFixedBuffer,
 
             default:
                 LogError( ( "Packet type is not a publish ACK: Packet type=%02x",
-                            ( int ) packetType ) );
+                            ( unsigned int ) packetType ) );
                 status = MQTTBadParameter;
                 break;
         }
@@ -2250,7 +2250,7 @@ MQTTStatus_t MQTT_DeserializePublish( const MQTTPacketInfo_t * pIncomingPacket,
     else if( ( pIncomingPacket->type & 0xF0U ) != MQTT_PACKET_TYPE_PUBLISH )
     {
         LogError( ( "Packet is not publish. Packet type: %02x.",
-                    ( int ) pIncomingPacket->type ) );
+                    ( unsigned int ) pIncomingPacket->type ) );
         status = MQTTBadParameter;
     }
     else if( pIncomingPacket->pRemainingData == NULL )
@@ -2288,7 +2288,7 @@ MQTTStatus_t MQTT_DeserializeAck( const MQTTPacketInfo_t * pIncomingPacket,
                ( pIncomingPacket->type != MQTT_PACKET_TYPE_PINGRESP ) ) )
     {
         LogError( ( "pPacketId cannot be NULL for packet type %02x.",
-                    ( int ) pIncomingPacket->type ) );
+                    ( unsigned int ) pIncomingPacket->type ) );
         status = MQTTBadParameter;
     }
     /* Pointer for session present cannot be NULL for CONNACK. */
@@ -2335,7 +2335,7 @@ MQTTStatus_t MQTT_DeserializeAck( const MQTTPacketInfo_t * pIncomingPacket,
             /* Any other packet type is invalid. */
             default:
                 LogError( ( "IotMqtt_DeserializeResponse() called with unknown packet type:(%02x).",
-                            ( int ) pIncomingPacket->type ) );
+                            ( unsigned int ) pIncomingPacket->type ) );
                 status = MQTTBadResponse;
                 break;
         }
