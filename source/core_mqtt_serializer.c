@@ -935,7 +935,7 @@ static MQTTStatus_t deserializeConnack( const MQTTPacketInfo_t * pConnack,
     if( pConnack->remainingLength != MQTT_PACKET_CONNACK_REMAINING_LENGTH )
     {
         LogError( ( "CONNACK does not have remaining length of %u.",
-                    MQTT_PACKET_CONNACK_REMAINING_LENGTH ) );
+                    ( unsigned int ) MQTT_PACKET_CONNACK_REMAINING_LENGTH ) );
 
         status = MQTTBadResponse;
     }
@@ -1326,7 +1326,7 @@ static MQTTStatus_t deserializeSimpleAck( const MQTTPacketInfo_t * pAck,
     if( pAck->remainingLength != MQTT_PACKET_SIMPLE_ACK_REMAINING_LENGTH )
     {
         LogError( ( "ACK does not have remaining length of %u.",
-                    MQTT_PACKET_SIMPLE_ACK_REMAINING_LENGTH ) );
+                    ( unsigned int ) MQTT_PACKET_SIMPLE_ACK_REMAINING_LENGTH ) );
 
         status = MQTTBadResponse;
     }
