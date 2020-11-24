@@ -605,7 +605,7 @@ static int32_t sendPacket( MQTTContext_t * pContext,
 
         if( bytesSent < 0 )
         {
-            LogError( ( "Transport send failed. Error code=%d.", ( int ) bytesSent ) );
+            LogError( ( "Transport send failed. Error code=%ld.", ( long int ) bytesSent ) );
             totalBytesSent = bytesSent;
             sendError = true;
         }
@@ -620,11 +620,11 @@ static int32_t sendPacket( MQTTContext_t * pContext,
             bytesRemaining -= ( size_t ) bytesSent;
             totalBytesSent += bytesSent;
             pIndex += bytesSent;
-            LogDebug( ( "BytesSent=%d, BytesRemaining=%lu,"
-                        " TotalBytesSent=%d.",
-                        ( int ) bytesSent,
+            LogDebug( ( "BytesSent=%ld, BytesRemaining=%lu,"
+                        " TotalBytesSent=%ld.",
+                        ( long int ) bytesSent,
                         ( unsigned long ) bytesRemaining,
-                        ( int ) totalBytesSent ) );
+                        ( long int ) totalBytesSent ) );
         }
     }
 
@@ -632,8 +632,8 @@ static int32_t sendPacket( MQTTContext_t * pContext,
     if( totalBytesSent > 0 )
     {
         pContext->lastPacketTime = sendTime;
-        LogDebug( ( "Successfully sent packet at time %u.",
-                    ( unsigned int ) sendTime ) );
+        LogDebug( ( "Successfully sent packet at time %lu.",
+                    ( unsigned long ) sendTime ) );
     }
 
     return totalBytesSent;
@@ -714,8 +714,8 @@ static int32_t recvExact( const MQTTContext_t * pContext,
 
         if( bytesRecvd < 0 )
         {
-            LogError( ( "Network error while receiving packet: ReturnCode=%d.",
-                        ( int ) bytesRecvd ) );
+            LogError( ( "Network error while receiving packet: ReturnCode=%ld.",
+                        ( long int ) bytesRecvd ) );
             totalBytesRecvd = bytesRecvd;
             receiveError = true;
         }
@@ -731,11 +731,11 @@ static int32_t recvExact( const MQTTContext_t * pContext,
             bytesRemaining -= ( size_t ) bytesRecvd;
             totalBytesRecvd += ( int32_t ) bytesRecvd;
             pIndex += bytesRecvd;
-            LogDebug( ( "BytesReceived=%d, BytesRemaining=%lu, "
-                        "TotalBytesReceived=%d.",
-                        ( int ) bytesRecvd,
+            LogDebug( ( "BytesReceived=%ld, BytesRemaining=%lu, "
+                        "TotalBytesReceived=%ld.",
+                        ( long int ) bytesRecvd,
                         ( unsigned long ) bytesRemaining,
-                        ( int ) totalBytesRecvd ) );
+                        ( long int ) totalBytesRecvd ) );
         }
 
         elapsedTimeMs = calculateElapsedTime( getTimeStampMs(), entryTimeMs );
@@ -784,8 +784,8 @@ static MQTTStatus_t discardPacket( const MQTTContext_t * pContext,
         if( bytesReceived != ( int32_t ) bytesToReceive )
         {
             LogError( ( "Receive error while discarding packet."
-                        "ReceivedBytes=%d, ExpectedBytes=%lu.",
-                        ( int ) bytesReceived,
+                        "ReceivedBytes=%ld, ExpectedBytes=%lu.",
+                        ( long int ) bytesReceived,
                         ( unsigned long ) bytesToReceive ) );
             receiveError = true;
         }
@@ -810,8 +810,8 @@ static MQTTStatus_t discardPacket( const MQTTContext_t * pContext,
 
     if( totalBytesReceived == remainingLength )
     {
-        LogError( ( "Dumped packet. DumpedBytes=%u.",
-                    ( unsigned int ) totalBytesReceived ) );
+        LogError( ( "Dumped packet. DumpedBytes=%lu.",
+                    ( unsigned long ) totalBytesReceived ) );
         /* Packet dumped, so no data is available. */
         status = MQTTNoDataAvailable;
     }
@@ -851,14 +851,14 @@ static MQTTStatus_t receivePacket( const MQTTContext_t * pContext,
         if( bytesReceived == ( int32_t ) bytesToReceive )
         {
             /* Receive successful, bytesReceived == bytesToReceive. */
-            LogInfo( ( "Packet received. ReceivedBytes=%d.",
-                       ( int ) bytesReceived ) );
+            LogInfo( ( "Packet received. ReceivedBytes=%ld.",
+                       ( long int ) bytesReceived ) );
         }
         else
         {
-            LogError( ( "Packet reception failed. ReceivedBytes=%d, "
+            LogError( ( "Packet reception failed. ReceivedBytes=%ld, "
                         "ExpectedBytes=%lu.",
-                        ( int ) bytesReceived,
+                        ( long int ) bytesReceived,
                         ( unsigned long ) bytesToReceive ) );
             status = MQTTRecvFailed;
         }
@@ -948,10 +948,10 @@ static MQTTStatus_t sendPublishAcks( MQTTContext_t * pContext,
         else
         {
             LogError( ( "Failed to send ACK packet: PacketType=%02x, "
-                        "SentBytes=%d, "
+                        "SentBytes=%ld, "
                         "PacketSize=%lu.",
                         ( unsigned int ) packetTypeByte,
-                        ( int ) bytesSent,
+                        ( long int ) bytesSent,
                         MQTT_PUBLISH_ACK_PACKET_SIZE ) );
             status = MQTTSendFailed;
         }
@@ -1387,8 +1387,8 @@ static MQTTStatus_t sendPublish( MQTTContext_t * pContext,
     }
     else
     {
-        LogDebug( ( "Sent %d bytes of PUBLISH header.",
-                    ( int ) bytesSent ) );
+        LogDebug( ( "Sent %ld bytes of PUBLISH header.",
+                    ( long int ) bytesSent ) );
 
         /* Send Payload if there is one to send. It is valid for a PUBLISH
          * Packet to contain a zero length payload.*/
@@ -1405,8 +1405,8 @@ static MQTTStatus_t sendPublish( MQTTContext_t * pContext,
             }
             else
             {
-                LogDebug( ( "Sent %d bytes of PUBLISH payload.",
-                            ( int ) bytesSent ) );
+                LogDebug( ( "Sent %ld bytes of PUBLISH payload.",
+                            ( long int ) bytesSent ) );
             }
         }
         else
@@ -1774,8 +1774,8 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
         }
         else
         {
-            LogDebug( ( "Sent %d bytes of CONNECT packet.",
-                        ( int ) bytesSent ) );
+            LogDebug( ( "Sent %ld bytes of CONNECT packet.",
+                        ( long int ) bytesSent ) );
         }
     }
 
@@ -1865,8 +1865,8 @@ MQTTStatus_t MQTT_Subscribe( MQTTContext_t * pContext,
         }
         else
         {
-            LogDebug( ( "Sent %d bytes of SUBSCRIBE packet.",
-                        ( int ) bytesSent ) );
+            LogDebug( ( "Sent %ld bytes of SUBSCRIBE packet.",
+                        ( long int ) bytesSent ) );
         }
     }
 
@@ -2000,8 +2000,8 @@ MQTTStatus_t MQTT_Ping( MQTTContext_t * pContext )
         {
             pContext->pingReqSendTimeMs = pContext->lastPacketTime;
             pContext->waitingForPingResp = true;
-            LogDebug( ( "Sent %d bytes of PINGREQ packet.",
-                        ( int ) bytesSent ) );
+            LogDebug( ( "Sent %ld bytes of PINGREQ packet.",
+                        ( long int ) bytesSent ) );
         }
     }
 
@@ -2060,8 +2060,8 @@ MQTTStatus_t MQTT_Unsubscribe( MQTTContext_t * pContext,
         }
         else
         {
-            LogDebug( ( "Sent %d bytes of UNSUBSCRIBE packet.",
-                        ( int ) bytesSent ) );
+            LogDebug( ( "Sent %ld bytes of UNSUBSCRIBE packet.",
+                        ( long int ) bytesSent ) );
         }
     }
 
@@ -2110,8 +2110,8 @@ MQTTStatus_t MQTT_Disconnect( MQTTContext_t * pContext )
         }
         else
         {
-            LogDebug( ( "Sent %d bytes of DISCONNECT packet.",
-                        ( int ) bytesSent ) );
+            LogDebug( ( "Sent %ld bytes of DISCONNECT packet.",
+                        ( long int ) bytesSent ) );
         }
     }
 

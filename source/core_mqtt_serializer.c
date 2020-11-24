@@ -2397,8 +2397,8 @@ MQTTStatus_t MQTT_GetIncomingPacketTypeAndLength( TransportRecv_t readFunc,
     else if( status != MQTTBadParameter )
     {
         LogError( ( "A single byte was not read from the transport: "
-                    "transportStatus=%d.",
-                    ( int ) bytesReceived ) );
+                    "transportStatus=%ld.",
+                    ( long int ) bytesReceived ) );
         status = MQTTRecvFailed;
     }
     else
