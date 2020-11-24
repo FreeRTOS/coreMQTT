@@ -941,8 +941,8 @@ static MQTTStatus_t sendPublishAcks( MQTTContext_t * pContext,
 
             if( status != MQTTSuccess )
             {
-                LogError( ( "Failed to update state of publish %u.",
-                            ( unsigned int ) packetId ) );
+                LogError( ( "Failed to update state of publish %hu.",
+                            ( unsigned short ) packetId ) );
             }
         }
         else
@@ -1063,8 +1063,8 @@ static MQTTStatus_t handleIncomingPublish( MQTTContext_t * pContext,
             publishRecordState = MQTT_CalculateStatePublish( MQTT_RECEIVE,
                                                              publishInfo.qos );
 
-            LogDebug( ( "Incoming publish packet with packet id %u already exists.",
-                        ( unsigned int ) packetIdentifier ) );
+            LogDebug( ( "Incoming publish packet with packet id %hu already exists.",
+                        ( unsigned short ) packetIdentifier ) );
 
             if( publishInfo.dup == false )
             {
@@ -1073,9 +1073,9 @@ static MQTTStatus_t handleIncomingPublish( MQTTContext_t * pContext,
         }
         else
         {
-            LogError( ( "Error in updating publish state for incoming publish with packet id %u."
+            LogError( ( "Error in updating publish state for incoming publish with packet id %hu."
                         " Error is %s",
-                        ( unsigned int ) packetIdentifier,
+                        ( unsigned short ) packetIdentifier,
                         MQTT_Status_strerror( status ) ) );
         }
     }
@@ -1145,9 +1145,9 @@ static MQTTStatus_t handlePublishAcks( MQTTContext_t * pContext,
         }
         else
         {
-            LogError( ( "Updating the state engine for packet id %u"
+            LogError( ( "Updating the state engine for packet id %hu"
                         " failed with error %s.",
-                        ( unsigned int ) packetIdentifier,
+                        ( unsigned short ) packetIdentifier,
                         MQTT_Status_strerror( status ) ) );
         }
     }
@@ -2274,18 +2274,18 @@ MQTTStatus_t MQTT_MatchTopic( const char * pTopicName,
     if( ( pTopicName == NULL ) || ( topicNameLength == 0u ) )
     {
         LogError( ( "Invalid paramater: Topic name should be non-NULL and its "
-                    "length should be > 0: TopicName=%p, TopicNameLength=%u",
+                    "length should be > 0: TopicName=%p, TopicNameLength=%hu",
                     ( void * ) pTopicName,
-                    ( unsigned int ) topicNameLength ) );
+                    ( unsigned short ) topicNameLength ) );
 
         status = MQTTBadParameter;
     }
     else if( ( pTopicFilter == NULL ) || ( topicFilterLength == 0u ) )
     {
         LogError( ( "Invalid paramater: Topic filter should be non-NULL and "
-                    "its length should be > 0: TopicName=%p, TopicFilterLength=%u",
+                    "its length should be > 0: TopicName=%p, TopicFilterLength=%hu",
                     ( void * ) pTopicFilter,
-                    ( unsigned int ) topicFilterLength ) );
+                    ( unsigned short ) topicFilterLength ) );
         status = MQTTBadParameter;
     }
     else if( pIsMatch == NULL )

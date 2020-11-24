@@ -1860,9 +1860,9 @@ MQTTStatus_t MQTT_GetPublishPacketSize( const MQTTPublishInfo_t * pPublishInfo,
     else if( ( pPublishInfo->pTopicName == NULL ) || ( pPublishInfo->topicNameLength == 0U ) )
     {
         LogError( ( "Invalid topic name for PUBLISH: pTopicName=%p, "
-                    "topicNameLength=%u.",
+                    "topicNameLength=%hu.",
                     ( void * ) pPublishInfo->pTopicName,
-                    ( unsigned int ) pPublishInfo->topicNameLength ) );
+                    ( unsigned short ) pPublishInfo->topicNameLength ) );
         status = MQTTBadParameter;
     }
     else
@@ -1919,9 +1919,9 @@ MQTTStatus_t MQTT_SerializePublish( const MQTTPublishInfo_t * pPublishInfo,
     else if( ( pPublishInfo->pTopicName == NULL ) || ( pPublishInfo->topicNameLength == 0U ) )
     {
         LogError( ( "Invalid topic name for PUBLISH: pTopicName=%p, "
-                    "topicNameLength=%u.",
+                    "topicNameLength=%hu.",
                     ( void * ) pPublishInfo->pTopicName,
-                    ( unsigned int ) pPublishInfo->topicNameLength ) );
+                    ( unsigned short ) pPublishInfo->topicNameLength ) );
         status = MQTTBadParameter;
     }
     else if( ( pPublishInfo->qos != MQTTQoS0 ) && ( packetId == 0U ) )
@@ -1996,15 +1996,15 @@ MQTTStatus_t MQTT_SerializePublishHeader( const MQTTPublishInfo_t * pPublishInfo
     else if( ( pPublishInfo->pTopicName == NULL ) || ( pPublishInfo->topicNameLength == 0U ) )
     {
         LogError( ( "Invalid topic name for publish: pTopicName=%p, "
-                    "topicNameLength=%u.",
+                    "topicNameLength=%hu.",
                     ( void * ) pPublishInfo->pTopicName,
-                    ( unsigned int ) pPublishInfo->topicNameLength ) );
+                    ( unsigned short ) pPublishInfo->topicNameLength ) );
         status = MQTTBadParameter;
     }
     else if( ( pPublishInfo->qos != MQTTQoS0 ) && ( packetId == 0U ) )
     {
-        LogError( ( "Packet Id is 0 for publish with QoS=%u.",
-                    ( unsigned int ) pPublishInfo->qos ) );
+        LogError( ( "Packet Id is 0 for publish with QoS=%hu.",
+                    ( unsigned short ) pPublishInfo->qos ) );
         status = MQTTBadParameter;
     }
     else if( ( pPublishInfo->dup == true ) && ( pPublishInfo->qos == MQTTQoS0 ) )
@@ -2213,7 +2213,7 @@ MQTTStatus_t MQTT_SerializePingreq( const MQTTFixedBuffer_t * pFixedBuffer )
         if( pFixedBuffer->size < MQTT_PACKET_PINGREQ_SIZE )
         {
             LogError( ( "Buffer size of %lu is not sufficient to hold "
-                        "serialized PINGREQ packet of size of %u.",
+                        "serialized PINGREQ packet of size of %lu.",
                         ( unsigned long ) pFixedBuffer->size,
                         MQTT_PACKET_PINGREQ_SIZE ) );
             status = MQTTNoMemory;
