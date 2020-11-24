@@ -947,11 +947,9 @@ static MQTTStatus_t sendPublishAcks( MQTTContext_t * pContext,
         }
         else
         {
-            LogError( ( "Failed to send ACK packet: PacketType=%02x, "
-                        "SentBytes=%ld, "
+            LogError( ( "Failed to send ACK packet: PacketType=%02x, SentBytes=%ld, "
                         "PacketSize=%lu.",
-                        ( unsigned int ) packetTypeByte,
-                        ( long int ) bytesSent,
+                        ( unsigned int ) packetTypeByte, ( long int ) bytesSent,
                         MQTT_PUBLISH_ACK_PACKET_SIZE ) );
             status = MQTTSendFailed;
         }
