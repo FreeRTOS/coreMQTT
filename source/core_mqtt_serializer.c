@@ -65,7 +65,7 @@
 /**
  * @brief A PINGREQ packet is always 2 bytes in size, defined by MQTT 3.1.1 spec.
  */
-#define MQTT_PACKET_PINGREQ_SIZE                    ( 2U )
+#define MQTT_PACKET_PINGREQ_SIZE                    ( 2UL )
 
 /**
  * @brief The Remaining Length field of MQTT disconnect packets, per MQTT spec.
