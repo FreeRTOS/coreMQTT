@@ -1,4 +1,4 @@
-name: Release automation for tagging, creating ZIP and uploading release
+name: Release automation
 
 on:
   workflow_dispatch:
