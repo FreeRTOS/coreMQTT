@@ -36,13 +36,17 @@ jobs:
         run: sudo apt-get install zip unzip
       - name: Checkout code
         uses: actions/checkout@v2
+        with:
+          path: coreMQTT
       - name: Create ZIP # This would actually build your project, using zip for an example artifact
         run: |
-          zip -r coreMQTT-${{ github.event.inputs.commit_id }}.zip ./ -x "*.git"
+          zip -r coreMQTT-${{ github.event.inputs.commit_id }}.zip coreMQTT -x "*.git"
           ls ./
       - name: Validate created ZIP 
         run: |
           mkdir zip-check 
           mv coreMQTT-${{ github.event.inputs.commit_id }}.zip zip-check
           cd zip-check
-          unzip coreMQTT-${{ github.event.inputs.commit_id }}.zip -d coreMQTT-${{ gi
+          unzip coreMQTT-${{ github.event.inputs.commit_id }}.zip -d coreMQTT-${{ github.event.inputs.commit_id }}
+          ls coreMQTT-${{ github.event.inputs.commit_id }}
+          diff -r -x "*.git*" coreMQTT-${{ github.event.inputs.commit_id }}/coreMQTT/ ../coreMQTT/
