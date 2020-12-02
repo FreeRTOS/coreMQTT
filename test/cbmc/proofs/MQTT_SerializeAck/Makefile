@@ -21,6 +21,7 @@
 
 HARNESS_ENTRY=harness
 HARNESS_FILE=MQTT_SerializeAck_harness
+PROOF_UID=MQTT_SerializeAck
 
 DEFINES +=
 INCLUDES +=

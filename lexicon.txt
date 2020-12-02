@@ -48,6 +48,8 @@ deserialize
 deserializeack
 deserialized
 deserializepublish
+deserializer
+deserializestatus
 deserializing
 didn
 disconnectpacketsize
@@ -199,6 +201,7 @@ pcurrentstate
 pcursor
 pdeserializedinfo
 pdestination
+pexpectparams
 pfilter
 pfilterindex
 pfixedbuffer
@@ -236,6 +239,7 @@ premainingdata
 premaininglength
 presendpublish
 processloop
+processloopstatus
 psessionpresent
 psource
 pstate
@@ -296,6 +300,7 @@ serializepayload
 serializepingreq
 serializepublish
 serializepublishheader
+serializestatus
 serializesubscribe
 serializeunsubscribe
 sessionpresent
@@ -308,6 +313,7 @@ somepassword
 someusername
 sourcelength
 stateafterdeserialize
+stateafterserialize
 statuscount
 strerror
 strlen

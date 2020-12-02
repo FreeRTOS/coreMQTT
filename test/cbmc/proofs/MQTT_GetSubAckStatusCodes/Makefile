@@ -21,6 +21,7 @@
 
 HARNESS_ENTRY=harness
 HARNESS_FILE=MQTT_GetSubAckStatusCodes_harness
+PROOF_UID=MQTT_GetSubAckStatusCodes
 
 DEFINES +=
 INCLUDES +=

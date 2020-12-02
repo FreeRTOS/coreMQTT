@@ -21,6 +21,7 @@
 
 HARNESS_ENTRY=harness
 HARNESS_FILE=MQTT_SerializeDisconnect_harness
+PROOF_UID=MQTT_SerializeDisconnect
 
 DEFINES +=
 INCLUDES +=

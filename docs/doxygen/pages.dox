@@ -11,14 +11,14 @@ This MQTT library implements the client side of the MQTT 3.1.1 protocol. This li
 - Operations on fixed buffers, so that applications may control their memory allocation strategy.
 - Scalable performance and footprint. The [configuration settings](@ref core_mqtt_config) allow this library to be tailored to a system's resources.
 
-Please see https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/master/demos/mqtt for example code demonstrating integration with TLS.
+Please see https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/main/demos/mqtt for example code demonstrating integration with TLS.
 
 @section mqtt_memory_requirements Memory Requirements
 @brief Memory requirements of the MQTT library.
 
 <table>
     <tr>
-        <td colspan="4"><center><b>Code Size of coreMQTT library files (sizes generated with [GCC for ARM Cortex-M toolchain 20191025](https://developer.arm.com/tools-and-software/open-source-software/developer-tools/gnu-toolchain/gnu-rm/downloads/9-2019-q4-major))</b></center></td>
+        <td colspan="4"><center><b>Code size of coreMQTT library files (sizes generated with [GCC for ARM Cortex-M toolchain](https://developer.arm.com/tools-and-software/open-source-software/developer-tools/gnu-toolchain/gnu-rm/downloads/9-2020-q2-update))</b></center></td>
     </tr>
     <tr>
         <td><b>File</b></td>
@@ -28,27 +28,27 @@ Please see https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/master/demo
     </tr>
     <tr>
         <td>core_mqtt.c</td>
-        <td>13.3K</td>
-        <td>5.1K</td>
-        <td>4.6K</td>
+        <td>13.6K</td>
+        <td>6.9K</td>
+        <td>6.3K</td>
     </tr>
     <tr>
         <td>core_mqtt_state.c</td>
-        <td>5.9K</td>
-        <td>2.2K</td>
-        <td>1.8K</td>
+        <td>6.0K</td>
+        <td>3.0K</td>
+        <td>2.3K</td>
     </tr>
     <tr>
         <td>core_mqtt_serializer.c</td>
-        <td>12.0K</td>
-        <td>4.2K</td>
-        <td>3.7K</td>
+        <td>12.3K</td>
+        <td>5.6K</td>
+        <td>5.1K</td>
     </tr>
     <tr>
         <td><b>Total estimates</b></td>
-        <td>31.2K</td>
-        <td>11.5K</td>
-        <td>10.1K</td>
+        <td>31.9K</td>
+        <td>15.5K</td>
+        <td>13.7K</td>
     </tr>
 </table>
  */

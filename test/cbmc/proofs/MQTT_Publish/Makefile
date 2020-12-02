@@ -21,6 +21,7 @@
 
 HARNESS_ENTRY=harness
 HARNESS_FILE=MQTT_Publish_harness
+PROOF_UID=MQTT_Publish
 
 # Please see test/cbmc/stubs/network_interface_subs.c for
 # more information on MAX_NETWORK_SEND_TRIES.

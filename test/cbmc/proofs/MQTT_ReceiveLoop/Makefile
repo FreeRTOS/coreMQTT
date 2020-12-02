@@ -3,6 +3,7 @@
 
 HARNESS_ENTRY=harness
 HARNESS_FILE=MQTT_ReceiveLoop_harness
+PROOF_UID=MQTT_ReceiveLoop
 
 # Bound on the timeout in MQTT_ProcessLoop. This timeout is bounded because
 # memory saftey can be proven in a only a few iteration of the MQTT operations.

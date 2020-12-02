@@ -1,5 +1,5 @@
 /*
- * coreMQTT v1.0.0
+ * coreMQTT v1.0.1
  * Copyright (C) 2020 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -527,9 +527,9 @@ static MQTTStatus_t addRecord( MQTTPubAckInfo_t * records,
             if( records[ index ].packetId == packetId )
             {
                 /* Collision. */
-                LogError( ( "Collision when adding PacketID=%u at index=%u.",
-                            packetId,
-                            index ) );
+                LogError( ( "Collision when adding PacketID=%u at index=%d.",
+                            ( unsigned int ) packetId,
+                            ( int ) index ) );
 
                 status = MQTTStateCollision;
                 availableIndex = recordCount;
@@ -941,7 +941,7 @@ MQTTStatus_t MQTT_UpdateStateAck( MQTTContext_t * pMqttContext,
     }
     else if( packetType > MQTTPubcomp )
     {
-        LogError( ( "Invalid packet type %u.", packetType ) );
+        LogError( ( "Invalid packet type %u.", ( unsigned int ) packetType ) );
         status = MQTTBadParameter;
     }
     else
@@ -977,7 +977,8 @@ MQTTStatus_t MQTT_UpdateStateAck( MQTTContext_t * pMqttContext,
     }
     else
     {
-        LogError( ( "No matching record found for publish: PacketId=%u.", packetId ) );
+        LogError( ( "No matching record found for publish: PacketId=%u.",
+                    ( unsigned int ) packetId ) );
     }
 
     return status;

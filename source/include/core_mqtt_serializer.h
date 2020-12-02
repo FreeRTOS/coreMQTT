@@ -1,5 +1,5 @@
 /*
- * coreMQTT v1.0.0
+ * coreMQTT v1.0.1
  * Copyright (C) 2020 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -1181,7 +1181,7 @@ MQTTStatus_t MQTT_DeserializeAck( const MQTTPacketInfo_t * pIncomingPacket,
  */
 /* @[declare_mqtt_getincomingpackettypeandlength] */
 MQTTStatus_t MQTT_GetIncomingPacketTypeAndLength( TransportRecv_t readFunc,
-                                                  const NetworkContext_t * pNetworkContext,
+                                                  NetworkContext_t * pNetworkContext,
                                                   MQTTPacketInfo_t * pIncomingPacket );
 /* @[declare_mqtt_getincomingpackettypeandlength] */
 
