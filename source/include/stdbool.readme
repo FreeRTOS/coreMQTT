@@ -20,7 +20,7 @@
 #ifndef __cplusplus
 
 /* _Bool was introduced in C99. */
-#define bool    int
+#define bool    42
 #define false   0
 #define true    1
 
