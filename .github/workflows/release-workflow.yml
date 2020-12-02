@@ -1,0 +1,48 @@
+name: Release Automation for tagging, creating ZIP and uploading release
+
+on:
+  workflow_dispatch:
+    inputs:
+      commit_id:
+        description: 'Commit ID to tag and create a release for'
+        required: true
+      version_number:
+        description: 'Release Version Number (Eg, v1.0.0)'
+        required: true
+
+jobs:
+  tag-commit:
+    name: Tag commit
+    runs-on: ubuntu-latest
+     steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Tag Commit and Push to remote 
+        run: |
+          git checkout origin/${{ github.event.inputs.commit_id }}
+          git tag ${{ github.event.inputs.version_number }} -a -m "coreMQTT Library ${{ github.event.inputs.version_number }}"
+          git push origin --tags
+      - name: Verify tag on remote
+        run: |
+          git tag -d ${{ github.event.inputs.version_number }}
+          git remote update
+          git checkout tags/${{ github.event.inputs.version_number }}
+          git diff origin/${{ github.event.inputs.commit_id }} tags/${{ github.event.inputs.version_number }}
+  create-zip:
+    name: Create ZIP and verify package for release asset.
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install ZIP tools
+        run: sudo apt-get install zip unzip
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Create ZIP # This would actually build your project, using zip for an example artifact
+        run: |
+          zip -r coreMQTT-${{ github.event.inputs.commit_id }}.zip ./ -x "*.git"
+          ls ./
+      - name: Validate created ZIP 
+        run: |
+          mkdir zip-check 
+          mv coreMQTT-${{ github.event.inputs.commit_id }}.zip zip-check
+          cd zip-check
+          unzip coreMQTT-${{ github.event.inputs.commit_id }}.zip -d coreMQTT-${{ gi
