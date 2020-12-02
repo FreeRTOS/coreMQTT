@@ -1263,10 +1263,7 @@ static MQTTStatus_t deserializePublish( const MQTTPacketInfo_t * pIncomingPacket
     {
         /* Parse the topic. */
         pPublishInfo->pTopicName = ( const char * ) ( pVariableHeader + sizeof( uint16_t ) );
-        LogDebug( ( "Topic name length %hu: %.*s",
-                    ( unsigned short ) pPublishInfo->topicNameLength,
-                    pPublishInfo->topicNameLength,
-                    pPublishInfo->pTopicName ) );
+        LogDebug( ( "Topic name length: %hu.", ( unsigned short ) pPublishInfo->topicNameLength ) );
 
         /* Extract the packet identifier for QoS 1 or 2 PUBLISH packets. Packet
          * identifier starts immediately after the topic name. */
