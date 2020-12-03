@@ -71,17 +71,25 @@ static uint32_t calculateElapsedTime( uint32_t later,
 static MQTTPubAckType_t getAckFromPacketType( uint8_t packetType );
 
 /**
- * @brief Receive bytes into the network buffer, with a timeout.
+ * @brief Receive bytes into the network buffer.
  *
  * @param[in] pContext Initialized MQTT Context.
  * @param[in] bytesToRecv Number of bytes to receive.
- * @param[in] timeoutMs Time remaining to receive the packet.
+ *
+ * @note This operation calls the transport receive function
+ * repeatedly to read bytes from the network until either:
+ * 1. The requested number of bytes @a bytesToRecv are read.
+ *                    OR
+ * 2. There is a timeout of MQTT_PACKET_RECV_TIMEOUT_MS duration
+ * between receiving bytes over the network.
+ *                    OR
+ * 3. There is an error in reading from the network.
+ *
  *
  * @return Number of bytes received, or negative number on network error.
  */
 static int32_t recvExact( const MQTTContext_t * pContext,
-                          size_t bytesToRecv,
-                          uint32_t timeoutMs );
+                          size_t bytesToRecv );
 
 /**
  * @brief Discard a packet from the transport interface.
@@ -683,8 +691,7 @@ static MQTTPubAckType_t getAckFromPacketType( uint8_t packetType )
 /*-----------------------------------------------------------*/
 
 static int32_t recvExact( const MQTTContext_t * pContext,
-                          size_t bytesToRecv,
-                          uint32_t timeoutMs )
+                          size_t bytesToRecv )
 {
     uint8_t * pIndex = NULL;
     size_t bytesRemaining = bytesToRecv;
@@ -745,7 +752,7 @@ static int32_t recvExact( const MQTTContext_t * pContext,
             /* No bytes were read from the network. */
             noDataRecvdTimeMs = calculateElapsedTime( getTimeStampMs(), entryTimeMs );
 
-            if( ( bytesRemaining > 0U ) && ( noDataRecvdTimeMs >= timeoutMs ) )
+            if( ( bytesRemaining > 0U ) && ( noDataRecvdTimeMs >= MQTT_PACKET_RECV_TIMEOUT_MS ) )
             {
                 LogError( ( "Time expired while receiving packet." ) );
                 receiveError = true;
@@ -785,7 +792,7 @@ static MQTTStatus_t discardPacket( const MQTTContext_t * pContext,
             bytesToReceive = remainingLength - totalBytesReceived;
         }
 
-        bytesReceived = recvExact( pContext, bytesToReceive, remainingTimeMs );
+        bytesReceived = recvExact( pContext, bytesToReceive );
 
         if( bytesReceived != ( int32_t ) bytesToReceive )
         {
@@ -852,7 +859,7 @@ static MQTTStatus_t receivePacket( const MQTTContext_t * pContext,
     else
     {
         bytesToReceive = incomingPacket.remainingLength;
-        bytesReceived = recvExact( pContext, bytesToReceive, remainingTimeMs );
+        bytesReceived = recvExact( pContext, bytesToReceive );
 
         if( bytesReceived == ( int32_t ) bytesToReceive )
         {

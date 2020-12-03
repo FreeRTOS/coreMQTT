@@ -109,6 +109,27 @@
 #endif
 
 /**
+ * @brief The timeout for receiving data over network for an incoming MQTT
+ * packet by the #MQTT_ProcessLoop or #MQTT_ReceiveLoop API functions.
+ *
+ * When an incoming MQTT packet is detected, the transport receive function
+ * may be called multiple times until all the expected number of bytes for the packet
+ * is received.
+ * This timeout represents the maximum duration to wait for data to be received
+ * between consecutive reception of bytes over the network in that scenario.
+ * If the timeout expires, the #MQTTProcessLoop or #MQTT_ReceiveLoop functions
+ * return #MQTTRecvFailed.
+ *
+ * <b>Possible values:</b> Any positive integer up to SIZE_MAX. Recommended to
+ * use a small timeout value. <br>
+ * <b>Default value:</b> `10`
+ *
+ */
+#ifndef MQTT_PACKET_RECV_TIMEOUT_MS
+    #define MQTT_PACKET_RECV_TIMEOUT_MS    ( 10U )
+#endif
+
+/**
  * @brief Macro that is called in the MQTT library for logging "Error" level
  * messages.
  *
