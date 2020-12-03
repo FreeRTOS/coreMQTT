@@ -719,8 +719,11 @@ static int32_t recvExact( const MQTTContext_t * pContext,
             totalBytesRecvd = bytesRecvd;
             receiveError = true;
         }
-        else
+        else if( bytesRecvd > 0 )
         {
+            /* Reset the elapsed time as we have not received all bytes from the network. */
+            entryTimeMs = getTimeStampMs();
+
             /* It is a bug in the application's transport receive implementation
              * if more bytes than expected are received. To avoid a possible
              * overflow in converting bytesRemaining from unsigned to signed,
@@ -737,13 +740,16 @@ static int32_t recvExact( const MQTTContext_t * pContext,
                         ( unsigned long ) bytesRemaining,
                         ( long int ) totalBytesRecvd ) );
         }
-
-        elapsedTimeMs = calculateElapsedTime( getTimeStampMs(), entryTimeMs );
-
-        if( ( bytesRemaining > 0U ) && ( elapsedTimeMs >= timeoutMs ) )
+        else
         {
-            LogError( ( "Time expired while receiving packet." ) );
-            receiveError = true;
+            /* No bytes were read from the network. */
+            elapsedTimeMs = calculateElapsedTime( getTimeStampMs(), entryTimeMs );
+
+            if( ( bytesRemaining > 0U ) && ( elapsedTimeMs >= timeoutMs ) )
+            {
+                LogError( ( "Time expired while receiving packet." ) );
+                receiveError = true;
+            }
         }
     }
 
