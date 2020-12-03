@@ -79,16 +79,18 @@ jobs:
     needs: create-zip
     name: Create Release and Upload Release Asset
     runs-on: ubuntu-latest
-      id: create_release
-      uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ github.event.inputs.version_number }}
-          release_name: ${{ github.event.inputs.version_number }}
-          body: Release ${{ github.event.inputs.version_number }} of the coreMQTT Library.
-          draft: false
-          prerelease: false
+    steps:
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+          env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          with:
+            tag_name: ${{ github.event.inputs.version_number }}
+            release_name: ${{ github.event.inputs.version_number }}
+            body: Release ${{ github.event.inputs.version_number }} of the coreMQTT Library.
+            draft: false
+            prerelease: false
       - name: Download ZIP artifact
         uses: actions/download-artifact@v2
         with:
