@@ -32,6 +32,7 @@ jobs:
           git checkout tags/${{ github.event.inputs.version_number }}
           git diff origin/${{ github.event.inputs.commit_id }} tags/${{ github.event.inputs.version_number }}
   create-zip:
+    needs: tag-commit
     name: Create ZIP and verify package for release asset.
     runs-on: ubuntu-latest
     steps:
@@ -52,4 +53,20 @@ jobs:
           cd zip-check
           unzip coreMQTT-${{ github.event.inputs.version_number }}.zip -d coreMQTT-${{ github.event.inputs.version_number }}
           ls coreMQTT-${{ github.event.inputs.version_number }}
-          diff -r -x "*.git*" coreMQTT-${{ github.event.inputs.version_number }}/coreMQTT/ ../coreMQTT/
+          diff -r -x "*.git*" coreMQTT-${{ github.event.inputs.version_number }}/coreMQTT/ ../coreMQTT/ | echo 0
+          cd ../
+      - name: Build
+        run: |
+          cd zip-check/coreMQTT-${{ github.event.inputs.version_number }}/coreMQTT
+          sudo apt-get install -y lcov
+          cmake -S test -B build/ \
+          -G "Unix Makefiles" \
+          -DCMAKE_BUILD_TYPE=Debug \
+          -DBUILD_CLONE_SUBMODULES=ON \
+          -DCMAKE_C_FLAGS='--coverage -Wall -Wextra -Werror -DNDEBUG'
+          make -C build/ all
+      - name: Test
+        run: |
+          cd build/
+          ctest -E system --output-on-failure
+          cd ..
