@@ -1597,7 +1597,7 @@ void test_MQTT_ProcessLoop_handleIncomingPublish_Error_Paths( void )
  * the transport recv function only reads less than requested bytes at a
  * time, and the timeout passed to the API is "0ms".
  */
-void test_MQTT_ProcessLoop_Zero_Duration_And_Slow_Network_Read( void )
+void test_MQTT_ProcessLoop_Zero_Duration_And_Partial_Network_Read( void )
 {
     MQTTStatus_t mqttStatus;
     MQTTContext_t context;
