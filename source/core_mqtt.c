@@ -689,7 +689,7 @@ static int32_t recvExact( const MQTTContext_t * pContext,
     uint8_t * pIndex = NULL;
     size_t bytesRemaining = bytesToRecv;
     int32_t totalBytesRecvd = 0, bytesRecvd;
-    uint32_t entryTimeMs = 0U, elapsedTimeMs = 0U;
+    uint32_t entryTimeMs = 0U, noDataRecvdTimeMs = 0U;
     TransportRecv_t recvFunc = NULL;
     MQTTGetCurrentTimeFunc_t getTimeStampMs = NULL;
     bool receiveError = false;
@@ -721,7 +721,7 @@ static int32_t recvExact( const MQTTContext_t * pContext,
         }
         else if( bytesRecvd > 0 )
         {
-            /* Reset the elapsed time as we have not received all bytes from the network. */
+            /* Reset the starting time as we have received some data from the network. */
             entryTimeMs = getTimeStampMs();
 
             /* It is a bug in the application's transport receive implementation
@@ -743,9 +743,9 @@ static int32_t recvExact( const MQTTContext_t * pContext,
         else
         {
             /* No bytes were read from the network. */
-            elapsedTimeMs = calculateElapsedTime( getTimeStampMs(), entryTimeMs );
+            noDataRecvdTimeMs = calculateElapsedTime( getTimeStampMs(), entryTimeMs );
 
-            if( ( bytesRemaining > 0U ) && ( elapsedTimeMs >= timeoutMs ) )
+            if( ( bytesRemaining > 0U ) && ( noDataRecvdTimeMs >= timeoutMs ) )
             {
                 LogError( ( "Time expired while receiving packet." ) );
                 receiveError = true;
