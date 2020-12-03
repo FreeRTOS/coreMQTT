@@ -67,6 +67,12 @@ jobs:
           make -C build/ all
       - name: Test
         run: |
-          cd build/
+          cd zip-check/coreMQTT-${{ github.event.inputs.version_number }}/coreMQTT/build/
           ctest -E system --output-on-failure
           cd ..
+      - name: Create artifact of ZIP
+        uses: actions/upload-artifact@v2
+        with:
+          name: coreMQTT-${{ github.event.inputs.version_number }}.zip
+          path: zip-check/coreMQTT-${{ github.event.inputs.version_number }}.zip
+
