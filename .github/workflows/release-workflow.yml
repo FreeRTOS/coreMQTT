@@ -17,12 +17,13 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.inputs.commit_id }}
       - name: Configure git identity
         run: |
             git config --global user.name "Release Workflow"
       - name: Tag Commit and Push to remote 
         run: |
-          git checkout origin/${{ github.event.inputs.commit_id }}
           git tag ${{ github.event.inputs.version_number }} -a -m "coreMQTT Library ${{ github.event.inputs.version_number }}"
           git push origin --tags
       - name: Verify tag on remote
@@ -41,7 +42,9 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
         with:
+          ref: ${{ github.event.inputs.commit_id }}
           path: coreMQTT
+          submodules: recursive
       - name: Create ZIP
         run: |
           zip -r coreMQTT-${{ github.event.inputs.version_number }}.zip coreMQTT -x "*.git"
