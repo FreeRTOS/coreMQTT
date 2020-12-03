@@ -46,30 +46,30 @@ jobs:
         run: |
           zip -r coreMQTT-${{ github.event.inputs.version_number }}.zip coreMQTT -x "*.git"
           ls ./
-      # - name: Validate created ZIP 
-      #   run: |
-      #     mkdir zip-check 
-      #     mv coreMQTT-${{ github.event.inputs.version_number }}.zip zip-check
-      #     cd zip-check
-      #     unzip coreMQTT-${{ github.event.inputs.version_number }}.zip -d coreMQTT-${{ github.event.inputs.version_number }}
-      #     ls coreMQTT-${{ github.event.inputs.version_number }}
-      #     diff -r -x "*.git*" coreMQTT-${{ github.event.inputs.version_number }}/coreMQTT/ ../coreMQTT/ | echo 0
-      #     cd ../
-      # - name: Build
-      #   run: |
-      #     cd zip-check/coreMQTT-${{ github.event.inputs.version_number }}/coreMQTT
-      #     sudo apt-get install -y lcov
-      #     cmake -S test -B build/ \
-      #     -G "Unix Makefiles" \
-      #     -DCMAKE_BUILD_TYPE=Debug \
-      #     -DBUILD_CLONE_SUBMODULES=ON \
-      #     -DCMAKE_C_FLAGS='--coverage -Wall -Wextra -Werror -DNDEBUG'
-      #     make -C build/ all
-      # - name: Test
-      #   run: |
-      #     cd zip-check/coreMQTT-${{ github.event.inputs.version_number }}/coreMQTT/build/
-      #     ctest -E system --output-on-failure
-      #     cd ..
+      - name: Validate created ZIP 
+        run: |
+          mkdir zip-check 
+          mv coreMQTT-${{ github.event.inputs.version_number }}.zip zip-check
+          cd zip-check
+          unzip coreMQTT-${{ github.event.inputs.version_number }}.zip -d coreMQTT-${{ github.event.inputs.version_number }}
+          ls coreMQTT-${{ github.event.inputs.version_number }}
+          diff -r -x "*.git*" coreMQTT-${{ github.event.inputs.version_number }}/coreMQTT/ ../coreMQTT/ | echo 0
+          cd ../
+      - name: Build
+        run: |
+          cd zip-check/coreMQTT-${{ github.event.inputs.version_number }}/coreMQTT
+          sudo apt-get install -y lcov
+          cmake -S test -B build/ \
+          -G "Unix Makefiles" \
+          -DCMAKE_BUILD_TYPE=Debug \
+          -DBUILD_CLONE_SUBMODULES=ON \
+          -DCMAKE_C_FLAGS='--coverage -Wall -Wextra -Werror -DNDEBUG'
+          make -C build/ all
+      - name: Test
+        run: |
+          cd zip-check/coreMQTT-${{ github.event.inputs.version_number }}/coreMQTT/build/
+          ctest -E system --output-on-failure
+          cd ..
       - name: Create artifact of ZIP
         uses: actions/upload-artifact@v2
         with:
