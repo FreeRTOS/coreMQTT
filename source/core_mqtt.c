@@ -80,7 +80,7 @@ static MQTTPubAckType_t getAckFromPacketType( uint8_t packetType );
  * repeatedly to read bytes from the network until either:
  * 1. The requested number of bytes @a bytesToRecv are read.
  *                    OR
- * 2. There is a timeout of MQTT_PACKET_RECV_TIMEOUT_MS duration
+ * 2. There is a timeout of MQTT_RECV_POLLING_TIMEOUT_MS duration
  * between receiving bytes over the network.
  *                    OR
  * 3. There is an error in reading from the network.
@@ -753,7 +753,7 @@ static int32_t recvExact( const MQTTContext_t * pContext,
             noDataRecvdTimeMs = calculateElapsedTime( getTimeStampMs(), entryTimeMs );
         }
 
-        if( ( bytesRemaining > 0U ) && ( noDataRecvdTimeMs >= MQTT_PACKET_RECV_TIMEOUT_MS ) )
+        if( ( bytesRemaining > 0U ) && ( noDataRecvdTimeMs >= MQTT_RECV_POLLING_TIMEOUT_MS ) )
         {
             LogError( ( "Time expired while receiving packet." ) );
             receiveError = true;
