@@ -772,13 +772,18 @@ static MQTTStatus_t discardPacket( const MQTTContext_t * pContext,
     MQTTStatus_t status = MQTTRecvFailed;
     int32_t bytesReceived = 0;
     size_t bytesToReceive = 0U;
-    uint32_t totalBytesReceived = 0U;
+    uint32_t totalBytesReceived = 0U, entryTimeMs = 0U, elapsedTimeMs = 0U;
+    uint32_t remainingTimeMs = timeoutMs;
+    MQTTGetCurrentTimeFunc_t getTimeStampMs = NULL;
     bool receiveError = false;
 
     assert( pContext != NULL );
     assert( pContext->getTime != NULL );
 
     bytesToReceive = pContext->networkBuffer.size;
+    getTimeStampMs = pContext->getTime;
+
+    entryTimeMs = getTimeStampMs();
 
     while( ( totalBytesReceived < remainingLength ) && ( receiveError == false ) )
     {
@@ -800,6 +805,15 @@ static MQTTStatus_t discardPacket( const MQTTContext_t * pContext,
         else
         {
             totalBytesReceived += ( uint32_t ) bytesReceived;
+
+            elapsedTimeMs = calculateElapsedTime( getTimeStampMs(), entryTimeMs );
+
+            /* Update remaining time and check for timeout. */
+            if( elapsedTimeMs >= timeoutMs )
+            {
+                LogError( ( "Time expired while discarding packet." ) );
+                receiveError = true;
+            }
         }
     }
 
