@@ -751,12 +751,12 @@ static int32_t recvExact( const MQTTContext_t * pContext,
         {
             /* No bytes were read from the network. */
             noDataRecvdTimeMs = calculateElapsedTime( getTimeStampMs(), entryTimeMs );
+        }
 
-            if( ( bytesRemaining > 0U ) && ( noDataRecvdTimeMs >= MQTT_PACKET_RECV_TIMEOUT_MS ) )
-            {
-                LogError( ( "Time expired while receiving packet." ) );
-                receiveError = true;
-            }
+        if( ( bytesRemaining > 0U ) && ( noDataRecvdTimeMs >= MQTT_PACKET_RECV_TIMEOUT_MS ) )
+        {
+            LogError( ( "Time expired while receiving packet." ) );
+            receiveError = true;
         }
     }
 
@@ -805,19 +805,6 @@ static MQTTStatus_t discardPacket( const MQTTContext_t * pContext,
         else
         {
             totalBytesReceived += ( uint32_t ) bytesReceived;
-
-            elapsedTimeMs = calculateElapsedTime( getTimeStampMs(), entryTimeMs );
-
-            /* Update remaining time and check for timeout. */
-            if( elapsedTimeMs < timeoutMs )
-            {
-                remainingTimeMs = timeoutMs - elapsedTimeMs;
-            }
-            else
-            {
-                LogError( ( "Time expired while discarding packet." ) );
-                receiveError = true;
-            }
         }
     }
 
