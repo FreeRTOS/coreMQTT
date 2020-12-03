@@ -117,7 +117,7 @@
  * is received.
  * This timeout represents the maximum duration to wait for data to be received
  * between consecutive reception of bytes over the network in that scenario.
- * If the timeout expires, the #MQTTProcessLoop or #MQTT_ReceiveLoop functions
+ * If the timeout expires, the #MQTT_ProcessLoop or #MQTT_ReceiveLoop functions
  * return #MQTTRecvFailed.
  *
  * <b>Possible values:</b> Any positive integer up to SIZE_MAX. Recommended to
