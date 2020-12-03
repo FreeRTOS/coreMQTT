@@ -81,7 +81,7 @@ static MQTTPubAckType_t getAckFromPacketType( uint8_t packetType );
  * 1. The requested number of bytes @a bytesToRecv are read.
  *                    OR
  * 2. No data is received from the network for MQTT_RECV_POLLING_TIMEOUT_MS duration.
- * 
+ *
  *                    OR
  * 3. There is an error in reading from the network.
  *
@@ -711,7 +711,8 @@ static int32_t recvExact( const MQTTContext_t * pContext,
     recvFunc = pContext->transportInterface.recv;
     getTimeStampMs = pContext->getTime;
 
-    entryTimeMs = getTimeStampMs();
+    /* Part of the MQTT packet has been read before calling this function. */
+    lastDataRecvTimeMs = getTimeStampMs();
 
     while( ( bytesRemaining > 0U ) && ( receiveError == false ) )
     {
