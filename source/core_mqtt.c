@@ -80,8 +80,8 @@ static MQTTPubAckType_t getAckFromPacketType( uint8_t packetType );
  * repeatedly to read bytes from the network until either:
  * 1. The requested number of bytes @a bytesToRecv are read.
  *                    OR
- * 2. There is a timeout of MQTT_RECV_POLLING_TIMEOUT_MS duration
- * between receiving bytes over the network.
+ * 2. No data is received from the network for MQTT_RECV_POLLING_TIMEOUT_MS duration.
+ * 
  *                    OR
  * 3. There is an error in reading from the network.
  *
@@ -696,7 +696,7 @@ static int32_t recvExact( const MQTTContext_t * pContext,
     uint8_t * pIndex = NULL;
     size_t bytesRemaining = bytesToRecv;
     int32_t totalBytesRecvd = 0, bytesRecvd;
-    uint32_t entryTimeMs = 0U, noDataRecvdTimeMs = 0U;
+    uint32_t lastDataRecvTimeMs = 0U, noDataRecvdTimeMs = 0U;
     TransportRecv_t recvFunc = NULL;
     MQTTGetCurrentTimeFunc_t getTimeStampMs = NULL;
     bool receiveError = false;
@@ -729,7 +729,7 @@ static int32_t recvExact( const MQTTContext_t * pContext,
         else if( bytesRecvd > 0 )
         {
             /* Reset the starting time as we have received some data from the network. */
-            entryTimeMs = getTimeStampMs();
+            lastDataRecvTimeMs = getTimeStampMs();
 
             /* It is a bug in the application's transport receive implementation
              * if more bytes than expected are received. To avoid a possible
@@ -750,7 +750,7 @@ static int32_t recvExact( const MQTTContext_t * pContext,
         else
         {
             /* No bytes were read from the network. */
-            noDataRecvdTimeMs = calculateElapsedTime( getTimeStampMs(), entryTimeMs );
+            noDataRecvdTimeMs = calculateElapsedTime( getTimeStampMs(), lastDataRecvTimeMs );
         }
 
         if( ( bytesRemaining > 0U ) && ( noDataRecvdTimeMs >= MQTT_RECV_POLLING_TIMEOUT_MS ) )
@@ -807,7 +807,7 @@ static MQTTStatus_t discardPacket( const MQTTContext_t * pContext,
 
             elapsedTimeMs = calculateElapsedTime( getTimeStampMs(), entryTimeMs );
 
-            /* Update remaining time and check for timeout. */
+            /* Check for timeout. */
             if( elapsedTimeMs >= timeoutMs )
             {
                 LogError( ( "Time expired while discarding packet." ) );

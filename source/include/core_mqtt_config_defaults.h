@@ -109,15 +109,15 @@
 #endif
 
 /**
- * @brief The maximum duration of receiving no data over network when
- * attempting to read an incoming MQTT packet by the #MQTT_ProcessLoop or
- * #MQTT_ReceiveLoop API functions.
+ * @brief The maximum duration between non-empty network reads while
+ * receiving an MQTT packet via the #MQTT_ProcessLoop or #MQTT_ReceiveLoop
+ * API functions.
  *
  * When an incoming MQTT packet is detected, the transport receive function
- * may be called multiple times until all the expected number of bytes for the
- * packet are received. This timeout represents the maximum duration of polling
- * for any data to be received over the network for the incoming.
- * If the timeout expires, the #MQTT_ProcessLoop or #MQTT_ReceiveLoop functions
+ * may be called multiple times until all of the expected number of bytes of the
+ * packet are received. This timeout represents the maximum polling duration that
+ * is allowed without any data reception from the network for the incoming packet.
+ * If the timeout expires, the #MQTT_ProcessLoop and #MQTT_ReceiveLoop functions
  * return #MQTTRecvFailed.
  *
  * <b>Possible values:</b> Any positive integer up to SIZE_MAX. Recommended to
