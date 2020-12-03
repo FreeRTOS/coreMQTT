@@ -366,6 +366,20 @@ static int32_t transportRecvOneByte( NetworkContext_t * pNetworkContext,
 }
 
 /**
+ * @brief Mocked transport returning zero bytes to simulate reception
+ * of no data over network.
+ */
+static int32_t transportRecvNoData( NetworkContext_t * pNetworkContext,
+                                    void * pBuffer,
+                                    size_t bytesToRead )
+{
+    ( void ) pNetworkContext;
+    ( void ) pBuffer;
+    ( void ) bytesToRead;
+    return 0;
+}
+
+/**
  * @brief Initialize the transport interface with the mocked functions for
  * send and receive.
  *
@@ -853,7 +867,7 @@ void test_MQTT_Connect_partial_receive()
 
     setupTransportInterface( &transport );
     setupNetworkBuffer( &networkBuffer );
-    transport.recv = transportRecvOneByte;
+    transport.recv = transportRecvNoData;
 
     memset( &mqttContext, 0x0, sizeof( mqttContext ) );
     MQTT_Init( &mqttContext, &transport, getTime, eventCallback, &networkBuffer );
@@ -864,14 +878,16 @@ void test_MQTT_Connect_partial_receive()
     incomingPacket.type = MQTT_PACKET_TYPE_CONNACK;
     incomingPacket.remainingLength = 2;
 
-    /* Not enough time to receive entire packet, for branch coverage. This is due
-     * to the fact the mocked receive function reads only one byte at a time. */
-    timeout = 1;
+    /* Timeout in receiving entire packet, for branch coverage. This is due to the fact that the mocked
+     * receive function always returns 0 bytes read. */
     MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_GetIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
     status = MQTT_Connect( &mqttContext, &connectInfo, NULL, timeout, &sessionPresent );
     TEST_ASSERT_EQUAL_INT( MQTTRecvFailed, status );
 
+    /* Update to use mock receive function that receives one byte at a time for the
+     * rest of the test. */
+    mqttContext.transportInterface.recv = transportRecvOneByte;
     timeout = 10;
 
     /* Not enough space for packet, discard it. */
