@@ -751,8 +751,7 @@ static int32_t recvExact( const MQTTContext_t * pContext,
         else
         {
             /* No bytes were read from the network. */
-            timeSinceLastDataWasRecvdMs =
-                calculateElapsedTime( getTimeStampMs(), lastDataRecvTimeMs );
+            timeSinceLastDataWasRecvdMs = calculateElapsedTime( getTimeStampMs(), lastDataRecvTimeMs );
         }
 
         if( ( bytesRemaining > 0U ) &&
