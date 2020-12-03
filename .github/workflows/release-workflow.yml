@@ -45,6 +45,10 @@ jobs:
           ref: ${{ github.event.inputs.commit_id }}
           path: coreMQTT
           submodules: recursive
+      - name: Checkout disabled submodules
+        run: |
+          cd coreMQTT
+          git submodule update --init --checkout --recursive
       - name: Create ZIP
         run: |
           zip -r coreMQTT-${{ github.event.inputs.version_number }}.zip coreMQTT -x "*.git"
