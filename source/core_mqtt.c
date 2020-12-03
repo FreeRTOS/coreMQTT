@@ -773,7 +773,6 @@ static MQTTStatus_t discardPacket( const MQTTContext_t * pContext,
     int32_t bytesReceived = 0;
     size_t bytesToReceive = 0U;
     uint32_t totalBytesReceived = 0U, entryTimeMs = 0U, elapsedTimeMs = 0U;
-    uint32_t remainingTimeMs = timeoutMs;
     MQTTGetCurrentTimeFunc_t getTimeStampMs = NULL;
     bool receiveError = false;
 
