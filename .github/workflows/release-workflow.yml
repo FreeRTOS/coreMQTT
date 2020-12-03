@@ -17,6 +17,9 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
+      - name: Configure git identity
+        run: |
+            git config --global user.name "Release Workflow"
       - name: Tag Commit and Push to remote 
         run: |
           git checkout origin/${{ github.event.inputs.commit_id }}
