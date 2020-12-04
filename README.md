@@ -25,6 +25,8 @@ and build the library with default configuration values, provide `MQTT_DO_NOT_US
 
 The [mqttFilePaths.cmake](mqttFilePaths.cmake) file contains the information of all source files and the header include path required to build the MQTT library.
 
+Additionally, the MQTT library requires two header files that are not part of the ISO C90 standard library, `stdbool.h` and `stdint.h`. For compilers that do not provide these header files, the [source/include](source/include) directory contains the files [stdbool.readme](source/include/stdbool.readme) and [stdint.readme](source/include/stdint.readme), which can be renamed to `stdbool.h` and `stdint.h`, respectively, to provide the type definitions required by MQTT.
+
 As mentioned in the previous section, either a custom config file (i.e. `core_mqtt_config.h`) OR `MQTT_DO_NOT_USE_CUSTOM_CONFIG` macro needs to be provided to build the MQTT library.
 
 For a CMake example of building the MQTT library with the `mqttFilePaths.cmake` file, refer to the `coverity_analysis` library target in [test/CMakeLists.txt](test/CMakeLists.txt) file.
