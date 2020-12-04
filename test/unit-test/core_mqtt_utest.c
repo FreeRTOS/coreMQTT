@@ -301,6 +301,19 @@ static int32_t transportSendFailure( NetworkContext_t * pNetworkContext,
 }
 
 /**
+ * @brief Mocked transport send that always returns 0 bytes sent.
+ */
+static int32_t transportSendNoBytes( NetworkContext_t * pNetworkContext,
+                                     const void * pBuffer,
+                                     size_t bytesToWrite )
+{
+    ( void ) pNetworkContext;
+    ( void ) pBuffer;
+    ( void ) bytesToWrite;
+    return 0;
+}
+
+/**
  * @brief Mocked transport send that succeeds then fails.
  */
 static int32_t transportSendSucceedThenFail( NetworkContext_t * pNetworkContext,
