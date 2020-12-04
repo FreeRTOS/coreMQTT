@@ -743,10 +743,8 @@ static int32_t recvExact( const MQTTContext_t * pContext,
             totalBytesRecvd += ( int32_t ) bytesRecvd;
             pIndex += bytesRecvd;
             LogDebug( ( "BytesReceived=%ld, BytesRemaining=%lu, "
-                        "TotalBytesReceived=%ld.",
                         ( long int ) bytesRecvd,
-                        ( unsigned long ) bytesRemaining,
-                        ( long int ) totalBytesRecvd ) );
+                        ( unsigned long ) bytesRemaining ) );
         }
         else
         {
@@ -754,7 +752,8 @@ static int32_t recvExact( const MQTTContext_t * pContext,
             timeSinceLastRecvMs = calculateElapsedTime( getTimeStampMs(), lastDataRecvTimeMs );
         }
 
-        if( ( bytesRemaining > 0U ) &&
+        if( ( bytesRecvd == 0 ) &&
+            ( bytesRemaining > 0U ) &&
             ( timeSinceLastRecvMs >= MQTT_RECV_POLLING_TIMEOUT_MS ) )
         {
             LogError( ( "Time expired while receiving packet." ) );
