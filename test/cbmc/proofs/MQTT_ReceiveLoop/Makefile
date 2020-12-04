@@ -28,7 +28,10 @@ REMOVE_FUNCTION_BODY += MQTT_SerializeAck
 # The loops below are unwound once more than the exclusive timeout bound.
 UNWINDSET += MQTT_ReceiveLoop.0:$(MQTT_RECEIVE_TIMEOUT)
 UNWINDSET += __CPROVER_file_local_core_mqtt_c_discardPacket.0:$(MQTT_RECEIVE_TIMEOUT)
-UNWINDSET += __CPROVER_file_local_core_mqtt_c_recvExact.0:$(MQTT_RECEIVE_TIMEOUT)
+# recvExact only iterates once with MQTT_RECV_POLLING_TIMEOUT_MS set to zero.
+# The possible values from the transport receive can attain coverage with a
+# single iteration.
+UNWINDSET += __CPROVER_file_local_core_mqtt_c_recvExact.0:2
 # Unlike recvExact, sendPacket is not bounded by the timeout. The loop in
 # sendPacket will continue until all the bytes are sent or a network error
 # occurs. Please see NetworkInterfaceReceiveStub in

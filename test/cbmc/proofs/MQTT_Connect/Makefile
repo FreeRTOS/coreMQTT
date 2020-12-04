@@ -54,10 +54,13 @@ REMOVE_FUNCTION_BODY += __CPROVER_file_local_core_mqtt_c_handleKeepAlive
 # function.
 REMOVE_FUNCTION_BODY += memcpy
 
-# The loops below are unwound once more than the timeout. The loops below use
+# The loop below is unwound once more than the timeout. The loop below uses
 # the user passed in timeout to break the loop.
-UNWINDSET += __CPROVER_file_local_core_mqtt_c_recvExact.0:$(MQTT_RECEIVE_TIMEOUT)
 UNWINDSET += __CPROVER_file_local_core_mqtt_c_discardPacket.0:$(MQTT_RECEIVE_TIMEOUT)
+# recvExact only iterates once with MQTT_RECV_POLLING_TIMEOUT_MS set to zero.
+# The possible values from the transport receive can attain coverage with a
+# single iteration.
+UNWINDSET += __CPROVER_file_local_core_mqtt_c_recvExact.0:2
 # If the user passed in timeout is zero, then the loop will run until the
 # MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT is reached.
 UNWINDSET += __CPROVER_file_local_core_mqtt_c_receiveConnack.0:$(MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT)
