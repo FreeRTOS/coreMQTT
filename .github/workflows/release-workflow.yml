@@ -51,7 +51,7 @@ jobs:
           git submodule update --init --checkout --recursive
       - name: Create ZIP
         run: |
-          zip -r coreMQTT-${{ github.event.inputs.version_number }}.zip coreMQTT -x "*.git"
+          zip -r coreMQTT-${{ github.event.inputs.version_number }}.zip coreMQTT -x "*.git*"
           ls ./
       - name: Validate created ZIP
         run: |
@@ -112,4 +112,3 @@ jobs:
           asset_path: ./coreMQTT-${{ github.event.inputs.version_number }}.zip
           asset_name: coreMQTT-${{ github.event.inputs.version_number }}.zip
           asset_content_type: application/zip
-
