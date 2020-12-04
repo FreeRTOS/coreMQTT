@@ -147,3 +147,18 @@ jobs:
         run: |
           git-secrets --register-aws
           git-secrets --scan
+  custom-standard-c-headers:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clone This Repo
+        uses: actions/checkout@v2
+      - name: Build
+        run: |
+          mkdir -p override-include
+          cp source/include/stdbool.readme override-include/stdbool.h
+          cp source/include/stdint.readme override-include/stdint.h
+          cmake -S test -B build/ \
+          -G "Unix Makefiles" \
+          -DBUILD_CLONE_SUBMODULES=ON \
+          -DCMAKE_C_FLAGS='-Wall -Wextra -I../override-include'
+          make -C build/ coverity_analysis
