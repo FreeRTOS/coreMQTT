@@ -560,7 +560,7 @@ MQTTStatus_t MQTT_Ping( MQTTContext_t * pContext );
  * // Obtain a new packet id for the unsubscribe request.
  * packetId = MQTT_GetPacketId( pContext );
  *
- * status = MQTT_Subscribe( pContext, &unsubscribeList[ 0 ], NUMBER_OF_SUBSCRIPTIONS, packetId );
+ * status = MQTT_Unsubscribe( pContext, &unsubscribeList[ 0 ], NUMBER_OF_SUBSCRIPTIONS, packetId );
  *
  * if( status == MQTTSuccess )
  * {
