@@ -78,3 +78,7 @@ Doxygen pages, please run the following command from the root of this repository
 ```shell
 doxygen docs/doxygen/config.doxyfile
 ```
+
+## Contributing
+
+See [CONTRIBUTING.md](./.github/CONTRIBUTING.md) for information on contributing.
