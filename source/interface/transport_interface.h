@@ -166,7 +166,7 @@ typedef struct NetworkContext NetworkContext_t;
  * @return The number of bytes received or a negative value to indicate
  * error.
  * @note If no data is available on the network to read and no error
- * has occurred, zero SHOULD be the return value. Zero should NOT be used
+ * has occurred, zero MUST be the return value. Zero MUST NOT be used
  * if a network disconnection has occurred.
  */
 /* @[define_transportrecv] */
