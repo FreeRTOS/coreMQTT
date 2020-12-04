@@ -279,6 +279,7 @@ receivepacket
 recordcount
 recordindex
 recv
+recvexact
 recvfunc
 reestablishment
 remaininglength
