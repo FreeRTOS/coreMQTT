@@ -82,6 +82,6 @@ struct NetworkContext
  * If the timeout expires, the #MQTT_ProcessLoop or #MQTT_ReceiveLoop functions
  * return #MQTTRecvFailed.
  */
-#define MQTT_RECV_POLLING_TIMEOUT_MS            ( 3U )
+#define MQTT_RECV_POLLING_TIMEOUT_MS            ( 2U )
 
 #endif /* ifndef CORE_MQTT_CONFIG_H_ */
