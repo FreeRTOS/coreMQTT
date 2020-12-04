@@ -39,7 +39,16 @@
  * @brief param[in] pBufferToSend Buffer to be sent to network.
  * @brief param[in] bytesToSend Number of bytes to be sent.
  *
- * @return Total number of bytes sent, or negative number on network error.
+ * @note This operation may call the transport send function
+ * repeatedly to send bytes over the network until either:
+ * 1. The requested number of bytes @a bytesToSend have been sent.
+ *                    OR
+ * 2. No byte cannot be sent over the network for the MQTT_SEND_RETRY_TIMEOUT_MS
+ * duration.
+ *                    OR
+ * 3. There is an error in sending data over the network.
+ *
+ * @return Total number of bytes sent, or negative value on network error.
  */
 static int32_t sendPacket( MQTTContext_t * pContext,
                            const uint8_t * pBufferToSend,
@@ -591,7 +600,7 @@ static int32_t sendPacket( MQTTContext_t * pContext,
     const uint8_t * pIndex = pBufferToSend;
     size_t bytesRemaining = bytesToSend;
     int32_t totalBytesSent = 0, bytesSent;
-    uint32_t sendTime = 0U;
+    uint32_t lastSendTimeMs = 0U, timeSinceLastSendMs = 0U;
     bool sendError = false;
 
     assert( pContext != NULL );
@@ -601,15 +610,14 @@ static int32_t sendPacket( MQTTContext_t * pContext,
 
     bytesRemaining = bytesToSend;
 
-    /* Record the time of transmission. */
-    sendTime = pContext->getTime();
-
     /* Loop until the entire packet is sent. */
     while( ( bytesRemaining > 0UL ) && ( sendError == false ) )
     {
         bytesSent = pContext->transportInterface.send( pContext->transportInterface.pNetworkContext,
                                                        pIndex,
                                                        bytesRemaining );
+        /* Record the most recent time of transmission. */
+        lastSendTimeMs = pContext->getTime();
 
         if( bytesSent < 0 )
         {
@@ -617,7 +625,7 @@ static int32_t sendPacket( MQTTContext_t * pContext,
             totalBytesSent = bytesSent;
             sendError = true;
         }
-        else
+        else if( bytesSent > 0 )
         {
             /* It is a bug in the application's transport send implementation if
              * more bytes than expected are sent. To avoid a possible overflow
@@ -634,14 +642,26 @@ static int32_t sendPacket( MQTTContext_t * pContext,
                         ( unsigned long ) bytesRemaining,
                         ( long int ) totalBytesSent ) );
         }
+        else
+        {
+            /* No bytes were sent over the network. */
+            timeSinceLastSendMs = calculateElapsedTime( pContext->getTime(), lastSendTimeMs );
+        }
+
+        if( ( bytesRemaining > 0U ) &&
+            ( timeSinceLastSendMs >= MQTT_SEND_RETRY_TIMEOUT_MS ) )
+        {
+            LogError( ( "Unable to send packet: Timed out in calling transport send." ) );
+            sendError = true;
+        }
     }
 
     /* Update time of last transmission if the entire packet is successfully sent. */
     if( totalBytesSent > 0 )
     {
-        pContext->lastPacketTime = sendTime;
+        pContext->lastPacketTime = lastSendTimeMs;
         LogDebug( ( "Successfully sent packet at time %lu.",
-                    ( unsigned long ) sendTime ) );
+                    ( unsigned long ) lastSendTimeMs ) );
     }
 
     return totalBytesSent;

@@ -130,6 +130,28 @@
 #endif
 
 /**
+ * @brief The maximum duration between non-empty network transmissions while
+ * sending an MQTT packet via the #MQTT_ProcessLoop or #MQTT_ReceiveLoop
+ * API functions.
+ *
+ * When sending an MQTT packet, the transport send function may be called multiple
+ * times until all of the required number of bytes are sent.
+ * This timeout represents the maximum duration that is allowed for no data
+ * transmission over the network through the transport send function.
+ *
+ * If the timeout expires, the #MQTT_ProcessLoop and #MQTT_ReceiveLoop functions
+ * return #MQTTSendFailed.
+ *
+ * <b>Possible values:</b> Any positive integer up to SIZE_MAX. Recommended to
+ * use a small timeout value. <br>
+ * <b>Default value:</b> `10`
+ *
+ */
+#ifndef MQTT_SEND_RETRY_TIMEOUT_MS
+    #define MQTT_SEND_RETRY_TIMEOUT_MS    ( 10U )
+#endif
+
+/**
  * @brief Macro that is called in the MQTT library for logging "Error" level
  * messages.
  *
