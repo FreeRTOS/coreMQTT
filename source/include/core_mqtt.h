@@ -604,8 +604,9 @@ MQTTStatus_t MQTT_Disconnect( MQTTContext_t * pContext );
  * run, unless an error occurs.
  *
  * @note Calling this function blocks the calling context for a time period that
- * depends on the passed @p timeoutMs, the configured macro, #MQTT_RECV_POLLING_TIMEOUT_MS
- * and the underlying transport interface implementation timeouts.
+ * depends on the passed @p timeoutMs, the configuration macro, #MQTT_RECV_POLLING_TIMEOUT_MS,
+ * and the underlying transport interface implementation timeouts, unless an error
+ * occurs.
  *    Blocking Time = Max( timeoutMs parameter,
  *                         MQTT_RECV_POLLING_TIMEOUT_MS,
  *                         Transport interface send/recv implementation timeout )
@@ -663,8 +664,9 @@ MQTTStatus_t MQTT_ProcessLoop( MQTTContext_t * pContext,
  * run, unless an error occurs.
  *
  * @note Calling this function blocks the calling context for a time period that
- * depends on the passed @p timeoutMs, the configured macro, #MQTT_RECV_POLLING_TIMEOUT_MS
- * and the underlying transport interface implementation timeouts.
+ * depends on the passed @p timeoutMs, the configuration macro, #MQTT_RECV_POLLING_TIMEOUT_MS,
+ * and the underlying transport interface implementation timeouts, unless an error
+ * occurs.
  *    Blocking Time = Max( timeoutMs parameter,
  *                         MQTT_RECV_POLLING_TIMEOUT_MS,
  *                         Transport interface send/recv implementation timeout )
