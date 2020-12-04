@@ -752,6 +752,7 @@ static int32_t recvExact( const MQTTContext_t * pContext,
             timeSinceLastRecvMs = calculateElapsedTime( getTimeStampMs(), lastDataRecvTimeMs );
         }
 
+        /* Check for timeout if we have been waiting to receive any byte on the network. */
         if( ( bytesRecvd == 0 ) &&
             ( bytesRemaining > 0U ) &&
             ( timeSinceLastRecvMs >= MQTT_RECV_POLLING_TIMEOUT_MS ) )
