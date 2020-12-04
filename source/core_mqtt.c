@@ -752,8 +752,7 @@ static int32_t recvExact( const MQTTContext_t * pContext,
             timeSinceLastRecvMs = calculateElapsedTime( getTimeStampMs(), lastDataRecvTimeMs );
 
             /* Check for timeout if we have been waiting to receive any byte on the network. */
-            if( ( bytesRemaining > 0U ) &&
-                ( timeSinceLastRecvMs >= MQTT_RECV_POLLING_TIMEOUT_MS ) )
+            if( timeSinceLastRecvMs >= MQTT_RECV_POLLING_TIMEOUT_MS )
             {
                 LogError( ( "Time expired while receiving packet." ) );
                 receiveError = true;
