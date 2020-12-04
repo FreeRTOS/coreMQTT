@@ -2177,7 +2177,7 @@ MQTTStatus_t MQTT_ProcessLoop( MQTTContext_t * pContext,
             elapsedTimeMs = calculateElapsedTime( pContext->getTime(),
                                                   entryTimeMs );
 
-            if( elapsedTimeMs > timeoutMs )
+            if( elapsedTimeMs >= timeoutMs )
             {
                 break;
             }
