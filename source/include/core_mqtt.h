@@ -603,6 +603,13 @@ MQTTStatus_t MQTT_Disconnect( MQTTContext_t * pContext );
  * @param[in] timeoutMs Minimum time in milliseconds that the receive loop will
  * run, unless an error occurs.
  *
+ * @note Calling this function blocks the calling context for a time period that
+ * depends on the passed @p timeoutMs, the configured macro, #MQTT_RECV_POLLING_TIMEOUT_MS
+ * and the underlying transport interface implementation timeouts.
+ *    Blocking Time = Max( timeoutMs parameter,
+ *                         MQTT_RECV_POLLING_TIMEOUT_MS,
+ *                         Transport interface send/recv implementation timeout )
+ *
  * @return #MQTTBadParameter if context is NULL;
  * #MQTTRecvFailed if a network error occurs during reception;
  * #MQTTSendFailed if a network error occurs while sending an ACK or PINGREQ;
@@ -654,6 +661,13 @@ MQTTStatus_t MQTT_ProcessLoop( MQTTContext_t * pContext,
  * @param[in] pContext Initialized and connected MQTT context.
  * @param[in] timeoutMs Minimum time in milliseconds that the receive loop will
  * run, unless an error occurs.
+ *
+ * @note Calling this function blocks the calling context for a time period that
+ * depends on the passed @p timeoutMs, the configured macro, #MQTT_RECV_POLLING_TIMEOUT_MS
+ * and the underlying transport interface implementation timeouts.
+ *    Blocking Time = Max( timeoutMs parameter,
+ *                         MQTT_RECV_POLLING_TIMEOUT_MS,
+ *                         Transport interface send/recv implementation timeout )
  *
  * @return #MQTTBadParameter if context is NULL;
  * #MQTTRecvFailed if a network error occurs during reception;
