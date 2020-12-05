@@ -600,7 +600,7 @@ static void expectProcessLoopCalls( MQTTContext_t * const pContext,
 /**
  * @brief Test that MQTT_Init is able to update the context object correctly.
  */
-void xtest_MQTT_Init_Happy_Path( void )
+void test_MQTT_Init_Happy_Path( void )
 {
     MQTTStatus_t mqttStatus;
     MQTTContext_t context;
@@ -624,7 +624,7 @@ void xtest_MQTT_Init_Happy_Path( void )
 /**
  * @brief Test that any NULL parameter causes MQTT_Init to return MQTTBadParameter.
  */
-void xtest_MQTT_Init_Invalid_Params( void )
+void test_MQTT_Init_Invalid_Params( void )
 {
     MQTTStatus_t mqttStatus;
     MQTTContext_t context;
@@ -665,7 +665,7 @@ void xtest_MQTT_Init_Invalid_Params( void )
 /**
  * @brief Test MQTT_Connect, except for receiving the CONNACK.
  */
-void xtest_MQTT_Connect_sendConnect( void )
+void test_MQTT_Connect_sendConnect( void )
 {
     MQTTContext_t mqttContext;
     MQTTConnectInfo_t connectInfo;
@@ -738,7 +738,7 @@ void xtest_MQTT_Connect_sendConnect( void )
 /**
  * @brief Test CONNACK reception in MQTT_Connect.
  */
-void xtest_MQTT_Connect_receiveConnack( void )
+void test_MQTT_Connect_receiveConnack( void )
 {
     MQTTContext_t mqttContext;
     MQTTConnectInfo_t connectInfo;
@@ -809,7 +809,7 @@ void xtest_MQTT_Connect_receiveConnack( void )
 /**
  * @brief Test CONNACK reception in MQTT_Connect.
  */
-void xtest_MQTT_Connect_receiveConnack_retries( void )
+void test_MQTT_Connect_receiveConnack_retries( void )
 {
     MQTTContext_t mqttContext;
     MQTTConnectInfo_t connectInfo;
@@ -869,7 +869,7 @@ void xtest_MQTT_Connect_receiveConnack_retries( void )
  * @brief Test error cases for MQTT_Connect when a timeout occurs or the packet
  * needs to be discarded in MQTT_Connect.
  */
-void xtest_MQTT_Connect_partial_receive()
+void test_MQTT_Connect_partial_receive()
 {
     MQTTContext_t mqttContext;
     MQTTConnectInfo_t connectInfo;
@@ -944,7 +944,7 @@ void xtest_MQTT_Connect_partial_receive()
 /**
  * @brief Test resend of pending acks in MQTT_Connect.
  */
-void xtest_MQTT_Connect_resendPendingAcks( void )
+void test_MQTT_Connect_resendPendingAcks( void )
 {
     MQTTContext_t mqttContext;
     MQTTConnectInfo_t connectInfo;
@@ -1076,7 +1076,7 @@ void xtest_MQTT_Connect_resendPendingAcks( void )
 /**
  * @brief Test success case for MQTT_Connect().
  */
-void xtest_MQTT_Connect_happy_path()
+void test_MQTT_Connect_happy_path()
 {
     MQTTContext_t mqttContext;
     MQTTConnectInfo_t connectInfo;
@@ -1207,7 +1207,7 @@ void xtest_MQTT_Connect_happy_path()
 /**
  * @brief Test that MQTT_Publish works as intended.
  */
-void xtest_MQTT_Publish( void )
+void test_MQTT_Publish( void )
 {
     MQTTContext_t mqttContext;
     MQTTPublishInfo_t publishInfo;
@@ -1345,7 +1345,7 @@ void xtest_MQTT_Publish( void )
  * and returns failure when the transport send function is unable to send any data
  * over the network.
  */
-void xtest_MQTT_Publish_Send_Timeout( void )
+void test_MQTT_Publish_Send_Timeout( void )
 {
     MQTTContext_t mqttContext;
     MQTTPublishInfo_t publishInfo;
@@ -1386,7 +1386,7 @@ void xtest_MQTT_Publish_Send_Timeout( void )
 /**
  * @brief Test that MQTT_Disconnect works as intended.
  */
-void xtest_MQTT_Disconnect( void )
+void test_MQTT_Disconnect( void )
 {
     MQTTContext_t mqttContext;
     MQTTStatus_t status;
@@ -1437,7 +1437,7 @@ void xtest_MQTT_Disconnect( void )
 /**
  * @brief Test that MQTT_GetPacketId works as intended.
  */
-void xtest_MQTT_GetPacketId( void )
+void test_MQTT_GetPacketId( void )
 {
     MQTTContext_t mqttContext;
     TransportInterface_t transport;
@@ -1468,7 +1468,7 @@ void xtest_MQTT_GetPacketId( void )
 /**
  * @brief Test that NULL pContext causes MQTT_ProcessLoop to return MQTTBadParameter.
  */
-void xtest_MQTT_ProcessLoop_Invalid_Params( void )
+void test_MQTT_ProcessLoop_Invalid_Params( void )
 {
     MQTTContext_t context;
     TransportInterface_t transport;
@@ -1499,7 +1499,7 @@ void xtest_MQTT_ProcessLoop_Invalid_Params( void )
  * handleIncomingPublish(...),
  * that result in the process loop returning successfully.
  */
-void xtest_MQTT_ProcessLoop_handleIncomingPublish_Happy_Paths( void )
+void test_MQTT_ProcessLoop_handleIncomingPublish_Happy_Paths( void )
 {
     MQTTStatus_t mqttStatus;
     MQTTContext_t context;
@@ -1599,7 +1599,7 @@ void xtest_MQTT_ProcessLoop_handleIncomingPublish_Happy_Paths( void )
  * handleIncomingPublish(...),
  * that result in the process loop returning an error.
  */
-void xtest_MQTT_ProcessLoop_handleIncomingPublish_Error_Paths( void )
+void test_MQTT_ProcessLoop_handleIncomingPublish_Error_Paths( void )
 {
     MQTTStatus_t mqttStatus;
     MQTTContext_t context;
@@ -1651,7 +1651,7 @@ void xtest_MQTT_ProcessLoop_handleIncomingPublish_Error_Paths( void )
  * the transport recv function only reads less than requested bytes at a
  * time, and the timeout passed to the API is "0ms".
  */
-void xtest_MQTT_ProcessLoop_Zero_Duration_And_Partial_Network_Read( void )
+void test_MQTT_ProcessLoop_Zero_Duration_And_Partial_Network_Read( void )
 {
     MQTTStatus_t mqttStatus;
     MQTTContext_t context;
@@ -1697,7 +1697,7 @@ void xtest_MQTT_ProcessLoop_Zero_Duration_And_Partial_Network_Read( void )
  * handleIncomingAck(...),
  * that result in the process loop returning successfully.
  */
-void xtest_MQTT_ProcessLoop_handleIncomingAck_Happy_Paths( void )
+void test_MQTT_ProcessLoop_handleIncomingAck_Happy_Paths( void )
 {
     MQTTStatus_t mqttStatus;
     MQTTContext_t context;
@@ -1795,7 +1795,7 @@ void xtest_MQTT_ProcessLoop_handleIncomingAck_Happy_Paths( void )
  * handleIncomingAck(...),
  * that result in the process loop returning an error.
  */
-void xtest_MQTT_ProcessLoop_handleIncomingAck_Error_Paths( void )
+void test_MQTT_ProcessLoop_handleIncomingAck_Error_Paths( void )
 {
     MQTTStatus_t mqttStatus;
     MQTTContext_t context;
@@ -1879,7 +1879,7 @@ void xtest_MQTT_ProcessLoop_handleIncomingAck_Error_Paths( void )
  * handleKeepAlive(...),
  * that result in the process loop returning successfully.
  */
-void xtest_MQTT_ProcessLoop_handleKeepAlive_Happy_Paths( void )
+void test_MQTT_ProcessLoop_handleKeepAlive_Happy_Paths( void )
 {
     MQTTStatus_t mqttStatus;
     MQTTContext_t context;
@@ -1940,7 +1940,7 @@ void xtest_MQTT_ProcessLoop_handleKeepAlive_Happy_Paths( void )
  * handleKeepAlive(...),
  * that result in the process loop returning an error.
  */
-void xtest_MQTT_ProcessLoop_handleKeepAlive_Error_Paths( void )
+void test_MQTT_ProcessLoop_handleKeepAlive_Error_Paths( void )
 {
     MQTTStatus_t mqttStatus;
     MQTTContext_t context;
@@ -1970,7 +1970,7 @@ void xtest_MQTT_ProcessLoop_handleKeepAlive_Error_Paths( void )
  * @brief This test mocks a failing transport receive and runs multiple
  * iterations of the process loop, resulting in returning MQTTRecvFailed.
  */
-void xtest_MQTT_ProcessLoop_Receive_Failed( void )
+void test_MQTT_ProcessLoop_Receive_Failed( void )
 {
     MQTTStatus_t mqttStatus;
     MQTTContext_t context;
@@ -2006,7 +2006,8 @@ void test_MQTT_ProcessLoop_Timer_Overflow( void )
     uint8_t numIterations = ( MQTT_TIMER_OVERFLOW_TIMEOUT_MS % MQTT_TIMER_CALLS_PER_ITERATION ) ?
                             ( MQTT_TIMER_OVERFLOW_TIMEOUT_MS % MQTT_TIMER_CALLS_PER_ITERATION ) :
                             ( ( MQTT_TIMER_OVERFLOW_TIMEOUT_MS % MQTT_TIMER_CALLS_PER_ITERATION ) + 1 );
-    uint32_t expectedFinalTime;
+
+    /* uint32_t expectedFinalTime; */
 
     setupTransportInterface( &transport );
     setupNetworkBuffer( &networkBuffer );
@@ -2016,7 +2017,7 @@ void test_MQTT_ProcessLoop_Timer_Overflow( void )
     incomingPacket.remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
 
     globalEntryTime = UINT32_MAX - MQTT_OVERFLOW_OFFSET;
-    expectedFinalTime = globalEntryTime + ( MQTT_TIMER_CALLS_PER_ITERATION * numIterations + 1 );
+    /*  expectedFinalTime = globalEntryTime + ( MQTT_TIMER_CALLS_PER_ITERATION * numIterations + 1 ); */
 
     mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
@@ -2047,7 +2048,7 @@ void test_MQTT_ProcessLoop_Timer_Overflow( void )
  * between this and the process loop is keep alive, we only need to test the
  * differences for coverage.
  */
-void xtest_MQTT_ReceiveLoop( void )
+void test_MQTT_ReceiveLoop( void )
 {
     MQTTStatus_t mqttStatus;
     MQTTContext_t context;
@@ -2113,7 +2114,7 @@ void xtest_MQTT_ReceiveLoop( void )
  * with an invalid parameter. This test case also gives us coverage over
  * the private method, validateSubscribeUnsubscribeParams(...).
  */
-void xtest_MQTT_Subscribe_invalid_params( void )
+void test_MQTT_Subscribe_invalid_params( void )
 {
     MQTTStatus_t mqttStatus;
     MQTTContext_t context;
@@ -2140,7 +2141,7 @@ void xtest_MQTT_Subscribe_invalid_params( void )
  * @brief This test case verifies that MQTT_Subscribe returns successfully
  * when valid parameters are passed and all bytes are sent.
  */
-void xtest_MQTT_Subscribe_happy_path( void )
+void test_MQTT_Subscribe_happy_path( void )
 {
     MQTTStatus_t mqttStatus;
     MQTTContext_t context;
@@ -2171,7 +2172,7 @@ void xtest_MQTT_Subscribe_happy_path( void )
  * @brief This test case verifies that MQTT_Subscribe returns MQTTSendFailed
  * if transport interface send returns an error.
  */
-void xtest_MQTT_Subscribe_error_paths( void )
+void test_MQTT_Subscribe_error_paths( void )
 {
     MQTTStatus_t mqttStatus;
     MQTTContext_t context;
@@ -2209,7 +2210,7 @@ void xtest_MQTT_Subscribe_error_paths( void )
  * with an invalid parameter. This test case also gives us coverage over
  * the private method, validateSubscribeUnsubscribeParams(...).
  */
-void xtest_MQTT_Unsubscribe_invalid_params( void )
+void test_MQTT_Unsubscribe_invalid_params( void )
 {
     MQTTStatus_t mqttStatus;
     MQTTContext_t context;
@@ -2236,7 +2237,7 @@ void xtest_MQTT_Unsubscribe_invalid_params( void )
  * @brief This test case verifies that MQTT_Unsubscribe returns successfully
  * when valid parameters are passed and all bytes are sent.
  */
-void xtest_MQTT_Unsubscribe_happy_path( void )
+void test_MQTT_Unsubscribe_happy_path( void )
 {
     MQTTStatus_t mqttStatus;
     MQTTContext_t context;
@@ -2267,7 +2268,7 @@ void xtest_MQTT_Unsubscribe_happy_path( void )
  * @brief This test case verifies that MQTT_Unsubscribe returns MQTTSendFailed
  * if transport interface send returns an error.
  */
-void xtest_MQTT_Unsubscribe_error_path( void )
+void test_MQTT_Unsubscribe_error_path( void )
 {
     MQTTStatus_t mqttStatus;
     MQTTContext_t context;
@@ -2304,7 +2305,7 @@ void xtest_MQTT_Unsubscribe_error_path( void )
  * @brief This test case verifies that MQTT_Ping returns MQTTBadParameter
  * with context parameter is NULL.
  */
-void xtest_MQTT_Ping_invalid_params( void )
+void test_MQTT_Ping_invalid_params( void )
 {
     MQTTStatus_t mqttStatus;
 
@@ -2317,7 +2318,7 @@ void xtest_MQTT_Ping_invalid_params( void )
  * @brief This test case verifies that MQTT_Ping returns successfully
  * when valid parameters are passed and all bytes are sent.
  */
-void xtest_MQTT_Ping_happy_path( void )
+void test_MQTT_Ping_happy_path( void )
 {
     MQTTStatus_t mqttStatus;
     MQTTContext_t context;
@@ -2347,7 +2348,7 @@ void xtest_MQTT_Ping_happy_path( void )
  * @brief This test case verifies that MQTT_Ping returns MQTTSendFailed
  * if transport interface send returns an error.
  */
-void xtest_MQTT_Ping_error_path( void )
+void test_MQTT_Ping_error_path( void )
 {
     MQTTStatus_t mqttStatus;
     MQTTContext_t context;
@@ -2390,7 +2391,7 @@ void xtest_MQTT_Ping_error_path( void )
 /**
  * @brief Test MQTT_MatchTopic for invalid input parameters.
  */
-void xtest_MQTT_MatchTopic_InvalidInput( void )
+void test_MQTT_MatchTopic_InvalidInput( void )
 {
     bool matchResult = false;
 
@@ -2438,7 +2439,7 @@ void xtest_MQTT_MatchTopic_InvalidInput( void )
  * @brief Verifies that MQTT_MatchTopic is able to determine an exact match between the
  * topic name and topic filter.
  */
-void xtest_MQTT_MatchTopic_ExactMatch( void )
+void test_MQTT_MatchTopic_ExactMatch( void )
 {
     const char * pTopicFilter = NULL;
     const char * pTopicName = NULL;
@@ -2507,7 +2508,7 @@ void xtest_MQTT_MatchTopic_ExactMatch( void )
  * @brief Verifies that MQTT_MatchTopic meets the MQTT 3.1.1 specification of all
  * cases of matching topic filters that contain the single-level '+' wildcard.
  */
-void xtest_MQTT_MatchTopic_Wildcard_SingleLevel_Match_Cases( void )
+void test_MQTT_MatchTopic_Wildcard_SingleLevel_Match_Cases( void )
 {
     const char * pTopicName = NULL;
     const char * pTopicFilter = NULL;
@@ -2616,7 +2617,7 @@ void xtest_MQTT_MatchTopic_Wildcard_SingleLevel_Match_Cases( void )
  * @brief Verifies that MQTT_MatchTopic meets the MQTT 3.1.1 specification for
  * cases of where topic filter containing '+' wildcard do not match topic name.
  */
-void xtest_MQTT_MatchTopic_Wildcard_SingleLevel_No_Match_Cases( void )
+void test_MQTT_MatchTopic_Wildcard_SingleLevel_No_Match_Cases( void )
 {
     const char * pTopicName = NULL;
     const char * pTopicFilter = NULL;
@@ -2678,7 +2679,7 @@ void xtest_MQTT_MatchTopic_Wildcard_SingleLevel_No_Match_Cases( void )
  * @brief Verifies that MQTT_MatchTopic meets the MQTT 3.1.1 specification of all
  * cases of matching topic filters that contain the multi-level '#' wildcard.
  */
-void xtest_MQTT_MatchTopic_Wildcard_MultiLevel_Match_Cases( void )
+void test_MQTT_MatchTopic_Wildcard_MultiLevel_Match_Cases( void )
 {
     const char * pTopicName = NULL;
     const char * pTopicFilter = NULL;
@@ -2777,7 +2778,7 @@ void xtest_MQTT_MatchTopic_Wildcard_MultiLevel_Match_Cases( void )
  * @brief Verifies that MQTT_MatchTopic meets the MQTT 3.1.1 specification for
  * cases of where topic filter containing '#' wildcard do not match topic name.
  */
-void xtest_MQTT_MatchTopic_Wildcard_MultiLevel_No_Match_Cases( void )
+void test_MQTT_MatchTopic_Wildcard_MultiLevel_No_Match_Cases( void )
 {
     const char * pTopicName = NULL;
     const char * pTopicFilter = NULL;
@@ -2848,7 +2849,7 @@ void xtest_MQTT_MatchTopic_Wildcard_MultiLevel_No_Match_Cases( void )
  * @brief Tests that MQTT_GetSubAckStatusCodes works as expected in parsing the
  * payload information of a SUBACK packet.
  */
-void xtest_MQTT_GetSubAckStatusCodes( void )
+void test_MQTT_GetSubAckStatusCodes( void )
 {
     MQTTPacketInfo_t mqttPacketInfo;
     size_t payloadSize;
@@ -2911,7 +2912,7 @@ void xtest_MQTT_GetSubAckStatusCodes( void )
 /**
  * @brief Test MQTT_Status_strerror returns correct strings.
  */
-void xtest_MQTT_Status_strerror( void )
+void test_MQTT_Status_strerror( void )
 {
     MQTTStatus_t status;
     const char * str = NULL;
