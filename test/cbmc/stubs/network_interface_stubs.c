@@ -35,6 +35,13 @@
     #define MAX_NETWORK_SEND_TRIES    3
 #endif
 
+/* An exclusive bound on the times that the NetworkInterfaceReceiveStub will
+ * return an unbound value. At this value and beyond, the
+ * NetworkInterfaceReceiveStub will return zero on every call. */
+#ifndef MAX_NETWORK_RECV_TRIES
+    #define MAX_NETWORK_RECV_TRIES    4
+#endif
+
 int32_t NetworkInterfaceReceiveStub( NetworkContext_t * pNetworkContext,
                                      void * pBuffer,
                                      size_t bytesToRecv )
@@ -48,11 +55,21 @@ int32_t NetworkInterfaceReceiveStub( NetworkContext_t * pNetworkContext,
     __CPROVER_havoc_object( pBuffer );
 
     int32_t bytesOrError;
+    static size_t tries = 0;
 
     /* It is a bug for the application defined transport send function to return
      * more than bytesToRecv. */
     __CPROVER_assume( bytesOrError <= ( int32_t ) bytesToRecv );
 
+    if( tries < ( MAX_NETWORK_RECV_TRIES - 1 ) )
+    {
+        tries++;
+    }
+    else
+    {
+        bytesOrError = 0;
+    }
+    
     return bytesOrError;
 }
 
