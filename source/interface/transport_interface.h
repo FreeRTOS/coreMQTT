@@ -163,7 +163,11 @@ typedef struct NetworkContext NetworkContext_t;
  * @param[in] pBuffer Buffer to receive the data into.
  * @param[in] bytesToRecv Number of bytes requested from the network.
  *
- * @return The number of bytes received or a negative error code.
+ * @return The number of bytes received or a negative value to indicate
+ * error.
+ * @note If no data is available on the network to read and no error
+ * has occurred, zero MUST be the return value. Zero MUST NOT be used
+ * if a network disconnection has occurred.
  */
 /* @[define_transportrecv] */
 typedef int32_t ( * TransportRecv_t )( NetworkContext_t * pNetworkContext,

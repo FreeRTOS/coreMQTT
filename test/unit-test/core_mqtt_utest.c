@@ -132,6 +132,7 @@ typedef struct ProcessLoopReturns
     MQTTStatus_t processLoopStatus;           /**< @brief Return value of the process loop. */
     bool incomingPublish;                     /**< @brief Whether the incoming packet is a publish. */
     MQTTPublishInfo_t * pPubInfo;             /**< @brief Publish information to be returned by the deserializer. */
+    uint32_t timeoutMs;                       /**< @brief The timeout value to call MQTT_ProcessLoop API with. */
 } ProcessLoopReturns_t;
 
 /**
@@ -366,6 +367,20 @@ static int32_t transportRecvOneByte( NetworkContext_t * pNetworkContext,
 }
 
 /**
+ * @brief Mocked transport returning zero bytes to simulate reception
+ * of no data over network.
+ */
+static int32_t transportRecvNoData( NetworkContext_t * pNetworkContext,
+                                    void * pBuffer,
+                                    size_t bytesToRead )
+{
+    ( void ) pNetworkContext;
+    ( void ) pBuffer;
+    ( void ) bytesToRead;
+    return 0;
+}
+
+/**
  * @brief Initialize the transport interface with the mocked functions for
  * send and receive.
  *
@@ -405,6 +420,7 @@ static void resetProcessLoopParams( ProcessLoopReturns_t * pExpectParams )
     pExpectParams->processLoopStatus = MQTTSuccess;
     pExpectParams->incomingPublish = false;
     pExpectParams->pPubInfo = NULL;
+    pExpectParams->timeoutMs = MQTT_NO_TIMEOUT_MS;
 }
 
 /**
@@ -548,7 +564,7 @@ static void expectProcessLoopCalls( MQTTContext_t * const pContext,
     }
 
     /* Expect the above calls when running MQTT_ProcessLoop. */
-    mqttStatus = MQTT_ProcessLoop( pContext, MQTT_NO_TIMEOUT_MS );
+    mqttStatus = MQTT_ProcessLoop( pContext, pExpectParams->timeoutMs );
     TEST_ASSERT_EQUAL( processLoopStatus, mqttStatus );
 
     /* Any final assertions to end the test. */
@@ -853,7 +869,7 @@ void test_MQTT_Connect_partial_receive()
 
     setupTransportInterface( &transport );
     setupNetworkBuffer( &networkBuffer );
-    transport.recv = transportRecvOneByte;
+    transport.recv = transportRecvNoData;
 
     memset( &mqttContext, 0x0, sizeof( mqttContext ) );
     MQTT_Init( &mqttContext, &transport, getTime, eventCallback, &networkBuffer );
@@ -864,14 +880,16 @@ void test_MQTT_Connect_partial_receive()
     incomingPacket.type = MQTT_PACKET_TYPE_CONNACK;
     incomingPacket.remainingLength = 2;
 
-    /* Not enough time to receive entire packet, for branch coverage. This is due
-     * to the fact the mocked receive function reads only one byte at a time. */
-    timeout = 1;
+    /* Timeout in receiving entire packet, for branch coverage. This is due to the fact that the mocked
+     * receive function always returns 0 bytes read. */
     MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_GetIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
     status = MQTT_Connect( &mqttContext, &connectInfo, NULL, timeout, &sessionPresent );
     TEST_ASSERT_EQUAL_INT( MQTTRecvFailed, status );
 
+    /* Update to use mock receive function that receives one byte at a time for the
+     * rest of the test. */
+    mqttContext.transportInterface.recv = transportRecvOneByte;
     timeout = 10;
 
     /* Not enough space for packet, discard it. */
@@ -1571,6 +1589,53 @@ void test_MQTT_ProcessLoop_handleIncomingPublish_Error_Paths( void )
     /* The other loop parameter fields are irrelevant. */
     expectProcessLoopCalls( &context, &expectParams );
     TEST_ASSERT_FALSE( isEventCallbackInvoked );
+}
+
+/**
+ * @brief This test checks that the ProcessLoop API function is able to
+ * support receiving an entire incoming MQTT packet over the network when
+ * the transport recv function only reads less than requested bytes at a
+ * time, and the timeout passed to the API is "0ms".
+ */
+void test_MQTT_ProcessLoop_Zero_Duration_And_Partial_Network_Read( void )
+{
+    MQTTStatus_t mqttStatus;
+    MQTTContext_t context;
+    TransportInterface_t transport;
+    MQTTFixedBuffer_t networkBuffer;
+    ProcessLoopReturns_t expectParams = { 0 };
+
+    setupNetworkBuffer( &networkBuffer );
+
+    transport.send = transportSendSuccess;
+
+    /* Set the transport recv function for the test to the mock function that represents
+     * partial read of data from network (i.e. less than requested number of bytes)
+     * at a time. */
+    transport.recv = transportRecvOneByte;
+
+    /* Initialize the context. */
+    mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+
+    /* Set flag required for configuring behavior of expectProcessLoopCalls()
+     * helper function. */
+    modifyIncomingPacketStatus = MQTTSuccess;
+
+    /* Test the ProcessLoop() call with zero duration timeout to verify that it
+     * will be able to support reading the packet over network over multiple calls to
+     * the transport receive function. */
+    expectParams.timeoutMs = MQTT_NO_TIMEOUT_MS;
+
+    /* Test with an incoming PUBLISH packet whose payload is read only one byte
+     * per call to the transport recv function. */
+    currentPacketType = MQTT_PACKET_TYPE_PUBLISH;
+    /* Set expected return values during the loop. */
+    resetProcessLoopParams( &expectParams );
+    expectParams.stateAfterDeserialize = MQTTPubAckSend;
+    expectParams.stateAfterSerialize = MQTTPublishDone;
+    expectParams.incomingPublish = true;
+    expectProcessLoopCalls( &context, &expectParams );
 }
 
 /**

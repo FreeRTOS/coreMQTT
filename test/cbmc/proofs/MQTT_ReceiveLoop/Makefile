@@ -11,6 +11,10 @@ PROOF_UID=MQTT_ReceiveLoop
 # out of 2 we can get coverage of the entire function. Another iteration will
 # performed unnecessarily duplicating of the proof.
 MQTT_RECEIVE_TIMEOUT=3
+# The NetworkInterfaceReceiveStub is called once for getting the incoming packet
+# type with one byte of data, then it is called multiple times to reveive the
+# packet.
+MAX_NETWORK_RECV_TRIES=4
 # Please see test/cbmc/stubs/network_interface_subs.c for
 # more information on MAX_NETWORK_SEND_TRIES.
 MAX_NETWORK_SEND_TRIES=3
@@ -19,6 +23,7 @@ MAX_NETWORK_SEND_TRIES=3
 MQTT_STATE_ARRAY_MAX_COUNT=11
 DEFINES += -DMQTT_RECEIVE_TIMEOUT=$(MQTT_RECEIVE_TIMEOUT)
 DEFINES += -DMAX_NETWORK_SEND_TRIES=$(MAX_NETWORK_SEND_TRIES)
+DEFINES += -DMAX_NETWORK_RECV_TRIES=$(MAX_NETWORK_RECV_TRIES)
 INCLUDES +=
 
 # These functions have their memory saftey proven in other harnesses.
@@ -28,7 +33,7 @@ REMOVE_FUNCTION_BODY += MQTT_SerializeAck
 # The loops below are unwound once more than the exclusive timeout bound.
 UNWINDSET += MQTT_ReceiveLoop.0:$(MQTT_RECEIVE_TIMEOUT)
 UNWINDSET += __CPROVER_file_local_core_mqtt_c_discardPacket.0:$(MQTT_RECEIVE_TIMEOUT)
-UNWINDSET += __CPROVER_file_local_core_mqtt_c_recvExact.0:$(MQTT_RECEIVE_TIMEOUT)
+UNWINDSET += __CPROVER_file_local_core_mqtt_c_recvExact.0:$(MAX_NETWORK_RECV_TRIES)
 # Unlike recvExact, sendPacket is not bounded by the timeout. The loop in
 # sendPacket will continue until all the bytes are sent or a network error
 # occurs. Please see NetworkInterfaceReceiveStub in

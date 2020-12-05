@@ -71,17 +71,25 @@ static uint32_t calculateElapsedTime( uint32_t later,
 static MQTTPubAckType_t getAckFromPacketType( uint8_t packetType );
 
 /**
- * @brief Receive bytes into the network buffer, with a timeout.
+ * @brief Receive bytes into the network buffer.
  *
  * @param[in] pContext Initialized MQTT Context.
  * @param[in] bytesToRecv Number of bytes to receive.
- * @param[in] timeoutMs Time remaining to receive the packet.
+ *
+ * @note This operation calls the transport receive function
+ * repeatedly to read bytes from the network until either:
+ * 1. The requested number of bytes @a bytesToRecv are read.
+ *                    OR
+ * 2. No data is received from the network for MQTT_RECV_POLLING_TIMEOUT_MS duration.
+ *
+ *                    OR
+ * 3. There is an error in reading from the network.
+ *
  *
  * @return Number of bytes received, or negative number on network error.
  */
 static int32_t recvExact( const MQTTContext_t * pContext,
-                          size_t bytesToRecv,
-                          uint32_t timeoutMs );
+                          size_t bytesToRecv );
 
 /**
  * @brief Discard a packet from the transport interface.
@@ -683,13 +691,12 @@ static MQTTPubAckType_t getAckFromPacketType( uint8_t packetType )
 /*-----------------------------------------------------------*/
 
 static int32_t recvExact( const MQTTContext_t * pContext,
-                          size_t bytesToRecv,
-                          uint32_t timeoutMs )
+                          size_t bytesToRecv )
 {
     uint8_t * pIndex = NULL;
     size_t bytesRemaining = bytesToRecv;
     int32_t totalBytesRecvd = 0, bytesRecvd;
-    uint32_t entryTimeMs = 0U, elapsedTimeMs = 0U;
+    uint32_t lastDataRecvTimeMs = 0U, timeSinceLastRecvMs = 0U;
     TransportRecv_t recvFunc = NULL;
     MQTTGetCurrentTimeFunc_t getTimeStampMs = NULL;
     bool receiveError = false;
@@ -704,7 +711,8 @@ static int32_t recvExact( const MQTTContext_t * pContext,
     recvFunc = pContext->transportInterface.recv;
     getTimeStampMs = pContext->getTime;
 
-    entryTimeMs = getTimeStampMs();
+    /* Part of the MQTT packet has been read before calling this function. */
+    lastDataRecvTimeMs = getTimeStampMs();
 
     while( ( bytesRemaining > 0U ) && ( receiveError == false ) )
     {
@@ -719,8 +727,11 @@ static int32_t recvExact( const MQTTContext_t * pContext,
             totalBytesRecvd = bytesRecvd;
             receiveError = true;
         }
-        else
+        else if( bytesRecvd > 0 )
         {
+            /* Reset the starting time as we have received some data from the network. */
+            lastDataRecvTimeMs = getTimeStampMs();
+
             /* It is a bug in the application's transport receive implementation
              * if more bytes than expected are received. To avoid a possible
              * overflow in converting bytesRemaining from unsigned to signed,
@@ -732,18 +743,20 @@ static int32_t recvExact( const MQTTContext_t * pContext,
             totalBytesRecvd += ( int32_t ) bytesRecvd;
             pIndex += bytesRecvd;
             LogDebug( ( "BytesReceived=%ld, BytesRemaining=%lu, "
-                        "TotalBytesReceived=%ld.",
                         ( long int ) bytesRecvd,
-                        ( unsigned long ) bytesRemaining,
-                        ( long int ) totalBytesRecvd ) );
+                        ( unsigned long ) bytesRemaining ) );
         }
-
-        elapsedTimeMs = calculateElapsedTime( getTimeStampMs(), entryTimeMs );
-
-        if( ( bytesRemaining > 0U ) && ( elapsedTimeMs >= timeoutMs ) )
+        else
         {
-            LogError( ( "Time expired while receiving packet." ) );
-            receiveError = true;
+            /* No bytes were read from the network. */
+            timeSinceLastRecvMs = calculateElapsedTime( getTimeStampMs(), lastDataRecvTimeMs );
+
+            /* Check for timeout if we have been waiting to receive any byte on the network. */
+            if( timeSinceLastRecvMs >= MQTT_RECV_POLLING_TIMEOUT_MS )
+            {
+                LogError( ( "Time expired while receiving packet." ) );
+                receiveError = true;
+            }
         }
     }
 
@@ -760,7 +773,6 @@ static MQTTStatus_t discardPacket( const MQTTContext_t * pContext,
     int32_t bytesReceived = 0;
     size_t bytesToReceive = 0U;
     uint32_t totalBytesReceived = 0U, entryTimeMs = 0U, elapsedTimeMs = 0U;
-    uint32_t remainingTimeMs = timeoutMs;
     MQTTGetCurrentTimeFunc_t getTimeStampMs = NULL;
     bool receiveError = false;
 
@@ -779,7 +791,7 @@ static MQTTStatus_t discardPacket( const MQTTContext_t * pContext,
             bytesToReceive = remainingLength - totalBytesReceived;
         }
 
-        bytesReceived = recvExact( pContext, bytesToReceive, remainingTimeMs );
+        bytesReceived = recvExact( pContext, bytesToReceive );
 
         if( bytesReceived != ( int32_t ) bytesToReceive )
         {
@@ -795,12 +807,8 @@ static MQTTStatus_t discardPacket( const MQTTContext_t * pContext,
 
             elapsedTimeMs = calculateElapsedTime( getTimeStampMs(), entryTimeMs );
 
-            /* Update remaining time and check for timeout. */
-            if( elapsedTimeMs < timeoutMs )
-            {
-                remainingTimeMs = timeoutMs - elapsedTimeMs;
-            }
-            else
+            /* Check for timeout. */
+            if( elapsedTimeMs >= timeoutMs )
             {
                 LogError( ( "Time expired while discarding packet." ) );
                 receiveError = true;
@@ -846,7 +854,7 @@ static MQTTStatus_t receivePacket( const MQTTContext_t * pContext,
     else
     {
         bytesToReceive = incomingPacket.remainingLength;
-        bytesReceived = recvExact( pContext, bytesToReceive, remainingTimeMs );
+        bytesReceived = recvExact( pContext, bytesToReceive );
 
         if( bytesReceived == ( int32_t ) bytesToReceive )
         {
@@ -2167,7 +2175,7 @@ MQTTStatus_t MQTT_ProcessLoop( MQTTContext_t * pContext,
             elapsedTimeMs = calculateElapsedTime( pContext->getTime(),
                                                   entryTimeMs );
 
-            if( elapsedTimeMs > timeoutMs )
+            if( elapsedTimeMs >= timeoutMs )
             {
                 break;
             }

@@ -70,4 +70,22 @@ struct NetworkContext
  */
 #define MQTT_PINGRESP_TIMEOUT_MS                ( 500U )
 
+/**
+ * @brief The maximum duration of receiving no data over network when
+ * attempting to read an incoming MQTT packet by the #MQTT_ProcessLoop or
+ * #MQTT_ReceiveLoop API functions.
+ *
+ * When an incoming MQTT packet is detected, the transport receive function
+ * may be called multiple times until all the expected number of bytes for the
+ * packet are received. This timeout represents the maximum duration of polling
+ * for any data to be received over the network for the incoming.
+ * If the timeout expires, the #MQTT_ProcessLoop or #MQTT_ReceiveLoop functions
+ * return #MQTTRecvFailed.
+ *
+ * This is set to 1 to exit right away after a zero is received in the transport
+ * receive stub. There is no added value, in proving memory safety, to repeat
+ * the logic that checks if the polling timeout is reached.
+ */
+#define MQTT_RECV_POLLING_TIMEOUT_MS            ( 1U )
+
 #endif /* ifndef CORE_MQTT_CONFIG_H_ */
