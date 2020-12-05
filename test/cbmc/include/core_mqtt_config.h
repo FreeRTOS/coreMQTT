@@ -81,7 +81,7 @@ struct NetworkContext
  * for any data to be received over the network for the incoming.
  * If the timeout expires, the #MQTT_ProcessLoop or #MQTT_ReceiveLoop functions
  * return #MQTTRecvFailed.
- * 
+ *
  * This is set to 1 to exit right away after a zero is received in the transport
  * receive stub. There is no added value, in proving memory safety, to repeat
  * the logic that checks if the polling timeout is reached.

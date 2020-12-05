@@ -69,7 +69,7 @@ int32_t NetworkInterfaceReceiveStub( NetworkContext_t * pNetworkContext,
     {
         bytesOrError = 0;
     }
-    
+
     return bytesOrError;
 }
 
