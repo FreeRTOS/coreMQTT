@@ -82,10 +82,10 @@ struct NetworkContext
  * If the timeout expires, the #MQTT_ProcessLoop or #MQTT_ReceiveLoop functions
  * return #MQTTRecvFailed.
  *
- * For the sake of proving memory safety quickly this is set to zero. When this
- * is set to zero, coverage of each condition in recvExact is reached before
- * ultimately exiting after a single iteration.
+ * This is set to 1 to exit right away after a zero is received in the transport
+ * receive stub. There is no added value, in proving memory safety, to repeat
+ * the logic that checks if the polling timeout is reached.
  */
-#define MQTT_RECV_POLLING_TIMEOUT_MS            ( 0U )
+#define MQTT_RECV_POLLING_TIMEOUT_MS            ( 1U )
 
 #endif /* ifndef CORE_MQTT_CONFIG_H_ */

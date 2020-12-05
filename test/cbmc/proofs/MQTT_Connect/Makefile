@@ -32,12 +32,17 @@ MAX_NETWORK_SEND_TRIES=3
 # time out of 3 we can get coverage of the entire function. Another iteration
 # performed will unnecessarily duplicate the proof.
 MQTT_RECEIVE_TIMEOUT=3
+# The NetworkInterfaceReceiveStub is called once for getting the incoming packet
+# type with one byte of data, then it is called multiple times to reveive the
+# packet.
+MAX_NETWORK_RECV_TRIES=4
 # Please see test/cbmc/include/core_mqtt_config.h for more
 # information on these defines.
 MQTT_STATE_ARRAY_MAX_COUNT=11
 MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT=3
 DEFINES += -DMQTT_RECEIVE_TIMEOUT=$(MQTT_RECEIVE_TIMEOUT)
 DEFINES += -DMAX_NETWORK_SEND_TRIES=$(MAX_NETWORK_SEND_TRIES)
+DEFINES += -DMAX_NETWORK_RECV_TRIES=$(MAX_NETWORK_RECV_TRIES)
 INCLUDES +=
 
 # These functions do not coincide with the call graph of MQTT_Connect, but are
@@ -57,10 +62,7 @@ REMOVE_FUNCTION_BODY += memcpy
 # The loop below is unwound once more than the timeout. The loop below uses
 # the user passed in timeout to break the loop.
 UNWINDSET += __CPROVER_file_local_core_mqtt_c_discardPacket.0:$(MQTT_RECEIVE_TIMEOUT)
-# recvExact only iterates once with MQTT_RECV_POLLING_TIMEOUT_MS set to zero.
-# The possible values from the transport receive can attain coverage with a
-# single iteration.
-UNWINDSET += __CPROVER_file_local_core_mqtt_c_recvExact.0:2
+UNWINDSET += __CPROVER_file_local_core_mqtt_c_recvExact.0:$(MAX_NETWORK_RECV_TRIES)
 # If the user passed in timeout is zero, then the loop will run until the
 # MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT is reached.
 UNWINDSET += __CPROVER_file_local_core_mqtt_c_receiveConnack.0:$(MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT)
