@@ -107,6 +107,9 @@ keepalivems
 keepaliveseconds
 lastpackettime
 linux
+logdebug
+logerror
+loginfo
 logwarn
 lsb
 lwt
@@ -115,6 +118,7 @@ managekeepalive
 matchtopic
 memcpy
 memset
+metadata
 mib
 min
 misra
