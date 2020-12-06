@@ -743,8 +743,10 @@ static int32_t recvExact( const MQTTContext_t * pContext,
             totalBytesRecvd += ( int32_t ) bytesRecvd;
             pIndex += bytesRecvd;
             LogDebug( ( "BytesReceived=%ld, BytesRemaining=%lu, "
+                        "TotalBytesReceived=%ld.",
                         ( long int ) bytesRecvd,
-                        ( unsigned long ) bytesRemaining ) );
+                        ( unsigned long ) bytesRemaining,
+                        ( long int ) totalBytesRecvd ) );
         }
         else
         {

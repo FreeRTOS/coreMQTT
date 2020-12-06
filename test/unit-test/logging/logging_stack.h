@@ -177,6 +177,6 @@
  */
     #define LogError( message )    SdkLog( ( "[ERROR] "LOG_METADATA_FORMAT, LOG_METADATA_ARGS ) ); SdkLog( message ); SdkLog( ( "\r\n" ) )
 
-#endif /* ifdef DOXYGEN */
+#endif /* ifndef DOXYGEN */
 
 #endif /* ifndef LOGGING_STACK_H_ */

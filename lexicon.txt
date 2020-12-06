@@ -243,6 +243,7 @@ pre
 premainingdata
 premaininglength
 presendpublish
+printf
 processloop
 processloopstatus
 psessionpresent
