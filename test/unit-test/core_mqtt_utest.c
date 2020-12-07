@@ -2011,9 +2011,12 @@ void test_MQTT_ProcessLoop_Timer_Overflow( void )
     MQTTPublishState_t publishState = MQTTPubAckSend;
     MQTTPublishState_t ackState = MQTTPublishDone;
     uint8_t i = 0;
-    uint8_t numIterations = ( ( MQTT_TIMER_OVERFLOW_TIMEOUT_MS % MQTT_TIMER_CALLS_PER_ITERATION ) == 0 ) ?
-                            ( MQTT_TIMER_OVERFLOW_TIMEOUT_MS / MQTT_TIMER_CALLS_PER_ITERATION ) :
-                            ( ( MQTT_TIMER_OVERFLOW_TIMEOUT_MS / MQTT_TIMER_CALLS_PER_ITERATION ) + 1 );
+
+    /* Calculate the number of iterations that the loop within the MQTT_ProcessLoop call
+     * will be executed for the time duration value in the test.
+     * The number of iterations is ceiling( Time Duration / Number of timer calls per iteration ) . */
+    uint8_t numIterations = ( MQTT_TIMER_OVERFLOW_TIMEOUT_MS + MQTT_TIMER_CALLS_PER_ITERATION - 1 ) /
+                            MQTT_TIMER_CALLS_PER_ITERATION;
 
     uint32_t expectedFinalTime;
 
@@ -2025,6 +2028,9 @@ void test_MQTT_ProcessLoop_Timer_Overflow( void )
     incomingPacket.remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
 
     globalEntryTime = UINT32_MAX - MQTT_OVERFLOW_OFFSET;
+
+    /* Calculate the expected time counter value after the MQTT_ProcessLoop API call.
+     * Note: The "+ 1" is for the call to getTime() function before the loop iterations. */
     expectedFinalTime = globalEntryTime + ( numIterations * MQTT_TIMER_CALLS_PER_ITERATION ) + 1;
 
     mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );

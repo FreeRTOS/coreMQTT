@@ -120,8 +120,8 @@
  * If the timeout expires, the #MQTT_ProcessLoop and #MQTT_ReceiveLoop functions
  * return #MQTTRecvFailed.
  *
- * <b>Possible values:</b> Any positive integer up to SIZE_MAX. Recommended to
- * use a small timeout value. <br>
+ * <b>Possible values:</b> Any positive 32 bit integer. Recommended to use a
+ * small timeout value. <br>
  * <b>Default value:</b> `10`
  *
  */
@@ -142,8 +142,8 @@
  * If the timeout expires, the #MQTT_ProcessLoop and #MQTT_ReceiveLoop functions
  * return #MQTTSendFailed.
  *
- * <b>Possible values:</b> Any positive integer up to SIZE_MAX. Recommended to
- * use a small timeout value. <br>
+ * <b>Possible values:</b> Any positive 32 bit integer. Recommended to use a small
+ * timeout value. <br>
  * <b>Default value:</b> `10`
  *
  */
