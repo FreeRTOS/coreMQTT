@@ -652,7 +652,7 @@ static int32_t sendPacket( MQTTContext_t * pContext,
             /* Check for timeout if we have been waiting to send any data over the network. */
             if( timeSinceLastSendMs >= MQTT_SEND_RETRY_TIMEOUT_MS )
             {
-                LogError( ( "Unable to send packet: Timed out in sending any data through transport send." ) );
+                LogError( ( "Unable to send packet: Timed out in transport send." ) );
                 sendError = true;
             }
         }
@@ -777,7 +777,7 @@ static int32_t recvExact( const MQTTContext_t * pContext,
             /* Check for timeout if we have been waiting to receive any byte on the network. */
             if( timeSinceLastRecvMs >= MQTT_RECV_POLLING_TIMEOUT_MS )
             {
-                LogError( ( "Unable to receive packet: Timed out in receiving any data from transport recv." ) );
+                LogError( ( "Unable to receive packet: Timed out in transport recv." ) );
                 receiveError = true;
             }
         }
