@@ -31,7 +31,7 @@ jobs:
           git tag -d ${{ github.event.inputs.version_number }}
           git remote update
           git checkout tags/${{ github.event.inputs.version_number }}
-          git diff origin/${{ github.event.inputs.commit_id }} tags/${{ github.event.inputs.version_number }}
+          git diff ${{ github.event.inputs.commit_id }} tags/${{ github.event.inputs.version_number }}
   create-zip:
     needs: tag-commit
     name: Create ZIP and verify package for release asset.
