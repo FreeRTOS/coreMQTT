@@ -39,7 +39,16 @@
  * @brief param[in] pBufferToSend Buffer to be sent to network.
  * @brief param[in] bytesToSend Number of bytes to be sent.
  *
- * @return Total number of bytes sent, or negative number on network error.
+ * @note This operation may call the transport send function
+ * repeatedly to send bytes over the network until either:
+ * 1. The requested number of bytes @a bytesToSend have been sent.
+ *                    OR
+ * 2. No byte cannot be sent over the network for the MQTT_SEND_RETRY_TIMEOUT_MS
+ * duration.
+ *                    OR
+ * 3. There is an error in sending data over the network.
+ *
+ * @return Total number of bytes sent, or negative value on network error.
  */
 static int32_t sendPacket( MQTTContext_t * pContext,
                            const uint8_t * pBufferToSend,
@@ -591,7 +600,7 @@ static int32_t sendPacket( MQTTContext_t * pContext,
     const uint8_t * pIndex = pBufferToSend;
     size_t bytesRemaining = bytesToSend;
     int32_t totalBytesSent = 0, bytesSent;
-    uint32_t sendTime = 0U;
+    uint32_t lastSendTimeMs = 0U, timeSinceLastSendMs = 0U;
     bool sendError = false;
 
     assert( pContext != NULL );
@@ -601,8 +610,8 @@ static int32_t sendPacket( MQTTContext_t * pContext,
 
     bytesRemaining = bytesToSend;
 
-    /* Record the time of transmission. */
-    sendTime = pContext->getTime();
+    /* Record the most recent time of successful transmission. */
+    lastSendTimeMs = pContext->getTime();
 
     /* Loop until the entire packet is sent. */
     while( ( bytesRemaining > 0UL ) && ( sendError == false ) )
@@ -617,8 +626,11 @@ static int32_t sendPacket( MQTTContext_t * pContext,
             totalBytesSent = bytesSent;
             sendError = true;
         }
-        else
+        else if( bytesSent > 0 )
         {
+            /* Record the most recent time of successful transmission. */
+            lastSendTimeMs = pContext->getTime();
+
             /* It is a bug in the application's transport send implementation if
              * more bytes than expected are sent. To avoid a possible overflow
              * in converting bytesRemaining from unsigned to signed, this assert
@@ -628,20 +640,30 @@ static int32_t sendPacket( MQTTContext_t * pContext,
             bytesRemaining -= ( size_t ) bytesSent;
             totalBytesSent += bytesSent;
             pIndex += bytesSent;
-            LogDebug( ( "BytesSent=%ld, BytesRemaining=%lu,"
-                        " TotalBytesSent=%ld.",
+            LogDebug( ( "BytesSent=%ld, BytesRemaining=%lu",
                         ( long int ) bytesSent,
-                        ( unsigned long ) bytesRemaining,
-                        ( long int ) totalBytesSent ) );
+                        ( unsigned long ) bytesRemaining ) );
+        }
+        else
+        {
+            /* No bytes were sent over the network. */
+            timeSinceLastSendMs = calculateElapsedTime( pContext->getTime(), lastSendTimeMs );
+
+            /* Check for timeout if we have been waiting to send any data over the network. */
+            if( timeSinceLastSendMs >= MQTT_SEND_RETRY_TIMEOUT_MS )
+            {
+                LogError( ( "Unable to send packet: Timed out in transport send." ) );
+                sendError = true;
+            }
         }
     }
 
     /* Update time of last transmission if the entire packet is successfully sent. */
     if( totalBytesSent > 0 )
     {
-        pContext->lastPacketTime = sendTime;
+        pContext->lastPacketTime = lastSendTimeMs;
         LogDebug( ( "Successfully sent packet at time %lu.",
-                    ( unsigned long ) sendTime ) );
+                    ( unsigned long ) lastSendTimeMs ) );
     }
 
     return totalBytesSent;
@@ -755,7 +777,7 @@ static int32_t recvExact( const MQTTContext_t * pContext,
             /* Check for timeout if we have been waiting to receive any byte on the network. */
             if( timeSinceLastRecvMs >= MQTT_RECV_POLLING_TIMEOUT_MS )
             {
-                LogError( ( "Time expired while receiving packet." ) );
+                LogError( ( "Unable to receive packet: Timed out in transport recv." ) );
                 receiveError = true;
             }
         }
@@ -1387,7 +1409,7 @@ static MQTTStatus_t sendPublish( MQTTContext_t * pContext,
                             pContext->networkBuffer.pBuffer,
                             headerSize );
 
-    if( bytesSent < 0 )
+    if( bytesSent < ( int32_t ) headerSize )
     {
         LogError( ( "Transport send failed for PUBLISH header." ) );
         status = MQTTSendFailed;
@@ -1405,7 +1427,7 @@ static MQTTStatus_t sendPublish( MQTTContext_t * pContext,
                                     pPublishInfo->pPayload,
                                     pPublishInfo->payloadLength );
 
-            if( bytesSent < 0 )
+            if( bytesSent < ( int32_t ) pPublishInfo->payloadLength )
             {
                 LogError( ( "Transport send failed for PUBLISH payload." ) );
                 status = MQTTSendFailed;

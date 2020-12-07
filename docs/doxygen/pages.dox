@@ -191,6 +191,9 @@ Some configuration settings are C pre-processor constants, and some are function
 @section MQTT_RECV_POLLING_TIMEOUT_MS
 @copydoc MQTT_RECV_POLLING_TIMEOUT_MS
 
+@section MQTT_SEND_RETRY_TIMEOUT_MS
+@copydoc MQTT_SEND_RETRY_TIMEOUT_MS
+
 @section MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT
 @copydoc MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT
 

@@ -165,6 +165,7 @@ typedef struct NetworkContext NetworkContext_t;
  *
  * @return The number of bytes received or a negative value to indicate
  * error.
+ *
  * @note If no data is available on the network to read and no error
  * has occurred, zero MUST be the return value. Zero MUST NOT be used
  * if a network disconnection has occurred.
@@ -183,7 +184,11 @@ typedef int32_t ( * TransportRecv_t )( NetworkContext_t * pNetworkContext,
  * @param[in] pBuffer Buffer containing the bytes to send over the network stack.
  * @param[in] bytesToSend Number of bytes to send over the network.
  *
- * @return The number of bytes sent or a negative error code.
+ * @return The number of bytes sent or a negative value to indicate error.
+ *
+ * @note If no data is transmitted over the network due to a full TX buffer and
+ * no network error has occurred, this MUST return zero as the return value.
+ * Zero MUST NOT be returned if a network disconnection has occurred.
  */
 /* @[define_transportsend] */
 typedef int32_t ( * TransportSend_t )( NetworkContext_t * pNetworkContext,

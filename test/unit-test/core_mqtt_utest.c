@@ -93,10 +93,18 @@
 #define MQTT_OVERFLOW_OFFSET                   ( 3 )
 
 /**
- * @brief Subtract this value from max value of global entry time
- * for the timer overflow test.
+ * @brief The number of times the "getTime()" function is called
+ * within a single iteration of the #MQTT_ProcessLoop.
+ *
+ * This constant is used for the timer overflow test which checks
+ * that the API can support normal behavior even if the timer
+ * overflows.
+ *
+ * @note Currently, there are 5 calls within a single iteration.
+ * This can change when the implementation changes which would be
+ * caught through unit test failure.
  */
-#define MQTT_TIMER_CALLS_PER_ITERATION         ( 4 )
+#define MQTT_TIMER_CALLS_PER_ITERATION         ( 5 )
 
 /**
  * @brief Timeout for the timer overflow test.
@@ -298,6 +306,19 @@ static int32_t transportSendFailure( NetworkContext_t * pNetworkContext,
     ( void ) pBuffer;
     ( void ) bytesToWrite;
     return -1;
+}
+
+/**
+ * @brief Mocked transport send that always returns 0 bytes sent.
+ */
+static int32_t transportSendNoBytes( NetworkContext_t * pNetworkContext,
+                                     const void * pBuffer,
+                                     size_t bytesToWrite )
+{
+    ( void ) pNetworkContext;
+    ( void ) pBuffer;
+    ( void ) bytesToWrite;
+    return 0;
 }
 
 /**
@@ -1327,6 +1348,47 @@ void test_MQTT_Publish( void )
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
 }
 
+/**
+ * @brief Test that verifies that the MQTT_Publish API detects a timeout
+ * and returns failure when the transport send function is unable to send any data
+ * over the network.
+ */
+void test_MQTT_Publish_Send_Timeout( void )
+{
+    MQTTContext_t mqttContext;
+    MQTTPublishInfo_t publishInfo;
+    TransportInterface_t transport;
+    MQTTFixedBuffer_t networkBuffer;
+    MQTTStatus_t status;
+    size_t headerSize;
+
+    setupNetworkBuffer( &networkBuffer );
+    setupTransportInterface( &transport );
+
+    /* Set the transport send function to the mock that always returns zero
+     * bytes for the test. */
+    transport.send = transportSendNoBytes;
+
+    /* Initialize the MQTT context. */
+    MQTT_Init( &mqttContext, &transport, getTime, eventCallback, &networkBuffer );
+
+    /* Setup for making sure that the test results in calling sendPacket function
+     * where calls to transport send function are made (repeatedly to send packet
+     * over the network).*/
+    memset( &publishInfo, 0, sizeof( MQTTPublishInfo_t ) );
+    headerSize = 1;
+    publishInfo.pPayload = "Test";
+    publishInfo.payloadLength = 4;
+    MQTT_GetPublishPacketSize_IgnoreAndReturn( MQTTSuccess );
+    MQTT_SerializePublishHeader_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_SerializePublishHeader_ReturnThruPtr_pHeaderSize( &headerSize );
+
+    /* Call the API function under test and expect that it detects a timeout in sending
+     * MQTT packet over the network. */
+    status = MQTT_Publish( &mqttContext, &publishInfo, 0 );
+    TEST_ASSERT_EQUAL_INT( MQTTSendFailed, status );
+}
+
 /* ========================================================================== */
 
 /**
@@ -1949,17 +2011,27 @@ void test_MQTT_ProcessLoop_Timer_Overflow( void )
     MQTTPublishState_t publishState = MQTTPubAckSend;
     MQTTPublishState_t ackState = MQTTPublishDone;
     uint8_t i = 0;
-    uint8_t numIterations = ( MQTT_TIMER_OVERFLOW_TIMEOUT_MS / MQTT_TIMER_CALLS_PER_ITERATION ) + 1;
+
+    /* Calculate the number of iterations that the loop within the MQTT_ProcessLoop call
+     * will be executed for the time duration value in the test.
+     * The number of iterations is ceiling( Time Duration / Number of timer calls per iteration ) . */
+    uint8_t numIterations = ( MQTT_TIMER_OVERFLOW_TIMEOUT_MS + MQTT_TIMER_CALLS_PER_ITERATION - 1 ) /
+                            MQTT_TIMER_CALLS_PER_ITERATION;
+
     uint32_t expectedFinalTime;
 
     setupTransportInterface( &transport );
+    setupNetworkBuffer( &networkBuffer );
 
     networkBuffer.size = 1000;
     incomingPacket.type = MQTT_PACKET_TYPE_PUBLISH;
     incomingPacket.remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
 
     globalEntryTime = UINT32_MAX - MQTT_OVERFLOW_OFFSET;
-    expectedFinalTime = MQTT_TIMER_CALLS_PER_ITERATION * numIterations - MQTT_OVERFLOW_OFFSET;
+
+    /* Calculate the expected time counter value after the MQTT_ProcessLoop API call.
+     * Note: The "+ 1" is for the call to getTime() function before the loop iterations. */
+    expectedFinalTime = globalEntryTime + ( numIterations * MQTT_TIMER_CALLS_PER_ITERATION ) + 1;
 
     mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
