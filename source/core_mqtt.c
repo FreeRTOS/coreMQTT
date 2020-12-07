@@ -2020,7 +2020,7 @@ MQTTStatus_t MQTT_Ping( MQTTContext_t * pContext )
                                 packetSize );
 
         /* It is an error to not send the entire PINGREQ packet. */
-        if( bytesSent < ( int32_t ) )
+        if( bytesSent < ( int32_t ) packetSize )
         {
             LogError( ( "Transport send failed for PINGREQ packet." ) );
             status = MQTTSendFailed;
