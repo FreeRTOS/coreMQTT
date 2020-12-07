@@ -2240,7 +2240,7 @@ void test_MQTT_Subscribe_error_paths( void )
     MQTT_GetSubscribePacketSize_ReturnThruPtr_pPacketSize( &packetSize );
     MQTT_GetSubscribePacketSize_ReturnThruPtr_pRemainingLength( &remainingLength );
     MQTT_SerializeSubscribe_ExpectAnyArgsAndReturn( MQTTSuccess );
-    mqttStatus = MQTT_Subscribe( &context, &subscribeInfo, 1, MQTT_GetPacketId( &context ) );
+    mqttStatus = MQTT_Subscribe( &context, &subscribeInfo, 1, MQTT_FIRST_VALID_PACKET_ID );
     TEST_ASSERT_EQUAL( MQTTSendFailed, mqttStatus );
 }
 
@@ -2336,7 +2336,7 @@ void test_MQTT_Unsubscribe_error_path( void )
     MQTT_GetUnsubscribePacketSize_ReturnThruPtr_pRemainingLength( &remainingLength );
     MQTT_SerializeUnsubscribe_ExpectAnyArgsAndReturn( MQTTSuccess );
     /* Expect the above calls when running MQTT_Unsubscribe. */
-    mqttStatus = MQTT_Unsubscribe( &context, &subscribeInfo, 1, MQTT_GetPacketId( &context ) );
+    mqttStatus = MQTT_Unsubscribe( &context, &subscribeInfo, 1, MQTT_FIRST_VALID_PACKET_ID );
     TEST_ASSERT_EQUAL( MQTTSendFailed, mqttStatus );
 
     /* Case when there is timeout in sending data through transport send. */
@@ -2346,7 +2346,7 @@ void test_MQTT_Unsubscribe_error_path( void )
     MQTT_GetUnsubscribePacketSize_ReturnThruPtr_pRemainingLength( &remainingLength );
     MQTT_SerializeUnsubscribe_ExpectAnyArgsAndReturn( MQTTSuccess );
     /* Expect the above calls when running MQTT_Unsubscribe. */
-    mqttStatus = MQTT_Unsubscribe( &context, &subscribeInfo, 1, MQTT_GetPacketId( &context ) );
+    mqttStatus = MQTT_Unsubscribe( &context, &subscribeInfo, 1, MQTT_FIRST_VALID_PACKET_ID );
     TEST_ASSERT_EQUAL( MQTTSendFailed, mqttStatus );
 }
 
