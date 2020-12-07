@@ -351,6 +351,7 @@ transportrecv
 transportsectionimplementation
 transportsectionoverview
 transportsend
+transportsendnobytes
 transportstruct
 tx
 uint
