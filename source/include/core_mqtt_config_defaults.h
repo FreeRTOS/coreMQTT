@@ -117,8 +117,12 @@
  * may be called multiple times until all of the expected number of bytes of the
  * packet are received. This timeout represents the maximum polling duration that
  * is allowed without any data reception from the network for the incoming packet.
+ *
  * If the timeout expires, the #MQTT_ProcessLoop and #MQTT_ReceiveLoop functions
  * return #MQTTRecvFailed.
+ *
+ * @note If a dummy implementation of the #MQTTGetCurrentTimeFunc_t timer function,
+ * that always returns 0, is used, then #MQTT_RECV_POLLING_TIMEOUT_MS MUST be set to 0.
  *
  * <b>Possible values:</b> Any positive 32 bit integer. Recommended to use a
  * small timeout value. <br>
@@ -141,6 +145,9 @@
  *
  * If the timeout expires, the #MQTT_ProcessLoop and #MQTT_ReceiveLoop functions
  * return #MQTTSendFailed.
+ *
+ * @note If a dummy implementation of the #MQTTGetCurrentTimeFunc_t timer function,
+ * that always returns 0, is used, then #MQTT_SEND_RETRY_TIMEOUT_MS MUST be set to 0.
  *
  * <b>Possible values:</b> Any positive 32 bit integer. Recommended to use a small
  * timeout value. <br>
