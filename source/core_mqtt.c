@@ -1796,7 +1796,7 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
                                 pContext->networkBuffer.pBuffer,
                                 packetSize );
 
-        if( bytesSent < 0 )
+        if( bytesSent < ( int32_t ) packetSize )
         {
             LogError( ( "Transport send failed for CONNECT packet." ) );
             status = MQTTSendFailed;
@@ -1887,7 +1887,7 @@ MQTTStatus_t MQTT_Subscribe( MQTTContext_t * pContext,
                                 pContext->networkBuffer.pBuffer,
                                 packetSize );
 
-        if( bytesSent < 0 )
+        if( bytesSent < ( int32_t ) packetSize )
         {
             LogError( ( "Transport send failed for SUBSCRIBE packet." ) );
             status = MQTTSendFailed;
@@ -2020,7 +2020,7 @@ MQTTStatus_t MQTT_Ping( MQTTContext_t * pContext )
                                 packetSize );
 
         /* It is an error to not send the entire PINGREQ packet. */
-        if( bytesSent < 0 )
+        if( bytesSent < ( int32_t ) packetSize )
         {
             LogError( ( "Transport send failed for PINGREQ packet." ) );
             status = MQTTSendFailed;
@@ -2082,7 +2082,7 @@ MQTTStatus_t MQTT_Unsubscribe( MQTTContext_t * pContext,
                                 pContext->networkBuffer.pBuffer,
                                 packetSize );
 
-        if( bytesSent < 0 )
+        if( bytesSent < ( int32_t ) packetSize )
         {
             LogError( ( "Transport send failed for UNSUBSCRIBE packet." ) );
             status = MQTTSendFailed;
@@ -2132,7 +2132,7 @@ MQTTStatus_t MQTT_Disconnect( MQTTContext_t * pContext )
                                 pContext->networkBuffer.pBuffer,
                                 packetSize );
 
-        if( bytesSent < 0 )
+        if( bytesSent < ( int32_t ) packetSize )
         {
             LogError( ( "Transport send failed for DISCONNECT packet." ) );
             status = MQTTSendFailed;
