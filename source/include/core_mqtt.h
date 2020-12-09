@@ -49,7 +49,7 @@
  * @cond DOXYGEN_IGNORE
  * The current version of this library.
  */
-#define MQTT_LIBRARY_VERSION      "v1.1.0"
+#define MQTT_LIBRARY_VERSION    "v1.1.0"
 /** @endcond */
 
 /**
