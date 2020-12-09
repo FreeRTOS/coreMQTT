@@ -3,8 +3,8 @@
 
 /*******************************************************************************
  * THIS IS NOT A FULL stdint.h IMPLEMENTATION - It only contains the definitions
- * necessary to build the coreMQTT code.  It is provided to allow coreMQTT to be
- * built using compilers that do not provide their own stdint.h definition.
+ * necessary to build the library code.  It is provided to allow the library to
+ * be built using compilers that do not provide their own stdint.h definition.
  *
  * To use this file:
  *
