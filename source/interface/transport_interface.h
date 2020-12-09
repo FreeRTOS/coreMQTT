@@ -105,7 +105,7 @@
  *        // to avoid blocking for socket timeout.
  *        if( TLSRecvCount( pNetworkContext->tlsContext ) == 0 )
  *        {
- *            callTlsRecvFunct = false;
+ *            callTlsRecvFunc = false;
  *        }
  *     }
  *
@@ -199,7 +199,7 @@ typedef struct NetworkContext NetworkContext_t;
  *
  * @note If no data is available on the network to read and no error
  * has occurred, zero MUST be the return value. A zero return value
- * SHOULD represent that the read operation can be retried by caling
+ * SHOULD represent that the read operation can be retried by calling
  * the API function. Zero MUST NOT be returned if a network disconnection
  * has occurred.
  */
@@ -222,7 +222,7 @@ typedef int32_t ( * TransportRecv_t )( NetworkContext_t * pNetworkContext,
  * @note If no data is transmitted over the network due to a full TX buffer and
  * no network error has occurred, this MUST return zero as the return value.
  * A zero return value SHOULD represent that the send operation can be retried
- * by caling the API function. Zero MUST NOT be returned if a network disconnection
+ * by calling the API function. Zero MUST NOT be returned if a network disconnection
  * has occurred.
  */
 /* @[define_transportsend] */
