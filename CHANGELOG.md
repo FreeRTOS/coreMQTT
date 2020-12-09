@@ -1,5 +1,18 @@
 # Changelog for coreMQTT Client Library
 
+## v1.1.0 (December 2020)
+
+### Updates
+ - [#118](https://github.com/FreeRTOS/coreMQTT/pull/118) Use the `stdbool.h` header file instead of using preprocessor checks for when `bool` is not defined. This also provides `stdbool.readme` and `stdint.readme` files in the case that a non-C99 compiler does not provide the respective header.
+ - [#120](https://github.com/FreeRTOS/coreMQTT/pull/120) Introduce a `MQTT_RECV_POLLING_TIMEOUT_MS` macro to control the timeout before a multi-part transport read operation returns an error. Previously, it was controlled by a runtime timeout parameter, so an error might be returned when data could still be read. Now, reads will wait at least the macro timeout value before returning error. Conversely, reads will also wait at most the macro timeout value if no data is received in that duration, regardless of the timeout passed at runtime.
+ - [#124](https://github.com/FreeRTOS/coreMQTT/pull/124), [#127](https://github.com/FreeRTOS/coreMQTT/pull/127), Introduce a `MQTT_SEND_RETRY_TIMEOUT_MS` macro to control the same timeout for transport sends.
+
+### Other
+ - [#107](https://github.com/FreeRTOS/coreMQTT/pull/107), [#109](https://github.com/FreeRTOS/coreMQTT/pull/109), [#121](https://github.com/FreeRTOS/coreMQTT/pull/121) Improve continuous integration checks.
+ - [#110](https://github.com/FreeRTOS/coreMQTT/pull/107) Rename the master branch to main.
+ - [#113](https://github.com/FreeRTOS/coreMQTT/pull/113), [#116](https://github.com/FreeRTOS/coreMQTT/pull/116), [#117](https://github.com/FreeRTOS/coreMQTT/pull/117), [#125](https://github.com/FreeRTOS/coreMQTT/pull/125) Update logging and cast to C standard types for logs.
+ - [#115](https://github.com/FreeRTOS/coreMQTT/pull/115), [#122](https://github.com/FreeRTOS/coreMQTT/pull/122), [#128](https://github.com/FreeRTOS/coreMQTT/pull/128) Minor documentation updates.
+
 ## v1.0.1 (November 2020)
 
 ### Updates
