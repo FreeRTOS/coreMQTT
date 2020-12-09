@@ -35,5 +35,6 @@ jobs:
           git push --set-upstream origin updater-job/update-to-${{ github.event.inputs.new_version_number }}
       - name: Raise a Pull-Request
         run: |
-          sudo apt-get install gh
+          sudo apt-get install 
+          export GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}
           gh pr create --base ${{ github.event.inputs.branch }} --title 'Update source file versioning to ${{ github.event.inputs.new_version_number }}' --body 'Updater-Job: PR to update versioning in source files from ${{ github.event.inputs.old_version_numver }} to ${{ github.event.inputs.new_version_number }}'
