@@ -101,10 +101,9 @@
  * #MQTT_ProcessLoop will return #MQTTKeepAliveTimeout.
  *
  * @note If a dummy implementation of the #MQTTGetCurrentTimeFunc_t timer function,
- * that always returns zero, is supplied to the library, then the keep-alive
- * mechanism is not supported by the #MQTT_ProcessLoop API function. In that
- * case, the value of #MQTT_PINGRESP_TIMEOUT_MS is irrelevant to the behavior
- * of the library.
+ * is supplied to the library, then the keep-alive mechanism is not supported by the
+ * #MQTT_ProcessLoop API function. In that case, the value of #MQTT_PINGRESP_TIMEOUT_MS
+ * is irrelevant to the behavior of the library.
  *
  * <b>Possible values:</b> Any positive integer up to SIZE_MAX. <br>
  * <b>Default value:</b> `500`
@@ -128,8 +127,7 @@
  * return #MQTTRecvFailed.
  *
  * @note If a dummy implementation of the #MQTTGetCurrentTimeFunc_t timer function,
- * that always returns 0, is supplied to the library, then #MQTT_RECV_POLLING_TIMEOUT_MS
- * MUST be set to 0.
+ * is supplied to the library, then #MQTT_RECV_POLLING_TIMEOUT_MS MUST be set to 0.
  *
  * <b>Possible values:</b> Any positive 32 bit integer. Recommended to use a
  * small timeout value. <br>
@@ -154,8 +152,7 @@
  * return #MQTTSendFailed.
  *
  * @note If a dummy implementation of the #MQTTGetCurrentTimeFunc_t timer function,
- * that always returns 0, is supplied to the library, then #MQTT_SEND_RETRY_TIMEOUT_MS
- * MUST be set to 0.
+ * is supplied to the library, then #MQTT_SEND_RETRY_TIMEOUT_MS MUST be set to 0.
  *
  * <b>Possible values:</b> Any positive 32 bit integer. Recommended to use a small
  * timeout value. <br>
