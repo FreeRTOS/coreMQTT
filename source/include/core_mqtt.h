@@ -598,9 +598,11 @@ MQTTStatus_t MQTT_Disconnect( MQTTContext_t * pContext );
  * alive.
  *
  * @note Passing a timeout value of 0 will run the loop for a single iteration.
- * If a dummy #MQTTGetCurrentTimeFunc_t was passed to #MQTT_Init, then the timeout
+ *
+ * @note If a dummy #MQTTGetCurrentTimeFunc_t was passed to #MQTT_Init, then the timeout
  * passed to the API MUST be 0, and the #MQTT_RECV_POLLING_TIMEOUT_MS and
- * #MQTT_SEND_RETRY_TIMEOUT_MS timeout configurations MUST be set to 0.
+ * #MQTT_SEND_RETRY_TIMEOUT_MS timeout configurations MUST be set to 0. With a dummy
+ * timer function, the #MQTT_ProcessLoop function does not handle keep-alive mechanism.
  *
  * @param[in] pContext Initialized and connected MQTT context.
  * @param[in] timeoutMs Minimum time in milliseconds that the receive loop will
