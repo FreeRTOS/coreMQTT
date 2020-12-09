@@ -3,7 +3,7 @@
 
 /*******************************************************************************
  * This file contains the definitions specified in stdbool.h. It is provided to
- * allow coreMQTT to be built using compilers that do not provide their own
+ * allow the library to be built using compilers that do not provide their own
  * stdbool.h defintion.
  *
  * To use this file:

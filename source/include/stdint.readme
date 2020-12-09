@@ -3,8 +3,8 @@
 
 /*******************************************************************************
  * THIS IS NOT A FULL stdint.h IMPLEMENTATION - It only contains the definitions
- * necessary to build the coreMQTT code.  It is provided to allow coreMQTT to be
- * built using compilers that do not provide their own stdint.h definition.
+ * necessary to build the library code.  It is provided to allow the library to
+ * be built using compilers that do not provide their own stdint.h definition.
  *
  * To use this file:
  *
@@ -26,7 +26,7 @@ typedef long long            int64_t;
 typedef unsigned long long   uint64_t;
 
 #define INT8_MAX      ( ( signed char ) 127 )
-#define UINT8_MAX     ( ( unsigned char ) ) 255
+#define UINT8_MAX     ( ( unsigned char ) 255 )
 #define INT16_MAX     ( ( short ) 32767 )
 #define UINT16_MAX    ( ( unsigned short ) 65535 )
 #define INT32_MAX     2147483647L
