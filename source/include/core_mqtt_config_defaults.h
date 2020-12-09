@@ -100,7 +100,7 @@
  * If a ping response is not received before this timeout, then
  * #MQTT_ProcessLoop will return #MQTTKeepAliveTimeout.
  *
- * @note If a dummy implementation of the #MQTTGetCurrentFunc_t timer function,
+ * @note If a dummy implementation of the #MQTTGetCurrentTimeFunc_t timer function,
  * that always returns zero, is supplied to the library, then the keep-alive
  * mechanism is not supported by the #MQTT_ProcessLoop API function. In that
  * case, the value of #MQTT_PINGRESP_TIMEOUT_MS is irrelevant to the behavior
