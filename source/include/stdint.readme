@@ -26,7 +26,7 @@ typedef long long            int64_t;
 typedef unsigned long long   uint64_t;
 
 #define INT8_MAX      ( ( signed char ) 127 )
-#define UINT8_MAX     ( ( unsigned char ) ) 255
+#define UINT8_MAX     ( ( unsigned char ) 255 )
 #define INT16_MAX     ( ( short ) 32767 )
 #define UINT16_MAX    ( ( unsigned short ) 65535 )
 #define INT32_MAX     2147483647L
