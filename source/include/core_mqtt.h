@@ -598,21 +598,22 @@ MQTTStatus_t MQTT_Disconnect( MQTTContext_t * pContext );
  * alive.
  *
  * @note Passing a timeout value of 0 will run the loop for a single iteration.
- * If a dummy #MQTTGetCurrentTimeFunc_t was passed to #MQTT_Init, then the timeout
- * passed to the API MUST be 0, and the #MQTT_RECV_POLLING_TIMEOUT_MS and
- * #MQTT_SEND_RETRY_TIMEOUT_MS timeout configurations MUST be set to 0.
+ *
+ * @note If a dummy timer function, #MQTTGetCurrentTimeFunc_t, is passed to the library,
+ * then the keep-alive mechanism is not supported by the #MQTT_ProcessLoop API.
+ * In that case, the #MQTT_ReceiveLoop API function should be used instead.
  *
  * @param[in] pContext Initialized and connected MQTT context.
  * @param[in] timeoutMs Minimum time in milliseconds that the receive loop will
  * run, unless an error occurs.
  *
  * @note Calling this function blocks the calling context for a time period that
- * depends on the passed @p timeoutMs, the configuration macro, #MQTT_RECV_POLLING_TIMEOUT_MS,
- * and the underlying transport interface implementation timeouts, unless an error
- * occurs.
- *    Blocking Time = Max( timeoutMs parameter,
- *                         MQTT_RECV_POLLING_TIMEOUT_MS,
- *                         Transport interface send/recv implementation timeout )
+ * depends on the passed @p timeoutMs, the configuration macros, #MQTT_RECV_POLLING_TIMEOUT_MS
+ * and #MQTT_SEND_RETRY_TIMEOUT_MS, and the underlying transport interface implementation
+ * timeouts, unless an error occurs. The blocking period also depends on the execution time of the
+ * #MQTTEventCallback_t callback supplied to the library. It is recommended that the supplied
+ * #MQTTEventCallback_t callback does not contain blocking operations to prevent potential
+ * non-deterministic blocking period of the #MQTT_ProcessLoop API call.
  *
  * @return #MQTTBadParameter if context is NULL;
  * #MQTTRecvFailed if a network error occurs during reception;
@@ -668,12 +669,12 @@ MQTTStatus_t MQTT_ProcessLoop( MQTTContext_t * pContext,
  * run, unless an error occurs.
  *
  * @note Calling this function blocks the calling context for a time period that
- * depends on the passed @p timeoutMs, the configuration macro, #MQTT_RECV_POLLING_TIMEOUT_MS,
- * and the underlying transport interface implementation timeouts, unless an error
- * occurs.
- *    Blocking Time = Max( timeoutMs parameter,
- *                         MQTT_RECV_POLLING_TIMEOUT_MS,
- *                         Transport interface send/recv implementation timeout )
+ * depends on the passed @p timeoutMs, the configuration macros, #MQTT_RECV_POLLING_TIMEOUT_MS
+ * and #MQTT_SEND_RETRY_TIMEOUT_MS, and the underlying transport interface implementation
+ * timeouts, unless an error occurs. The blocking period also depends on the execution time of the
+ * #MQTTEventCallback_t callback supplied to the library. It is recommended that the supplied
+ * #MQTTEventCallback_t callback does not contain blocking operations to prevent potential
+ * non-deterministic blocking period of the #MQTT_ReceiveLoop API call.
  *
  * @return #MQTTBadParameter if context is NULL;
  * #MQTTRecvFailed if a network error occurs during reception;
