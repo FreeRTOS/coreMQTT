@@ -614,7 +614,7 @@ MQTTStatus_t MQTT_Disconnect( MQTTContext_t * pContext );
  * timeouts, unless an error occurs. The blocking period also depends on the execution time of the
  * #MQTTEventCallback_t callback supplied to the library. It is recommended that the supplied
  * #MQTTEventCallback_t callback does not contain blocking operations to prevent potential
- * non-deterministic blocking period of the #MQTTProcess_Loop API call.
+ * non-deterministic blocking period of the #MQTT_ProcessLoop API call.
  *
  * @return #MQTTBadParameter if context is NULL;
  * #MQTTRecvFailed if a network error occurs during reception;
@@ -675,7 +675,7 @@ MQTTStatus_t MQTT_ProcessLoop( MQTTContext_t * pContext,
  * timeouts, unless an error occurs. The blocking period also depends on the execution time of the
  * #MQTTEventCallback_t callback supplied to the library. It is recommended that the supplied
  * #MQTTEventCallback_t callback does not contain blocking operations to prevent potential
- * non-deterministic blocking period of the #MQTReceive_Loop API call.
+ * non-deterministic blocking period of the #MQTT_ReceiveLoop API call.
  *
  * @return #MQTTBadParameter if context is NULL;
  * #MQTTRecvFailed if a network error occurs during reception;
