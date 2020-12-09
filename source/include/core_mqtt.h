@@ -50,6 +50,7 @@
  * The current version of this library.
  */
 #define MQTT_LIBRARY_VERSION      "v1.1.0"
+/** @endcond */
 
 /**
  * @ingroup mqtt_constants
