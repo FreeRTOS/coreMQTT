@@ -23,6 +23,7 @@ bytestosend
 bytestowrite
 calculatestateack
 calculatestatepublish
+calltlsrecvfunc
 cb
 cbmc
 chk
@@ -341,6 +342,7 @@ timeoutms
 tls
 tlscontext
 tlsrecv
+tlsrecvcount
 tlssend
 topicfilterlength
 topicnamelength

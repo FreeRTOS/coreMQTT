@@ -96,16 +96,37 @@
  *                                      size_t bytesToRecv )
  * {
  *     int32_t bytesReceived = 0;
- *     bytesReceived = TLSRecv( pNetworkContext->tlsContext,
- *                              pBuffer,
- *                              bytesToRecv,
- *                              MY_SOCKET_TIMEOUT );
- *     if( bytesReceived < 0 )
- *     {
- *         // Handle socket error.
- *     }
- *     // Handle other cases.
+ *     bool callTlsRecvFunc = true;
  *
+ *     // For a single byte read request, check if data is available on the network.
+ *     if( bytesToRecv == 1 )
+ *     {
+ *        // If no data is available on the network, do not call TLSRecv
+ *        // to avoid blocking for socket timeout.
+ *        if( TLSRecvCount( pNetworkContext->tlsContext ) == 0 )
+ *        {
+ *            callTlsRecvFunc = false;
+ *        }
+ *     }
+ *
+ *     if( callTlsRecvFunc == true )
+ *     {
+ *        bytesReceived = TLSRecv( pNetworkContext->tlsContext,
+ *                                 pBuffer,
+ *                                 bytesToRecv,
+ *                                 MY_SOCKET_TIMEOUT );
+ *        if( bytesReceived < 0 )
+ *        {
+ *           // If the error code represents a timeout, then the return
+ *           // code should be translated to zero so that the caller
+ *           // can retry the read operation.
+ *           if( bytesReceived == MY_SOCKET_ERROR_TIMEOUT )
+ *           {
+ *              bytesReceived = 0;
+ *           }
+ *        }
+ *        // Handle other cases.
+ *     }
  *     return bytesReceived;
  * }
  * @endcode
@@ -132,7 +153,14 @@
  *                          pBuffer,
  *                          bytesToSend,
  *                          MY_SOCKET_TIMEOUT );
- *     if( bytesSent < 0 )
+ *
+ *      // If underlying TCP buffer is full, set the return value to zero
+ *      // so that caller can retry the send operation.
+ *     if( bytesSent == MY_SOCKET_ERROR_BUFFER_FULL )
+ *     {
+ *          bytesSent = 0;
+ *     }
+ *     else if( bytesSent < 0 )
  *     {
  *         // Handle socket error.
  *     }
@@ -159,6 +187,15 @@ typedef struct NetworkContext NetworkContext_t;
  * @transportcallback
  * @brief Transport interface for receiving data on the network.
  *
+ * @note It is RECOMMENDED that the transport receive implementation
+ * does NOT block when requested to read a single byte. A single byte
+ * read request can be made by the caller to check whether there is a
+ * new frame available on the network for reading.
+ * However, the receive implementation MAY block for a timeout period when
+ * it is requested to read more than 1 byte. This is because once the caller
+ * is aware that a new frame is available to read on the network, then
+ * the likelihood of reading more than one byte over the network becomes high.
+ *
  * @param[in] pNetworkContext Implementation-defined network context.
  * @param[in] pBuffer Buffer to receive the data into.
  * @param[in] bytesToRecv Number of bytes requested from the network.
@@ -167,8 +204,10 @@ typedef struct NetworkContext NetworkContext_t;
  * error.
  *
  * @note If no data is available on the network to read and no error
- * has occurred, zero MUST be the return value. Zero MUST NOT be used
- * if a network disconnection has occurred.
+ * has occurred, zero MUST be the return value. A zero return value
+ * SHOULD represent that the read operation can be retried by calling
+ * the API function. Zero MUST NOT be returned if a network disconnection
+ * has occurred.
  */
 /* @[define_transportrecv] */
 typedef int32_t ( * TransportRecv_t )( NetworkContext_t * pNetworkContext,
@@ -188,7 +227,9 @@ typedef int32_t ( * TransportRecv_t )( NetworkContext_t * pNetworkContext,
  *
  * @note If no data is transmitted over the network due to a full TX buffer and
  * no network error has occurred, this MUST return zero as the return value.
- * Zero MUST NOT be returned if a network disconnection has occurred.
+ * A zero return value SHOULD represent that the send operation can be retried
+ * by calling the API function. Zero MUST NOT be returned if a network disconnection
+ * has occurred.
  */
 /* @[define_transportsend] */
 typedef int32_t ( * TransportSend_t )( NetworkContext_t * pNetworkContext,
