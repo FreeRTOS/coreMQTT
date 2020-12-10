@@ -117,7 +117,13 @@
  *                                 MY_SOCKET_TIMEOUT );
  *        if( bytesReceived < 0 )
  *        {
- *            // Handle socket error.
+ *           // If the error code represents a timeout, then the return
+ *           // code should be translated to zero so that the caller
+ *           // can retry the read operation.
+ *           if( bytesReceived == MY_SOCKET_ERROR_TIMEOUT )
+ *           {
+ *              bytesReceived = 0;
+ *           }
  *        }
  *        // Handle other cases.
  *     }
@@ -149,8 +155,8 @@
  *                          MY_SOCKET_TIMEOUT );
  *
  *      // If underlying TCP buffer is full, set the return value to zero
- *      // so that caller can retry operation.
- *     if( bytesSent == TCP_BUFFER_FULL )
+ *      // so that caller can retry the send operation.
+ *     if( bytesSent == MY_SOCKET_ERROR_BUFFER_FULL )
  *     {
  *          bytesSent = 0;
  *     }
