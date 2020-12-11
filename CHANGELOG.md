@@ -4,8 +4,8 @@
 
 ### Updates
  - [#118](https://github.com/FreeRTOS/coreMQTT/pull/118) Use the `stdbool.h` header file instead of using preprocessor checks for when `bool` is not defined. This also provides `stdbool.readme` and `stdint.readme` files in the case that a non-C99 compiler does not provide the respective header.
- - [#120](https://github.com/FreeRTOS/coreMQTT/pull/120) Introduce a `MQTT_RECV_POLLING_TIMEOUT_MS` macro to control the timeout before a multi-part transport read operation returns an error. Previously, it was controlled by a runtime timeout parameter, so an error might be returned when data could still be read. Now, reads will wait at least the macro timeout value before returning error. Conversely, reads will also wait at most the macro timeout value if no data is received in that duration, regardless of the timeout passed at runtime.
- - [#124](https://github.com/FreeRTOS/coreMQTT/pull/124), [#127](https://github.com/FreeRTOS/coreMQTT/pull/127), Introduce a `MQTT_SEND_RETRY_TIMEOUT_MS` macro to control the same timeout for transport sends.
+ - [#120](https://github.com/FreeRTOS/coreMQTT/pull/120) Introduce a `MQTT_RECV_POLLING_TIMEOUT_MS` configuration macro to control the timeout for retrying zero byte network read operations. Previously, network read attempts were controlled by a runtime timeout parameter, which could result in a premature timeout even when data could still be read. Now, reads will wait for at least the macro timeout value before returning error. Conversely, the macro timeout value is now the maximum duration during which no data may be received, regardless of the timeout passed at runtime.
+ - [#124](https://github.com/FreeRTOS/coreMQTT/pull/124), [#127](https://github.com/FreeRTOS/coreMQTT/pull/127), Introduce a `MQTT_SEND_RETRY_TIMEOUT_MS` configuration macro to control the similar case of retrying zero byte transport send operations.
  - [#139](https://github.com/FreeRTOS/coreMQTT/pull/139) Add a parameter check for empty topic filters in SUBSCRIBE and UNSUBSCRIBE packets.
 
 ### Other
