@@ -21,6 +21,52 @@ and build the library with default configuration values, provide `MQTT_DO_NOT_US
 **OR**
 * Defining the `MQTT_DO_NOT_USE_CUSTOM_CONFIG` preprocessor macro for the library build.
 
+## Sending metrics to AWS IoT
+
+When establishing a connection with AWS IoT, users can optionally report the Operating System, Hardware Platform and MQTT client version information of their device to AWS. This information can help AWS IoT provide faster issue resolution and technical support. If users want to report this information, they can send a specially formatted string (see below) in the username field of the MQTT CONNECT packet.
+
+Format
+
+The format of the username string with metrics is:
+
+```
+<Actual_Username>?SDK=<OS_Name>&Version=<OS_Version>&Platform=<Hardware_Platform>&MQTTLib=<MQTT_Library_name>@<MQTT_Library_version>
+```
+
+Where
+
+* <Actual_Username> is the actual username used for authentication, if username and password are used for authentication. When username and password based authentication is not used, this
+is an empty value.
+* <OS_Name> is the Operating System the application is running on (e.g. FreeRTOS)
+* <OS_Version> is the version number of the Operating System (e.g. V10.4.3)
+* <Hardware_Platform> is the Hardware Platform the application is running on (e.g. WinSim)
+* <MQTT_Library_name> is the MQTT Client library being used (e.g. coreMQTT)
+* <MQTT_Library_version> is the version of the MQTT Client library being used (e.g. 1.0.2)
+
+Example
+
+*  Actual_Username = “iotuser”, OS_Name = FreeRTOS, OS_Version = V10.4.3, Hardware_Platform_Name = WinSim, MQTT_Library_Name = coremqtt, MQTT_Library_version = 1.1.0. If username is not used, then “iotuser” can be removed.
+
+```
+/* Username string:
+ * iotuser?SDK=FreeRTOS&Version=v10.4.3&Platform=WinSim&MQTTLib=coremqtt@1.1.0
+ */
+
+#define OS_NAME                   "FreeRTOS"
+#define OS_VERSION                "V10.4.3"
+#define HARDWARE_PLATFORM_NAME    "WinSim"
+#define MQTT_LIB                  "coremqtt@1.1.0"
+
+#define USERNAME_STRING           "iotuser?SDK=" OS_NAME "&Version=" OS_VERSION "&Platform=" HARDWARE_PLATFORM_NAME "&MQTTLib=" MQTT_LIB
+#define USERNAME_STRING_LENGTH    ( ( uint16_t ) ( sizeof( USERNAME_STRING ) - 1 ) )
+
+MQTTConnectInfo_t connectInfo;
+connectInfo.pUserName = USERNAME_STRING;
+connectInfo.userNameLength = USERNAME_STRING_LENGTH;
+mqttStatus = MQTT_Connect( pMqttContext, &connectInfo, NULL, CONNACK_RECV_TIMEOUT_MS, pSessionPresent );
+```
+
+
 ## Building the Library
 
 The [mqttFilePaths.cmake](mqttFilePaths.cmake) file contains the information of all source files and the header include path required to build the MQTT library.
