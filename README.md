@@ -23,7 +23,7 @@ and build the library with default configuration values, provide `MQTT_DO_NOT_US
 
 ## Sending metrics to AWS IoT
 
-When establishing a connection with AWS IoT, users can optionally report the Operating System, Hardware Platform and MQTT client version information of their device to AWS. These metrics help AWS IoT improve security and provide better technical support. If users want to report this information, they can send a specially formatted string (see below) in the username field of the MQTT CONNECT packet.
+When establishing a connection with AWS IoT, users can optionally report the Operating System, Hardware Platform and MQTT client version information of their device to AWS. This information can help AWS IoT provide faster issue resolution and technical support. If users want to report this information, they can send a specially formatted string (see below) in the username field of the MQTT CONNECT packet.
 
 Format
 
