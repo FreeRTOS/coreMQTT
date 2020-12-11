@@ -21,9 +21,9 @@ and build the library with default configuration values, provide `MQTT_DO_NOT_US
 **OR**
 * Defining the `MQTT_DO_NOT_USE_CUSTOM_CONFIG` preprocessor macro for the library build.
 
-## Adding OS and other information
+## Sending metrics to AWS IoT
 
-Users have the option to report the Operating System, Hardware Platform and MQTT client information to an IoT service. These metrics can help IoT service providers offer faster technical support. If users want to report this information, they can send a specially formatted string (see below) in the username field of the MQTT CONNECT packet.
+When establishing a connection with AWS IoT, users can optionally report the Operating System, Hardware Platform and MQTT client version information of their device to AWS. These metrics help AWS IoT improve security and provide better technical support. If users want to report this information, they can send a specially formatted string (see below) in the username field of the MQTT CONNECT packet.
 
 Format
 
@@ -35,7 +35,8 @@ The format of the username string with metrics is:
 
 Where
 
-* <Actual_Username> is the actual username used for authentication, if username and password are used for authentication.
+* <Actual_Username> is the actual username used for authentication, if username and password are used for authentication. When username and password based authentication is not used, this
+is an empty value.
 * <OS_Name> is the Operating System the application is running on (e.g. FreeRTOS)
 * <OS_Version> is the version number of the Operating System (e.g. V10.4.3)
 * <Hardware_Platform> is the Hardware Platform the application is running on (e.g. WinSim)
