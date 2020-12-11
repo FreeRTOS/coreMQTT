@@ -201,7 +201,7 @@ static bool calculatePublishPacketSize( const MQTTPublishInfo_t * pPublishInfo,
  * @param[in] subscriptionType #MQTT_SUBSCRIBE or #MQTT_UNSUBSCRIBE.
  *
  * #MQTTBadParameter if the packet would exceed the size allowed by the
- * MQTT spec; #MQTTSuccess otherwise.
+ * MQTT spec or a subscription is empty; #MQTTSuccess otherwise.
  */
 static MQTTStatus_t calculateSubscriptionPacketSize( const MQTTSubscribeInfo_t * pSubscriptionList,
                                                      size_t subscriptionCount,
@@ -1032,6 +1032,17 @@ static MQTTStatus_t calculateSubscriptionPacketSize( const MQTTSubscribeInfo_t *
         {
             packetSize += 1U;
         }
+
+        /* Validate each topic filter. */
+        if( ( pSubscriptionList[ i ].topicFilterLength == 0U ) ||
+            ( pSubscriptionList[ i ].pTopicFilter == NULL ) )
+        {
+            status = MQTTBadParameter;
+            LogError( ( "Subscription #%lu in %sSUBSCRIBE packet cannot be empty.",
+                        ( unsigned long ) i,
+                        ( subscriptionType == MQTT_SUBSCRIBE ) ? "" : "UN" ) );
+            /* It is not necessary to break as an error status has already been set. */
+        }
     }
 
     /* At this point, the "Remaining length" has been calculated. Return error
@@ -1045,7 +1056,8 @@ static MQTTStatus_t calculateSubscriptionPacketSize( const MQTTSubscribeInfo_t *
                     MQTT_MAX_REMAINING_LENGTH ) );
         status = MQTTBadParameter;
     }
-    else
+
+    if( status == MQTTSuccess )
     {
         *pRemainingLength = packetSize;
 
@@ -1669,19 +1681,12 @@ MQTTStatus_t MQTT_GetSubscribePacketSize( const MQTTSubscribeInfo_t * pSubscript
     }
     else
     {
-        /* Calculate the MQTT UNSUBSCRIBE packet size. */
+        /* Calculate the MQTT SUBSCRIBE packet size. */
         status = calculateSubscriptionPacketSize( pSubscriptionList,
                                                   subscriptionCount,
                                                   pRemainingLength,
                                                   pPacketSize,
                                                   MQTT_SUBSCRIBE );
-
-        if( status == MQTTBadParameter )
-        {
-            LogError( ( "SUBSCRIBE packet remaining length exceeds %lu, which is the "
-                        "maximum size allowed by MQTT 3.1.1.",
-                        MQTT_MAX_REMAINING_LENGTH ) );
-        }
     }
 
     return status;
@@ -1768,19 +1773,12 @@ MQTTStatus_t MQTT_GetUnsubscribePacketSize( const MQTTSubscribeInfo_t * pSubscri
     }
     else
     {
-        /* Calculate the MQTT SUBSCRIBE packet size. */
+        /* Calculate the MQTT UNSUBSCRIBE packet size. */
         status = calculateSubscriptionPacketSize( pSubscriptionList,
                                                   subscriptionCount,
                                                   pRemainingLength,
                                                   pPacketSize,
                                                   MQTT_UNSUBSCRIBE );
-
-        if( status == MQTTBadParameter )
-        {
-            LogError( ( "UNSUBSCRIBE packet remaining length exceeds %lu, which is the "
-                        "maximum size allowed by MQTT 3.1.1.",
-                        MQTT_MAX_REMAINING_LENGTH ) );
-        }
     }
 
     return status;

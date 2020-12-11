@@ -656,7 +656,7 @@ void test_MQTT_SerializeConnect( void )
 void test_MQTT_GetSubscribePacketSize( void )
 {
     MQTTSubscribeInfo_t subscriptionList;
-    size_t subscriptionCount = 0;
+    size_t subscriptionCount = 1;
     size_t remainingLength = 0;
     size_t packetSize = 0;
     MQTTStatus_t status = MQTTSuccess;
@@ -693,6 +693,22 @@ void test_MQTT_GetSubscribePacketSize( void )
                                           &packetSize );
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
 
+    /* Zero length topic filter. */
+    subscriptionCount = 1;
+    status = MQTT_GetSubscribePacketSize( &subscriptionList,
+                                          subscriptionCount,
+                                          &remainingLength,
+                                          &packetSize );
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+
+    /* NULL topic filter, nonzero length. */
+    subscriptionList.topicFilterLength = 1;
+    status = MQTT_GetSubscribePacketSize( &subscriptionList,
+                                          subscriptionCount,
+                                          &remainingLength,
+                                          &packetSize );
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+
     /* Verify packet size cannot exceed limit. Note the max remaining length of
      * an MQTT packet is 2^28-1 = 268435455, or 256MiB. Since the only way to increase
      * the subscribe packet size is with the topic filters of the subscriptions
@@ -701,6 +717,10 @@ void test_MQTT_GetSubscribePacketSize( void )
     for( i = 0; i < 4096; i++ )
     {
         fourThousandSubscriptions[ i ].topicFilterLength = UINT16_MAX;
+
+        /* We need to set this to avoid an early bad parameter, however we do
+         * not need a 65535 byte buffer as the packet will not be serialized. */
+        fourThousandSubscriptions[ i ].pTopicFilter = "";
     }
 
     subscriptionCount = sizeof( fourThousandSubscriptions ) / sizeof( fourThousandSubscriptions[ 0 ] );
@@ -730,7 +750,7 @@ void test_MQTT_GetSubscribePacketSize( void )
 void test_MQTT_GetUnsubscribePacketSize( void )
 {
     MQTTSubscribeInfo_t subscriptionList;
-    size_t subscriptionCount = 0;
+    size_t subscriptionCount = 1;
     size_t remainingLength = 0;
     size_t packetSize = 0;
     MQTTStatus_t status = MQTTSuccess;
@@ -767,6 +787,22 @@ void test_MQTT_GetUnsubscribePacketSize( void )
                                             &packetSize );
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
 
+    /* Zero length topic filter. */
+    subscriptionCount = 1;
+    status = MQTT_GetUnsubscribePacketSize( &subscriptionList,
+                                            subscriptionCount,
+                                            &remainingLength,
+                                            &packetSize );
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+
+    /* NULL topic filter, nonzero length. */
+    subscriptionList.topicFilterLength = 1;
+    status = MQTT_GetUnsubscribePacketSize( &subscriptionList,
+                                            subscriptionCount,
+                                            &remainingLength,
+                                            &packetSize );
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+
     /* Verify packet size cannot exceed limit. Note the max remaining length of
      * an MQTT packet is 2^28-1 = 268435455, or 256MiB. Since the only way to increase
      * the subscribe packet size is with the topic filters of the subscriptions
@@ -775,6 +811,10 @@ void test_MQTT_GetUnsubscribePacketSize( void )
     for( i = 0; i < 4096; i++ )
     {
         fourThousandSubscriptions[ i ].topicFilterLength = UINT16_MAX;
+
+        /* We need to set this to avoid an early bad parameter, however we do
+         * not need a 65535 byte buffer as the packet will not be serialized. */
+        fourThousandSubscriptions[ i ].pTopicFilter = "";
     }
 
     subscriptionCount = sizeof( fourThousandSubscriptions ) / sizeof( fourThousandSubscriptions[ 0 ] );
