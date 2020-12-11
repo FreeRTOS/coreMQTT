@@ -47,9 +47,9 @@ MQTT Ping Response timeout is the time to wait for a ping response to an MQTT pi
 mechanism in the MQTT Client. This timeout can be configured independent of the Transport timeouts unlike the MQTT Keep Alive
 interval, since this timeout only depends on the MQTT broker, the platform and, the network latencies.
 
-We recommend to use a ping response timeout greater than the P99 ping response latency for the broker and the platform being used.
-The P99 value for the ping response latency can be calculated using an MQTT application by experimenting on a sample of devices and
-obtaining the data for latency of each ping response from the broker after a ping request is sent.
+We recommend to choose a ping response timeout by experimenting with an MQTT application on a sample of devices and obtaining the data
+for latency of each ping response from the broker after a ping request is sent. A timeout value can then be chosen based on the statistical
+measure suitable for the end application, such as 99th percentile or average.
 
 MQTT Ping Response timeout can be set by defining the configuration @ref MQTT_PINGRESP_TIMEOUT_MS.
 
@@ -105,9 +105,9 @@ This timeout is passed as an argument to @ref mqtt_connect_function. It is the m
 set to 0, then instead of a time-based loop, it will attempt to call the Transport Receive function up to a fixed maximum number of times,
 which is defined by @ref MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT.
 
-We recommend to use a timeout value greater than the P99 latency for receiving the MQTT CONNACK packet from the broker on the platform being used.
-The P99 value for this latency can be calculated using an MQTT application by experimenting on a sample of devices and obtaining the data for
-latency to receive each MQTT CONNACK packet from the broker after an MQTT CONNECT packet is sent.
+We recommend to choose a timeout for  @ref mqtt_connect_function by experimenting with an MQTT application on a sample of devices and
+obtaining the data for latency of each CONNACK packet from the broker after an MQTT CONNECT packet is sent. A timeout value can then be chosen
+based on the statistical measure suitable for the end application, such as 99th percentile or average.
 
 @see @ref mqtt_receivetimeout
 
