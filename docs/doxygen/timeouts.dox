@@ -95,8 +95,7 @@ being half way through a packet and will just error and disconnect if you don't 
 That means, especially in multi-threaded application, the process loop timeout can be zero.
 
 @ref mqtt_processloop_function API can be used to manage the MQTT keep-alive mechanism and if used, application must invoke this API
-faster than the MQTT Keep Alive interval. If a dummy @ref MQTTGetCurrentTimeFunc_t was passed to @ref mqtt_init_function,
-then the timeout must be set to 0.
+faster than the MQTT Keep Alive interval. If a dummy @ref MQTTGetCurrentTimeFunc_t was passed to @ref mqtt_init_function, then the keep-alive mechanism is not supported by the @ref mqtt_processloop_function API; instead the @ref mqtt_receiveloop_function should be used.
 
 @see @ref mqtt_receivetimeout
 
