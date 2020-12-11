@@ -45,7 +45,7 @@ the Transport functions block for the maximum time. MQTT Keep Alive interval can
 @section mqtt_timeouts_ping_response MQTT Ping Response timeout
 MQTT Ping Response timeout is the time to wait for a ping response to an MQTT ping request as part of the keep-alive
 mechanism in the MQTT Client. This timeout can be configured independent of the Transport timeouts unlike the MQTT Keep Alive
-interval, since this timeout only depends on the MQTT broker, the platform and, the network latencies.
+interval, since this timeout only depends on the MQTT broker, the platform and the network latencies.
 
 We recommend to choose a ping response timeout by experimenting with an MQTT application on a sample of devices and obtaining the data
 for latency of each ping response from the broker after a ping request is sent. A timeout value can then be chosen based on the statistical
