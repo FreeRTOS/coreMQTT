@@ -102,7 +102,7 @@ then the timeout must be set to 0.
 
 @section mqtt_timeouts_connect Timeout for MQTT_Connect
 This timeout is passed as an argument to @ref mqtt_connect_function. It is the maximum time to wait for an MQTT CONNACK packet. If this value is
-set to 0, then instead of a time-based loop, it will attempt to call the Transport Receive function up to a fixed maximum number of times,
+set to 0, then instead of a time-based loop, it will attempt to call the Transport Receive function up to a maximum number of retries,
 which is defined by @ref MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT.
 
 We recommend to choose a timeout for  @ref mqtt_connect_function by experimenting with an MQTT application on a sample of devices and
