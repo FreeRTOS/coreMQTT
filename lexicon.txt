@@ -3,6 +3,7 @@ acked
 acks
 addrecord
 addtogroup
+alt
 ansi
 api
 apis
@@ -30,9 +31,12 @@ chk
 cleansession
 clientidentifierlength
 cmock
+colspan
+copydoc
 com
 cond
 config
+configpagestyle
 configs
 connack
 connectinfo
@@ -40,12 +44,15 @@ connectpacketsize
 const
 coremqtt
 csdk
+css
 currentstate
 de
+defgroup
 defragmenting
 deserialization
 deserializationresult
 deserialize
+deserializers
 deserializeack
 deserialized
 deserializepublish
@@ -68,6 +75,7 @@ expectprocessloopcalls
 filterindex
 fixedbuffer
 fn
+gcc
 getconnectpacketsize
 getdisconnectpacketsize
 getincomingpackettypeandlength
@@ -88,12 +96,15 @@ handleincomingpublish
 handlekeepalive
 hasn
 headersize
+html
 http
 https
 ifndef
+img
 inc
 incomingpacket
 incomingpublish
+incomingpublishrecords
 ingroup
 init
 initializeconnectinfo
@@ -114,6 +125,8 @@ loginfo
 logwarn
 lsb
 lwt
+mainpage
+mdash
 malloc
 managekeepalive
 matchtopic
@@ -122,8 +135,10 @@ memset
 metadata
 mib
 min
+minimise
 misra
 modifyincomingpacket
+mq
 mqtt
 mqttbadparameter
 mqttbadresponse
@@ -188,6 +203,9 @@ nextpacketid
 noninfringement
 numcodes
 optype
+org
+os
+outgoingpublishrecords
 packetid
 packetidentifier
 packetsize
@@ -214,6 +232,7 @@ pfixedbuffer
 pheadersize
 pincomingpacket
 pingreq
+pingreqs
 pingreqsendtimems
 pingresp
 pingresps
@@ -227,6 +246,7 @@ pnetworkbuffer
 pnetworkcontext
 pnetworkinterface
 pnewstate
+png
 posix
 ppacketid
 ppacketidentifier
@@ -295,6 +315,7 @@ remainingtimems
 resending
 reservestate
 responsecode
+rm
 sdk
 searchstates
 sendpacket
@@ -320,6 +341,7 @@ somenetworkinterface
 somepassword
 someusername
 sourcelength
+src
 stateafterdeserialize
 stateafterserialize
 statuscount
@@ -337,6 +359,7 @@ sys
 tcp
 tcpsocket
 tcpsocketcontext
+td
 testcase
 timeoutms
 tls
@@ -344,8 +367,10 @@ tlscontext
 tlsrecv
 tlsrecvcount
 tlssend
+toolchain
 topicfilterlength
 topicnamelength
+tr
 transportcallback
 transportinterface
 transportpage
@@ -356,6 +381,7 @@ transportsend
 transportsendnobytes
 transportstruct
 tx
+typename
 uint
 un
 unsuback
