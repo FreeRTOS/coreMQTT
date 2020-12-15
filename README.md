@@ -6,7 +6,7 @@ This library has gone through code quality checks including verification that no
 
 See memory requirements for this library [here](https://docs.aws.amazon.com/embedded-csdk/202012.00/lib-ref/libraries/standard/coreMQTT/docs/doxygen/output/html/index.html#mqtt_memory_requirements).
 
-**coreMQTT v1.1.0 [source code](https://github.com/FreeRTOS/coreMQTT/tree/v1.1.0/source) is part of the [FreeRTOS 202012.00 LTS](https://github.com/FreeRTOS/FreeRTOS-LTS/tree/202012.00_LTS) release.**
+**coreMQTT v1.1.0 [source code](https://github.com/FreeRTOS/coreMQTT/tree/v1.1.0/source) is part of the [FreeRTOS 202012.00 LTS](https://github.com/FreeRTOS/FreeRTOS-LTS/tree/202012.00-LTS) release.**
 
 ## MQTT Config File
 
