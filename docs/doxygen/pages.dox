@@ -148,7 +148,7 @@ which is defined by @ref MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT.
 
 For @ref mqtt_processloop_function and @ref mqtt_receiveloop_function, the timeout value represents the <i>minimum</i> duration that will be spent in the function, provided there are no network errors.
 Should the timeout be set to 0, then the loop will run for a single iteration. A single iteration of a loop consists of an attempt to receive a single byte from the network, and
-if the single byte receive was successful, then attempt(s) to receive the rest of the packet (with retry attempts goverened by @ref MQTT_RECV_POLLING_TIMEOUT_MS), followed by sending acknowledgement response, if needed
+if the single byte receive was successful, then attempt(s) to receive the rest of the packet (with retry attempts governed by @ref MQTT_RECV_POLLING_TIMEOUT_MS), followed by sending acknowledgement response, if needed
 (with retry attempts governed by @ref MQTT_SEND_RETRY_TIMEOUT_MS), and then, finally deserialization of the packet received and a call to the application callback. 
 If the first read did not succeed, then instead the library checks if a ping request needs to be sent (only for the process loop).
 

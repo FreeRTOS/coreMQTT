@@ -11,7 +11,7 @@ repeat
 repeat while (                      No network data available AND \n retry count < MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT) is (yes)
 -> no or timeout == 0;
 
-repeat 
+repeat
 	: Get rest of CONNACK packet;
 	note left: Retry zero byte reads for maximum period \nof **MQTT_RECV_POLLING_TIMEOUT_MS**
 repeat while( Received complete packet? ) is ( no )
