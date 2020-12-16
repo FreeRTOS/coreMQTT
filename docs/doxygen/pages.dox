@@ -61,11 +61,11 @@ This MQTT client library provides an implementation of the [MQTT 3.1.1 specifica
 
 @section mqtt_interfaces Interfaces and Callbacks
 
-The MQTT library relies on interfaces to dissociate itself from platform specific areas,
-such as the transport layer or maintaining time. Interfaces used by MQTT are simply function callbacks
+The MQTT library relies on interfaces to dissociate itself from platform specific functionality,
+such as the transport layer or maintaining time. Interfaces used by MQTT are simply function pointers
 with expectations of behavior.
 
-The MQTT library expects the following interfaces:
+The MQTT library expects the application to provide implementations for the following interfaces:
 
 <table>
     <tr>
@@ -141,15 +141,16 @@ wait for acknowledgments, a call to @ref mqtt_processloop_function or @ref mqtt_
 The exception is @ref mqtt_connect_function; since a MQTT session cannot be considered established until the server acknowledges a CONNECT packet with a CONNACK,
 the function waits until the CONNACK is received.
 
-@subsection mqtt_receivetimeout Timeouts
+@subsection mqtt_receivetimeout Runtime Timeouts passed to MQTT library
 @ref mqtt_connect_function, @ref mqtt_processloop_function, and @ref mqtt_receiveloop_function all accept a timeout parameter for packet reception.<br>
-For the @ref mqtt_connect_function, if this value is set to 0, then instead of a time-based loop, it will attempt to call the transport receive function up
-to a fixed maximum number of times, which is defined by @ref MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT.
+For the @ref mqtt_connect_function, if this value is set to 0, then instead of a time-based loop, it will attempt to call the transport receive function up to a maximum number of retries,
+which is defined by @ref MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT.
 
 For @ref mqtt_processloop_function and @ref mqtt_receiveloop_function, the timeout value represents the <i>minimum</i> duration that will be spent in the function, provided there are no network errors.
-Should the timeout be set to 0, then the loop will run for a single iteration. A single iteration of a loop consists of an attempt to receive a single byte from the network,
-followed by the reception of the entire packet if the receive was successful, and finally deserialization of the packet received and a call to the application callback. If the first read did not succeed,
-then instead the library checks if a ping request needs to be sent (only for the process loop).
+Should the timeout be set to 0, then the loop will run for a single iteration. A single iteration of a loop consists of an attempt to receive a single byte from the network, and
+if the single byte receive was successful, then attempt(s) to receive the rest of the packet (with retry attempts goverened by @ref MQTT_RECV_POLLING_TIMEOUT_MS), followed by sending acknowledgement response, if needed
+(with retry attempts governed by @ref MQTT_SEND_RETRY_TIMEOUT_MS), and then, finally deserialization of the packet received and a call to the application callback. 
+If the first read did not succeed, then instead the library checks if a ping request needs to be sent (only for the process loop).
 
 See the below diagrams for a representation of the above flows:
 | MQTT Connect Diagram | MQTT ProcessLoop Diagram | MQTT ReceiveLoop Diagram |
