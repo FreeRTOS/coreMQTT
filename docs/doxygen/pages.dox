@@ -18,7 +18,7 @@ Please see https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/main/demos/
 
 <table>
     <tr>
-        <td colspan="4"><center><b>Code size of coreMQTT (example generated with GCC for ARM Cortex-M toolchain)</b></center></td>
+        <td colspan="4"><center><b>Code size of coreMQTT (example generated with GCC for ARM Cortex-M)</b></center></td>
     </tr>
     <tr>
         <td><b>File</b></td>
