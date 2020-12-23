@@ -57,7 +57,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Check complexity
-        uses: aggarw13/testCustomGitHubAction/complexity@main
+        uses: FreeRTOS/CI-CD-Github-Actions/complexity@main
         with:
           path: ./
   doxygen:
@@ -65,7 +65,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Run doxygen build
-        uses: aggarw13/testCustomGitHubAction/doxygen@main
+        uses: FreeRTOS/CI-CD-Github-Actions/doxygen@main
         with:
           path: ./
   spell-check:
@@ -74,7 +74,7 @@ jobs:
       - name: Clone This Repo
         uses: actions/checkout@v2
       - name: Run spellings check
-        uses: aggarw13/testCustomGitHubAction/spellings@main
+        uses: FreeRTOS/CI-CD-Github-Actions/spellings@main
         with:
           path: ./
   formatting:
@@ -82,7 +82,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Check formatting
-        uses: aggarw13/testCustomGitHubAction/formatting@main
+        uses: FreeRTOS/CI-CD-Github-Actions/formatting@main
         with:
           path: ./
   git-secrets:
