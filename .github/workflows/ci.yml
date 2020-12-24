@@ -56,81 +56,35 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Setup
-        run: sudo apt-get install complexity
-      - name: Complexity
-        run: |
-          find source/ -iname '*.c' |\
-          xargs complexity --scores --threshold=0 --horrid-threshold=8
+      - name: Check complexity
+        uses: FreeRTOS/CI-CD-Github-Actions/complexity@main
+        with:
+          path: ./
   doxygen:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
-      - name: Install Doxygen
-        run: |
-          wget -qO- "http://doxygen.nl/files/doxygen-1.8.20.linux.bin.tar.gz" | sudo tar --strip-components=1 -xz -C /usr/local
-          sudo apt-get install -y libclang-9-dev
-      - name: Run Doxygen And Verify Stdout Is Empty
-        run: |
-          doxygen docs/doxygen/config.doxyfile 2>&1 | tee doxyoutput.txt
-          if [[ "$(wc -c < doxyoutput.txt | bc)" = "0" ]]; then exit 0; else exit 1; fi
+      - name: Run doxygen build
+        uses: FreeRTOS/CI-CD-Github-Actions/doxygen@main
+        with:
+          path: ./
   spell-check:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Parent Repo
-        uses: actions/checkout@v2
-        with:
-          ref: main
-          repository: aws/aws-iot-device-sdk-embedded-C
-      - run: rm -r libraries/standard/coreMQTT
       - name: Clone This Repo
         uses: actions/checkout@v2
+      - name: Run spellings check
+        uses: FreeRTOS/CI-CD-Github-Actions/spellings@main
         with:
-          path: libraries/standard/coreMQTT
-      - name: Install spell
-        run: |
-          sudo apt-get install spell
-          sudo apt-get install util-linux
-      - name: Check spelling
-        run: |
-          PATH=$PATH:$PWD/tools/spell
-          for lexfile in `find libraries/standard/coreMQTT -name lexicon.txt`
-          do dir=${lexfile%/lexicon.txt}
-            echo $dir
-            find-unknown-comment-words --directory $dir
-            if [ $? -ne "0" ]
-            then
-              exit 1
-            fi
-          done
+          path: ./
   formatting:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Install Uncrustify
-        run: sudo apt-get install uncrustify
-      - name: Run Uncrustify
-        run: find . -iname "*.[hc]" -exec uncrustify --check -c tools/uncrustify.cfg {} +
-      - name: Check For Trailing Whitespace
-        run: |
-          set +e
-          grep --exclude="README.md" -rnI -e "[[:blank:]]$" .
-          if [ "$?" = "0" ]; then
-            echo "Files have trailing whitespace."
-            exit 1
-          else
-            exit 0
-          fi
-      - name: Check for CRLF
-        run: |
-          set +e
-          find . -path ./.git -prune -o -exec file {} + |  grep "CRLF"
-          if [ "$?" = "0" ]; then
-            echo "Files have CRLF line endings."
-            exit 1
-          else
-            exit 0
-          fi
+      - name: Check formatting
+        uses: FreeRTOS/CI-CD-Github-Actions/formatting@main
+        with:
+          path: ./
   git-secrets:
     runs-on: ubuntu-latest
     steps:
