@@ -278,7 +278,7 @@ typedef struct MQTTDeserializedInfo
  * memset( ( void * ) &mqttContext, 0x00, sizeof( MQTTContext_t ) );
  *
  * // Set transport interface members.
- * transport.pNetworkInterface = &someNetworkInterface;
+ * transport.pNetworkContext = &someTransportContext;
  * transport.send = networkSend;
  * transport.recv = networkRecv;
  *
