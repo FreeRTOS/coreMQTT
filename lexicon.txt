@@ -339,6 +339,7 @@ sizeof
 someclientid
 somenetworkinterface
 somepassword
+sometransportcontext
 someusername
 sourcelength
 src
