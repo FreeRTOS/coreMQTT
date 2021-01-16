@@ -1,0 +1,31 @@
+name: Memory statistics
+
+on:
+  workflow_dispatch:
+
+jobs:
+  memory_statistics:
+    name: Calculate object sizes
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+            submodules: 'recursive'
+      - name: Measure sizes
+        uses: FreeRTOS/CI-CD-Github-Actions/memory_statistics@main
+        with:
+          lib_name: coreMQTT
+          src: |
+            source/core_mqtt.c
+            source/core_mqtt_state.c
+            source/core_mqtt_serializer.c
+          include: |
+            source/include
+            source/interface
+          compiler_flags: |
+            MQTT_DO_NOT_USE_CUSTOM_CONFIG
+      - name: Upload table
+        uses: actions/upload-artifact@v2
+        with:
+          name: size_table
+          path: size_table.html
