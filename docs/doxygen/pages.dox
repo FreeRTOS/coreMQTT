@@ -16,36 +16,7 @@ Please see https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/main/demos/
 @section mqtt_memory_requirements Memory Requirements
 @brief Memory requirements of the MQTT library.
 
-<table>
-    <tr>
-        <td colspan="3"><center><b>Code size of coreMQTT (example generated with GCC for ARM Cortex-M)</b></center></td>
-    </tr>
-    <tr>
-        <td><b>File</b></td>
-        <td><center><b>With -O1 Optimization</b></center></td>
-        <td><center><b>With -Os Optimization</b></center></td>
-    </tr>
-    <tr>
-        <td>core_mqtt.c</td>
-        <td><center>3.0K</center></td>
-        <td><center>2.6K</center></td>
-    </tr>
-    <tr>
-        <td>core_mqtt_state.c</td>
-        <td><center>1.4K</center></td>
-        <td><center>1.1K</center></td>
-    </tr>
-    <tr>
-        <td>core_mqtt_serializer.c</td>
-        <td><center>2.5K</center></td>
-        <td><center>2.0K</center></td>
-    </tr>
-    <tr>
-        <td><b>Total estimate</b></td>
-        <td><center><b>6.9K</b></center></td>
-        <td><center><b>5.7K</b></center></td>
-    </tr>
-</table>
+@include{doc} size_table.html
  */
 
 /**
