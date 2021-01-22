@@ -14,16 +14,7 @@ jobs:
       - name: Measure sizes
         uses: FreeRTOS/CI-CD-Github-Actions/memory_statistics@main
         with:
-          lib_name: coreMQTT
-          src: |
-            source/core_mqtt.c
-            source/core_mqtt_state.c
-            source/core_mqtt_serializer.c
-          include: |
-            source/include
-            source/interface
-          compiler_flags: |
-            MQTT_DO_NOT_USE_CUSTOM_CONFIG
+            config: .github/memory_statistics_config.json
       - name: Upload table
         uses: actions/upload-artifact@v2
         with:
