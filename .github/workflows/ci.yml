@@ -101,3 +101,14 @@ jobs:
           -DBUILD_CLONE_SUBMODULES=ON \
           -DCMAKE_C_FLAGS='-Wall -Wextra -I../override-include'
           make -C build/ coverity_analysis
+  memory_statistics:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+            submodules: 'recursive'
+      - name: Measure sizes
+        uses: FreeRTOS/CI-CD-Github-Actions/memory_statistics@main
+        with:
+            config: .github/memory_statistics_config.json
+            check_against: docs/doxygen/include/size_table.html
