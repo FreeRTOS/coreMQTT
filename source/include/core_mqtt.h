@@ -1,5 +1,5 @@
 /*
- * coreMQTT v1.1.0
+ * coreMQTT v1.1.1
  * Copyright (C) 2020 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -49,7 +49,7 @@
  * @cond DOXYGEN_IGNORE
  * The current version of this library.
  */
-#define MQTT_LIBRARY_VERSION    "v1.1.0"
+#define MQTT_LIBRARY_VERSION    "v1.1.1"
 /** @endcond */
 
 /**
@@ -138,7 +138,7 @@ typedef enum MQTTPubAckType
  */
 typedef enum MQTTSubAckStatus
 {
-    MQTTSubAckSuccessQos0 = 0x00, /**< @brief Success with a maximum delivery at QoS 0 . */
+    MQTTSubAckSuccessQos0 = 0x00, /**< @brief Success with a maximum delivery at QoS 0. */
     MQTTSubAckSuccessQos1 = 0x01, /**< @brief Success with a maximum delivery at QoS 1. */
     MQTTSubAckSuccessQos2 = 0x02, /**< @brief Success with a maximum delivery at QoS 2. */
     MQTTSubAckFailure = 0x80      /**< @brief Failure. */
