@@ -3,7 +3,7 @@
 ## v1.1.1 (March 2021)
 
 ### Changes
- - [#142](https://github.com/FreeRTOS/coreMQTT/pull/142), [#143](https://github.com/FreeRTOS/coreMQTT/pull/143) and [#150](https://github.com/FreeRTOS/coreMQTT/pull/150) Documentation fixes.
+ - [#142](https://github.com/FreeRTOS/coreMQTT/pull/142), [#143](https://github.com/FreeRTOS/coreMQTT/pull/143), and [#150](https://github.com/FreeRTOS/coreMQTT/pull/150) Documentation fixes.
 
 ## v1.1.0 (December 2020)
 
