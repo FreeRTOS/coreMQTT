@@ -11,7 +11,7 @@ on:
         required: true
       delete_existing_tag_release:
         description: 'Configure release workflow to delete existing tag and release (Default: false)'
-        default: false
+        default: 'false'
         required: false
 jobs:
   clean-existing-tag-and-release:
@@ -43,7 +43,7 @@ jobs:
               gh release delete --yes $VERSION_NUM
           fi
   tag-commit:
-    if: ${{ ( github.event.inputs.delete_existing_tag_release == 'true' && success() )  || ( github.event.inputs.delete_existing_tag_release == 'false' && always() ) }}
+    if: ${{ ( github.event.inputs.delete_existing_tag_rlease == 'true' && success() )  || ( github.event.inputs.delete_existing_tag_release == 'false' && always() ) }}
     needs: clean-existing-tag-and-release
     name: Tag commit
     runs-on: ubuntu-latest
@@ -66,6 +66,7 @@ jobs:
           git checkout tags/${{ github.event.inputs.version_number }}
           git diff ${{ github.event.inputs.commit_id }} tags/${{ github.event.inputs.version_number }}
   create-zip:
+    if: ${{ ( github.event.inputs.delete_existing_tag_rlease == 'true' && success() )  || ( github.event.inputs.delete_existing_tag_release == 'false' && always() ) }}
     needs: tag-commit
     name: Create ZIP and verify package for release asset.
     runs-on: ubuntu-latest
@@ -116,6 +117,7 @@ jobs:
           name: coreMQTT-${{ github.event.inputs.version_number }}.zip
           path: zip-check/coreMQTT-${{ github.event.inputs.version_number }}.zip
   create-release:
+    if: ${{ ( github.event.inputs.delete_existing_tag_rlease == 'true' && success() )  || ( github.event.inputs.delete_existing_tag_release == 'false' && always() ) }}
     needs: create-zip
     name: Create Release and Upload Release Asset
     runs-on: ubuntu-latest
