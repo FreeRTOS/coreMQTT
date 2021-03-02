@@ -10,7 +10,7 @@ on:
         description: 'Release Version Number (Eg, v1.0.0)'
         required: true
       delete_existing_tag_release:
-        description: 'Configure release workflow to delete existing tag and release (Default: false)'
+        description: 'Is this a re-release of existing tag/release? (Default: false)'
         default: 'false'
         required: false
 jobs:
