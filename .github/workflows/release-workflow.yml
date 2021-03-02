@@ -9,9 +9,42 @@ on:
       version_number:
         description: 'Release Version Number (Eg, v1.0.0)'
         required: true
-
+      delete_existing_tag_release:
+        description: 'Configure release workflow to delete existing tag and release (Default: false)'
+        default: false
+        required: false
 jobs:
+  clean-existing-tag-and-release:
+    if: ${{ github.event.inputs.delete_existing_tag_release == 'true' }}
+    runs-on: ubuntu-latest
+    env: 
+      VERSION_NUM: ${{ github.event.inputs.version_number }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Check if tag exists
+        run: |
+          git fetch origin
+          if git tag --list $VERSION_NUM
+          then
+              echo "Deleting existing tag for $VERSION_NUM"
+              git push origin --delete tags/$VERSION_NUM
+          fi
+      - name: Check if release exists
+        run: |
+          sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-key C99B11DEB97541F0
+          sudo apt-add-repository https://cli.github.com/packages
+          sudo apt update
+          sudo apt-get install gh
+          if gh release list | grep $VERSION_NUM
+          then
+              echo "Deleting existing release for $VERSION_NUM"
+              gh release delete --yes $VERSION_NUM
+          fi
   tag-commit:
+    if: ${{ github.event.inputs.delete_existing_tag_release == 'true' && success() ||  github.event.inputs.delete_existing_tag_release == 'false' && always() }}
+    needs: clean-existing-tag-and-release
     name: Tag commit
     runs-on: ubuntu-latest
     steps:
