@@ -43,7 +43,7 @@ jobs:
               gh release delete --yes $VERSION_NUM
           fi
   tag-commit:
-    if: ${{ github.event.inputs.delete_existing_tag_release == 'true' && success() ||  github.event.inputs.delete_existing_tag_release == 'false' && always() }}
+    if: ${{ ( github.event.inputs.delete_existing_tag_release == 'true' && success() )  || ( github.event.inputs.delete_existing_tag_release == 'false' && always() ) }}
     needs: clean-existing-tag-and-release
     name: Tag commit
     runs-on: ubuntu-latest
