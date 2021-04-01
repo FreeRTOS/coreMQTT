@@ -24,9 +24,11 @@
  * @file core_mqtt_serializer.c
  * @brief Implements the user-facing functions in core_mqtt_serializer.h.
  */
+#include <cstdint>
 #include <string.h>
 #include <assert.h>
 
+#include "core_mqtt.h"
 #include "core_mqtt_serializer.h"
 
 /**
@@ -1164,8 +1166,15 @@ static MQTTStatus_t deserializeSuback( const MQTTPacketInfo_t * pSuback,
         LogDebug( ( "Packet identifier %hu.",
                     ( unsigned short ) *pPacketIdentifier ) );
 
-        status = readSubackStatus( remainingLength - sizeof( uint16_t ),
-                                   pVariableHeader + sizeof( uint16_t ) );
+        if( *pPacketIdentifier == MQTT_PACKET_ID_INVALID )
+        {
+            status = MQTTBadResponse;
+        }
+        else
+        {
+            status = readSubackStatus( remainingLength - sizeof( uint16_t ),
+                                       pVariableHeader + sizeof( uint16_t ) );
+        }
     }
 
     return status;

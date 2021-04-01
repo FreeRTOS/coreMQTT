@@ -1480,6 +1480,14 @@ void test_MQTT_DeserializeAck_suback( void )
     status = MQTT_DeserializeAck( &mqttPacketInfo, &packetIdentifier, &sessionPresent );
     TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
 
+    /* Invalid packet ID. */
+    buffer[ 0 ] = 0;
+    buffer[ 1 ] = 0;
+    mqttPacketInfo.remainingLength = 3;
+    buffer[ 2 ] = 0;
+    status = MQTT_DeserializeAck( &mqttPacketInfo, &packetIdentifier, &sessionPresent );
+    TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
+
     /* Set packet identifier. */
     buffer[ 0 ] = 0;
     buffer[ 1 ] = 1;

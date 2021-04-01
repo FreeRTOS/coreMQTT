@@ -4,6 +4,7 @@
 
 ### Updates
  - [#163](https://github.com/FreeRTOS/coreMQTT/pull/163) Fix bug to check for ping responses within `MQTT_PINGRESP_TIMEOUT_MS` instead of the entire keep alive interval
+ - Add more checks for malformed packets when deserializing acknowledgments.
 
 ## v1.1.1 (February 2021)
 
