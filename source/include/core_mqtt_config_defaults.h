@@ -106,11 +106,11 @@
  * is irrelevant to the behavior of the library.
  *
  * <b>Possible values:</b> Any positive integer up to SIZE_MAX. <br>
- * <b>Default value:</b> `500`
+ * <b>Default value:</b> `5000`
  */
 #ifndef MQTT_PINGRESP_TIMEOUT_MS
-    /* Wait 0.5 seconds by default for a ping response. */
-    #define MQTT_PINGRESP_TIMEOUT_MS    ( 500U )
+    /* Wait 5 seconds by default for a ping response. */
+    #define MQTT_PINGRESP_TIMEOUT_MS    ( 5000U )
 #endif
 
 /**

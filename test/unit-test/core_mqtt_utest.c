@@ -491,7 +491,7 @@ static void expectProcessLoopCalls( MQTTContext_t * const pContext,
     {
         if( ( pContext->waitingForPingResp == false ) &&
             ( pContext->keepAliveIntervalSec != 0U ) &&
-            ( globalEntryTime - pContext->lastPacketTime ) > ( 1000U * pContext->keepAliveIntervalSec ) )
+            ( ( globalEntryTime - pContext->lastPacketTime ) > ( 1000U * pContext->keepAliveIntervalSec ) ) )
         {
             MQTT_GetPingreqPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
             /* Replace pointer parameter being passed to the method. */

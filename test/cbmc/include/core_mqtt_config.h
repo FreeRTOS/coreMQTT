@@ -68,7 +68,7 @@ struct NetworkContext
  * If a ping response is not received before this timeout, then
  * #MQTT_ProcessLoop will return #MQTTKeepAliveTimeout.
  */
-#define MQTT_PINGRESP_TIMEOUT_MS                ( 500U )
+#define MQTT_PINGRESP_TIMEOUT_MS                ( 5000U )
 
 /**
  * @brief The maximum duration of receiving no data over network when
