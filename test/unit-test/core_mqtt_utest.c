@@ -490,7 +490,8 @@ static void expectProcessLoopCalls( MQTTContext_t * const pContext,
     if( modifyIncomingPacketStatus == MQTTNoDataAvailable )
     {
         if( ( pContext->waitingForPingResp == false ) &&
-            ( pContext->keepAliveIntervalSec != 0U ) )
+            ( pContext->keepAliveIntervalSec != 0U ) &&
+            ( globalEntryTime - pContext->lastPacketTime ) > ( 1000U * pContext->keepAliveIntervalSec ) )
         {
             MQTT_GetPingreqPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
             /* Replace pointer parameter being passed to the method. */
@@ -1929,10 +1930,9 @@ void test_MQTT_ProcessLoop_handleKeepAlive_Happy_Paths( void )
     expectProcessLoopCalls( &context, &expectParams );
 
     /* Coverage for the branch path where keep alive interval is greater than 0,
-     * and the interval has expired. */
+     * and the interval has not expired. PINGREQ should not be sent. */
     mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
-    context.waitingForPingResp = true;
     context.keepAliveIntervalSec = MQTT_SAMPLE_KEEPALIVE_INTERVAL_S;
     context.lastPacketTime = getTime();
     /* Set expected return values in the loop. All success. */
@@ -1944,7 +1944,7 @@ void test_MQTT_ProcessLoop_handleKeepAlive_Happy_Paths( void )
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
     context.waitingForPingResp = true;
     context.keepAliveIntervalSec = MQTT_SAMPLE_KEEPALIVE_INTERVAL_S;
-    context.lastPacketTime = 0;
+    context.lastPacketTime = MQTT_ONE_SECOND_TO_MS;
     context.pingReqSendTimeMs = MQTT_ONE_SECOND_TO_MS;
     /* Set expected return values in the loop. All success. */
     resetProcessLoopParams( &expectParams );

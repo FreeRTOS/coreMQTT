@@ -995,6 +995,7 @@ static MQTTStatus_t handleKeepAlive( MQTTContext_t * pContext )
 {
     MQTTStatus_t status = MQTTSuccess;
     uint32_t now = 0U, keepAliveMs = 0U;
+    uint32_t pingrespTimeoutMs = MQTT_PINGRESP_TIMEOUT_MS;
 
     assert( pContext != NULL );
     assert( pContext->getTime != NULL );
@@ -1002,22 +1003,30 @@ static MQTTStatus_t handleKeepAlive( MQTTContext_t * pContext )
     now = pContext->getTime();
     keepAliveMs = 1000U * ( uint32_t ) pContext->keepAliveIntervalSec;
 
+    /* It is not useful for the ping response timeout to be greater than half
+     * the keep alive, as the server will have disconnected us by that point. */
+    if( pingrespTimeoutMs > ( keepAliveMs / 2 ) )
+    {
+        pingrespTimeoutMs = keepAliveMs / 2;
+    }
+
     /* If keep alive interval is 0, it is disabled. */
-    if( ( keepAliveMs != 0U ) &&
-        ( calculateElapsedTime( now, pContext->lastPacketTime ) > keepAliveMs ) )
+    if( keepAliveMs != 0U )
     {
         if( pContext->waitingForPingResp == true )
         {
             /* Has time expired? */
-            if( calculateElapsedTime( now, pContext->pingReqSendTimeMs ) >
-                MQTT_PINGRESP_TIMEOUT_MS )
+            if( calculateElapsedTime( now, pContext->pingReqSendTimeMs ) > pingrespTimeoutMs )
             {
                 status = MQTTKeepAliveTimeout;
             }
         }
         else
         {
-            status = MQTT_Ping( pContext );
+            if( calculateElapsedTime( now, pContext->lastPacketTime ) > keepAliveMs )
+            {
+                status = MQTT_Ping( pContext );
+            }
         }
     }
 
