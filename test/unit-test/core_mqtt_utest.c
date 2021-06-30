@@ -1943,11 +1943,7 @@ void test_MQTT_ProcessLoop_handleKeepAlive_Happy_Paths( void )
     mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
     context.waitingForPingResp = true;
-
-    /* Use a large keep alive interval for this test so that the ping response
-     * timeout will be #MQTT_PINGRESP_TIMEOUT_MS and not keep alive interval / 2.
-     * We use 4 * ping response timeout, so timeout / 1000 * 4 = timeout / 250. */
-    context.keepAliveIntervalSec = MQTT_PINGRESP_TIMEOUT_MS / 250;
+    context.keepAliveIntervalSec = MQTT_SAMPLE_KEEPALIVE_INTERVAL_S;
     context.lastPacketTime = MQTT_ONE_SECOND_TO_MS;
     context.pingReqSendTimeMs = MQTT_ONE_SECOND_TO_MS;
     /* Set expected return values in the loop. All success. */
@@ -1981,7 +1977,7 @@ void test_MQTT_ProcessLoop_handleKeepAlive_Error_Paths( void )
     setupTransportInterface( &transport );
 
     modifyIncomingPacketStatus = MQTTNoDataAvailable;
-    globalEntryTime = MQTT_ONE_SECOND_TO_MS;
+    globalEntryTime = MQTT_PINGRESP_TIMEOUT_MS + 1;
 
     /* Coverage for the branch path where PINGRESP timeout interval has expired. */
     mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
