@@ -94,11 +94,15 @@
 #endif
 
 /**
- * @brief Number of milliseconds to wait for a ping response to a ping
+ * @brief Maximum number of milliseconds to wait for a ping response to a ping
  * request as part of the keep-alive mechanism.
  *
  * If a ping response is not received before this timeout, then
  * #MQTT_ProcessLoop will return #MQTTKeepAliveTimeout.
+ *
+ * @note If this value is more than half of the keep alive interval, and the
+ * server does not receive the previous ping request, then it is likely that the
+ * server will disconnect the client before #MQTTKeepAliveTimeout can be returned.
  *
  * @note If a dummy implementation of the #MQTTGetCurrentTimeFunc_t timer function,
  * is supplied to the library, then the keep-alive mechanism is not supported by the
