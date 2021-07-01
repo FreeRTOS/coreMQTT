@@ -94,11 +94,15 @@
 #endif
 
 /**
- * @brief Number of milliseconds to wait for a ping response to a ping
+ * @brief Maximum number of milliseconds to wait for a ping response to a ping
  * request as part of the keep-alive mechanism.
  *
  * If a ping response is not received before this timeout, then
  * #MQTT_ProcessLoop will return #MQTTKeepAliveTimeout.
+ *
+ * @note If this value is more than half of the keep alive interval, and the
+ * server does not receive the previous ping request, then it is likely that the
+ * server will disconnect the client before #MQTTKeepAliveTimeout can be returned.
  *
  * @note If a dummy implementation of the #MQTTGetCurrentTimeFunc_t timer function,
  * is supplied to the library, then the keep-alive mechanism is not supported by the
@@ -106,11 +110,11 @@
  * is irrelevant to the behavior of the library.
  *
  * <b>Possible values:</b> Any positive integer up to SIZE_MAX. <br>
- * <b>Default value:</b> `500`
+ * <b>Default value:</b> `5000`
  */
 #ifndef MQTT_PINGRESP_TIMEOUT_MS
-    /* Wait 0.5 seconds by default for a ping response. */
-    #define MQTT_PINGRESP_TIMEOUT_MS    ( 500U )
+    /* Wait 5 seconds by default for a ping response. */
+    #define MQTT_PINGRESP_TIMEOUT_MS    ( 5000U )
 #endif
 
 /**

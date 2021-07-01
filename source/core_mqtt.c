@@ -1003,8 +1003,7 @@ static MQTTStatus_t handleKeepAlive( MQTTContext_t * pContext )
     keepAliveMs = 1000U * ( uint32_t ) pContext->keepAliveIntervalSec;
 
     /* If keep alive interval is 0, it is disabled. */
-    if( ( keepAliveMs != 0U ) &&
-        ( calculateElapsedTime( now, pContext->lastPacketTime ) > keepAliveMs ) )
+    if( keepAliveMs != 0U )
     {
         if( pContext->waitingForPingResp == true )
         {
@@ -1017,7 +1016,10 @@ static MQTTStatus_t handleKeepAlive( MQTTContext_t * pContext )
         }
         else
         {
-            status = MQTT_Ping( pContext );
+            if( calculateElapsedTime( now, pContext->lastPacketTime ) > keepAliveMs )
+            {
+                status = MQTT_Ping( pContext );
+            }
         }
     }
 
