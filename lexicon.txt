@@ -32,7 +32,6 @@ cleansession
 clientidentifierlength
 cmock
 colspan
-copydoc
 com
 cond
 config
@@ -42,6 +41,7 @@ connack
 connectinfo
 connectpacketsize
 const
+copydoc
 coremqtt
 csdk
 css
@@ -52,11 +52,11 @@ defragmenting
 deserialization
 deserializationresult
 deserialize
-deserializers
 deserializeack
 deserialized
 deserializepublish
 deserializer
+deserializers
 deserializestatus
 deserializing
 didn
@@ -126,10 +126,10 @@ logwarn
 lsb
 lwt
 mainpage
-mdash
 malloc
 managekeepalive
 matchtopic
+mdash
 memcpy
 memset
 metadata

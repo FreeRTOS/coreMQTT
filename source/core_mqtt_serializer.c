@@ -1164,8 +1164,15 @@ static MQTTStatus_t deserializeSuback( const MQTTPacketInfo_t * pSuback,
         LogDebug( ( "Packet identifier %hu.",
                     ( unsigned short ) *pPacketIdentifier ) );
 
-        status = readSubackStatus( remainingLength - sizeof( uint16_t ),
-                                   pVariableHeader + sizeof( uint16_t ) );
+        if( *pPacketIdentifier == 0U )
+        {
+            status = MQTTBadResponse;
+        }
+        else
+        {
+            status = readSubackStatus( remainingLength - sizeof( uint16_t ),
+                                       pVariableHeader + sizeof( uint16_t ) );
+        }
     }
 
     return status;
