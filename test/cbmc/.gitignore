@@ -3,6 +3,7 @@ proofs/**/logs
 proofs/**/gotos
 proofs/**/report
 proofs/**/html
+proofs/output
 
 # Emitted by CBMC Viewer
 TAGS-*
@@ -16,5 +17,8 @@ Makefile.arpa
 .ninja_deps
 .ninja_log
 .litani_cache_dir
+
+# These files should be overwritten whenever prepare.py runs
+cbmc-batch.yaml
 
 __pycache__/
