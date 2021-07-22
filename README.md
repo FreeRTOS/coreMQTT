@@ -4,7 +4,7 @@ This repository contains the coreMQTT library that has been optimized for a low 
 
 This library has gone through code quality checks including verification that no function has a [GNU Complexity](https://www.gnu.org/software/complexity/manual/complexity.html) score over 8, and checks against deviations from mandatory rules in the [MISRA coding standard](https://www.misra.org.uk).  Deviations from the MISRA C:2012 guidelines are documented under [MISRA Deviations](MISRA.md). This library has also undergone both static code analysis from [Coverity static analysis](https://scan.coverity.com/), and validation of memory safety through the [CBMC automated reasoning tool](https://www.cprover.org/cbmc/).
 
-See memory requirements for this library [here](https://docs.aws.amazon.com/embedded-csdk/202103.00/lib-ref/libraries/standard/coreMQTT/docs/doxygen/output/html/index.html#mqtt_memory_requirements).
+See memory requirements for this library [here](./docs/MEMORY_ESTIMATES.md).
 
 **coreMQTT v1.1.0 [source code](https://github.com/FreeRTOS/coreMQTT/tree/v1.1.0/source) is part of the [FreeRTOS 202012.00 LTS](https://github.com/FreeRTOS/FreeRTOS-LTS/tree/202012.00-LTS) release.**
 
@@ -121,6 +121,13 @@ Please refer to the demos of the MQTT client library in the following locations 
 
 
 ## Generating documentation
+
+Note: For pre-generated documentation, please see the documentation linked in the above repositories:
+
+| Location |
+| :-: |
+| [AWS IoT Device SDK for Embedded C](https://github.com/aws/aws-iot-device-sdk-embedded-C#releases-and-documentation) |
+| [FreeRTOS.org](https://freertos.org/Documentation/api-ref/coreMQTT/docs/doxygen/output/html/index.html) |
 
 The Doxygen references were created using Doxygen version 1.8.20. To generate the
 Doxygen pages, please run the following command from the root of this repository:
