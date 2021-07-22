@@ -115,4 +115,4 @@ jobs:
         uses: FreeRTOS/CI-CD-Github-Actions/memory_statistics@main
         with:
             config: .github/memory_statistics_config.json
-            check_against: docs/doxygen/include/size_table.html
+            check_against: docs/doxygen/include/size_table.md

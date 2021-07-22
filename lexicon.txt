@@ -129,6 +129,7 @@ mainpage
 malloc
 managekeepalive
 matchtopic
+md
 mdash
 memcpy
 memset
