@@ -19,4 +19,4 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: size_table
-          path: size_table.html
+          path: size_table.md
