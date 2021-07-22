@@ -27,6 +27,12 @@
 #ifndef CORE_MQTT_H
 #define CORE_MQTT_H
 
+/* *INDENT-OFF* */
+#ifdef __cplusplus
+extern "C" {
+#endif
+/* *INDENT-ON* */
+
 /* MQTT_DO_NOT_USE_CUSTOM_CONFIG allows building the MQTT library
  * without a custom config. If a custom config is provided, the
  * MQTT_DO_NOT_USE_CUSTOM_CONFIG macro should not be defined. */
@@ -886,5 +892,11 @@ MQTTStatus_t MQTT_GetSubAckStatusCodes( const MQTTPacketInfo_t * pSubackPacket,
 /* @[declare_mqtt_status_strerror] */
 const char * MQTT_Status_strerror( MQTTStatus_t status );
 /* @[declare_mqtt_status_strerror] */
+
+/* *INDENT-OFF* */
+#ifdef __cplusplus
+}
+#endif
+/* *INDENT-ON* */
 
 #endif /* ifndef CORE_MQTT_H */

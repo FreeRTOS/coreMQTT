@@ -27,6 +27,12 @@
 #ifndef CORE_MQTT_STATE_H
 #define CORE_MQTT_STATE_H
 
+/* *INDENT-OFF* */
+#ifdef __cplusplus
+extern "C" {
+#endif
+/* *INDENT-ON* */
+
 #include "core_mqtt.h"
 
 /**
@@ -274,5 +280,11 @@ uint16_t MQTT_PublishToResend( const MQTTContext_t * pMqttContext,
  */
 const char * MQTT_State_strerror( MQTTPublishState_t state );
 /** @endcond */
+
+/* *INDENT-OFF* */
+#ifdef __cplusplus
+}
+#endif
+/* *INDENT-ON* */
 
 #endif /* ifndef CORE_MQTT_STATE_H */

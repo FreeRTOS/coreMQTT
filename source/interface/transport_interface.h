@@ -28,6 +28,12 @@
 #ifndef TRANSPORT_INTERFACE_H_
 #define TRANSPORT_INTERFACE_H_
 
+/* *INDENT-OFF* */
+#ifdef __cplusplus
+extern "C" {
+#endif
+/* *INDENT-ON* */
+
 #include <stdint.h>
 #include <stddef.h>
 
@@ -249,5 +255,11 @@ typedef struct TransportInterface
     NetworkContext_t * pNetworkContext; /**< Implementation-defined network context. */
 } TransportInterface_t;
 /* @[define_transportinterface] */
+
+/* *INDENT-OFF* */
+#ifdef __cplusplus
+}
+#endif
+/* *INDENT-ON* */
 
 #endif /* ifndef TRANSPORT_INTERFACE_H_ */
