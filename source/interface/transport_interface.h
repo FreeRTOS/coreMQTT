@@ -28,14 +28,14 @@
 #ifndef TRANSPORT_INTERFACE_H_
 #define TRANSPORT_INTERFACE_H_
 
+#include <stdint.h>
+#include <stddef.h>
+
 /* *INDENT-OFF* */
 #ifdef __cplusplus
     extern "C" {
 #endif
 /* *INDENT-ON* */
-
-#include <stdint.h>
-#include <stddef.h>
 
 /**
  * @transportpage
