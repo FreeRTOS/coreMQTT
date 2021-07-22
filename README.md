@@ -124,7 +124,7 @@ Please refer to the demos of the MQTT client library in the following locations 
 
 ### Existing Documentation
 
-For pre-generated documentation, please see the documentation linked in the above repositories:
+For pre-generated documentation, please see the documentation linked in the locations below:
 
 | Location |
 | :-: |
