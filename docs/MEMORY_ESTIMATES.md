@@ -1,41 +1,30 @@
 <table>
-<colgroup>
-<col style="width: 33%" />
-<col style="width: 33%" />
-<col style="width: 33%" />
-</colgroup>
-<tbody>
-<tr class="odd">
-<td colspan="3"><strong>Code Size of coreMQTT (example generated with GCC for ARM Cortex-M)</strong></td>
-</tr>
-<tr class="even">
-<td><strong>File</strong></td>
-<td><strong></strong>
-With -O1 Optimization</td>
-<td><strong></strong>
-With -Os Optimization</td>
-</tr>
-<tr class="odd">
-<td>core_mqtt.c</td>
-<td>3.0K</td>
-<td>2.6K</td>
-</tr>
-<tr class="even">
-<td>core_mqtt_state.c</td>
-<td>1.4K</td>
-<td>1.1K</td>
-</tr>
-<tr class="odd">
-<td>core_mqtt_serializer.c</td>
-<td>2.5K</td>
-<td>2.0K</td>
-</tr>
-<tr class="even">
-<td><strong>Total estimates</strong></td>
-<td><strong></strong>
-6.9K</td>
-<td><strong></strong>
-5.7K</td>
-</tr>
-</tbody>
+    <tr>
+        <td colspan="3"><center><b>Code Size of coreMQTT (example generated with GCC for ARM Cortex-M)</b></center></td>
+    </tr>
+    <tr>
+        <td><b>File</b></td>
+        <td><b><center>With -O1 Optimization</center></b></td>
+        <td><b><center>With -Os Optimization</center></b></td>
+    </tr>
+    <tr>
+        <td>core_mqtt.c</td>
+        <td><center>3.0K</center></td>
+        <td><center>2.6K</center></td>
+    </tr>
+    <tr>
+        <td>core_mqtt_state.c</td>
+        <td><center>1.4K</center></td>
+        <td><center>1.1K</center></td>
+    </tr>
+    <tr>
+        <td>core_mqtt_serializer.c</td>
+        <td><center>2.5K</center></td>
+        <td><center>2.0K</center></td>
+    </tr>
+    <tr>
+        <td><b>Total estimates</b></td>
+        <td><b><center>6.9K</center></b></td>
+        <td><b><center>5.7K</center></b></td>
+    </tr>
 </table>
