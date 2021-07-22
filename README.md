@@ -131,7 +131,7 @@ For pre-generated documentation, please see the documentation linked in the loca
 | [AWS IoT Device SDK for Embedded C](https://github.com/aws/aws-iot-device-sdk-embedded-C#releases-and-documentation) |
 | [FreeRTOS.org](https://freertos.org/Documentation/api-ref/coreMQTT/docs/doxygen/output/html/index.html) |
 
-Note that the latest included version of coreMQTT may differ across repositories. The Embedded C SDK includes the current version of coreMQTT.
+Note that the latest included version of coreMQTT may differ across repositories.
 
 ### Generating Documentation
 
