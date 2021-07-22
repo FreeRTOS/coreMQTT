@@ -120,14 +120,20 @@ Please refer to the demos of the MQTT client library in the following locations 
 | FreeRTOS | [FreeRTOS AWS Reference Integrations](https://github.com/aws/amazon-freertos/tree/master/demos/coreMQTT) | Based on Secure Sockets Abstraction |
 
 
-## Generating documentation
+## Documentation
 
-Note: For pre-generated documentation, please see the documentation linked in the above repositories:
+### Existing Documentation
+
+For pre-generated documentation, please see the documentation linked in the above repositories:
 
 | Location |
 | :-: |
 | [AWS IoT Device SDK for Embedded C](https://github.com/aws/aws-iot-device-sdk-embedded-C#releases-and-documentation) |
 | [FreeRTOS.org](https://freertos.org/Documentation/api-ref/coreMQTT/docs/doxygen/output/html/index.html) |
+
+Note that the latest included version of coreMQTT may differ across repositories. The Embedded C SDK includes the current version of coreMQTT.
+
+### Generating Documentation
 
 The Doxygen references were created using Doxygen version 1.8.20. To generate the
 Doxygen pages, please run the following command from the root of this repository:
