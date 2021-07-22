@@ -1,6 +1,6 @@
 # Changelog for coreMQTT Client Library
 
-## Commits to `main`
+## v1.1.2 (July 2021)
 
 ### Updates
  - [#163](https://github.com/FreeRTOS/coreMQTT/pull/163) Fix bug to check for ping responses within `MQTT_PINGRESP_TIMEOUT_MS` instead of the entire keep alive interval.
