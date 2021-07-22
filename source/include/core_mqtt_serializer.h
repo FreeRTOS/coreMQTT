@@ -36,7 +36,7 @@
 
 /* *INDENT-OFF* */
 #ifdef __cplusplus
-extern "C" {
+    extern "C" {
 #endif
 /* *INDENT-ON */
 
@@ -1179,7 +1179,7 @@ MQTTStatus_t MQTT_GetIncomingPacketTypeAndLength( TransportRecv_t readFunc,
 
 /* *INDENT-OFF* */
 #ifdef __cplusplus
-}
+    }
 #endif
 /* *INDENT-ON* */
 

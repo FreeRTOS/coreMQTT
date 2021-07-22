@@ -35,6 +35,12 @@
 #ifndef CORE_MQTT_CONFIG_DEFAULTS_H_
 #define CORE_MQTT_CONFIG_DEFAULTS_H_
 
+/* *INDENT-OFF* */
+#ifdef __cplusplus
+    extern "C" {
+#endif
+/* *INDENT-ON* */
+
 /* The macro definition for MQTT_DO_NOT_USE_CUSTOM_CONFIG is for Doxygen
  * documentation only. */
 
@@ -246,5 +252,11 @@
 #ifndef LogDebug
     #define LogDebug( message )
 #endif
+
+/* *INDENT-OFF* */
+#ifdef __cplusplus
+    }
+#endif
+/* *INDENT-ON* */
 
 #endif /* ifndef CORE_MQTT_CONFIG_DEFAULTS_H_ */

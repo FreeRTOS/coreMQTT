@@ -29,7 +29,7 @@
 
 /* *INDENT-OFF* */
 #ifdef __cplusplus
-extern "C" {
+    extern "C" {
 #endif
 /* *INDENT-ON* */
 
@@ -283,7 +283,7 @@ const char * MQTT_State_strerror( MQTTPublishState_t state );
 
 /* *INDENT-OFF* */
 #ifdef __cplusplus
-}
+    }
 #endif
 /* *INDENT-ON* */
 

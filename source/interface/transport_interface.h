@@ -30,7 +30,7 @@
 
 /* *INDENT-OFF* */
 #ifdef __cplusplus
-extern "C" {
+    extern "C" {
 #endif
 /* *INDENT-ON* */
 
@@ -258,7 +258,7 @@ typedef struct TransportInterface
 
 /* *INDENT-OFF* */
 #ifdef __cplusplus
-}
+    }
 #endif
 /* *INDENT-ON* */
 
