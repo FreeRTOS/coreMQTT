@@ -2207,6 +2207,13 @@ MQTTStatus_t MQTT_ProcessLoop( MQTTContext_t * pContext,
         }
     }
 
+    if( calculateElapsedTime( pContext->getTime(), entryTimeMs ) > ( 2 * timeoutMs ) )
+    {
+        LogInfo( ( "Elapsed time %u is more than 2 * %u ( timeoutMs )."
+                   "The receive function in transport interface may run longer than timeoutMs."
+                   ,calculateElapsedTime( pContext->getTime(), entryTimeMs ) ,timeoutMs ) );
+    }
+
     return status;
 }
 
@@ -2260,6 +2267,13 @@ MQTTStatus_t MQTT_ReceiveLoop( MQTTContext_t * pContext,
 
             remainingTimeMs = timeoutMs - elapsedTimeMs;
         }
+    }
+
+    if( calculateElapsedTime( pContext->getTime(), entryTimeMs ) > ( 2 * timeoutMs ) )
+    {
+        LogInfo( ( "Elapsed time %u is more than 2 * %u ( timeoutMs )."
+                   "The receive function in transport interface may run longer than timeoutMs."
+                   ,calculateElapsedTime( pContext->getTime(), entryTimeMs ) ,timeoutMs ) );
     }
 
     return status;
