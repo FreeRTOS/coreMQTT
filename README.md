@@ -116,8 +116,8 @@ Please refer to the demos of the MQTT client library in the following locations 
 | Platform | Location | Transport Interface Implementation |
 | :-: | :-: | :-: |
 | POSIX | [AWS IoT Device SDK for Embedded C](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/main/demos/mqtt) | POSIX sockets for TCP/IP and OpenSSL for TLS stack
-| FreeRTOS | [FreeRTOS/FreeRTOS](https://github.com/FreeRTOS/FreeRTOS/tree/master/FreeRTOS-Plus/Demo) | FreeRTOS+TCP for TCP/IP and mbedTLS for TLS stack |
-| FreeRTOS | [FreeRTOS AWS Reference Integrations](https://github.com/aws/amazon-freertos/tree/master/demos/coreMQTT) | Based on Secure Sockets Abstraction |
+| FreeRTOS | [FreeRTOS/FreeRTOS](https://github.com/FreeRTOS/FreeRTOS/tree/main/FreeRTOS-Plus/Demo) | FreeRTOS+TCP for TCP/IP and mbedTLS for TLS stack |
+| FreeRTOS | [FreeRTOS AWS Reference Integrations](https://github.com/aws/amazon-freertos/tree/main/demos/coreMQTT) | Based on Secure Sockets Abstraction |
 
 
 ## Documentation
