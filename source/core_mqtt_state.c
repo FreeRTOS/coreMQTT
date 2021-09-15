@@ -246,6 +246,7 @@ static bool validateTransitionPublish( MQTTPublishState_t currentState,
                     isValid = ( newState == MQTTPubRecPending ) ? true : false;
                     break;
 
+                case MQTTQoS0:
                 default:
                     /* QoS 0 is checked before calling this function. */
                     break;
@@ -271,6 +272,13 @@ static bool validateTransitionPublish( MQTTPublishState_t currentState,
 
             break;
 
+        case MQTTPubAckSend:
+        case MQTTPubCompPending:
+        case MQTTPubCompSend:
+        case MQTTPubRecSend:
+        case MQTTPubRelPending:
+        case MQTTPubRelSend:
+        case MQTTPublishDone:
         default:
             /* For a PUBLISH, we should not start from any other state. */
             break;

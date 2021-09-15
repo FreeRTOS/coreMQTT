@@ -922,6 +922,13 @@ static uint8_t getAckTypeToSend( MQTTPublishState_t state )
             packetTypeByte = MQTT_PACKET_TYPE_PUBCOMP;
             break;
 
+        case MQTTPubAckPending:
+        case MQTTPubCompPending:
+        case MQTTPubRecPending:
+        case MQTTPubRelPending:
+        case MQTTPublishDone:
+        case MQTTPublishSend:
+        case MQTTStateNull:
         default:
             /* Take no action for states that do not require sending an ack. */
             break;
