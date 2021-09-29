@@ -955,7 +955,7 @@ static MQTTStatus_t deserializeConnack( const MQTTPacketInfo_t * pConnack,
         if( ( pRemainingData[ 0 ] & MQTT_PACKET_CONNACK_SESSION_PRESENT_MASK )
             == MQTT_PACKET_CONNACK_SESSION_PRESENT_MASK )
         {
-            LogInfo( ( "CONNACK session present bit set." ) );
+            LogDebug( ( "CONNACK session present bit set." ) );
             *pSessionPresent = true;
 
             /* MQTT 3.1.1 specifies that the fourth byte in CONNACK must be 0 if the
