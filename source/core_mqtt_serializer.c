@@ -909,7 +909,7 @@ static void logConnackResponse( uint8_t responseCode )
     if( responseCode == 0u )
     {
         /* Log at Info level for a success CONNACK response. */
-        LogInfo( ( "%s", pConnackResponses[ 0 ] ) );
+        LogDebug( ( "%s", pConnackResponses[ 0 ] ) );
     }
     else
     {
@@ -967,7 +967,7 @@ static MQTTStatus_t deserializeConnack( const MQTTPacketInfo_t * pConnack,
         }
         else
         {
-            LogInfo( ( "CONNACK session present bit not set." ) );
+            LogDebug( ( "CONNACK session present bit not set." ) );
             *pSessionPresent = false;
         }
     }
