@@ -940,7 +940,7 @@ static MQTTStatus_t deserializeConnack( const MQTTPacketInfo_t * pConnack,
         status = MQTTBadResponse;
     }
 
-    /* Check the reserved bits in CONNACK. The high 7 bits of the second byte
+    /* Check the reserved bits in CONNACK. The high 7 bits of the third byte
      * in CONNACK must be 0. */
     else if( ( pRemainingData[ 0 ] | 0x01U ) != 0x01U )
     {
@@ -951,7 +951,7 @@ static MQTTStatus_t deserializeConnack( const MQTTPacketInfo_t * pConnack,
     else
     {
         /* Determine if the "Session Present" bit is set. This is the lowest bit of
-         * the second byte in CONNACK. */
+         * the third byte in CONNACK. */
         if( ( pRemainingData[ 0 ] & MQTT_PACKET_CONNACK_SESSION_PRESENT_MASK )
             == MQTT_PACKET_CONNACK_SESSION_PRESENT_MASK )
         {
@@ -962,7 +962,7 @@ static MQTTStatus_t deserializeConnack( const MQTTPacketInfo_t * pConnack,
              * "Session Present" bit is set. */
             if( pRemainingData[ 1 ] != 0U )
             {
-                LogError( ( "Session Present bit is set, but fourth byte in CONNACK is %u (nonzero).",
+                LogError( ( "Session Present bit is set, but connect return code in CONNACK is %u (nonzero).",
                             ( unsigned int ) pRemainingData[ 1 ] ) );
                 status = MQTTBadResponse;
             }
