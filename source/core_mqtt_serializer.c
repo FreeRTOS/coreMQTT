@@ -908,7 +908,7 @@ static void logConnackResponse( uint8_t responseCode )
 
     if( responseCode == 0u )
     {
-        /* Log at Info level for a success CONNACK response. */
+        /* Log at Debug level for a success CONNACK response. */
         LogDebug( ( "%s", pConnackResponses[ 0 ] ) );
     }
     else
