@@ -962,8 +962,8 @@ static MQTTStatus_t deserializeConnack( const MQTTPacketInfo_t * pConnack,
              * "Session Present" bit is set. */
             if( pRemainingData[ 1 ] != 0U )
             {
-                LogError( ( "Session Present bit is set, but fourth byte in CONNACK is %u (nonzero).", 
-                            ( unsigned int ) pRemainingData [1] ) );
+                LogError( ( "Session Present bit is set, but fourth byte in CONNACK is %u (nonzero).",
+                            ( unsigned int ) pRemainingData[ 1 ] ) );
                 status = MQTTBadResponse;
             }
         }

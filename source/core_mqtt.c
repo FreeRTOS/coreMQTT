@@ -883,7 +883,7 @@ static MQTTStatus_t receivePacket( const MQTTContext_t * pContext,
         {
             /* Receive successful, bytesReceived == bytesToReceive. */
             LogDebug( ( "Packet received. ReceivedBytes=%ld.",
-                       ( long int ) bytesReceived ) );
+                        ( long int ) bytesReceived ) );
         }
         else
         {
