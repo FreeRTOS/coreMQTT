@@ -810,7 +810,7 @@ static MQTTStatus_t checkPublishRemainingLength( size_t remainingLength,
         /* Check that the "Remaining length" is greater than the minimum. */
         if( remainingLength < qos0Minimum )
         {
-            LogDebug( ( "QoS 0 PUBLISH cannot have a remaining length less than %lu.",
+            LogError( ( "QoS 0 PUBLISH cannot have a remaining length less than %lu.",
                         ( unsigned long ) qos0Minimum ) );
 
             status = MQTTBadResponse;
@@ -823,7 +823,7 @@ static MQTTStatus_t checkPublishRemainingLength( size_t remainingLength,
          * packet identifier. */
         if( remainingLength < ( qos0Minimum + 2U ) )
         {
-            LogDebug( ( "QoS 1 or 2 PUBLISH cannot have a remaining length less than %lu.",
+            LogError( ( "QoS 1 or 2 PUBLISH cannot have a remaining length less than %lu.",
                         ( unsigned long ) ( qos0Minimum + 2U ) ) );
 
             status = MQTTBadResponse;
@@ -848,7 +848,7 @@ static MQTTStatus_t processPublishFlags( uint8_t publishFlags,
         /* PUBLISH packet is invalid if both QoS 1 and QoS 2 bits are set. */
         if( UINT8_CHECK_BIT( publishFlags, MQTT_PUBLISH_FLAG_QOS1 ) )
         {
-            LogDebug( ( "Bad QoS: 3." ) );
+            LogError( ( "Bad QoS: 3." ) );
 
             status = MQTTBadResponse;
         }
@@ -908,8 +908,8 @@ static void logConnackResponse( uint8_t responseCode )
 
     if( responseCode == 0u )
     {
-        /* Log at Info level for a success CONNACK response. */
-        LogInfo( ( "%s", pConnackResponses[ 0 ] ) );
+        /* Log at Debug level for a success CONNACK response. */
+        LogDebug( ( "%s", pConnackResponses[ 0 ] ) );
     }
     else
     {
@@ -940,7 +940,7 @@ static MQTTStatus_t deserializeConnack( const MQTTPacketInfo_t * pConnack,
         status = MQTTBadResponse;
     }
 
-    /* Check the reserved bits in CONNACK. The high 7 bits of the second byte
+    /* Check the reserved bits in CONNACK. The high 7 bits of the third byte
      * in CONNACK must be 0. */
     else if( ( pRemainingData[ 0 ] | 0x01U ) != 0x01U )
     {
@@ -951,23 +951,25 @@ static MQTTStatus_t deserializeConnack( const MQTTPacketInfo_t * pConnack,
     else
     {
         /* Determine if the "Session Present" bit is set. This is the lowest bit of
-         * the second byte in CONNACK. */
+         * the third byte in CONNACK. */
         if( ( pRemainingData[ 0 ] & MQTT_PACKET_CONNACK_SESSION_PRESENT_MASK )
             == MQTT_PACKET_CONNACK_SESSION_PRESENT_MASK )
         {
-            LogInfo( ( "CONNACK session present bit set." ) );
+            LogDebug( ( "CONNACK session present bit set." ) );
             *pSessionPresent = true;
 
             /* MQTT 3.1.1 specifies that the fourth byte in CONNACK must be 0 if the
              * "Session Present" bit is set. */
             if( pRemainingData[ 1 ] != 0U )
             {
+                LogError( ( "Session Present bit is set, but connect return code in CONNACK is %u (nonzero).",
+                            ( unsigned int ) pRemainingData[ 1 ] ) );
                 status = MQTTBadResponse;
             }
         }
         else
         {
-            LogInfo( ( "CONNACK session present bit not set." ) );
+            LogDebug( ( "CONNACK session present bit not set." ) );
             *pSessionPresent = false;
         }
     }
@@ -1116,7 +1118,7 @@ static MQTTStatus_t readSubackStatus( size_t statusCount,
                 break;
 
             default:
-                LogDebug( ( "Bad SUBSCRIBE status %u.",
+                LogError( ( "Bad SUBSCRIBE status %u.",
                             ( unsigned int ) subscriptionStatus ) );
 
                 status = MQTTBadResponse;
@@ -1153,7 +1155,7 @@ static MQTTStatus_t deserializeSuback( const MQTTPacketInfo_t * pSuback,
      * packet identifier and at least 1 return code. */
     if( remainingLength < 3U )
     {
-        LogDebug( ( "SUBACK cannot have a remaining length less than 3." ) );
+        LogError( ( "SUBACK cannot have a remaining length less than 3." ) );
         status = MQTTBadResponse;
     }
     else
@@ -1301,6 +1303,7 @@ static MQTTStatus_t deserializePublish( const MQTTPacketInfo_t * pIncomingPacket
             /* Packet identifier cannot be 0. */
             if( *pPacketId == 0U )
             {
+                LogError( ( "Packet identifier cannot be 0." ) );
                 status = MQTTBadResponse;
             }
         }
@@ -1357,6 +1360,7 @@ static MQTTStatus_t deserializeSimpleAck( const MQTTPacketInfo_t * pAck,
         /* Packet identifier cannot be 0. */
         if( *pPacketIdentifier == 0U )
         {
+            LogError( ( "Packet identifier cannot be 0." ) );
             status = MQTTBadResponse;
         }
     }
@@ -2378,6 +2382,7 @@ MQTTStatus_t MQTT_GetIncomingPacketTypeAndLength( TransportRecv_t readFunc,
 
             if( pIncomingPacket->remainingLength == MQTT_REMAINING_LENGTH_INVALID )
             {
+                LogError( ( "Incoming packet remaining length invalid." ) );
                 status = MQTTBadResponse;
             }
         }

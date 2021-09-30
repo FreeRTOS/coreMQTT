@@ -882,8 +882,8 @@ static MQTTStatus_t receivePacket( const MQTTContext_t * pContext,
         if( bytesReceived == ( int32_t ) bytesToReceive )
         {
             /* Receive successful, bytesReceived == bytesToReceive. */
-            LogInfo( ( "Packet received. ReceivedBytes=%ld.",
-                       ( long int ) bytesReceived ) );
+            LogDebug( ( "Packet received. ReceivedBytes=%ld.",
+                        ( long int ) bytesReceived ) );
         }
         else
         {
@@ -1569,7 +1569,7 @@ static MQTTStatus_t receiveConnack( const MQTTContext_t * pContext,
 
     if( status == MQTTSuccess )
     {
-        LogInfo( ( "Received MQTT CONNACK successfully from broker." ) );
+        LogDebug( ( "Received MQTT CONNACK successfully from broker." ) );
     }
     else
     {
