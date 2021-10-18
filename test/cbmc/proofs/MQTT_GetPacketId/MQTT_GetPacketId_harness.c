@@ -34,7 +34,7 @@ void harness()
      * MQTT_GetPacketId() touches only the nextPacketId field in MQTTContext_t.
      * This nextPacketId is left unbounded to verify the function under harness.
      */
-    MQTTContext_t * pContext = mallocCanFail( sizeof( MQTTContext_t ) );
+    MQTTContext_t * pContext = malloc( sizeof( MQTTContext_t ) );
 
     MQTT_GetPacketId( pContext );
 }

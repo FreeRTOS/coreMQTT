@@ -37,10 +37,10 @@ void harness()
     bool * pMatchResult;
 
     __CPROVER_assume( nameLength < MAX_TOPIC_NAME_FILTER_LENGTH );
-    pTopicName = mallocCanFail( ( sizeof( char ) * nameLength ) );
+    pTopicName = malloc( ( sizeof( char ) * nameLength ) );
     __CPROVER_assume( filterLength < MAX_TOPIC_NAME_FILTER_LENGTH );
-    pTopicFilter = mallocCanFail( ( sizeof( char ) * filterLength ) );
-    pMatchResult = mallocCanFail( sizeof( bool ) );
+    pTopicFilter = malloc( ( sizeof( char ) * filterLength ) );
+    pMatchResult = malloc( sizeof( bool ) );
 
     MQTT_MatchTopic( pTopicName,
                      nameLength,

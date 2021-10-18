@@ -40,7 +40,7 @@ void harness()
     pPublishInfo = allocateMqttPublishInfo( NULL );
     __CPROVER_assume( isValidMqttPublishInfo( pPublishInfo ) );
 
-    pPacketId = mallocCanFail( sizeof( uint16_t ) );
+    pPacketId = malloc( sizeof( uint16_t ) );
 
     /* This function grabs the topic name, the topic name length, the
      * the payload, and the payload length. */

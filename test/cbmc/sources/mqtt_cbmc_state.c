@@ -50,25 +50,16 @@
     #define REMAINING_LENGTH_MAX    CBMC_MAX_OBJECT_SIZE
 #endif
 
-void * mallocCanFail( size_t size )
-{
-    __CPROVER_assert( size < CBMC_MAX_OBJECT_SIZE, "mallocCanFail size is too big" );
-    return nondet_bool() ? NULL : malloc( size );
-}
-
 MQTTPacketInfo_t * allocateMqttPacketInfo( MQTTPacketInfo_t * pPacketInfo )
 {
     if( pPacketInfo == NULL )
     {
-        pPacketInfo = mallocCanFail( sizeof( MQTTPacketInfo_t ) );
+        pPacketInfo = malloc( sizeof( MQTTPacketInfo_t ) );
     }
 
     if( pPacketInfo != NULL )
     {
-        __CPROVER_assert( REMAINING_LENGTH_MAX <= CBMC_MAX_OBJECT_SIZE,
-                          "REMAINING_LENGTH_MAX size is too big" );
-        __CPROVER_assume( pPacketInfo->remainingLength < REMAINING_LENGTH_MAX );
-        pPacketInfo->pRemainingData = mallocCanFail( pPacketInfo->remainingLength );
+        pPacketInfo->pRemainingData = malloc( pPacketInfo->remainingLength );
     }
 
     return pPacketInfo;
@@ -78,13 +69,6 @@ bool isValidMqttPacketInfo( const MQTTPacketInfo_t * pPacketInfo )
 {
     bool isValid = true;
 
-    if( pPacketInfo != NULL )
-    {
-        __CPROVER_assert( REMAINING_LENGTH_MAX <= CBMC_MAX_OBJECT_SIZE,
-                          "REMAINING_LENGTH_MAX size is too big" );
-        isValid = pPacketInfo->remainingLength < REMAINING_LENGTH_MAX;
-    }
-
     return isValid;
 }
 
@@ -92,15 +76,13 @@ MQTTPublishInfo_t * allocateMqttPublishInfo( MQTTPublishInfo_t * pPublishInfo )
 {
     if( pPublishInfo == NULL )
     {
-        pPublishInfo = mallocCanFail( sizeof( MQTTPublishInfo_t ) );
+        pPublishInfo = malloc( sizeof( MQTTPublishInfo_t ) );
     }
 
     if( pPublishInfo != NULL )
     {
-        __CPROVER_assume( pPublishInfo->topicNameLength < CBMC_MAX_OBJECT_SIZE );
-        pPublishInfo->pTopicName = mallocCanFail( pPublishInfo->topicNameLength );
-        __CPROVER_assume( pPublishInfo->payloadLength < CBMC_MAX_OBJECT_SIZE );
-        pPublishInfo->pPayload = mallocCanFail( pPublishInfo->payloadLength );
+        pPublishInfo->pTopicName = malloc( pPublishInfo->topicNameLength );
+        pPublishInfo->pPayload = malloc( pPublishInfo->payloadLength );
     }
 
     return pPublishInfo;
@@ -110,12 +92,6 @@ bool isValidMqttPublishInfo( const MQTTPublishInfo_t * pPublishInfo )
 {
     bool isValid = true;
 
-    if( pPublishInfo != NULL )
-    {
-        isValid = isValid && ( pPublishInfo->topicNameLength < CBMC_MAX_OBJECT_SIZE );
-        isValid = isValid && ( pPublishInfo->payloadLength < CBMC_MAX_OBJECT_SIZE );
-    }
-
     return isValid;
 }
 
@@ -123,17 +99,14 @@ MQTTConnectInfo_t * allocateMqttConnectInfo( MQTTConnectInfo_t * pConnectInfo )
 {
     if( pConnectInfo == NULL )
     {
-        pConnectInfo = mallocCanFail( sizeof( MQTTConnectInfo_t ) );
+        pConnectInfo = malloc( sizeof( MQTTConnectInfo_t ) );
     }
 
     if( pConnectInfo != NULL )
     {
-        __CPROVER_assume( pConnectInfo->clientIdentifierLength < CBMC_MAX_OBJECT_SIZE );
-        pConnectInfo->pClientIdentifier = mallocCanFail( pConnectInfo->clientIdentifierLength );
-        __CPROVER_assume( pConnectInfo->userNameLength < CBMC_MAX_OBJECT_SIZE );
-        pConnectInfo->pUserName = mallocCanFail( pConnectInfo->userNameLength );
-        __CPROVER_assume( pConnectInfo->passwordLength < CBMC_MAX_OBJECT_SIZE );
-        pConnectInfo->pPassword = mallocCanFail( pConnectInfo->passwordLength );
+        pConnectInfo->pClientIdentifier = malloc( pConnectInfo->clientIdentifierLength );
+        pConnectInfo->pUserName = malloc( pConnectInfo->userNameLength );
+        pConnectInfo->pPassword = malloc( pConnectInfo->passwordLength );
     }
 
     return pConnectInfo;
@@ -143,13 +116,6 @@ bool isValidMqttConnectInfo( const MQTTConnectInfo_t * pConnectInfo )
 {
     bool isValid = true;
 
-    if( pConnectInfo != NULL )
-    {
-        isValid = isValid && ( pConnectInfo->clientIdentifierLength < CBMC_MAX_OBJECT_SIZE );
-        isValid = isValid && ( pConnectInfo->userNameLength < CBMC_MAX_OBJECT_SIZE );
-        isValid = isValid && ( pConnectInfo->passwordLength < CBMC_MAX_OBJECT_SIZE );
-    }
-
     return isValid;
 }
 
@@ -157,13 +123,12 @@ MQTTFixedBuffer_t * allocateMqttFixedBuffer( MQTTFixedBuffer_t * pFixedBuffer )
 {
     if( pFixedBuffer == NULL )
     {
-        pFixedBuffer = mallocCanFail( sizeof( MQTTFixedBuffer_t ) );
+        pFixedBuffer = malloc( sizeof( MQTTFixedBuffer_t ) );
     }
 
     if( pFixedBuffer != NULL )
     {
-        __CPROVER_assume( pFixedBuffer->size < CBMC_MAX_OBJECT_SIZE );
-        pFixedBuffer->pBuffer = mallocCanFail( pFixedBuffer->size );
+        pFixedBuffer->pBuffer = malloc( pFixedBuffer->size );
     }
 
     return pFixedBuffer;
@@ -173,11 +138,6 @@ bool isValidMqttFixedBuffer( const MQTTFixedBuffer_t * pFixedBuffer )
 {
     bool isValid = true;
 
-    if( pFixedBuffer != NULL )
-    {
-        isValid = pFixedBuffer->size < CBMC_MAX_OBJECT_SIZE;
-    }
-
     return isValid;
 }
 
@@ -186,16 +146,14 @@ MQTTSubscribeInfo_t * allocateMqttSubscriptionList( MQTTSubscribeInfo_t * pSubsc
 {
     if( pSubscriptionList == NULL )
     {
-        __CPROVER_assume( sizeof( MQTTSubscribeInfo_t ) * subscriptionCount < CBMC_MAX_OBJECT_SIZE );
-        pSubscriptionList = mallocCanFail( sizeof( MQTTSubscribeInfo_t ) * subscriptionCount );
+        pSubscriptionList = malloc( sizeof( MQTTSubscribeInfo_t ) * subscriptionCount );
     }
 
     if( pSubscriptionList != NULL )
     {
         for( int i = 0; i < subscriptionCount; i++ )
         {
-            __CPROVER_assume( pSubscriptionList[ i ].topicFilterLength < CBMC_MAX_OBJECT_SIZE );
-            pSubscriptionList[ i ].pTopicFilter = mallocCanFail( pSubscriptionList[ i ].topicFilterLength );
+            pSubscriptionList[ i ].pTopicFilter = malloc( pSubscriptionList[ i ].topicFilterLength );
         }
     }
 
@@ -206,14 +164,6 @@ bool isValidMqttSubscriptionList( MQTTSubscribeInfo_t * pSubscriptionList,
                                   size_t subscriptionCount )
 {
     bool isValid = true;
-
-    if( pSubscriptionList != NULL )
-    {
-        for( int i = 0; i < subscriptionCount; i++ )
-        {
-            isValid = isValid && ( pSubscriptionList[ i ].topicFilterLength < CBMC_MAX_OBJECT_SIZE );
-        }
-    }
 
     return isValid;
 }
@@ -226,10 +176,10 @@ MQTTContext_t * allocateMqttContext( MQTTContext_t * pContext )
 
     if( pContext == NULL )
     {
-        pContext = mallocCanFail( sizeof( MQTTContext_t ) );
+        pContext = malloc( sizeof( MQTTContext_t ) );
     }
 
-    pTransportInterface = mallocCanFail( sizeof( TransportInterface_t ) );
+    pTransportInterface = malloc( sizeof( TransportInterface_t ) );
 
     if( pTransportInterface != NULL )
     {
@@ -241,7 +191,6 @@ MQTTContext_t * allocateMqttContext( MQTTContext_t * pContext )
     }
 
     pNetworkBuffer = allocateMqttFixedBuffer( NULL );
-    __CPROVER_assume( isValidMqttFixedBuffer( pNetworkBuffer ) );
 
     /* It is part of the API contract to call MQTT_Init() with the MQTTContext_t
      * before any other function in core_mqtt.h. */
@@ -271,8 +220,7 @@ bool isValidMqttContext( const MQTTContext_t * pContext )
 
     if( pContext != NULL )
     {
-        isValid = isValid && pContext->networkBuffer.size < CBMC_MAX_OBJECT_SIZE;
-        isValid = isValid && isValidMqttFixedBuffer( &( pContext->networkBuffer ) );
+        isValid = isValidMqttFixedBuffer( &( pContext->networkBuffer ) );
     }
 
     return isValid;

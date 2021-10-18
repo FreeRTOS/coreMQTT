@@ -39,8 +39,8 @@ void harness()
 
     /* pPayloadStart and pPayloadSize are output parameters, and
      * thus, don't carry any assumptions. */
-    pPayloadStart = mallocCanFail( sizeof( uint8_t * ) );
-    pPayloadSize = mallocCanFail( sizeof( size_t ) );
+    pPayloadStart = malloc( sizeof( uint8_t * ) );
+    pPayloadSize = malloc( sizeof( size_t ) );
 
     MQTT_GetSubAckStatusCodes( pSubackPacket,
                                pPayloadStart,

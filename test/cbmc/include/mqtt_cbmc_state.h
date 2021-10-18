@@ -31,14 +31,7 @@
 
 /* mqtt.h must precede including this header. */
 
-/**
- * @brief Proof model for malloc that can fail and return NULL.
- *
- * @param[in] size The size in bytes of memory to allocate.
- *
- * @return NULL or requested memory.
- */
-void * mallocCanFail( size_t size );
+#define IMPLIES( a, b )    ( !( a ) || ( b ) )
 
 /**
  * @brief Allocate a #MQTTPacketInfo_t object.
