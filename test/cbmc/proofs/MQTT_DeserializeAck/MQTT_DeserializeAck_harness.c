@@ -35,10 +35,11 @@ void harness()
 
     pIncomingPacket = allocateMqttPacketInfo( NULL );
     __CPROVER_assume( isValidMqttPacketInfo( pIncomingPacket ) );
+    __CPROVER_assume( IMPLIES( pIncomingPacket != NULL, pIncomingPacket->remainingLength < REMAINING_LENGTH_MAX ) );
 
     /* These are allocated for coverage of a NULL input. */
-    pPacketId = mallocCanFail( sizeof( uint16_t ) );
-    pSessionPresent = mallocCanFail( sizeof( bool ) );
+    pPacketId = malloc( sizeof( uint16_t ) );
+    pSessionPresent = malloc( sizeof( bool ) );
 
     MQTT_DeserializeAck( pIncomingPacket,
                          pPacketId,

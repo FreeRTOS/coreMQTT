@@ -44,7 +44,7 @@ void harness()
     pWillInfo = allocateMqttPublishInfo( NULL );
     __CPROVER_assume( isValidMqttPublishInfo( pWillInfo ) );
 
-    pSessionPresent = mallocCanFail( sizeof( bool ) );
+    pSessionPresent = malloc( sizeof( bool ) );
 
     /* The MQTT_RECEIVE_TIMEOUT is used here to control the number of loops
      * when receiving on the network. The default is used here because memory
