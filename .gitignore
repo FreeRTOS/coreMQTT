@@ -11,3 +11,6 @@ build/
 *.gcda
 *.gcno
 *.gcov
+
+# Ignore IDE setting folders
+.vscode/
