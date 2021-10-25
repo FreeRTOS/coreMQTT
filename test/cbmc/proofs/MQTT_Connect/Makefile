@@ -52,12 +52,6 @@ REMOVE_FUNCTION_BODY += MQTT_ProcessLoop
 REMOVE_FUNCTION_BODY += MQTT_ReceiveLoop
 REMOVE_FUNCTION_BODY += __CPROVER_file_local_core_mqtt_c_handleIncomingPublish
 REMOVE_FUNCTION_BODY += __CPROVER_file_local_core_mqtt_c_handleKeepAlive
-# This function body is removed to be replaced with the defined stub so that the
-# proof runs faster. The memcpy stub simply checks that the destination is
-# writable and that the source is readable, for the copy length specified. This
-# is safe to do because the results of the copy are not used later in the
-# function.
-REMOVE_FUNCTION_BODY += memcpy
 
 # The loop below is unwound once more than the timeout. The loop below uses
 # the user passed in timeout to break the loop.
@@ -87,7 +81,6 @@ PROOF_SOURCES += $(SRCDIR)/test/cbmc/sources/mqtt_cbmc_state.c
 PROOF_SOURCES += $(SRCDIR)/test/cbmc/stubs/network_interface_stubs.c
 PROOF_SOURCES += $(SRCDIR)/test/cbmc/stubs/get_time_stub.c
 PROOF_SOURCES += $(SRCDIR)/test/cbmc/stubs/event_callback_stub.c
-PROOF_SOURCES += $(SRCDIR)/test/cbmc/stubs/memcpy.c
 PROJECT_SOURCES += $(SRCDIR)/source/core_mqtt.c
 PROJECT_SOURCES += $(SRCDIR)/source/core_mqtt_serializer.c
 PROJECT_SOURCES += $(SRCDIR)/source/core_mqtt_state.c
