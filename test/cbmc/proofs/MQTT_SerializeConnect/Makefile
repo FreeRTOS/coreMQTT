@@ -30,12 +30,6 @@ INCLUDES +=
 # found by CBMC during processing in logs/MQTT_Connect_harness3.txt. We remove
 # the function body to improve coverage accuracy.
 REMOVE_FUNCTION_BODY += MQTT_GetIncomingPacketTypeAndLength
-# This function body is removed to be replaced with the defined stub so that the
-# proof runs faster. The memcpy stub simply checks that the destination is
-# writable and that the source is readable, for the copy length specified. This
-# is safe to do because the results of the copy are not used later in the
-# function.
-REMOVE_FUNCTION_BODY += memcpy
 
 # The encodeRemainingLength loop is unwound 5 times because encodeRemainingLength()
 # divides a size_t variable by 128 until it reaches zero to stop the loop.
@@ -44,7 +38,6 @@ UNWINDSET += __CPROVER_file_local_core_mqtt_serializer_c_encodeRemainingLength.0
 
 PROOF_SOURCES += $(PROOFDIR)/$(HARNESS_FILE).c
 PROOF_SOURCES += $(SRCDIR)/test/cbmc/sources/mqtt_cbmc_state.c
-PROOF_SOURCES += $(SRCDIR)/test/cbmc/stubs/memcpy.c
 PROJECT_SOURCES += $(SRCDIR)/source/core_mqtt_serializer.c
 
 include ../Makefile.common
