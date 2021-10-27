@@ -35,7 +35,6 @@ void harness()
 
     pIncomingPacket = allocateMqttPacketInfo( NULL );
     __CPROVER_assume( isValidMqttPacketInfo( pIncomingPacket ) );
-    __CPROVER_assume( IMPLIES( pIncomingPacket != NULL, pIncomingPacket->remainingLength < REMAINING_LENGTH_MAX ) );
 
     /* These are allocated for coverage of a NULL input. */
     pPacketId = malloc( sizeof( uint16_t ) );

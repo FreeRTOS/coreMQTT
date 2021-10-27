@@ -69,6 +69,11 @@ bool isValidMqttPacketInfo( const MQTTPacketInfo_t * pPacketInfo )
 {
     bool isValid = true;
 
+    if( pPacketInfo != NULL )
+    {
+        isValid = isValid && pPacketInfo->remainingLength < REMAINING_LENGTH_MAX;
+    }
+
     return isValid;
 }
 
