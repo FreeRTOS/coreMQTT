@@ -1,6 +1,6 @@
 # Changelog for coreMQTT Client Library
 
-## Commits to `main`
+## v1.2.0 (November 2021)
 
 ### Changes
  - [#175](https://github.com/FreeRTOS/coreMQTT/pull/175) Change levels of some logs.
