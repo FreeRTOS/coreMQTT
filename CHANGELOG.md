@@ -1,5 +1,12 @@
 # Changelog for coreMQTT Client Library
 
+## v1.2.0 (November 2021)
+
+### Changes
+ - [#175](https://github.com/FreeRTOS/coreMQTT/pull/175) Change levels of some logs.
+ - [#174](https://github.com/FreeRTOS/coreMQTT/pull/174) Fix warnings for some compiler options.
+ - [#148](https://github.com/FreeRTOS/coreMQTT/pull/148) Update doxygen version used for documentation to 1.9.2.
+
 ## v1.1.2 (July 2021)
 
 ### Updates
