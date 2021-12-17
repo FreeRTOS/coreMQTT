@@ -116,9 +116,21 @@ jobs:
         with:
           name: coreMQTT-${{ github.event.inputs.version_number }}.zip
           path: zip-check/coreMQTT-${{ github.event.inputs.version_number }}.zip
+  deploy-doxygen:
+    needs: tag-commit
+    name: Deploy doxygen documentation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Doxygen generation
+        uses: FreeRTOS/CI-CD-Github-Actions/doxygen-generation@main
+        with:
+          ref: ${{ github.event.inputs.version_number }}
+          add_release: "true"
   create-release:
+    needs:
+      - create-zip
+      - deploy-doxygen
     if: ${{ ( github.event.inputs.delete_existing_tag_release == 'true' && success() )  || ( github.event.inputs.delete_existing_tag_release == 'false' && always() ) }}
-    needs: create-zip
     name: Create Release and Upload Release Asset
     runs-on: ubuntu-latest
     steps:

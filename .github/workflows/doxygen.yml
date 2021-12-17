@@ -1,0 +1,11 @@
+name: Doxygen Generation
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+jobs:
+  doxygen-generation:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Doxygen generation
+        uses: FreeRTOS/CI-CD-Github-Actions/doxygen-generation@main
