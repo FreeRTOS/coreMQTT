@@ -483,7 +483,7 @@ static void compactRecords( MQTTPubAckInfo_t * records,
                 /* Mark the record at current non empty index as invalid. */
                 records[ index ].packetId = MQTT_PACKET_ID_INVALID;
                 records[ index ].qos = MQTTQoS0;
-                records[ index ].packetId = MQTTStateNull;
+                records[ index ].publishState = MQTTStateNull;
 
                 /* Advance the emptyIndex. */
                 emptyIndex++;
@@ -573,7 +573,7 @@ static void updateRecord( MQTTPubAckInfo_t * records,
         /* Mark the record as invalid. */
         records[ recordIndex ].packetId = MQTT_PACKET_ID_INVALID;
         records[ recordIndex ].qos = MQTTQoS0;
-        records[ recordIndex ].packetId = MQTTStateNull;
+        records[ recordIndex ].publishState = MQTTStateNull;
     }
     else
     {
