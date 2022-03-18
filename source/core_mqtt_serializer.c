@@ -28,6 +28,7 @@
 #include <assert.h>
 
 #include "core_mqtt_serializer.h"
+#include "core_mqtt_default_logging.h"
 
 /**
  * @brief MQTT protocol version 3.1.1.
