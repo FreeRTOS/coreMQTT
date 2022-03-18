@@ -27,6 +27,7 @@
 #include <assert.h>
 #include <string.h>
 #include "core_mqtt_state.h"
+#include "core_mqtt_default_logging.h"
 
 /*-----------------------------------------------------------*/
 

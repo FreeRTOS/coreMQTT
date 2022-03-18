@@ -173,6 +173,10 @@
     #define MQTT_SEND_RETRY_TIMEOUT_MS    ( 10U )
 #endif
 
+/* The macro definition for logging macros is for Doxygen
+ * documentation only. */
+#ifdef DOXYGEN
+
 /**
  * @brief Macro that is called in the MQTT library for logging "Error" level
  * messages.
@@ -189,9 +193,7 @@
  * <b>Default value</b>: Error logging is turned off, and no code is generated for calls
  * to the macro in the MQTT library on compilation.
  */
-#ifndef LogError
     #define LogError( message )
-#endif
 
 /**
  * @brief Macro that is called in the MQTT library for logging "Warning" level
@@ -209,9 +211,7 @@
  * <b>Default value</b>: Warning logs are turned off, and no code is generated for calls
  * to the macro in the MQTT library on compilation.
  */
-#ifndef LogWarn
     #define LogWarn( message )
-#endif
 
 /**
  * @brief Macro that is called in the MQTT library for logging "Info" level
@@ -229,9 +229,7 @@
  * <b>Default value</b>: Info logging is turned off, and no code is generated for calls
  * to the macro in the MQTT library on compilation.
  */
-#ifndef LogInfo
     #define LogInfo( message )
-#endif
 
 /**
  * @brief Macro that is called in the MQTT library for logging "Debug" level
@@ -249,9 +247,9 @@
  * <b>Default value</b>: Debug logging is turned off, and no code is generated for calls
  * to the macro in the MQTT library on compilation.
  */
-#ifndef LogDebug
     #define LogDebug( message )
-#endif
+
+#endif /* ifdef DOXYGEN */
 
 /* *INDENT-OFF* */
 #ifdef __cplusplus
