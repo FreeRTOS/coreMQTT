@@ -1051,7 +1051,7 @@ static MQTTStatus_t handleIncomingPublish( MQTTContext_t * pContext,
     assert( pContext->appCallback != NULL );
 
     status = MQTT_DeserializePublish( pIncomingPacket, &packetIdentifier, &publishInfo );
-    LogInfo( ( "De-serialized incoming PUBLISH packet: DeserializerResult=%s.",
+    LogDebug( ( "De-serialized incoming PUBLISH packet: DeserializerResult=%s.",
                MQTT_Status_strerror( status ) ) );
 
     if( status == MQTTSuccess )
@@ -1064,7 +1064,7 @@ static MQTTStatus_t handleIncomingPublish( MQTTContext_t * pContext,
 
         if( status == MQTTSuccess )
         {
-            LogInfo( ( "State record updated. New state=%s.",
+            LogDebug( ( "State record updated. New state=%s.",
                        MQTT_State_strerror( publishRecordState ) ) );
         }
 
@@ -1168,7 +1168,7 @@ static MQTTStatus_t handlePublishAcks( MQTTContext_t * pContext,
 
     ackType = getAckFromPacketType( pIncomingPacket->type );
     status = MQTT_DeserializeAck( pIncomingPacket, &packetIdentifier, NULL );
-    LogInfo( ( "Ack packet deserialized with result: %s.",
+    LogDebug( ( "Ack packet deserialized with result: %s.",
                MQTT_Status_strerror( status ) ) );
 
     if( status == MQTTSuccess )
@@ -1181,7 +1181,7 @@ static MQTTStatus_t handlePublishAcks( MQTTContext_t * pContext,
 
         if( status == MQTTSuccess )
         {
-            LogInfo( ( "State record updated. New state=%s.",
+            LogDebug( ( "State record updated. New state=%s.",
                        MQTT_State_strerror( publishRecordState ) ) );
         }
         else
