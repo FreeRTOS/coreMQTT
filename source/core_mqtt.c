@@ -1024,8 +1024,11 @@ static MQTTStatus_t handleKeepAlive( MQTTContext_t * pContext )
         }
         else
         {
-            if( calculateElapsedTime( now, pContext->lastPacketTime ) > keepAliveMs )
+            if(( calculateElapsedTime( now, pContext->lastPacketTime ) > keepAliveMs ) ||
+              ( calculateElapsedTime( now, pContext->lastPacketReceivedTime) > keepAliveMs ))
             {
+                pContext->lastPacketReceivedTime = now; /* this to avoid sending back-to-back MQTT pings. Note that MQTT_Ping will
+                                                         * internally update the lastPacketTime as it calls sendPacket() */
                 status = MQTT_Ping( pContext );
             }
         }
@@ -1340,6 +1343,7 @@ static MQTTStatus_t receiveSingleIteration( MQTTContext_t * pContext,
     if( status == MQTTSuccess )
     {
         incomingPacket.pRemainingData = pContext->networkBuffer.pBuffer;
+        pContext->lastPacketReceivedTime = pContext->getTime();
 
         /* PUBLISH packets allow flags in the lower four bits. For other
          * packet types, they are reserved. */
