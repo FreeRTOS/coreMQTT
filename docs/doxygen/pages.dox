@@ -133,7 +133,7 @@ In this library, @ref mqtt_processloop_function handles sending of PINGREQs and 
 The standard does not specify the time duration within which the server has to respond to a ping request, noting only a "reasonable amount of time". If the response to a ping request is not received within @ref MQTT_PINGRESP_TIMEOUT_MS, this library assumes that the connection is dead.
 
 If @ref mqtt_receiveloop_function is used instead of @ref mqtt_processloop_function, then no ping requests are sent. The application must ensure the connection does not remain idle for more than the keep-alive interval by calling @ref mqtt_ping_function to send ping requests.
-The timestamp in @ref MQTTContext_t.lastPacketTime indicates when a packet was last sent by the library.
+The timestamp in @ref MQTTContext_t.lastPacketTxTime indicates when a packet was last sent by the library.
 
 Sending any ping request sets the @ref MQTTContext_t.waitingForPingResp flag. This flag is cleared by @ref mqtt_processloop_function when a ping response is received. If @ref mqtt_receiveloop_function is used instead, then this flag must be cleared manually by the application's callback.
 */

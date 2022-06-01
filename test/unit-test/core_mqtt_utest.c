@@ -491,7 +491,7 @@ static void expectProcessLoopCalls( MQTTContext_t * const pContext,
     {
         if( ( pContext->waitingForPingResp == false ) &&
             ( pContext->keepAliveIntervalSec != 0U ) &&
-            ( ( globalEntryTime - pContext->lastPacketTime ) > ( 1000U * pContext->keepAliveIntervalSec ) ) )
+            ( ( globalEntryTime - pContext->lastPacketTxTime ) > ( 1000U * pContext->keepAliveIntervalSec ) ) )
         {
             MQTT_GetPingreqPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
             /* Replace pointer parameter being passed to the method. */
@@ -1934,7 +1934,7 @@ void test_MQTT_ProcessLoop_handleKeepAlive_Happy_Paths( void )
     mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
     context.keepAliveIntervalSec = MQTT_SAMPLE_KEEPALIVE_INTERVAL_S;
-    context.lastPacketTime = getTime();
+    context.lastPacketTxTime = getTime();
     /* Set expected return values in the loop. All success. */
     resetProcessLoopParams( &expectParams );
     expectProcessLoopCalls( &context, &expectParams );
@@ -1944,7 +1944,7 @@ void test_MQTT_ProcessLoop_handleKeepAlive_Happy_Paths( void )
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
     context.waitingForPingResp = true;
     context.keepAliveIntervalSec = MQTT_SAMPLE_KEEPALIVE_INTERVAL_S;
-    context.lastPacketTime = MQTT_ONE_SECOND_TO_MS;
+    context.lastPacketTxTime = MQTT_ONE_SECOND_TO_MS;
     context.pingReqSendTimeMs = MQTT_ONE_SECOND_TO_MS;
     /* Set expected return values in the loop. All success. */
     resetProcessLoopParams( &expectParams );
@@ -1955,7 +1955,7 @@ void test_MQTT_ProcessLoop_handleKeepAlive_Happy_Paths( void )
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
     context.waitingForPingResp = false;
     context.keepAliveIntervalSec = MQTT_SAMPLE_KEEPALIVE_INTERVAL_S;
-    context.lastPacketTime = 0;
+    context.lastPacketTxTime = 0;
     /* Set expected return values in the loop. All success. */
     resetProcessLoopParams( &expectParams );
     expectProcessLoopCalls( &context, &expectParams );
@@ -1983,7 +1983,7 @@ void test_MQTT_ProcessLoop_handleKeepAlive_Error_Paths( void )
     mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
     context.keepAliveIntervalSec = MQTT_SAMPLE_KEEPALIVE_INTERVAL_S;
-    context.lastPacketTime = 0;
+    context.lastPacketTxTime = 0;
     context.pingReqSendTimeMs = 0;
     context.waitingForPingResp = true;
     /* Set expected return values in the loop. */
@@ -2391,7 +2391,7 @@ void test_MQTT_Ping_happy_path( void )
     mqttStatus = MQTT_Ping( &context );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
 
-    TEST_ASSERT_EQUAL( context.lastPacketTime, context.pingReqSendTimeMs );
+    TEST_ASSERT_EQUAL( context.lastPacketTxTime, context.pingReqSendTimeMs );
     TEST_ASSERT_TRUE( context.waitingForPingResp );
 }
 

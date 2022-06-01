@@ -725,7 +725,7 @@ MQTTStatus_t MQTT_ProcessLoop( MQTTContext_t * pContext,
  *      {
  *          // Since this function does not send pings, the application may need
  *          // to in order to comply with keep alive.
- *          if( ( pContext->getTime() - pContext->lastPacketTime ) > keepAliveMs )
+ *          if( ( pContext->getTime() - pContext->lastPacketTxTime ) > keepAliveMs )
  *          {
  *              status = MQTT_Ping( pContext );
  *          }
