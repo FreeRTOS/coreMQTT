@@ -1009,13 +1009,11 @@ static MQTTStatus_t handleKeepAlive( MQTTContext_t * pContext )
 
     now = pContext->getTime();
 
+    packetTxTimeoutMs = 1000U * ( uint32_t ) pContext->keepAliveIntervalSec;
+
     if( PACKET_TX_TIMEOUT_MS < packetTxTimeoutMs )
     {
         packetTxTimeoutMs = PACKET_TX_TIMEOUT_MS;
-    }
-    else
-    {
-        packetTxTimeoutMs = 1000U * ( uint32_t ) pContext->keepAliveIntervalSec;
     }
 
     /* If keep alive interval is 0, it is disabled. */
