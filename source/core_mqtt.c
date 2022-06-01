@@ -1002,13 +1002,14 @@ static MQTTStatus_t sendPublishAcks( MQTTContext_t * pContext,
 static MQTTStatus_t handleKeepAlive( MQTTContext_t * pContext )
 {
     MQTTStatus_t status = MQTTSuccess;
-    uint32_t now = 0U, keepAliveMs = 0U;
+    uint32_t now = 0U, keepAliveMs = 0U, packetRxTimeoutMs = 0U;
 
     assert( pContext != NULL );
     assert( pContext->getTime != NULL );
 
     now = pContext->getTime();
     keepAliveMs = 1000U * ( uint32_t ) pContext->keepAliveIntervalSec;
+    packetRxTimeoutMs = 1000U * ( uint32_t ) pContext->packetRxTimeoutSec;
 
     /* If keep alive interval is 0, it is disabled. */
     if( keepAliveMs != 0U )
@@ -1024,11 +1025,12 @@ static MQTTStatus_t handleKeepAlive( MQTTContext_t * pContext )
         }
         else
         {
-            if(( calculateElapsedTime( now, pContext->lastPacketTxTime ) > keepAliveMs ) ||
-              ( calculateElapsedTime( now, pContext->lastPacketRxTime) > keepAliveMs ))
+            if( calculateElapsedTime( now, pContext->lastPacketTxTime ) >= keepAliveMs )
             {
-                pContext->lastPacketRxTime = now; /* this to avoid sending back-to-back MQTT pings. Note that MQTT_Ping will
-                                                   * internally update the lastPacketTxTime as it calls sendPacket() */
+                status = MQTT_Ping( pContext );
+            }
+            else if( calculateElapsedTime( now, pContext->lastPacketRxTime) >= packetRxTimeoutMs )
+            {
                 status = MQTT_Ping( pContext );
             }
         }

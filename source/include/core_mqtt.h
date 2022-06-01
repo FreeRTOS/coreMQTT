@@ -224,9 +224,10 @@ typedef struct MQTTContext
     bool controlPacketSent;
 
     /* Keep alive members. */
-    uint16_t keepAliveIntervalSec; /**< @brief Keep Alive interval. */
-    uint32_t pingReqSendTimeMs;    /**< @brief Timestamp of the last sent PINGREQ. */
-    bool waitingForPingResp;       /**< @brief If the library is currently awaiting a PINGRESP. */
+    uint16_t keepAliveIntervalSec;    /**< @brief Keep Alive interval. */
+    uint16_t packetRxTimeoutSec;      /**< @brief Packet Receive timeout. */
+    uint32_t pingReqSendTimeMs;       /**< @brief Timestamp of the last sent PINGREQ. */
+    bool waitingForPingResp;          /**< @brief If the library is currently awaiting a PINGRESP. */
 } MQTTContext_t;
 
 /**
