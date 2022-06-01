@@ -662,7 +662,7 @@ static int32_t sendPacket( MQTTContext_t * pContext,
     /* Update time of last transmission if the entire packet is successfully sent. */
     if( totalBytesSent > 0 )
     {
-        pContext->lastPacketTime = lastSendTimeMs;
+        pContext->lastPacketTxTime = lastSendTimeMs;
         LogDebug( ( "Successfully sent packet at time %lu.",
                     ( unsigned long ) lastSendTimeMs ) );
     }
@@ -1024,11 +1024,11 @@ static MQTTStatus_t handleKeepAlive( MQTTContext_t * pContext )
         }
         else
         {
-            if(( calculateElapsedTime( now, pContext->lastPacketTime ) > keepAliveMs ) ||
-              ( calculateElapsedTime( now, pContext->lastPacketReceivedTime) > keepAliveMs ))
+            if(( calculateElapsedTime( now, pContext->lastPacketTxTime ) > keepAliveMs ) ||
+              ( calculateElapsedTime( now, pContext->lastPacketRxTime) > keepAliveMs ))
             {
-                pContext->lastPacketReceivedTime = now; /* this to avoid sending back-to-back MQTT pings. Note that MQTT_Ping will
-                                                         * internally update the lastPacketTime as it calls sendPacket() */
+                pContext->lastPacketRxTime = now; /* this to avoid sending back-to-back MQTT pings. Note that MQTT_Ping will
+                                                   * internally update the lastPacketTxTime as it calls sendPacket() */
                 status = MQTT_Ping( pContext );
             }
         }
@@ -1343,7 +1343,7 @@ static MQTTStatus_t receiveSingleIteration( MQTTContext_t * pContext,
     if( status == MQTTSuccess )
     {
         incomingPacket.pRemainingData = pContext->networkBuffer.pBuffer;
-        pContext->lastPacketReceivedTime = pContext->getTime();
+        pContext->lastPacketRxTime = pContext->getTime();
 
         /* PUBLISH packets allow flags in the lower four bits. For other
          * packet types, they are reserved. */
@@ -2041,7 +2041,7 @@ MQTTStatus_t MQTT_Ping( MQTTContext_t * pContext )
         }
         else
         {
-            pContext->pingReqSendTimeMs = pContext->lastPacketTime;
+            pContext->pingReqSendTimeMs = pContext->lastPacketTxTime;
             pContext->waitingForPingResp = true;
             LogDebug( ( "Sent %ld bytes of PINGREQ packet.",
                         ( long int ) bytesSent ) );

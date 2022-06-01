@@ -210,12 +210,12 @@ typedef struct MQTTContext
     /**
      * @brief Timestamp of the last packet sent by the library.
      */
-    uint32_t lastPacketTime;
+    uint32_t lastPacketTxTime;
 
     /**
      * @brief Timestamp of the last packet received by the library.
      */
-    uint32_t lastPacketReceivedTime;
+    uint32_t lastPacketRxTime;
 
     /**
      * @brief Whether the library sent a packet during a call of #MQTT_ProcessLoop or
