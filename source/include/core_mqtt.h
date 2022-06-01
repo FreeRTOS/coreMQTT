@@ -37,8 +37,8 @@
  * without a custom config. If a custom config is provided, the
  * MQTT_DO_NOT_USE_CUSTOM_CONFIG macro should not be defined. */
 #ifndef MQTT_DO_NOT_USE_CUSTOM_CONFIG
-    /* Include custom config file before other headers. */
-    #include "core_mqtt_config.h"
+/* Include custom config file before other headers. */
+#include "core_mqtt_config.h"
 #endif
 
 /* Include config defaults header to get default values of configs not

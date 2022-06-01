@@ -1008,7 +1008,12 @@ static MQTTStatus_t handleKeepAlive( MQTTContext_t * pContext )
     assert( pContext->getTime != NULL );
 
     now = pContext->getTime();
-    packetTxTimeoutMs = MIN(PACKET_TX_TIMEOUT_MS, 1000U * ( uint32_t ) pContext->keepAliveIntervalSec);
+    packetTxTimeoutMs = 1000U * ( uint32_t ) pContext->keepAliveIntervalSec;
+
+    if( PACKET_TX_TIMEOUT_MS < packetTxTimeoutMs )
+    {
+        packetTxTimeoutMs = PACKET_TX_TIMEOUT_MS;
+    }
 
     /* If keep alive interval is 0, it is disabled. */
     if( pContext->waitingForPingResp == true )
@@ -1022,11 +1027,11 @@ static MQTTStatus_t handleKeepAlive( MQTTContext_t * pContext )
     }
     else
     {
-        if((packetTxTimeoutMs != 0U) && (calculateElapsedTime( now, pContext->lastPacketTxTime ) >= packetTxTimeoutMs) )
+        if( ( packetTxTimeoutMs != 0U ) && ( calculateElapsedTime( now, pContext->lastPacketTxTime ) >= packetTxTimeoutMs ) )
         {
             status = MQTT_Ping( pContext );
         }
-        else if((PACKET_RX_TIMEOUT_MS != 0U) && ( calculateElapsedTime( now, pContext->lastPacketRxTime) >= PACKET_RX_TIMEOUT_MS) )
+        else if( ( PACKET_RX_TIMEOUT_MS != 0U ) && ( calculateElapsedTime( now, pContext->lastPacketRxTime ) >= PACKET_RX_TIMEOUT_MS ) )
         {
             status = MQTT_Ping( pContext );
         }
