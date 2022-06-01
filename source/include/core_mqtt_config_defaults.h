@@ -124,6 +124,32 @@
 #endif
 
 /**
+ * @brief Maximum number of milliseconds of TX inactivity to wait
+ * before initiating a PINGREQ
+ *
+ * @note If this value is less than the keep alive interval than
+ * it will be used instead.
+ * 
+ * <b>Possible values:</b> Any positive integer up to SIZE_MAX. <br>
+ * <b>Default value:</b> '30000'
+*/
+#ifndef PACKET_TX_TIMEOUT_MS
+    #define PACKET_TX_TIMEOUT_MS    ( 30000U )
+#endif
+
+/**
+ * @brief Maximum number of milliseconds of RX inactivity to wait
+ * before initiating a PINGREQ
+ * 
+ * <b>Possible values:</b> Any positive integer up to SIZE_MAX. <br>
+ * <b>Default value:</b> '30000'
+ *
+*/
+#ifndef PACKET_RX_TIMEOUT_MS
+    #define PACKET_RX_TIMEOUT_MS    ( 30000U )
+#endif
+
+/**
  * @brief The maximum duration between non-empty network reads while
  * receiving an MQTT packet via the #MQTT_ProcessLoop or #MQTT_ReceiveLoop
  * API functions.

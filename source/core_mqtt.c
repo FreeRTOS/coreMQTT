@@ -1002,37 +1002,33 @@ static MQTTStatus_t sendPublishAcks( MQTTContext_t * pContext,
 static MQTTStatus_t handleKeepAlive( MQTTContext_t * pContext )
 {
     MQTTStatus_t status = MQTTSuccess;
-    uint32_t now = 0U, keepAliveMs = 0U, packetRxTimeoutMs = 0U;
+    uint32_t now = 0U, packetTxTimeoutMs = 0U, packetRxTimeoutMs = 0U;
 
     assert( pContext != NULL );
     assert( pContext->getTime != NULL );
 
     now = pContext->getTime();
-    keepAliveMs = 1000U * ( uint32_t ) pContext->keepAliveIntervalSec;
-    packetRxTimeoutMs = 1000U * ( uint32_t ) pContext->packetRxTimeoutSec;
+    packetTxTimeoutMs = MIN(PACKET_TX_TIMEOUT_MS, 1000U * ( uint32_t ) pContext->keepAliveIntervalSec);
 
     /* If keep alive interval is 0, it is disabled. */
-    if( keepAliveMs != 0U )
+    if( pContext->waitingForPingResp == true )
     {
-        if( pContext->waitingForPingResp == true )
+        /* Has time expired? */
+        if( calculateElapsedTime( now, pContext->pingReqSendTimeMs ) >
+            MQTT_PINGRESP_TIMEOUT_MS )
         {
-            /* Has time expired? */
-            if( calculateElapsedTime( now, pContext->pingReqSendTimeMs ) >
-                MQTT_PINGRESP_TIMEOUT_MS )
-            {
-                status = MQTTKeepAliveTimeout;
-            }
+            status = MQTTKeepAliveTimeout;
         }
-        else
+    }
+    else
+    {
+        if((packetTxTimeoutMs != 0U) && (calculateElapsedTime( now, pContext->lastPacketTxTime ) >= packetTxTimeoutMs) )
         {
-            if( calculateElapsedTime( now, pContext->lastPacketTxTime ) >= keepAliveMs )
-            {
-                status = MQTT_Ping( pContext );
-            }
-            else if( calculateElapsedTime( now, pContext->lastPacketRxTime) >= packetRxTimeoutMs )
-            {
-                status = MQTT_Ping( pContext );
-            }
+            status = MQTT_Ping( pContext );
+        }
+        else if((PACKET_RX_TIMEOUT_MS != 0U) && ( calculateElapsedTime( now, pContext->lastPacketRxTime) >= PACKET_RX_TIMEOUT_MS) )
+        {
+            status = MQTT_Ping( pContext );
         }
     }
 
