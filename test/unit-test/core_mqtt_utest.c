@@ -1999,7 +1999,7 @@ void test_MQTT_ProcessLoop_handleKeepAlive_Error_Paths( void )
     context.waitingForPingResp = false;
     /* Set expected return values in the loop. */
     resetProcessLoopParams( &expectParams );
-    expectParams.processLoopStatus = MQTTKeepAliveTimeout;
+    expectParams.processLoopStatus = MQTTSuccess;
     expectProcessLoopCalls( &context, &expectParams );
 }
 
