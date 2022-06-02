@@ -118,7 +118,7 @@ iso
 keepaliveintervalsec
 keepalivems
 keepaliveseconds
-lastpackettime
+lastpackettxtime
 linux
 logdebug
 logerror
