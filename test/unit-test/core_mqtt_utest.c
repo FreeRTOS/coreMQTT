@@ -1991,7 +1991,7 @@ void test_MQTT_ProcessLoop_handleKeepAlive_Error_Paths( void )
     expectParams.processLoopStatus = MQTTKeepAliveTimeout;
     expectProcessLoopCalls( &context, &expectParams );
 
-    context.keepAliveIntervalSec = PACKET_RX_TIMEOUT_MS + 5;
+    context.keepAliveIntervalSec = PACKET_TX_TIMEOUT_MS + 5;
     context.lastPacketTxTime = 0;
     context.pingReqSendTimeMs = 0;
     context.waitingForPingResp = true;
