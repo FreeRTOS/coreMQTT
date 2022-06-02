@@ -55,7 +55,7 @@
  * be defined.
  */
 #ifdef DOXYGEN
-#define MQTT_DO_NOT_USE_CUSTOM_CONFIG
+    #define MQTT_DO_NOT_USE_CUSTOM_CONFIG
 #endif
 
 /**
@@ -79,7 +79,7 @@
  */
 #ifndef MQTT_STATE_ARRAY_MAX_COUNT
 /* Default value for the maximum acknowledgment pending PUBLISH messages. */
-#define MQTT_STATE_ARRAY_MAX_COUNT    ( 10U )
+    #define MQTT_STATE_ARRAY_MAX_COUNT    ( 10U )
 #endif
 
 /**
@@ -96,7 +96,7 @@
  */
 #ifndef MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT
 /* Default value for the CONNACK receive retries. */
-#define MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT    ( 5U )
+    #define MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT    ( 5U )
 #endif
 
 /**
@@ -120,7 +120,7 @@
  */
 #ifndef MQTT_PINGRESP_TIMEOUT_MS
 /* Wait 5 seconds by default for a ping response. */
-#define MQTT_PINGRESP_TIMEOUT_MS    ( 5000U )
+    #define MQTT_PINGRESP_TIMEOUT_MS    ( 5000U )
 #endif
 
 /**
@@ -134,7 +134,7 @@
  * <b>Default value:</b> '30000'
  */
 #ifndef PACKET_TX_TIMEOUT_MS
-#define PACKET_TX_TIMEOUT_MS    ( 30000U )
+    #define PACKET_TX_TIMEOUT_MS    ( 30000U )
 #endif
 
 /**
@@ -146,7 +146,7 @@
  *
  */
 #ifndef PACKET_RX_TIMEOUT_MS
-#define PACKET_RX_TIMEOUT_MS    ( 30000U )
+    #define PACKET_RX_TIMEOUT_MS    ( 30000U )
 #endif
 
 /**
@@ -171,7 +171,7 @@
  *
  */
 #ifndef MQTT_RECV_POLLING_TIMEOUT_MS
-#define MQTT_RECV_POLLING_TIMEOUT_MS    ( 10U )
+    #define MQTT_RECV_POLLING_TIMEOUT_MS    ( 10U )
 #endif
 
 /**
@@ -196,7 +196,7 @@
  *
  */
 #ifndef MQTT_SEND_RETRY_TIMEOUT_MS
-#define MQTT_SEND_RETRY_TIMEOUT_MS    ( 10U )
+    #define MQTT_SEND_RETRY_TIMEOUT_MS    ( 10U )
 #endif
 
 /* *INDENT-OFF* */

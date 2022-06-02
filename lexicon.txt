@@ -318,6 +318,7 @@ resending
 reservestate
 responsecode
 rm
+rx
 sdk
 searchstates
 sendpacket
