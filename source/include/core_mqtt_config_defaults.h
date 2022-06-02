@@ -146,7 +146,7 @@
  *
  */
 #ifndef PACKET_RX_TIMEOUT_MS
-    #define PACKET_RX_TIMEOUT_MS    ( 30000U )
+    #define PACKET_RX_TIMEOUT_MS    ( 25000U )
 #endif
 
 /**
