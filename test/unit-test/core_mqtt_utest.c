@@ -100,11 +100,11 @@
  * that the API can support normal behavior even if the timer
  * overflows.
  *
- * @note Currently, there are 5 calls within a single iteration.
+ * @note Currently, there are 6 calls within a single iteration.
  * This can change when the implementation changes which would be
  * caught through unit test failure.
  */
-#define MQTT_TIMER_CALLS_PER_ITERATION         ( 5 )
+#define MQTT_TIMER_CALLS_PER_ITERATION         ( 6 )
 
 /**
  * @brief Timeout for the timer overflow test.
