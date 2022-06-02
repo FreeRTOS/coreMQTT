@@ -1984,6 +1984,7 @@ void test_MQTT_ProcessLoop_handleKeepAlive_Error_Paths( void )
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
     context.keepAliveIntervalSec = MQTT_SAMPLE_KEEPALIVE_INTERVAL_S;
     context.lastPacketTxTime = 0;
+    context.lastPacketRxTime = 0;
     context.pingReqSendTimeMs = 0;
     context.waitingForPingResp = true;
     /* Set expected return values in the loop. */
@@ -1993,8 +1994,9 @@ void test_MQTT_ProcessLoop_handleKeepAlive_Error_Paths( void )
 
     context.keepAliveIntervalSec = 35;
     context.lastPacketTxTime = 0;
+    context.lastPacketRxTime = 0;
     context.pingReqSendTimeMs = 0;
-    context.waitingForPingResp = true;
+    context.waitingForPingResp = false;
     /* Set expected return values in the loop. */
     resetProcessLoopParams( &expectParams );
     expectParams.processLoopStatus = MQTTKeepAliveTimeout;
