@@ -1035,6 +1035,7 @@ static MQTTStatus_t handleKeepAlive( MQTTContext_t * pContext )
         else if( ( PACKET_RX_TIMEOUT_MS != 0U ) && ( calculateElapsedTime( now, pContext->lastPacketRxTime ) >= PACKET_RX_TIMEOUT_MS ) )
         {
             status = MQTT_Ping( pContext );
+        } else {
         }
     }
 
