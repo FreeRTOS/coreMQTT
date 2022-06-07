@@ -1985,7 +1985,6 @@ void test_MQTT_ProcessLoop_handleKeepAlive_Error_Paths( void )
     TransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
     ProcessLoopReturns_t expectParams;
-    size_t pingreqSize = MQTT_PACKET_PINGREQ_SIZE;
 
     setupTransportInterface( &transport );
 
