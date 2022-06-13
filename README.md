@@ -91,6 +91,9 @@ git submodule update --checkout --init --recursive test/unit-test/CMock
 
 ### Platform Prerequisites
 
+- Docker
+
+or the following:
 - For running unit tests
     - **C90 compiler** like gcc
     - **CMake 3.13.0 or later**
@@ -98,6 +101,10 @@ git submodule update --checkout --init --recursive test/unit-test/CMock
 - For running the coverage target, **gcov** and **lcov** are additionally required.
 
 ### Steps to build **Unit Tests**
+
+1. If using docker, launch the container:
+    1. `docker build -t coremqtt .`
+    1. `docker run -it -v "$PWD":/workspaces/coreMQTT -w /workspaces/coreMQTT coremqtt`
 
 1. Go to the root directory of this repository. (Make sure that the **CMock** submodule is cloned as described [above](#checkout-cmock-submodule))
 
