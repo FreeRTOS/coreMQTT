@@ -100,11 +100,11 @@
  * that the API can support normal behavior even if the timer
  * overflows.
  *
- * @note Currently, there are 5 calls within a single iteration.
+ * @note Currently, there are 6 calls within a single iteration.
  * This can change when the implementation changes which would be
  * caught through unit test failure.
  */
-#define MQTT_TIMER_CALLS_PER_ITERATION         ( 5 )
+#define MQTT_TIMER_CALLS_PER_ITERATION         ( 6 )
 
 /**
  * @brief Timeout for the timer overflow test.
@@ -491,7 +491,8 @@ static void expectProcessLoopCalls( MQTTContext_t * const pContext,
     {
         if( ( pContext->waitingForPingResp == false ) &&
             ( pContext->keepAliveIntervalSec != 0U ) &&
-            ( ( globalEntryTime - pContext->lastPacketTime ) > ( 1000U * pContext->keepAliveIntervalSec ) ) )
+            ( ( globalEntryTime - pContext->lastPacketTime ) > ( 1000U * pContext->keepAliveIntervalSec ) ||
+              ( globalEntryTime - pContext->lastReceivedPacketTime ) > ( 1000U * pContext->keepAliveIntervalSec ) ) )
         {
             MQTT_GetPingreqPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
             /* Replace pointer parameter being passed to the method. */
@@ -1935,6 +1936,7 @@ void test_MQTT_ProcessLoop_handleKeepAlive_Happy_Paths( void )
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
     context.keepAliveIntervalSec = MQTT_SAMPLE_KEEPALIVE_INTERVAL_S;
     context.lastPacketTime = getTime();
+    context.lastReceivedPacketTime = getTime();
     /* Set expected return values in the loop. All success. */
     resetProcessLoopParams( &expectParams );
     expectProcessLoopCalls( &context, &expectParams );
@@ -1962,6 +1964,86 @@ void test_MQTT_ProcessLoop_handleKeepAlive_Happy_Paths( void )
 }
 
 /**
+ * @brief Verify that MQTT keep alive messages are sent when Tx path is idle.
+ */
+void test_MQTT_ProcessLoop_handleKeepAlive_Tx_Idle( void )
+{
+    MQTTStatus_t mqttStatus;
+    MQTTContext_t context;
+    TransportInterface_t transport;
+    MQTTFixedBuffer_t networkBuffer;
+    size_t pingreqSize = MQTT_PACKET_PINGREQ_SIZE;
+
+    setupNetworkBuffer( &networkBuffer );
+    setupTransportInterface( &transport );
+
+    /* Clock starts at 1000. */
+    globalEntryTime = MQTT_ONE_SECOND_TO_MS;
+
+    mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+
+    /* Tx path is idle and therefore, PINGREQ should be sent. */
+    context.keepAliveIntervalSec = MQTT_SAMPLE_KEEPALIVE_INTERVAL_S;
+    /* Since the clock started at 1000, all the calls to getTime() will return
+     * numbers greater than 1000. Setting lastPacketTime to 0, therefore, ensures
+     * that Tx path is determined idle for more than 1000 milliseconds which is
+     * the keep alive interval. */
+    context.lastPacketTime = 0;
+    context.lastReceivedPacketTime = getTime();
+
+    MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTNoDataAvailable );
+    MQTT_GetPingreqPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_GetPingreqPacketSize_ReturnThruPtr_pPacketSize( &pingreqSize );
+    MQTT_SerializePingreq_ExpectAnyArgsAndReturn( MQTTSuccess );
+
+    mqttStatus = MQTT_ProcessLoop( &context, MQTT_NO_TIMEOUT_MS );
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+    /* Ensure that a PINGREQ is sent and we are waiting for PINGRESP. */
+    TEST_ASSERT_TRUE( context.waitingForPingResp );
+}
+
+/**
+ * @brief Verify that MQTT keep alive messages are sent when Rx path is idle.
+ */
+void test_MQTT_ProcessLoop_handleKeepAlive_Rx_Idle( void )
+{
+    MQTTStatus_t mqttStatus;
+    MQTTContext_t context;
+    TransportInterface_t transport;
+    MQTTFixedBuffer_t networkBuffer;
+    size_t pingreqSize = MQTT_PACKET_PINGREQ_SIZE;
+
+    setupNetworkBuffer( &networkBuffer );
+    setupTransportInterface( &transport );
+
+    /* Clock starts at 1000. */
+    globalEntryTime = MQTT_ONE_SECOND_TO_MS;
+
+    mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+
+    /* Rx path is idle and therefore PINGREQ, should be sent. */
+    context.keepAliveIntervalSec = MQTT_SAMPLE_KEEPALIVE_INTERVAL_S;
+    context.lastPacketTime = getTime();
+     /* Since the clock started at 1000, all the calls to getTime() will return
+      * numbers greater than 1000. Setting lastReceivedPacketTime to 0, therefore,
+      * ensures that Rx path is determined idle for more than 1000 milliseconds
+      * which is the keep alive interval. */
+    context.lastReceivedPacketTime = 0;
+
+    MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTNoDataAvailable );
+    MQTT_GetPingreqPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_GetPingreqPacketSize_ReturnThruPtr_pPacketSize( &pingreqSize );
+    MQTT_SerializePingreq_ExpectAnyArgsAndReturn( MQTTSuccess );
+
+    mqttStatus = MQTT_ProcessLoop( &context, MQTT_NO_TIMEOUT_MS );
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+    /* Ensure that a PINGREQ is sent and we are waiting for PINGRESP. */
+    TEST_ASSERT_TRUE( context.waitingForPingResp );
+}
+
+/**
  * @brief This test case covers all calls to the private method,
  * handleKeepAlive(...),
  * that result in the process loop returning an error.
@@ -1974,6 +2056,7 @@ void test_MQTT_ProcessLoop_handleKeepAlive_Error_Paths( void )
     MQTTFixedBuffer_t networkBuffer;
     ProcessLoopReturns_t expectParams;
 
+    setupNetworkBuffer( &networkBuffer );
     setupTransportInterface( &transport );
 
     modifyIncomingPacketStatus = MQTTNoDataAvailable;
