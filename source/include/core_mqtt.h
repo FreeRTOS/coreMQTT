@@ -213,6 +213,11 @@ typedef struct MQTTContext
     uint32_t lastPacketTime;
 
     /**
+     * @brief Timestamp of the last packet received by the library.
+     */
+    uint32_t lastReceivedPacketTime;
+
+    /**
      * @brief Whether the library sent a packet during a call of #MQTT_ProcessLoop or
      * #MQTT_ReceiveLoop.
      */
@@ -720,7 +725,8 @@ MQTTStatus_t MQTT_ProcessLoop( MQTTContext_t * pContext,
  *      {
  *          // Since this function does not send pings, the application may need
  *          // to in order to comply with keep alive.
- *          if( ( pContext->getTime() - pContext->lastPacketTime ) > keepAliveMs )
+ *          if( ( pContext->getTime() - pContext->lastPacketTime ) > keepAliveMs ) ||
+ *              ( pContext->getTime() - pContext->lastReceivedPacketTime ) > keepAliveMs ) )
  *          {
  *              status = MQTT_Ping( pContext );
  *          }

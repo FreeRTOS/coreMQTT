@@ -882,7 +882,10 @@ static MQTTStatus_t receivePacket( const MQTTContext_t * pContext,
 
         if( bytesReceived == ( int32_t ) bytesToReceive )
         {
-            /* Receive successful, bytesReceived == bytesToReceive. */
+            /* Receive successful, bytesReceived == bytesToReceive. Record
+             * the time of last successful receive. */
+            pContext->lastReceivedPacketTime = pContext->getTime();
+
             LogDebug( ( "Packet received. ReceivedBytes=%ld.",
                         ( long int ) bytesReceived ) );
         }
@@ -1024,7 +1027,8 @@ static MQTTStatus_t handleKeepAlive( MQTTContext_t * pContext )
         }
         else
         {
-            if( calculateElapsedTime( now, pContext->lastPacketTime ) > keepAliveMs )
+            if( ( calculateElapsedTime( now, pContext->lastPacketTime ) > keepAliveMs ) ||
+                ( calculateElapsedTime( now, pContext->lastReceivedPacketTime ) > keepAliveMs ) )
             {
                 status = MQTT_Ping( pContext );
             }
