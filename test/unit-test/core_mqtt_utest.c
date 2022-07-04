@@ -491,8 +491,8 @@ static void expectProcessLoopCalls( MQTTContext_t * const pContext,
     {
         if( ( pContext->waitingForPingResp == false ) &&
             ( pContext->keepAliveIntervalSec != 0U ) &&
-            ( ( globalEntryTime - pContext->lastPacketTime ) > ( 1000U * pContext->keepAliveIntervalSec ) ||
-              ( globalEntryTime - pContext->lastReceivedPacketTime ) > ( 1000U * pContext->keepAliveIntervalSec ) ) )
+            ( ( ( globalEntryTime - pContext->lastPacketTime ) > ( 1000U * pContext->keepAliveIntervalSec ) ) ||
+              ( ( globalEntryTime - pContext->lastReceivedPacketTime ) > ( 1000U * pContext->keepAliveIntervalSec ) ) ) )
         {
             MQTT_GetPingreqPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
             /* Replace pointer parameter being passed to the method. */
@@ -1985,6 +1985,7 @@ void test_MQTT_ProcessLoop_handleKeepAlive_Tx_Idle( void )
 
     /* Tx path is idle and therefore, PINGREQ should be sent. */
     context.keepAliveIntervalSec = MQTT_SAMPLE_KEEPALIVE_INTERVAL_S;
+
     /* Since the clock started at 1000, all the calls to getTime() will return
      * numbers greater than 1000. Setting lastPacketTime to 0, therefore, ensures
      * that Tx path is determined idle for more than 1000 milliseconds which is
@@ -2026,10 +2027,11 @@ void test_MQTT_ProcessLoop_handleKeepAlive_Rx_Idle( void )
     /* Rx path is idle and therefore PINGREQ, should be sent. */
     context.keepAliveIntervalSec = MQTT_SAMPLE_KEEPALIVE_INTERVAL_S;
     context.lastPacketTime = getTime();
-     /* Since the clock started at 1000, all the calls to getTime() will return
-      * numbers greater than 1000. Setting lastReceivedPacketTime to 0, therefore,
-      * ensures that Rx path is determined idle for more than 1000 milliseconds
-      * which is the keep alive interval. */
+
+    /* Since the clock started at 1000, all the calls to getTime() will return
+     * numbers greater than 1000. Setting lastReceivedPacketTime to 0, therefore,
+     * ensures that Rx path is determined idle for more than 1000 milliseconds
+     * which is the keep alive interval. */
     context.lastReceivedPacketTime = 0;
 
     MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTNoDataAvailable );

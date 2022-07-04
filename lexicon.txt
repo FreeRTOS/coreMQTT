@@ -119,6 +119,7 @@ keepaliveintervalsec
 keepalivems
 keepaliveseconds
 lastpackettime
+lastreceivedpackettime
 linux
 logdebug
 logerror
@@ -318,6 +319,7 @@ resending
 reservestate
 responsecode
 rm
+rx
 sdk
 searchstates
 sendpacket
