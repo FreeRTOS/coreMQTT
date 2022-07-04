@@ -123,7 +123,7 @@ static MQTTStatus_t discardPacket( const MQTTContext_t * pContext,
  *
  * @return #MQTTSuccess or #MQTTRecvFailed.
  */
-static MQTTStatus_t receivePacket( const MQTTContext_t * pContext,
+static MQTTStatus_t receivePacket( MQTTContext_t * pContext,
                                    MQTTPacketInfo_t incomingPacket,
                                    uint32_t remainingTimeMs );
 
@@ -261,7 +261,7 @@ static MQTTStatus_t sendPublish( MQTTContext_t * pContext,
  * ##MQTTRecvFailed if transport recv failed;
  * #MQTTSuccess otherwise.
  */
-static MQTTStatus_t receiveConnack( const MQTTContext_t * pContext,
+static MQTTStatus_t receiveConnack( MQTTContext_t * pContext,
                                     uint32_t timeoutMs,
                                     bool cleanSession,
                                     MQTTPacketInfo_t * pIncomingPacket,
@@ -853,7 +853,7 @@ static MQTTStatus_t discardPacket( const MQTTContext_t * pContext,
 
 /*-----------------------------------------------------------*/
 
-static MQTTStatus_t receivePacket( const MQTTContext_t * pContext,
+static MQTTStatus_t receivePacket( MQTTContext_t * pContext,
                                    MQTTPacketInfo_t incomingPacket,
                                    uint32_t remainingTimeMs )
 {
@@ -1463,7 +1463,7 @@ static MQTTStatus_t sendPublish( MQTTContext_t * pContext,
 
 /*-----------------------------------------------------------*/
 
-static MQTTStatus_t receiveConnack( const MQTTContext_t * pContext,
+static MQTTStatus_t receiveConnack( MQTTContext_t * pContext,
                                     uint32_t timeoutMs,
                                     bool cleanSession,
                                     MQTTPacketInfo_t * pIncomingPacket,
