@@ -78,7 +78,7 @@
  * <b>Default value:</b> `10`
  */
 #ifndef MQTT_STATE_ARRAY_MAX_COUNT
-    /* Default value for the maximum acknowledgment pending PUBLISH messages. */
+/* Default value for the maximum acknowledgment pending PUBLISH messages. */
     #define MQTT_STATE_ARRAY_MAX_COUNT    ( 10U )
 #endif
 
@@ -95,7 +95,7 @@
  * <b>Default value:</b> `5`
  */
 #ifndef MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT
-    /* Default value for the CONNACK receive retries. */
+/* Default value for the CONNACK receive retries. */
     #define MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT    ( 5U )
 #endif
 
@@ -119,8 +119,34 @@
  * <b>Default value:</b> `5000`
  */
 #ifndef MQTT_PINGRESP_TIMEOUT_MS
-    /* Wait 5 seconds by default for a ping response. */
+/* Wait 5 seconds by default for a ping response. */
     #define MQTT_PINGRESP_TIMEOUT_MS    ( 5000U )
+#endif
+
+/**
+ * @brief Maximum number of milliseconds of TX inactivity to wait
+ * before initiating a PINGREQ
+ *
+ * @note If this value is less than the keep alive interval than
+ * it will be used instead.
+ *
+ * <b>Possible values:</b> Any positive integer up to SIZE_MAX. <br>
+ * <b>Default value:</b> '30000'
+ */
+#ifndef PACKET_TX_TIMEOUT_MS
+    #define PACKET_TX_TIMEOUT_MS    ( 30000U )
+#endif
+
+/**
+ * @brief Maximum number of milliseconds of RX inactivity to wait
+ * before initiating a PINGREQ
+ *
+ * <b>Possible values:</b> Any positive integer up to SIZE_MAX. <br>
+ * <b>Default value:</b> '30000'
+ *
+ */
+#ifndef PACKET_RX_TIMEOUT_MS
+    #define PACKET_RX_TIMEOUT_MS    ( 30000U )
 #endif
 
 /**

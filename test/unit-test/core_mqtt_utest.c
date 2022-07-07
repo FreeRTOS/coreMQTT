@@ -100,11 +100,11 @@
  * that the API can support normal behavior even if the timer
  * overflows.
  *
- * @note Currently, there are 5 calls within a single iteration.
+ * @note Currently, there are 6 calls within a single iteration.
  * This can change when the implementation changes which would be
  * caught through unit test failure.
  */
-#define MQTT_TIMER_CALLS_PER_ITERATION         ( 5 )
+#define MQTT_TIMER_CALLS_PER_ITERATION         ( 6 )
 
 /**
  * @brief Timeout for the timer overflow test.
@@ -465,6 +465,7 @@ static void expectProcessLoopCalls( MQTTContext_t * const pContext,
     MQTTStatus_t processLoopStatus = pExpectParams->processLoopStatus;
     bool incomingPublish = pExpectParams->incomingPublish;
     MQTTPublishInfo_t * pPubInfo = pExpectParams->pPubInfo;
+    uint32_t packetTxTimeoutMs = 0U;
 
     /* Modify incoming packet depending on type to be tested. */
     incomingPacket.type = currentPacketType;
@@ -489,14 +490,25 @@ static void expectProcessLoopCalls( MQTTContext_t * const pContext,
     /* When no data is available, the process loop tries to send a PINGREQ. */
     if( modifyIncomingPacketStatus == MQTTNoDataAvailable )
     {
-        if( ( pContext->waitingForPingResp == false ) &&
-            ( pContext->keepAliveIntervalSec != 0U ) &&
-            ( ( globalEntryTime - pContext->lastPacketTime ) > ( 1000U * pContext->keepAliveIntervalSec ) ) )
+        packetTxTimeoutMs = 1000U * ( uint32_t ) pContext->keepAliveIntervalSec;
+
+        if( PACKET_TX_TIMEOUT_MS < packetTxTimeoutMs )
         {
-            MQTT_GetPingreqPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
-            /* Replace pointer parameter being passed to the method. */
-            MQTT_GetPingreqPacketSize_ReturnThruPtr_pPacketSize( &pingreqSize );
-            MQTT_SerializePingreq_ExpectAnyArgsAndReturn( serializeStatus );
+            packetTxTimeoutMs = PACKET_TX_TIMEOUT_MS;
+        }
+
+        if( pContext->waitingForPingResp == false )
+        {
+            if( ( ( packetTxTimeoutMs != 0U ) &&
+                  ( ( globalEntryTime - pContext->lastPacketTxTime ) >= packetTxTimeoutMs ) ) ||
+                ( ( PACKET_RX_TIMEOUT_MS != 0U ) &&
+                  ( ( globalEntryTime - pContext->lastPacketRxTime ) >= PACKET_RX_TIMEOUT_MS ) ) )
+            {
+                MQTT_GetPingreqPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
+                /* Replace pointer parameter being passed to the method. */
+                MQTT_GetPingreqPacketSize_ReturnThruPtr_pPacketSize( &pingreqSize );
+                MQTT_SerializePingreq_ExpectAnyArgsAndReturn( serializeStatus );
+            }
         }
 
         expectMoreCalls = false;
@@ -1934,7 +1946,7 @@ void test_MQTT_ProcessLoop_handleKeepAlive_Happy_Paths( void )
     mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
     context.keepAliveIntervalSec = MQTT_SAMPLE_KEEPALIVE_INTERVAL_S;
-    context.lastPacketTime = getTime();
+    context.lastPacketTxTime = getTime();
     /* Set expected return values in the loop. All success. */
     resetProcessLoopParams( &expectParams );
     expectProcessLoopCalls( &context, &expectParams );
@@ -1944,7 +1956,7 @@ void test_MQTT_ProcessLoop_handleKeepAlive_Happy_Paths( void )
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
     context.waitingForPingResp = true;
     context.keepAliveIntervalSec = MQTT_SAMPLE_KEEPALIVE_INTERVAL_S;
-    context.lastPacketTime = MQTT_ONE_SECOND_TO_MS;
+    context.lastPacketTxTime = MQTT_ONE_SECOND_TO_MS;
     context.pingReqSendTimeMs = MQTT_ONE_SECOND_TO_MS;
     /* Set expected return values in the loop. All success. */
     resetProcessLoopParams( &expectParams );
@@ -1955,7 +1967,7 @@ void test_MQTT_ProcessLoop_handleKeepAlive_Happy_Paths( void )
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
     context.waitingForPingResp = false;
     context.keepAliveIntervalSec = MQTT_SAMPLE_KEEPALIVE_INTERVAL_S;
-    context.lastPacketTime = 0;
+    context.lastPacketTxTime = 0;
     /* Set expected return values in the loop. All success. */
     resetProcessLoopParams( &expectParams );
     expectProcessLoopCalls( &context, &expectParams );
@@ -1983,12 +1995,32 @@ void test_MQTT_ProcessLoop_handleKeepAlive_Error_Paths( void )
     mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
     context.keepAliveIntervalSec = MQTT_SAMPLE_KEEPALIVE_INTERVAL_S;
-    context.lastPacketTime = 0;
+    context.lastPacketTxTime = 0;
+    context.lastPacketRxTime = 0;
     context.pingReqSendTimeMs = 0;
     context.waitingForPingResp = true;
     /* Set expected return values in the loop. */
     resetProcessLoopParams( &expectParams );
     expectParams.processLoopStatus = MQTTKeepAliveTimeout;
+    expectProcessLoopCalls( &context, &expectParams );
+
+    context.keepAliveIntervalSec = PACKET_TX_TIMEOUT_MS + 1;
+    context.lastPacketTxTime = 0;
+    context.lastPacketRxTime = 0;
+    context.pingReqSendTimeMs = 0;
+    context.waitingForPingResp = false;
+    /* Set expected return values in the loop. */
+    resetProcessLoopParams( &expectParams );
+    expectProcessLoopCalls( &context, &expectParams );
+
+    globalEntryTime = PACKET_RX_TIMEOUT_MS + 1;
+    context.keepAliveIntervalSec = 0;
+    context.lastPacketTxTime = 0;
+    context.lastPacketRxTime = 0;
+    context.pingReqSendTimeMs = 0;
+    context.waitingForPingResp = false;
+    /* Set expected return values in the loop. */
+    resetProcessLoopParams( &expectParams );
     expectProcessLoopCalls( &context, &expectParams );
 }
 
@@ -2391,7 +2423,7 @@ void test_MQTT_Ping_happy_path( void )
     mqttStatus = MQTT_Ping( &context );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
 
-    TEST_ASSERT_EQUAL( context.lastPacketTime, context.pingReqSendTimeMs );
+    TEST_ASSERT_EQUAL( context.lastPacketTxTime, context.pingReqSendTimeMs );
     TEST_ASSERT_TRUE( context.waitingForPingResp );
 }
 

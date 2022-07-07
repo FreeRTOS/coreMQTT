@@ -37,7 +37,7 @@
  * without a custom config. If a custom config is provided, the
  * MQTT_DO_NOT_USE_CUSTOM_CONFIG macro should not be defined. */
 #ifndef MQTT_DO_NOT_USE_CUSTOM_CONFIG
-    /* Include custom config file before other headers. */
+/* Include custom config file before other headers. */
     #include "core_mqtt_config.h"
 #endif
 
@@ -210,7 +210,12 @@ typedef struct MQTTContext
     /**
      * @brief Timestamp of the last packet sent by the library.
      */
-    uint32_t lastPacketTime;
+    uint32_t lastPacketTxTime;
+
+    /**
+     * @brief Timestamp of the last packet received by the library.
+     */
+    uint32_t lastPacketRxTime;
 
     /**
      * @brief Whether the library sent a packet during a call of #MQTT_ProcessLoop or
@@ -720,7 +725,7 @@ MQTTStatus_t MQTT_ProcessLoop( MQTTContext_t * pContext,
  *      {
  *          // Since this function does not send pings, the application may need
  *          // to in order to comply with keep alive.
- *          if( ( pContext->getTime() - pContext->lastPacketTime ) > keepAliveMs )
+ *          if( ( pContext->getTime() - pContext->lastPacketTxTime ) > keepAliveMs )
  *          {
  *              status = MQTT_Ping( pContext );
  *          }

@@ -662,7 +662,7 @@ static int32_t sendPacket( MQTTContext_t * pContext,
     /* Update time of last transmission if the entire packet is successfully sent. */
     if( totalBytesSent > 0 )
     {
-        pContext->lastPacketTime = lastSendTimeMs;
+        pContext->lastPacketTxTime = lastSendTimeMs;
         LogDebug( ( "Successfully sent packet at time %lu.",
                     ( unsigned long ) lastSendTimeMs ) );
     }
@@ -1002,32 +1002,42 @@ static MQTTStatus_t sendPublishAcks( MQTTContext_t * pContext,
 static MQTTStatus_t handleKeepAlive( MQTTContext_t * pContext )
 {
     MQTTStatus_t status = MQTTSuccess;
-    uint32_t now = 0U, keepAliveMs = 0U;
+    uint32_t now = 0U, packetTxTimeoutMs = 0U;
 
     assert( pContext != NULL );
     assert( pContext->getTime != NULL );
 
     now = pContext->getTime();
-    keepAliveMs = 1000U * ( uint32_t ) pContext->keepAliveIntervalSec;
+
+    packetTxTimeoutMs = 1000U * ( uint32_t ) pContext->keepAliveIntervalSec;
+
+    if( PACKET_TX_TIMEOUT_MS < packetTxTimeoutMs )
+    {
+        packetTxTimeoutMs = PACKET_TX_TIMEOUT_MS;
+    }
 
     /* If keep alive interval is 0, it is disabled. */
-    if( keepAliveMs != 0U )
+    if( pContext->waitingForPingResp == true )
     {
-        if( pContext->waitingForPingResp == true )
+        /* Has time expired? */
+        if( calculateElapsedTime( now, pContext->pingReqSendTimeMs ) >
+            MQTT_PINGRESP_TIMEOUT_MS )
         {
-            /* Has time expired? */
-            if( calculateElapsedTime( now, pContext->pingReqSendTimeMs ) >
-                MQTT_PINGRESP_TIMEOUT_MS )
-            {
-                status = MQTTKeepAliveTimeout;
-            }
+            status = MQTTKeepAliveTimeout;
+        }
+    }
+    else
+    {
+        if( ( packetTxTimeoutMs != 0U ) && ( calculateElapsedTime( now, pContext->lastPacketTxTime ) >= packetTxTimeoutMs ) )
+        {
+            status = MQTT_Ping( pContext );
+        }
+        else if( ( PACKET_RX_TIMEOUT_MS != 0U ) && ( calculateElapsedTime( now, pContext->lastPacketRxTime ) >= PACKET_RX_TIMEOUT_MS ) )
+        {
+            status = MQTT_Ping( pContext );
         }
         else
         {
-            if( calculateElapsedTime( now, pContext->lastPacketTime ) > keepAliveMs )
-            {
-                status = MQTT_Ping( pContext );
-            }
         }
     }
 
@@ -1340,6 +1350,7 @@ static MQTTStatus_t receiveSingleIteration( MQTTContext_t * pContext,
     if( status == MQTTSuccess )
     {
         incomingPacket.pRemainingData = pContext->networkBuffer.pBuffer;
+        pContext->lastPacketRxTime = pContext->getTime();
 
         /* PUBLISH packets allow flags in the lower four bits. For other
          * packet types, they are reserved. */
@@ -2037,7 +2048,7 @@ MQTTStatus_t MQTT_Ping( MQTTContext_t * pContext )
         }
         else
         {
-            pContext->pingReqSendTimeMs = pContext->lastPacketTime;
+            pContext->pingReqSendTimeMs = pContext->lastPacketTxTime;
             pContext->waitingForPingResp = true;
             LogDebug( ( "Sent %ld bytes of PINGREQ packet.",
                         ( long int ) bytesSent ) );
