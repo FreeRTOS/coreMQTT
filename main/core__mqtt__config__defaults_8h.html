@@ -118,6 +118,12 @@ Macros</h2></td></tr>
 <tr class="memitem:afa825fddb52da7df88fb56d2befcd2fa"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="core__mqtt__config__defaults_8h.html#afa825fddb52da7df88fb56d2befcd2fa">MQTT_PINGRESP_TIMEOUT_MS</a>&#160;&#160;&#160;( 5000U )</td></tr>
 <tr class="memdesc:afa825fddb52da7df88fb56d2befcd2fa"><td class="mdescLeft">&#160;</td><td class="mdescRight">Maximum number of milliseconds to wait for a ping response to a ping request as part of the keep-alive mechanism.  <a href="core__mqtt__config__defaults_8h.html#afa825fddb52da7df88fb56d2befcd2fa">More...</a><br /></td></tr>
 <tr class="separator:afa825fddb52da7df88fb56d2befcd2fa"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9b3c7c33badcafec477a205d916424bc"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="core__mqtt__config__defaults_8h.html#a9b3c7c33badcafec477a205d916424bc">PACKET_TX_TIMEOUT_MS</a>&#160;&#160;&#160;( 30000U )</td></tr>
+<tr class="memdesc:a9b3c7c33badcafec477a205d916424bc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Maximum number of milliseconds of TX inactivity to wait before initiating a PINGREQ.  <a href="core__mqtt__config__defaults_8h.html#a9b3c7c33badcafec477a205d916424bc">More...</a><br /></td></tr>
+<tr class="separator:a9b3c7c33badcafec477a205d916424bc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a46ef647d5a8315f626dc17d62e264aed"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="core__mqtt__config__defaults_8h.html#a46ef647d5a8315f626dc17d62e264aed">PACKET_RX_TIMEOUT_MS</a>&#160;&#160;&#160;( 30000U )</td></tr>
+<tr class="memdesc:a46ef647d5a8315f626dc17d62e264aed"><td class="mdescLeft">&#160;</td><td class="mdescRight">Maximum number of milliseconds of RX inactivity to wait before initiating a PINGREQ.  <a href="core__mqtt__config__defaults_8h.html#a46ef647d5a8315f626dc17d62e264aed">More...</a><br /></td></tr>
+<tr class="separator:a46ef647d5a8315f626dc17d62e264aed"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a43dc9a67427d9e420a65955eea0e2671"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="core__mqtt__config__defaults_8h.html#a43dc9a67427d9e420a65955eea0e2671">MQTT_RECV_POLLING_TIMEOUT_MS</a>&#160;&#160;&#160;( 10U )</td></tr>
 <tr class="memdesc:a43dc9a67427d9e420a65955eea0e2671"><td class="mdescLeft">&#160;</td><td class="mdescRight">The maximum duration between non-empty network reads while receiving an MQTT packet via the <a class="el" href="core__mqtt_8h.html#adce9111350db412c1256689ef9a7b9f4" title="Loop to receive packets from the transport interface. Handles keep alive.">MQTT_ProcessLoop</a> or <a class="el" href="core__mqtt_8h.html#a274d7a62c9c011a063031c2e678fb40a" title="Loop to receive packets from the transport interface. Does not handle keep alive.">MQTT_ReceiveLoop</a> API functions.  <a href="core__mqtt__config__defaults_8h.html#a43dc9a67427d9e420a65955eea0e2671">More...</a><br /></td></tr>
 <tr class="separator:a43dc9a67427d9e420a65955eea0e2671"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -205,6 +211,43 @@ Macros</h2></td></tr>
 If a dummy implementation of the <a class="el" href="group__mqtt__callback__types.html#gae3bea55b0e49e5208b8c5709a5ea23aa" title="Application provided function to query the current time in milliseconds.">MQTTGetCurrentTimeFunc_t</a> timer function, is supplied to the library, then the keep-alive mechanism is not supported by the <a class="el" href="core__mqtt_8h.html#adce9111350db412c1256689ef9a7b9f4" title="Loop to receive packets from the transport interface. Handles keep alive.">MQTT_ProcessLoop</a> API function. In that case, the value of <a class="el" href="core__mqtt__config__defaults_8h.html#afa825fddb52da7df88fb56d2befcd2fa" title="Maximum number of milliseconds to wait for a ping response to a ping request as part of the keep-aliv...">MQTT_PINGRESP_TIMEOUT_MS</a> is irrelevant to the behavior of the library.</dd></dl>
 <p><b>Possible values:</b> Any positive integer up to SIZE_MAX. <br  />
  <b>Default value:</b> <code>5000</code> </p>
+
+</div>
+</div>
+<a id="a9b3c7c33badcafec477a205d916424bc" name="a9b3c7c33badcafec477a205d916424bc"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9b3c7c33badcafec477a205d916424bc">&#9670;&nbsp;</a></span>PACKET_TX_TIMEOUT_MS</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define PACKET_TX_TIMEOUT_MS&#160;&#160;&#160;( 30000U )</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Maximum number of milliseconds of TX inactivity to wait before initiating a PINGREQ. </p>
+<dl class="section note"><dt>Note</dt><dd>If this value is less than the keep alive interval than it will be used instead.</dd></dl>
+<p><b>Possible values:</b> Any positive integer up to SIZE_MAX. <br  />
+ <b>Default value:</b> '30000' </p>
+
+</div>
+</div>
+<a id="a46ef647d5a8315f626dc17d62e264aed" name="a46ef647d5a8315f626dc17d62e264aed"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a46ef647d5a8315f626dc17d62e264aed">&#9670;&nbsp;</a></span>PACKET_RX_TIMEOUT_MS</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define PACKET_RX_TIMEOUT_MS&#160;&#160;&#160;( 30000U )</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Maximum number of milliseconds of RX inactivity to wait before initiating a PINGREQ. </p>
+<p ><b>Possible values:</b> Any positive integer up to SIZE_MAX. <br  />
+ <b>Default value:</b> '30000' </p>
 
 </div>
 </div>
