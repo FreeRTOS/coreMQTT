@@ -15,7 +15,7 @@ COMPILE_FLAGS += -fPIC
 COMPILE_FLAGS += -std=gnu90
 
 # Path to litani executable, used for running proofs and displaying report
-LITANI ?= $(SRCDIR)/test/cbmc/litani/litani
+LITANI ?= litani
 PROJECT_NAME = "FreeRTOS coreMQTT"
 
 
