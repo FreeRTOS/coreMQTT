@@ -227,6 +227,7 @@ typedef struct MQTTContext
     uint16_t keepAliveIntervalSec; /**< @brief Keep Alive interval. */
     uint32_t pingReqSendTimeMs;    /**< @brief Timestamp of the last sent PINGREQ. */
     bool waitingForPingResp;       /**< @brief If the library is currently awaiting a PINGRESP. */
+    MQTTStoredPacketInfo_t lastRxPacket;
 } MQTTContext_t;
 
 /**
@@ -648,13 +649,12 @@ MQTTStatus_t MQTT_Disconnect( MQTTContext_t * pContext );
  *
  * // Variables used in this example.
  * MQTTStatus_t status;
- * uint32_t timeoutMs = 100;
  * // This context is assumed to be initialized and connected.
  * MQTTContext_t * pContext;
  *
  * while( true )
  * {
- *      status = MQTT_ProcessLoop( pContext, timeoutMs );
+ *      status = MQTT_ProcessLoop( pContext );
  *
  *      if( status != MQTTSuccess )
  *      {
@@ -669,8 +669,7 @@ MQTTStatus_t MQTT_Disconnect( MQTTContext_t * pContext );
  * @endcode
  */
 /* @[declare_mqtt_processloop] */
-MQTTStatus_t MQTT_ProcessLoop( MQTTContext_t * pContext,
-                               uint32_t timeoutMs );
+MQTTStatus_t MQTT_ProcessLoop( MQTTContext_t * pContext );
 /* @[declare_mqtt_processloop] */
 
 /**

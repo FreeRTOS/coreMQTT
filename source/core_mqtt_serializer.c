@@ -298,6 +298,10 @@ static uint8_t * encodeString( uint8_t * pDestination,
 static size_t getRemainingLength( TransportRecv_t recvFunc,
                                   NetworkContext_t * pNetworkContext );
 
+static size_t storeRemainingLength( TransportRecv_t recvFunc,
+                                    NetworkContext_t * pNetworkContext,
+                                    MQTTStoredPacketInfo_t * pIncomingPacketStore );
+
 /**
  * @brief Check if an incoming packet type is valid.
  *
@@ -744,6 +748,86 @@ static size_t getRemainingLength( TransportRecv_t recvFunc,
 
     /* Check that the decoded remaining length conforms to the MQTT specification. */
     if( remainingLength != MQTT_REMAINING_LENGTH_INVALID )
+    {
+        expectedSize = remainingLengthEncodedSize( remainingLength );
+
+        if( bytesDecoded != expectedSize )
+        {
+            remainingLength = MQTT_REMAINING_LENGTH_INVALID;
+        }
+    }
+
+    return remainingLength;
+}
+
+/*-----------------------------------------------------------*/
+
+static size_t storeRemainingLength( TransportRecv_t recvFunc,
+                                    NetworkContext_t * pNetworkContext,
+                                    MQTTStoredPacketInfo_t * pIncomingPacketStore )
+{
+    size_t remainingLength = pIncomingPacketStore->remainingTotalPacketLength;
+    size_t multiplier = pIncomingPacketStore->multipler;
+    size_t bytesDecoded = pIncomingPacketStore->totalLengthBytesRead;
+    size_t expectedSize = 0;
+    uint8_t encodedByte = 0;
+    int32_t bytesReceived = 0;
+
+    /* This algorithm is copied from the MQTT v3.1.1 spec. */
+    do
+    {
+        if( multiplier > 2097152U ) /* 128 ^ 3 */
+        {
+            remainingLength = MQTT_REMAINING_LENGTH_INVALID;
+
+            /* Complete, albeit incorrect, length has been read. */
+            pIncomingPacketStore->lengthReadComplete = true;
+        }
+        else
+        {
+            bytesReceived = recvFunc( pNetworkContext, &encodedByte, 1U );
+
+            if( bytesReceived == 1 )
+            {
+                remainingLength += ( ( size_t ) encodedByte & 0x7FU ) * multiplier;
+                multiplier *= 128U;
+                bytesDecoded++;
+            }
+            else
+            {
+                /* In case nothing is received from the transport interface,
+                 * save the state. */
+                pIncomingPacketStore->multipler = multiplier;
+                pIncomingPacketStore->remainingTotalPacketLength = remainingLength;
+                pIncomingPacketStore->totalLengthBytesRead = bytesDecoded;
+                pIncomingPacketStore->lengthReadComplete = false;
+
+                /* And break out of the loop. */
+                break;
+            }
+        }
+
+        if( remainingLength == MQTT_REMAINING_LENGTH_INVALID )
+        {
+            break;
+        }
+    } while( ( encodedByte & 0x80U ) != 0U );
+
+    if( ( encodedByte & 0x80U ) == 0U )
+    {
+        /* If this is the last byte, then the length has been fully received.
+         * Fill in the data in the context.
+         */
+        pIncomingPacketStore->lengthReadComplete = true; 
+        pIncomingPacketStore->multipler = multiplier;
+        pIncomingPacketStore->remainingTotalPacketLength = remainingLength;
+        pIncomingPacketStore->totalLengthBytesRead = bytesDecoded;
+        pIncomingPacketStore->bytesPendingRecv = remainingLength;
+    }
+
+    /* Check that the decoded remaining length conforms to the MQTT specification. */
+    if( ( pIncomingPacketStore->lengthReadComplete == true ) &&
+        ( remainingLength != MQTT_REMAINING_LENGTH_INVALID ) )
     {
         expectedSize = remainingLengthEncodedSize( remainingLength );
 
@@ -2389,6 +2473,88 @@ MQTTStatus_t MQTT_GetIncomingPacketTypeAndLength( TransportRecv_t readFunc,
         }
         else
         {
+            LogError( ( "Incoming packet invalid: Packet type=%u.",
+                        ( unsigned int ) pIncomingPacket->type ) );
+            status = MQTTBadResponse;
+        }
+    }
+    else if( ( status != MQTTBadParameter ) && ( bytesReceived == 0 ) )
+    {
+        status = MQTTNoDataAvailable;
+    }
+
+    /* If the input packet was valid, then any other number of bytes received is
+     * a failure. */
+    else if( status != MQTTBadParameter )
+    {
+        LogError( ( "A single byte was not read from the transport: "
+                    "transportStatus=%ld.",
+                    ( long int ) bytesReceived ) );
+        status = MQTTRecvFailed;
+    }
+    else
+    {
+        /* Empty else MISRA 15.7 */
+    }
+
+    return status;
+}
+
+/*-----------------------------------------------------------*/
+
+MQTTStatus_t MQTT_StoreIncomingPacketTypeAndLength( TransportRecv_t readFunc,
+                                                    NetworkContext_t * pNetworkContext,
+                                                    MQTTStoredPacketInfo_t * pIncomingPacket )
+{
+    MQTTStatus_t status = MQTTSuccess;
+    int32_t bytesReceived = 0;
+
+    if( pIncomingPacket == NULL )
+    {
+        LogError( ( "Invalid parameter: pIncomingPacket is NULL." ) );
+        status = MQTTBadParameter;
+    }
+    else
+    {
+        /* Read the first byte (type) only if this is a new packet. */
+        if( pIncomingPacket->newPacket == true )
+        {
+            /* Read a single byte. */
+            bytesReceived = readFunc( pNetworkContext,
+                                      &( pIncomingPacket->type ),
+                                      1U );
+        }
+        else
+        {
+            /* Show that the first byte has been received. */
+            bytesReceived = 1;
+        }
+    }
+
+    if( bytesReceived == 1 )
+    {
+        /* Check validity. */
+        if( incomingPacketValid( pIncomingPacket->type ) == true )
+        {
+            /* Update this field showing that this packet is not 'new'. */
+            pIncomingPacket->newPacket = false;
+
+            pIncomingPacket->remainingTotalPacketLength = storeRemainingLength( readFunc,
+                                                                                pNetworkContext,
+                                                                                pIncomingPacket );
+
+            if( pIncomingPacket->remainingTotalPacketLength == MQTT_REMAINING_LENGTH_INVALID )
+            {
+                LogError( ( "Incoming packet remaining length invalid." ) );
+                status = MQTTBadResponse;
+            }
+        }
+        else
+        {
+            /* Update this field showing that the next byte received will be
+             * treated as belonging to a new packet. */
+            pIncomingPacket->newPacket = true;
+
             LogError( ( "Incoming packet invalid: Packet type=%u.",
                         ( unsigned int ) pIncomingPacket->type ) );
             status = MQTTBadResponse;
