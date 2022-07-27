@@ -105,7 +105,8 @@ typedef enum MQTTStatus
     MQTTNoDataAvailable, /**< No data available from the transport interface. */
     MQTTIllegalState,    /**< An illegal state in the state record. */
     MQTTStateCollision,  /**< A collision with an existing state record entry. */
-    MQTTKeepAliveTimeout /**< Timeout while waiting for PINGRESP. */
+    MQTTKeepAliveTimeout, /**< Timeout while waiting for PINGRESP. */
+    MQTTIncomingRecvIncomplete /**<  Error to show that the MQTT_ProcessLoop has received incomplete data. */
 } MQTTStatus_t;
 
 /**
@@ -1218,6 +1219,25 @@ MQTTStatus_t MQTT_GetIncomingPacketTypeAndLength( TransportRecv_t readFunc,
                                                   MQTTPacketInfo_t * pIncomingPacket );
 /* @[declare_mqtt_getincomingpackettypeandlength] */
 
+/**
+ * @brief Extract the MQTT packet type and length from incoming packet.
+ *
+ * This function must be called for every incoming packet to retrieve the
+ * #MQTTPacketInfo_t.type and #MQTTPacketInfo_t.remainingLength. A
+ * #MQTTPacketInfo_t is not valid until this routine has been invoked.
+ *
+ * @param[in] readFunc Transport layer read function pointer.
+ * @param[in] pNetworkContext The network context pointer provided by the application.
+ * @param[out] pIncomingPacket Pointer to MQTTStoredPacketInfo_t structure. This is
+ * where type, remaining length and packet identifier are stored and used in later
+ * iterations.
+ *
+ * @return #MQTTSuccess on successful extraction of type and length,
+ * #MQTTBadParameter if @p pIncomingPacket is invalid,
+ * #MQTTRecvFailed on transport receive failure,
+ * #MQTTBadResponse if an invalid packet is read, and
+ * #MQTTNoDataAvailable if there is nothing to read.
+ */
 MQTTStatus_t MQTT_StoreIncomingPacketTypeAndLength( TransportRecv_t readFunc,
                                                     NetworkContext_t * pNetworkContext,
                                                     MQTTStoredPacketInfo_t * pIncomingPacket );

@@ -1490,15 +1490,20 @@ static MQTTStatus_t receiveSingleIteration( MQTTContext_t * pContext,
         LogError( ( "Receiving incoming packet length failed. Status=%s",
                     MQTT_Status_strerror( status ) ) );
     }
+    else if( pIncomingPacketStore->lengthReadComplete == true )
+    {
+        /* Receive the packet only when the length has been completely read.
+         * Remaining time is recalculated before calling this function. */
+        status = receiveAndStorePacket( pContext, pIncomingPacketStore );
+    }
     else
     {
-        /* Receive packet. Remaining time is recalculated before calling this
-         * function. */
-        status = receiveAndStorePacket( pContext, pIncomingPacketStore );
+        /* Receiving the length was not complete. Do nothing. */
     }
 
     /* Handle received packet. If incomplete data was read then this will not execute. */
-    if( status == MQTTSuccess )
+    if( ( status == MQTTSuccess ) &&
+        ( pIncomingPacketStore->lengthReadComplete == true ) )
     {
         incomingPacket.pRemainingData = pContext->networkBuffer.pBuffer;
         incomingPacket.type = pIncomingPacketStore->type;
