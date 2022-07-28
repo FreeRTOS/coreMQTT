@@ -42,7 +42,7 @@ jobs:
               echo "Deleting existing release for $VERSION_NUM"
               gh release delete --yes $VERSION_NUM
           fi
-  tag-commit:
+  add-sbom-and-tag-commit:
     if: ${{ ( github.event.inputs.delete_existing_tag_release == 'true' && success() )  || ( github.event.inputs.delete_existing_tag_release == 'false' && always() ) }}
     needs: clean-existing-tag-and-release
     name: Tag commit
@@ -54,7 +54,20 @@ jobs:
           ref: ${{ github.event.inputs.commit_id }}
       - name: Configure git identity
         run: |
-            git config --global user.name "Release Workflow"
+          git config --global user.name ${{ github.actor }}
+          git config --global user.email ${{ github.actor }}@users.noreply.github.com
+      - name: create a new branch that references commit id
+        run: git checkout -b ${{ github.event.inputs.version_number }} ${{ github.event.inputs.commit_id }}
+      - name: Generate SBOM
+        uses: FreeRTOS/CI-CD-Github-Actions/sbom-generator@main
+        with:
+          repo_path: ./
+          source_path: ./source
+      - name: commit SBOM file
+        run: |
+          git add .
+          git commit -m 'Update SBOM'
+          git push -u origin ${{ github.event.inputs.version_number }}
       - name: Tag Commit and Push to remote
         run: |
           git tag ${{ github.event.inputs.version_number }} -a -m "coreMQTT Library ${{ github.event.inputs.version_number }}"
