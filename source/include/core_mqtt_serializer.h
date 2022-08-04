@@ -265,50 +265,12 @@ typedef struct MQTTPacketInfo
      */
     size_t remainingLength;
 
+    /**
+     * @brief The length of the MQTT header including the type and length.
+     */
     size_t headerLength;
 } MQTTPacketInfo_t;
 
-
-typedef struct MQTTStoredPacketInfo
-{
-    /**
-     * @brief This boolean value represents whether any data has been received
-     * or not.
-     */
-    bool newPacket;
-
-    /**
-     * @brief Whether the complete length field has been read or not.
-     */
-    bool lengthReadComplete;
-    
-    /**
-     * @brief Type of the packet being received. First byte of the header.
-     */
-    uint8_t type;
-    
-    /**
-     * @brief How many (1-4) bytes have been read for the length.
-     */
-    size_t totalLengthBytesRead;
-    
-    /**
-     * @brief The value of multipler used to calculate remaining bytes.
-     */
-    size_t multipler;
-    
-    /**
-     * @brief Total number of bytes in the packet. This is calculated using
-     * length[4] array.
-     */
-    size_t remainingTotalPacketLength;
-    
-    /**
-     * @brief Total number of bytes which are yet to be received from the
-     * socket.
-     */
-    size_t bytesPendingRecv;
-} MQTTStoredPacketInfo_t;
 /**
  * @brief Get the size and Remaining Length of an MQTT CONNECT packet.
  *

@@ -117,7 +117,7 @@ static MQTTStatus_t discardPacket( const MQTTContext_t * pContext,
                                    size_t remainingLength,
                                    uint32_t timeoutMs );
 
-static MQTTStatus_t discardStoredPacket( const MQTTContext_t * pContext,
+static MQTTStatus_t discardStoredPacket( MQTTContext_t * pContext,
                                          MQTTPacketInfo_t * pPacketInfo );
 /**
  * @brief Receive a packet from the transport interface.

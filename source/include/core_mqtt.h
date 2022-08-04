@@ -223,12 +223,15 @@ typedef struct MQTTContext
      */
     bool controlPacketSent;
 
+    /**
+     * @brief Index to keep track of the number of bytes received in network buffer.
+     */
+    size_t index;
+
     /* Keep alive members. */
     uint16_t keepAliveIntervalSec; /**< @brief Keep Alive interval. */
     uint32_t pingReqSendTimeMs;    /**< @brief Timestamp of the last sent PINGREQ. */
     bool waitingForPingResp;       /**< @brief If the library is currently awaiting a PINGRESP. */
-    MQTTStoredPacketInfo_t lastRxPacket;
-    size_t index;
 } MQTTContext_t;
 
 /**
