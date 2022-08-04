@@ -311,9 +311,9 @@ static size_t getRemainingLength( TransportRecv_t recvFunc,
  *         packet is not yet fully received and decoded. Otherwise, MQTTSuccess
  *         shows that processing of the packet was successful.
  */
-static MQTTStatus_t storeRemainingLength( TransportRecv_t recvFunc,
-                                          NetworkContext_t * pNetworkContext,
-                                          MQTTStoredPacketInfo_t * pIncomingPacketStore );
+static MQTTStatus_t storeRemainingLength( uint8_t * pBuffer,
+                                          size_t * pIndex,
+                                          MQTTPacketInfo_t * pIncomingPacket );
 
 /**
  * @brief Check if an incoming packet type is valid.
@@ -775,16 +775,15 @@ static size_t getRemainingLength( TransportRecv_t recvFunc,
 
 /*-----------------------------------------------------------*/
 
-static MQTTStatus_t storeRemainingLength( TransportRecv_t recvFunc,
-                                          NetworkContext_t * pNetworkContext,
-                                          MQTTStoredPacketInfo_t * pIncomingPacketStore )
+static MQTTStatus_t storeRemainingLength( uint8_t * pBuffer,
+                                          size_t * pIndex,
+                                          MQTTPacketInfo_t * pIncomingPacket )
 {
-    size_t remainingLength = pIncomingPacketStore->remainingTotalPacketLength;
-    size_t multiplier = pIncomingPacketStore->multipler;
-    size_t bytesDecoded = pIncomingPacketStore->totalLengthBytesRead;
+    size_t remainingLength = 0;
+    size_t multiplier = 1;
+    size_t bytesDecoded = 0;
     size_t expectedSize = 0;
     uint8_t encodedByte = 0;
-    int32_t bytesReceived = 0;
     MQTTStatus_t status = MQTTSuccess;
 
     /* This algorithm is copied from the MQTT v3.1.1 spec. */
@@ -794,39 +793,23 @@ static MQTTStatus_t storeRemainingLength( TransportRecv_t recvFunc,
         {
             remainingLength = MQTT_REMAINING_LENGTH_INVALID;
 
-            /* Complete, albeit incorrect, length has been read. */
-            pIncomingPacketStore->lengthReadComplete = true;
-
             status = MQTTBadResponse;
         }
         else
         {
-            bytesReceived = recvFunc( pNetworkContext, &encodedByte, 1U );
-
-            if( bytesReceived == 1 )
+            if( *pIndex > ( bytesDecoded + 1 ) )
             {
+                /* Get the next byte. It is at the next position after the bytes
+                 * decoded till now since the header of one byte was read before. */
+                encodedByte = pBuffer[ bytesDecoded + 1 ];
+
                 remainingLength += ( ( size_t ) encodedByte & 0x7FU ) * multiplier;
                 multiplier *= 128U;
                 bytesDecoded++;
             }
             else
             {
-                if( bytesReceived == 0 )
-                {
-                    status = MQTTIncomingRecvIncomplete;
-                }
-                else
-                {
-                    /* Bubble up the error to the user. */
-                    status = MQTTBadResponse;
-                }
-
-                /* In case nothing is received from the transport interface,
-                 * save the state. */
-                pIncomingPacketStore->multipler = multiplier;
-                pIncomingPacketStore->remainingTotalPacketLength = remainingLength;
-                pIncomingPacketStore->totalLengthBytesRead = bytesDecoded;
-                pIncomingPacketStore->lengthReadComplete = false;
+                status = MQTTNeedMoreBytes;
             }                
         }
 
@@ -841,21 +824,17 @@ static MQTTStatus_t storeRemainingLength( TransportRecv_t recvFunc,
 
     if( status == MQTTSuccess )
     {
-        /* If this is the last byte, then the length has been fully received.
-         * Fill in the data in the context.
-         */
-        pIncomingPacketStore->lengthReadComplete = true;
-        /* Reset the multiplier. */
-        pIncomingPacketStore->multipler = 1;
-        pIncomingPacketStore->remainingTotalPacketLength = remainingLength;
-        pIncomingPacketStore->bytesPendingRecv = remainingLength;
-
         /* Check that the decoded remaining length conforms to the MQTT specification. */
         expectedSize = remainingLengthEncodedSize( remainingLength );
 
         if( bytesDecoded != expectedSize )
         {
             status = MQTTBadResponse;
+        }
+        else
+        {
+            pIncomingPacket->remainingLength = remainingLength;
+            pIncomingPacket->headerLength = bytesDecoded + 1;
         }
     }
 
@@ -2524,75 +2503,55 @@ MQTTStatus_t MQTT_GetIncomingPacketTypeAndLength( TransportRecv_t readFunc,
 
 /*-----------------------------------------------------------*/
 
-MQTTStatus_t MQTT_StoreIncomingPacketTypeAndLength( TransportRecv_t readFunc,
-                                                    NetworkContext_t * pNetworkContext,
-                                                    MQTTStoredPacketInfo_t * pIncomingPacket )
+MQTTStatus_t MQTT_StoreIncomingPacketTypeAndLength( uint8_t * pBuffer,
+                                                    size_t * pIndex,
+                                                    MQTTPacketInfo_t * pIncomingPacket )
 {
     MQTTStatus_t status = MQTTSuccess;
-    int32_t bytesReceived = 0;
 
     if( pIncomingPacket == NULL )
     {
         LogError( ( "Invalid parameter: pIncomingPacket is NULL." ) );
         status = MQTTBadParameter;
     }
+    else if( pIndex == NULL )
+    {
+        LogError( ( "Invalid parameter: pIndex is NULL." ) );
+        status = MQTTBadParameter;
+    }
+    else if( pBuffer == NULL )
+    {
+        LogError( ( "Invalid parameter: pBuffer is NULL." ) );
+        status = MQTTBadParameter;
+    }
+    /* There should be at least one byte in the buffer */
+    else if( *pIndex < 1 )
+    {
+        /* No data is available. There are 0 bytes received from the network
+         * receive function. */
+        status = MQTTNoDataAvailable;
+    }
     else
     {
-        /* Read the first byte (type) only if this is a new packet. */
-        if( pIncomingPacket->newPacket == true )
-        {
-            /* Read a single byte. */
-            bytesReceived = readFunc( pNetworkContext,
-                                      &( pIncomingPacket->type ),
-                                      1U );
-        }
-        else
-        {
-            /* Show that the first byte has been received. */
-            bytesReceived = 1;
-        }
+        /* At least one byte is present which should be deciphered. */
+        pIncomingPacket->type = pBuffer[ 0 ];
     }
 
-    if( bytesReceived == 1 )
+    if( status == MQTTSuccess )
     {
         /* Check validity. */
         if( incomingPacketValid( pIncomingPacket->type ) == true )
         {
-            /* Update this field showing that this packet is not 'new'. */
-            pIncomingPacket->newPacket = false;
-
-            status = storeRemainingLength( readFunc,
-                                           pNetworkContext,
+            status = storeRemainingLength( pBuffer,
+                                           pIndex,
                                            pIncomingPacket );
         }
         else
         {
-            /* Update this field showing that the next byte received will be
-             * treated as belonging to a new packet. */
-            pIncomingPacket->newPacket = true;
-
             LogError( ( "Incoming packet invalid: Packet type=%u.",
                         ( unsigned int ) pIncomingPacket->type ) );
             status = MQTTBadResponse;
         }
-    }
-    else if( ( status != MQTTBadParameter ) && ( bytesReceived == 0 ) )
-    {
-        status = MQTTNoDataAvailable;
-    }
-
-    /* If the input packet was valid, then any other number of bytes received is
-     * a failure. */
-    else if( status != MQTTBadParameter )
-    {
-        LogError( ( "A single byte was not read from the transport: "
-                    "transportStatus=%ld.",
-                    ( long int ) bytesReceived ) );
-        status = MQTTRecvFailed;
-    }
-    else
-    {
-        /* Empty else MISRA 15.7 */
     }
 
     return status;

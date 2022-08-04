@@ -228,6 +228,7 @@ typedef struct MQTTContext
     uint32_t pingReqSendTimeMs;    /**< @brief Timestamp of the last sent PINGREQ. */
     bool waitingForPingResp;       /**< @brief If the library is currently awaiting a PINGRESP. */
     MQTTStoredPacketInfo_t lastRxPacket;
+    size_t index;
 } MQTTContext_t;
 
 /**
@@ -735,8 +736,7 @@ MQTTStatus_t MQTT_ProcessLoop( MQTTContext_t * pContext );
  * @endcode
  */
 /* @[declare_mqtt_receiveloop] */
-MQTTStatus_t MQTT_ReceiveLoop( MQTTContext_t * pContext,
-                               uint32_t timeoutMs );
+MQTTStatus_t MQTT_ReceiveLoop( MQTTContext_t * pContext );
 /* @[declare_mqtt_receiveloop] */
 
 /**

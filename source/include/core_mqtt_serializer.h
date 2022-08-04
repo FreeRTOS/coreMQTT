@@ -95,18 +95,18 @@ struct MQTTPacketInfo;
  */
 typedef enum MQTTStatus
 {
-    MQTTSuccess = 0,     /**< Function completed successfully. */
-    MQTTBadParameter,    /**< At least one parameter was invalid. */
-    MQTTNoMemory,        /**< A provided buffer was too small. */
-    MQTTSendFailed,      /**< The transport send function failed. */
-    MQTTRecvFailed,      /**< The transport receive function failed. */
-    MQTTBadResponse,     /**< An invalid packet was received from the server. */
-    MQTTServerRefused,   /**< The server refused a CONNECT or SUBSCRIBE. */
-    MQTTNoDataAvailable, /**< No data available from the transport interface. */
-    MQTTIllegalState,    /**< An illegal state in the state record. */
-    MQTTStateCollision,  /**< A collision with an existing state record entry. */
+    MQTTSuccess = 0,      /**< Function completed successfully. */
+    MQTTBadParameter,     /**< At least one parameter was invalid. */
+    MQTTNoMemory,         /**< A provided buffer was too small. */
+    MQTTSendFailed,       /**< The transport send function failed. */
+    MQTTRecvFailed,       /**< The transport receive function failed. */
+    MQTTBadResponse,      /**< An invalid packet was received from the server. */
+    MQTTServerRefused,    /**< The server refused a CONNECT or SUBSCRIBE. */
+    MQTTNoDataAvailable,  /**< No data available from the transport interface. */
+    MQTTIllegalState,     /**< An illegal state in the state record. */
+    MQTTStateCollision,   /**< A collision with an existing state record entry. */
     MQTTKeepAliveTimeout, /**< Timeout while waiting for PINGRESP. */
-    MQTTIncomingRecvIncomplete /**<  Error to show that the MQTT_ProcessLoop has received incomplete data. */
+    MQTTNeedMoreBytes     /**<  Error to show that the MQTT_ProcessLoop has received incomplete data. */
 } MQTTStatus_t;
 
 /**
@@ -264,6 +264,8 @@ typedef struct MQTTPacketInfo
      * @brief Length of remaining serialized data.
      */
     size_t remainingLength;
+
+    size_t headerLength;
 } MQTTPacketInfo_t;
 
 
@@ -1238,9 +1240,9 @@ MQTTStatus_t MQTT_GetIncomingPacketTypeAndLength( TransportRecv_t readFunc,
  * #MQTTBadResponse if an invalid packet is read, and
  * #MQTTNoDataAvailable if there is nothing to read.
  */
-MQTTStatus_t MQTT_StoreIncomingPacketTypeAndLength( TransportRecv_t readFunc,
-                                                    NetworkContext_t * pNetworkContext,
-                                                    MQTTStoredPacketInfo_t * pIncomingPacket );
+MQTTStatus_t MQTT_StoreIncomingPacketTypeAndLength( uint8_t * pBuffer,
+                                                    size_t * index,
+                                                    MQTTPacketInfo_t * pIncomingPacket );
 
 /* *INDENT-OFF* */
 #ifdef __cplusplus
