@@ -311,9 +311,9 @@ static size_t getRemainingLength( TransportRecv_t recvFunc,
  *         packet is not yet fully received and decoded. Otherwise, MQTTSuccess
  *         shows that processing of the packet was successful.
  */
-static MQTTStatus_t storeRemainingLength( uint8_t * pBuffer,
-                                          size_t * pIndex,
-                                          MQTTPacketInfo_t * pIncomingPacket );
+static MQTTStatus_t processRemainingLength( uint8_t * pBuffer,
+                                            size_t * pIndex,
+                                            MQTTPacketInfo_t * pIncomingPacket );
 
 /**
  * @brief Check if an incoming packet type is valid.
@@ -775,9 +775,9 @@ static size_t getRemainingLength( TransportRecv_t recvFunc,
 
 /*-----------------------------------------------------------*/
 
-static MQTTStatus_t storeRemainingLength( uint8_t * pBuffer,
-                                          size_t * pIndex,
-                                          MQTTPacketInfo_t * pIncomingPacket )
+static MQTTStatus_t processRemainingLength( uint8_t * pBuffer,
+                                            size_t * pIndex,
+                                            MQTTPacketInfo_t * pIncomingPacket )
 {
     size_t remainingLength = 0;
     size_t multiplier = 1;
@@ -2503,9 +2503,9 @@ MQTTStatus_t MQTT_GetIncomingPacketTypeAndLength( TransportRecv_t readFunc,
 
 /*-----------------------------------------------------------*/
 
-MQTTStatus_t MQTT_StoreIncomingPacketTypeAndLength( uint8_t * pBuffer,
-                                                    size_t * pIndex,
-                                                    MQTTPacketInfo_t * pIncomingPacket )
+MQTTStatus_t MQTT_ProcessIncomingPacketTypeAndLength( uint8_t * pBuffer,
+                                                      size_t * pIndex,
+                                                      MQTTPacketInfo_t * pIncomingPacket )
 {
     MQTTStatus_t status = MQTTSuccess;
 
@@ -2542,9 +2542,9 @@ MQTTStatus_t MQTT_StoreIncomingPacketTypeAndLength( uint8_t * pBuffer,
         /* Check validity. */
         if( incomingPacketValid( pIncomingPacket->type ) == true )
         {
-            status = storeRemainingLength( pBuffer,
-                                           pIndex,
-                                           pIncomingPacket );
+            status = processRemainingLength( pBuffer,
+                                             pIndex,
+                                             pIncomingPacket );
         }
         else
         {

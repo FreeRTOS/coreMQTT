@@ -1202,9 +1202,9 @@ MQTTStatus_t MQTT_GetIncomingPacketTypeAndLength( TransportRecv_t readFunc,
  * #MQTTBadResponse if an invalid packet is read, and
  * #MQTTNoDataAvailable if there is nothing to read.
  */
-MQTTStatus_t MQTT_StoreIncomingPacketTypeAndLength( uint8_t * pBuffer,
-                                                    size_t * index,
-                                                    MQTTPacketInfo_t * pIncomingPacket );
+MQTTStatus_t MQTT_ProcessIncomingPacketTypeAndLength( uint8_t * pBuffer,
+                                                      size_t * index,
+                                                      MQTTPacketInfo_t * pIncomingPacket );
 
 /* *INDENT-OFF* */
 #ifdef __cplusplus

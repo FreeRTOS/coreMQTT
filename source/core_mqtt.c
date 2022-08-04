@@ -1410,9 +1410,9 @@ static MQTTStatus_t receiveSingleIteration( MQTTContext_t * pContext,
         /* Update the number of bytes in the MQTT fixed buffer. */
         pContext->index += recvBytes;
     
-        status = MQTT_StoreIncomingPacketTypeAndLength( pContext->networkBuffer.pBuffer,
-                                                        &pContext->index,
-                                                        &incomingPacket );
+        status = MQTT_ProcessIncomingPacketTypeAndLength( pContext->networkBuffer.pBuffer,
+                                                          &pContext->index,
+                                                          &incomingPacket );
 
         totalMQTTPacketLength = incomingPacket.remainingLength + incomingPacket.headerLength;
     }
