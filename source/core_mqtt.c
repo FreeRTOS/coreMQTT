@@ -101,9 +101,6 @@ static MQTTPubAckType_t getAckFromPacketType( uint8_t packetType );
 static int32_t recvExact( const MQTTContext_t * pContext,
                           size_t bytesToRecv );
 
-static int32_t processPacket( MQTTContext_t * pContext,
-                              MQTTPacketInfo_t * pIncomingPacket );
-
 /**
  * @brief Discard a packet from the transport interface.
  *
@@ -131,9 +128,6 @@ static MQTTStatus_t discardStoredPacket( MQTTContext_t * pContext,
 static MQTTStatus_t receivePacket( const MQTTContext_t * pContext,
                                    MQTTPacketInfo_t incomingPacket,
                                    uint32_t remainingTimeMs );
-
-static MQTTStatus_t receiveAndStorePacket( MQTTContext_t * pContext,
-                                           MQTTPacketInfo_t * pIncomingPacket );
 
 /**
  * @brief Get the correct ack type to send.
