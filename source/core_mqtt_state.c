@@ -926,6 +926,47 @@ MQTTStatus_t MQTT_UpdateStatePublish( MQTTContext_t * pMqttContext,
 
 /*-----------------------------------------------------------*/
 
+MQTTStatus_t MQTT_RemoveStateRecord( MQTTContext_t * pMqttContext,
+                                     uint16_t packetId )
+{
+    MQTTStatus_t status = MQTTSuccess;
+    MQTTPubAckInfo_t* records = NULL;
+    size_t recordIndex = MQTT_STATE_ARRAY_MAX_COUNT;
+    MQTTQoS_t qos = MQTTQoS0;
+    MQTTPublishState_t currentState = MQTTStateNull;
+
+    assert( pMqttContext != NULL );
+    assert( pMqttContext->outgoingPublishRecords != NULL );
+
+    records = pMqttContext->outgoingPublishRecords;
+
+    recordIndex = findInRecord( records,
+                                MQTT_STATE_ARRAY_MAX_COUNT,
+                                packetId,
+                                &qos,
+                                &currentState );
+
+    if( currentState == MQTTStateNull )
+    {
+        status = MQTTBadParameter;
+    }
+    else if( ( qos != MQTTQoS1 ) && ( qos != MQTTQoS2 ) )
+    {
+        status = MQTTBadParameter;
+    }
+    else
+    {
+        updateRecord( records,
+                      recordIndex,
+                      MQTTStateNull,
+                      true );
+    }
+
+    return status;
+}
+
+/*-----------------------------------------------------------*/
+
 MQTTStatus_t MQTT_UpdateStateAck( MQTTContext_t * pMqttContext,
                                   uint16_t packetId,
                                   MQTTPubAckType_t packetType,
