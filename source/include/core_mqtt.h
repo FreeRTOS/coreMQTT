@@ -528,7 +528,7 @@ MQTTStatus_t MQTT_Publish( MQTTContext_t * pContext,
 /* @[declare_mqtt_publish] */
 
 /**
- * @brief Cancels an outgoing publish waiting for an ACK by the broker by
+ * @brief Cancels an outgoing publish callback (only for QoS > QoS0) by
  * removing it from the pending ACK list.
  *
  * @param[in] pContext Initialized MQTT context.
@@ -537,10 +537,10 @@ MQTTStatus_t MQTT_Publish( MQTTContext_t * pContext,
  * @return #MQTTBadParameter if invalid parameters are passed;
  * #MQTTSuccess otherwise.
  */
- /* @[declare_mqtt_cancelpublish] */
-MQTTStatus_t MQTT_CancelPublish( MQTTContext_t * pContext,
-                                 uint16_t packetId );
-/* @[declare_mqtt_cancelpublish] */
+ /* @[declare_mqtt_cancelcallback] */
+MQTTStatus_t MQTT_CancelCallback( MQTTContext_t * pContext,
+                                  uint16_t packetId );
+/* @[declare_mqtt_cancelcallback] */
 
 /**
  * @brief Sends an MQTT PINGREQ to broker.

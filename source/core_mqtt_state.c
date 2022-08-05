@@ -956,6 +956,7 @@ MQTTStatus_t MQTT_RemoveStateRecord( MQTTContext_t * pMqttContext,
     }
     else
     {
+        /* Delete the record. */
         updateRecord( records,
                       recordIndex,
                       MQTTStateNull,
