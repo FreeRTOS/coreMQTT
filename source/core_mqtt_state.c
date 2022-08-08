@@ -930,7 +930,7 @@ MQTTStatus_t MQTT_RemoveStateRecord( MQTTContext_t * pMqttContext,
                                      uint16_t packetId )
 {
     MQTTStatus_t status = MQTTSuccess;
-    MQTTPubAckInfo_t* records = NULL;
+    MQTTPubAckInfo_t * records = NULL;
     size_t recordIndex = MQTT_STATE_ARRAY_MAX_COUNT;
     MQTTQoS_t qos = MQTTQoS0;
     MQTTPublishState_t currentState = MQTTStateNull;

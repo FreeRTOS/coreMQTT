@@ -537,7 +537,7 @@ MQTTStatus_t MQTT_Publish( MQTTContext_t * pContext,
  * @return #MQTTBadParameter if invalid parameters are passed;
  * #MQTTSuccess otherwise.
  */
- /* @[declare_mqtt_cancelcallback] */
+/* @[declare_mqtt_cancelcallback] */
 MQTTStatus_t MQTT_CancelCallback( MQTTContext_t * pContext,
                                   uint16_t packetId );
 /* @[declare_mqtt_cancelcallback] */
