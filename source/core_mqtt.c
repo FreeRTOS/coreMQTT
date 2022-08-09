@@ -1768,6 +1768,19 @@ MQTTStatus_t MQTT_Init( MQTTContext_t * pContext,
 
 /*-----------------------------------------------------------*/
 
+MQTTStatus_t MQTT_CancelCallback( MQTTContext_t * pContext,
+                                  uint16_t packetId )
+{
+    MQTTStatus_t status;
+
+    status = MQTT_RemoveStateRecord( pContext,
+                                     packetId );
+
+    return status;
+}
+
+/*-----------------------------------------------------------*/
+
 MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
                            const MQTTConnectInfo_t * pConnectInfo,
                            const MQTTPublishInfo_t * pWillInfo,
