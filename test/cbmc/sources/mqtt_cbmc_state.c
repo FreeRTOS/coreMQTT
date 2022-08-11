@@ -50,6 +50,10 @@
     #define REMAINING_LENGTH_MAX    CBMC_MAX_OBJECT_SIZE
 #endif
 
+#ifndef MAXIMUM_SOCKET_MEMORY
+    #define MAXIMUM_SOCKET_MEMORY    ( 100 * 1024 )
+#endif
+
 MQTTPacketInfo_t * allocateMqttPacketInfo( MQTTPacketInfo_t * pPacketInfo )
 {
     if( pPacketInfo == NULL )
@@ -142,6 +146,11 @@ MQTTFixedBuffer_t * allocateMqttFixedBuffer( MQTTFixedBuffer_t * pFixedBuffer )
 bool isValidMqttFixedBuffer( const MQTTFixedBuffer_t * pFixedBuffer )
 {
     bool isValid = true;
+
+    if( pFixedBuffer->size >= MAXIMUM_SOCKET_MEMORY )
+    {
+        isValid = false;
+    }
 
     return isValid;
 }
