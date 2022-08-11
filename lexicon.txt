@@ -153,6 +153,7 @@ mqttfixedbuffer
 mqttgetcurrenttimefunc
 mqttillegalstate
 mqttkeepalivetimeout
+mqttneedmorebytes
 mqttnodataavailable
 mqttnomemory
 mqttnotconnected

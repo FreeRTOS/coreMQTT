@@ -114,8 +114,17 @@ static MQTTStatus_t discardPacket( const MQTTContext_t * pContext,
                                    size_t remainingLength,
                                    uint32_t timeoutMs );
 
+/**
+ * @brief Discard a packet from the MQTT buffer and the transport interface.
+ *
+ * @param[in] pContext MQTT Connection context.
+ * @param[in] pPacketInfo Information struct of the packet to be discarded.
+ *
+ * @return #MQTTRecvFailed or #MQTTNoDataAvailable.
+ */
 static MQTTStatus_t discardStoredPacket( MQTTContext_t * pContext,
                                          MQTTPacketInfo_t * pPacketInfo );
+
 /**
  * @brief Receive a packet from the transport interface.
  *
@@ -202,7 +211,6 @@ static MQTTStatus_t handleIncomingAck( MQTTContext_t * pContext,
  * @brief Run a single iteration of the receive loop.
  *
  * @param[in] pContext MQTT Connection context.
- * @param[in] remainingTimeMs Remaining time for the loop in milliseconds.
  * @param[in] manageKeepAlive Flag indicating if keep alive should be handled.
  *
  * @return #MQTTRecvFailed if a network error occurs during reception;
@@ -852,6 +860,8 @@ static MQTTStatus_t discardPacket( const MQTTContext_t * pContext,
     return status;
 }
 
+/*-----------------------------------------------------------*/
+
 static MQTTStatus_t discardStoredPacket( MQTTContext_t * pContext,
                                          MQTTPacketInfo_t * pPacketInfo )
 {
@@ -1403,7 +1413,7 @@ static MQTTStatus_t receiveSingleIteration( MQTTContext_t * pContext,
     {
         /* Update the number of bytes in the MQTT fixed buffer. */
         pContext->index += recvBytes;
-    
+
         status = MQTT_ProcessIncomingPacketTypeAndLength( pContext->networkBuffer.pBuffer,
                                                           &pContext->index,
                                                           &incomingPacket );
@@ -1471,7 +1481,7 @@ static MQTTStatus_t receiveSingleIteration( MQTTContext_t * pContext,
         /* Move the remaining bytes to the front of the buffer. */
         memmove( pContext->networkBuffer.pBuffer,
                  &( pContext->networkBuffer.pBuffer[ totalMQTTPacketLength ] ),
-                 pContext->index );        
+                 pContext->index );
     }
 
     if( status == MQTTNoDataAvailable )
@@ -2319,7 +2329,7 @@ MQTTStatus_t MQTT_ProcessLoop( MQTTContext_t * pContext )
     {
         pContext->controlPacketSent = false;
         status = receiveSingleIteration( pContext, true );
-    }    
+    }
 
     return status;
 }
@@ -2345,7 +2355,7 @@ MQTTStatus_t MQTT_ReceiveLoop( MQTTContext_t * pContext )
     else
     {
         status = receiveSingleIteration( pContext, false );
-    }    
+    }
 
     return status;
 }

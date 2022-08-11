@@ -1190,11 +1190,11 @@ MQTTStatus_t MQTT_GetIncomingPacketTypeAndLength( TransportRecv_t readFunc,
  * #MQTTPacketInfo_t.type and #MQTTPacketInfo_t.remainingLength. A
  * #MQTTPacketInfo_t is not valid until this routine has been invoked.
  *
- * @param[in] readFunc Transport layer read function pointer.
- * @param[in] pNetworkContext The network context pointer provided by the application.
- * @param[out] pIncomingPacket Pointer to MQTTStoredPacketInfo_t structure. This is
- * where type, remaining length and packet identifier are stored and used in later
- * iterations.
+ * @param[in] pBuffer The buffer holding the raw data to be processed
+ * @param[in] pIndex Pointer to the index within the buffer to marking the end of raw data
+ *            available.
+ * @param[in] pIncomingPacket Strucutre used to hold the fields of the
+ *            incoming packet.
  *
  * @return #MQTTSuccess on successful extraction of type and length,
  * #MQTTBadParameter if @p pIncomingPacket is invalid,
@@ -1203,7 +1203,7 @@ MQTTStatus_t MQTT_GetIncomingPacketTypeAndLength( TransportRecv_t readFunc,
  * #MQTTNoDataAvailable if there is nothing to read.
  */
 MQTTStatus_t MQTT_ProcessIncomingPacketTypeAndLength( uint8_t * pBuffer,
-                                                      size_t * index,
+                                                      size_t * pIndex,
                                                       MQTTPacketInfo_t * pIncomingPacket );
 
 /* *INDENT-OFF* */

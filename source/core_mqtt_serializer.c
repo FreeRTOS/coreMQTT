@@ -302,12 +302,13 @@ static size_t getRemainingLength( TransportRecv_t recvFunc,
  * @brief Retrieves, decodes and stores the Remaining Length from the network
  * interface by reading a single byte at a time.
  *
- * @param[in] recvFunc Network interface receive function.
- * @param[in] pNetworkContext Network interface context to the receive function.
- * @param[in] pIncomingPacketStore Strucutre used to hold the fields of the
+ * @param[in] pBuffer The buffer holding the raw data to be processed
+ * @param[in] pIndex Pointer to the index within the buffer to marking the end of raw data
+ *            available.
+ * @param[in] pIncomingPacket Structure used to hold the fields of the
  *            incoming packet.
  *
- * @return MQTTIncomingRecvIncomplete is returned to show that the incoming
+ * @return MQTTNeedMoreBytes is returned to show that the incoming
  *         packet is not yet fully received and decoded. Otherwise, MQTTSuccess
  *         shows that processing of the packet was successful.
  */
@@ -810,7 +811,7 @@ static MQTTStatus_t processRemainingLength( uint8_t * pBuffer,
             else
             {
                 status = MQTTNeedMoreBytes;
-            }                
+            }
         }
 
         /* If the response is incorrect, or no more data is available, then

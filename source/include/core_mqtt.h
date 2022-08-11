@@ -642,8 +642,6 @@ MQTTStatus_t MQTT_Disconnect( MQTTContext_t * pContext );
  * In that case, the #MQTT_ReceiveLoop API function should be used instead.
  *
  * @param[in] pContext Initialized and connected MQTT context.
- * @param[in] timeoutMs Minimum time in milliseconds that the receive loop will
- * run, unless an error occurs.
  *
  * @note Calling this function blocks the calling context for a time period that
  * depends on the passed @p timeoutMs, the configuration macros, #MQTT_RECV_POLLING_TIMEOUT_MS
@@ -701,8 +699,6 @@ MQTTStatus_t MQTT_ProcessLoop( MQTTContext_t * pContext );
  * and #MQTT_SEND_RETRY_TIMEOUT_MS timeout configurations MUST be set to 0.
  *
  * @param[in] pContext Initialized and connected MQTT context.
- * @param[in] timeoutMs Minimum time in milliseconds that the receive loop will
- * run, unless an error occurs.
  *
  * @note Calling this function blocks the calling context for a time period that
  * depends on the passed @p timeoutMs, the configuration macros, #MQTT_RECV_POLLING_TIMEOUT_MS
