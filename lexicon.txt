@@ -234,6 +234,7 @@ pfilterindex
 pfixedbuffer
 pheadersize
 pincomingpacket
+pindex
 pingreq
 pingreqs
 pingreqsendtimems

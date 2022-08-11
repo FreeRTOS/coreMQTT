@@ -1475,7 +1475,7 @@ static MQTTStatus_t receiveSingleIteration( MQTTContext_t * pContext,
             status = handleIncomingAck( pContext, &incomingPacket, manageKeepAlive );
         }
 
-        /* Update the index to reflect the remining bytes in the buffer.  */
+        /* Update the index to reflect the remaining bytes in the buffer.  */
         pContext->index -= totalMQTTPacketLength;
 
         /* Move the remaining bytes to the front of the buffer. */

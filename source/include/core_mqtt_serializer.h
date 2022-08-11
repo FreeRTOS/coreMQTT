@@ -1193,7 +1193,7 @@ MQTTStatus_t MQTT_GetIncomingPacketTypeAndLength( TransportRecv_t readFunc,
  * @param[in] pBuffer The buffer holding the raw data to be processed
  * @param[in] pIndex Pointer to the index within the buffer to marking the end of raw data
  *            available.
- * @param[in] pIncomingPacket Strucutre used to hold the fields of the
+ * @param[in] pIncomingPacket Structure used to hold the fields of the
  *            incoming packet.
  *
  * @return #MQTTSuccess on successful extraction of type and length,
