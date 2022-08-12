@@ -134,6 +134,10 @@ MQTTFixedBuffer_t * allocateMqttFixedBuffer( MQTTFixedBuffer_t * pFixedBuffer )
     if( pFixedBuffer != NULL )
     {
         __CPROVER_assume( pFixedBuffer->size > 0 );
+        /* The buffer should be less than an signed 32-bit integer value since the
+         * transport interface cannot return more than that value. */
+        __CPROVER_assume( pFixedBuffer->size < 0x7FFFFFFF );
+
         pFixedBuffer->pBuffer = malloc( pFixedBuffer->size );
     }
 
