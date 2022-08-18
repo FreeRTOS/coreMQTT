@@ -233,20 +233,6 @@ static MQTTStatus_t validateSubscribeUnsubscribeParams( const MQTTContext_t * pC
                                                         uint16_t packetId );
 
 /**
- * @brief Send serialized publish packet using transport send.
- *
- * @brief param[in] pContext Initialized MQTT context.
- * @brief param[in] pPublishInfo MQTT PUBLISH packet parameters.
- * @brief param[in] headerSize Header size of the PUBLISH packet.
- *
- * @return #MQTTSendFailed if transport write failed;
- * #MQTTSuccess otherwise.
- */
-static MQTTStatus_t sendPublish( MQTTContext_t * pContext,
-                                 const MQTTPublishInfo_t * pPublishInfo,
-                                 size_t headerSize );
-
-/**
  * @brief Receives a CONNACK MQTT packet.
  *
  * @param[in] pContext Initialized MQTT context.
@@ -280,6 +266,26 @@ static MQTTStatus_t receiveConnack( const MQTTContext_t * pContext,
 static MQTTStatus_t handleSessionResumption( MQTTContext_t * pContext,
                                              bool sessionPresent );
 
+
+/**
+ * @brief Send the publish packet without copying the topic string and payload in
+ * the buffer.
+ *
+ * @brief param[in] pContext Initialized MQTT context.
+ * @brief param[in] pPublishInfo MQTT PUBLISH packet parameters.
+ * @brief param[in] pMqttHeader the serialized MQTT header with the header byte;
+ * the encoded length of the packet; and the encoded length of the topic string.
+ * @brief param[in] headerSize Size of the serialized PUBLISH header.
+ * @brief param[in] packetId Packet Id of the publish packet.
+ *
+ * @return #MQTTSendFailed if transport send during resend failed;
+ * #MQTTSuccess otherwise.
+ */
+static MQTTStatus_t sendPublishWithoutCopy( MQTTContext_t * pContext,
+                                            const MQTTPublishInfo_t * pPublishInfo,
+                                            const uint8_t * pMqttHeader,
+                                            size_t headerSize,
+                                            uint16_t packetId );
 /**
  * @brief Serializes a PUBLISH message.
  *
@@ -1412,56 +1418,69 @@ static MQTTStatus_t validateSubscribeUnsubscribeParams( const MQTTContext_t * pC
 
 /*-----------------------------------------------------------*/
 
-static MQTTStatus_t sendPublish( MQTTContext_t * pContext,
-                                 const MQTTPublishInfo_t * pPublishInfo,
-                                 size_t headerSize )
+static MQTTStatus_t sendPublishWithoutCopy( MQTTContext_t * pContext,
+                                            const MQTTPublishInfo_t * pPublishInfo,
+                                            const uint8_t * pMqttHeader,
+                                            size_t headerSize,
+                                            uint16_t packetId )
 {
     MQTTStatus_t status = MQTTSuccess;
-    int32_t bytesSent = 0;
+    int32_t bytesSent;
+    uint8_t serializedPacketID[ 2 ];
+    const size_t packetIdLength = 2UL;
 
-    assert( pContext != NULL );
-    assert( pPublishInfo != NULL );
-    assert( headerSize > 0 );
-    assert( pContext->networkBuffer.pBuffer != NULL );
-    assert( !( pPublishInfo->payloadLength > 0 ) || ( pPublishInfo->pPayload != NULL ) );
-
-    /* Send header first. */
+    /* Send the serialized publish packet header over network. */
     bytesSent = sendPacket( pContext,
-                            pContext->networkBuffer.pBuffer,
+                            pMqttHeader,
                             headerSize );
 
-    if( bytesSent < ( int32_t ) headerSize )
+    if( bytesSent != ( int32_t ) headerSize )
     {
-        LogError( ( "Transport send failed for PUBLISH header." ) );
         status = MQTTSendFailed;
     }
-    else
-    {
-        LogDebug( ( "Sent %ld bytes of PUBLISH header.",
-                    ( long int ) bytesSent ) );
 
+    if( status == MQTTSuccess )
+    {
+        /* Send the topic string over the network. */
+        bytesSent = sendPacket( pContext,
+                                ( const uint8_t * ) pPublishInfo->pTopicName,
+                                pPublishInfo->topicNameLength );
+
+        if( bytesSent != ( ( int32_t ) pPublishInfo->topicNameLength ) )
+        {
+            status = MQTTSendFailed;
+        }
+    }
+
+    if( ( status == MQTTSuccess ) && ( pPublishInfo->qos > MQTTQoS0 ) )
+    {
+        /* Encode and send the packet ID. */
+        serializedPacketID[ 0 ] = ( ( uint8_t ) ( ( packetId ) >> 8 ) );
+        serializedPacketID[ 1 ] = ( ( uint8_t ) ( ( packetId ) & 0x00ffU ) );
+
+        /* Sends the topic string over the network. */
+        bytesSent = sendPacket( pContext,
+                                serializedPacketID,
+                                packetIdLength );
+
+        if( bytesSent != ( int32_t ) packetIdLength )
+        {
+            status = MQTTSendFailed;
+        }
+    }
+
+    if( ( status == MQTTSuccess ) &&
+        ( pPublishInfo->payloadLength > 0U ) )
+    {
         /* Send Payload if there is one to send. It is valid for a PUBLISH
          * Packet to contain a zero length payload.*/
-        if( pPublishInfo->payloadLength > 0U )
-        {
-            bytesSent = sendPacket( pContext,
-                                    pPublishInfo->pPayload,
-                                    pPublishInfo->payloadLength );
+        bytesSent = sendPacket( pContext,
+                                pPublishInfo->pPayload,
+                                pPublishInfo->payloadLength );
 
-            if( bytesSent < ( int32_t ) pPublishInfo->payloadLength )
-            {
-                LogError( ( "Transport send failed for PUBLISH payload." ) );
-                status = MQTTSendFailed;
-            }
-            else
-            {
-                LogDebug( ( "Sent %ld bytes of PUBLISH payload.",
-                            ( long int ) bytesSent ) );
-            }
-        }
-        else
+        if( bytesSent != ( ( int32_t ) pPublishInfo->payloadLength ) )
         {
-            LogDebug( ( "PUBLISH payload was not sent. Payload length was zero." ) );
+            status = MQTTSendFailed;
         }
     }
 
@@ -1929,19 +1948,29 @@ MQTTStatus_t MQTT_Publish( MQTTContext_t * pContext,
                            const MQTTPublishInfo_t * pPublishInfo,
                            uint16_t packetId )
 {
-    size_t headerSize = 0UL;
+    size_t headerSize = 0UL, remainingLength = 0UL, packetSize = 0UL;
     MQTTPublishState_t publishStatus = MQTTStateNull;
+    /* 1 header byte + 4 bytes (maximum) required for encoding the length +
+     * 2 bytes for topic string. */
+    uint8_t mqttHeader[ 7 ];
 
     /* Validate arguments. */
     MQTTStatus_t status = validatePublishParams( pContext, pPublishInfo, packetId );
 
     if( status == MQTTSuccess )
     {
-        /* Serialize PUBLISH packet. */
-        status = serializePublish( pContext,
-                                   pPublishInfo,
-                                   packetId,
-                                   &headerSize );
+        /* Get the remaining length and packet size.*/
+        status = MQTT_GetPublishPacketSize( pPublishInfo,
+                                            &remainingLength,
+                                            &packetSize );
+    }
+
+    if( status == MQTTSuccess )
+    {
+        status = MQTT_SerializePublishHeaderWithoutTopic( pPublishInfo,
+                                                          remainingLength,
+                                                          mqttHeader,
+                                                          &headerSize );
     }
 
     if( ( status == MQTTSuccess ) && ( pPublishInfo->qos > MQTTQoS0 ) )
@@ -1962,10 +1991,11 @@ MQTTStatus_t MQTT_Publish( MQTTContext_t * pContext,
 
     if( status == MQTTSuccess )
     {
-        /* Sends the serialized publish packet over network. */
-        status = sendPublish( pContext,
-                              pPublishInfo,
-                              headerSize );
+        status = sendPublishWithoutCopy( pContext,
+                                         pPublishInfo,
+                                         mqttHeader,
+                                         headerSize,
+                                         packetId );
     }
 
     if( ( status == MQTTSuccess ) && ( pPublishInfo->qos > MQTTQoS0 ) )

@@ -612,6 +612,79 @@ static bool calculatePublishPacketSize( const MQTTPublishInfo_t * pPublishInfo,
 
 /*-----------------------------------------------------------*/
 
+MQTTStatus_t MQTT_SerializePublishHeaderWithoutTopic( const MQTTPublishInfo_t * pPublishInfo,
+                                                      size_t remainingLength,
+                                                      uint8_t * pBuffer,
+                                                      size_t * headerSize )
+{
+    size_t headerLength;
+    uint8_t * pIndex;
+    MQTTStatus_t status = MQTTSuccess;
+
+    /* The first byte of a PUBLISH packet contains the packet type and flags. */
+    uint8_t publishFlags = MQTT_PACKET_TYPE_PUBLISH;
+
+    /* Get the start address of the buffer. */
+    pIndex = pBuffer;
+
+    /* Length of serialized packet = First byte
+     *                               + Length of encoded remaining length
+     *                               + Encoded topic length. */
+    headerLength = 1U + remainingLengthEncodedSize( remainingLength ) + 2U;
+
+    if( pPublishInfo->qos == MQTTQoS1 )
+    {
+        LogDebug( ( "Adding QoS as QoS1 in PUBLISH flags." ) );
+        UINT8_SET_BIT( publishFlags, MQTT_PUBLISH_FLAG_QOS1 );
+    }
+    else if( pPublishInfo->qos == MQTTQoS2 )
+    {
+        LogDebug( ( "Adding QoS as QoS2 in PUBLISH flags." ) );
+        UINT8_SET_BIT( publishFlags, MQTT_PUBLISH_FLAG_QOS2 );
+    }
+    else
+    {
+        /* Empty else MISRA 15.7 */
+    }
+
+    if( pPublishInfo->retain == true )
+    {
+        LogDebug( ( "Adding retain bit in PUBLISH flags." ) );
+        UINT8_SET_BIT( publishFlags, MQTT_PUBLISH_FLAG_RETAIN );
+    }
+
+    if( pPublishInfo->dup == true )
+    {
+        LogDebug( ( "Adding dup bit in PUBLISH flags." ) );
+        UINT8_SET_BIT( publishFlags, MQTT_PUBLISH_FLAG_DUP );
+    }
+
+    *pIndex = publishFlags;
+    pIndex++;
+
+    /* The "Remaining length" is encoded from the second byte. */
+    pIndex = encodeRemainingLength( pIndex, remainingLength );
+
+    /* The first byte of a UTF-8 string is the high byte of the string length. */
+    *pIndex = UINT16_HIGH_BYTE( pPublishInfo->topicNameLength );
+    pIndex++;
+
+    /* The second byte of a UTF-8 string is the low byte of the string length. */
+    *pIndex = UINT16_LOW_BYTE( pPublishInfo->topicNameLength );
+    pIndex++;
+
+    *headerSize = headerLength;
+
+    if( headerLength > 7 )
+    {
+        status = MQTTBadParameter;
+    }
+
+    return status;
+}
+
+/*-----------------------------------------------------------*/
+
 static void serializePublishCommon( const MQTTPublishInfo_t * pPublishInfo,
                                     size_t remainingLength,
                                     uint16_t packetIdentifier,
