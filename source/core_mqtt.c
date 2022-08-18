@@ -1454,11 +1454,11 @@ static MQTTStatus_t sendPublishWithoutCopy( MQTTContext_t * pContext,
 
     if( ( status == MQTTSuccess ) && ( pPublishInfo->qos > MQTTQoS0 ) )
     {
-        /* Encode and send the packet ID. */
+        /* Encode the packet ID. */
         serializedPacketID[ 0 ] = ( ( uint8_t ) ( ( packetId ) >> 8 ) );
         serializedPacketID[ 1 ] = ( ( uint8_t ) ( ( packetId ) & 0x00ffU ) );
 
-        /* Sends the topic string over the network. */
+        /* Send the packet ID over the network. */
         bytesSent = sendPacket( pContext,
                                 serializedPacketID,
                                 packetIdLength );
