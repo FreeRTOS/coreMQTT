@@ -2034,6 +2034,12 @@ MQTTStatus_t MQTT_Ping( MQTTContext_t * pContext )
     int32_t bytesSent = 0;
     MQTTStatus_t status = MQTTSuccess;
     size_t packetSize = 0U;
+    /* MQTT ping packets are of fixed length. */
+    uint8_t pingreqPacket[ MQTT_PACKET_PINGREQ_SIZE ];
+    MQTTFixedBuffer_t localBuffer;
+
+    localBuffer.pBuffer = pingreqPacket;
+    localBuffer.size = MQTT_PACKET_PINGREQ_SIZE;
 
     if( pContext == NULL )
     {
@@ -2060,14 +2066,14 @@ MQTTStatus_t MQTT_Ping( MQTTContext_t * pContext )
     if( status == MQTTSuccess )
     {
         /* Serialize MQTT PINGREQ. */
-        status = MQTT_SerializePingreq( &( pContext->networkBuffer ) );
+        status = MQTT_SerializePingreq( &localBuffer );
     }
 
     if( status == MQTTSuccess )
     {
         /* Send the serialized PINGREQ packet to transport layer. */
         bytesSent = sendPacket( pContext,
-                                pContext->networkBuffer.pBuffer,
+                                localBuffer.pBuffer,
                                 packetSize );
 
         /* It is an error to not send the entire PINGREQ packet. */
@@ -2155,6 +2161,11 @@ MQTTStatus_t MQTT_Disconnect( MQTTContext_t * pContext )
     size_t packetSize = 0U;
     int32_t bytesSent = 0;
     MQTTStatus_t status = MQTTSuccess;
+    MQTTFixedBuffer_t localBuffer;
+    uint8_t disconnectPacket[ MQTT_DISCONNECT_PACKET_SIZE ];
+
+    localBuffer.pBuffer = disconnectPacket;
+    localBuffer.size = MQTT_DISCONNECT_PACKET_SIZE;
 
     /* Validate arguments. */
     if( pContext == NULL )
@@ -2174,13 +2185,13 @@ MQTTStatus_t MQTT_Disconnect( MQTTContext_t * pContext )
     if( status == MQTTSuccess )
     {
         /* Serialize MQTT DISCONNECT packet. */
-        status = MQTT_SerializeDisconnect( &( pContext->networkBuffer ) );
+        status = MQTT_SerializeDisconnect( &localBuffer );
     }
 
     if( status == MQTTSuccess )
     {
         bytesSent = sendPacket( pContext,
-                                pContext->networkBuffer.pBuffer,
+                                localBuffer.pBuffer,
                                 packetSize );
 
         if( bytesSent < ( int32_t ) packetSize )
