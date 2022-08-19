@@ -153,6 +153,7 @@ mqttfixedbuffer
 mqttgetcurrenttimefunc
 mqttillegalstate
 mqttkeepalivetimeout
+mqttneedmorebytes
 mqttnodataavailable
 mqttnomemory
 mqttnotconnected
@@ -233,6 +234,7 @@ pfilterindex
 pfixedbuffer
 pheadersize
 pincomingpacket
+pindex
 pingreq
 pingreqs
 pingreqsendtimems

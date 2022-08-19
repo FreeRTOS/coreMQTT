@@ -115,6 +115,17 @@ static MQTTStatus_t discardPacket( const MQTTContext_t * pContext,
                                    uint32_t timeoutMs );
 
 /**
+ * @brief Discard a packet from the MQTT buffer and the transport interface.
+ *
+ * @param[in] pContext MQTT Connection context.
+ * @param[in] pPacketInfo Information struct of the packet to be discarded.
+ *
+ * @return #MQTTRecvFailed or #MQTTNoDataAvailable.
+ */
+static MQTTStatus_t discardStoredPacket( MQTTContext_t * pContext,
+                                         MQTTPacketInfo_t * pPacketInfo );
+
+/**
  * @brief Receive a packet from the transport interface.
  *
  * @param[in] pContext MQTT Connection context.
@@ -200,7 +211,6 @@ static MQTTStatus_t handleIncomingAck( MQTTContext_t * pContext,
  * @brief Run a single iteration of the receive loop.
  *
  * @param[in] pContext MQTT Connection context.
- * @param[in] remainingTimeMs Remaining time for the loop in milliseconds.
  * @param[in] manageKeepAlive Flag indicating if keep alive should be handled.
  *
  * @return #MQTTRecvFailed if a network error occurs during reception;
@@ -213,7 +223,6 @@ static MQTTStatus_t handleIncomingAck( MQTTContext_t * pContext,
  * #MQTTSuccess on success.
  */
 static MQTTStatus_t receiveSingleIteration( MQTTContext_t * pContext,
-                                            uint32_t remainingTimeMs,
                                             bool manageKeepAlive );
 
 /**
@@ -853,6 +862,76 @@ static MQTTStatus_t discardPacket( const MQTTContext_t * pContext,
 
 /*-----------------------------------------------------------*/
 
+static MQTTStatus_t discardStoredPacket( MQTTContext_t * pContext,
+                                         MQTTPacketInfo_t * pPacketInfo )
+{
+    MQTTStatus_t status = MQTTRecvFailed;
+    int32_t bytesReceived = 0;
+    size_t bytesToReceive = 0U;
+    uint32_t totalBytesReceived = 0U;
+    bool receiveError = false;
+    size_t mqttPacketSize = 0;
+    size_t remainingLength;
+
+    assert( pContext != NULL );
+    assert( pPacketInfo != NULL );
+
+    mqttPacketSize = pPacketInfo->remainingLength + pPacketInfo->headerLength;
+
+    /* Assert that the packet being discarded is bigger than the
+     * receive buffer. */
+    assert( mqttPacketSize > pContext->networkBuffer.size );
+
+    /* Discard these many bytes at a time. */
+    bytesToReceive = pContext->networkBuffer.size;
+
+    /* Number of bytes depicted by 'index' have already been received. */
+    remainingLength = mqttPacketSize - pContext->index;
+
+    while( ( totalBytesReceived < remainingLength ) && ( receiveError == false ) )
+    {
+        if( ( remainingLength - totalBytesReceived ) < bytesToReceive )
+        {
+            bytesToReceive = remainingLength - totalBytesReceived;
+        }
+
+        bytesReceived = recvExact( pContext, bytesToReceive );
+
+        if( bytesReceived != ( int32_t ) bytesToReceive )
+        {
+            LogError( ( "Receive error while discarding packet."
+                        "ReceivedBytes=%ld, ExpectedBytes=%lu.",
+                        ( long int ) bytesReceived,
+                        ( unsigned long ) bytesToReceive ) );
+            receiveError = true;
+        }
+        else
+        {
+            totalBytesReceived += ( uint32_t ) bytesReceived;
+        }
+    }
+
+    if( totalBytesReceived == remainingLength )
+    {
+        LogError( ( "Dumped packet. DumpedBytes=%lu.",
+                    ( unsigned long ) totalBytesReceived ) );
+        /* Packet dumped, so no data is available. */
+        status = MQTTNoDataAvailable;
+    }
+
+    /* Clear the buffer */
+    memset( pContext->networkBuffer.pBuffer,
+            0,
+            pContext->networkBuffer.size );
+
+    /* Reset the index. */
+    pContext->index = 0;
+
+    return status;
+}
+
+/*-----------------------------------------------------------*/
+
 static MQTTStatus_t receivePacket( const MQTTContext_t * pContext,
                                    MQTTPacketInfo_t incomingPacket,
                                    uint32_t remainingTimeMs )
@@ -1305,18 +1384,42 @@ static MQTTStatus_t handleIncomingAck( MQTTContext_t * pContext,
 /*-----------------------------------------------------------*/
 
 static MQTTStatus_t receiveSingleIteration( MQTTContext_t * pContext,
-                                            uint32_t remainingTimeMs,
                                             bool manageKeepAlive )
 {
     MQTTStatus_t status = MQTTSuccess;
-    MQTTPacketInfo_t incomingPacket;
+    MQTTPacketInfo_t incomingPacket = { 0 };
+    int32_t recvBytes;
+    size_t totalMQTTPacketLength = 0;
 
     assert( pContext != NULL );
     assert( pContext->networkBuffer.pBuffer != NULL );
 
-    status = MQTT_GetIncomingPacketTypeAndLength( pContext->transportInterface.recv,
-                                                  pContext->transportInterface.pNetworkContext,
-                                                  &incomingPacket );
+    /* Read as many bytes as possible into the network buffer. */
+    recvBytes = pContext->transportInterface.recv( pContext->transportInterface.pNetworkContext,
+                                                   &( pContext->networkBuffer.pBuffer[ pContext->index ] ),
+                                                   pContext->networkBuffer.size - pContext->index );
+
+    if( recvBytes < 0 )
+    {
+        /* The receive function has failed. Bubble up the error up to the user. */
+        status = MQTTRecvFailed;
+    }
+    else if( recvBytes == 0 )
+    {
+        /* No more bytes available since the last read. */
+        status = MQTTNoDataAvailable;
+    }
+    else
+    {
+        /* Update the number of bytes in the MQTT fixed buffer. */
+        pContext->index += recvBytes;
+
+        status = MQTT_ProcessIncomingPacketTypeAndLength( pContext->networkBuffer.pBuffer,
+                                                          &pContext->index,
+                                                          &incomingPacket );
+
+        totalMQTTPacketLength = incomingPacket.remainingLength + incomingPacket.headerLength;
+    }
 
     if( status == MQTTNoDataAvailable )
     {
@@ -1329,8 +1432,8 @@ static MQTTStatus_t receiveSingleIteration( MQTTContext_t * pContext,
 
         if( status == MQTTSuccess )
         {
-            /* Reset the status to indicate that we should not try to read
-             * a packet from the transport interface. */
+            /* Reset the status to indicate that nothing was read
+             * from the transport interface. */
             status = MQTTNoDataAvailable;
         }
     }
@@ -1339,18 +1442,27 @@ static MQTTStatus_t receiveSingleIteration( MQTTContext_t * pContext,
         LogError( ( "Receiving incoming packet length failed. Status=%s",
                     MQTT_Status_strerror( status ) ) );
     }
+    /* If the MQTT Packet size is bigger than the buffer itself. */
+    else if( totalMQTTPacketLength > pContext->networkBuffer.size )
+    {
+        /* Discard the packet from the buffer and from the socket buffer. */
+        status = discardStoredPacket( pContext,
+                                      &incomingPacket );
+    }
+    /* If the total packet is of more length than the bytes we have available. */
+    else if( totalMQTTPacketLength > pContext->index )
+    {
+        status = MQTTNeedMoreBytes;
+    }
     else
     {
-        /* Receive packet. Remaining time is recalculated before calling this
-         * function. */
-        status = receivePacket( pContext, incomingPacket, remainingTimeMs );
+        /* MISRA else */
     }
 
-    /* Handle received packet. If no data was read then this will not execute. */
+    /* Handle received packet. If incomplete data was read then this will not execute. */
     if( status == MQTTSuccess )
     {
-        incomingPacket.pRemainingData = pContext->networkBuffer.pBuffer;
-        pContext->lastPacketRxTime = pContext->getTime();
+        incomingPacket.pRemainingData = &pContext->networkBuffer.pBuffer[ incomingPacket.headerLength ];
 
         /* PUBLISH packets allow flags in the lower four bits. For other
          * packet types, they are reserved. */
@@ -1362,6 +1474,14 @@ static MQTTStatus_t receiveSingleIteration( MQTTContext_t * pContext,
         {
             status = handleIncomingAck( pContext, &incomingPacket, manageKeepAlive );
         }
+
+        /* Update the index to reflect the remaining bytes in the buffer.  */
+        pContext->index -= totalMQTTPacketLength;
+
+        /* Move the remaining bytes to the front of the buffer. */
+        memmove( pContext->networkBuffer.pBuffer,
+                 &( pContext->networkBuffer.pBuffer[ totalMQTTPacketLength ] ),
+                 pContext->index );
     }
 
     if( status == MQTTNoDataAvailable )
@@ -2189,11 +2309,9 @@ MQTTStatus_t MQTT_Disconnect( MQTTContext_t * pContext )
 
 /*-----------------------------------------------------------*/
 
-MQTTStatus_t MQTT_ProcessLoop( MQTTContext_t * pContext,
-                               uint32_t timeoutMs )
+MQTTStatus_t MQTT_ProcessLoop( MQTTContext_t * pContext )
 {
     MQTTStatus_t status = MQTTBadParameter;
-    uint32_t entryTimeMs = 0U, remainingTimeMs = timeoutMs, elapsedTimeMs = 0U;
 
     if( pContext == NULL )
     {
@@ -2209,36 +2327,8 @@ MQTTStatus_t MQTT_ProcessLoop( MQTTContext_t * pContext,
     }
     else
     {
-        entryTimeMs = pContext->getTime();
         pContext->controlPacketSent = false;
-        status = MQTTSuccess;
-    }
-
-    while( status == MQTTSuccess )
-    {
-        status = receiveSingleIteration( pContext, remainingTimeMs, true );
-
-        /* We don't need to break here since the status is already checked in
-         * the loop condition, and we do not want multiple breaks in a loop. */
-        if( status != MQTTSuccess )
-        {
-            LogError( ( "Exiting process loop due to failure: ErrorStatus=%s",
-                        MQTT_Status_strerror( status ) ) );
-        }
-        else
-        {
-            /* Recalculate remaining time and check if loop should exit. This is
-             * done at the end so the loop will run at least a single iteration. */
-            elapsedTimeMs = calculateElapsedTime( pContext->getTime(),
-                                                  entryTimeMs );
-
-            if( elapsedTimeMs >= timeoutMs )
-            {
-                break;
-            }
-
-            remainingTimeMs = timeoutMs - elapsedTimeMs;
-        }
+        status = receiveSingleIteration( pContext, true );
     }
 
     return status;
@@ -2246,11 +2336,9 @@ MQTTStatus_t MQTT_ProcessLoop( MQTTContext_t * pContext,
 
 /*-----------------------------------------------------------*/
 
-MQTTStatus_t MQTT_ReceiveLoop( MQTTContext_t * pContext,
-                               uint32_t timeoutMs )
+MQTTStatus_t MQTT_ReceiveLoop( MQTTContext_t * pContext )
 {
     MQTTStatus_t status = MQTTBadParameter;
-    uint32_t entryTimeMs = 0U, remainingTimeMs = timeoutMs, elapsedTimeMs = 0U;
 
     if( pContext == NULL )
     {
@@ -2266,34 +2354,7 @@ MQTTStatus_t MQTT_ReceiveLoop( MQTTContext_t * pContext,
     }
     else
     {
-        entryTimeMs = pContext->getTime();
-        status = MQTTSuccess;
-    }
-
-    while( status == MQTTSuccess )
-    {
-        status = receiveSingleIteration( pContext, remainingTimeMs, false );
-
-        /* We don't need to break here since the status is already checked in
-         * the loop condition, and we do not want multiple breaks in a loop. */
-        if( status != MQTTSuccess )
-        {
-            LogError( ( "Exiting receive loop. Error status=%s",
-                        MQTT_Status_strerror( status ) ) );
-        }
-        else
-        {
-            /* Recalculate remaining time and check if loop should exit. This is
-             * done at the end so the loop will run at least a single iteration. */
-            elapsedTimeMs = calculateElapsedTime( pContext->getTime(), entryTimeMs );
-
-            if( elapsedTimeMs >= timeoutMs )
-            {
-                break;
-            }
-
-            remainingTimeMs = timeoutMs - elapsedTimeMs;
-        }
+        status = receiveSingleIteration( pContext, false );
     }
 
     return status;
