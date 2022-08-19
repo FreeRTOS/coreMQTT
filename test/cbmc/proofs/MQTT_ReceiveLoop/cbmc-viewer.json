@@ -1,6 +1,7 @@
 { "expected-missing-functions":
   [
-
+    "MQTT_DeserializeAck",
+    "MQTT_SerializeAck"
   ],
   "proof-name": "MQTT_ReceiveLoop",
   "proof-root": "test/cbmc/proofs"
