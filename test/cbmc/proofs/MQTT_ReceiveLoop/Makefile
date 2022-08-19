@@ -29,6 +29,7 @@ INCLUDES +=
 # These functions have their memory saftey proven in other harnesses.
 REMOVE_FUNCTION_BODY += MQTT_DeserializeAck
 REMOVE_FUNCTION_BODY += MQTT_SerializeAck
+REMOVE_FUNCTION_BODY += memmove # Use stub
 
 # The loops below are unwound once more than the exclusive timeout bound.
 UNWINDSET += __CPROVER_file_local_core_mqtt_c_discardStoredPacket.0:$(MAX_NETWORK_RECV_TRIES)
@@ -53,6 +54,7 @@ PROOF_SOURCES += $(SRCDIR)/test/cbmc/sources/mqtt_cbmc_state.c
 PROOF_SOURCES += $(SRCDIR)/test/cbmc/stubs/network_interface_stubs.c
 PROOF_SOURCES += $(SRCDIR)/test/cbmc/stubs/get_time_stub.c
 PROOF_SOURCES += $(SRCDIR)/test/cbmc/stubs/event_callback_stub.c
+PROOF_SOURCES += $(SRCDIR)/test/cbmc/stubs/memmove.c
 PROJECT_SOURCES += $(SRCDIR)/source/core_mqtt.c
 PROJECT_SOURCES += $(SRCDIR)/source/core_mqtt_serializer.c
 PROJECT_SOURCES += $(SRCDIR)/source/core_mqtt_state.c
