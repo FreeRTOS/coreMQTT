@@ -1428,23 +1428,48 @@ static MQTTStatus_t sendPublishWithoutCopy( MQTTContext_t * pContext,
     int32_t bytesSent;
     uint8_t serializedPacketID[ 2 ];
     const size_t packetIdLength = 2UL;
+    bool writeAndFlushAvailable;
+
+    writeAndFlushAvailable = ( ( pContext->transportInterface.write != NULL ) &&
+                             ( pContext->transportInterface.flush != NULL ) );
+
+    /* Encode the packet ID. */
+    serializedPacketID[ 0 ] = ( ( uint8_t ) ( ( packetId ) >> 8 ) );
+    serializedPacketID[ 1 ] = ( ( uint8_t ) ( ( packetId ) & 0x00ffU ) );
 
     /* Send the serialized publish packet header over network. */
-    bytesSent = sendPacket( pContext,
-                            pMqttHeader,
-                            headerSize );
+    if( writeAndFlushAvailable == true )
+    {
+        bytesSent = pContext->transportInterface.write( pContext->transportInterface.pNetworkContext,
+                                                        pMqttHeader,
+                                                        headerSize );
+    }
+    else
+    {
+        bytesSent = sendPacket( pContext,
+                                pMqttHeader,
+                                headerSize );
+    }
 
     if( bytesSent != ( int32_t ) headerSize )
     {
         status = MQTTSendFailed;
     }
-
-    if( status == MQTTSuccess )
+    else
     {
         /* Send the topic string over the network. */
-        bytesSent = sendPacket( pContext,
-                                ( const uint8_t * ) pPublishInfo->pTopicName,
-                                pPublishInfo->topicNameLength );
+        if( writeAndFlushAvailable == true )
+        {
+            bytesSent = pContext->transportInterface.write( pContext->transportInterface.pNetworkContext,
+                                                            ( const uint8_t* )pPublishInfo->pTopicName,
+                                                            pPublishInfo->topicNameLength );
+        }
+        else
+        {
+            bytesSent = sendPacket( pContext,
+                                    ( const uint8_t * ) pPublishInfo->pTopicName,
+                                    pPublishInfo->topicNameLength );
+        }
 
         if( bytesSent != ( ( int32_t ) pPublishInfo->topicNameLength ) )
         {
@@ -1454,14 +1479,19 @@ static MQTTStatus_t sendPublishWithoutCopy( MQTTContext_t * pContext,
 
     if( ( status == MQTTSuccess ) && ( pPublishInfo->qos > MQTTQoS0 ) )
     {
-        /* Encode the packet ID. */
-        serializedPacketID[ 0 ] = ( ( uint8_t ) ( ( packetId ) >> 8 ) );
-        serializedPacketID[ 1 ] = ( ( uint8_t ) ( ( packetId ) & 0x00ffU ) );
-
         /* Send the packet ID over the network. */
-        bytesSent = sendPacket( pContext,
-                                serializedPacketID,
-                                packetIdLength );
+        if( writeAndFlushAvailable == true )
+        {
+            bytesSent = pContext->transportInterface.write( pContext->transportInterface.pNetworkContext,
+                                                            serializedPacketID,
+                                                            packetIdLength );
+        }
+        else
+        {
+            bytesSent = sendPacket( pContext,
+                                    serializedPacketID,
+                                    packetIdLength );
+        }
 
         if( bytesSent != ( int32_t ) packetIdLength )
         {
@@ -1474,14 +1504,30 @@ static MQTTStatus_t sendPublishWithoutCopy( MQTTContext_t * pContext,
     {
         /* Send Payload if there is one to send. It is valid for a PUBLISH
          * Packet to contain a zero length payload.*/
-        bytesSent = sendPacket( pContext,
-                                pPublishInfo->pPayload,
-                                pPublishInfo->payloadLength );
+        if( writeAndFlushAvailable == true )
+        {
+            bytesSent = pContext->transportInterface.write( pContext->transportInterface.pNetworkContext,
+                                                            pPublishInfo->pPayload,
+                                                            pPublishInfo->payloadLength );
+        }
+        else
+        {
+            bytesSent = sendPacket( pContext,
+                                    pPublishInfo->pPayload,
+                                    pPublishInfo->payloadLength );
+        }
 
         if( bytesSent != ( ( int32_t ) pPublishInfo->payloadLength ) )
         {
             status = MQTTSendFailed;
         }
+    }
+
+    if( ( status == MQTTSuccess ) &&
+        ( writeAndFlushAvailable == true ) )
+    {
+        /* Flush the buffers to send the message over the network. */
+        ( void ) pContext->transportInterface.flush( pContext->transportInterface.pNetworkContext );
     }
 
     return status;

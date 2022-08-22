@@ -244,6 +244,49 @@ typedef int32_t ( * TransportSend_t )( NetworkContext_t * pNetworkContext,
 /* @[define_transportsend] */
 
 /**
+ * @transportcallback
+ * @brief Transport interface for writing data into the IP stack's buffers. This
+ * data will not be sent immediately as the stack will wait for the application to
+ * write more data.
+ *
+ * @param[in] pNetworkContext Implementation-defined network context.
+ * @param[in] pBuffer Buffer containing the bytes to send over the network stack.
+ * @param[in] bytesToWrite Number of bytes to write to the stack's buffers.
+ *
+ * @return The number of bytes written or a negative value to indicate error.
+ *
+ * @note If no data is written to the buffer due to the buffer being full this MUST
+ * return zero as the return value.
+ * A zero return value SHOULD represent that the send operation can be retried
+ * by calling the API function. Zero MUST NOT be returned if a network disconnection
+ * has occurred.
+ */
+/* @[define_transportwrite] */
+typedef int32_t ( * TransportWrite_t )( NetworkContext_t * pNetworkContext,
+                                        const void * pBuffer,
+                                        size_t bytesToWrite );
+/* @[define_transportwrite] */
+
+/**
+ * @transportcallback
+ * @brief Transport interface for sending all the data present in the IP-stacks buffers
+ * added by the call to transport interface write function.
+ *
+ * @param[in] pNetworkContext Implementation-defined network context.
+ *
+ * @return The number of bytes sent or a negative value to indicate error.
+ *
+ * @note If no data is written to the buffer due to the buffer being full this MUST
+ * return zero as the return value.
+ * A zero return value SHOULD represent that the send operation can be retried
+ * by calling the API function. Zero MUST NOT be returned if a network disconnection
+ * has occurred.
+ */
+/* @[define_transportflush] */
+typedef int32_t ( * TransportFlush_t )( NetworkContext_t * pNetworkContext );
+/* @[define_transportflush] */
+
+/**
  * @transportstruct
  * @brief The transport layer interface.
  */
@@ -252,6 +295,8 @@ typedef struct TransportInterface
 {
     TransportRecv_t recv;               /**< Transport receive interface. */
     TransportSend_t send;               /**< Transport send interface. */
+    TransportWrite_t write;             /**< Transport write interface. */
+    TransportFlush_t flush;             /**< Transport flush interface. */
     NetworkContext_t * pNetworkContext; /**< Implementation-defined network context. */
 } TransportInterface_t;
 /* @[define_transportinterface] */
