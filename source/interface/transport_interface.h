@@ -243,15 +243,19 @@ typedef int32_t ( * TransportSend_t )( NetworkContext_t * pNetworkContext,
                                        size_t bytesToSend );
 /* @[define_transportsend] */
 
+typedef struct TransportOutVector
+{
+    const void * iov_base;      /* Base address of data */
+    size_t iov_len;             /* Length of data in buffer */
+} TransportOutVector_t;
+
 /**
  * @transportcallback
- * @brief Transport interface for writing data into the IP stack's buffers. This
- * data will not be sent immediately as the stack will wait for the application to
- * write more data.
+ * @brief Transport interface function for "vectored" / scatter-gather based writes.
  *
  * @param[in] pNetworkContext Implementation-defined network context.
- * @param[in] pBuffer Buffer containing the bytes to send over the network stack.
- * @param[in] bytesToWrite Number of bytes to write to the stack's buffers.
+ * @param[in] pIoVec An array of TransportIoVector_t structs.
+ * @param[in] ioVecCount Number of TransportIoVector_t in pIoVec.
  *
  * @return The number of bytes written or a negative value to indicate error.
  *
@@ -261,30 +265,11 @@ typedef int32_t ( * TransportSend_t )( NetworkContext_t * pNetworkContext,
  * by calling the API function. Zero MUST NOT be returned if a network disconnection
  * has occurred.
  */
-/* @[define_transportwrite] */
-typedef int32_t ( * TransportWrite_t )( NetworkContext_t * pNetworkContext,
-                                        const void * pBuffer,
-                                        size_t bytesToWrite );
-/* @[define_transportwrite] */
-
-/**
- * @transportcallback
- * @brief Transport interface for sending all the data present in the IP-stacks buffers
- * added by the call to transport interface write function.
- *
- * @param[in] pNetworkContext Implementation-defined network context.
- *
- * @return The number of bytes sent or a negative value to indicate error.
- *
- * @note If no data is written to the buffer due to the buffer being full this MUST
- * return zero as the return value.
- * A zero return value SHOULD represent that the send operation can be retried
- * by calling the API function. Zero MUST NOT be returned if a network disconnection
- * has occurred.
- */
-/* @[define_transportflush] */
-typedef int32_t ( * TransportFlush_t )( NetworkContext_t * pNetworkContext );
-/* @[define_transportflush] */
+/* @[define_transportwritev] */
+typedef int32_t ( * TransportWritev_t )( NetworkContext_t * pNetworkContext,
+                                         TransportOutVector_t * pIoVec,
+                                         size_t ioVecCount );
+/* @[define_transportwritev] */
 
 /**
  * @transportstruct
@@ -293,10 +278,9 @@ typedef int32_t ( * TransportFlush_t )( NetworkContext_t * pNetworkContext );
 /* @[define_transportinterface] */
 typedef struct TransportInterface
 {
-    TransportRecv_t recv;               /**< Transport receive interface. */
-    TransportSend_t send;               /**< Transport send interface. */
-    TransportWrite_t write;             /**< Transport write interface. */
-    TransportFlush_t flush;             /**< Transport flush interface. */
+    TransportRecv_t recv;               /**< Transport receive function pointer. */
+    TransportSend_t send;               /**< Transport send function pointer. */
+    TransportWritev_t writev;           /**< Transport writev function pointer. */
     NetworkContext_t * pNetworkContext; /**< Implementation-defined network context. */
 } TransportInterface_t;
 /* @[define_transportinterface] */
