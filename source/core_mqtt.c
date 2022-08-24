@@ -620,7 +620,7 @@ static int32_t sendMessageVector( MQTTContext_t * pContext,
     assert( pContext != NULL );
     assert( pIoVec != NULL );
     assert( pContext->getTime != NULL );
-    /* Send must alwaus be defined */
+    /* Send must always be defined */
     assert( pContext->transportInterface.send );
 
     timeoutTime = pContext->getTime() + MQTT_SEND_RETRY_TIMEOUT_MS;
@@ -1705,6 +1705,57 @@ static MQTTStatus_t sendPublishWithoutCopy( MQTTContext_t * pContext,
 
 /*-----------------------------------------------------------*/
 
+static void addWillAndConnectInfo( const MQTTConnectInfo_t * pConnectInfo,
+                                   const MQTTPublishInfo_t * pWillInfo,
+                                   size_t * totalMessageLength,
+                                   TransportOutVector_t * iterator,
+                                   uint8_t serializedTopicLength[ 2 ],
+                                   uint8_t serializedPayloadLength[ 2 ],
+                                   uint8_t serializedUsernameLength[ 2 ],
+                                   uint8_t serializedPasswordLength[ 2 ] )
+{
+    if( pWillInfo != NULL )
+    {
+        /* Serialize the topic. */
+        iterator = addEncodedStringToVector( serializedTopicLength,
+                                             pWillInfo->pTopicName,
+                                             pWillInfo->topicNameLength,
+                                             iterator,
+                                             &totalMessageLength );
+
+        /* Serialize the payload. */
+        iterator = addEncodedStringToVector( serializedPayloadLength,
+                                             pWillInfo->pPayload,
+                                             pWillInfo->payloadLength,
+                                             iterator,
+                                             &totalMessageLength );
+    }
+
+    /* Encode the user name if provided. */
+    if( pConnectInfo->pUserName != NULL )
+    {
+        /* Serialize the user name string. */
+        iterator = addEncodedStringToVector( serializedUsernameLength,
+                                             pConnectInfo->pUserName,
+                                             pConnectInfo->userNameLength,
+                                             iterator,
+                                             &totalMessageLength );
+    }
+
+    /* Encode the password if provided. */
+    if( pConnectInfo->pPassword != NULL )
+    {
+        /* Serialize the user name string. */
+        iterator = addEncodedStringToVector( serializedPasswordLength,
+                                             pConnectInfo->pPassword,
+                                             pConnectInfo->passwordLength,
+                                             iterator,
+                                             &totalMessageLength );
+    }
+}
+
+/*-----------------------------------------------------------*/
+
 static MQTTStatus_t sendConnectWithoutCopy( MQTTContext_t * pContext,
                                             const MQTTConnectInfo_t * pConnectInfo,
                                             const MQTTPublishInfo_t * pWillInfo,
@@ -1757,7 +1808,6 @@ static MQTTStatus_t sendConnectWithoutCopy( MQTTContext_t * pContext,
         totalMessageLength += iterator->iov_len;
         iterator++;
 
-
         /* Serialize the client ID. */
         iterator = addEncodedStringToVector( serializedClientIDLength,
                                              pConnectInfo->pClientIdentifier,
@@ -1765,44 +1815,14 @@ static MQTTStatus_t sendConnectWithoutCopy( MQTTContext_t * pContext,
                                              iterator,
                                              &totalMessageLength );
 
-        if( pWillInfo != NULL )
-        {
-            /* Serialize the topic. */
-            iterator = addEncodedStringToVector( serializedTopicLength,
-                                                 pWillInfo->pTopicName,
-                                                 pWillInfo->topicNameLength,
-                                                 iterator,
-                                                 &totalMessageLength );
-
-            /* Serialize the payload. */
-            iterator = addEncodedStringToVector( serializedPayloadLength,
-                                                 pWillInfo->pPayload,
-                                                 pWillInfo->payloadLength,
-                                                 iterator,
-                                                 &totalMessageLength );
-        }
-
-        /* Encode the user name if provided. */
-        if( pConnectInfo->pUserName != NULL )
-        {
-            /* Serialize the user name string. */
-            iterator = addEncodedStringToVector( serializedUsernameLength,
-                                                 pConnectInfo->pUserName,
-                                                 pConnectInfo->userNameLength,
-                                                 iterator,
-                                                 &totalMessageLength );
-        }
-
-        /* Encode the password if provided. */
-        if( pConnectInfo->pPassword != NULL )
-        {
-            /* Serialize the user name string. */
-            iterator = addEncodedStringToVector( serializedPasswordLength,
-                                                 pConnectInfo->pPassword,
-                                                 pConnectInfo->passwordLength,
-                                                 iterator,
-                                                 &totalMessageLength );
-        }
+        addWillAndConnectInfo( pWillInfo,
+                               pConnectInfo,
+                               &totalMessageLength,
+                               iterator,
+                               serializedTopicLength,
+                               serializedPayloadLength,
+                               serializedUsernameLength,
+                               serializedPasswordLength );
 
         ioVectorLength = ( size_t ) ( ( iterator - pIoVector ) + 1 );
 

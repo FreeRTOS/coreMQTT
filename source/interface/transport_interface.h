@@ -245,8 +245,8 @@ typedef int32_t ( * TransportSend_t )( NetworkContext_t * pNetworkContext,
 
 typedef struct TransportOutVector
 {
-    const void * iov_base;      /* Base address of data */
-    size_t iov_len;             /* Length of data in buffer */
+    const void * iov_base; /* Base address of data */
+    size_t iov_len;        /* Length of data in buffer */
 } TransportOutVector_t;
 
 /**

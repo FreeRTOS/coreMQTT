@@ -112,7 +112,9 @@ initializeconnectinfo
 initializesubscribeinfo
 initializewillinfo
 int
+io
 iot
+ioveccount
 isn
 iso
 keepaliveintervalsec
@@ -238,11 +240,13 @@ pingreqs
 pingreqsendtimems
 pingresp
 pingresps
+piovec
 pismatch
 plaintext
 pmatch
 pmessage
 pmqttcontext
+pmqttheader
 pnameindex
 pnetworkbuffer
 pnetworkcontext
@@ -400,6 +404,7 @@ validatesubscribeunsubscribeparams
 validator
 waitingforpingresp
 willinfo
+writev
 xa
 xb
 xc
