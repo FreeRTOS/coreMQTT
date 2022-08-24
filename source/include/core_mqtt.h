@@ -475,8 +475,7 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
  */
 /* @[declare_mqtt_subscribe] */
 MQTTStatus_t MQTT_Subscribe( MQTTContext_t * pContext,
-                             const MQTTSubscribeInfo_t * pSubscriptionList,
-                             size_t subscriptionCount,
+                             const MQTTSubscribeInfo_t * pSubscription,
                              uint16_t packetId );
 /* @[declare_mqtt_subscribe] */
 
@@ -591,8 +590,7 @@ MQTTStatus_t MQTT_Ping( MQTTContext_t * pContext );
  */
 /* @[declare_mqtt_unsubscribe] */
 MQTTStatus_t MQTT_Unsubscribe( MQTTContext_t * pContext,
-                               const MQTTSubscribeInfo_t * pSubscriptionList,
-                               size_t subscriptionCount,
+                               const MQTTSubscribeInfo_t * pSubscription,
                                uint16_t packetId );
 /* @[declare_mqtt_unsubscribe] */
 

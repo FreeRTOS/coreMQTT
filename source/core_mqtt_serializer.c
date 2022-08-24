@@ -1352,37 +1352,30 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp )
     return status;
 }
 
-/*-----------------------------------------------------------*/
-
-static void serializeConnectPacket( const MQTTConnectInfo_t * pConnectInfo,
-                                    const MQTTPublishInfo_t * pWillInfo,
-                                    size_t remainingLength,
-                                    const MQTTFixedBuffer_t * pFixedBuffer )
+uint8_t * MQTT_SerializeConnectFixedHeader( uint8_t * pIndex,
+                                            const MQTTConnectInfo_t * pConnectInfo,
+                                            const MQTTPublishInfo_t * pWillInfo,
+                                            size_t remainingLength )
 {
+    uint8_t * pIndexLocal = pIndex;
     uint8_t connectFlags = 0U;
-    uint8_t * pIndex = NULL;
-
-    assert( pConnectInfo != NULL );
-    assert( pFixedBuffer != NULL );
-    assert( pFixedBuffer->pBuffer != NULL );
-
-    pIndex = pFixedBuffer->pBuffer;
+    
     /* The first byte in the CONNECT packet is the control packet type. */
-    *pIndex = MQTT_PACKET_TYPE_CONNECT;
-    pIndex++;
+    *pIndexLocal = MQTT_PACKET_TYPE_CONNECT;
+    pIndexLocal++;
 
     /* The remaining length of the CONNECT packet is encoded starting from the
      * second byte. The remaining length does not include the length of the fixed
      * header or the encoding of the remaining length. */
-    pIndex = encodeRemainingLength( pIndex, remainingLength );
+    pIndexLocal = encodeRemainingLength( pIndex, remainingLength );
 
     /* The string "MQTT" is placed at the beginning of the CONNECT packet's variable
      * header. This string is 4 bytes long. */
-    pIndex = encodeString( pIndex, "MQTT", 4 );
+    pIndexLocal = encodeString( pIndex, "MQTT", 4 );
 
     /* The MQTT protocol version is the second field of the variable header. */
-    *pIndex = MQTT_VERSION_3_1_1;
-    pIndex++;
+    *pIndexLocal = MQTT_VERSION_3_1_1;
+    pIndexLocal++;
 
     /* Set the clean session flag if needed. */
     if( pConnectInfo->cleanSession == true )
@@ -1426,13 +1419,37 @@ static void serializeConnectPacket( const MQTTConnectInfo_t * pConnectInfo,
         }
     }
 
-    *pIndex = connectFlags;
-    pIndex++;
+    *pIndexLocal = connectFlags;
+    pIndexLocal++;
 
     /* Write the 2 bytes of the keep alive interval into the CONNECT packet. */
-    *pIndex = UINT16_HIGH_BYTE( pConnectInfo->keepAliveSeconds );
-    *( pIndex + 1 ) = UINT16_LOW_BYTE( pConnectInfo->keepAliveSeconds );
-    pIndex += 2;
+    *pIndexLocal = UINT16_HIGH_BYTE( pConnectInfo->keepAliveSeconds );
+    *( pIndexLocal + 1 ) = UINT16_LOW_BYTE( pConnectInfo->keepAliveSeconds );
+    pIndexLocal += 2;
+
+    return pIndexLocal;
+}
+/*-----------------------------------------------------------*/
+
+static void serializeConnectPacket( const MQTTConnectInfo_t * pConnectInfo,
+                                    const MQTTPublishInfo_t * pWillInfo,
+                                    size_t remainingLength,
+                                    const MQTTFixedBuffer_t * pFixedBuffer )
+{
+    uint8_t connectFlags = 0U;
+    uint8_t * pIndex = NULL;
+
+    assert( pConnectInfo != NULL );
+    assert( pFixedBuffer != NULL );
+    assert( pFixedBuffer->pBuffer != NULL );
+
+    pIndex = pFixedBuffer->pBuffer;
+    
+    /* Serialize the header. */
+    pIndex = MQTT_SerializeConnectFixedHeader( pIndex,
+                                               pConnectInfo,
+                                               pWillInfo,
+                                               remainingLength );
 
     /* Write the client identifier into the CONNECT packet. */
     pIndex = encodeString( pIndex,
@@ -1669,6 +1686,50 @@ MQTTStatus_t MQTT_GetSubscribePacketSize( const MQTTSubscribeInfo_t * pSubscript
 
 /*-----------------------------------------------------------*/
 
+uint8_t * MQTT_SerializeSubscribeHeader( size_t remainingLength,
+                                         uint8_t * pIndex,
+                                         uint16_t packetId )
+{
+    uint8_t * pIterator = pIndex;
+
+    /* The first byte in SUBSCRIBE is the packet type. */
+    *pIterator = MQTT_PACKET_TYPE_SUBSCRIBE;
+    pIterator++;
+
+    /* Encode the "Remaining length" starting from the second byte. */
+    pIterator = encodeRemainingLength( pIterator, remainingLength );
+
+    /* Place the packet identifier into the SUBSCRIBE packet. */
+    *pIterator = UINT16_HIGH_BYTE( packetId );
+    *( pIterator + 1 ) = UINT16_LOW_BYTE( packetId );
+    pIterator += 2;
+
+    return pIterator;
+}
+
+/*-----------------------------------------------------------*/
+
+uint8_t * MQTT_SerializeUnsubscribeHeader( size_t remainingLength,
+                                           uint8_t * pIndex,
+                                           uint16_t packetId )
+{
+    uint8_t * pIterator = pIndex;
+
+    /* The first byte in UNSUBSCRIBE is the packet type. */
+    *pIterator = MQTT_PACKET_TYPE_UNSUBSCRIBE;
+    pIterator++;
+
+    /* Encode the "Remaining length" starting from the second byte. */
+    pIterator = encodeRemainingLength( pIterator, remainingLength );
+
+    /* Place the packet identifier into the SUBSCRIBE packet. */
+    *pIterator = UINT16_HIGH_BYTE( packetId );
+    *( pIterator + 1 ) = UINT16_LOW_BYTE( packetId );
+    pIterator += 2;
+
+    return pIterator;
+}
+
 MQTTStatus_t MQTT_SerializeSubscribe( const MQTTSubscribeInfo_t * pSubscriptionList,
                                       size_t subscriptionCount,
                                       uint16_t packetId,
@@ -1690,17 +1751,9 @@ MQTTStatus_t MQTT_SerializeSubscribe( const MQTTSubscribeInfo_t * pSubscriptionL
     {
         pIndex = pFixedBuffer->pBuffer;
 
-        /* The first byte in SUBSCRIBE is the packet type. */
-        *pIndex = MQTT_PACKET_TYPE_SUBSCRIBE;
-        pIndex++;
-
-        /* Encode the "Remaining length" starting from the second byte. */
-        pIndex = encodeRemainingLength( pIndex, remainingLength );
-
-        /* Place the packet identifier into the SUBSCRIBE packet. */
-        *pIndex = UINT16_HIGH_BYTE( packetId );
-        *( pIndex + 1 ) = UINT16_LOW_BYTE( packetId );
-        pIndex += 2;
+        pIndex = MQTT_SerializeSubscribeHeader( remainingLength,
+                                                pIndex,
+                                                packetId );
 
         /* Serialize each subscription topic filter and QoS. */
         for( i = 0; i < subscriptionCount; i++ )
@@ -1783,17 +1836,7 @@ MQTTStatus_t MQTT_SerializeUnsubscribe( const MQTTSubscribeInfo_t * pSubscriptio
         /* Get the start of the buffer to the iterator variable. */
         pIndex = pFixedBuffer->pBuffer;
 
-        /* The first byte in UNSUBSCRIBE is the packet type. */
-        *pIndex = MQTT_PACKET_TYPE_UNSUBSCRIBE;
-        pIndex++;
-
-        /* Encode the "Remaining length" starting from the second byte. */
-        pIndex = encodeRemainingLength( pIndex, remainingLength );
-
-        /* Place the packet identifier into the UNSUBSCRIBE packet. */
-        *pIndex = UINT16_HIGH_BYTE( packetId );
-        *( pIndex + 1 ) = UINT16_LOW_BYTE( packetId );
-        pIndex += 2;
+        pIndex = MQTT_SerializeUnsubscribeHeader( remainingLength, pIndex, packetId );
 
         /* Serialize each subscription topic filter. */
         for( i = 0; i < subscriptionCount; i++ )

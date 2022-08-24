@@ -1315,6 +1315,19 @@ MQTTStatus_t MQTT_GetIncomingPacketTypeAndLength( TransportRecv_t readFunc,
                                                   MQTTPacketInfo_t * pIncomingPacket );
 /* @[declare_mqtt_getincomingpackettypeandlength] */
 
+uint8_t * MQTT_SerializeConnectFixedHeader( uint8_t * pIndex,
+                                            const MQTTConnectInfo_t * pConnectInfo,
+                                            const MQTTPublishInfo_t * pWillInfo,
+                                            size_t remainingLength );
+
+uint8_t * MQTT_SerializeSubscribeHeader( size_t remainingLength,
+                                         uint8_t * pIndex,
+                                         uint16_t packetId );
+
+uint8_t * MQTT_SerializeUnsubscribeHeader( size_t remainingLength,
+                                           uint8_t * pIndex,
+                                           uint16_t packetId );
+
 /* *INDENT-OFF* */
 #ifdef __cplusplus
     }
