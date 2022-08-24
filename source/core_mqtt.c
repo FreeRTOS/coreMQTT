@@ -1715,6 +1715,7 @@ static MQTTStatus_t sendConnectWithoutCopy( MQTTContext_t * pContext,
     TransportOutVector_t * iterator;
     size_t ioVectorLength = 0U;
     size_t totalMessageLength = 0U;
+    int32_t bytesSentOrError;
 
     /* Connect packet header can be of maximum 15 bytes. */
     uint8_t connectPacketHeader[ 15 ];
@@ -1805,7 +1806,9 @@ static MQTTStatus_t sendConnectWithoutCopy( MQTTContext_t * pContext,
 
         ioVectorLength = ( size_t ) ( ( iterator - pIoVector ) + 1 );
 
-        if( sendMessageVector( pContext, pIoVector, ioVectorLength ) != ( int32_t ) totalMessageLength )
+        bytesSentOrError = sendMessageVector( pContext, pIoVector, ioVectorLength );
+
+        if( bytesSentOrError != ( int32_t ) totalMessageLength )
         {
             status = MQTTSendFailed;
         }
