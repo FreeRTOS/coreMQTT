@@ -292,6 +292,7 @@ static MQTTStatus_t sendPublishWithoutCopy( MQTTContext_t * pContext,
                                             const uint8_t * pMqttHeader,
                                             size_t headerSize,
                                             uint16_t packetId );
+
 /**
  * @brief Serializes a PUBLISH message.
  *
@@ -1535,7 +1536,7 @@ static TransportOutVector_t * addEncodedStringToVector( uint8_t serailizedLength
 
     packetLength = length + seralizedLengthFieldSize;
 
-    ( * updatedLength ) = (*updatedLength) + packetLength;
+    ( *updatedLength ) = ( *updatedLength ) + packetLength;
 
     return iterator;
 }
@@ -1551,9 +1552,10 @@ static MQTTStatus_t sendSubscribeWithoutCopy( MQTTContext_t * pContext,
     uint8_t subscribeheader[ 5 ];
     uint8_t * pIndex;
     TransportOutVector_t pIoVector[ 4 ];
-    TransportOutVector_t* pIterator;
+    TransportOutVector_t * pIterator;
     uint8_t serializedTopicFieldLength[ 2 ];
     size_t totalPacketLength = 0U;
+
     /* Subscribe packet always has 4 vector fields. Namely:
      * Header + Topic Filter length + Topic filter + QoS */
     const size_t ioVectorLength = 4U;
@@ -1601,9 +1603,10 @@ static MQTTStatus_t sendUnsubscribeWithoutCopy( MQTTContext_t * pContext,
     uint8_t unsubscribeheader[ 5 ];
     uint8_t * pIndex;
     TransportOutVector_t pIoVector[ 4 ];
-    TransportOutVector_t* pIterator;
+    TransportOutVector_t * pIterator;
     uint8_t serializedTopicFieldLength[ 2 ];
     size_t totalPacketLength = 0U;
+
     /* Subscribe packet always has 4 vector fields. Namely:
      * Header + Topic Filter length + Topic filter + QoS */
     const size_t ioVectorLength = 4U;
@@ -1685,7 +1688,7 @@ static MQTTStatus_t sendPublishWithoutCopy( MQTTContext_t * pContext,
     /* Publish packets are allowed to contain no payload. */
     if( pPublishInfo->payloadLength > 0U )
     {
-        pIoVector[ ioVectorLength ].iov_base = pPublishInfo->pPayload;;
+        pIoVector[ ioVectorLength ].iov_base = pPublishInfo->pPayload;
         pIoVector[ ioVectorLength ].iov_len = pPublishInfo->payloadLength;
 
         ioVectorLength++;
@@ -1709,13 +1712,13 @@ static MQTTStatus_t sendConnectWithoutCopy( MQTTContext_t * pContext,
 {
     MQTTStatus_t status = MQTTSuccess;
     size_t connectPacketSize = 0;
-    TransportOutVector_t* iterator;
+    TransportOutVector_t * iterator;
     size_t ioVectorLength = 0U;
     size_t totalMessageLength = 0U;
 
     /* Connect packet header can be of maximum 15 bytes. */
     uint8_t connectPacketHeader[ 15 ];
-    uint8_t* pIndex = connectPacketHeader;
+    uint8_t * pIndex = connectPacketHeader;
     TransportOutVector_t pIoVector[ 11 ];
     uint8_t serializedClientIDLength[ 2 ];
     uint8_t serializedTopicLength[ 2 ];
@@ -1750,9 +1753,9 @@ static MQTTStatus_t sendConnectWithoutCopy( MQTTContext_t * pContext,
         /* The header gets sent first. */
         iterator->iov_base = connectPacketHeader;
         iterator->iov_len = ( size_t ) ( pIndex - connectPacketHeader );
-        totalMessageLength += iterator->iov_len; 
+        totalMessageLength += iterator->iov_len;
         iterator++;
-        
+
 
         /* Serialize the client ID. */
         iterator = addEncodedStringToVector( serializedClientIDLength,
@@ -2235,6 +2238,7 @@ MQTTStatus_t MQTT_Publish( MQTTContext_t * pContext,
 {
     size_t headerSize = 0UL, remainingLength = 0UL, packetSize = 0UL;
     MQTTPublishState_t publishStatus = MQTTStateNull;
+
     /* 1 header byte + 4 bytes (maximum) required for encoding the length +
      * 2 bytes for topic string. */
     uint8_t mqttHeader[ 7 ];

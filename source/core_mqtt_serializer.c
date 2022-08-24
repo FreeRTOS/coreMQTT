@@ -1359,7 +1359,7 @@ uint8_t * MQTT_SerializeConnectFixedHeader( uint8_t * pIndex,
 {
     uint8_t * pIndexLocal = pIndex;
     uint8_t connectFlags = 0U;
-    
+
     /* The first byte in the CONNECT packet is the control packet type. */
     *pIndexLocal = MQTT_PACKET_TYPE_CONNECT;
     pIndexLocal++;
@@ -1444,7 +1444,7 @@ static void serializeConnectPacket( const MQTTConnectInfo_t * pConnectInfo,
     assert( pFixedBuffer->pBuffer != NULL );
 
     pIndex = pFixedBuffer->pBuffer;
-    
+
     /* Serialize the header. */
     pIndex = MQTT_SerializeConnectFixedHeader( pIndex,
                                                pConnectInfo,
