@@ -46,9 +46,9 @@ UNWINDSET += __CPROVER_file_local_core_mqtt_c_sendBuffer.0:$(MAX_NETWORK_SEND_TR
 UNWINDSET += allocateMqttSubscriptionList.0:$(SUBSCRIPTION_COUNT_MAX)
 UNWINDSET += __CPROVER_file_local_core_mqtt_serializer_c_calculateSubscriptionPacketSize.0:$(SUBSCRIPTION_COUNT_MAX)
 UNWINDSET += MQTT_SerializeUnsubscribe.0:$(SUBSCRIPTION_COUNT_MAX)
-UNWINDSET += __CPROVER_file_local_core_mqtt_c_sendMessageVector.0:${SUBSCRIBE_PACKET_VECTORS}
-UNWINDSET += __CPROVER_file_local_core_mqtt_c_sendMessageVector.1:${SUBSCRIBE_PACKET_VECTORS}
-UNWINDSET += __CPROVER_file_local_core_mqtt_c_sendMessageVector.2:${SUBSCRIBE_PACKET_VECTORS}
+UNWINDSET += __CPROVER_file_local_core_mqtt_c_sendMessageVector.0:${UNSUBSCRIBE_PACKET_VECTORS}
+UNWINDSET += __CPROVER_file_local_core_mqtt_c_sendMessageVector.1:${UNSUBSCRIBE_PACKET_VECTORS}
+UNWINDSET += __CPROVER_file_local_core_mqtt_c_sendMessageVector.2:${UNSUBSCRIBE_PACKET_VECTORS}
 # The encodeRemainingLength loop is unwound 5 times because encodeRemainingLength()
 # divides a size_t variable by 128 until it reaches zero to stop the loop.
 # log128(SIZE_MAX) = 4.571...

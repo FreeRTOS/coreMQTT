@@ -1844,14 +1844,14 @@ static MQTTStatus_t sendUnsubscribeWithoutCopy( MQTTContext_t * pContext,
     MQTTStatus_t status = MQTTSuccess;
     uint8_t unsubscribeheader[ 7 ];
     uint8_t * pIndex;
-    TransportOutVector_t pIoVector[ 4 ];
+    TransportOutVector_t pIoVector[ 3 ];
     TransportOutVector_t * pIterator;
     uint8_t serializedTopicFieldLength[ 2 ];
     size_t totalPacketLength = 0U;
 
-    /* Subscribe packet always has 4 vector fields. Namely:
-     * Header + Topic Filter length + Topic filter + QoS */
-    const size_t ioVectorLength = 4U;
+    /* Unsubscribe packet always has 3 vector fields. Namely:
+     * Header + Topic Filter length + Topic filter */
+    const size_t ioVectorLength = 3U;
 
     pIndex = unsubscribeheader;
     pIterator = pIoVector;
@@ -1872,10 +1872,6 @@ static MQTTStatus_t sendUnsubscribeWithoutCopy( MQTTContext_t * pContext,
                                           pSubscription->topicFilterLength,
                                           pIterator,
                                           &totalPacketLength );
-
-    /* Lastly, the QoS gets sent. */
-    pIterator->iov_base = &( pSubscription->qos );
-    pIterator->iov_len = 1U;
 
     if( sendMessageVector( pContext, pIoVector, ioVectorLength ) != ( int32_t ) totalPacketLength )
     {

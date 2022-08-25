@@ -40,6 +40,7 @@ MAX_NETWORK_RECV_TRIES=4
 # information on these defines.
 MQTT_STATE_ARRAY_MAX_COUNT=11
 MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT=3
+CONNECT_PACKET_VECTORS = 12
 DEFINES += -DMQTT_RECEIVE_TIMEOUT=$(MQTT_RECEIVE_TIMEOUT)
 DEFINES += -DMAX_NETWORK_SEND_TRIES=$(MAX_NETWORK_SEND_TRIES)
 DEFINES += -DMAX_NETWORK_RECV_TRIES=$(MAX_NETWORK_RECV_TRIES)
@@ -75,6 +76,9 @@ UNWINDSET += __CPROVER_file_local_core_mqtt_serializer_c_getRemainingLength.0:5
 # acknowledgements plus one. This value is set in
 # test/cbmc/include/core_mqtt_config.h.
 UNWINDSET += __CPROVER_file_local_core_mqtt_state_c_stateSelect.0:$(MQTT_STATE_ARRAY_MAX_COUNT)
+UNWINDSET += __CPROVER_file_local_core_mqtt_c_sendMessageVector.0:${CONNECT_PACKET_VECTORS}
+UNWINDSET += __CPROVER_file_local_core_mqtt_c_sendMessageVector.1:${CONNECT_PACKET_VECTORS}
+UNWINDSET += __CPROVER_file_local_core_mqtt_c_sendMessageVector.2:${CONNECT_PACKET_VECTORS}
 
 PROOF_SOURCES += $(PROOFDIR)/$(HARNESS_FILE).c
 PROOF_SOURCES += $(SRCDIR)/test/cbmc/sources/mqtt_cbmc_state.c
