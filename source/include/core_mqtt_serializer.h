@@ -1335,6 +1335,7 @@ uint8_t * MQTT_SerializeConnectFixedHeader( uint8_t * pIndex,
                                             const MQTTConnectInfo_t * pConnectInfo,
                                             const MQTTPublishInfo_t * pWillInfo,
                                             size_t remainingLength );
+/** @endcond */
 
 /**
  * @brief Serialize the fixed part of the subscribe packet header.
@@ -1355,6 +1356,7 @@ uint8_t * MQTT_SerializeConnectFixedHeader( uint8_t * pIndex,
 uint8_t * MQTT_SerializeSubscribeHeader( size_t remainingLength,
                                          uint8_t * pIndex,
                                          uint16_t packetId );
+/** @endcond */
 
 /**
  * @brief Serialize the fixed part of the unsubscribe packet header.
@@ -1375,6 +1377,7 @@ uint8_t * MQTT_SerializeSubscribeHeader( size_t remainingLength,
 uint8_t * MQTT_SerializeUnsubscribeHeader( size_t remainingLength,
                                            uint8_t * pIndex,
                                            uint16_t packetId );
+/** @endcond */
 
 /* *INDENT-OFF* */
 #ifdef __cplusplus
