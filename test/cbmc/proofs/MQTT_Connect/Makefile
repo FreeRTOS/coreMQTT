@@ -60,12 +60,12 @@ UNWINDSET += __CPROVER_file_local_core_mqtt_c_recvExact.0:$(MAX_NETWORK_RECV_TRI
 # If the user passed in timeout is zero, then the loop will run until the
 # MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT is reached.
 UNWINDSET += __CPROVER_file_local_core_mqtt_c_receiveConnack.0:$(MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT)
-# Unlike recvExact, sendPacket is not bounded by the timeout. The loop in
-# sendPacket will continue until all the bytes are sent or a network error
+# Unlike recvExact, sendBuffer is not bounded by the timeout. The loop in
+# sendBuffer will continue until all the bytes are sent or a network error
 # occurs. Please see NetworkInterfaceReceiveStub in
 # libraries\standard\mqtt\cbmc\stubs\network_interface_stubs.c for more
 # information.
-UNWINDSET += __CPROVER_file_local_core_mqtt_c_sendPacket.0:$(MAX_NETWORK_SEND_TRIES)
+UNWINDSET += __CPROVER_file_local_core_mqtt_c_sendBuffer.0:$(MAX_NETWORK_SEND_TRIES)
 # The loops are unwound 5 times because these functions divides a size_t
 # variable by 128 until it reaches zero to stop the loop.
 # log128(SIZE_MAX) = 4.571...
