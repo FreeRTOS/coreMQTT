@@ -288,6 +288,7 @@ psubscriptionlist
 ptopic
 ptopicfilter
 ptopicname
+ptotalmessagelength
 ptr
 ptransport
 ptransportinterface

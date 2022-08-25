@@ -1311,6 +1311,30 @@ MQTTStatus_t MQTT_GetIncomingPacketTypeAndLength( TransportRecv_t readFunc,
                                                   MQTTPacketInfo_t * pIncomingPacket );
 /* @[declare_mqtt_getincomingpackettypeandlength] */
 
+/*
+ * @brief Extract the MQTT packet type and length from incoming packet.
+ *
+ * This function must be called for every incoming packet to retrieve the
+ * #MQTTPacketInfo_t.type and #MQTTPacketInfo_t.remainingLength. A
+ * #MQTTPacketInfo_t is not valid until this routine has been invoked.
+ *
+ * @param[in] pBuffer The buffer holding the raw data to be processed
+ * @param[in] pIndex Pointer to the index within the buffer to marking the end
+ *            of raw data available.
+ * @param[out] pIncomingPacket Structure used to hold the fields of the
+ *            incoming packet.
+ *
+ * @return #MQTTSuccess on successful extraction of type and length,
+ * #MQTTBadParameter if @p pIncomingPacket is invalid,
+ * #MQTTBadResponse if an invalid packet is read, and
+ * #MQTTNoDataAvailable if there is nothing to read.
+ */
+ /* @[declare_mqtt_processincomingpackettypeandlength] */
+MQTTStatus_t MQTT_ProcessIncomingPacketTypeAndLength( uint8_t * pBuffer,
+                                                      size_t * pIndex,
+                                                      MQTTPacketInfo_t * pIncomingPacket );
+/* @[declare_mqtt_processincomingpackettypeandlength] */
+
 /**
  * @fn uint8_t * MQTT_SerializeConnectFixedHeader( uint8_t * pIndex, const MQTTConnectInfo_t * pConnectInfo, const MQTTPublishInfo_t * pWillInfo, size_t remainingLength );
  * @brief Serialize the fixed part of the connect packet header.
@@ -1378,28 +1402,6 @@ uint8_t * MQTT_SerializeUnsubscribeHeader( size_t remainingLength,
                                            uint8_t * pIndex,
                                            uint16_t packetId );
 /** @endcond */
-
-/*
- * @brief Extract the MQTT packet type and length from incoming packet.
- *
- * This function must be called for every incoming packet to retrieve the
- * #MQTTPacketInfo_t.type and #MQTTPacketInfo_t.remainingLength. A
- * #MQTTPacketInfo_t is not valid until this routine has been invoked.
- *
- * @param[in] pBuffer The buffer holding the raw data to be processed
- * @param[in] pIndex Pointer to the index within the buffer to marking the end
- *            of raw data available.
- * @param[out] pIncomingPacket Structure used to hold the fields of the
- *            incoming packet.
- *
- * @return #MQTTSuccess on successful extraction of type and length,
- * #MQTTBadParameter if @p pIncomingPacket is invalid,
- * #MQTTBadResponse if an invalid packet is read, and
- * #MQTTNoDataAvailable if there is nothing to read.
- */
-MQTTStatus_t MQTT_ProcessIncomingPacketTypeAndLength( uint8_t * pBuffer,
-                                                      size_t * pIndex,
-                                                      MQTTPacketInfo_t * pIncomingPacket );
 
 /* *INDENT-OFF* */
 #ifdef __cplusplus
