@@ -243,6 +243,9 @@ typedef int32_t ( * TransportSend_t )( NetworkContext_t * pNetworkContext,
                                        size_t bytesToSend );
 /* @[define_transportsend] */
 
+/**
+ * @brief Transport vector structure for sending multiple messages.
+ */
 typedef struct TransportOutVector
 {
     const void * iov_base; /* Base address of data */

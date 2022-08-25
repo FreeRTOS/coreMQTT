@@ -56,11 +56,132 @@ static int32_t sendBuffer( MQTTContext_t * pContext,
                            size_t bytesToSend,
                            uint32_t timeout );
 
+/**
+ * @brief Sends MQTT connect without copying the users data into any buffer.
+ *
+ * @brief param[in] pContext Initialized MQTT context.
+ * @brief param[in] pConnectInfo MQTT CONNECT packet information.
+ * @brief param[in] pWillInfo Last Will and Testament. Pass NULL if Last Will and
+ * Testament is not used.
+ * @brief param[in] remainingLength the length of the connect packet.
+ *
+ * @note This operation may call the transport send function
+ * repeatedly to send bytes over the network until either:
+ * 1. The requested number of bytes @a remainingLength have been sent.
+ *                    OR
+ * 2. No byte cannot be sent over the network for the MQTT_SEND_RETRY_TIMEOUT_MS
+ * duration.
+ *                    OR
+ * 3. There is an error in sending data over the network.
+ *
+ * @return #MQTTSendFailed or #MQTTSuccess. 
+ */
 static MQTTStatus_t sendConnectWithoutCopy( MQTTContext_t * pContext,
                                             const MQTTConnectInfo_t * pConnectInfo,
                                             const MQTTPublishInfo_t * pWillInfo,
                                             size_t remainingLength );
 
+/**
+ * @brief Sends the vector array passed through the parameters over the network.
+ *
+ * @note The preference is given to 'write' function if it is present in the
+ * transport interface. Otherwise, a send call is made repeatedly to achieve the
+ * result.
+ *
+ * @param[in] pContext Initialized MQTT context.
+ * @param[in] pIoVec The vecotr array to be sent.
+ * @param[in] ioVecCount The number of elements in the array.
+ *
+ * @return The total number of bytes sent or the error code as received from the
+ * transport interface.
+ */
+static int32_t sendMessageVector( MQTTContext_t * pContext,
+                                  TransportOutVector_t * pIoVec,
+                                  size_t ioVecCount );
+
+/**
+ * @brief Add a string and its length after serializing it in a manner outlined by
+ * the MQTT specification.
+ *
+ * @param[in] serailizedLength Array of two bytes to which the vecotr will point.
+ * The array must remain in scope until the message has been sent.
+ * @param[in] string The string to be serialized.
+ * @param[in] length The length of the string to be serialized.
+ * @param[in] iterator The iterator pointing to the first element in the
+ * transport interface IO array.
+ * @param[out] updatedLength This parameter will be added to with the number of
+ * bytes added to the vector.
+ *
+ * @return The updated pointer to the vector array.
+ */
+static TransportOutVector_t * addEncodedStringToVector( uint8_t serailizedLength[ 2 ],
+                                                        uint8_t * string,
+                                                        uint8_t length,
+                                                        TransportOutVector_t * iterator,
+                                                        size_t * updatedLength );
+
+/**
+ * @brief Add the will and testament information along with the connection information
+ * to the given vector.
+ *
+ * @param[in] pConnectInfo Connection information of MQTT.
+ * @param[in] pWillInfo The last will and testament information.
+ * @param[out] totalMessageLength This parameter will be added to with the number of
+ * bytes added to the vector.
+ * @param[in] iterator The iterator pointing to the first element in the
+ * transport interface IO array.
+ * @param[out] serializedTopicLength This array will be updated with the topic field
+ * length in serialized MQTT format.
+ * @param[out] serializedPayloadLength This array will be updated with the payload
+ * field length in serialized MQTT format.
+ * @param[out] serializedUsernameLength This array will be updated with the user name
+ * field length in serialized MQTT format.
+ * @param[out] serializedPasswordLength This array will be updated with the password
+ * field length in serialized MQTT format.
+ * 
+ * @note All the arrays must stay in scope until the message contained in the vector has
+ * been sent.
+ */
+static void addWillAndConnectInfo( const MQTTConnectInfo_t * pConnectInfo,
+                                   const MQTTPublishInfo_t * pWillInfo,
+                                   size_t * totalMessageLength,
+                                   TransportOutVector_t * iterator,
+                                   uint8_t serializedTopicLength[ 2 ],
+                                   uint8_t serializedPayloadLength[ 2 ],
+                                   uint8_t serializedUsernameLength[ 2 ],
+                                   uint8_t serializedPasswordLength[ 2 ] );
+
+/**
+ * @brief Send MQTT SUBSCRIBE message without copying the user data into a buffer and
+ * directly sending it.
+ *
+ * @param[in] pContext Initialized MQTT context.
+ * @param[in] pSubscription MQTT subscription info.
+ * @param[in] packetId The packet ID of the subscribe packet
+ * @param[in] remainingLength The remaining length of the subscribe packet.
+ *
+ * @return #MQTTSuccess or #MQTTSendFailed.
+ */
+static MQTTStatus_t sendSubscribeWithoutCopy( MQTTContext_t * pContext,
+                                              const MQTTSubscribeInfo_t * pSubscription,
+                                              uint16_t packetId,
+                                              size_t remainingLength );
+
+/**
+ * @brief Send MQTT UNSUBSCRIBE message without copying the user data into a buffer and
+ * directly sending it.
+ *
+ * @param[in] pContext Initialized MQTT context.
+ * @param[in] pSubscription MQTT subscription info.
+ * @param[in] packetId The packet ID of the unsubscribe packet.
+ * @param[in] remainingLength The remaining length of the unsubscribe packet.
+ *
+ * @return #MQTTSuccess or #MQTTSendFailed.
+ */
+static MQTTStatus_t sendUnsubscribeWithoutCopy( MQTTContext_t * pContext,
+                                                const MQTTSubscribeInfo_t * pSubscription,
+                                                uint16_t packetId,
+                                                size_t remainingLength );
 /**
  * @brief Calculate the interval between two millisecond timestamps, including
  * when the later value has overflowed.
@@ -1515,7 +1636,7 @@ static MQTTStatus_t validateSubscribeUnsubscribeParams( const MQTTContext_t * pC
 /*-----------------------------------------------------------*/
 
 static TransportOutVector_t * addEncodedStringToVector( uint8_t serailizedLength[ 2 ],
-                                                        uint8_t string,
+                                                        uint8_t * string,
                                                         uint8_t length,
                                                         TransportOutVector_t * iterator,
                                                         size_t * updatedLength )
