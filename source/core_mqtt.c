@@ -115,8 +115,8 @@ static int32_t sendMessageVector( MQTTContext_t * pContext,
  * @return The updated pointer to the vector array.
  */
 static TransportOutVector_t * addEncodedStringToVector( uint8_t serailizedLength[ 2 ],
-                                                        const uint8_t * string,
-                                                        uint8_t length,
+                                                        const char * const string,
+                                                        uint16_t length,
                                                         TransportOutVector_t * iterator,
                                                         size_t * updatedLength );
 
@@ -126,7 +126,7 @@ static TransportOutVector_t * addEncodedStringToVector( uint8_t serailizedLength
  *
  * @param[in] pConnectInfo Connection information of MQTT.
  * @param[in] pWillInfo The last will and testament information.
- * @param[out] totalMessageLength This parameter will be added to with the number of
+ * @param[out] pTotalMessageLength This parameter will be added to with the number of
  * bytes added to the vector.
  * @param[in] iterator The iterator pointing to the first element in the
  * transport interface IO array.
@@ -1757,8 +1757,8 @@ static MQTTStatus_t validateSubscribeUnsubscribeParams( const MQTTContext_t * pC
 /*-----------------------------------------------------------*/
 
 static TransportOutVector_t * addEncodedStringToVector( uint8_t serailizedLength[ 2 ],
-                                                        const uint8_t * string,
-                                                        uint8_t length,
+                                                        const char * const string,
+                                                        uint16_t length,
                                                         TransportOutVector_t * iterator,
                                                         size_t * updatedLength )
 {
@@ -1968,7 +1968,7 @@ static void addWillAndConnectInfo( const MQTTConnectInfo_t * pConnectInfo,
         /* Serialize the payload. */
         iterator = addEncodedStringToVector( serializedPayloadLength,
                                              pWillInfo->pPayload,
-                                             pWillInfo->payloadLength,
+                                             ( uint16_t ) pWillInfo->payloadLength,
                                              iterator,
                                              pTotalMessageLength );
     }
@@ -2004,7 +2004,6 @@ static MQTTStatus_t sendConnectWithoutCopy( MQTTContext_t * pContext,
                                             size_t remainingLength )
 {
     MQTTStatus_t status = MQTTSuccess;
-    size_t connectPacketSize = 0;
     TransportOutVector_t * iterator;
     size_t ioVectorLength = 0U;
     size_t totalMessageLength = 0U;
@@ -2057,8 +2056,8 @@ static MQTTStatus_t sendConnectWithoutCopy( MQTTContext_t * pContext,
                                              iterator,
                                              &totalMessageLength );
 
-        addWillAndConnectInfo( pWillInfo,
-                               pConnectInfo,
+        addWillAndConnectInfo( pConnectInfo,
+                               pWillInfo,
                                &totalMessageLength,
                                iterator,
                                serializedTopicLength,
@@ -2399,7 +2398,6 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
                            bool * pSessionPresent )
 {
     size_t remainingLength = 0UL, packetSize = 0UL;
-    int32_t bytesSent;
     MQTTStatus_t status = MQTTSuccess;
     MQTTPacketInfo_t incomingPacket = { 0 };
 
@@ -2476,7 +2474,6 @@ MQTTStatus_t MQTT_Subscribe( MQTTContext_t * pContext,
                              uint16_t packetId )
 {
     size_t remainingLength = 0UL, packetSize = 0UL;
-    int32_t bytesSent = 0;
 
     /* Validate arguments. */
     MQTTStatus_t status = validateSubscribeUnsubscribeParams( pContext,
@@ -2672,7 +2669,6 @@ MQTTStatus_t MQTT_Unsubscribe( MQTTContext_t * pContext,
                                uint16_t packetId )
 {
     size_t remainingLength = 0UL, packetSize = 0UL;
-    int32_t bytesSent = 0;
 
     /* Validate arguments. */
     MQTTStatus_t status = validateSubscribeUnsubscribeParams( pContext,

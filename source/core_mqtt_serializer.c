@@ -1522,7 +1522,6 @@ static void serializeConnectPacket( const MQTTConnectInfo_t * pConnectInfo,
                                     size_t remainingLength,
                                     const MQTTFixedBuffer_t * pFixedBuffer )
 {
-    uint8_t connectFlags = 0U;
     uint8_t * pIndex = NULL;
 
     assert( pConnectInfo != NULL );

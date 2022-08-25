@@ -1387,14 +1387,13 @@ uint8_t * MQTT_SerializeUnsubscribeHeader( size_t remainingLength,
  * #MQTTPacketInfo_t is not valid until this routine has been invoked.
  *
  * @param[in] pBuffer The buffer holding the raw data to be processed
- * @param[in] pIndex Pointer to the index within the buffer to marking the end of raw data
- *            available.
- * @param[in] pIncomingPacket Structure used to hold the fields of the
+ * @param[in] pIndex Pointer to the index within the buffer to marking the end
+ *            of raw data available.
+ * @param[out] pIncomingPacket Structure used to hold the fields of the
  *            incoming packet.
  *
  * @return #MQTTSuccess on successful extraction of type and length,
  * #MQTTBadParameter if @p pIncomingPacket is invalid,
- * #MQTTRecvFailed on transport receive failure,
  * #MQTTBadResponse if an invalid packet is read, and
  * #MQTTNoDataAvailable if there is nothing to read.
  */
