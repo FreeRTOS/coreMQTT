@@ -74,7 +74,7 @@ static int32_t sendBuffer( MQTTContext_t * pContext,
  *                    OR
  * 3. There is an error in sending data over the network.
  *
- * @return #MQTTSendFailed or #MQTTSuccess. 
+ * @return #MQTTSendFailed or #MQTTSuccess.
  */
 static MQTTStatus_t sendConnectWithoutCopy( MQTTContext_t * pContext,
                                             const MQTTConnectInfo_t * pConnectInfo,
@@ -89,7 +89,7 @@ static MQTTStatus_t sendConnectWithoutCopy( MQTTContext_t * pContext,
  * result.
  *
  * @param[in] pContext Initialized MQTT context.
- * @param[in] pIoVec The vecotr array to be sent.
+ * @param[in] pIoVec The vector array to be sent.
  * @param[in] ioVecCount The number of elements in the array.
  *
  * @return The total number of bytes sent or the error code as received from the
@@ -103,7 +103,7 @@ static int32_t sendMessageVector( MQTTContext_t * pContext,
  * @brief Add a string and its length after serializing it in a manner outlined by
  * the MQTT specification.
  *
- * @param[in] serailizedLength Array of two bytes to which the vecotr will point.
+ * @param[in] serailizedLength Array of two bytes to which the vector will point.
  * The array must remain in scope until the message has been sent.
  * @param[in] string The string to be serialized.
  * @param[in] length The length of the string to be serialized.
@@ -138,7 +138,7 @@ static TransportOutVector_t * addEncodedStringToVector( uint8_t serailizedLength
  * field length in serialized MQTT format.
  * @param[out] serializedPasswordLength This array will be updated with the password
  * field length in serialized MQTT format.
- * 
+ *
  * @note All the arrays must stay in scope until the message contained in the vector has
  * been sent.
  */
@@ -182,6 +182,7 @@ static MQTTStatus_t sendUnsubscribeWithoutCopy( MQTTContext_t * pContext,
                                                 const MQTTSubscribeInfo_t * pSubscription,
                                                 uint16_t packetId,
                                                 size_t remainingLength );
+
 /**
  * @brief Calculate the interval between two millisecond timestamps, including
  * when the later value has overflowed.
@@ -801,7 +802,7 @@ static int32_t sendMessageVector( MQTTContext_t * pContext,
         if( ( bytesSentThisVector > 0U ) &&
             ( pIoVectIterator < &( pIoVec[ ioVecCount ] ) ) )
         {
-            ( * ( ( uint8_t * ) pIoVectIterator->iov_base ) ) += bytesSentThisVector;
+            ( *( ( uint8_t * ) pIoVectIterator->iov_base ) ) += bytesSentThisVector;
             pIoVectIterator->iov_len -= bytesSentThisVector;
         }
     }

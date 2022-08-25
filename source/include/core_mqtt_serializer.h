@@ -848,27 +848,18 @@ MQTTStatus_t MQTT_SerializePublish( const MQTTPublishInfo_t * pPublishInfo,
                                     const MQTTFixedBuffer_t * pFixedBuffer );
 /* @[declare_mqtt_serializepublish] */
 
-/* TODO: Re-write the brief comments below. */
 /**
  * @brief Serialize an MQTT PUBLISH packet header without the topic string in the
  * given buffer. This function will add the topic string length to the provided
  * buffer. This helps reduce an unnecessary copy of the topic string into the
  * buffer.
  *
- * #MQTT_GetPublishPacketSize should be called with @p pPublishInfo before
- * invoking this function to get the size of the required buffer and
- * @p remainingLength. The @p remainingLength must be the same as returned by
- * #MQTT_GetPublishPacketSize. The buffer must be at least as large
- * as the size returned by #MQTT_GetPublishPacketSize.
- *
  * @param[in] pPublishInfo MQTT PUBLISH packet parameters.
  * @param[in] remainingLength Remaining Length provided by #MQTT_GetPublishPacketSize.
  * @param[out] pBuffer Buffer for packet serialization.
  * @param[out] headerSize Size of the serialized MQTT PUBLISH header.
  *
- * @return #MQTTNoMemory if pFixedBuffer is too small to hold the MQTT packet;
- * #MQTTBadParameter if invalid parameters are passed;
- * #MQTTSuccess otherwise.
+ * @return #MQTTSuccess if the serialization is successful. Otherwise, #MQTTBadParameter.
  */
 MQTTStatus_t MQTT_SerializePublishHeaderWithoutTopic( const MQTTPublishInfo_t * pPublishInfo,
                                                       size_t remainingLength,

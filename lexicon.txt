@@ -235,6 +235,7 @@ pfilterindex
 pfixedbuffer
 pheadersize
 pincomingpacket
+pindex
 pingreq
 pingreqs
 pingreqsendtimems
@@ -281,6 +282,7 @@ psuback
 psubackpacket
 psubscribeinfo
 psubscribes
+psubscription
 psubscriptionlist
 ptopic
 ptopicfilter
@@ -332,6 +334,11 @@ serializeack
 serializeconnect
 serializeconnectpacket
 serializedisconnect
+serailizedlength
+serializedpasswordlength
+serializedpayloadlength
+serializedtopiclength
+serializedusernamelength
 serializepayload
 serializepingreq
 serializepublish
@@ -378,6 +385,7 @@ tlssend
 toolchain
 topicfilterlength
 topicnamelength
+totalmessagelength
 tr
 transportcallback
 transportinterface
@@ -394,6 +402,7 @@ uint
 un
 unsuback
 unsubscribelist
+updatedlength
 updatestateack
 updatestatepublish
 updatestatestatus

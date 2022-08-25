@@ -456,7 +456,7 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
  *      // Each subscription needs a topic filter.
  *      subscriptionList[ i ].pTopicFilter = filters[ i ];
  *      subscriptionList[ i ].topicFilterLength = strlen( filters[ i ] );
- * 
+ *
  *      // Obtain a new packet id for the subscription.
  *      packetId = MQTT_GetPacketId( pContext );
  *
@@ -570,7 +570,7 @@ MQTTStatus_t MQTT_Ping( MQTTContext_t * pContext );
  *      unsubscribeList[ i ].topicFilterLength = strlen( filters[ i ] );
  *
  *      // The QoS field of MQTT_SubscribeInfo_t is unused for unsubscribing.
- * 
+ *
  *      // Obtain a new packet id for the unsubscribe request.
  *      packetId = MQTT_GetPacketId( pContext );
  *
