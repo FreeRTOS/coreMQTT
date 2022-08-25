@@ -223,6 +223,11 @@ typedef struct MQTTContext
      */
     bool controlPacketSent;
 
+    /**
+     * @brief Index to keep track of the number of bytes received in network buffer.
+     */
+    size_t index;
+
     /* Keep alive members. */
     uint16_t keepAliveIntervalSec; /**< @brief Keep Alive interval. */
     uint32_t pingReqSendTimeMs;    /**< @brief Timestamp of the last sent PINGREQ. */
@@ -525,6 +530,21 @@ MQTTStatus_t MQTT_Publish( MQTTContext_t * pContext,
 /* @[declare_mqtt_publish] */
 
 /**
+ * @brief Cancels an outgoing publish callback (only for QoS > QoS0) by
+ * removing it from the pending ACK list.
+ *
+ * @param[in] pContext Initialized MQTT context.
+ * @param[in] packetId packet ID corresponding to the outstanding publish.
+ *
+ * @return #MQTTBadParameter if invalid parameters are passed;
+ * #MQTTSuccess otherwise.
+ */
+/* @[declare_mqtt_cancelcallback] */
+MQTTStatus_t MQTT_CancelCallback( MQTTContext_t * pContext,
+                                  uint16_t packetId );
+/* @[declare_mqtt_cancelcallback] */
+
+/**
  * @brief Sends an MQTT PINGREQ to broker.
  *
  * @param[in] pContext Initialized and connected MQTT context.
@@ -616,8 +636,6 @@ MQTTStatus_t MQTT_Disconnect( MQTTContext_t * pContext );
  * In that case, the #MQTT_ReceiveLoop API function should be used instead.
  *
  * @param[in] pContext Initialized and connected MQTT context.
- * @param[in] timeoutMs Minimum time in milliseconds that the receive loop will
- * run, unless an error occurs.
  *
  * @note Calling this function blocks the calling context for a time period that
  * depends on the passed @p timeoutMs, the configuration macros, #MQTT_RECV_POLLING_TIMEOUT_MS
@@ -642,13 +660,12 @@ MQTTStatus_t MQTT_Disconnect( MQTTContext_t * pContext );
  *
  * // Variables used in this example.
  * MQTTStatus_t status;
- * uint32_t timeoutMs = 100;
  * // This context is assumed to be initialized and connected.
  * MQTTContext_t * pContext;
  *
  * while( true )
  * {
- *      status = MQTT_ProcessLoop( pContext, timeoutMs );
+ *      status = MQTT_ProcessLoop( pContext );
  *
  *      if( status != MQTTSuccess )
  *      {
@@ -663,8 +680,7 @@ MQTTStatus_t MQTT_Disconnect( MQTTContext_t * pContext );
  * @endcode
  */
 /* @[declare_mqtt_processloop] */
-MQTTStatus_t MQTT_ProcessLoop( MQTTContext_t * pContext,
-                               uint32_t timeoutMs );
+MQTTStatus_t MQTT_ProcessLoop( MQTTContext_t * pContext );
 /* @[declare_mqtt_processloop] */
 
 /**
@@ -677,8 +693,6 @@ MQTTStatus_t MQTT_ProcessLoop( MQTTContext_t * pContext,
  * and #MQTT_SEND_RETRY_TIMEOUT_MS timeout configurations MUST be set to 0.
  *
  * @param[in] pContext Initialized and connected MQTT context.
- * @param[in] timeoutMs Minimum time in milliseconds that the receive loop will
- * run, unless an error occurs.
  *
  * @note Calling this function blocks the calling context for a time period that
  * depends on the passed @p timeoutMs, the configuration macros, #MQTT_RECV_POLLING_TIMEOUT_MS
@@ -730,8 +744,7 @@ MQTTStatus_t MQTT_ProcessLoop( MQTTContext_t * pContext,
  * @endcode
  */
 /* @[declare_mqtt_receiveloop] */
-MQTTStatus_t MQTT_ReceiveLoop( MQTTContext_t * pContext,
-                               uint32_t timeoutMs );
+MQTTStatus_t MQTT_ReceiveLoop( MQTTContext_t * pContext );
 /* @[declare_mqtt_receiveloop] */
 
 /**

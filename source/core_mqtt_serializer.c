@@ -189,6 +189,24 @@ static size_t getRemainingLength( TransportRecv_t recvFunc,
                                   NetworkContext_t * pNetworkContext );
 
 /**
+ * @brief Retrieves, decodes and stores the Remaining Length from the network
+ * interface by reading a single byte at a time.
+ *
+ * @param[in] pBuffer The buffer holding the raw data to be processed
+ * @param[in] pIndex Pointer to the index within the buffer to marking the end of raw data
+ *            available.
+ * @param[in] pIncomingPacket Structure used to hold the fields of the
+ *            incoming packet.
+ *
+ * @return MQTTNeedMoreBytes is returned to show that the incoming
+ *         packet is not yet fully received and decoded. Otherwise, MQTTSuccess
+ *         shows that processing of the packet was successful.
+ */
+static MQTTStatus_t processRemainingLength( uint8_t * pBuffer,
+                                            size_t * pIndex,
+                                            MQTTPacketInfo_t * pIncomingPacket );
+
+/**
  * @brief Check if an incoming packet type is valid.
  *
  * @param[in] packetType The packet type to check.
@@ -717,6 +735,74 @@ static size_t getRemainingLength( TransportRecv_t recvFunc,
     }
 
     return remainingLength;
+}
+
+/*-----------------------------------------------------------*/
+
+static MQTTStatus_t processRemainingLength( uint8_t * pBuffer,
+                                            size_t * pIndex,
+                                            MQTTPacketInfo_t * pIncomingPacket )
+{
+    size_t remainingLength = 0;
+    size_t multiplier = 1;
+    size_t bytesDecoded = 0;
+    size_t expectedSize = 0;
+    uint8_t encodedByte = 0;
+    MQTTStatus_t status = MQTTSuccess;
+
+    /* This algorithm is copied from the MQTT v3.1.1 spec. */
+    do
+    {
+        if( multiplier > 2097152U ) /* 128 ^ 3 */
+        {
+            remainingLength = MQTT_REMAINING_LENGTH_INVALID;
+
+            status = MQTTBadResponse;
+        }
+        else
+        {
+            if( *pIndex > ( bytesDecoded + 1 ) )
+            {
+                /* Get the next byte. It is at the next position after the bytes
+                 * decoded till now since the header of one byte was read before. */
+                encodedByte = pBuffer[ bytesDecoded + 1 ];
+
+                remainingLength += ( ( size_t ) encodedByte & 0x7FU ) * multiplier;
+                multiplier *= 128U;
+                bytesDecoded++;
+            }
+            else
+            {
+                status = MQTTNeedMoreBytes;
+            }
+        }
+
+        /* If the response is incorrect, or no more data is available, then
+         * break out of the loop. */
+        if( ( remainingLength == MQTT_REMAINING_LENGTH_INVALID ) ||
+            ( status != MQTTSuccess ) )
+        {
+            break;
+        }
+    } while( ( encodedByte & 0x80U ) != 0U );
+
+    if( status == MQTTSuccess )
+    {
+        /* Check that the decoded remaining length conforms to the MQTT specification. */
+        expectedSize = remainingLengthEncodedSize( remainingLength );
+
+        if( bytesDecoded != expectedSize )
+        {
+            status = MQTTBadResponse;
+        }
+        else
+        {
+            pIncomingPacket->remainingLength = remainingLength;
+            pIncomingPacket->headerLength = bytesDecoded + 1;
+        }
+    }
+
+    return status;
 }
 
 /*-----------------------------------------------------------*/
@@ -2417,6 +2503,62 @@ MQTTStatus_t MQTT_GetIncomingPacketTypeAndLength( TransportRecv_t readFunc,
     else
     {
         /* Empty else MISRA 15.7 */
+    }
+
+    return status;
+}
+
+/*-----------------------------------------------------------*/
+
+MQTTStatus_t MQTT_ProcessIncomingPacketTypeAndLength( uint8_t * pBuffer,
+                                                      size_t * pIndex,
+                                                      MQTTPacketInfo_t * pIncomingPacket )
+{
+    MQTTStatus_t status = MQTTSuccess;
+
+    if( pIncomingPacket == NULL )
+    {
+        LogError( ( "Invalid parameter: pIncomingPacket is NULL." ) );
+        status = MQTTBadParameter;
+    }
+    else if( pIndex == NULL )
+    {
+        LogError( ( "Invalid parameter: pIndex is NULL." ) );
+        status = MQTTBadParameter;
+    }
+    else if( pBuffer == NULL )
+    {
+        LogError( ( "Invalid parameter: pBuffer is NULL." ) );
+        status = MQTTBadParameter;
+    }
+    /* There should be at least one byte in the buffer */
+    else if( *pIndex < 1 )
+    {
+        /* No data is available. There are 0 bytes received from the network
+         * receive function. */
+        status = MQTTNoDataAvailable;
+    }
+    else
+    {
+        /* At least one byte is present which should be deciphered. */
+        pIncomingPacket->type = pBuffer[ 0 ];
+    }
+
+    if( status == MQTTSuccess )
+    {
+        /* Check validity. */
+        if( incomingPacketValid( pIncomingPacket->type ) == true )
+        {
+            status = processRemainingLength( pBuffer,
+                                             pIndex,
+                                             pIncomingPacket );
+        }
+        else
+        {
+            LogError( ( "Incoming packet invalid: Packet type=%u.",
+                        ( unsigned int ) pIncomingPacket->type ) );
+            status = MQTTBadResponse;
+        }
     }
 
     return status;

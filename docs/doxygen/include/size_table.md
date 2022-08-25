@@ -14,7 +14,7 @@
     </tr>
     <tr>
         <td>core_mqtt_state.c</td>
-        <td><center>1.4K</center></td>
+        <td><center>1.5K</center></td>
         <td><center>1.1K</center></td>
     </tr>
     <tr>
