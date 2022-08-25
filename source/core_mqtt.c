@@ -1791,7 +1791,7 @@ static MQTTStatus_t sendSubscribeWithoutCopy( MQTTContext_t * pContext,
                                               size_t remainingLength )
 {
     MQTTStatus_t status = MQTTSuccess;
-    uint8_t subscribeheader[ 5 ];
+    uint8_t subscribeheader[ 7 ];
     uint8_t * pIndex;
     TransportOutVector_t pIoVector[ 4 ];
     TransportOutVector_t * pIterator;
@@ -1842,7 +1842,7 @@ static MQTTStatus_t sendUnsubscribeWithoutCopy( MQTTContext_t * pContext,
                                                 size_t remainingLength )
 {
     MQTTStatus_t status = MQTTSuccess;
-    uint8_t unsubscribeheader[ 5 ];
+    uint8_t unsubscribeheader[ 7 ];
     uint8_t * pIndex;
     TransportOutVector_t pIoVector[ 4 ];
     TransportOutVector_t * pIterator;

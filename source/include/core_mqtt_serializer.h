@@ -1311,7 +1311,7 @@ MQTTStatus_t MQTT_GetIncomingPacketTypeAndLength( TransportRecv_t readFunc,
                                                   MQTTPacketInfo_t * pIncomingPacket );
 /* @[declare_mqtt_getincomingpackettypeandlength] */
 
-/*
+/**
  * @brief Extract the MQTT packet type and length from incoming packet.
  *
  * This function must be called for every incoming packet to retrieve the
