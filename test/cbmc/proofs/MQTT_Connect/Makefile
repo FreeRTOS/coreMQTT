@@ -53,6 +53,8 @@ REMOVE_FUNCTION_BODY += MQTT_ProcessLoop
 REMOVE_FUNCTION_BODY += MQTT_ReceiveLoop
 REMOVE_FUNCTION_BODY += __CPROVER_file_local_core_mqtt_c_handleIncomingPublish
 REMOVE_FUNCTION_BODY += __CPROVER_file_local_core_mqtt_c_handleKeepAlive
+REMOVE_FUNCTION_BODY += __CPROVER_file_local_core_mqtt_c_sendMessageVector
+REMOVE_FUNCTION_BODY += __CPROVER_file_local_core_mqtt_c_sendBuffer
 
 # The loop below is unwound once more than the timeout. The loop below uses
 # the user passed in timeout to break the loop.
@@ -61,12 +63,6 @@ UNWINDSET += __CPROVER_file_local_core_mqtt_c_recvExact.0:$(MAX_NETWORK_RECV_TRI
 # If the user passed in timeout is zero, then the loop will run until the
 # MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT is reached.
 UNWINDSET += __CPROVER_file_local_core_mqtt_c_receiveConnack.0:$(MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT)
-# Unlike recvExact, sendBuffer is not bounded by the timeout. The loop in
-# sendBuffer will continue until all the bytes are sent or a network error
-# occurs. Please see NetworkInterfaceReceiveStub in
-# libraries\standard\mqtt\cbmc\stubs\network_interface_stubs.c for more
-# information.
-UNWINDSET += __CPROVER_file_local_core_mqtt_c_sendBuffer.0:$(MAX_NETWORK_SEND_TRIES)
 # The loops are unwound 5 times because these functions divides a size_t
 # variable by 128 until it reaches zero to stop the loop.
 # log128(SIZE_MAX) = 4.571...
@@ -76,9 +72,6 @@ UNWINDSET += __CPROVER_file_local_core_mqtt_serializer_c_getRemainingLength.0:5
 # acknowledgements plus one. This value is set in
 # test/cbmc/include/core_mqtt_config.h.
 UNWINDSET += __CPROVER_file_local_core_mqtt_state_c_stateSelect.0:$(MQTT_STATE_ARRAY_MAX_COUNT)
-UNWINDSET += __CPROVER_file_local_core_mqtt_c_sendMessageVector.0:${CONNECT_PACKET_VECTORS}
-UNWINDSET += __CPROVER_file_local_core_mqtt_c_sendMessageVector.1:${CONNECT_PACKET_VECTORS}
-UNWINDSET += __CPROVER_file_local_core_mqtt_c_sendMessageVector.2:${CONNECT_PACKET_VECTORS}
 
 PROOF_SOURCES += $(PROOFDIR)/$(HARNESS_FILE).c
 PROOF_SOURCES += $(SRCDIR)/test/cbmc/sources/mqtt_cbmc_state.c

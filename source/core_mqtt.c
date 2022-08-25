@@ -796,8 +796,8 @@ static int32_t sendMessageVector( MQTTContext_t * pContext,
             break;
         }
 
-        while( ( bytesSentThisVector >= pIoVectIterator->iov_len ) &&
-               ( pIoVectIterator < &( pIoVec[ ioVecCount ] ) ) )
+        while( ( pIoVectIterator < &( pIoVec[ ioVecCount ] ) ) &&
+               ( bytesSentThisVector >= pIoVectIterator->iov_len ) )
         {
             bytesSentThisVector -= pIoVectIterator->iov_len;
             pIoVectIterator++;

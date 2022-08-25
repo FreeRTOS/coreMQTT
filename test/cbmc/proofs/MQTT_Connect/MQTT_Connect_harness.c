@@ -37,6 +37,7 @@ void harness()
 
     pContext = allocateMqttContext( NULL );
     __CPROVER_assume( isValidMqttContext( pContext ) );
+    __CPROVER_assume( pContext->networkBuffer.pBuffer != NULL );
 
     pConnectInfo = allocateMqttConnectInfo( NULL );
     __CPROVER_assume( isValidMqttConnectInfo( pConnectInfo ) );
