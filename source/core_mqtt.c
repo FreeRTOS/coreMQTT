@@ -115,7 +115,7 @@ static int32_t sendMessageVector( MQTTContext_t * pContext,
  * @return The updated pointer to the vector array.
  */
 static TransportOutVector_t * addEncodedStringToVector( uint8_t serailizedLength[ 2 ],
-                                                        uint8_t * string,
+                                                        const uint8_t * string,
                                                         uint8_t length,
                                                         TransportOutVector_t * iterator,
                                                         size_t * updatedLength );
@@ -144,7 +144,7 @@ static TransportOutVector_t * addEncodedStringToVector( uint8_t serailizedLength
  */
 static void addWillAndConnectInfo( const MQTTConnectInfo_t * pConnectInfo,
                                    const MQTTPublishInfo_t * pWillInfo,
-                                   size_t * totalMessageLength,
+                                   size_t * pTotalMessageLength,
                                    TransportOutVector_t * iterator,
                                    uint8_t serializedTopicLength[ 2 ],
                                    uint8_t serializedPayloadLength[ 2 ],
@@ -757,7 +757,7 @@ static int32_t sendMessageVector( MQTTContext_t * pContext,
     pIoVectIterator = pIoVec;
 
     while( ( pContext->getTime() < timeoutTime ) &&
-           ( bytesSentOrError < bytesToSend ) )
+           ( bytesSentOrError < ( int32_t ) bytesToSend ) )
     {
         int32_t sendResult;
         uint32_t bytesSentThisVector = 0U;
@@ -1637,7 +1637,7 @@ static MQTTStatus_t validateSubscribeUnsubscribeParams( const MQTTContext_t * pC
 /*-----------------------------------------------------------*/
 
 static TransportOutVector_t * addEncodedStringToVector( uint8_t serailizedLength[ 2 ],
-                                                        uint8_t * string,
+                                                        const uint8_t * string,
                                                         uint8_t length,
                                                         TransportOutVector_t * iterator,
                                                         size_t * updatedLength )
@@ -1829,7 +1829,7 @@ static MQTTStatus_t sendPublishWithoutCopy( MQTTContext_t * pContext,
 
 static void addWillAndConnectInfo( const MQTTConnectInfo_t * pConnectInfo,
                                    const MQTTPublishInfo_t * pWillInfo,
-                                   size_t * totalMessageLength,
+                                   size_t * pTotalMessageLength,
                                    TransportOutVector_t * iterator,
                                    uint8_t serializedTopicLength[ 2 ],
                                    uint8_t serializedPayloadLength[ 2 ],
@@ -1843,14 +1843,14 @@ static void addWillAndConnectInfo( const MQTTConnectInfo_t * pConnectInfo,
                                              pWillInfo->pTopicName,
                                              pWillInfo->topicNameLength,
                                              iterator,
-                                             &totalMessageLength );
+                                             pTotalMessageLength );
 
         /* Serialize the payload. */
         iterator = addEncodedStringToVector( serializedPayloadLength,
                                              pWillInfo->pPayload,
                                              pWillInfo->payloadLength,
                                              iterator,
-                                             &totalMessageLength );
+                                             pTotalMessageLength );
     }
 
     /* Encode the user name if provided. */
@@ -1861,7 +1861,7 @@ static void addWillAndConnectInfo( const MQTTConnectInfo_t * pConnectInfo,
                                              pConnectInfo->pUserName,
                                              pConnectInfo->userNameLength,
                                              iterator,
-                                             &totalMessageLength );
+                                             pTotalMessageLength );
     }
 
     /* Encode the password if provided. */
@@ -1872,7 +1872,7 @@ static void addWillAndConnectInfo( const MQTTConnectInfo_t * pConnectInfo,
                                              pConnectInfo->pPassword,
                                              pConnectInfo->passwordLength,
                                              iterator,
-                                             &totalMessageLength );
+                                             pTotalMessageLength );
     }
 }
 
