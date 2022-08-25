@@ -1315,6 +1315,7 @@ MQTTStatus_t MQTT_GetIncomingPacketTypeAndLength( TransportRecv_t readFunc,
 /* @[declare_mqtt_getincomingpackettypeandlength] */
 
 /**
+ * @fn uint8_t * MQTT_SerializeConnectFixedHeader( uint8_t * pIndex, const MQTTConnectInfo_t * pConnectInfo, const MQTTPublishInfo_t * pWillInfo, size_t remainingLength );
  * @brief Serialize the fixed part of the connect packet header.
  *
  * @param[out] pIndex Pointer to the buffer where the header is to
@@ -1338,6 +1339,7 @@ uint8_t * MQTT_SerializeConnectFixedHeader( uint8_t * pIndex,
 /** @endcond */
 
 /**
+ * @fn  uint8_t * MQTT_SerializeSubscribeHeader( size_t remainingLength, uint8_t * pIndex, uint16_t packetId );
  * @brief Serialize the fixed part of the subscribe packet header.
  *
  * @param[in] remainingLength The remaining length of the packet to be
@@ -1359,6 +1361,7 @@ uint8_t * MQTT_SerializeSubscribeHeader( size_t remainingLength,
 /** @endcond */
 
 /**
+ * @fn uint8_t * MQTT_SerializeUnsubscribeHeader( size_t remainingLength, uint8_t * pIndex, uint16_t packetId );
  * @brief Serialize the fixed part of the unsubscribe packet header.
  *
  * @param[in] remainingLength The remaining length of the packet to be
