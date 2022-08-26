@@ -745,6 +745,7 @@ static int32_t sendMessageVector( MQTTContext_t * pContext,
     uint32_t timeoutTime;
     uint32_t bytesToSend = 0U;
     int32_t bytesSentOrError = 0U;
+    uint64_t temp = 0;
     TransportOutVector_t * pIoVectIterator;
     size_t vectorsToBeSent = ioVecCount;
 
@@ -759,6 +760,7 @@ static int32_t sendMessageVector( MQTTContext_t * pContext,
     /* Count the total number of bytes to be sent as outlined in the vector. */
     for( pIoVectIterator = pIoVec; pIoVectIterator < &( pIoVec[ ioVecCount ] ); pIoVectIterator++ )
     {
+        temp += pIoVectIterator->iov_len;
         bytesToSend += pIoVectIterator->iov_len;
     }
 
@@ -2061,7 +2063,7 @@ static MQTTStatus_t sendConnectWithoutCopy( MQTTContext_t * pContext,
                                serializedUsernameLength,
                                serializedPasswordLength );
 
-        ioVectorLength = ( size_t ) ( ( iterator - pIoVector ) + 1 );
+        ioVectorLength = ( size_t ) ( iterator - pIoVector );
 
         bytesSentOrError = sendMessageVector( pContext, pIoVector, ioVectorLength );
 
