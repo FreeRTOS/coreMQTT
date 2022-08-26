@@ -58,6 +58,7 @@ void harness()
 
     pWillInfo = allocateMqttPublishInfo( NULL );
     __CPROVER_assume( isValidMqttPublishInfo( pWillInfo ) );
+
     if( pWillInfo != NULL )
     {
         /* 128^4 is the length imposed by the MQTT spec. */
