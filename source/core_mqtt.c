@@ -31,7 +31,6 @@
 #include "core_mqtt_state.h"
 #include "core_mqtt_default_logging.h"
 
-#define MQTT_SUB_UNSUB_MAX_VECTORS             ( 4U )
 /*-----------------------------------------------------------*/
 
 /**
@@ -157,7 +156,8 @@ static void addWillAndConnectInfo( const MQTTConnectInfo_t * pConnectInfo,
  * directly sending it.
  *
  * @param[in] pContext Initialized MQTT context.
- * @param[in] pSubscription MQTT subscription info.
+ * @param[in] pSubscriptionList List of MQTT subscription info.
+ * @param[in] subscriptionCount The count of elements in the list.
  * @param[in] packetId The packet ID of the subscribe packet
  * @param[in] remainingLength The remaining length of the subscribe packet.
  *
@@ -174,7 +174,8 @@ static MQTTStatus_t sendSubscribeWithoutCopy( MQTTContext_t * pContext,
  * directly sending it.
  *
  * @param[in] pContext Initialized MQTT context.
- * @param[in] pSubscription MQTT subscription info.
+ * @param[in] pSubscriptionList MQTT subscription info.
+ * @param[in] subscriptionCount The count of elements in the list.
  * @param[in] packetId The packet ID of the unsubscribe packet.
  * @param[in] remainingLength The remaining length of the unsubscribe packet.
  *
@@ -1841,7 +1842,7 @@ static MQTTStatus_t sendSubscribeWithoutCopy( MQTTContext_t * pContext,
                                                   &totalPacketLength );
 
             /* Lastly, the QoS gets sent. */
-            pIterator->iov_base = &( pSubscriptionList[ subscriptionsSent ].qos);
+            pIterator->iov_base = &( pSubscriptionList[ subscriptionsSent ].qos );
             pIterator->iov_len = 1U;
 
             /* Two slots get used by the topic string length and topic string. And
