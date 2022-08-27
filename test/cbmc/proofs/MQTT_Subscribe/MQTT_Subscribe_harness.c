@@ -37,8 +37,12 @@ void harness()
     pContext = allocateMqttContext( NULL );
     __CPROVER_assume( isValidMqttContext( pContext ) );
 
+    /* Please see the default bound description on SUBSCRIPTION_COUNT_MAX in
+     * mqtt_cbmc_state.c for more information. */
+    __CPROVER_assume( subscriptionCount < SUBSCRIPTION_COUNT_MAX );
+
     pSubscriptionList = allocateMqttSubscriptionList( NULL, 1U );
     __CPROVER_assume( isValidMqttSubscriptionList( pSubscriptionList, 1U ) );
 
-    MQTT_Subscribe( pContext, pSubscriptionList, packetId );
+    MQTT_Subscribe( pContext, pSubscriptionList, subscriptionCount, packetId );
 }

@@ -53,6 +53,8 @@ UNWINDSET += __CPROVER_file_local_core_mqtt_c_sendMessageVector.2:${UNSUBSCRIBE_
 # divides a size_t variable by 128 until it reaches zero to stop the loop.
 # log128(SIZE_MAX) = 4.571...
 UNWINDSET += __CPROVER_file_local_core_mqtt_serializer_c_encodeRemainingLength.0:5
+UNWINDSET += __CPROVER_file_local_core_mqtt_c_sendUnsubscribeWithoutCopy.0:$(MAX_NETWORK_SEND_TRIES)
+UNWINDSET += __CPROVER_file_local_core_mqtt_c_sendUnsubscribeWithoutCopy.1:$(MAX_NETWORK_SEND_TRIES)
 
 PROOF_SOURCES += $(PROOFDIR)/$(HARNESS_FILE).c
 PROOF_SOURCES += $(SRCDIR)/test/cbmc/sources/mqtt_cbmc_state.c
