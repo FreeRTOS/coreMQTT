@@ -31,6 +31,7 @@
 #include "core_mqtt_state.h"
 #include "core_mqtt_default_logging.h"
 
+#define MQTT_SUB_UNSUB_MAX_VECTORS             ( 4U )
 /*-----------------------------------------------------------*/
 
 /**
@@ -163,7 +164,8 @@ static void addWillAndConnectInfo( const MQTTConnectInfo_t * pConnectInfo,
  * @return #MQTTSuccess or #MQTTSendFailed.
  */
 static MQTTStatus_t sendSubscribeWithoutCopy( MQTTContext_t * pContext,
-                                              const MQTTSubscribeInfo_t * pSubscription,
+                                              const MQTTSubscribeInfo_t * pSubscriptionList,
+                                              size_t subscriptionCount,
                                               uint16_t packetId,
                                               size_t remainingLength );
 
@@ -179,7 +181,8 @@ static MQTTStatus_t sendSubscribeWithoutCopy( MQTTContext_t * pContext,
  * @return #MQTTSuccess or #MQTTSendFailed.
  */
 static MQTTStatus_t sendUnsubscribeWithoutCopy( MQTTContext_t * pContext,
-                                                const MQTTSubscribeInfo_t * pSubscription,
+                                                const MQTTSubscribeInfo_t * pSubscriptionList,
+                                                size_t subscriptionCount,
                                                 uint16_t packetId,
                                                 size_t remainingLength );
 
@@ -1788,21 +1791,26 @@ static TransportOutVector_t * addEncodedStringToVector( uint8_t serailizedLength
 /*-----------------------------------------------------------*/
 
 static MQTTStatus_t sendSubscribeWithoutCopy( MQTTContext_t * pContext,
-                                              const MQTTSubscribeInfo_t * pSubscription,
+                                              const MQTTSubscribeInfo_t * pSubscriptionList,
+                                              size_t subscriptionCount,
                                               uint16_t packetId,
                                               size_t remainingLength )
 {
     MQTTStatus_t status = MQTTSuccess;
     uint8_t subscribeheader[ 7 ];
     uint8_t * pIndex;
-    TransportOutVector_t pIoVector[ 4 ];
+    TransportOutVector_t pIoVector[ MQTT_SUB_UNSUB_MAX_VECTORS ];
     TransportOutVector_t * pIterator;
     uint8_t serializedTopicFieldLength[ 2 ];
     size_t totalPacketLength = 0U;
+    size_t ioVectorLength = 0U;
+    size_t subscriptionsSent = 0U;
+    /* For subscribe, only three vector slots are required per topic string. */
+    const size_t subscriptionStringVectorSlots = 3U;
 
-    /* Subscribe packet always has 4 vector fields. Namely:
-     * Header + Topic Filter length + Topic filter + QoS */
-    const size_t ioVectorLength = 4U;
+    /* The vector array should be at least three element long as the topic
+     * string needs these many vector elements to be stored. */
+    assert( MQTT_SUB_UNSUB_MAX_VECTORS >= subscriptionStringVectorSlots );
 
     pIndex = subscribeheader;
     pIterator = pIoVector;
@@ -1815,22 +1823,45 @@ static MQTTStatus_t sendSubscribeWithoutCopy( MQTTContext_t * pContext,
     pIterator->iov_base = subscribeheader;
     pIterator->iov_len = ( size_t ) ( pIndex - subscribeheader );
     pIterator++;
+    ioVectorLength++;
     totalPacketLength += ( size_t ) ( pIndex - subscribeheader );
 
-    /* The topic filter gets sent next. */
-    pIterator = addEncodedStringToVector( serializedTopicFieldLength,
-                                          pSubscription->pTopicFilter,
-                                          pSubscription->topicFilterLength,
-                                          pIterator,
-                                          &totalPacketLength );
-
-    /* Lastly, the QoS gets sent. */
-    pIterator->iov_base = &( pSubscription->qos );
-    pIterator->iov_len = 1U;
-
-    if( sendMessageVector( pContext, pIoVector, ioVectorLength ) != ( int32_t ) totalPacketLength )
+    while( ( status == MQTTSuccess ) && ( subscriptionsSent < subscriptionCount ) )
     {
-        status = MQTTSendFailed;
+        /* Check whether the subscription topic (with QoS) will fit in the
+         * given vector. */
+        while( ( ioVectorLength <= ( MQTT_SUB_UNSUB_MAX_VECTORS - subscriptionStringVectorSlots ) ) &&
+               ( subscriptionsSent < subscriptionCount ) )
+        {
+            /* The topic filter gets sent next. */
+            pIterator = addEncodedStringToVector( serializedTopicFieldLength,
+                                                  pSubscriptionList[ subscriptionsSent ].pTopicFilter,
+                                                  pSubscriptionList[ subscriptionsSent ].topicFilterLength,
+                                                  pIterator,
+                                                  &totalPacketLength );
+
+            /* Lastly, the QoS gets sent. */
+            pIterator->iov_base = &( pSubscriptionList[ subscriptionsSent ].qos);
+            pIterator->iov_len = 1U;
+
+            /* Two slots get used by the topic string length and topic string. And
+             * one slot gets used by the quality of service. */
+            ioVectorLength += subscriptionStringVectorSlots;
+
+            subscriptionsSent++;
+        }
+
+        if( sendMessageVector( pContext, pIoVector, ioVectorLength ) != ( int32_t ) totalPacketLength )
+        {
+            status = MQTTSendFailed;
+        }
+
+        /* Update the iterator for the next potential loop iteration. */
+        pIterator = pIoVector;
+        /* Reset the vector length for the next potential loop iteration. */
+        ioVectorLength = 0U;
+        /* Reset the packet length for the next potential loop iteration. */
+        totalPacketLength = 0U;
     }
 
     return status;
@@ -1839,21 +1870,26 @@ static MQTTStatus_t sendSubscribeWithoutCopy( MQTTContext_t * pContext,
 /*-----------------------------------------------------------*/
 
 static MQTTStatus_t sendUnsubscribeWithoutCopy( MQTTContext_t * pContext,
-                                                const MQTTSubscribeInfo_t * pSubscription,
+                                                const MQTTSubscribeInfo_t * pSubscriptionList,
+                                                size_t subscriptionCount,
                                                 uint16_t packetId,
                                                 size_t remainingLength )
 {
     MQTTStatus_t status = MQTTSuccess;
     uint8_t unsubscribeheader[ 7 ];
     uint8_t * pIndex;
-    TransportOutVector_t pIoVector[ 3 ];
+    TransportOutVector_t pIoVector[ MQTT_SUB_UNSUB_MAX_VECTORS ];
     TransportOutVector_t * pIterator;
     uint8_t serializedTopicFieldLength[ 2 ];
     size_t totalPacketLength = 0U;
+    size_t unsubscriptionsSent = 0U;
+    size_t ioVectorLength = 0U;
+    /* For unsubscribe, only two vector slots are required per topic string. */
+    const size_t subscriptionStringVectorSlots = 2U;
 
-    /* Unsubscribe packet always has 3 vector fields. Namely:
-     * Header + Topic Filter length + Topic filter */
-    const size_t ioVectorLength = 3U;
+    /* The vector array should be at least three element long as the topic
+     * string needs these many vector elements to be stored. */
+    assert( MQTT_SUB_UNSUB_MAX_VECTORS >= subscriptionStringVectorSlots );
 
     pIndex = unsubscribeheader;
     pIterator = pIoVector;
@@ -1865,19 +1901,41 @@ static MQTTStatus_t sendUnsubscribeWithoutCopy( MQTTContext_t * pContext,
     /* The header is to be sent first. */
     pIterator->iov_base = unsubscribeheader;
     pIterator->iov_len = ( size_t ) ( pIndex - unsubscribeheader );
-    pIterator++;
     totalPacketLength += ( size_t ) ( pIndex - unsubscribeheader );
+    pIterator++;
+    ioVectorLength++;
 
-    /* The topic filter gets sent next. */
-    pIterator = addEncodedStringToVector( serializedTopicFieldLength,
-                                          pSubscription->pTopicFilter,
-                                          pSubscription->topicFilterLength,
-                                          pIterator,
-                                          &totalPacketLength );
-
-    if( sendMessageVector( pContext, pIoVector, ioVectorLength ) != ( int32_t ) totalPacketLength )
+    while( ( status == MQTTSuccess ) && ( unsubscriptionsSent < subscriptionCount ) )
     {
-        status = MQTTSendFailed;
+        /* Check whether the subscription topic will fit in the given vector. */
+        while( ( ioVectorLength <= ( MQTT_SUB_UNSUB_MAX_VECTORS - subscriptionStringVectorSlots ) ) &&
+               ( unsubscriptionsSent < subscriptionCount ) )
+        {
+            /* The topic filter gets sent next. */
+            pIterator = addEncodedStringToVector( serializedTopicFieldLength,
+                                                  pSubscriptionList[ unsubscriptionsSent ].pTopicFilter,
+                                                  pSubscriptionList[ unsubscriptionsSent ].topicFilterLength,
+                                                  pIterator,
+                                                  &totalPacketLength );
+
+            /* Two slots get used by the topic string length and topic string. And
+             * one slot gets used by the quality of service. */
+            ioVectorLength += subscriptionStringVectorSlots;
+
+            unsubscriptionsSent++;
+        }
+
+        if( sendMessageVector( pContext, pIoVector, ioVectorLength ) != ( int32_t ) totalPacketLength )
+        {
+            status = MQTTSendFailed;
+        }
+
+        /* Update the iterator for the next potential loop iteration. */
+        pIterator = pIoVector;
+        /* Reset the vector length for the next potential loop iteration. */
+        ioVectorLength = 0U;
+        /* Reset the packet length for the next potential loop iteration. */
+        totalPacketLength = 0U;
     }
 
     return status;
@@ -2468,22 +2526,23 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
 /*-----------------------------------------------------------*/
 
 MQTTStatus_t MQTT_Subscribe( MQTTContext_t * pContext,
-                             const MQTTSubscribeInfo_t * pSubscription,
+                             const MQTTSubscribeInfo_t * pSubscriptionList,
+                             size_t subscriptionCount,
                              uint16_t packetId )
 {
     size_t remainingLength = 0UL, packetSize = 0UL;
 
     /* Validate arguments. */
     MQTTStatus_t status = validateSubscribeUnsubscribeParams( pContext,
-                                                              pSubscription,
-                                                              1U,
+                                                              pSubscriptionList,
+                                                              subscriptionCount,
                                                               packetId );
 
     if( status == MQTTSuccess )
     {
         /* Get the remaining length and packet size.*/
-        status = MQTT_GetSubscribePacketSize( pSubscription,
-                                              1U,
+        status = MQTT_GetSubscribePacketSize( pSubscriptionList,
+                                              subscriptionCount,
                                               &remainingLength,
                                               &packetSize );
         LogDebug( ( "SUBSCRIBE packet size is %lu and remaining length is %lu.",
@@ -2495,7 +2554,8 @@ MQTTStatus_t MQTT_Subscribe( MQTTContext_t * pContext,
     {
         /* Send MQTT SUBSCRIBE packet. */
         status = sendSubscribeWithoutCopy( pContext,
-                                           pSubscription,
+                                           pSubscriptionList,
+                                           subscriptionCount,
                                            packetId,
                                            remainingLength );
     }
@@ -2663,22 +2723,23 @@ MQTTStatus_t MQTT_Ping( MQTTContext_t * pContext )
 /*-----------------------------------------------------------*/
 
 MQTTStatus_t MQTT_Unsubscribe( MQTTContext_t * pContext,
-                               const MQTTSubscribeInfo_t * pSubscription,
+                               const MQTTSubscribeInfo_t * pSubscriptionList,
+                               size_t subscriptionCount,
                                uint16_t packetId )
 {
     size_t remainingLength = 0UL, packetSize = 0UL;
 
     /* Validate arguments. */
     MQTTStatus_t status = validateSubscribeUnsubscribeParams( pContext,
-                                                              pSubscription,
-                                                              1U,
+                                                              pSubscriptionList,
+                                                              subscriptionCount,
                                                               packetId );
 
     if( status == MQTTSuccess )
     {
         /* Get the remaining length and packet size.*/
-        status = MQTT_GetUnsubscribePacketSize( pSubscription,
-                                                1U,
+        status = MQTT_GetUnsubscribePacketSize( pSubscriptionList,
+                                                subscriptionCount,
                                                 &remainingLength,
                                                 &packetSize );
         LogDebug( ( "UNSUBSCRIBE packet size is %lu and remaining length is %lu.",
@@ -2689,7 +2750,8 @@ MQTTStatus_t MQTT_Unsubscribe( MQTTContext_t * pContext,
     if( status == MQTTSuccess )
     {
         status = sendUnsubscribeWithoutCopy( pContext,
-                                             pSubscription,
+                                             pSubscriptionList,
+                                             subscriptionCount,
                                              packetId,
                                              remainingLength );
     }
