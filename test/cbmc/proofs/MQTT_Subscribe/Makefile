@@ -30,26 +30,30 @@ MAX_NETWORK_SEND_TRIES=3
 # mqtt_cbmc_state.c for more information on this bound. This is set to 2
 # currently to have the proof run quickly.
 SUBSCRIPTION_COUNT_MAX=2
+SUBSCRIBE_PACKET_VECTORS = 5
 
 DEFINES += -DMAX_NETWORK_SEND_TRIES=$(MAX_NETWORK_SEND_TRIES)
 DEFINES += -DSUBSCRIPTION_COUNT_MAX=$(SUBSCRIPTION_COUNT_MAX)
 INCLUDES +=
 
 REMOVE_FUNCTION_BODY +=
-# Unlike recvExact, sendPacket is not bounded by the timeout. The loop in
-# sendPacket will continue until all the bytes are sent or a network error
+# Unlike recvExact, sendBuffer is not bounded by the timeout. The loop in
+# sendBuffer will continue until all the bytes are sent or a network error
 # occurs. Please see NetworkInterfaceReceiveStub in
 # libraries\standard\mqtt\cbmc\stubs\network_interface_stubs.c for more
 # information.
-UNWINDSET += __CPROVER_file_local_core_mqtt_c_sendPacket.0:$(MAX_NETWORK_SEND_TRIES)
+UNWINDSET += __CPROVER_file_local_core_mqtt_c_sendBuffer.0:$(MAX_NETWORK_SEND_TRIES)
 UNWINDSET += allocateMqttSubscriptionList.0:$(SUBSCRIPTION_COUNT_MAX)
-UNWINDSET += isValidMqttSubscriptionList.0:$(SUBSCRIPTION_COUNT_MAX)
 UNWINDSET += __CPROVER_file_local_core_mqtt_serializer_c_calculateSubscriptionPacketSize.0:$(SUBSCRIPTION_COUNT_MAX)
-UNWINDSET += MQTT_SerializeSubscribe.0:$(SUBSCRIPTION_COUNT_MAX)
+UNWINDSET += __CPROVER_file_local_core_mqtt_c_sendMessageVector.0:${SUBSCRIBE_PACKET_VECTORS}
+UNWINDSET += __CPROVER_file_local_core_mqtt_c_sendMessageVector.1:${SUBSCRIBE_PACKET_VECTORS}
+UNWINDSET += __CPROVER_file_local_core_mqtt_c_sendMessageVector.2:${SUBSCRIBE_PACKET_VECTORS}
 # The encodeRemainingLength loop is unwound 5 times because encodeRemainingLength()
 # divides a size_t variable by 128 until it reaches zero to stop the loop.
 # log128(SIZE_MAX) = 4.571...
 UNWINDSET += __CPROVER_file_local_core_mqtt_serializer_c_encodeRemainingLength.0:5
+UNWINDSET += __CPROVER_file_local_core_mqtt_c_sendSubscribeWithoutCopy.0:$(MAX_NETWORK_SEND_TRIES)
+UNWINDSET += __CPROVER_file_local_core_mqtt_c_sendSubscribeWithoutCopy.1:$(MAX_NETWORK_SEND_TRIES)
 
 PROOF_SOURCES += $(PROOFDIR)/$(HARNESS_FILE).c
 PROOF_SOURCES += $(SRCDIR)/test/cbmc/sources/mqtt_cbmc_state.c

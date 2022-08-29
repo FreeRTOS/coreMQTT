@@ -199,6 +199,7 @@ MQTTContext_t * allocateMqttContext( MQTTContext_t * pContext )
          * function in core_mqtt.h. */
         pTransportInterface->recv = NetworkInterfaceReceiveStub;
         pTransportInterface->send = NetworkInterfaceSendStub;
+        pTransportInterface->writev = NULL;
     }
 
     pNetworkBuffer = allocateMqttFixedBuffer( NULL );

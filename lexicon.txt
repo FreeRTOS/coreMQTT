@@ -112,7 +112,10 @@ initializeconnectinfo
 initializesubscribeinfo
 initializewillinfo
 int
+io
 iot
+ioveccount
+ip
 isn
 iso
 keepaliveintervalsec
@@ -240,11 +243,13 @@ pingreqs
 pingreqsendtimems
 pingresp
 pingresps
+piovec
 pismatch
 plaintext
 pmatch
 pmessage
 pmqttcontext
+pmqttheader
 pnameindex
 pnetworkbuffer
 pnetworkcontext
@@ -279,10 +284,12 @@ psuback
 psubackpacket
 psubscribeinfo
 psubscribes
+psubscription
 psubscriptionlist
 ptopic
 ptopicfilter
 ptopicname
+ptotalmessagelength
 ptr
 ptransport
 ptransportinterface
@@ -330,6 +337,11 @@ serializeack
 serializeconnect
 serializeconnectpacket
 serializedisconnect
+serailizedlength
+serializedpasswordlength
+serializedpayloadlength
+serializedtopiclength
+serializedusernamelength
 serializepayload
 serializepingreq
 serializepublish
@@ -376,6 +388,7 @@ tlssend
 toolchain
 topicfilterlength
 topicnamelength
+totalmessagelength
 tr
 transportcallback
 transportinterface
@@ -392,6 +405,7 @@ uint
 un
 unsuback
 unsubscribelist
+updatedlength
 updatestateack
 updatestatepublish
 updatestatestatus
@@ -402,6 +416,7 @@ validatesubscribeunsubscribeparams
 validator
 waitingforpingresp
 willinfo
+writev
 xa
 xb
 xc

@@ -244,14 +244,63 @@ typedef int32_t ( * TransportSend_t )( NetworkContext_t * pNetworkContext,
 /* @[define_transportsend] */
 
 /**
+ * @brief Transport vector structure for sending multiple messages.
+ */
+typedef struct TransportOutVector
+{
+    /**
+     * @brief Base address of data.
+     */
+    const void * iov_base;
+
+    /**
+     * @brief Length of data in buffer.
+     */
+    size_t iov_len;
+} TransportOutVector_t;
+
+/**
+ * @transportcallback
+ * @brief Transport interface function for "vectored" / scatter-gather based
+ * writes. This function is expected to iterate over the list of vectors pIoVec
+ * having ioVecCount entries containing portions of one MQTT message at a maximum.
+ * If the proper functionality is available, then the data in the list should be
+ * copied to the underlying TCP buffer before flushing the buffer. Implementing it
+ * in this fashion  will lead to sending of fewer TCP packets for all the values
+ * in the list.
+ *
+ * @note If the proper write functionality is not present for a given device/IP-stack,
+ * then there is no strict requirement to implement write. Only the send and recv
+ * interfaces must be defined for the application to work properly.
+ *
+ * @param[in] pNetworkContext Implementation-defined network context.
+ * @param[in] pIoVec An array of TransportIoVector_t structs.
+ * @param[in] ioVecCount Number of TransportIoVector_t in pIoVec.
+ *
+ * @return The number of bytes written or a negative value to indicate error.
+ *
+ * @note If no data is written to the buffer due to the buffer being full this MUST
+ * return zero as the return value.
+ * A zero return value SHOULD represent that the write operation can be retried
+ * by calling the API function. Zero MUST NOT be returned if a network disconnection
+ * has occurred.
+ */
+/* @[define_transportwritev] */
+typedef int32_t ( * TransportWritev_t )( NetworkContext_t * pNetworkContext,
+                                         TransportOutVector_t * pIoVec,
+                                         size_t ioVecCount );
+/* @[define_transportwritev] */
+
+/**
  * @transportstruct
  * @brief The transport layer interface.
  */
 /* @[define_transportinterface] */
 typedef struct TransportInterface
 {
-    TransportRecv_t recv;               /**< Transport receive interface. */
-    TransportSend_t send;               /**< Transport send interface. */
+    TransportRecv_t recv;               /**< Transport receive function pointer. */
+    TransportSend_t send;               /**< Transport send function pointer. */
+    TransportWritev_t writev;           /**< Transport writev function pointer. */
     NetworkContext_t * pNetworkContext; /**< Implementation-defined network context. */
 } TransportInterface_t;
 /* @[define_transportinterface] */

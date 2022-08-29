@@ -29,17 +29,19 @@ MAX_NETWORK_SEND_TRIES=3
 # Please see test/cbmc/include/core_mqtt_config.h for more
 # information.
 MQTT_STATE_ARRAY_MAX_COUNT=11
+PUBLISH_PACKET_VECTORS = 5
+
 DEFINES += -DMAX_NETWORK_SEND_TRIES=$(MAX_NETWORK_SEND_TRIES)
 INCLUDES +=
 
 REMOVE_FUNCTION_BODY +=
 REMOVE_FUNCTION_BODY +=
-# Unlike recvExact, sendPacket is not bounded by the timeout. The loop in
-# sendPacket will continue until all the bytes are sent or a network error
+# Unlike recvExact, sendBuffer is not bounded by the timeout. The loop in
+# sendBuffer will continue until all the bytes are sent or a network error
 # occurs. Please see NetworkInterfaceReceiveStub in
 # libraries\standard\mqtt\cbmc\stubs\network_interface_stubs.c for more
 # information.
-UNWINDSET += __CPROVER_file_local_core_mqtt_c_sendPacket.0:$(MAX_NETWORK_SEND_TRIES)
+UNWINDSET += __CPROVER_file_local_core_mqtt_c_sendBuffer.0:$(MAX_NETWORK_SEND_TRIES)
 # These loops will run for the maximum number of publishes pending acknowledgement.
 # This is set in test/cbmc/include/core_mqtt_config.h.
 UNWINDSET += __CPROVER_file_local_core_mqtt_state_c_addRecord.0:$(MQTT_STATE_ARRAY_MAX_COUNT)
@@ -48,6 +50,9 @@ UNWINDSET += __CPROVER_file_local_core_mqtt_state_c_findInRecord.0:$(MQTT_STATE_
 # divides a size_t variable by 128 until it reaches zero to stop the loop.
 # log128(SIZE_MAX) = 4.571...
 UNWINDSET += __CPROVER_file_local_core_mqtt_serializer_c_encodeRemainingLength.0:5
+UNWINDSET += __CPROVER_file_local_core_mqtt_c_sendMessageVector.0:${PUBLISH_PACKET_VECTORS}
+UNWINDSET += __CPROVER_file_local_core_mqtt_c_sendMessageVector.1:${PUBLISH_PACKET_VECTORS}
+UNWINDSET += __CPROVER_file_local_core_mqtt_c_sendMessageVector.2:${PUBLISH_PACKET_VECTORS}
 
 PROOF_SOURCES += $(PROOFDIR)/$(HARNESS_FILE).c
 PROOF_SOURCES += $(SRCDIR)/test/cbmc/sources/mqtt_cbmc_state.c

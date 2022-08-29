@@ -745,6 +745,24 @@ MQTTStatus_t MQTT_SerializePublish( const MQTTPublishInfo_t * pPublishInfo,
 /* @[declare_mqtt_serializepublish] */
 
 /**
+ * @brief Serialize an MQTT PUBLISH packet header without the topic string in the
+ * given buffer. This function will add the topic string length to the provided
+ * buffer. This helps reduce an unnecessary copy of the topic string into the
+ * buffer.
+ *
+ * @param[in] pPublishInfo MQTT PUBLISH packet parameters.
+ * @param[in] remainingLength Remaining Length provided by #MQTT_GetPublishPacketSize.
+ * @param[out] pBuffer Buffer for packet serialization.
+ * @param[out] headerSize Size of the serialized MQTT PUBLISH header.
+ *
+ * @return #MQTTSuccess if the serialization is successful. Otherwise, #MQTTBadParameter.
+ */
+MQTTStatus_t MQTT_SerializePublishHeaderWithoutTopic( const MQTTPublishInfo_t * pPublishInfo,
+                                                      size_t remainingLength,
+                                                      uint8_t * pBuffer,
+                                                      size_t * headerSize );
+
+/**
  * @brief Serialize an MQTT PUBLISH packet header in the given buffer.
  *
  * This function serializes PUBLISH header in to the given buffer. The payload
@@ -1191,20 +1209,89 @@ MQTTStatus_t MQTT_GetIncomingPacketTypeAndLength( TransportRecv_t readFunc,
  * #MQTTPacketInfo_t is not valid until this routine has been invoked.
  *
  * @param[in] pBuffer The buffer holding the raw data to be processed
- * @param[in] pIndex Pointer to the index within the buffer to marking the end of raw data
- *            available.
- * @param[in] pIncomingPacket Structure used to hold the fields of the
+ * @param[in] pIndex Pointer to the index within the buffer to marking the end
+ *            of raw data available.
+ * @param[out] pIncomingPacket Structure used to hold the fields of the
  *            incoming packet.
  *
  * @return #MQTTSuccess on successful extraction of type and length,
  * #MQTTBadParameter if @p pIncomingPacket is invalid,
- * #MQTTRecvFailed on transport receive failure,
  * #MQTTBadResponse if an invalid packet is read, and
  * #MQTTNoDataAvailable if there is nothing to read.
  */
+ /* @[declare_mqtt_processincomingpackettypeandlength] */
 MQTTStatus_t MQTT_ProcessIncomingPacketTypeAndLength( uint8_t * pBuffer,
                                                       size_t * pIndex,
                                                       MQTTPacketInfo_t * pIncomingPacket );
+/* @[declare_mqtt_processincomingpackettypeandlength] */
+
+/**
+ * @fn uint8_t * MQTT_SerializeConnectFixedHeader( uint8_t * pIndex, const MQTTConnectInfo_t * pConnectInfo, const MQTTPublishInfo_t * pWillInfo, size_t remainingLength );
+ * @brief Serialize the fixed part of the connect packet header.
+ *
+ * @param[out] pIndex Pointer to the buffer where the header is to
+ * be serialized.
+ * @param[in] pConnectInfo The connect information.
+ * @param[in] pWillInfo The last will and testament information.
+ * @param[in] remainingLength The remaining length of the packet to be
+ * serialized.
+ *
+ * @return A pointer to the end of the encoded string.
+ */
+
+/**
+ * @cond DOXYGEN_IGNORE
+ * Doxygen should ignore this definition, this function is private.
+ */
+uint8_t * MQTT_SerializeConnectFixedHeader( uint8_t * pIndex,
+                                            const MQTTConnectInfo_t * pConnectInfo,
+                                            const MQTTPublishInfo_t * pWillInfo,
+                                            size_t remainingLength );
+/** @endcond */
+
+/**
+ * @fn  uint8_t * MQTT_SerializeSubscribeHeader( size_t remainingLength, uint8_t * pIndex, uint16_t packetId );
+ * @brief Serialize the fixed part of the subscribe packet header.
+ *
+ * @param[in] remainingLength The remaining length of the packet to be
+ * serialized.
+ * @param[in] pIndex Pointer to the buffer where the header is to
+ * be serialized.
+ * @param[in] packetId The packet ID to be serialized.
+ *
+ * @return A pointer to the end of the encoded string.
+ */
+
+/**
+ * @cond DOXYGEN_IGNORE
+ * Doxygen should ignore this definition, this function is private.
+ */
+uint8_t * MQTT_SerializeSubscribeHeader( size_t remainingLength,
+                                         uint8_t * pIndex,
+                                         uint16_t packetId );
+/** @endcond */
+
+/**
+ * @fn uint8_t * MQTT_SerializeUnsubscribeHeader( size_t remainingLength, uint8_t * pIndex, uint16_t packetId );
+ * @brief Serialize the fixed part of the unsubscribe packet header.
+ *
+ * @param[in] remainingLength The remaining length of the packet to be
+ * serialized.
+ * @param[in] pIndex Pointer to the buffer where the header is to
+ * be serialized.
+ * @param[in] packetId The packet ID to be serialized.
+ *
+ * @return A pointer to the end of the encoded string.
+ */
+
+/**
+ * @cond DOXYGEN_IGNORE
+ * Doxygen should ignore this definition, this function is private.
+ */
+uint8_t * MQTT_SerializeUnsubscribeHeader( size_t remainingLength,
+                                           uint8_t * pIndex,
+                                           uint16_t packetId );
+/** @endcond */
 
 /* *INDENT-OFF* */
 #ifdef __cplusplus
