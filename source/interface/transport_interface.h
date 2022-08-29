@@ -269,6 +269,10 @@ typedef struct TransportOutVector
  * in this fashion  will lead to sending of fewer TCP packets for all the values
  * in the list.
  *
+ * @note If the proper write functionality is not present for a given device/IP-stack,
+ * then there is no strict requirement to implement write. Only the send and recv
+ * interfaces must be defined for the application to work properly.
+ *
  * @param[in] pNetworkContext Implementation-defined network context.
  * @param[in] pIoVec An array of TransportIoVector_t structs.
  * @param[in] ioVecCount Number of TransportIoVector_t in pIoVec.
