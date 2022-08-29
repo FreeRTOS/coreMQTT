@@ -1770,8 +1770,8 @@ static TransportOutVector_t * addEncodedStringToVector( uint8_t serailizedLength
     size_t packetLength = 0U;
     const size_t seralizedLengthFieldSize = 2U;
 
-    serailizedLength[ 0 ] = UINT16_HIGH_BYTE( length );
-    serailizedLength[ 1 ] = UINT16_LOW_BYTE( length );
+    serailizedLength[ 0 ] = ( ( uint8_t ) ( ( length ) >> 8 ) );
+    serailizedLength[ 1 ] = ( ( uint8_t ) ( ( length ) & 0x00ffU ) );
 
     iterator->iov_base = serailizedLength;
     iterator->iov_len = seralizedLengthFieldSize;
@@ -2657,11 +2657,11 @@ MQTTStatus_t MQTT_Ping( MQTTContext_t * pContext )
     MQTTStatus_t status = MQTTSuccess;
     size_t packetSize = 0U;
     /* MQTT ping packets are of fixed length. */
-    uint8_t pingreqPacket[ MQTT_PACKET_PINGREQ_SIZE ];
+    uint8_t pingreqPacket[ 2U ];
     MQTTFixedBuffer_t localBuffer;
 
     localBuffer.pBuffer = pingreqPacket;
-    localBuffer.size = MQTT_PACKET_PINGREQ_SIZE;
+    localBuffer.size = 2U;
 
     if( pContext == NULL )
     {
@@ -2699,7 +2699,7 @@ MQTTStatus_t MQTT_Ping( MQTTContext_t * pContext )
          * from the user provided buffers. Thus it can be sent directly. */
         bytesSent = sendBuffer( pContext,
                                 localBuffer.pBuffer,
-                                MQTT_PACKET_PINGREQ_SIZE,
+                                2U,
                                 MQTT_SEND_RETRY_TIMEOUT_MS );
 
         /* It is an error to not send the entire PINGREQ packet. */
@@ -2767,10 +2767,10 @@ MQTTStatus_t MQTT_Disconnect( MQTTContext_t * pContext )
     int32_t bytesSent = 0;
     MQTTStatus_t status = MQTTSuccess;
     MQTTFixedBuffer_t localBuffer;
-    uint8_t disconnectPacket[ MQTT_DISCONNECT_PACKET_SIZE ];
+    uint8_t disconnectPacket[ 2U ];
 
     localBuffer.pBuffer = disconnectPacket;
-    localBuffer.size = MQTT_DISCONNECT_PACKET_SIZE;
+    localBuffer.size = 2U;
 
     /* Validate arguments. */
     if( pContext == NULL )
