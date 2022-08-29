@@ -261,7 +261,13 @@ typedef struct TransportOutVector
 
 /**
  * @transportcallback
- * @brief Transport interface function for "vectored" / scatter-gather based writes.
+ * @brief Transport interface function for "vectored" / scatter-gather based
+ * writes. This function is expected to iterate over the list of vectors pIoVec
+ * having ioVecCount entries containing portions of one MQTT message at a maximum.
+ * If the proper functionality is available, then the data in the list should be
+ * copied to the underlying TCP buffer before flushing the buffer. Implementing it
+ * in this fashion  will lead to sending of fewer TCP packets for all the values
+ * in the list.
  *
  * @param[in] pNetworkContext Implementation-defined network context.
  * @param[in] pIoVec An array of TransportIoVector_t structs.
@@ -271,7 +277,7 @@ typedef struct TransportOutVector
  *
  * @note If no data is written to the buffer due to the buffer being full this MUST
  * return zero as the return value.
- * A zero return value SHOULD represent that the send operation can be retried
+ * A zero return value SHOULD represent that the write operation can be retried
  * by calling the API function. Zero MUST NOT be returned if a network disconnection
  * has occurred.
  */
