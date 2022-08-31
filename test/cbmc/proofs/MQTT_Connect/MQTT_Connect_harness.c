@@ -33,16 +33,44 @@ void harness()
     MQTTConnectInfo_t * pConnectInfo;
     MQTTPublishInfo_t * pWillInfo;
     uint32_t timeoutMs;
+    size_t totalMessageLength = 0U;
     bool * pSessionPresent;
 
     pContext = allocateMqttContext( NULL );
     __CPROVER_assume( isValidMqttContext( pContext ) );
+    __CPROVER_assume( pContext != NULL );
+    __CPROVER_assume( pContext->networkBuffer.pBuffer != NULL );
 
     pConnectInfo = allocateMqttConnectInfo( NULL );
     __CPROVER_assume( isValidMqttConnectInfo( pConnectInfo ) );
 
+    if( pConnectInfo != NULL )
+    {
+        /* 128^4 is the length imposed by the MQTT spec. */
+        __CPROVER_assume( pConnectInfo->passwordLength < 268435456 );
+        __CPROVER_assume( pConnectInfo->userNameLength < 268435456 );
+        __CPROVER_assume( pConnectInfo->clientIdentifierLength < 268435456 );
+
+        totalMessageLength += pConnectInfo->passwordLength;
+        totalMessageLength += pConnectInfo->userNameLength;
+        totalMessageLength += pConnectInfo->clientIdentifierLength;
+    }
+
     pWillInfo = allocateMqttPublishInfo( NULL );
     __CPROVER_assume( isValidMqttPublishInfo( pWillInfo ) );
+
+    if( pWillInfo != NULL )
+    {
+        /* 128^4 is the length imposed by the MQTT spec. */
+        __CPROVER_assume( pWillInfo->topicNameLength < 268435456 );
+        __CPROVER_assume( pWillInfo->payloadLength < 268435456 );
+
+        totalMessageLength += pWillInfo->topicNameLength;
+        totalMessageLength += pWillInfo->payloadLength;
+    }
+
+    /* 128^4 is the length imposed by the MQTT spec. */
+    __CPROVER_assume( totalMessageLength <= 268435456 );
 
     pSessionPresent = malloc( sizeof( bool ) );
 

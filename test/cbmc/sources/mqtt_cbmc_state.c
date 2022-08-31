@@ -133,6 +133,12 @@ MQTTFixedBuffer_t * allocateMqttFixedBuffer( MQTTFixedBuffer_t * pFixedBuffer )
 
     if( pFixedBuffer != NULL )
     {
+        __CPROVER_assume( pFixedBuffer->size > 0 );
+
+        /* The buffer should be less than an signed 32-bit integer value since the
+         * transport interface cannot return more than that value. */
+        __CPROVER_assume( pFixedBuffer->size < 0x7FFFFFFF );
+
         pFixedBuffer->pBuffer = malloc( pFixedBuffer->size );
     }
 
@@ -193,6 +199,7 @@ MQTTContext_t * allocateMqttContext( MQTTContext_t * pContext )
          * function in core_mqtt.h. */
         pTransportInterface->recv = NetworkInterfaceReceiveStub;
         pTransportInterface->send = NetworkInterfaceSendStub;
+        pTransportInterface->writev = NULL;
     }
 
     pNetworkBuffer = allocateMqttFixedBuffer( NULL );

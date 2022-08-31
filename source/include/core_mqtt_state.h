@@ -125,6 +125,24 @@ MQTTStatus_t MQTT_UpdateStatePublish( MQTTContext_t * pMqttContext,
 /** @endcond */
 
 /**
+ * @fn MQTTStatus_t MQTT_RemoveStateRecord( MQTTContext_t * pMqttContext, uint16_t packetId );
+ * @brief Remove the state record for a PUBLISH packet.
+ *
+ * @param[in] pMqttContext Initialized MQTT context.
+ * @param[in] packetId ID of the PUBLISH packet.
+ *
+ * @return #MQTTBadParameter or #MQTTSuccess.
+ */
+
+/**
+ * @cond DOXYGEN_IGNORE
+ * Doxygen should ignore this definition, this function is private.
+ */
+MQTTStatus_t MQTT_RemoveStateRecord( MQTTContext_t * pMqttContext,
+                                     uint16_t packetId );
+/** @endcond */
+
+/**
  * @fn MQTTPublishState_t MQTT_CalculateStateAck( MQTTPubAckType_t packetType, MQTTStateOperation_t opType, MQTTQoS_t qos );
  * @brief Calculate the state from a PUBACK, PUBREC, PUBREL, or PUBCOMP.
  *
