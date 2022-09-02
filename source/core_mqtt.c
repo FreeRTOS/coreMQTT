@@ -2578,6 +2578,7 @@ MQTTStatus_t MQTT_Publish( MQTTContext_t * pContext,
 {
     size_t headerSize = 0UL, remainingLength = 0UL, packetSize = 0UL;
     MQTTPublishState_t publishStatus = MQTTStateNull;
+    bool mutexTaken = false;
 
     /* 1 header byte + 4 bytes (maximum) required for encoding the length +
      * 2 bytes for topic string. */
@@ -2606,6 +2607,8 @@ MQTTStatus_t MQTT_Publish( MQTTContext_t * pContext,
     {
         /* Take the mutex required to update the state. */
         MQTT_STATE_UPDATE_MUTEX_TAKE( pContext );
+        /* Set the flag so that the mutex can be released later. */
+        mutexTaken = true;
 
         status = MQTT_ReserveState( pContext,
                                     packetId,
@@ -2636,28 +2639,29 @@ MQTTStatus_t MQTT_Publish( MQTTContext_t * pContext,
         MQTT_SEND_MUTEX_GIVE( pContext );
     }
 
-    if( pPublishInfo->qos > MQTTQoS0 )
+    if( ( status == MQTTSuccess ) &&
+        ( pPublishInfo->qos > MQTTQoS0 ) )
     {
-        if( status == MQTTSuccess )
+        /* Update state machine after PUBLISH is sent.
+         * Only to be done for QoS1 or QoS2. */
+        status = MQTT_UpdateStatePublish( pContext,
+                                          packetId,
+                                          MQTT_SEND,
+                                          pPublishInfo->qos,
+                                          &publishStatus );
+
+        if( status != MQTTSuccess )
         {
-            /* Update state machine after PUBLISH is sent.
-             * Only to be done for QoS1 or QoS2. */
-            status = MQTT_UpdateStatePublish( pContext,
-                                              packetId,
-                                              MQTT_SEND,
-                                              pPublishInfo->qos,
-                                              &publishStatus );
-
-            if( status != MQTTSuccess )
-            {
-                LogError( ( "Update state for publish failed with status %s."
-                            " However PUBLISH packet was sent to the broker."
-                            " Any further handling of ACKs for the packet Id"
-                            " will fail.",
-                            MQTT_Status_strerror( status ) ) );
-            }
+            LogError( ( "Update state for publish failed with status %s."
+                        " However PUBLISH packet was sent to the broker."
+                        " Any further handling of ACKs for the packet Id"
+                        " will fail.",
+                        MQTT_Status_strerror( status ) ) );
         }
+    }
 
+    if( mutexTaken == true )
+    {
         /* Regardless of the status, if the mutex was taken due to the
          * packet being of QoS > QoS0, then it should be relinquished. */
         MQTT_STATE_UPDATE_MUTEX_GIVE( pContext );
