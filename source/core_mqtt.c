@@ -69,8 +69,7 @@
  */
 static int32_t sendBuffer( MQTTContext_t * pContext,
                            const uint8_t * pBufferToSend,
-                           size_t bytesToSend,
-                           uint32_t timeout );
+                           size_t bytesToSend );
 
 /**
  * @brief Sends MQTT connect without copying the users data into any buffer.
@@ -445,23 +444,6 @@ static MQTTStatus_t sendPublishWithoutCopy( MQTTContext_t * pContext,
                                             uint16_t packetId );
 
 /**
- * @brief Serializes a PUBLISH message.
- *
- * @brief param[in] pContext Initialized MQTT context.
- * @brief param[in] pPublishInfo MQTT PUBLISH packet parameters.
- * @brief param[in] packetId Packet Id of the publish packet.
- * @brief param[out] pHeaderSize Size of the serialized PUBLISH header.
- *
- * @return #MQTTNoMemory if pBuffer is too small to hold the MQTT packet;
- * #MQTTBadParameter if invalid parameters are passed;
- * #MQTTSuccess otherwise.
- */
-static MQTTStatus_t serializePublish( const MQTTContext_t * pContext,
-                                      const MQTTPublishInfo_t * pPublishInfo,
-                                      uint16_t packetId,
-                                      size_t * const pHeaderSize );
-
-/**
  * @brief Function to validate #MQTT_Publish parameters.
  *
  * @brief param[in] pContext Initialized MQTT context.
@@ -803,8 +785,7 @@ static int32_t sendMessageVector( MQTTContext_t * pContext,
         {
             sendResult = sendBuffer( pContext,
                                      pIoVectIterator->iov_base,
-                                     pIoVectIterator->iov_len,
-                                     ( timeoutTime - pContext->getTime() ) );
+                                     pIoVectIterator->iov_len );
         }
 
         if( sendResult >= 0 )
@@ -843,14 +824,12 @@ static int32_t sendMessageVector( MQTTContext_t * pContext,
 
 static int32_t sendBuffer( MQTTContext_t * pContext,
                            const uint8_t * pBufferToSend,
-                           size_t bytesToSend,
-                           uint32_t timeout )
+                           size_t bytesToSend )
 {
     const uint8_t * pIndex = pBufferToSend;
     size_t bytesRemaining = bytesToSend;
     int32_t totalBytesSent = 0, bytesSent;
     uint32_t lastSendTimeMs = 0U, timeSinceLastSendMs = 0U;
-    uint32_t timeoutTime;
     bool sendError = false;
 
     assert( pContext != NULL );
@@ -859,7 +838,6 @@ static int32_t sendBuffer( MQTTContext_t * pContext,
     assert( pIndex != NULL );
 
     bytesRemaining = bytesToSend;
-    timeoutTime = pContext->getTime() + timeout;
 
     /* Loop until the entire packet is sent. */
     while( ( bytesRemaining > 0UL ) && ( sendError == false ) )
@@ -1292,8 +1270,7 @@ static MQTTStatus_t sendPublishAcks( MQTTContext_t * pContext,
              * to be sent which can be achieved with a normal send call. */
             bytesSent = sendBuffer( pContext,
                                     localBuffer.pBuffer,
-                                    MQTT_PUBLISH_ACK_PACKET_SIZE,
-                                    MQTT_SEND_RETRY_TIMEOUT_MS );
+                                    MQTT_PUBLISH_ACK_PACKET_SIZE );
 
             MQTT_SEND_MUTEX_GIVE( pContext );
         }
@@ -2332,44 +2309,6 @@ static MQTTStatus_t handleSessionResumption( MQTTContext_t * pContext,
     return status;
 }
 
-/*-----------------------------------------------------------*/
-
-static MQTTStatus_t serializePublish( const MQTTContext_t * pContext,
-                                      const MQTTPublishInfo_t * pPublishInfo,
-                                      uint16_t packetId,
-                                      size_t * const pHeaderSize )
-{
-    MQTTStatus_t status = MQTTSuccess;
-    size_t remainingLength = 0UL, packetSize = 0UL;
-
-    assert( pContext != NULL );
-    assert( pPublishInfo != NULL );
-    assert( pHeaderSize != NULL );
-
-    /* Get the remaining length and packet size.*/
-    status = MQTT_GetPublishPacketSize( pPublishInfo,
-                                        &remainingLength,
-                                        &packetSize );
-    LogDebug( ( "PUBLISH packet size is %lu and remaining length is %lu.",
-                ( unsigned long ) packetSize,
-                ( unsigned long ) remainingLength ) );
-
-    if( status == MQTTSuccess )
-    {
-        status = MQTT_SerializePublishHeader( pPublishInfo,
-                                              packetId,
-                                              remainingLength,
-                                              &( pContext->networkBuffer ),
-                                              pHeaderSize );
-        LogDebug( ( "Serialized PUBLISH header size is %lu.",
-                    ( unsigned long ) *pHeaderSize ) );
-    }
-
-    return status;
-}
-
-/*-----------------------------------------------------------*/
-
 static MQTTStatus_t validatePublishParams( const MQTTContext_t * pContext,
                                            const MQTTPublishInfo_t * pPublishInfo,
                                            uint16_t packetId )
@@ -2766,8 +2705,7 @@ MQTTStatus_t MQTT_Ping( MQTTContext_t * pContext )
          * from the user provided buffers. Thus it can be sent directly. */
         bytesSent = sendBuffer( pContext,
                                 localBuffer.pBuffer,
-                                2U,
-                                MQTT_SEND_RETRY_TIMEOUT_MS );
+                                2U );
 
         /* Give the mutex away. */
         MQTT_SEND_MUTEX_GIVE( pContext );
@@ -2879,8 +2817,7 @@ MQTTStatus_t MQTT_Disconnect( MQTTContext_t * pContext )
          * using a simple send call. */
         bytesSent = sendBuffer( pContext,
                                 localBuffer.pBuffer,
-                                packetSize,
-                                MQTT_SEND_RETRY_TIMEOUT_MS );
+                                packetSize );
 
         /* Give the mutex away. */
         MQTT_SEND_MUTEX_GIVE( pContext );
