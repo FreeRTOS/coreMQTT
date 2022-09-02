@@ -32,39 +32,43 @@
 #include "core_mqtt_default_logging.h"
 
 #ifndef MQTT_SEND_MUTEX_TAKE
-    /**
-     * @brief Macro which should point to a function which can acquire a
-     * mutex with infinite timeout when multiple senders are using the 
-     * coreMQTT library. The mutex will serialize the access to send calls
-     * which should be made in order to keep the MQTT connection intact.
-     */
+
+/**
+ * @brief Macro which should point to a function which can acquire a
+ * mutex with infinite timeout when multiple senders are using the
+ * coreMQTT library. The mutex will serialize the access to send calls
+ * which should be made in order to keep the MQTT connection intact.
+ */
     #define MQTT_SEND_MUTEX_TAKE( pContext )
 #endif /* !MQTT_SEND_MUTEX_TAKE */
 
 #ifndef MQTT_SEND_MUTEX_GIVE
-    /**
-     * @brief Macro which should point to a function which can release the
-     * mutex acquired with #MQTT_SEND_MUTEX_TAKE.
-     */
+
+/**
+ * @brief Macro which should point to a function which can release the
+ * mutex acquired with #MQTT_SEND_MUTEX_TAKE.
+ */
     #define MQTT_SEND_MUTEX_GIVE( pContext )
 #endif /* !MQTT_SEND_MUTEX_GIVE */
 
 #ifndef MQTT_STATE_UPDATE_MUTEX_TAKE
-    /**
-     * @brief Macro which should point to a function which can acquire a
-     * mutex with infinite timeout when multiple senders are using the 
-     * coreMQTT library. The mutex will serialize the access to the state
-     * data structure which holds the state of incoming and outgoing
-     publishes.
-     */
+
+/**
+ * @brief Macro which should point to a function which can acquire a
+ * mutex with infinite timeout when multiple senders are using the
+ * coreMQTT library. The mutex will serialize the access to the state
+ * data structure which holds the state of incoming and outgoing
+ * publishes.
+ */
     #define MQTT_STATE_UPDATE_MUTEX_TAKE( pContext )
 #endif /* !MQTT_STATE_UPDATE_MUTEX_TAKE */
 
 #ifndef MQTT_STATE_UPDATE_MUTEX_GIVE
-    /**
-     * @brief Macro which should point to a function which can release the
-     * mutex acquired with #MQTT_STATE_UPDATE_MUTEX_TAKE.
-     */
+
+/**
+ * @brief Macro which should point to a function which can release the
+ * mutex acquired with #MQTT_STATE_UPDATE_MUTEX_TAKE.
+ */
     #define MQTT_STATE_UPDATE_MUTEX_GIVE( pContext )
 #endif /* !MQTT_STATE_UPDATE_MUTEX_GIVE */
 
@@ -1399,13 +1403,11 @@ static MQTTStatus_t handleIncomingPublish( MQTTContext_t * pContext,
     if( status == MQTTSuccess )
     {
         MQTT_STATE_UPDATE_MUTEX_TAKE( pContext );
-
         status = MQTT_UpdateStatePublish( pContext,
                                           packetIdentifier,
                                           MQTT_RECEIVE,
                                           publishInfo.qos,
                                           &publishRecordState );
-
         MQTT_STATE_UPDATE_MUTEX_GIVE( pContext );
 
         if( status == MQTTSuccess )
@@ -2606,8 +2608,8 @@ MQTTStatus_t MQTT_Publish( MQTTContext_t * pContext,
         MQTT_STATE_UPDATE_MUTEX_TAKE( pContext );
 
         status = MQTT_ReserveState( pContext,
-                                        packetId,
-                                        pPublishInfo->qos );
+                                    packetId,
+                                    pPublishInfo->qos );
 
         /* State already exists for a duplicate packet.
          * If a state doesn't exist, it will be handled as a new publish in
@@ -2645,7 +2647,6 @@ MQTTStatus_t MQTT_Publish( MQTTContext_t * pContext,
                                               MQTT_SEND,
                                               pPublishInfo->qos,
                                               &publishStatus );
-
 
             if( status != MQTTSuccess )
             {
