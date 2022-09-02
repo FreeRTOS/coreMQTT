@@ -32,18 +32,39 @@
 #include "core_mqtt_default_logging.h"
 
 #ifndef MQTT_SEND_MUTEX_TAKE
+    /**
+     * @brief Macro which should point to a function which can acquire a
+     * mutex with infinite timeout when multiple senders are using the 
+     * coreMQTT library. The mutex will serialize the access to send calls
+     * which should be made in order to keep the MQTT connection intact.
+     */
     #define MQTT_SEND_MUTEX_TAKE( pContext )
 #endif /* !MQTT_SEND_MUTEX_TAKE */
 
 #ifndef MQTT_SEND_MUTEX_GIVE
+    /**
+     * @brief Macro which should point to a function which can release the
+     * mutex acquired with #MQTT_SEND_MUTEX_TAKE.
+     */
     #define MQTT_SEND_MUTEX_GIVE( pContext )
 #endif /* !MQTT_SEND_MUTEX_GIVE */
 
 #ifndef MQTT_STATE_UPDATE_MUTEX_TAKE
+    /**
+     * @brief Macro which should point to a function which can acquire a
+     * mutex with infinite timeout when multiple senders are using the 
+     * coreMQTT library. The mutex will serialize the access to the state
+     * data structure which holds the state of incoming and outgoing
+     * publishes.
+     */
     #define MQTT_STATE_UPDATE_MUTEX_TAKE( pContext )
 #endif /* !MQTT_STATE_UPDATE_MUTEX_TAKE */
 
 #ifndef MQTT_STATE_UPDATE_MUTEX_GIVE
+    /**
+     * @brief Macro which should point to a function which can release the
+     * mutex acquired with #MQTT_STATE_UPDATE_MUTEX_TAKE.
+     */
     #define MQTT_STATE_UPDATE_MUTEX_GIVE( pContext )
 #endif /* !MQTT_STATE_UPDATE_MUTEX_GIVE */
 
