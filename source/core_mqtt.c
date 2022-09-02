@@ -55,7 +55,7 @@
      * mutex with infinite timeout when multiple senders are using the 
      * coreMQTT library. The mutex will serialize the access to the state
      * data structure which holds the state of incoming and outgoing
-     * publishes.
+     publishes.
      */
     #define MQTT_STATE_UPDATE_MUTEX_TAKE( pContext )
 #endif /* !MQTT_STATE_UPDATE_MUTEX_TAKE */
@@ -2112,8 +2112,7 @@ static MQTTStatus_t sendConnectWithoutCopy( MQTTContext_t * pContext,
     /* Validate arguments. */
     if( pConnectInfo == NULL )
     {
-        LogError( ( "Argument cannot be NULL: pConnectInfo=%p, "
-                    "pFixedBuffer=%p.",
+        LogError( ( "Argument cannot be NULL: pConnectInfo=%p.",
                     ( void * ) pConnectInfo ) );
         status = MQTTBadParameter;
     }
