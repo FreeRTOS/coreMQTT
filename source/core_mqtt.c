@@ -31,6 +31,22 @@
 #include "core_mqtt_state.h"
 #include "core_mqtt_default_logging.h"
 
+#ifndef MQTT_SEND_MUTEX_TAKE
+    #define MQTT_SEND_MUTEX_TAKE( pContext )
+#endif /* !MQTT_SEND_MUTEX_TAKE */
+
+#ifndef MQTT_SEND_MUTEX_GIVE
+    #define MQTT_SEND_MUTEX_GIVE( pContext )
+#endif /* !MQTT_SEND_MUTEX_GIVE */
+
+#ifndef MQTT_STATE_UPDATE_MUTEX_TAKE
+    #define MQTT_STATE_UPDATE_MUTEX_TAKE( pContext )
+#endif /* !MQTT_STATE_UPDATE_MUTEX_TAKE */
+
+#ifndef MQTT_STATE_UPDATE_MUTEX_GIVE
+    #define MQTT_STATE_UPDATE_MUTEX_GIVE( pContext )
+#endif /* !MQTT_STATE_UPDATE_MUTEX_GIVE */
+
 /*-----------------------------------------------------------*/
 
 /**
@@ -1270,22 +1286,31 @@ static MQTTStatus_t sendPublishAcks( MQTTContext_t * pContext,
 
         if( status == MQTTSuccess )
         {
+            MQTT_SEND_MUTEX_TAKE( pContext );
+
             /* Here, we are not using the vector approach for efficiency. There is just one buffer
              * to be sent which can be achieved with a normal send call. */
             bytesSent = sendBuffer( pContext,
                                     localBuffer.pBuffer,
                                     MQTT_PUBLISH_ACK_PACKET_SIZE,
                                     MQTT_SEND_RETRY_TIMEOUT_MS );
+
+            MQTT_SEND_MUTEX_GIVE( pContext );
         }
 
         if( bytesSent == ( int32_t ) MQTT_PUBLISH_ACK_PACKET_SIZE )
         {
             pContext->controlPacketSent = true;
+
+            MQTT_STATE_UPDATE_MUTEX_TAKE( pContext );
+
             status = MQTT_UpdateStateAck( pContext,
                                           packetId,
                                           packetType,
                                           MQTT_SEND,
                                           &newState );
+
+            MQTT_STATE_UPDATE_MUTEX_GIVE( pContext );
 
             if( status != MQTTSuccess )
             {
@@ -1375,11 +1400,15 @@ static MQTTStatus_t handleIncomingPublish( MQTTContext_t * pContext,
 
     if( status == MQTTSuccess )
     {
+        MQTT_STATE_UPDATE_MUTEX_TAKE( pContext );
+
         status = MQTT_UpdateStatePublish( pContext,
                                           packetIdentifier,
                                           MQTT_RECEIVE,
                                           publishInfo.qos,
                                           &publishRecordState );
+
+        MQTT_STATE_UPDATE_MUTEX_GIVE( pContext );
 
         if( status == MQTTSuccess )
         {
@@ -1492,11 +1521,15 @@ static MQTTStatus_t handlePublishAcks( MQTTContext_t * pContext,
 
     if( status == MQTTSuccess )
     {
+        MQTT_STATE_UPDATE_MUTEX_TAKE( pContext );
+
         status = MQTT_UpdateStateAck( pContext,
                                       packetIdentifier,
                                       ackType,
                                       MQTT_RECEIVE,
                                       &publishRecordState );
+
+        MQTT_STATE_UPDATE_MUTEX_GIVE( pContext );
 
         if( status == MQTTSuccess )
         {
@@ -2440,8 +2473,12 @@ MQTTStatus_t MQTT_CancelCallback( MQTTContext_t * pContext,
 {
     MQTTStatus_t status;
 
+    MQTT_STATE_UPDATE_MUTEX_TAKE( pContext );
+
     status = MQTT_RemoveStateRecord( pContext,
                                      packetId );
+
+    MQTT_STATE_UPDATE_MUTEX_GIVE( pContext );
 
     return status;
 }
@@ -2484,10 +2521,14 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
 
     if( status == MQTTSuccess )
     {
+        MQTT_SEND_MUTEX_TAKE( pContext );
+
         status = sendConnectWithoutCopy( pContext,
                                          pConnectInfo,
                                          pWillInfo,
                                          remainingLength );
+
+        MQTT_SEND_MUTEX_GIVE( pContext );
     }
 
     /* Read CONNACK from transport layer. */
@@ -2553,12 +2594,16 @@ MQTTStatus_t MQTT_Subscribe( MQTTContext_t * pContext,
 
     if( status == MQTTSuccess )
     {
+        MQTT_SEND_MUTEX_TAKE( pContext );
+
         /* Send MQTT SUBSCRIBE packet. */
         status = sendSubscribeWithoutCopy( pContext,
                                            pSubscriptionList,
                                            subscriptionCount,
                                            packetId,
                                            remainingLength );
+
+        MQTT_SEND_MUTEX_GIVE( pContext );
     }
 
     return status;
@@ -2598,10 +2643,12 @@ MQTTStatus_t MQTT_Publish( MQTTContext_t * pContext,
 
     if( ( status == MQTTSuccess ) && ( pPublishInfo->qos > MQTTQoS0 ) )
     {
-        /* Reserve state for publish message. Only to be done for QoS1 or QoS2. */
+        /* Take the mutex required to update the state. */
+        MQTT_STATE_UPDATE_MUTEX_TAKE( pContext );
+
         status = MQTT_ReserveState( pContext,
-                                    packetId,
-                                    pPublishInfo->qos );
+                                        packetId,
+                                        pPublishInfo->qos );
 
         /* State already exists for a duplicate packet.
          * If a state doesn't exist, it will be handled as a new publish in
@@ -2614,31 +2661,46 @@ MQTTStatus_t MQTT_Publish( MQTTContext_t * pContext,
 
     if( status == MQTTSuccess )
     {
+        /* Take the mutex as multiple send calls are required for sending this
+         * packet. */
+        MQTT_SEND_MUTEX_TAKE( pContext );
+
         status = sendPublishWithoutCopy( pContext,
                                          pPublishInfo,
                                          mqttHeader,
                                          headerSize,
                                          packetId );
+
+        /* Give the mutex away for the next taker. */
+        MQTT_SEND_MUTEX_GIVE( pContext );
     }
 
-    if( ( status == MQTTSuccess ) && ( pPublishInfo->qos > MQTTQoS0 ) )
+    if( pPublishInfo->qos > MQTTQoS0 )
     {
-        /* Update state machine after PUBLISH is sent.
-         * Only to be done for QoS1 or QoS2. */
-        status = MQTT_UpdateStatePublish( pContext,
-                                          packetId,
-                                          MQTT_SEND,
-                                          pPublishInfo->qos,
-                                          &publishStatus );
-
-        if( status != MQTTSuccess )
+        if( status == MQTTSuccess )
         {
-            LogError( ( "Update state for publish failed with status %s."
-                        " However PUBLISH packet was sent to the broker."
-                        " Any further handling of ACKs for the packet Id"
-                        " will fail.",
-                        MQTT_Status_strerror( status ) ) );
+            /* Update state machine after PUBLISH is sent.
+             * Only to be done for QoS1 or QoS2. */
+            status = MQTT_UpdateStatePublish( pContext,
+                                              packetId,
+                                              MQTT_SEND,
+                                              pPublishInfo->qos,
+                                              &publishStatus );
+
+
+            if( status != MQTTSuccess )
+            {
+                LogError( ( "Update state for publish failed with status %s."
+                            " However PUBLISH packet was sent to the broker."
+                            " Any further handling of ACKs for the packet Id"
+                            " will fail.",
+                            MQTT_Status_strerror( status ) ) );
+            }
         }
+
+        /* Regardless of the status, if the mutex was taken due to the
+         * packet being of QoS > QoS0, then it should be relinquished. */
+        MQTT_STATE_UPDATE_MUTEX_GIVE( pContext );
     }
 
     if( status != MQTTSuccess )
@@ -2694,6 +2756,10 @@ MQTTStatus_t MQTT_Ping( MQTTContext_t * pContext )
 
     if( status == MQTTSuccess )
     {
+        /* Take the mutex as the send call should not be interrupted in
+         * between. */
+        MQTT_SEND_MUTEX_TAKE( pContext );
+
         /* Send the serialized PINGREQ packet to transport layer.
          * Here, we do not use the vectored IO approach for efficiency as the
          * Ping packet does not have numerous fields which need to be copied
@@ -2702,6 +2768,9 @@ MQTTStatus_t MQTT_Ping( MQTTContext_t * pContext )
                                 localBuffer.pBuffer,
                                 2U,
                                 MQTT_SEND_RETRY_TIMEOUT_MS );
+
+        /* Give the mutex away. */
+        MQTT_SEND_MUTEX_GIVE( pContext );
 
         /* It is an error to not send the entire PINGREQ packet. */
         if( bytesSent < ( int32_t ) packetSize )
@@ -2750,11 +2819,17 @@ MQTTStatus_t MQTT_Unsubscribe( MQTTContext_t * pContext,
 
     if( status == MQTTSuccess )
     {
+        /* Take the mutex because the below call should not be interrupted. */
+        MQTT_SEND_MUTEX_TAKE( pContext );
+
         status = sendUnsubscribeWithoutCopy( pContext,
                                              pSubscriptionList,
                                              subscriptionCount,
                                              packetId,
                                              remainingLength );
+
+        /* Give the mutex away. */
+        MQTT_SEND_MUTEX_GIVE( pContext );
     }
 
     return status;
@@ -2796,6 +2871,9 @@ MQTTStatus_t MQTT_Disconnect( MQTTContext_t * pContext )
 
     if( status == MQTTSuccess )
     {
+        /* Take the mutex because the below call should not be interrupted. */
+        MQTT_SEND_MUTEX_TAKE( pContext );
+
         /* Here we do not use vectors as the disconnect packet has fixed fields
          * which do not reside in user provided buffers. Thus, it can be sent
          * using a simple send call. */
@@ -2803,6 +2881,9 @@ MQTTStatus_t MQTT_Disconnect( MQTTContext_t * pContext )
                                 localBuffer.pBuffer,
                                 packetSize,
                                 MQTT_SEND_RETRY_TIMEOUT_MS );
+
+        /* Give the mutex away. */
+        MQTT_SEND_MUTEX_GIVE( pContext );
 
         if( bytesSent < ( int32_t ) packetSize )
         {
