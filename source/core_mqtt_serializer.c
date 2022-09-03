@@ -313,8 +313,8 @@ static size_t getRemainingLength( TransportRecv_t recvFunc,
  *         packet is not yet fully received and decoded. Otherwise, MQTTSuccess
  *         shows that processing of the packet was successful.
  */
-static MQTTStatus_t processRemainingLength( uint8_t * pBuffer,
-                                            size_t * pIndex,
+static MQTTStatus_t processRemainingLength( const uint8_t * pBuffer,
+                                            const size_t * pIndex,
                                             MQTTPacketInfo_t * pIncomingPacket );
 
 /**
@@ -694,7 +694,7 @@ MQTTStatus_t MQTT_SerializePublishHeaderWithoutTopic( const MQTTPublishInfo_t * 
 
     *headerSize = headerLength;
 
-    if( headerLength > 7 )
+    if( headerLength > 7U )
     {
         status = MQTTBadParameter;
     }
@@ -850,8 +850,8 @@ static size_t getRemainingLength( TransportRecv_t recvFunc,
 
 /*-----------------------------------------------------------*/
 
-static MQTTStatus_t processRemainingLength( uint8_t * pBuffer,
-                                            size_t * pIndex,
+static MQTTStatus_t processRemainingLength( const uint8_t * pBuffer,
+                                            const size_t * pIndex,
                                             MQTTPacketInfo_t * pIncomingPacket )
 {
     size_t remainingLength = 0;
@@ -872,11 +872,11 @@ static MQTTStatus_t processRemainingLength( uint8_t * pBuffer,
         }
         else
         {
-            if( *pIndex > ( bytesDecoded + 1 ) )
+            if( *pIndex > ( bytesDecoded + 1U ) )
             {
                 /* Get the next byte. It is at the next position after the bytes
                  * decoded till now since the header of one byte was read before. */
-                encodedByte = pBuffer[ bytesDecoded + 1 ];
+                encodedByte = pBuffer[ bytesDecoded + 1U ];
 
                 remainingLength += ( ( size_t ) encodedByte & 0x7FU ) * multiplier;
                 multiplier *= 128U;
@@ -909,7 +909,7 @@ static MQTTStatus_t processRemainingLength( uint8_t * pBuffer,
         else
         {
             pIncomingPacket->remainingLength = remainingLength;
-            pIncomingPacket->headerLength = bytesDecoded + 1;
+            pIncomingPacket->headerLength = bytesDecoded + 1U;
         }
     }
 
@@ -2620,8 +2620,8 @@ MQTTStatus_t MQTT_GetIncomingPacketTypeAndLength( TransportRecv_t readFunc,
 
 /*-----------------------------------------------------------*/
 
-MQTTStatus_t MQTT_ProcessIncomingPacketTypeAndLength( uint8_t * pBuffer,
-                                                      size_t * pIndex,
+MQTTStatus_t MQTT_ProcessIncomingPacketTypeAndLength( const uint8_t * pBuffer,
+                                                      const size_t * pIndex,
                                                       MQTTPacketInfo_t * pIncomingPacket )
 {
     MQTTStatus_t status = MQTTSuccess;
@@ -2642,7 +2642,7 @@ MQTTStatus_t MQTT_ProcessIncomingPacketTypeAndLength( uint8_t * pBuffer,
         status = MQTTBadParameter;
     }
     /* There should be at least one byte in the buffer */
-    else if( *pIndex < 1 )
+    else if( *pIndex < 1U )
     {
         /* No data is available. There are 0 bytes received from the network
          * receive function. */

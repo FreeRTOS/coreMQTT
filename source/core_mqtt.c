@@ -107,7 +107,7 @@ static int32_t sendMessageVector( MQTTContext_t * pContext,
  * The array must remain in scope until the message has been sent.
  * @param[in] string The string to be serialized.
  * @param[in] length The length of the string to be serialized.
- * @param[in] iterator The iterator pointing to the first element in the
+ * @param[in] origIterator The iterator pointing to the first element in the
  * transport interface IO array.
  * @param[out] updatedLength This parameter will be added to with the number of
  * bytes added to the vector.
@@ -117,7 +117,7 @@ static int32_t sendMessageVector( MQTTContext_t * pContext,
 static TransportOutVector_t * addEncodedStringToVector( uint8_t serailizedLength[ 2 ],
                                                         const char * const string,
                                                         uint16_t length,
-                                                        TransportOutVector_t * iterator,
+                                                        TransportOutVector_t * origIterator,
                                                         size_t * updatedLength );
 
 /**
@@ -128,7 +128,7 @@ static TransportOutVector_t * addEncodedStringToVector( uint8_t serailizedLength
  * @param[in] pWillInfo The last will and testament information.
  * @param[out] pTotalMessageLength This parameter will be added to with the number of
  * bytes added to the vector.
- * @param[in] iterator The iterator pointing to the first element in the
+ * @param[in] origIterator The iterator pointing to the first element in the
  * transport interface IO array.
  * @param[out] serializedTopicLength This array will be updated with the topic field
  * length in serialized MQTT format.
@@ -145,7 +145,7 @@ static TransportOutVector_t * addEncodedStringToVector( uint8_t serailizedLength
 static void addWillAndConnectInfo( const MQTTConnectInfo_t * pConnectInfo,
                                    const MQTTPublishInfo_t * pWillInfo,
                                    size_t * pTotalMessageLength,
-                                   TransportOutVector_t * iterator,
+                                   TransportOutVector_t * origIterator,
                                    uint8_t serializedTopicLength[ 2 ],
                                    uint8_t serializedPayloadLength[ 2 ],
                                    uint8_t serializedUsernameLength[ 2 ],
@@ -255,7 +255,7 @@ static MQTTStatus_t discardPacket( const MQTTContext_t * pContext,
  * @return #MQTTRecvFailed or #MQTTNoDataAvailable.
  */
 static MQTTStatus_t discardStoredPacket( MQTTContext_t * pContext,
-                                         MQTTPacketInfo_t * pPacketInfo );
+                                         const MQTTPacketInfo_t * pPacketInfo );
 
 /**
  * @brief Receive a packet from the transport interface.
@@ -748,7 +748,7 @@ static int32_t sendMessageVector( MQTTContext_t * pContext,
 {
     uint32_t timeoutTime;
     uint32_t bytesToSend = 0U;
-    int32_t bytesSentOrError = 0U;
+    int32_t bytesSentOrError = 0;
     uint64_t temp = 0;
     TransportOutVector_t * pIoVectIterator;
     size_t vectorsToBeSent = ioVecCount;
@@ -765,7 +765,8 @@ static int32_t sendMessageVector( MQTTContext_t * pContext,
     for( pIoVectIterator = pIoVec; pIoVectIterator < &( pIoVec[ ioVecCount ] ); pIoVectIterator++ )
     {
         temp += pIoVectIterator->iov_len;
-        bytesToSend += pIoVectIterator->iov_len;
+        /* Use a bit mask to ensure there is no overflow per MISRA rule 10.3 */
+        bytesToSend += ( uint32_t ) ( 0xFFFFFFFFu & pIoVectIterator->iov_len );
     }
 
     /* Reset the iterator to point to the first entry in the array. */
@@ -794,7 +795,7 @@ static int32_t sendMessageVector( MQTTContext_t * pContext,
         if( sendResult >= 0 )
         {
             bytesSentOrError += sendResult;
-            bytesSentThisVector += sendResult;
+            bytesSentThisVector += ( uint32_t ) sendResult;
         }
         else
         {
@@ -805,7 +806,8 @@ static int32_t sendMessageVector( MQTTContext_t * pContext,
         while( ( pIoVectIterator < &( pIoVec[ ioVecCount ] ) ) &&
                ( bytesSentThisVector >= pIoVectIterator->iov_len ) )
         {
-            bytesSentThisVector -= pIoVectIterator->iov_len;
+            /* Use a bit mask to ensure there is no overflow per MISRA rule 10.3 */
+            bytesSentThisVector -= ( uint32_t ) ( 0xFFFFFFFFu & pIoVectIterator->iov_len );
             pIoVectIterator++;
 
             /* Update the number of vector which are yet to be sent. */
@@ -817,7 +819,11 @@ static int32_t sendMessageVector( MQTTContext_t * pContext,
         if( ( bytesSentThisVector > 0U ) &&
             ( pIoVectIterator < &( pIoVec[ ioVecCount ] ) ) )
         {
-            ( *( ( uint8_t * ) pIoVectIterator->iov_base ) ) += bytesSentThisVector;
+            /* Use a bit mask to ensure there is no overflow per MISRA rule 10.3 */
+            /* MISRA Ref 11.8.1 [Removal of const from pointer] */
+            /* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-118 */
+            /* coverity[misra_c_2012_rule_11_8_violation] */
+            ( *( ( uint8_t * ) pIoVectIterator->iov_base ) ) += ( uint8_t ) ( 0xFFu & bytesSentThisVector );
             pIoVectIterator->iov_len -= bytesSentThisVector;
         }
     }
@@ -834,7 +840,6 @@ static int32_t sendBuffer( MQTTContext_t * pContext,
     size_t bytesRemaining = bytesToSend;
     int32_t totalBytesSent = 0, bytesSent;
     uint32_t lastSendTimeMs = 0U, timeSinceLastSendMs = 0U;
-    uint32_t timeoutTime;
     bool sendError = false;
 
     assert( pContext != NULL );
@@ -843,7 +848,6 @@ static int32_t sendBuffer( MQTTContext_t * pContext,
     assert( pIndex != NULL );
 
     bytesRemaining = bytesToSend;
-    timeoutTime = pContext->getTime() + timeout;
 
     /* Loop until the entire packet is sent. */
     while( ( bytesRemaining > 0UL ) && ( sendError == false ) )
@@ -1085,7 +1089,7 @@ static MQTTStatus_t discardPacket( const MQTTContext_t * pContext,
 /*-----------------------------------------------------------*/
 
 static MQTTStatus_t discardStoredPacket( MQTTContext_t * pContext,
-                                         MQTTPacketInfo_t * pPacketInfo )
+                                         const MQTTPacketInfo_t * pPacketInfo )
 {
     MQTTStatus_t status = MQTTRecvFailed;
     int32_t bytesReceived = 0;
@@ -1142,9 +1146,9 @@ static MQTTStatus_t discardStoredPacket( MQTTContext_t * pContext,
     }
 
     /* Clear the buffer */
-    memset( pContext->networkBuffer.pBuffer,
-            0,
-            pContext->networkBuffer.size );
+    ( void ) memset( pContext->networkBuffer.pBuffer,
+                     0,
+                     pContext->networkBuffer.size );
 
     /* Reset the index. */
     pContext->index = 0;
@@ -1341,13 +1345,17 @@ static MQTTStatus_t handleKeepAlive( MQTTContext_t * pContext )
         {
             status = MQTT_Ping( pContext );
         }
-        else if( ( PACKET_RX_TIMEOUT_MS != 0U ) && ( calculateElapsedTime( now, pContext->lastPacketRxTime ) >= PACKET_RX_TIMEOUT_MS ) )
-        {
-            status = MQTT_Ping( pContext );
-        }
-        else
-        {
-        }
+
+        #if ( PACKET_RX_TIMEOUT_MS != 0U )
+            else if( calculateElapsedTime( now, pContext->lastPacketRxTime ) >= PACKET_RX_TIMEOUT_MS )
+            {
+                status = MQTT_Ping( pContext );
+            }
+            else
+            {
+                /* MISRA Empty Body */
+            }
+        #endif /* if ( PACKET_RX_TIMEOUT_MS != 0U ) */
     }
 
     return status;
@@ -1642,7 +1650,7 @@ static MQTTStatus_t receiveSingleIteration( MQTTContext_t * pContext,
     else
     {
         /* Update the number of bytes in the MQTT fixed buffer. */
-        pContext->index += recvBytes;
+        pContext->index += ( uint32_t ) recvBytes;
 
         status = MQTT_ProcessIncomingPacketTypeAndLength( pContext->networkBuffer.pBuffer,
                                                           &pContext->index,
@@ -1709,9 +1717,9 @@ static MQTTStatus_t receiveSingleIteration( MQTTContext_t * pContext,
         pContext->index -= totalMQTTPacketLength;
 
         /* Move the remaining bytes to the front of the buffer. */
-        memmove( pContext->networkBuffer.pBuffer,
-                 &( pContext->networkBuffer.pBuffer[ totalMQTTPacketLength ] ),
-                 pContext->index );
+        ( void ) memmove( pContext->networkBuffer.pBuffer,
+                          &( pContext->networkBuffer.pBuffer[ totalMQTTPacketLength ] ),
+                          pContext->index );
     }
 
     if( status == MQTTNoDataAvailable )
@@ -1765,11 +1773,12 @@ static MQTTStatus_t validateSubscribeUnsubscribeParams( const MQTTContext_t * pC
 static TransportOutVector_t * addEncodedStringToVector( uint8_t serailizedLength[ 2 ],
                                                         const char * const string,
                                                         uint16_t length,
-                                                        TransportOutVector_t * iterator,
+                                                        TransportOutVector_t * origIterator,
                                                         size_t * updatedLength )
 {
     size_t packetLength = 0U;
     const size_t seralizedLengthFieldSize = 2U;
+    TransportOutVector_t * iterator = origIterator;
 
     serailizedLength[ 0 ] = ( ( uint8_t ) ( ( length ) >> 8 ) );
     serailizedLength[ 1 ] = ( ( uint8_t ) ( ( length ) & 0x00ffU ) );
@@ -1822,10 +1831,11 @@ static MQTTStatus_t sendSubscribeWithoutCopy( MQTTContext_t * pContext,
 
     /* The header is to be sent first. */
     pIterator->iov_base = subscribeheader;
-    pIterator->iov_len = ( size_t ) ( pIndex - subscribeheader );
+    /* MISRA Rule 10.8 requires elevation of the result to an int16_t before size_t cast */
+    pIterator->iov_len = ( size_t ) ( ( int16_t ) ( pIndex - subscribeheader ) );
+    totalPacketLength = ( size_t ) ( ( int16_t ) ( pIndex - subscribeheader ) );
     pIterator++;
     ioVectorLength++;
-    totalPacketLength += ( size_t ) ( pIndex - subscribeheader );
 
     while( ( status == MQTTSuccess ) && ( subscriptionsSent < subscriptionCount ) )
     {
@@ -1901,8 +1911,9 @@ static MQTTStatus_t sendUnsubscribeWithoutCopy( MQTTContext_t * pContext,
 
     /* The header is to be sent first. */
     pIterator->iov_base = unsubscribeheader;
-    pIterator->iov_len = ( size_t ) ( pIndex - unsubscribeheader );
-    totalPacketLength += ( size_t ) ( pIndex - unsubscribeheader );
+    /* MISRA Rule 10.8 requires elevation of the result to an int16_t before size_t cast */
+    pIterator->iov_len = ( size_t ) ( ( int16_t ) ( pIndex - unsubscribeheader ) );
+    totalPacketLength += ( size_t ) ( ( int16_t ) ( pIndex - unsubscribeheader ) );
     pIterator++;
     ioVectorLength++;
 
@@ -2007,12 +2018,14 @@ static MQTTStatus_t sendPublishWithoutCopy( MQTTContext_t * pContext,
 static void addWillAndConnectInfo( const MQTTConnectInfo_t * pConnectInfo,
                                    const MQTTPublishInfo_t * pWillInfo,
                                    size_t * pTotalMessageLength,
-                                   TransportOutVector_t * iterator,
+                                   TransportOutVector_t * origIterator,
                                    uint8_t serializedTopicLength[ 2 ],
                                    uint8_t serializedPayloadLength[ 2 ],
                                    uint8_t serializedUsernameLength[ 2 ],
                                    uint8_t serializedPasswordLength[ 2 ] )
 {
+    TransportOutVector_t * iterator = origIterator;
+
     if( pWillInfo != NULL )
     {
         /* Serialize the topic. */
@@ -2102,7 +2115,8 @@ static MQTTStatus_t sendConnectWithoutCopy( MQTTContext_t * pContext,
 
         /* The header gets sent first. */
         iterator->iov_base = connectPacketHeader;
-        iterator->iov_len = ( size_t ) ( pIndex - connectPacketHeader );
+        /* MISRA Rule 10.8 requires elevation of the result to an int16_t before size_t cast */
+        iterator->iov_len = ( size_t ) ( ( int16_t ) ( pIndex - connectPacketHeader ) );
         totalMessageLength += iterator->iov_len;
         iterator++;
 
@@ -2122,7 +2136,7 @@ static MQTTStatus_t sendConnectWithoutCopy( MQTTContext_t * pContext,
                                serializedUsernameLength,
                                serializedPasswordLength );
 
-        ioVectorLength = ( size_t ) ( iterator - pIoVector );
+        ioVectorLength = ( size_t ) ( int32_t ) ( iterator - pIoVector );
 
         bytesSentOrError = sendMessageVector( pContext, pIoVector, ioVectorLength );
 

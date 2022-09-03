@@ -49,6 +49,8 @@ target_compile_definitions( coverity_analysis PUBLIC MQTT_DO_NOT_USE_CUSTOM_CONF
 # MQTT public include path.
 target_include_directories( coverity_analysis PUBLIC ${MQTT_INCLUDE_PUBLIC_DIRS} )
 
+# When building the coverity analysis target we disable debug
+target_compile_options(coverity_analysis PUBLIC -DNDEBUG )
 #  ====================================  Test Configuration ========================================
 
 # Define a CMock resource path.
