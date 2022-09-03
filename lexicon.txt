@@ -43,6 +43,7 @@ connectpacketsize
 const
 copydoc
 coremqtt
+coverity
 csdk
 css
 currentstate
@@ -74,6 +75,7 @@ eventcallback
 expectprocessloopcalls
 filterindex
 fixedbuffer
+freertos
 fn
 gcc
 getconnectpacketsize
@@ -210,6 +212,7 @@ noninfringement
 numcodes
 optype
 org
+origiterator
 os
 outgoingpublishrecords
 packetid
