@@ -32,39 +32,35 @@
 #include "core_mqtt_default_logging.h"
 
 #ifndef MQTT_PRE_SEND_HOOK
-    /**
-     * @brief Macro which should point to a function which can acquire a
-     * mutex with infinite timeout when multiple senders are using the 
-     * coreMQTT library. The mutex will serialize the access to send calls
-     * which should be made in order to keep the MQTT connection intact.
-     */
+
+/**
+ * @brief Hook called before a 'send' operation is executed.
+ */
     #define MQTT_PRE_SEND_HOOK( pContext )
 #endif /* !MQTT_PRE_SEND_HOOK */
 
 #ifndef MQTT_POST_SEND_HOOK
-    /**
-     * @brief Macro which should point to a function which can release the
-     * mutex acquired with #MQTT_PRE_SEND_HOOK.
-     */
+
+/**
+ * @brief Hook called after the 'send' operation is complete.
+ */
     #define MQTT_POST_SEND_HOOK( pContext )
 #endif /* !MQTT_POST_SEND_HOOK */
 
 #ifndef MQTT_PRE_STATE_UPDATE_HOOK
-    /**
-     * @brief Macro which should point to a function which can acquire a
-     * mutex with infinite timeout when multiple senders are using the 
-     * coreMQTT library. The mutex will serialize the access to the state
-     * data structure which holds the state of incoming and outgoing
-     publishes.
-     */
+
+/**
+ * @brief Hook called just before an update to the MQTT state is made.
+ */
     #define MQTT_PRE_STATE_UPDATE_HOOK( pContext )
 #endif /* !MQTT_PRE_STATE_UPDATE_HOOK */
 
 #ifndef MQTT_POST_STATE_UPDATE_HOOK
-    /**
-     * @brief Macro which should point to a function which can release the
-     * mutex acquired with #MQTT_PRE_STATE_UPDATE_HOOK.
-     */
+
+/**
+ * @brief Hook called just after an update to the MQTT state has
+ * been made.
+ */
     #define MQTT_POST_STATE_UPDATE_HOOK( pContext )
 #endif /* !MQTT_POST_STATE_UPDATE_HOOK */
 
