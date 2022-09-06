@@ -2576,7 +2576,7 @@ MQTTStatus_t MQTT_Publish( MQTTContext_t * pContext,
 {
     size_t headerSize = 0UL, remainingLength = 0UL, packetSize = 0UL;
     MQTTPublishState_t publishStatus = MQTTStateNull;
-    bool mutexTaken = false;
+    bool stateUpdateHookExecuted = false;
 
     /* 1 header byte + 4 bytes (maximum) required for encoding the length +
      * 2 bytes for topic string. */
@@ -2603,11 +2603,10 @@ MQTTStatus_t MQTT_Publish( MQTTContext_t * pContext,
 
     if( ( status == MQTTSuccess ) && ( pPublishInfo->qos > MQTTQoS0 ) )
     {
-        /* Take the mutex required to update the state. */
         MQTT_PRE_STATE_UPDATE_HOOK( pContext );
 
-        /* Set the flag so that the mutex can be released later. */
-        mutexTaken = true;
+        /* Set the flag so that the corresponding hook can be called later. */
+        stateUpdateHookExecuted = true;
 
         status = MQTT_ReserveState( pContext,
                                     packetId,
@@ -2659,7 +2658,7 @@ MQTTStatus_t MQTT_Publish( MQTTContext_t * pContext,
         }
     }
 
-    if( mutexTaken == true )
+    if( stateUpdateHookExecuted == true )
     {
         /* Regardless of the status, if the mutex was taken due to the
          * packet being of QoS > QoS0, then it should be relinquished. */
