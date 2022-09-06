@@ -28,6 +28,12 @@
 #include <assert.h>
 
 #include "core_mqtt_serializer.h"
+
+#define LIBRARY_LOG_NAME "MQTT"
+#ifndef LIBRARY_LOG_LEVEL
+    #define LIBRARY_LOG_LEVEL MQTT_LOG_LEVEL
+#endif
+
 #include "core_mqtt_default_logging.h"
 
 /**

@@ -41,6 +41,15 @@
 #endif
 /* *INDENT-ON* */
 
+#include "logging_levels.h"
+
+/**
+ * @brief The macro defining the default logging level.
+ */
+#ifndef MQTT_LOG_LEVEL
+    #define MQTT_LOG_LEVEL LOG_ERROR
+#endif
+
 /* The macro definition for MQTT_DO_NOT_USE_CUSTOM_CONFIG is for Doxygen
  * documentation only. */
 
