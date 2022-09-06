@@ -31,6 +31,7 @@
 #include "core_mqtt_state.h"
 #include "core_mqtt_default_logging.h"
 
+<<<<<<< HEAD
 #ifndef MQTT_PRE_SEND_HOOK
     /**
      * @brief Macro which should point to a function which can acquire a
@@ -67,6 +68,48 @@
      */
     #define MQTT_POST_STATE_UPDATE_HOOK( pContext )
 #endif /* !MQTT_POST_STATE_UPDATE_HOOK */
+=======
+#ifndef MQTT_SEND_MUTEX_TAKE
+
+/**
+ * @brief Macro which should point to a function which can acquire a
+ * mutex with infinite timeout when multiple senders are using the
+ * coreMQTT library. The mutex will serialize the access to send calls
+ * which should be made in order to keep the MQTT connection intact.
+ */
+    #define MQTT_SEND_MUTEX_TAKE( pContext )
+#endif /* !MQTT_SEND_MUTEX_TAKE */
+
+#ifndef MQTT_SEND_MUTEX_GIVE
+
+/**
+ * @brief Macro which should point to a function which can release the
+ * mutex acquired with #MQTT_SEND_MUTEX_TAKE.
+ */
+    #define MQTT_SEND_MUTEX_GIVE( pContext )
+#endif /* !MQTT_SEND_MUTEX_GIVE */
+
+#ifndef MQTT_STATE_UPDATE_MUTEX_TAKE
+
+/**
+ * @brief Macro which should point to a function which can acquire a
+ * mutex with infinite timeout when multiple senders are using the
+ * coreMQTT library. The mutex will serialize the access to the state
+ * data structure which holds the state of incoming and outgoing
+ * publishes.
+ */
+    #define MQTT_STATE_UPDATE_MUTEX_TAKE( pContext )
+#endif /* !MQTT_STATE_UPDATE_MUTEX_TAKE */
+
+#ifndef MQTT_STATE_UPDATE_MUTEX_GIVE
+
+/**
+ * @brief Macro which should point to a function which can release the
+ * mutex acquired with #MQTT_STATE_UPDATE_MUTEX_TAKE.
+ */
+    #define MQTT_STATE_UPDATE_MUTEX_GIVE( pContext )
+#endif /* !MQTT_STATE_UPDATE_MUTEX_GIVE */
+>>>>>>> 44c99c128d0e870df451734dca1ed99e43d428cf
 
 /*-----------------------------------------------------------*/
 
@@ -1398,15 +1441,23 @@ static MQTTStatus_t handleIncomingPublish( MQTTContext_t * pContext,
 
     if( status == MQTTSuccess )
     {
+<<<<<<< HEAD
         MQTT_PRE_STATE_UPDATE_HOOK( pContext );
 
+=======
+        MQTT_STATE_UPDATE_MUTEX_TAKE( pContext );
+>>>>>>> 44c99c128d0e870df451734dca1ed99e43d428cf
         status = MQTT_UpdateStatePublish( pContext,
                                           packetIdentifier,
                                           MQTT_RECEIVE,
                                           publishInfo.qos,
                                           &publishRecordState );
+<<<<<<< HEAD
 
         MQTT_POST_STATE_UPDATE_HOOK( pContext );
+=======
+        MQTT_STATE_UPDATE_MUTEX_GIVE( pContext );
+>>>>>>> 44c99c128d0e870df451734dca1ed99e43d428cf
 
         if( status == MQTTSuccess )
         {
@@ -2576,6 +2627,7 @@ MQTTStatus_t MQTT_Publish( MQTTContext_t * pContext,
 {
     size_t headerSize = 0UL, remainingLength = 0UL, packetSize = 0UL;
     MQTTPublishState_t publishStatus = MQTTStateNull;
+    bool mutexTaken = false;
 
     /* 1 header byte + 4 bytes (maximum) required for encoding the length +
      * 2 bytes for topic string. */
@@ -2603,11 +2655,17 @@ MQTTStatus_t MQTT_Publish( MQTTContext_t * pContext,
     if( ( status == MQTTSuccess ) && ( pPublishInfo->qos > MQTTQoS0 ) )
     {
         /* Take the mutex required to update the state. */
+<<<<<<< HEAD
         MQTT_PRE_STATE_UPDATE_HOOK( pContext );
+=======
+        MQTT_STATE_UPDATE_MUTEX_TAKE( pContext );
+        /* Set the flag so that the mutex can be released later. */
+        mutexTaken = true;
+>>>>>>> 44c99c128d0e870df451734dca1ed99e43d428cf
 
         status = MQTT_ReserveState( pContext,
-                                        packetId,
-                                        pPublishInfo->qos );
+                                    packetId,
+                                    pPublishInfo->qos );
 
         /* State already exists for a duplicate packet.
          * If a state doesn't exist, it will be handled as a new publish in
@@ -2634,29 +2692,29 @@ MQTTStatus_t MQTT_Publish( MQTTContext_t * pContext,
         MQTT_POST_SEND_HOOK( pContext );
     }
 
-    if( pPublishInfo->qos > MQTTQoS0 )
+    if( ( status == MQTTSuccess ) &&
+        ( pPublishInfo->qos > MQTTQoS0 ) )
     {
-        if( status == MQTTSuccess )
+        /* Update state machine after PUBLISH is sent.
+         * Only to be done for QoS1 or QoS2. */
+        status = MQTT_UpdateStatePublish( pContext,
+                                          packetId,
+                                          MQTT_SEND,
+                                          pPublishInfo->qos,
+                                          &publishStatus );
+
+        if( status != MQTTSuccess )
         {
-            /* Update state machine after PUBLISH is sent.
-             * Only to be done for QoS1 or QoS2. */
-            status = MQTT_UpdateStatePublish( pContext,
-                                              packetId,
-                                              MQTT_SEND,
-                                              pPublishInfo->qos,
-                                              &publishStatus );
-
-
-            if( status != MQTTSuccess )
-            {
-                LogError( ( "Update state for publish failed with status %s."
-                            " However PUBLISH packet was sent to the broker."
-                            " Any further handling of ACKs for the packet Id"
-                            " will fail.",
-                            MQTT_Status_strerror( status ) ) );
-            }
+            LogError( ( "Update state for publish failed with status %s."
+                        " However PUBLISH packet was sent to the broker."
+                        " Any further handling of ACKs for the packet Id"
+                        " will fail.",
+                        MQTT_Status_strerror( status ) ) );
         }
+    }
 
+    if( mutexTaken == true )
+    {
         /* Regardless of the status, if the mutex was taken due to the
          * packet being of QoS > QoS0, then it should be relinquished. */
         MQTT_POST_STATE_UPDATE_HOOK( pContext );
