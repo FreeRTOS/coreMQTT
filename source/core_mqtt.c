@@ -29,6 +29,19 @@
 
 #include "core_mqtt.h"
 #include "core_mqtt_state.h"
+
+/* MQTT_DO_NOT_USE_CUSTOM_CONFIG allows building the MQTT library
+ * without a custom config. If a custom config is provided, the
+ * MQTT_DO_NOT_USE_CUSTOM_CONFIG macro should not be defined. */
+#ifndef MQTT_DO_NOT_USE_CUSTOM_CONFIG
+/* Include custom config file before other headers. */
+    #include "core_mqtt_config.h"
+#endif
+
+/* Include config defaults header to get default values of configs not
+ * defined in core_mqtt_config.h file. */
+#include "core_mqtt_config_defaults.h"
+
 #include "core_mqtt_default_logging.h"
 
 /*-----------------------------------------------------------*/
@@ -1373,6 +1386,16 @@ static MQTTStatus_t handleIncomingPublish( MQTTContext_t * pContext,
     LogInfo( ( "De-serialized incoming PUBLISH packet: DeserializerResult=%s.",
                MQTT_Status_strerror( status ) ) );
 
+    if( ( pContext->incomingPublishRecords == NULL ) &&
+        ( publishInfo.qos > MQTTQoS0 ) )
+    {
+        LogError( ( "Incoming publish has QoS > MQTTQoS0 but incoming "
+                    "publish records have not been initialized. Dropping the "
+                    "incoming publish. Please call MQTT_InitStatefulQoS to enable "
+                    "use of QoS1 and QoS2 publishes." ) );
+        status = MQTTRecvFailed;
+    }
+
     if( status == MQTTSuccess )
     {
         status = MQTT_UpdateStatePublish( pContext,
@@ -1754,7 +1777,21 @@ static MQTTStatus_t validateSubscribeUnsubscribeParams( const MQTTContext_t * pC
     }
     else
     {
-        /* Empty else MISRA 15.7 */
+        if( pContext->incomingPublishRecords == NULL )
+        {
+            for( size_t iterator = 0; iterator < subscriptionCount; iterator++ )
+            {
+                if( pSubscriptionList->qos > MQTTQoS0 )
+                {
+                    LogError(( "The incoming publish record list is not "
+                              "initialised for QoS1/QoS2 records. Please call "
+                              " MQTT_InitStatefulQoS to enable use of QoS1 and "
+                              " QoS2 packets."));
+                    status = MQTTBadParameter;
+                    break;
+                }
+            }
+        }
     }
 
     return status;
@@ -2366,9 +2403,16 @@ static MQTTStatus_t validatePublishParams( const MQTTContext_t * pContext,
                     pPublishInfo->pPayload ) );
         status = MQTTBadParameter;
     }
+    else if( ( pContext->outgoingPublishRecords == NULL ) && ( pPublishInfo->qos > MQTTQoS0 ) )
+    {
+        LogError( ( "Trying to publish a QoS > MQTTQoS0 packet when outgoing publishes "
+                    "for QoS1/QoS2 have not been enabled. Please, call MQTT_InitStatefulQoS "
+                    "to initialize and enable the use of QoS1/QoS2 publishes." ) );
+        status = MQTTBadParameter;
+    }
     else
     {
-        /* Empty else MISRA 15.7 */
+        /* MISRA else */
     }
 
     return status;
@@ -2435,13 +2479,79 @@ MQTTStatus_t MQTT_Init( MQTTContext_t * pContext,
 
 /*-----------------------------------------------------------*/
 
+MQTTStatus_t MQTT_InitStatefulQoS( MQTTContext_t * pContext,
+                                   MQTTPubAckInfo_t * pOutgoingPublishRecords,
+                                   size_t outgoingPublishCount,
+                                   MQTTPubAckInfo_t * pIncomingPublishRecords,
+                                   size_t incomingPublishCount )
+{
+    MQTTStatus_t status = MQTTSuccess;
+
+    if( pContext == NULL )
+    {
+        LogError( ( "Argument cannot be NULL: pContext=%p\n",
+                    ( void * ) pContext ) );
+        status = MQTTBadParameter;
+    }
+    else if( ( outgoingPublishCount == 0 ) ^
+             ( pOutgoingPublishRecords == NULL ) )
+    {
+        LogError( ( "Arguments do not match: pOutgoingPublishRecords=%p, "
+                    "outgoingPublishCount=%u",
+                    pOutgoingPublishRecords,
+                    outgoingPublishCount ) );
+        status = MQTTBadParameter;
+    }
+    else if( ( incomingPublishCount == 0 ) ^
+             ( pIncomingPublishRecords == NULL ) )
+    {
+        LogError( ( "Arguments do not match: pIncomingPublishRecords=%p, "
+                    "incomingPublishCount=%u",
+                    pIncomingPublishRecords,
+                    incomingPublishCount ) );
+        status = MQTTBadParameter;
+    }
+    else if( pContext->appCallback == NULL )
+    {
+        LogError( ( "MQTT_InitStatefulQoS must be called only after MQTT_InIt has"
+                    " been called succesfully.\n" ) );
+        status = MQTTBadParameter;
+    }
+    else
+    {
+        pContext->incomingPublishRecordMaxCount = incomingPublishCount;
+        pContext->incomingPublishRecords = pIncomingPublishRecords;
+        pContext->outgoingPublishRecordMaxCount = outgoingPublishCount;
+        pContext->outgoingPublishRecords = pOutgoingPublishRecords;
+    }
+
+    return status;
+}
+
+/*-----------------------------------------------------------*/
+
 MQTTStatus_t MQTT_CancelCallback( MQTTContext_t * pContext,
                                   uint16_t packetId )
 {
-    MQTTStatus_t status;
+    MQTTStatus_t status = MQTTSuccess;
 
-    status = MQTT_RemoveStateRecord( pContext,
-                                     packetId );
+    if( pContext == NULL )
+    {
+        LogWarn( ( "pContext is NULL\n" ) );
+        status = MQTTBadParameter;
+    }
+    else if( pContext->outgoingPublishRecords == NULL )
+    {
+        LogError( ( "QoS1/QoS2 is not initialized for use. Please, "
+                    "call MQTT_InitStatefulQoS to enable QoS1 and QoS2 "
+                    "publishes.\n" ) );
+        status = MQTTBadParameter;
+    }
+    else
+    {
+        status = MQTT_RemoveStateRecord( pContext,
+                                         packetId );
+    }
 
     return status;
 }

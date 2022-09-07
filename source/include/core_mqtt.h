@@ -33,18 +33,6 @@
 #endif
 /* *INDENT-ON* */
 
-/* MQTT_DO_NOT_USE_CUSTOM_CONFIG allows building the MQTT library
- * without a custom config. If a custom config is provided, the
- * MQTT_DO_NOT_USE_CUSTOM_CONFIG macro should not be defined. */
-#ifndef MQTT_DO_NOT_USE_CUSTOM_CONFIG
-/* Include custom config file before other headers. */
-    #include "core_mqtt_config.h"
-#endif
-
-/* Include config defaults header to get default values of configs not
- * defined in core_mqtt_config.h file. */
-#include "core_mqtt_config_defaults.h"
-
 /* Include MQTT serializer library. */
 #include "core_mqtt_serializer.h"
 
@@ -176,12 +164,22 @@ typedef struct MQTTContext
     /**
      * @brief State engine records for outgoing publishes.
      */
-    MQTTPubAckInfo_t outgoingPublishRecords[ MQTT_STATE_ARRAY_MAX_COUNT ];
+    MQTTPubAckInfo_t * outgoingPublishRecords;
 
     /**
      * @brief State engine records for incoming publishes.
      */
-    MQTTPubAckInfo_t incomingPublishRecords[ MQTT_STATE_ARRAY_MAX_COUNT ];
+    MQTTPubAckInfo_t * incomingPublishRecords;
+
+    /**
+     * @brief The maximum number of outgoing publish records. 
+     */
+    size_t outgoingPublishRecordMaxCount;
+
+    /**
+     * @brief The maximum number of incoming publish records.
+     */
+    size_t incomingPublishRecordMaxCount;
 
     /**
      * @brief The transport interface used by the MQTT connection.
@@ -324,6 +322,12 @@ MQTTStatus_t MQTT_Init( MQTTContext_t * pContext,
                         MQTTEventCallback_t userCallback,
                         const MQTTFixedBuffer_t * pNetworkBuffer );
 /* @[declare_mqtt_init] */
+
+MQTTStatus_t MQTT_InitStatefulQoS( MQTTContext_t * pContext,
+                                   MQTTPubAckInfo_t * pOutgoingPublishRecords,
+                                   size_t outgoingPublishCount,
+                                   MQTTPubAckInfo_t * pIncomingPublishRecords,
+                                   size_t incomingPublishCount );
 
 /**
  * @brief Establish an MQTT session.

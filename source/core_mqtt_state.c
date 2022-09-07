@@ -27,9 +27,24 @@
 #include <assert.h>
 #include <string.h>
 #include "core_mqtt_state.h"
+
+/* MQTT_DO_NOT_USE_CUSTOM_CONFIG allows building the MQTT library
+ * without a custom config. If a custom config is provided, the
+ * MQTT_DO_NOT_USE_CUSTOM_CONFIG macro should not be defined. */
+#ifndef MQTT_DO_NOT_USE_CUSTOM_CONFIG
+/* Include custom config file before other headers. */
+    #include "core_mqtt_config.h"
+#endif
+
+/* Include config defaults header to get default values of configs not
+ * defined in core_mqtt_config.h file. */
+#include "core_mqtt_config_defaults.h"
+
 #include "core_mqtt_default_logging.h"
 
 /*-----------------------------------------------------------*/
+
+#define MQTT_INVALID_STATE_COUNT              ( ( size_t ) ( ~ 0UL ) )
 
 /**
  * @brief Create a 16-bit bitmap with bit set at specified position.
@@ -177,6 +192,7 @@ static uint16_t stateSelect( const MQTTContext_t * pMqttContext,
  * validations.
  *
  * @param[in] records State records pointer.
+ * @param[in] maxRecordCount The maximum number of records.
  * @param[in] recordIndex Index at which the record is stored.
  * @param[in] packetId Packet id of the packet.
  * @param[in] currentState Current state of the publish record.
@@ -185,6 +201,7 @@ static uint16_t stateSelect( const MQTTContext_t * pMqttContext,
  * @return #MQTTIllegalState, or #MQTTSuccess.
  */
 static MQTTStatus_t updateStateAck( MQTTPubAckInfo_t * records,
+                                    size_t maxRecordCount,
                                     size_t recordIndex,
                                     uint16_t packetId,
                                     MQTTPublishState_t currentState,
@@ -457,7 +474,7 @@ static void compactRecords( MQTTPubAckInfo_t * records,
                             size_t recordCount )
 {
     size_t index = 0;
-    size_t emptyIndex = MQTT_STATE_ARRAY_MAX_COUNT;
+    size_t emptyIndex = MQTT_INVALID_STATE_COUNT;
 
     assert( records != NULL );
 
@@ -467,14 +484,14 @@ static void compactRecords( MQTTPubAckInfo_t * records,
         /* Find the first empty spot. */
         if( records[ index ].packetId == MQTT_PACKET_ID_INVALID )
         {
-            if( emptyIndex == MQTT_STATE_ARRAY_MAX_COUNT )
+            if( emptyIndex == MQTT_INVALID_STATE_COUNT)
             {
                 emptyIndex = index;
             }
         }
         else
         {
-            if( emptyIndex != MQTT_STATE_ARRAY_MAX_COUNT )
+            if( emptyIndex != MQTT_INVALID_STATE_COUNT)
             {
                 /* Copy over the contents at non empty index to empty index. */
                 records[ emptyIndex ].packetId = records[ index ].packetId;
@@ -591,6 +608,7 @@ static uint16_t stateSelect( const MQTTContext_t * pMqttContext,
     uint16_t packetId = MQTT_PACKET_ID_INVALID;
     uint16_t outgoingStates = 0U;
     const MQTTPubAckInfo_t * records = NULL;
+    size_t maxCount;
     bool stateCheck = false;
 
     assert( pMqttContext != NULL );
@@ -609,8 +627,9 @@ static uint16_t stateSelect( const MQTTContext_t * pMqttContext,
     assert( ( ~outgoingStates & searchStates ) == 0 );
 
     records = pMqttContext->outgoingPublishRecords;
+    maxCount = pMqttContext->outgoingPublishRecordMaxCount;
 
-    while( *pCursor < MQTT_STATE_ARRAY_MAX_COUNT )
+    while( *pCursor < maxCount )
     {
         /* Check if any of the search states are present. */
         stateCheck = UINT16_CHECK_BIT( searchStates, records[ *pCursor ].publishState ) ? true : false;
@@ -680,6 +699,7 @@ MQTTPublishState_t MQTT_CalculateStateAck( MQTTPubAckType_t packetType,
 /*-----------------------------------------------------------*/
 
 static MQTTStatus_t updateStateAck( MQTTPubAckInfo_t * records,
+                                    size_t maxRecordCount,
                                     size_t recordIndex,
                                     uint16_t packetId,
                                     MQTTPublishState_t currentState,
@@ -719,7 +739,7 @@ static MQTTStatus_t updateStateAck( MQTTPubAckInfo_t * records,
             if( newState == MQTTPubRelSend )
             {
                 status = addRecord( records,
-                                    MQTT_STATE_ARRAY_MAX_COUNT,
+                                    maxRecordCount,
                                     packetId,
                                     MQTTQoS2,
                                     MQTTPubRelSend );
@@ -765,7 +785,7 @@ static MQTTStatus_t updateStatePublish( MQTTContext_t * pMqttContext,
         if( opType == MQTT_RECEIVE )
         {
             status = addRecord( pMqttContext->incomingPublishRecords,
-                                MQTT_STATE_ARRAY_MAX_COUNT,
+                                pMqttContext->incomingPublishRecordMaxCount,
                                 packetId,
                                 qos,
                                 newState );
@@ -812,7 +832,7 @@ MQTTStatus_t MQTT_ReserveState( MQTTContext_t * pMqttContext,
     {
         /* Collisions are detected when adding the record. */
         status = addRecord( pMqttContext->outgoingPublishRecords,
-                            MQTT_STATE_ARRAY_MAX_COUNT,
+                            pMqttContext->outgoingPublishRecordMaxCount,
                             packetId,
                             qos,
                             MQTTPublishSend );
@@ -861,7 +881,7 @@ MQTTStatus_t MQTT_UpdateStatePublish( MQTTContext_t * pMqttContext,
     MQTTPublishState_t newState = MQTTStateNull;
     MQTTPublishState_t currentState = MQTTStateNull;
     MQTTStatus_t mqttStatus = MQTTSuccess;
-    size_t recordIndex = MQTT_STATE_ARRAY_MAX_COUNT;
+    size_t recordIndex = MQTT_INVALID_STATE_COUNT;
     MQTTQoS_t foundQoS = MQTTQoS0;
 
     if( ( pMqttContext == NULL ) || ( pNewState == NULL ) )
@@ -886,12 +906,12 @@ MQTTStatus_t MQTT_UpdateStatePublish( MQTTContext_t * pMqttContext,
     {
         /* Search record for entry so we can check QoS. */
         recordIndex = findInRecord( pMqttContext->outgoingPublishRecords,
-                                    MQTT_STATE_ARRAY_MAX_COUNT,
+                                    pMqttContext->outgoingPublishRecordMaxCount,
                                     packetId,
                                     &foundQoS,
                                     &currentState );
 
-        if( ( recordIndex == MQTT_STATE_ARRAY_MAX_COUNT ) || ( foundQoS != qos ) )
+        if( ( recordIndex == MQTT_INVALID_STATE_COUNT ) || ( foundQoS != qos ) )
         {
             /* Entry should match with supplied QoS. */
             mqttStatus = MQTTBadParameter;
@@ -930,37 +950,43 @@ MQTTStatus_t MQTT_RemoveStateRecord( MQTTContext_t * pMqttContext,
                                      uint16_t packetId )
 {
     MQTTStatus_t status = MQTTSuccess;
-    MQTTPubAckInfo_t * records = NULL;
-    size_t recordIndex = MQTT_STATE_ARRAY_MAX_COUNT;
+    MQTTPubAckInfo_t * records;
+    size_t recordIndex;
+    /* Current state is updated by the findInRecord function. */
+    MQTTPublishState_t currentState;
     MQTTQoS_t qos = MQTTQoS0;
-    MQTTPublishState_t currentState = MQTTStateNull;
+    
 
-    assert( pMqttContext != NULL );
-    assert( pMqttContext->outgoingPublishRecords != NULL );
-
-    records = pMqttContext->outgoingPublishRecords;
-
-    recordIndex = findInRecord( records,
-                                MQTT_STATE_ARRAY_MAX_COUNT,
-                                packetId,
-                                &qos,
-                                &currentState );
-
-    if( currentState == MQTTStateNull )
-    {
-        status = MQTTBadParameter;
-    }
-    else if( ( qos != MQTTQoS1 ) && ( qos != MQTTQoS2 ) )
+    if( ( pMqttContext == NULL ) || ( ( pMqttContext->outgoingPublishRecords == NULL ) ) )
     {
         status = MQTTBadParameter;
     }
     else
     {
-        /* Delete the record. */
-        updateRecord( records,
-                      recordIndex,
-                      MQTTStateNull,
-                      true );
+        records = pMqttContext->outgoingPublishRecords;
+
+        recordIndex = findInRecord( records,
+                                    pMqttContext->outgoingPublishRecordMaxCount,
+                                    packetId,
+                                    &qos,
+                                    &currentState );
+
+        if( currentState == MQTTStateNull )
+        {
+            status = MQTTBadParameter;
+        }
+        else if( ( qos != MQTTQoS1 ) && ( qos != MQTTQoS2 ) )
+        {
+            status = MQTTBadParameter;
+        }
+        else
+        {
+            /* Delete the record. */
+            updateRecord( records,
+                          recordIndex,
+                          MQTTStateNull,
+                          true );
+        }
     }
 
     return status;
@@ -978,9 +1004,13 @@ MQTTStatus_t MQTT_UpdateStateAck( MQTTContext_t * pMqttContext,
     MQTTPublishState_t currentState = MQTTStateNull;
     bool isOutgoingPublish = isPublishOutgoing( packetType, opType );
     MQTTQoS_t qos = MQTTQoS0;
-    size_t recordIndex = MQTT_STATE_ARRAY_MAX_COUNT;
+    size_t maxRecordCount = MQTT_INVALID_STATE_COUNT;
+    size_t recordIndex = MQTT_INVALID_STATE_COUNT;
+
     MQTTPubAckInfo_t * records = NULL;
     MQTTStatus_t status = MQTTBadResponse;
+
+
 
     if( ( pMqttContext == NULL ) || ( pNewState == NULL ) )
     {
@@ -1004,25 +1034,33 @@ MQTTStatus_t MQTT_UpdateStateAck( MQTTContext_t * pMqttContext,
         if( isOutgoingPublish == true )
         {
             records = pMqttContext->outgoingPublishRecords;
+            maxRecordCount = pMqttContext->outgoingPublishRecordMaxCount;
         }
         else
         {
             records = pMqttContext->incomingPublishRecords;
+            maxRecordCount = pMqttContext->incomingPublishRecordMaxCount;
         }
 
         recordIndex = findInRecord( records,
-                                    MQTT_STATE_ARRAY_MAX_COUNT,
+                                    maxRecordCount,
                                     packetId,
                                     &qos,
                                     &currentState );
     }
 
-    if( recordIndex < MQTT_STATE_ARRAY_MAX_COUNT )
+    if( ( recordIndex < MQTT_INVALID_STATE_COUNT ) &&
+        ( recordIndex < maxRecordCount ) )
     {
         newState = MQTT_CalculateStateAck( packetType, opType, qos );
 
         /* Validate state transition and update state record. */
-        status = updateStateAck( records, recordIndex, packetId, currentState, newState );
+        status = updateStateAck( records,
+                                 maxRecordCount,
+                                 recordIndex,
+                                 packetId,
+                                 currentState,
+                                 newState );
 
         /* Update the output parameter. */
         if( status == MQTTSuccess )
