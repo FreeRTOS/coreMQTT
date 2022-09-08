@@ -38,7 +38,7 @@
 /**
  * @brief This macro depicts the invalid value for the state publishes.
  */
-#define MQTT_INVALID_STATE_COUNT              ( ( size_t ) ( ~ 0UL ) )
+#define MQTT_INVALID_STATE_COUNT    ( ( size_t ) ( ~0UL ) )
 
 /**
  * @brief Create a 16-bit bitmap with bit set at specified position.
@@ -478,14 +478,14 @@ static void compactRecords( MQTTPubAckInfo_t * records,
         /* Find the first empty spot. */
         if( records[ index ].packetId == MQTT_PACKET_ID_INVALID )
         {
-            if( emptyIndex == MQTT_INVALID_STATE_COUNT)
+            if( emptyIndex == MQTT_INVALID_STATE_COUNT )
             {
                 emptyIndex = index;
             }
         }
         else
         {
-            if( emptyIndex != MQTT_INVALID_STATE_COUNT)
+            if( emptyIndex != MQTT_INVALID_STATE_COUNT )
             {
                 /* Copy over the contents at non empty index to empty index. */
                 records[ emptyIndex ].packetId = records[ index ].packetId;
@@ -949,7 +949,7 @@ MQTTStatus_t MQTT_RemoveStateRecord( MQTTContext_t * pMqttContext,
     /* Current state is updated by the findInRecord function. */
     MQTTPublishState_t currentState;
     MQTTQoS_t qos = MQTTQoS0;
-    
+
 
     if( ( pMqttContext == NULL ) || ( ( pMqttContext->outgoingPublishRecords == NULL ) ) )
     {

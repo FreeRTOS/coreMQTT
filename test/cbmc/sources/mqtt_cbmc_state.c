@@ -65,7 +65,7 @@
  * @note This definition must exist in order to compile. 10U is a typical value
  * used in the MQTT demos.
  */
-#define MAX_UNACKED_PACKETS           ( 20U )
+#define MAX_UNACKED_PACKETS    ( 20U )
 
 MQTTPacketInfo_t * allocateMqttPacketInfo( MQTTPacketInfo_t * pPacketInfo )
 {
@@ -227,9 +227,11 @@ MQTTContext_t * allocateMqttContext( MQTTContext_t * pContext )
 
     __CPROVER_assume( outgoingAckListSize <= MAX_UNACKED_PACKETS );
     __CPROVER_assume( outgoingAckListSize > 0U );
+
     /* Here, malloc can fail. If it does, then it is proper to update the number of entries
      * in the array. */
     pOutgoingAckList = malloc( outgoingAckListSize * sizeof( MQTTPubAckInfo_t ) );
+
     if( pOutgoingAckList == NULL )
     {
         outgoingAckListSize = 0U;
@@ -237,9 +239,11 @@ MQTTContext_t * allocateMqttContext( MQTTContext_t * pContext )
 
     __CPROVER_assume( incomingAckListSize <= MAX_UNACKED_PACKETS );
     __CPROVER_assume( incomingAckListSize > 0U );
+
     /* Here, malloc can fail. If it does, then it is proper to update the number of entries
      * in the array. */
     pIncomingAckList = malloc( incomingAckListSize * sizeof( MQTTPubAckInfo_t ) );
+
     if( pIncomingAckList == NULL )
     {
         incomingAckListSize = 0U;

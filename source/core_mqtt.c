@@ -1769,10 +1769,10 @@ static MQTTStatus_t validateSubscribeUnsubscribeParams( const MQTTContext_t * pC
             {
                 if( pSubscriptionList->qos > MQTTQoS0 )
                 {
-                    LogError(( "The incoming publish record list is not "
-                              "initialised for QoS1/QoS2 records. Please call "
-                              " MQTT_InitStatefulQoS to enable use of QoS1 and "
-                              " QoS2 packets."));
+                    LogError( ( "The incoming publish record list is not "
+                                "initialised for QoS1/QoS2 records. Please call "
+                                " MQTT_InitStatefulQoS to enable use of QoS1 and "
+                                " QoS2 packets." ) );
                     status = MQTTBadParameter;
                     break;
                 }

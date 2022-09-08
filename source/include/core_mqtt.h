@@ -172,7 +172,7 @@ typedef struct MQTTContext
     MQTTPubAckInfo_t * incomingPublishRecords;
 
     /**
-     * @brief The maximum number of outgoing publish records. 
+     * @brief The maximum number of outgoing publish records.
      */
     size_t outgoingPublishRecordMaxCount;
 
@@ -345,7 +345,7 @@ MQTTStatus_t MQTT_Init( MQTTContext_t * pContext,
  * publishes.
  * @param[in] incomingPublishCount Maximum number of records which can be kept in the memory
  * pointed to by @p pIncomingPublishRecords.
- * 
+ *
  * @return #MQTTBadParameter if invalid parameters are passed;
  * #MQTTSuccess otherwise.
  *
@@ -370,7 +370,7 @@ MQTTStatus_t MQTT_Init( MQTTContext_t * pContext,
  * MQTTFixedBuffer_t fixedBuffer;
  * uint8_t buffer[ 1024 ];
  * const size_t outgoingPublishCount = 30;
- * MQTTPubAckInfo_t outgoingPublishes[ outgoingPublishCount ]; 
+ * MQTTPubAckInfo_t outgoingPublishes[ outgoingPublishCount ];
  *
  * // Clear context.
  * memset( ( void * ) &mqttContext, 0x00, sizeof( MQTTContext_t ) );
@@ -391,7 +391,7 @@ MQTTStatus_t MQTT_Init( MQTTContext_t * pContext,
  *      // We do not expect any incoming publishes in this example, therefore the incoming
  *      // publish pointer is NULL and the count is zero.
  *      status = MQTT_InitStatefulQoS( &mqttContext, outgoingPublishes, outgoingPublishCount, NULL, 0 );
- * 
+ *
  *      // Now QoS1 and/or QoS2 publishes can be sent with this context.
  * }
  * @endcode
