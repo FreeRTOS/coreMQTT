@@ -57,8 +57,7 @@
  */
 static int32_t sendBuffer( MQTTContext_t * pContext,
                            const uint8_t * pBufferToSend,
-                           size_t bytesToSend,
-                           uint32_t timeout );
+                           size_t bytesToSend );
 
 /**
  * @brief Sends MQTT connect without copying the users data into any buffer.
@@ -791,8 +790,7 @@ static int32_t sendMessageVector( MQTTContext_t * pContext,
         {
             sendResult = sendBuffer( pContext,
                                      pIoVectIterator->iov_base,
-                                     pIoVectIterator->iov_len,
-                                     ( timeoutTime - pContext->getTime() ) );
+                                     pIoVectIterator->iov_len );
         }
 
         if( sendResult >= 0 )
@@ -831,14 +829,12 @@ static int32_t sendMessageVector( MQTTContext_t * pContext,
 
 static int32_t sendBuffer( MQTTContext_t * pContext,
                            const uint8_t * pBufferToSend,
-                           size_t bytesToSend,
-                           uint32_t timeout )
+                           size_t bytesToSend )
 {
     const uint8_t * pIndex = pBufferToSend;
     size_t bytesRemaining = bytesToSend;
     int32_t totalBytesSent = 0, bytesSent;
     uint32_t lastSendTimeMs = 0U, timeSinceLastSendMs = 0U;
-    uint32_t timeoutTime;
     bool sendError = false;
 
     assert( pContext != NULL );
@@ -847,7 +843,6 @@ static int32_t sendBuffer( MQTTContext_t * pContext,
     assert( pIndex != NULL );
 
     bytesRemaining = bytesToSend;
-    timeoutTime = pContext->getTime() + timeout;
 
     /* Loop until the entire packet is sent. */
     while( ( bytesRemaining > 0UL ) && ( sendError == false ) )
@@ -1278,8 +1273,7 @@ static MQTTStatus_t sendPublishAcks( MQTTContext_t * pContext,
              * to be sent which can be achieved with a normal send call. */
             bytesSent = sendBuffer( pContext,
                                     localBuffer.pBuffer,
-                                    MQTT_PUBLISH_ACK_PACKET_SIZE,
-                                    MQTT_SEND_RETRY_TIMEOUT_MS );
+                                    MQTT_PUBLISH_ACK_PACKET_SIZE );
         }
 
         if( bytesSent == ( int32_t ) MQTT_PUBLISH_ACK_PACKET_SIZE )
@@ -1746,6 +1740,7 @@ static MQTTStatus_t validateSubscribeUnsubscribeParams( const MQTTContext_t * pC
                                                         uint16_t packetId )
 {
     MQTTStatus_t status = MQTTSuccess;
+    size_t iterator;
 
     /* Validate all the parameters. */
     if( ( pContext == NULL ) || ( pSubscriptionList == NULL ) )
@@ -1770,7 +1765,7 @@ static MQTTStatus_t validateSubscribeUnsubscribeParams( const MQTTContext_t * pC
     {
         if( pContext->incomingPublishRecords == NULL )
         {
-            for( size_t iterator = 0; iterator < subscriptionCount; iterator++ )
+            for( iterator = 0; iterator < subscriptionCount; iterator++ )
             {
                 if( pSubscriptionList->qos > MQTTQoS0 )
                 {
@@ -2801,8 +2796,7 @@ MQTTStatus_t MQTT_Ping( MQTTContext_t * pContext )
          * from the user provided buffers. Thus it can be sent directly. */
         bytesSent = sendBuffer( pContext,
                                 localBuffer.pBuffer,
-                                2U,
-                                MQTT_SEND_RETRY_TIMEOUT_MS );
+                                2U );
 
         /* It is an error to not send the entire PINGREQ packet. */
         if( bytesSent < ( int32_t ) packetSize )
@@ -2902,8 +2896,7 @@ MQTTStatus_t MQTT_Disconnect( MQTTContext_t * pContext )
          * using a simple send call. */
         bytesSent = sendBuffer( pContext,
                                 localBuffer.pBuffer,
-                                packetSize,
-                                MQTT_SEND_RETRY_TIMEOUT_MS );
+                                packetSize );
 
         if( bytesSent < ( int32_t ) packetSize )
         {
