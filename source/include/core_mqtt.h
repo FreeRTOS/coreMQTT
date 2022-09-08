@@ -79,10 +79,10 @@ struct MQTTDeserializedInfo;
 
 /**
  * @ingroup mqtt_callback_types
- * @brief Application provided function to query the current time in
- * milliseconds.
+ * @brief Application provided function to query the time elapsed since a given
+ * epoch in milliseconds.
  *
- * @return The current time in milliseconds.
+ * @return The time elapsed in milliseconds.
  */
 typedef uint32_t (* MQTTGetCurrentTimeFunc_t )( void );
 
@@ -267,10 +267,15 @@ typedef struct MQTTDeserializedInfo
  *
  * @param[in] pContext The context to initialize.
  * @param[in] pTransportInterface The transport interface to use with the context.
- * @param[in] getTimeFunction The time utility function to use with the context.
- * @param[in] userCallback The user callback to use with the context to
- * notify about incoming packet events.
- * @param[in] pNetworkBuffer Network buffer provided for the context.
+ * @param[in] getTimeFunction The time utility function which can return the amount of time
+ *    (in milliseconds) elapsed since a given epoch. This function will be used to ensure that
+ *    timeouts in the API calls are met and keep-alive messages are sent on time.
+ * @param[in] userCallback The user callback to use with the context to notify about incoming
+ *     packet events.
+ * @param[in] pNetworkBuffer Network buffer provided for the context. This buffer will be used
+ *     to receive incoming messages from the broker. This buffer must remain valid and in scope
+ *     for the entire lifetime of the @p pContext and must not be used by another context and/or
+ *     application.
  *
  * @return #MQTTBadParameter if invalid parameters are passed;
  * #MQTTSuccess otherwise.
@@ -294,6 +299,8 @@ typedef struct MQTTDeserializedInfo
  * MQTTContext_t mqttContext;
  * TransportInterface_t transport;
  * MQTTFixedBuffer_t fixedBuffer;
+ * // Create a globally accessible buffer which remains in scope for the entire duration
+ * // of the MQTT context.
  * uint8_t buffer[ 1024 ];
  *
  * // Clear context.
@@ -314,6 +321,7 @@ typedef struct MQTTDeserializedInfo
  * {
  *      // Do something with mqttContext. The transport and fixedBuffer structs were
  *      // copied into the context, so the original structs do not need to stay in scope.
+ *      // However, the memory pointed to by the fixedBuffer.pBuffer must remain in scope.
  * }
  * @endcode
  */
