@@ -2311,12 +2311,19 @@ static MQTTStatus_t handleSessionResumption( MQTTContext_t * pContext,
     else
     {
         /* Clear any existing records if a new session is established. */
-        ( void ) memset( pContext->outgoingPublishRecords,
-                         0x00,
-                         pContext->outgoingPublishRecordMaxCount * sizeof( *pContext->outgoingPublishRecords ) );
-        ( void ) memset( pContext->incomingPublishRecords,
-                         0x00,
-                         pContext->incomingPublishRecordMaxCount * sizeof( *pContext->incomingPublishRecords ) );
+        if( pContext->outgoingPublishRecordMaxCount > 0 )
+        {
+            ( void ) memset( pContext->outgoingPublishRecords,
+                             0x00,
+                             pContext->outgoingPublishRecordMaxCount * sizeof( *pContext->outgoingPublishRecords ) );
+        }
+
+        if( pContext->incomingPublishRecordMaxCount > 0 )
+        {
+            ( void ) memset( pContext->incomingPublishRecords,
+                             0x00,
+                             pContext->incomingPublishRecordMaxCount * sizeof( *pContext->incomingPublishRecords ) );
+        }
     }
 
     return status;
