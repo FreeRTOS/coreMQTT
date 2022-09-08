@@ -28,22 +28,16 @@
 #include <string.h>
 #include "core_mqtt_state.h"
 
-/* MQTT_DO_NOT_USE_CUSTOM_CONFIG allows building the MQTT library
- * without a custom config. If a custom config is provided, the
- * MQTT_DO_NOT_USE_CUSTOM_CONFIG macro should not be defined. */
-#ifndef MQTT_DO_NOT_USE_CUSTOM_CONFIG
-/* Include custom config file before other headers. */
-    #include "core_mqtt_config.h"
-#endif
-
-/* Include config defaults header to get default values of configs not
- * defined in core_mqtt_config.h file. */
+/* Include config defaults header to get default values of configs. */
 #include "core_mqtt_config_defaults.h"
 
 #include "core_mqtt_default_logging.h"
 
 /*-----------------------------------------------------------*/
 
+/**
+ * @brief This macro depicts the invalid value for the state publishes.
+ */
 #define MQTT_INVALID_STATE_COUNT              ( ( size_t ) ( ~ 0UL ) )
 
 /**

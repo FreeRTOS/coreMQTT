@@ -323,11 +323,86 @@ MQTTStatus_t MQTT_Init( MQTTContext_t * pContext,
                         const MQTTFixedBuffer_t * pNetworkBuffer );
 /* @[declare_mqtt_init] */
 
+/**
+ * @brief Initialize an MQTT context.
+ *
+ * This function must be called on a #MQTTContext_t before any other function.
+ *
+ * @note The #MQTTGetCurrentTimeFunc_t function for querying time must be defined. If
+ * there is no time implementation, it is the responsibility of the application
+ * to provide a dummy function to always return 0, provide 0 timeouts for
+ * all calls to #MQTT_Connect, #MQTT_ProcessLoop, and #MQTT_ReceiveLoop and configure
+ * the #MQTT_RECV_POLLING_TIMEOUT_MS and #MQTT_SEND_RETRY_TIMEOUT_MS configurations
+ * to be 0. This will result in loop functions running for a single iteration, and
+ * #MQTT_Connect relying on #MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT to receive the CONNACK packet.
+ *
+ * @param[in] pContext The context to initialize.
+ * @param[in] pOutgoingPublishRecords Pointer to memory which will be used to store state of outgoing
+ * publishes.
+ * @param[in] outgoingPublishCount Maximum number of records which can be kept in the memory
+ * pointed to by @p pOutgoingPublishRecords.
+ * @param[in] pIncomingPublishRecords Pointer to memory which will be used to store state of incoming
+ * publishes.
+ * @param[in] incomingPublishCount Maximum number of records which can be kept in the memory
+ * pointed to by @p pIncomingPublishRecords.
+ * 
+ * @return #MQTTBadParameter if invalid parameters are passed;
+ * #MQTTSuccess otherwise.
+ *
+ * <b>Example</b>
+ * @code{c}
+ *
+ * // Function for obtaining a timestamp.
+ * uint32_t getTimeStampMs();
+ * // Callback function for receiving packets.
+ * void eventCallback(
+ *      MQTTContext_t * pContext,
+ *      MQTTPacketInfo_t * pPacketInfo,
+ *      MQTTDeserializedInfo_t * pDeserializedInfo
+ * );
+ * // Network send.
+ * int32_t networkSend( NetworkContext_t * pContext, const void * pBuffer, size_t bytes );
+ * // Network receive.
+ * int32_t networkRecv( NetworkContext_t * pContext, void * pBuffer, size_t bytes );
+ *
+ * MQTTContext_t mqttContext;
+ * TransportInterface_t transport;
+ * MQTTFixedBuffer_t fixedBuffer;
+ * uint8_t buffer[ 1024 ];
+ * const size_t outgoingPublishCount = 30;
+ * MQTTPubAckInfo_t outgoingPublishes[ outgoingPublishCount ]; 
+ *
+ * // Clear context.
+ * memset( ( void * ) &mqttContext, 0x00, sizeof( MQTTContext_t ) );
+ *
+ * // Set transport interface members.
+ * transport.pNetworkContext = &someTransportContext;
+ * transport.send = networkSend;
+ * transport.recv = networkRecv;
+ *
+ * // Set buffer members.
+ * fixedBuffer.pBuffer = buffer;
+ * fixedBuffer.size = 1024;
+ *
+ * status = MQTT_Init( &mqttContext, &transport, getTimeStampMs, eventCallback, &fixedBuffer );
+ *
+ * if( status == MQTTSuccess )
+ * {
+ *      // We do not expect any incoming publishes in this example, therefore the incoming
+ *      // publish pointer is NULL and the count is zero.
+ *      status = MQTT_InitStatefulQoS( &mqttContext, outgoingPublishes, outgoingPublishCount, NULL, 0 );
+ * 
+ *      // Now QoS1 and/or QoS2 publishes can be sent with this context.
+ * }
+ * @endcode
+ */
+/* @[declare_mqtt_initstatefulqos] */
 MQTTStatus_t MQTT_InitStatefulQoS( MQTTContext_t * pContext,
                                    MQTTPubAckInfo_t * pOutgoingPublishRecords,
                                    size_t outgoingPublishCount,
                                    MQTTPubAckInfo_t * pIncomingPublishRecords,
                                    size_t incomingPublishCount );
+/* @[declare_mqtt_initstatefulqos] */
 
 /**
  * @brief Establish an MQTT session.

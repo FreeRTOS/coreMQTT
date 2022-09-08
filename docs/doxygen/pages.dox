@@ -149,9 +149,6 @@ Some configuration settings are C pre-processor constants, and some are function
 @section MQTT_DO_NOT_USE_CUSTOM_CONFIG
 @copydoc MQTT_DO_NOT_USE_CUSTOM_CONFIG
 
-@section MQTT_STATE_ARRAY_MAX_COUNT
-@copydoc MQTT_STATE_ARRAY_MAX_COUNT
-
 @section MQTT_PINGRESP_TIMEOUT_MS
 @copydoc MQTT_PINGRESP_TIMEOUT_MS
 

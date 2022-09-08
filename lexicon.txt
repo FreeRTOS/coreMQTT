@@ -73,6 +73,7 @@ enums
 eventcallback
 expectprocessloopcalls
 filterindex
+findinrecord
 fixedbuffer
 fn
 gcc
@@ -133,6 +134,7 @@ mainpage
 malloc
 managekeepalive
 matchtopic
+maxrecordcount
 md
 mdash
 memcpy
