@@ -551,7 +551,7 @@ MQTTStatus_t MQTT_Publish( MQTTContext_t * pContext,
 /**
  * @brief Cancels an outgoing publish callback (only for QoS > QoS0) by
  * removing it from the pending ACK list.
- * 
+ *
  * @note This cannot cancel the actual publish as that might have already
  * been sent to the broker. This only removes the details of the given packet
  * ID from the list of unACKed packet. That allows the caller to free any memory
