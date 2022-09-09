@@ -324,7 +324,7 @@ MQTTStatus_t MQTT_Init( MQTTContext_t * pContext,
 /* @[declare_mqtt_init] */
 
 /**
- * @brief Initialize an MQTT context for stateful QoS (QoS > 0).
+ * @brief Initialize an MQTT context for QoS > 0.
  *
  * This function must be called on an #MQTTContext_t after MQTT_Init and before any other function.
  *
