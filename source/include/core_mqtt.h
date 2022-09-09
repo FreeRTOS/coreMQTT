@@ -253,7 +253,7 @@ typedef struct MQTTDeserializedInfo
 /**
  * @brief Initialize an MQTT context.
  *
- * This function must be called on a #MQTTContext_t before any other function.
+ * This function must be called on an #MQTTContext_t before any other function.
  *
  * @note The #MQTTGetCurrentTimeFunc_t function for querying time must be defined. If
  * there is no time implementation, it is the responsibility of the application
@@ -324,17 +324,9 @@ MQTTStatus_t MQTT_Init( MQTTContext_t * pContext,
 /* @[declare_mqtt_init] */
 
 /**
- * @brief Initialize an MQTT context.
+ * @brief Initialize an MQTT context for stateful QoS (QoS > 0).
  *
- * This function must be called on a #MQTTContext_t before any other function.
- *
- * @note The #MQTTGetCurrentTimeFunc_t function for querying time must be defined. If
- * there is no time implementation, it is the responsibility of the application
- * to provide a dummy function to always return 0, provide 0 timeouts for
- * all calls to #MQTT_Connect, #MQTT_ProcessLoop, and #MQTT_ReceiveLoop and configure
- * the #MQTT_RECV_POLLING_TIMEOUT_MS and #MQTT_SEND_RETRY_TIMEOUT_MS configurations
- * to be 0. This will result in loop functions running for a single iteration, and
- * #MQTT_Connect relying on #MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT to receive the CONNACK packet.
+ * This function must be called on an #MQTTContext_t after MQTT_Init and before any other function.
  *
  * @param[in] pContext The context to initialize.
  * @param[in] pOutgoingPublishRecords Pointer to memory which will be used to store state of outgoing
