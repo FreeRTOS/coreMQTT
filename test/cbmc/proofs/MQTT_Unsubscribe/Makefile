@@ -44,6 +44,7 @@ REMOVE_FUNCTION_BODY +=
 # information.
 UNWINDSET += __CPROVER_file_local_core_mqtt_c_sendBuffer.0:$(MAX_NETWORK_SEND_TRIES)
 UNWINDSET += allocateMqttSubscriptionList.0:$(SUBSCRIPTION_COUNT_MAX)
+UNWINDSET += __CPROVER_file_local_core_mqtt_c_validateSubscribeUnsubscribeParams.0:$(SUBSCRIPTION_COUNT_MAX)
 UNWINDSET += __CPROVER_file_local_core_mqtt_serializer_c_calculateSubscriptionPacketSize.0:$(SUBSCRIPTION_COUNT_MAX)
 UNWINDSET += MQTT_SerializeUnsubscribe.0:$(SUBSCRIPTION_COUNT_MAX)
 UNWINDSET += __CPROVER_file_local_core_mqtt_c_sendMessageVector.0:${UNSUBSCRIBE_PACKET_VECTORS}
