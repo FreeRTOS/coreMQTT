@@ -50,6 +50,23 @@
     #define REMAINING_LENGTH_MAX    CBMC_MAX_OBJECT_SIZE
 #endif
 
+/**
+ * @brief Determines the maximum number of MQTT PUBLISH messages, pending
+ * acknowledgement at a time, that are supported for incoming and outgoing
+ * direction of messages, separately.
+ *
+ * QoS 1 and 2 MQTT PUBLISHes require acknowledgement from the server before
+ * they can be completed. While they are awaiting the acknowledgement, the
+ * client must maintain information about their state. The value of this
+ * macro sets the limit on how many simultaneous PUBLISH states an MQTT
+ * context maintains, separately, for both incoming and outgoing direction of
+ * PUBLISHes.
+ *
+ * @note This definition must exist in order to compile. 10U is a typical value
+ * used in the MQTT demos.
+ */
+#define MAX_UNACKED_PACKETS    ( 20U )
+
 MQTTPacketInfo_t * allocateMqttPacketInfo( MQTTPacketInfo_t * pPacketInfo )
 {
     if( pPacketInfo == NULL )
@@ -184,6 +201,10 @@ MQTTContext_t * allocateMqttContext( MQTTContext_t * pContext )
     TransportInterface_t * pTransportInterface;
     MQTTFixedBuffer_t * pNetworkBuffer;
     MQTTStatus_t status = MQTTSuccess;
+    MQTTPubAckInfo_t * pOutgoingAckList;
+    MQTTPubAckInfo_t * pIncomingAckList;
+    size_t outgoingAckListSize;
+    size_t incomingAckListSize;
 
     if( pContext == NULL )
     {
@@ -203,6 +224,30 @@ MQTTContext_t * allocateMqttContext( MQTTContext_t * pContext )
     }
 
     pNetworkBuffer = allocateMqttFixedBuffer( NULL );
+
+    __CPROVER_assume( outgoingAckListSize <= MAX_UNACKED_PACKETS );
+    __CPROVER_assume( outgoingAckListSize > 0U );
+
+    /* Here, malloc can fail. If it does, then it is proper to update the number of entries
+     * in the array. */
+    pOutgoingAckList = malloc( outgoingAckListSize * sizeof( MQTTPubAckInfo_t ) );
+
+    if( pOutgoingAckList == NULL )
+    {
+        outgoingAckListSize = 0U;
+    }
+
+    __CPROVER_assume( incomingAckListSize <= MAX_UNACKED_PACKETS );
+    __CPROVER_assume( incomingAckListSize > 0U );
+
+    /* Here, malloc can fail. If it does, then it is proper to update the number of entries
+     * in the array. */
+    pIncomingAckList = malloc( incomingAckListSize * sizeof( MQTTPubAckInfo_t ) );
+
+    if( pIncomingAckList == NULL )
+    {
+        incomingAckListSize = 0U;
+    }
 
     /* It is part of the API contract to call MQTT_Init() with the MQTTContext_t
      * before any other function in core_mqtt.h. */
