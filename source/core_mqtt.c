@@ -2506,7 +2506,7 @@ MQTTStatus_t MQTT_InitStatefulQoS( MQTTContext_t * pContext,
     }
     else if( pContext->appCallback == NULL )
     {
-        LogError( ( "MQTT_InitStatefulQoS must be called only after MQTT_InIt has"
+        LogError( ( "MQTT_InitStatefulQoS must be called only after MQTT_Init has"
                     " been called succesfully.\n" ) );
         status = MQTTBadParameter;
     }
