@@ -2537,7 +2537,7 @@ MQTTStatus_t MQTT_CancelCallback( MQTTContext_t * pContext,
     else
     {
         MQTT_PRE_STATE_UPDATE_HOOK( pContext );
-        
+
         status = MQTT_RemoveStateRecord( pContext,
                                          packetId );
 
