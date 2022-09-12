@@ -73,6 +73,7 @@ enums
 eventcallback
 expectprocessloopcalls
 filterindex
+findinrecord
 fixedbuffer
 fn
 gcc
@@ -105,6 +106,7 @@ img
 inc
 incomingpacket
 incomingpublish
+incomingpublishcount
 incomingpublishrecords
 ingroup
 init
@@ -133,6 +135,7 @@ mainpage
 malloc
 managekeepalive
 matchtopic
+maxrecordcount
 md
 mdash
 memcpy
@@ -212,6 +215,8 @@ numcodes
 optype
 org
 os
+outgoingpublishes
+outgoingpublishcount
 outgoingpublishrecords
 packetid
 packetidentifier
@@ -238,6 +243,7 @@ pfilterindex
 pfixedbuffer
 pheadersize
 pincomingpacket
+pincomingpublishrecords
 pindex
 pingreq
 pingreqs
@@ -258,6 +264,7 @@ pnetworkinterface
 pnewstate
 png
 posix
+poutgoingpublishrecords
 ppacketid
 ppacketidentifier
 ppacketinfo
@@ -404,6 +411,7 @@ tx
 typename
 uint
 un
+unacked
 unsuback
 unsubscribelist
 updatedlength

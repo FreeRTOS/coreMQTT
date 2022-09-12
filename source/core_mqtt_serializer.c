@@ -28,6 +28,10 @@
 #include <assert.h>
 
 #include "core_mqtt_serializer.h"
+
+/* Include config defaults header to get default values of configs. */
+#include "core_mqtt_config_defaults.h"
+
 #include "core_mqtt_default_logging.h"
 
 /**
