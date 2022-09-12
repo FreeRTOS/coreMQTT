@@ -106,7 +106,9 @@ typedef enum MQTTStatus
     MQTTIllegalState,     /**< An illegal state in the state record. */
     MQTTStateCollision,   /**< A collision with an existing state record entry. */
     MQTTKeepAliveTimeout, /**< Timeout while waiting for PINGRESP. */
-    MQTTNeedMoreBytes     /**<  Error to show that the MQTT_ProcessLoop has received incomplete data. */
+    MQTTNeedMoreBytes     /**< MQTT_ProcessLoop/MQTT_ReceiveLoop has received
+                          incomplete data; it should be called again (probably after
+                          a delay). */
 } MQTTStatus_t;
 
 /**
