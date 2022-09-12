@@ -70,6 +70,9 @@ struct MQTTDeserializedInfo;
  * @brief Application provided function to query the time elapsed since a given
  * epoch in milliseconds.
  *
+ * @note The timer should be a monotonic timer. It just needs to provide an
+ * incrementing count of milliseconds elapsed since a given epoch.
+ *
  * @return The time elapsed in milliseconds.
  */
 typedef uint32_t (* MQTTGetCurrentTimeFunc_t )( void );
