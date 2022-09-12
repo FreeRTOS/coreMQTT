@@ -2202,7 +2202,7 @@ static void verifySerializedConnectPacket( const MQTTConnectInfo_t * const pConn
 
     pIndex = pBuffer->pBuffer;
     /* The first byte in the CONNECT packet is the control packet type. */
-    TEST_ASSERT_EQUAL( MQTT_PACKET_TYPE_CONNECT, *pIndex );
+    TEST_ASSERT_EQUAL_MESSAGE( MQTT_PACKET_TYPE_CONNECT, *pIndex, "MQTT_PACKET_TYPE_CONNECT is not equal to *pIndex" );
     pIndex++;
 
     /* The remaining length of the CONNECT packet is encoded starting from the
@@ -2361,7 +2361,8 @@ void test_MQTT_SerializeConnect_Invalid_Params()
 void test_MQTT_SerializeConnect_Happy_Paths()
 {
     MQTTStatus_t mqttStatus = MQTTSuccess;
-    size_t remainingLength = 0, packetSize = 0;
+    size_t remainingLength = 0;
+    size_t packetSize = 0;
     MQTTFixedBuffer_t networkBuffer;
     MQTTConnectInfo_t connectInfo;
     MQTTPublishInfo_t willInfo;
@@ -2386,7 +2387,6 @@ void test_MQTT_SerializeConnect_Happy_Paths()
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
     verifySerializedConnectPacket( &connectInfo, &willInfo,
                                    remainingLength, &networkBuffer );
-
 
     /* Repeat with MQTTQoS1. */
     willInfo.qos = MQTTQoS1;

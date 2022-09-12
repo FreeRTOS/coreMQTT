@@ -178,14 +178,14 @@ static TransportOutVector_t * addEncodedStringToVector( uint8_t serailizedLength
  * @note All the arrays must stay in scope until the message contained in the vector has
  * been sent.
  */
-static void addWillAndConnectInfo( const MQTTConnectInfo_t * pConnectInfo,
-                                   const MQTTPublishInfo_t * pWillInfo,
-                                   size_t * pTotalMessageLength,
-                                   TransportOutVector_t * iterator,
-                                   uint8_t serializedTopicLength[ 2 ],
-                                   uint8_t serializedPayloadLength[ 2 ],
-                                   uint8_t serializedUsernameLength[ 2 ],
-                                   uint8_t serializedPasswordLength[ 2 ] );
+static TransportOutVector_t * addWillAndConnectInfo( const MQTTConnectInfo_t * pConnectInfo,
+                                                     const MQTTPublishInfo_t * pWillInfo,
+                                                     size_t * pTotalMessageLength,
+                                                     TransportOutVector_t * iterator,
+                                                     uint8_t serializedTopicLength[ 2 ],
+                                                     uint8_t serializedPayloadLength[ 2 ],
+                                                     uint8_t serializedUsernameLength[ 2 ],
+                                                     uint8_t serializedPasswordLength[ 2 ] );
 
 /**
  * @brief Send MQTT SUBSCRIBE message without copying the user data into a buffer and
@@ -1334,7 +1334,8 @@ static MQTTStatus_t sendPublishAcks( MQTTContext_t * pContext,
 static MQTTStatus_t handleKeepAlive( MQTTContext_t * pContext )
 {
     MQTTStatus_t status = MQTTSuccess;
-    uint32_t now = 0U, packetTxTimeoutMs = 0U;
+    uint32_t now = 0U;
+    uint32_t packetTxTimeoutMs = 0U;
 
     assert( pContext != NULL );
     assert( pContext->getTime != NULL );
@@ -1908,7 +1909,9 @@ static MQTTStatus_t sendSubscribeWithoutCopy( MQTTContext_t * pContext,
             subscriptionsSent++;
         }
 
-        if( sendMessageVector( pContext, pIoVector, ioVectorLength ) != ( int32_t ) totalPacketLength )
+        if( sendMessageVector( pContext,
+                               pIoVector,
+                               ioVectorLength ) != ( int32_t ) totalPacketLength )
         {
             status = MQTTSendFailed;
         }
@@ -2060,14 +2063,14 @@ static MQTTStatus_t sendPublishWithoutCopy( MQTTContext_t * pContext,
 
 /*-----------------------------------------------------------*/
 
-static void addWillAndConnectInfo( const MQTTConnectInfo_t * pConnectInfo,
-                                   const MQTTPublishInfo_t * pWillInfo,
-                                   size_t * pTotalMessageLength,
-                                   TransportOutVector_t * iterator,
-                                   uint8_t serializedTopicLength[ 2 ],
-                                   uint8_t serializedPayloadLength[ 2 ],
-                                   uint8_t serializedUsernameLength[ 2 ],
-                                   uint8_t serializedPasswordLength[ 2 ] )
+static TransportOutVector_t * addWillAndConnectInfo( const MQTTConnectInfo_t * pConnectInfo,
+                                                     const MQTTPublishInfo_t * pWillInfo,
+                                                     size_t * pTotalMessageLength,
+                                                     TransportOutVector_t * iterator,
+                                                     uint8_t serializedTopicLength[ 2 ],
+                                                     uint8_t serializedPayloadLength[ 2 ],
+                                                     uint8_t serializedUsernameLength[ 2 ],
+                                                     uint8_t serializedPasswordLength[ 2 ] )
 {
     if( pWillInfo != NULL )
     {
@@ -2107,6 +2110,8 @@ static void addWillAndConnectInfo( const MQTTConnectInfo_t * pConnectInfo,
                                              iterator,
                                              pTotalMessageLength );
     }
+
+    return iterator;
 }
 
 /*-----------------------------------------------------------*/
@@ -2168,14 +2173,14 @@ static MQTTStatus_t sendConnectWithoutCopy( MQTTContext_t * pContext,
                                              iterator,
                                              &totalMessageLength );
 
-        addWillAndConnectInfo( pConnectInfo,
-                               pWillInfo,
-                               &totalMessageLength,
-                               iterator,
-                               serializedTopicLength,
-                               serializedPayloadLength,
-                               serializedUsernameLength,
-                               serializedPasswordLength );
+        iterator = addWillAndConnectInfo( pConnectInfo,
+                                          pWillInfo,
+                                          &totalMessageLength,
+                                          iterator,
+                                          serializedTopicLength,
+                                          serializedPayloadLength,
+                                          serializedUsernameLength,
+                                          serializedPasswordLength );
 
         ioVectorLength = ( size_t ) ( iterator - pIoVector );
 
@@ -2679,7 +2684,9 @@ MQTTStatus_t MQTT_Publish( MQTTContext_t * pContext,
                            const MQTTPublishInfo_t * pPublishInfo,
                            uint16_t packetId )
 {
-    size_t headerSize = 0UL, remainingLength = 0UL, packetSize = 0UL;
+    size_t headerSize = 0UL;
+    size_t remainingLength = 0UL;
+    size_t packetSize = 0UL;
     MQTTPublishState_t publishStatus = MQTTStateNull;
     bool stateUpdateHookExecuted = false;
 
