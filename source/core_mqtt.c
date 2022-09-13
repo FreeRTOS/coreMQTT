@@ -3032,6 +3032,7 @@ uint16_t MQTT_GetPacketId( MQTTContext_t * pContext )
 
     if( pContext != NULL )
     {
+        MQTT_PRE_STATE_UPDATE_HOOK( pContext );
         packetId = pContext->nextPacketId;
 
         /* A packet ID of zero is not a valid packet ID. When the max ID
@@ -3044,6 +3045,7 @@ uint16_t MQTT_GetPacketId( MQTTContext_t * pContext )
         {
             pContext->nextPacketId++;
         }
+        MQTT_POST_STATE_UPDATE_HOOK( pContext );
     }
 
     return packetId;
