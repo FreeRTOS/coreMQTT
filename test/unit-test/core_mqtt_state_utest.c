@@ -51,8 +51,35 @@ int suiteTearDown( int numFailures )
 {
     return numFailures;
 }
-#define  MQTT_STATE_ARRAY_MAX_COUNT    5
+
+#define  MQTT_STATE_ARRAY_MAX_COUNT    10
 /* ========================================================================== */
+
+/**
+ * @brief A mocked timer query function that increments on every call. This
+ * guarantees that only a single iteration runs in the ProcessLoop for ease
+ * of testing.
+ */
+static uint32_t getTime( void )
+{
+    return 0;
+}
+
+/**
+ * @brief Mocked MQTT event callback.
+ *
+ * @param[in] pContext MQTT context pointer.
+ * @param[in] pPacketInfo Packet Info pointer for the incoming packet.
+ * @param[in] pDeserializedInfo Deserialized information from the incoming packet.
+ */
+static void eventCallback( MQTTContext_t * pContext,
+                           MQTTPacketInfo_t * pPacketInfo,
+                           MQTTDeserializedInfo_t * pDeserializedInfo )
+{
+    ( void ) pContext;
+    ( void ) pPacketInfo;
+    ( void ) pDeserializedInfo;
+}
 
 static void resetPublishRecords( MQTTContext_t * pMqttContext )
 {
@@ -116,6 +143,20 @@ void test_MQTT_ReserveState( void )
     const uint16_t PACKET_ID2 = 2;
     const uint16_t PACKET_ID3 = 3;
     const size_t index = MQTT_STATE_ARRAY_MAX_COUNT / 2;
+    TransportInterface_t transport;
+    MQTTFixedBuffer_t networkBuffer;
+
+    MQTTPubAckInfo_t incomingRecords[ MQTT_STATE_ARRAY_MAX_COUNT ] = { 0 };
+    MQTTPubAckInfo_t outgoingRecords[ MQTT_STATE_ARRAY_MAX_COUNT ] = { 0 };
+
+    status = MQTT_Init( &mqttContext, &transport,
+                        getTime, eventCallback, &networkBuffer );
+    TEST_ASSERT_EQUAL( MQTTSuccess, status );
+
+    status = MQTT_InitStatefulQoS( &mqttContext,
+                                   outgoingRecords, MQTT_STATE_ARRAY_MAX_COUNT,
+                                   incomingRecords, MQTT_STATE_ARRAY_MAX_COUNT );
+    TEST_ASSERT_EQUAL( MQTTSuccess, status );
 
     /* QoS 0 returns success. */
     TEST_ASSERT_EQUAL( MQTTSuccess, MQTT_ReserveState( NULL, MQTT_PACKET_ID_INVALID, MQTTQoS0 ) );
@@ -127,12 +168,13 @@ void test_MQTT_ReserveState( void )
     TEST_ASSERT_EQUAL( MQTTBadParameter, status );
 
     /* Test for collisions. */
-    mqttContext.outgoingPublishRecords[ 1 ].packetId = PACKET_ID;
-    mqttContext.outgoingPublishRecords[ 1 ].qos = MQTTQoS1;
-    mqttContext.outgoingPublishRecords[ 1 ].publishState = MQTTPublishSend;
+    mqttContext.outgoingPublishRecords[ 0 ].packetId = PACKET_ID;
+    mqttContext.outgoingPublishRecords[ 0 ].qos = MQTTQoS1;
+    mqttContext.outgoingPublishRecords[ 0 ].publishState = MQTTPublishSend;
 
     status = MQTT_ReserveState( &mqttContext, PACKET_ID, MQTTQoS1 );
     TEST_ASSERT_EQUAL( MQTTStateCollision, status );
+
 
     /* Test for no memory. */
     fillRecord( mqttContext.outgoingPublishRecords, 2, MQTTQoS1, MQTTPublishSend );
@@ -169,18 +211,45 @@ void test_MQTT_ReserveState_compactRecords( void )
     const uint16_t PACKET_ID = 1;
     const uint16_t PACKET_ID2 = 2;
 
+    TransportInterface_t transport;
+    MQTTFixedBuffer_t networkBuffer;
+
+    MQTTPubAckInfo_t incomingRecords[ MQTT_STATE_ARRAY_MAX_COUNT ] = { 0 };
+    MQTTPubAckInfo_t outgoingRecords[ MQTT_STATE_ARRAY_MAX_COUNT ] = { 0 };
+
+    status = MQTT_Init( &mqttContext, &transport,
+                        getTime, eventCallback, &networkBuffer );
+    TEST_ASSERT_EQUAL( MQTTSuccess, status );
+
+    status = MQTT_InitStatefulQoS( &mqttContext,
+                                   outgoingRecords, MQTT_STATE_ARRAY_MAX_COUNT,
+                                   incomingRecords, MQTT_STATE_ARRAY_MAX_COUNT );
+    TEST_ASSERT_EQUAL( MQTTSuccess, status );
+
     /* Consider the state of the array with 2 states. 1 indicates a non empty
      * spot and 0 an empty spot. Size of the array is 10.
      * Pre condition - 0 0 0 0 0 0 0 0 0 1.
      * Add an element will try to compact the array and the resulting state
      * should be - 1 1 0 0 0 0 0 0 0 0. */
-    addToRecord( mqttContext.outgoingPublishRecords, MQTT_STATE_ARRAY_MAX_COUNT - 1, PACKET_ID, MQTTQoS1, MQTTPubRelSend );
+    addToRecord( mqttContext.outgoingPublishRecords,
+                 MQTT_STATE_ARRAY_MAX_COUNT - 1,
+                 PACKET_ID,
+                 MQTTQoS1,
+                 MQTTPubRelSend );
     status = MQTT_ReserveState( &mqttContext, PACKET_ID2, MQTTQoS1 );
     TEST_ASSERT_EQUAL( MQTTSuccess, status );
     /* The existing record should be at index 0. */
-    validateRecordAt( mqttContext.outgoingPublishRecords, 0, PACKET_ID, MQTTQoS1, MQTTPubRelSend );
+    validateRecordAt( mqttContext.outgoingPublishRecords,
+                      0,
+                      PACKET_ID,
+                      MQTTQoS1,
+                      MQTTPubRelSend );
     /* New record should be added to index 1. */
-    validateRecordAt( mqttContext.outgoingPublishRecords, 1, PACKET_ID2, MQTTQoS1, MQTTPublishSend );
+    validateRecordAt( mqttContext.outgoingPublishRecords,
+                      1,
+                      PACKET_ID2,
+                      MQTTQoS1,
+                      MQTTPublishSend );
 
     /* One free spot.
      * Pre condition - 1 1 1 0 1 1 1 1 1 1.
@@ -314,6 +383,21 @@ void test_MQTT_UpdateStatePublish( void )
     MQTTQoS_t qos = MQTTQoS0;
     MQTTPublishState_t state;
     MQTTStatus_t status;
+
+    TransportInterface_t transport;
+    MQTTFixedBuffer_t networkBuffer;
+
+    MQTTPubAckInfo_t incomingRecords[ MQTT_STATE_ARRAY_MAX_COUNT ] = { 0 };
+    MQTTPubAckInfo_t outgoingRecords[ MQTT_STATE_ARRAY_MAX_COUNT ] = { 0 };
+
+    status = MQTT_Init( &mqttContext, &transport,
+                        getTime, eventCallback, &networkBuffer );
+    TEST_ASSERT_EQUAL( MQTTSuccess, status );
+
+    status = MQTT_InitStatefulQoS( &mqttContext,
+                                   outgoingRecords, MQTT_STATE_ARRAY_MAX_COUNT,
+                                   incomingRecords, MQTT_STATE_ARRAY_MAX_COUNT );
+    TEST_ASSERT_EQUAL( MQTTSuccess, status );
 
     /* QoS 0. */
     status = MQTT_UpdateStatePublish( &mqttContext, 0, operation, qos, &state );
@@ -507,6 +591,20 @@ void test_MQTT_UpdateStateAck( void )
     MQTTStatus_t status;
 
     const uint16_t PACKET_ID = 1;
+    TransportInterface_t transport;
+    MQTTFixedBuffer_t networkBuffer;
+
+    MQTTPubAckInfo_t incomingRecords[ MQTT_STATE_ARRAY_MAX_COUNT ] = { 0 };
+    MQTTPubAckInfo_t outgoingRecords[ MQTT_STATE_ARRAY_MAX_COUNT ] = { 0 };
+
+    status = MQTT_Init( &mqttContext, &transport,
+                        getTime, eventCallback, &networkBuffer );
+    TEST_ASSERT_EQUAL( MQTTSuccess, status );
+
+    status = MQTT_InitStatefulQoS( &mqttContext,
+                                   outgoingRecords, MQTT_STATE_ARRAY_MAX_COUNT,
+                                   incomingRecords, MQTT_STATE_ARRAY_MAX_COUNT );
+    TEST_ASSERT_EQUAL( MQTTSuccess, status );
 
     /* NULL parameters. */
     status = MQTT_UpdateStateAck( NULL, PACKET_ID, ack, operation, &state );
@@ -684,6 +782,21 @@ void test_MQTT_AckToResend( void )
     const size_t index3 = MQTT_STATE_ARRAY_MAX_COUNT / 2;
     const size_t index4 = index3 + 2;
 
+    MQTTPubAckInfo_t incomingRecords[ MQTT_STATE_ARRAY_MAX_COUNT ] = { 0 };
+    MQTTPubAckInfo_t outgoingRecords[ MQTT_STATE_ARRAY_MAX_COUNT ] = { 0 };
+    MQTTStatus_t status;
+    TransportInterface_t transport;
+    MQTTFixedBuffer_t networkBuffer;
+
+    status = MQTT_Init( &mqttContext, &transport,
+                        getTime, eventCallback, &networkBuffer );
+    TEST_ASSERT_EQUAL( MQTTSuccess, status );
+
+    status = MQTT_InitStatefulQoS( &mqttContext,
+                                   outgoingRecords, MQTT_STATE_ARRAY_MAX_COUNT,
+                                   incomingRecords, MQTT_STATE_ARRAY_MAX_COUNT );
+    TEST_ASSERT_EQUAL( MQTTSuccess, status );
+
     /* Invalid parameters. */
     packetId = MQTT_PubrelToResend( NULL, &cursor, &state );
     TEST_ASSERT_EQUAL( MQTT_PACKET_ID_INVALID, packetId );
@@ -747,6 +860,22 @@ void test_MQTT_AckToResend( void )
     TEST_ASSERT_EQUAL( MQTT_STATE_ARRAY_MAX_COUNT, cursor );
 }
 
+static int32_t transportRecvSuccess( NetworkContext_t * pNetworkContext,
+                                     void * pBuffer,
+                                     size_t bytesToRead )
+{
+    ( void ) pBuffer;
+    return bytesToRead;
+}
+
+static int32_t transportSendSuccess( NetworkContext_t * pNetworkContext,
+                                     const void * pBuffer,
+                                     size_t bytesToWrite )
+{
+    ( void ) pBuffer;
+    return bytesToWrite;
+}
+
 void test_MQTT_PublishToResend( void )
 {
     MQTTContext_t mqttContext = { 0 };
@@ -760,6 +889,25 @@ void test_MQTT_PublishToResend( void )
     const size_t index2 = 1;
     const size_t index3 = MQTT_STATE_ARRAY_MAX_COUNT / 2;
     const size_t index4 = index3 + 2;
+
+    MQTTPubAckInfo_t incomingRecords[ MQTT_STATE_ARRAY_MAX_COUNT ] = { 0 };
+    MQTTPubAckInfo_t outgoingRecords[ MQTT_STATE_ARRAY_MAX_COUNT ] = { 0 };
+    MQTTStatus_t status;
+    TransportInterface_t transport = { 0 };
+
+    transport.recv = transportRecvSuccess;
+    transport.send = transportSendSuccess;
+
+    MQTTFixedBuffer_t networkBuffer = { 0 };
+
+    status = MQTT_Init( &mqttContext, &transport,
+                        getTime, eventCallback, &networkBuffer );
+    TEST_ASSERT_EQUAL( MQTTSuccess, status );
+
+    status = MQTT_InitStatefulQoS( &mqttContext,
+                                   outgoingRecords, MQTT_STATE_ARRAY_MAX_COUNT,
+                                   incomingRecords, MQTT_STATE_ARRAY_MAX_COUNT );
+    TEST_ASSERT_EQUAL( MQTTSuccess, status );
 
 
     /* Invalid parameters. */
