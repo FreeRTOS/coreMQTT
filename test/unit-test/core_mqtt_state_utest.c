@@ -55,6 +55,22 @@ int suiteTearDown( int numFailures )
 #define  MQTT_STATE_ARRAY_MAX_COUNT    10
 /* ========================================================================== */
 
+static int32_t transportRecvSuccess( NetworkContext_t * pNetworkContext,
+                                     void * pBuffer,
+                                     size_t bytesToRead )
+{
+    ( void ) pBuffer;
+    return bytesToRead;
+}
+
+static int32_t transportSendSuccess( NetworkContext_t * pNetworkContext,
+                                     const void * pBuffer,
+                                     size_t bytesToWrite )
+{
+    ( void ) pBuffer;
+    return bytesToWrite;
+}
+
 /**
  * @brief A mocked timer query function that increments on every call. This
  * guarantees that only a single iteration runs in the ProcessLoop for ease
@@ -146,6 +162,9 @@ void test_MQTT_ReserveState( void )
     TransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
 
+    transport.recv = transportRecvSuccess;
+    transport.send = transportSendSuccess;
+
     MQTTPubAckInfo_t incomingRecords[ MQTT_STATE_ARRAY_MAX_COUNT ] = { 0 };
     MQTTPubAckInfo_t outgoingRecords[ MQTT_STATE_ARRAY_MAX_COUNT ] = { 0 };
 
@@ -213,6 +232,9 @@ void test_MQTT_ReserveState_compactRecords( void )
 
     TransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
+
+    transport.recv = transportRecvSuccess;
+    transport.send = transportSendSuccess;
 
     MQTTPubAckInfo_t incomingRecords[ MQTT_STATE_ARRAY_MAX_COUNT ] = { 0 };
     MQTTPubAckInfo_t outgoingRecords[ MQTT_STATE_ARRAY_MAX_COUNT ] = { 0 };
@@ -386,6 +408,9 @@ void test_MQTT_UpdateStatePublish( void )
 
     TransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
+
+    transport.recv = transportRecvSuccess;
+    transport.send = transportSendSuccess;
 
     MQTTPubAckInfo_t incomingRecords[ MQTT_STATE_ARRAY_MAX_COUNT ] = { 0 };
     MQTTPubAckInfo_t outgoingRecords[ MQTT_STATE_ARRAY_MAX_COUNT ] = { 0 };
@@ -594,6 +619,9 @@ void test_MQTT_UpdateStateAck( void )
     TransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
 
+    transport.recv = transportRecvSuccess;
+    transport.send = transportSendSuccess;
+
     MQTTPubAckInfo_t incomingRecords[ MQTT_STATE_ARRAY_MAX_COUNT ] = { 0 };
     MQTTPubAckInfo_t outgoingRecords[ MQTT_STATE_ARRAY_MAX_COUNT ] = { 0 };
 
@@ -788,6 +816,9 @@ void test_MQTT_AckToResend( void )
     TransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
 
+    transport.recv = transportRecvSuccess;
+    transport.send = transportSendSuccess;
+
     status = MQTT_Init( &mqttContext, &transport,
                         getTime, eventCallback, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTSuccess, status );
@@ -858,22 +889,6 @@ void test_MQTT_AckToResend( void )
     TEST_ASSERT_EQUAL( MQTT_PACKET_ID_INVALID, packetId );
     TEST_ASSERT_EQUAL( MQTTStateNull, state );
     TEST_ASSERT_EQUAL( MQTT_STATE_ARRAY_MAX_COUNT, cursor );
-}
-
-static int32_t transportRecvSuccess( NetworkContext_t * pNetworkContext,
-                                     void * pBuffer,
-                                     size_t bytesToRead )
-{
-    ( void ) pBuffer;
-    return bytesToRead;
-}
-
-static int32_t transportSendSuccess( NetworkContext_t * pNetworkContext,
-                                     const void * pBuffer,
-                                     size_t bytesToWrite )
-{
-    ( void ) pBuffer;
-    return bytesToWrite;
 }
 
 void test_MQTT_PublishToResend( void )
