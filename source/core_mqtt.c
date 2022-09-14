@@ -29,7 +29,44 @@
 
 #include "core_mqtt.h"
 #include "core_mqtt_state.h"
+
+/* Include config defaults header to get default values of configs. */
+#include "core_mqtt_config_defaults.h"
+
 #include "core_mqtt_default_logging.h"
+
+#ifndef MQTT_PRE_SEND_HOOK
+
+/**
+ * @brief Hook called before a 'send' operation is executed.
+ */
+    #define MQTT_PRE_SEND_HOOK( pContext )
+#endif /* !MQTT_PRE_SEND_HOOK */
+
+#ifndef MQTT_POST_SEND_HOOK
+
+/**
+ * @brief Hook called after the 'send' operation is complete.
+ */
+    #define MQTT_POST_SEND_HOOK( pContext )
+#endif /* !MQTT_POST_SEND_HOOK */
+
+#ifndef MQTT_PRE_STATE_UPDATE_HOOK
+
+/**
+ * @brief Hook called just before an update to the MQTT state is made.
+ */
+    #define MQTT_PRE_STATE_UPDATE_HOOK( pContext )
+#endif /* !MQTT_PRE_STATE_UPDATE_HOOK */
+
+#ifndef MQTT_POST_STATE_UPDATE_HOOK
+
+/**
+ * @brief Hook called just after an update to the MQTT state has
+ * been made.
+ */
+    #define MQTT_POST_STATE_UPDATE_HOOK( pContext )
+#endif /* !MQTT_POST_STATE_UPDATE_HOOK */
 
 /*-----------------------------------------------------------*/
 
@@ -53,8 +90,7 @@
  */
 static int32_t sendBuffer( MQTTContext_t * pContext,
                            const uint8_t * pBufferToSend,
-                           size_t bytesToSend,
-                           uint32_t timeout );
+                           size_t bytesToSend );
 
 /**
  * @brief Sends MQTT connect without copying the users data into any buffer.
@@ -429,23 +465,6 @@ static MQTTStatus_t sendPublishWithoutCopy( MQTTContext_t * pContext,
                                             uint16_t packetId );
 
 /**
- * @brief Serializes a PUBLISH message.
- *
- * @brief param[in] pContext Initialized MQTT context.
- * @brief param[in] pPublishInfo MQTT PUBLISH packet parameters.
- * @brief param[in] packetId Packet Id of the publish packet.
- * @brief param[out] pHeaderSize Size of the serialized PUBLISH header.
- *
- * @return #MQTTNoMemory if pBuffer is too small to hold the MQTT packet;
- * #MQTTBadParameter if invalid parameters are passed;
- * #MQTTSuccess otherwise.
- */
-static MQTTStatus_t serializePublish( const MQTTContext_t * pContext,
-                                      const MQTTPublishInfo_t * pPublishInfo,
-                                      uint16_t packetId,
-                                      size_t * const pHeaderSize );
-
-/**
  * @brief Function to validate #MQTT_Publish parameters.
  *
  * @brief param[in] pContext Initialized MQTT context.
@@ -787,8 +806,7 @@ static int32_t sendMessageVector( MQTTContext_t * pContext,
         {
             sendResult = sendBuffer( pContext,
                                      pIoVectIterator->iov_base,
-                                     pIoVectIterator->iov_len,
-                                     ( timeoutTime - pContext->getTime() ) );
+                                     pIoVectIterator->iov_len );
         }
 
         if( sendResult >= 0 )
@@ -827,14 +845,12 @@ static int32_t sendMessageVector( MQTTContext_t * pContext,
 
 static int32_t sendBuffer( MQTTContext_t * pContext,
                            const uint8_t * pBufferToSend,
-                           size_t bytesToSend,
-                           uint32_t timeout )
+                           size_t bytesToSend )
 {
     const uint8_t * pIndex = pBufferToSend;
     size_t bytesRemaining = bytesToSend;
     int32_t totalBytesSent = 0, bytesSent;
     uint32_t lastSendTimeMs = 0U, timeSinceLastSendMs = 0U;
-    uint32_t timeoutTime;
     bool sendError = false;
 
     assert( pContext != NULL );
@@ -843,7 +859,6 @@ static int32_t sendBuffer( MQTTContext_t * pContext,
     assert( pIndex != NULL );
 
     bytesRemaining = bytesToSend;
-    timeoutTime = pContext->getTime() + timeout;
 
     /* Loop until the entire packet is sent. */
     while( ( bytesRemaining > 0UL ) && ( sendError == false ) )
@@ -1270,22 +1285,30 @@ static MQTTStatus_t sendPublishAcks( MQTTContext_t * pContext,
 
         if( status == MQTTSuccess )
         {
+            MQTT_PRE_SEND_HOOK( pContext );
+
             /* Here, we are not using the vector approach for efficiency. There is just one buffer
              * to be sent which can be achieved with a normal send call. */
             bytesSent = sendBuffer( pContext,
                                     localBuffer.pBuffer,
-                                    MQTT_PUBLISH_ACK_PACKET_SIZE,
-                                    MQTT_SEND_RETRY_TIMEOUT_MS );
+                                    MQTT_PUBLISH_ACK_PACKET_SIZE );
+
+            MQTT_POST_SEND_HOOK( pContext );
         }
 
         if( bytesSent == ( int32_t ) MQTT_PUBLISH_ACK_PACKET_SIZE )
         {
             pContext->controlPacketSent = true;
+
+            MQTT_PRE_STATE_UPDATE_HOOK( pContext );
+
             status = MQTT_UpdateStateAck( pContext,
                                           packetId,
                                           packetType,
                                           MQTT_SEND,
                                           &newState );
+
+            MQTT_POST_STATE_UPDATE_HOOK( pContext );
 
             if( status != MQTTSuccess )
             {
@@ -1373,13 +1396,27 @@ static MQTTStatus_t handleIncomingPublish( MQTTContext_t * pContext,
     LogInfo( ( "De-serialized incoming PUBLISH packet: DeserializerResult=%s.",
                MQTT_Status_strerror( status ) ) );
 
+    if( ( pContext->incomingPublishRecords == NULL ) &&
+        ( publishInfo.qos > MQTTQoS0 ) )
+    {
+        LogError( ( "Incoming publish has QoS > MQTTQoS0 but incoming "
+                    "publish records have not been initialized. Dropping the "
+                    "incoming publish. Please call MQTT_InitStatefulQoS to enable "
+                    "use of QoS1 and QoS2 publishes." ) );
+        status = MQTTRecvFailed;
+    }
+
     if( status == MQTTSuccess )
     {
+        MQTT_PRE_STATE_UPDATE_HOOK( pContext );
+
         status = MQTT_UpdateStatePublish( pContext,
                                           packetIdentifier,
                                           MQTT_RECEIVE,
                                           publishInfo.qos,
                                           &publishRecordState );
+
+        MQTT_POST_STATE_UPDATE_HOOK( pContext );
 
         if( status == MQTTSuccess )
         {
@@ -1492,11 +1529,15 @@ static MQTTStatus_t handlePublishAcks( MQTTContext_t * pContext,
 
     if( status == MQTTSuccess )
     {
+        MQTT_PRE_STATE_UPDATE_HOOK( pContext );
+
         status = MQTT_UpdateStateAck( pContext,
                                       packetIdentifier,
                                       ackType,
                                       MQTT_RECEIVE,
                                       &publishRecordState );
+
+        MQTT_POST_STATE_UPDATE_HOOK( pContext );
 
         if( status == MQTTSuccess )
         {
@@ -1732,6 +1773,7 @@ static MQTTStatus_t validateSubscribeUnsubscribeParams( const MQTTContext_t * pC
                                                         uint16_t packetId )
 {
     MQTTStatus_t status = MQTTSuccess;
+    size_t iterator;
 
     /* Validate all the parameters. */
     if( ( pContext == NULL ) || ( pSubscriptionList == NULL ) )
@@ -1754,7 +1796,21 @@ static MQTTStatus_t validateSubscribeUnsubscribeParams( const MQTTContext_t * pC
     }
     else
     {
-        /* Empty else MISRA 15.7 */
+        if( pContext->incomingPublishRecords == NULL )
+        {
+            for( iterator = 0; iterator < subscriptionCount; iterator++ )
+            {
+                if( pSubscriptionList->qos > MQTTQoS0 )
+                {
+                    LogError( ( "The incoming publish record list is not "
+                                "initialised for QoS1/QoS2 records. Please call "
+                                " MQTT_InitStatefulQoS to enable use of QoS1 and "
+                                " QoS2 packets." ) );
+                    status = MQTTBadParameter;
+                    break;
+                }
+            }
+        }
     }
 
     return status;
@@ -2081,8 +2137,7 @@ static MQTTStatus_t sendConnectWithoutCopy( MQTTContext_t * pContext,
     /* Validate arguments. */
     if( pConnectInfo == NULL )
     {
-        LogError( ( "Argument cannot be NULL: pConnectInfo=%p, "
-                    "pFixedBuffer=%p.",
+        LogError( ( "Argument cannot be NULL: pConnectInfo=%p.",
                     ( void * ) pConnectInfo ) );
         status = MQTTBadParameter;
     }
@@ -2288,54 +2343,23 @@ static MQTTStatus_t handleSessionResumption( MQTTContext_t * pContext,
     else
     {
         /* Clear any existing records if a new session is established. */
-        ( void ) memset( pContext->outgoingPublishRecords,
-                         0x00,
-                         sizeof( pContext->outgoingPublishRecords ) );
-        ( void ) memset( pContext->incomingPublishRecords,
-                         0x00,
-                         sizeof( pContext->incomingPublishRecords ) );
+        if( pContext->outgoingPublishRecordMaxCount > 0 )
+        {
+            ( void ) memset( pContext->outgoingPublishRecords,
+                             0x00,
+                             pContext->outgoingPublishRecordMaxCount * sizeof( *pContext->outgoingPublishRecords ) );
+        }
+
+        if( pContext->incomingPublishRecordMaxCount > 0 )
+        {
+            ( void ) memset( pContext->incomingPublishRecords,
+                             0x00,
+                             pContext->incomingPublishRecordMaxCount * sizeof( *pContext->incomingPublishRecords ) );
+        }
     }
 
     return status;
 }
-
-/*-----------------------------------------------------------*/
-
-static MQTTStatus_t serializePublish( const MQTTContext_t * pContext,
-                                      const MQTTPublishInfo_t * pPublishInfo,
-                                      uint16_t packetId,
-                                      size_t * const pHeaderSize )
-{
-    MQTTStatus_t status = MQTTSuccess;
-    size_t remainingLength = 0UL, packetSize = 0UL;
-
-    assert( pContext != NULL );
-    assert( pPublishInfo != NULL );
-    assert( pHeaderSize != NULL );
-
-    /* Get the remaining length and packet size.*/
-    status = MQTT_GetPublishPacketSize( pPublishInfo,
-                                        &remainingLength,
-                                        &packetSize );
-    LogDebug( ( "PUBLISH packet size is %lu and remaining length is %lu.",
-                ( unsigned long ) packetSize,
-                ( unsigned long ) remainingLength ) );
-
-    if( status == MQTTSuccess )
-    {
-        status = MQTT_SerializePublishHeader( pPublishInfo,
-                                              packetId,
-                                              remainingLength,
-                                              &( pContext->networkBuffer ),
-                                              pHeaderSize );
-        LogDebug( ( "Serialized PUBLISH header size is %lu.",
-                    ( unsigned long ) *pHeaderSize ) );
-    }
-
-    return status;
-}
-
-/*-----------------------------------------------------------*/
 
 static MQTTStatus_t validatePublishParams( const MQTTContext_t * pContext,
                                            const MQTTPublishInfo_t * pPublishInfo,
@@ -2366,9 +2390,16 @@ static MQTTStatus_t validatePublishParams( const MQTTContext_t * pContext,
                     pPublishInfo->pPayload ) );
         status = MQTTBadParameter;
     }
+    else if( ( pContext->outgoingPublishRecords == NULL ) && ( pPublishInfo->qos > MQTTQoS0 ) )
+    {
+        LogError( ( "Trying to publish a QoS > MQTTQoS0 packet when outgoing publishes "
+                    "for QoS1/QoS2 have not been enabled. Please, call MQTT_InitStatefulQoS "
+                    "to initialize and enable the use of QoS1/QoS2 publishes." ) );
+        status = MQTTBadParameter;
+    }
     else
     {
-        /* Empty else MISRA 15.7 */
+        /* MISRA else */
     }
 
     return status;
@@ -2435,13 +2466,83 @@ MQTTStatus_t MQTT_Init( MQTTContext_t * pContext,
 
 /*-----------------------------------------------------------*/
 
+MQTTStatus_t MQTT_InitStatefulQoS( MQTTContext_t * pContext,
+                                   MQTTPubAckInfo_t * pOutgoingPublishRecords,
+                                   size_t outgoingPublishCount,
+                                   MQTTPubAckInfo_t * pIncomingPublishRecords,
+                                   size_t incomingPublishCount )
+{
+    MQTTStatus_t status = MQTTSuccess;
+
+    if( pContext == NULL )
+    {
+        LogError( ( "Argument cannot be NULL: pContext=%p\n",
+                    ( void * ) pContext ) );
+        status = MQTTBadParameter;
+    }
+    else if( ( outgoingPublishCount == 0 ) ^
+             ( pOutgoingPublishRecords == NULL ) )
+    {
+        LogError( ( "Arguments do not match: pOutgoingPublishRecords=%p, "
+                    "outgoingPublishCount=%u",
+                    pOutgoingPublishRecords,
+                    outgoingPublishCount ) );
+        status = MQTTBadParameter;
+    }
+    else if( ( incomingPublishCount == 0 ) ^
+             ( pIncomingPublishRecords == NULL ) )
+    {
+        LogError( ( "Arguments do not match: pIncomingPublishRecords=%p, "
+                    "incomingPublishCount=%u",
+                    pIncomingPublishRecords,
+                    incomingPublishCount ) );
+        status = MQTTBadParameter;
+    }
+    else if( pContext->appCallback == NULL )
+    {
+        LogError( ( "MQTT_InitStatefulQoS must be called only after MQTT_Init has"
+                    " been called succesfully.\n" ) );
+        status = MQTTBadParameter;
+    }
+    else
+    {
+        pContext->incomingPublishRecordMaxCount = incomingPublishCount;
+        pContext->incomingPublishRecords = pIncomingPublishRecords;
+        pContext->outgoingPublishRecordMaxCount = outgoingPublishCount;
+        pContext->outgoingPublishRecords = pOutgoingPublishRecords;
+    }
+
+    return status;
+}
+
+/*-----------------------------------------------------------*/
+
 MQTTStatus_t MQTT_CancelCallback( MQTTContext_t * pContext,
                                   uint16_t packetId )
 {
-    MQTTStatus_t status;
+    MQTTStatus_t status = MQTTSuccess;
 
-    status = MQTT_RemoveStateRecord( pContext,
-                                     packetId );
+    if( pContext == NULL )
+    {
+        LogWarn( ( "pContext is NULL\n" ) );
+        status = MQTTBadParameter;
+    }
+    else if( pContext->outgoingPublishRecords == NULL )
+    {
+        LogError( ( "QoS1/QoS2 is not initialized for use. Please, "
+                    "call MQTT_InitStatefulQoS to enable QoS1 and QoS2 "
+                    "publishes.\n" ) );
+        status = MQTTBadParameter;
+    }
+    else
+    {
+        MQTT_PRE_STATE_UPDATE_HOOK( pContext );
+
+        status = MQTT_RemoveStateRecord( pContext,
+                                         packetId );
+
+        MQTT_POST_STATE_UPDATE_HOOK( pContext );
+    }
 
     return status;
 }
@@ -2484,10 +2585,14 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
 
     if( status == MQTTSuccess )
     {
+        MQTT_PRE_SEND_HOOK( pContext );
+
         status = sendConnectWithoutCopy( pContext,
                                          pConnectInfo,
                                          pWillInfo,
                                          remainingLength );
+
+        MQTT_POST_SEND_HOOK( pContext );
     }
 
     /* Read CONNACK from transport layer. */
@@ -2553,12 +2658,16 @@ MQTTStatus_t MQTT_Subscribe( MQTTContext_t * pContext,
 
     if( status == MQTTSuccess )
     {
+        MQTT_PRE_SEND_HOOK( pContext );
+
         /* Send MQTT SUBSCRIBE packet. */
         status = sendSubscribeWithoutCopy( pContext,
                                            pSubscriptionList,
                                            subscriptionCount,
                                            packetId,
                                            remainingLength );
+
+        MQTT_POST_SEND_HOOK( pContext );
     }
 
     return status;
@@ -2572,6 +2681,7 @@ MQTTStatus_t MQTT_Publish( MQTTContext_t * pContext,
 {
     size_t headerSize = 0UL, remainingLength = 0UL, packetSize = 0UL;
     MQTTPublishState_t publishStatus = MQTTStateNull;
+    bool stateUpdateHookExecuted = false;
 
     /* 1 header byte + 4 bytes (maximum) required for encoding the length +
      * 2 bytes for topic string. */
@@ -2598,7 +2708,11 @@ MQTTStatus_t MQTT_Publish( MQTTContext_t * pContext,
 
     if( ( status == MQTTSuccess ) && ( pPublishInfo->qos > MQTTQoS0 ) )
     {
-        /* Reserve state for publish message. Only to be done for QoS1 or QoS2. */
+        MQTT_PRE_STATE_UPDATE_HOOK( pContext );
+
+        /* Set the flag so that the corresponding hook can be called later. */
+        stateUpdateHookExecuted = true;
+
         status = MQTT_ReserveState( pContext,
                                     packetId,
                                     pPublishInfo->qos );
@@ -2614,14 +2728,22 @@ MQTTStatus_t MQTT_Publish( MQTTContext_t * pContext,
 
     if( status == MQTTSuccess )
     {
+        /* Take the mutex as multiple send calls are required for sending this
+         * packet. */
+        MQTT_PRE_SEND_HOOK( pContext );
+
         status = sendPublishWithoutCopy( pContext,
                                          pPublishInfo,
                                          mqttHeader,
                                          headerSize,
                                          packetId );
+
+        /* Give the mutex away for the next taker. */
+        MQTT_POST_SEND_HOOK( pContext );
     }
 
-    if( ( status == MQTTSuccess ) && ( pPublishInfo->qos > MQTTQoS0 ) )
+    if( ( status == MQTTSuccess ) &&
+        ( pPublishInfo->qos > MQTTQoS0 ) )
     {
         /* Update state machine after PUBLISH is sent.
          * Only to be done for QoS1 or QoS2. */
@@ -2639,6 +2761,13 @@ MQTTStatus_t MQTT_Publish( MQTTContext_t * pContext,
                         " will fail.",
                         MQTT_Status_strerror( status ) ) );
         }
+    }
+
+    if( stateUpdateHookExecuted == true )
+    {
+        /* Regardless of the status, if the mutex was taken due to the
+         * packet being of QoS > QoS0, then it should be relinquished. */
+        MQTT_POST_STATE_UPDATE_HOOK( pContext );
     }
 
     if( status != MQTTSuccess )
@@ -2694,14 +2823,20 @@ MQTTStatus_t MQTT_Ping( MQTTContext_t * pContext )
 
     if( status == MQTTSuccess )
     {
+        /* Take the mutex as the send call should not be interrupted in
+         * between. */
+        MQTT_PRE_SEND_HOOK( pContext );
+
         /* Send the serialized PINGREQ packet to transport layer.
          * Here, we do not use the vectored IO approach for efficiency as the
          * Ping packet does not have numerous fields which need to be copied
          * from the user provided buffers. Thus it can be sent directly. */
         bytesSent = sendBuffer( pContext,
                                 localBuffer.pBuffer,
-                                2U,
-                                MQTT_SEND_RETRY_TIMEOUT_MS );
+                                2U );
+
+        /* Give the mutex away. */
+        MQTT_POST_SEND_HOOK( pContext );
 
         /* It is an error to not send the entire PINGREQ packet. */
         if( bytesSent < ( int32_t ) packetSize )
@@ -2750,11 +2885,17 @@ MQTTStatus_t MQTT_Unsubscribe( MQTTContext_t * pContext,
 
     if( status == MQTTSuccess )
     {
+        /* Take the mutex because the below call should not be interrupted. */
+        MQTT_PRE_SEND_HOOK( pContext );
+
         status = sendUnsubscribeWithoutCopy( pContext,
                                              pSubscriptionList,
                                              subscriptionCount,
                                              packetId,
                                              remainingLength );
+
+        /* Give the mutex away. */
+        MQTT_POST_SEND_HOOK( pContext );
     }
 
     return status;
@@ -2796,13 +2937,18 @@ MQTTStatus_t MQTT_Disconnect( MQTTContext_t * pContext )
 
     if( status == MQTTSuccess )
     {
+        /* Take the mutex because the below call should not be interrupted. */
+        MQTT_PRE_SEND_HOOK( pContext );
+
         /* Here we do not use vectors as the disconnect packet has fixed fields
          * which do not reside in user provided buffers. Thus, it can be sent
          * using a simple send call. */
         bytesSent = sendBuffer( pContext,
                                 localBuffer.pBuffer,
-                                packetSize,
-                                MQTT_SEND_RETRY_TIMEOUT_MS );
+                                packetSize );
+
+        /* Give the mutex away. */
+        MQTT_POST_SEND_HOOK( pContext );
 
         if( bytesSent < ( int32_t ) packetSize )
         {
@@ -2886,6 +3032,8 @@ uint16_t MQTT_GetPacketId( MQTTContext_t * pContext )
 
     if( pContext != NULL )
     {
+        MQTT_PRE_STATE_UPDATE_HOOK( pContext );
+
         packetId = pContext->nextPacketId;
 
         /* A packet ID of zero is not a valid packet ID. When the max ID
@@ -2898,6 +3046,8 @@ uint16_t MQTT_GetPacketId( MQTTContext_t * pContext )
         {
             pContext->nextPacketId++;
         }
+
+        MQTT_POST_STATE_UPDATE_HOOK( pContext );
     }
 
     return packetId;
