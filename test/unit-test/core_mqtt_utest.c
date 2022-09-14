@@ -1411,13 +1411,16 @@ void test_MQTT_Connect_happy_path3()
     mqttContext.keepAliveIntervalSec = 0;
     willInfo.pTopicName = "test";
     willInfo.topicNameLength = 4;
+    incomingPacket.type = MQTT_PACKET_TYPE_CONNACK;
     MQTT_SerializeConnect_IgnoreAndReturn( MQTTSuccess );
     MQTT_GetConnectPacketSize_IgnoreAndReturn( MQTTSuccess );
     MQTT_SerializeConnectFixedHeader_Stub( MQTT_SerializeConnectFixedHeader_cb );
     MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_GetIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
     MQTT_DeserializeAck_ExpectAnyArgsAndReturn( MQTTSuccess );
+
     status = MQTT_Connect( &mqttContext, &connectInfo, &willInfo, timeout, &sessionPresent );
+
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
     TEST_ASSERT_EQUAL_INT( MQTTConnected, mqttContext.connectStatus );
     TEST_ASSERT_EQUAL_INT( connectInfo.keepAliveSeconds, mqttContext.keepAliveIntervalSec );
@@ -1449,7 +1452,6 @@ void test_MQTT_Connect_happy_path4()
                           &outgoingRecords, 4,
                           &incomingRecords, 4 );
 
-
     /* Request to establish a clean session. */
     mqttContext.connectStatus = MQTTNotConnected;
     mqttContext.keepAliveIntervalSec = 0;
@@ -1462,6 +1464,10 @@ void test_MQTT_Connect_happy_path4()
     mqttContext.outgoingPublishRecords[ 0 ].qos = MQTTQoS2;
     mqttContext.outgoingPublishRecords[ 0 ].publishState = MQTTPublishSend;
     mqttContext.incomingPublishRecords[ MQTT_STATE_ARRAY_MAX_COUNT - 1 ].packetId = 1;
+    mqttContext.networkBuffer.size = 5000;
+
+    incomingPacket.type = MQTT_PACKET_TYPE_CONNACK;
+    incomingPacket.remainingLength = 2;
 
     /* Set ping response flag to true to ensure it will be cleared. */
     mqttContext.waitingForPingResp = true;
