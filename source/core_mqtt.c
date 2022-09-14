@@ -1652,7 +1652,6 @@ static MQTTStatus_t handleIncomingAck( MQTTContext_t * pContext,
 
     return status;
 }
-
 /*-----------------------------------------------------------*/
 
 static MQTTStatus_t receiveSingleIteration( MQTTContext_t * pContext,
@@ -1901,6 +1900,7 @@ static MQTTStatus_t sendSubscribeWithoutCopy( MQTTContext_t * pContext,
             /* Lastly, the QoS gets sent. */
             pIterator->iov_base = &( pSubscriptionList[ subscriptionsSent ].qos );
             pIterator->iov_len = 1U;
+            totalPacketLength += pIterator->iov_len;
 
             /* Two slots get used by the topic string length and topic string. And
              * one slot gets used by the quality of service. */

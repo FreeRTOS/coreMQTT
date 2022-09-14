@@ -791,7 +791,10 @@ static MQTTStatus_t updateStatePublish( MQTTContext_t * pMqttContext,
              * update is required. */
             if( currentState != newState )
             {
-                updateRecord( pMqttContext->outgoingPublishRecords, recordIndex, newState, false );
+                updateRecord( pMqttContext->outgoingPublishRecords,
+                              recordIndex,
+                              newState,
+                              false );
             }
         }
     }

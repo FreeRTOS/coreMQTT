@@ -51,7 +51,7 @@ int suiteTearDown( int numFailures )
 {
     return numFailures;
 }
-
+#define  MQTT_STATE_ARRAY_MAX_COUNT    5
 /* ========================================================================== */
 
 static void resetPublishRecords( MQTTContext_t * pMqttContext )
