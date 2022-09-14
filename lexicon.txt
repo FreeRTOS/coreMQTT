@@ -197,6 +197,7 @@ mqttsubacksuccessqos
 mqttsubscribeinfo
 mqttsuccess
 msb
+mutex
 mynetworkrecvimplementation
 mynetworksendimplementation
 mytcpsocketcontext
