@@ -768,6 +768,7 @@ void test_MQTT_Connect_sendConnect1( void )
     MQTTFixedBuffer_t networkBuffer;
     size_t remainingLength;
     size_t packetSize;
+
     setupTransportInterface( &transport );
     transport.writev = transportWritevFail;
     setupNetworkBuffer( &networkBuffer );
@@ -2172,6 +2173,8 @@ void test_MQTT_Disconnect3( void )
 MQTTStatus_t MQTT_SerializeDisconnect_stub( const MQTTFixedBuffer_t * pFixedBuffer,
                                             int numcalls )
 {
+    ( void ) numcalls;
+
     pFixedBuffer->pBuffer[ 0 ] = MQTT_PACKET_TYPE_DISCONNECT;
     pFixedBuffer->pBuffer[ 1 ] = 0;
 
@@ -2411,7 +2414,6 @@ void test_MQTT_ProcessLoop_handleIncomingPublish_Happy_Path4( void )
     MQTTContext_t context;
     TransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
-    MQTTPublishInfo_t pubInfo;
     ProcessLoopReturns_t expectParams = { 0 };
 
     setupTransportInterface( &transport );
@@ -2428,7 +2430,6 @@ void test_MQTT_ProcessLoop_handleIncomingPublish_Happy_Path4( void )
      * updateStateStatus=MQTTStateCollision and pPubInfo is passed with
      * dup flag set. The event callback should not be invoked. */
     currentPacketType = MQTT_PACKET_TYPE_PUBLISH;
-    pubInfo.qos = MQTTQoS2;
     isEventCallbackInvoked = false;
     /* Only changes are for QoS 2, no need to reset. */
     expectParams.stateAfterDeserialize = MQTTPubRecSend;
@@ -2450,7 +2451,6 @@ void test_MQTT_ProcessLoop_handleIncomingPublish_Happy_Path5( void )
     MQTTContext_t context;
     TransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
-    MQTTPublishInfo_t pubInfo;
     ProcessLoopReturns_t expectParams = { 0 };
 
     setupTransportInterface( &transport );
@@ -2463,7 +2463,6 @@ void test_MQTT_ProcessLoop_handleIncomingPublish_Happy_Path5( void )
 
     /* A publish is received when already a state record exists, but dup
      * flag is not set. */
-    pubInfo.dup = false;
     currentPacketType = MQTT_PACKET_TYPE_PUBLISH;
     isEventCallbackInvoked = false;
     expectParams.incomingPublish = true;
@@ -2486,7 +2485,6 @@ void test_MQTT_ProcessLoop_handleIncomingPublish_Happy_Path6( void )
     MQTTContext_t context;
     TransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
-    MQTTPublishInfo_t pubInfo;
     ProcessLoopReturns_t expectParams = { 0 };
 
     setupTransportInterface( &transport );
@@ -2502,7 +2500,6 @@ void test_MQTT_ProcessLoop_handleIncomingPublish_Happy_Path6( void )
      * incomingPublish=true, stateAfterDeserialize=MQTTPubRecSend,
      * updateStateStatus=MQTTSuccess and pPubInfo is passed with
      * dup flag set. The event callback should be invoked. */
-    pubInfo.dup = true;
     currentPacketType = MQTT_PACKET_TYPE_PUBLISH;
     isEventCallbackInvoked = false;
     expectParams.incomingPublish = true;
