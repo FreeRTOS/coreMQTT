@@ -766,9 +766,6 @@ void test_MQTT_Connect_sendConnect1( void )
     MQTTStatus_t status;
     TransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
-    MQTTPacketInfo_t incomingPacket;
-
-    incomingPacket.type = MQTT_PACKET_TYPE_CONNACK;
     size_t remainingLength;
     size_t packetSize;
     setupTransportInterface( &transport );
@@ -1646,8 +1643,6 @@ void test_MQTT_Publish3( void )
     MQTTFixedBuffer_t networkBuffer;
     MQTTStatus_t status;
 
-    const uint16_t PACKET_ID = 1;
-
     setupTransportInterface( &transport );
     setupNetworkBuffer( &networkBuffer );
     transport.send = transportSendFailure;
@@ -1699,8 +1694,6 @@ void test_MQTT_Publish5( void )
     MQTTFixedBuffer_t networkBuffer;
     MQTTStatus_t status;
 
-    const uint16_t PACKET_ID = 1;
-
     setupTransportInterface( &transport );
     setupNetworkBuffer( &networkBuffer );
     transport.send = transportSendFailure;
@@ -1726,8 +1719,6 @@ void test_MQTT_Publish6( void )
     TransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
     MQTTStatus_t status;
-
-    const uint16_t PACKET_ID = 1;
 
     setupTransportInterface( &transport );
     setupNetworkBuffer( &networkBuffer );
@@ -1755,9 +1746,6 @@ void test_MQTT_Publish7( void )
     TransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
     MQTTStatus_t status;
-    size_t headerSize;
-
-    const uint16_t PACKET_ID = 1;
 
     setupTransportInterface( &transport );
     setupNetworkBuffer( &networkBuffer );
@@ -1773,7 +1761,6 @@ void test_MQTT_Publish7( void )
     /* We need sendPacket to be called with at least 1 byte to send, so that
      * it can return failure. This argument is the output of serializing the
      * publish header. */
-    headerSize = 1;
     publishInfo.pPayload = "Test";
     publishInfo.payloadLength = 4;
     status = MQTT_Publish( &mqttContext, &publishInfo, 0 );
@@ -1790,8 +1777,6 @@ void test_MQTT_Publish8( void )
     TransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
     MQTTStatus_t status;
-
-    const uint16_t PACKET_ID = 1;
 
     setupTransportInterface( &transport );
     setupNetworkBuffer( &networkBuffer );
@@ -1823,8 +1808,6 @@ void test_MQTT_Publish9( void )
     MQTTFixedBuffer_t networkBuffer;
     MQTTStatus_t status;
 
-    const uint16_t PACKET_ID = 1;
-
     setupTransportInterface( &transport );
     setupNetworkBuffer( &networkBuffer );
     transport.send = transportSendFailure;
@@ -1850,8 +1833,6 @@ void test_MQTT_Publish10( void )
     TransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
     MQTTStatus_t status;
-
-    const uint16_t PACKET_ID = 1;
 
     setupTransportInterface( &transport );
     setupNetworkBuffer( &networkBuffer );
@@ -2063,7 +2044,6 @@ void test_MQTT_Publish_Send_Timeout( void )
     TransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
     MQTTStatus_t status;
-    size_t headerSize;
 
     setupNetworkBuffer( &networkBuffer );
     setupTransportInterface( &transport );
@@ -2080,7 +2060,6 @@ void test_MQTT_Publish_Send_Timeout( void )
      * where calls to transport send function are made (repeatedly to send packet
      * over the network).*/
     memset( &publishInfo, 0, sizeof( MQTTPublishInfo_t ) );
-    headerSize = 1;
     publishInfo.pPayload = "Test";
     publishInfo.payloadLength = 4;
     MQTT_GetPublishPacketSize_IgnoreAndReturn( MQTTSuccess );
@@ -2106,7 +2085,6 @@ void test_MQTT_Disconnect1( void )
     NetworkContext_t networkContext;
     TransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
-    size_t disconnectSize = 2;
 
     setupTransportInterface( &transport );
     setupNetworkBuffer( &networkBuffer );
@@ -2314,7 +2292,6 @@ void test_MQTT_ProcessLoop_handleIncomingPublish_Happy_Path1( void )
     MQTTContext_t context;
     TransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
-    MQTTPublishInfo_t pubInfo;
     ProcessLoopReturns_t expectParams = { 0 };
 
     setupTransportInterface( &transport );
@@ -2348,7 +2325,6 @@ void test_MQTT_ProcessLoop_handleIncomingPublish_Happy_Path2( void )
     MQTTContext_t context;
     TransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
-    MQTTPublishInfo_t pubInfo;
     ProcessLoopReturns_t expectParams = { 0 };
 
     setupTransportInterface( &transport );
@@ -3211,7 +3187,6 @@ void test_MQTT_ProcessLoop_Timer_Overflow( void )
     MQTTPacketInfo_t incomingPacket = { 0 };
     MQTTPublishState_t publishState = MQTTPubAckSend;
     MQTTPublishState_t ackState = MQTTPublishDone;
-    uint8_t i = 0;
 
 
     setupTransportInterface( &transport );
@@ -3254,7 +3229,6 @@ void test_MQTT_ReceiveLoop( void )
     MQTTContext_t context;
     TransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
-    MQTTPacketInfo_t incomingPacket = { 0 };
 
     setupTransportInterface( &transport );
 
@@ -3277,8 +3251,6 @@ void test_MQTT_ReceiveLoop( void )
     TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
     setupNetworkBuffer( &( context.networkBuffer ) );
 
-    incomingPacket.type = MQTT_PACKET_TYPE_PUBLISH;
-    incomingPacket.remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
     MQTT_ProcessIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTRecvFailed );
     /* Error case, for branch coverage. */
     mqttStatus = MQTT_ReceiveLoop( &context );
@@ -3297,8 +3269,6 @@ void test_MQTT_ReceiveLoop( void )
     context.getTime = getTime;
 
     /* Receive a PINGRESP. */
-    incomingPacket.type = MQTT_PACKET_TYPE_PINGRESP;
-    incomingPacket.remainingLength = 0U;
     mqttStatus = MQTT_ReceiveLoop( &context );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
 }
