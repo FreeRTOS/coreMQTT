@@ -59,6 +59,7 @@ static int32_t transportRecvSuccess( NetworkContext_t * pNetworkContext,
                                      void * pBuffer,
                                      size_t bytesToRead )
 {
+    ( void ) pNetworkContext;
     ( void ) pBuffer;
     return bytesToRead;
 }
@@ -67,6 +68,7 @@ static int32_t transportSendSuccess( NetworkContext_t * pNetworkContext,
                                      const void * pBuffer,
                                      size_t bytesToWrite )
 {
+    ( void ) pNetworkContext;
     ( void ) pBuffer;
     return bytesToWrite;
 }
