@@ -746,6 +746,11 @@ static uint8_t * MQTT_SerializeConnectFixedHeader_cb( uint8_t * pIndex,
                                                       size_t remainingLength,
                                                       int numcallbacks )
 {
+    ( void ) pConnectInfo;
+    ( void ) pWillInfo;
+    ( void ) remainingLength;
+    ( void ) numcallbacks;
+
     return pIndex;
 }
 
@@ -766,7 +771,6 @@ void test_MQTT_Connect_sendConnect1( void )
     incomingPacket.type = MQTT_PACKET_TYPE_CONNACK;
     size_t remainingLength;
     size_t packetSize;
-    uint8_t * pIndex = NULL;
     setupTransportInterface( &transport );
     transport.writev = transportWritevFail;
     setupNetworkBuffer( &networkBuffer );
@@ -802,7 +806,6 @@ void test_MQTT_Connect_sendConnect2( void )
     MQTTFixedBuffer_t networkBuffer;
     size_t remainingLength;
     size_t packetSize;
-    uint8_t * pIndex = NULL;
 
     setupTransportInterface( &transport );
     transport.writev = transportWritevFail;
@@ -844,9 +847,6 @@ void test_MQTT_Connect_sendConnect3( void )
     MQTTStatus_t status;
     TransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
-    size_t remainingLength;
-    size_t packetSize;
-    uint8_t * pIndex = NULL;
 
     setupTransportInterface( &transport );
     setupNetworkBuffer( &networkBuffer );
@@ -879,9 +879,6 @@ void test_MQTT_Connect_sendConnect4( void )
     MQTTStatus_t status;
     TransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
-    size_t remainingLength;
-    size_t packetSize;
-    uint8_t * pIndex = NULL;
 
     setupTransportInterface( &transport );
     setupNetworkBuffer( &networkBuffer );
@@ -914,7 +911,6 @@ void test_MQTT_Connect_sendConnect5( void )
     MQTTFixedBuffer_t networkBuffer;
     size_t remainingLength;
     size_t packetSize;
-    uint8_t * pIndex = NULL;
 
     setupTransportInterface( &transport );
     setupNetworkBuffer( &networkBuffer );
@@ -950,9 +946,6 @@ void test_MQTT_Connect_sendConnect6( void )
     MQTTStatus_t status;
     TransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
-    size_t remainingLength;
-    size_t packetSize;
-    uint8_t * pIndex = NULL;
 
     setupTransportInterface( &transport );
     setupNetworkBuffer( &networkBuffer );
@@ -1324,9 +1317,7 @@ void test_MQTT_Connect_happy_path1()
 {
     MQTTContext_t mqttContext;
     MQTTConnectInfo_t connectInfo;
-    MQTTPublishInfo_t willInfo;
-    uint32_t timeout = 2;
-    bool sessionPresent, sessionPresentExpected;
+    bool sessionPresent;
     MQTTStatus_t status;
     TransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
@@ -1365,9 +1356,8 @@ void test_MQTT_Connect_happy_path2()
 {
     MQTTContext_t mqttContext;
     MQTTConnectInfo_t connectInfo;
-    MQTTPublishInfo_t willInfo;
     uint32_t timeout = 2;
-    bool sessionPresent, sessionPresentExpected;
+    bool sessionPresent;
     MQTTStatus_t status;
     TransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
@@ -1405,7 +1395,6 @@ void test_MQTT_Connect_happy_path3()
     MQTTPublishInfo_t willInfo;
     uint32_t timeout = 2;
     bool sessionPresent;
-    bool sessionPresentExpected;
     MQTTStatus_t status;
     TransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
@@ -1443,9 +1432,9 @@ void test_MQTT_Connect_happy_path4()
 {
     MQTTContext_t mqttContext;
     MQTTConnectInfo_t connectInfo;
-    MQTTPublishInfo_t willInfo;
     uint32_t timeout = 2;
-    bool sessionPresent, sessionPresentExpected;
+    bool sessionPresent;
+    bool sessionPresentExpected;
     MQTTStatus_t status;
     TransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
@@ -1507,7 +1496,6 @@ void test_MQTT_Connect_happy_path5()
 {
     MQTTContext_t mqttContext;
     MQTTConnectInfo_t connectInfo;
-    MQTTPublishInfo_t willInfo;
     uint32_t timeout = 2;
     bool sessionPresent, sessionPresentExpected;
     MQTTStatus_t status;
@@ -1557,9 +1545,7 @@ void test_MQTT_Connect_happy_path6()
 {
     MQTTContext_t mqttContext;
     MQTTConnectInfo_t connectInfo;
-    MQTTPublishInfo_t willInfo;
-    uint32_t timeout = 2;
-    bool sessionPresent, sessionPresentExpected;
+    bool sessionPresent;
     MQTTStatus_t status;
     TransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
@@ -1608,8 +1594,6 @@ void test_MQTT_Publish( void )
     TransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
     MQTTStatus_t status;
-    size_t headerSize;
-    MQTTPublishState_t expectedState;
 
     const uint16_t PACKET_ID = 1;
 
@@ -1636,8 +1620,6 @@ void test_MQTT_Publish2( void )
     TransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
     MQTTStatus_t status;
-    size_t headerSize;
-    MQTTPublishState_t expectedState;
 
     const uint16_t PACKET_ID = 1;
 
@@ -1663,8 +1645,6 @@ void test_MQTT_Publish3( void )
     TransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
     MQTTStatus_t status;
-    size_t headerSize;
-    MQTTPublishState_t expectedState;
 
     const uint16_t PACKET_ID = 1;
 
@@ -1691,8 +1671,6 @@ void test_MQTT_Publish4( void )
     TransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
     MQTTStatus_t status;
-    size_t headerSize;
-    MQTTPublishState_t expectedState;
 
     const uint16_t PACKET_ID = 1;
 
@@ -1720,8 +1698,6 @@ void test_MQTT_Publish5( void )
     TransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
     MQTTStatus_t status;
-    size_t headerSize;
-    MQTTPublishState_t expectedState;
 
     const uint16_t PACKET_ID = 1;
 
@@ -1750,8 +1726,6 @@ void test_MQTT_Publish6( void )
     TransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
     MQTTStatus_t status;
-    size_t headerSize;
-    MQTTPublishState_t expectedState;
 
     const uint16_t PACKET_ID = 1;
 
@@ -1782,7 +1756,6 @@ void test_MQTT_Publish7( void )
     MQTTFixedBuffer_t networkBuffer;
     MQTTStatus_t status;
     size_t headerSize;
-    MQTTPublishState_t expectedState;
 
     const uint16_t PACKET_ID = 1;
 
@@ -1817,8 +1790,6 @@ void test_MQTT_Publish8( void )
     TransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
     MQTTStatus_t status;
-    size_t headerSize;
-    MQTTPublishState_t expectedState;
 
     const uint16_t PACKET_ID = 1;
 
@@ -1851,8 +1822,6 @@ void test_MQTT_Publish9( void )
     TransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
     MQTTStatus_t status;
-    size_t headerSize;
-    MQTTPublishState_t expectedState;
 
     const uint16_t PACKET_ID = 1;
 
@@ -1881,8 +1850,6 @@ void test_MQTT_Publish10( void )
     TransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
     MQTTStatus_t status;
-    size_t headerSize;
-    MQTTPublishState_t expectedState;
 
     const uint16_t PACKET_ID = 1;
 
@@ -1913,9 +1880,6 @@ void test_MQTT_Publish11( void )
     TransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
     MQTTStatus_t status;
-    size_t headerSize;
-    MQTTPublishState_t expectedState;
-
     const uint16_t PACKET_ID = 1;
 
     setupTransportInterface( &transport );
@@ -1947,7 +1911,6 @@ void test_MQTT_Publish12( void )
     TransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
     MQTTStatus_t status;
-    size_t headerSize;
     MQTTPublishState_t expectedState;
 
     MQTTPubAckInfo_t incomingRecords = { 0 };
@@ -1999,8 +1962,6 @@ void test_MQTT_Publish13( void )
     TransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
     MQTTStatus_t status;
-    size_t headerSize;
-    MQTTPublishState_t expectedState;
     MQTTPubAckInfo_t incomingRecords = { 0 };
     MQTTPubAckInfo_t outgoingRecords = { 0 };
 
@@ -2038,8 +1999,6 @@ void test_MQTT_Publish14( void )
     TransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
     MQTTStatus_t status;
-    size_t headerSize;
-    MQTTPublishState_t expectedState;
 
     const uint16_t PACKET_ID = 1;
 
@@ -2071,9 +2030,6 @@ void test_MQTT_Publish15( void )
     TransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
     MQTTStatus_t status;
-    size_t headerSize;
-    MQTTPublishState_t expectedState;
-
     const uint16_t PACKET_ID = 1;
 
     setupTransportInterface( &transport );
@@ -3382,6 +3338,11 @@ static uint8_t * MQTT_SerializeSubscribedHeader_cb( size_t remainingLength,
                                                     uint16_t packetId,
                                                     int numcallbacks )
 {
+    ( void ) remainingLength;
+    ( void ) pIndex;
+    ( void ) packetId;
+    ( void ) numcallbacks;
+
     return pIndex;
 }
 
@@ -3531,6 +3492,11 @@ static uint8_t * MQTT_SerializeUnsubscribeHeader_cb( size_t remainingLength,
                                                      uint16_t packetId,
                                                      int numcallbacks )
 {
+    ( void ) remainingLength;
+    ( void ) pIndex;
+    ( void ) packetId;
+    ( void ) numcallbacks;
+
     return pIndex;
 }
 
