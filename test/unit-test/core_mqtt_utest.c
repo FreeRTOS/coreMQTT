@@ -1563,21 +1563,20 @@ void test_MQTT_Connect_happy_path6()
     memset( &mqttContext, 0x0, sizeof( mqttContext ) );
     MQTT_Init( &mqttContext, &transport, getTime, eventCallback, &networkBuffer );
 
-    /* CONNACK receive with timeoutMs=0. Retry logic will be used.
+    /* CONNACK receive with timeoutMs=0. Retry logic will  be used.
      * #MQTTNoDataAvailable for first #MQTT_GetIncomingPacketTypeAndLength
      * and success in the second time. */
     mqttContext.connectStatus = MQTTNotConnected;
     mqttContext.keepAliveIntervalSec = 0;
     incomingPacket.type = MQTT_PACKET_TYPE_CONNACK;
     incomingPacket.remainingLength = 2;
-    MQTT_SerializeConnect_IgnoreAndReturn( MQTTSuccess );
+
     MQTT_GetConnectPacketSize_IgnoreAndReturn( MQTTSuccess );
     MQTT_SerializeConnectFixedHeader_Stub( MQTT_SerializeConnectFixedHeader_cb );
     MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTNoDataAvailable );
     MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_GetIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
     MQTT_DeserializeAck_IgnoreAndReturn( MQTTSuccess );
-    MQTT_PubrelToResend_ExpectAnyArgsAndReturn( MQTT_PACKET_ID_INVALID );
 
     status = MQTT_Connect( &mqttContext, &connectInfo, NULL, 0U, &sessionPresent );
 
@@ -2303,11 +2302,15 @@ void test_MQTT_ProcessLoop_handleIncomingPublish_Happy_Path1( void )
     TransportInterface_t transport = { 0 };
     MQTTFixedBuffer_t networkBuffer = { 0 };
     ProcessLoopReturns_t expectParams = { 0 };
+    MQTTPubAckInfo_t pIncomingCallback[ 10 ];
 
     setupTransportInterface( &transport );
     setupNetworkBuffer( &networkBuffer );
 
     mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+
+    mqttStatus = MQTT_InitStatefulQoS( &context, NULL, 0, pIncomingCallback, 10 );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
 
     modifyIncomingPacketStatus = MQTTSuccess;
@@ -2336,11 +2339,15 @@ void test_MQTT_ProcessLoop_handleIncomingPublish_Happy_Path2( void )
     TransportInterface_t transport = { 0 };
     MQTTFixedBuffer_t networkBuffer = { 0 };
     ProcessLoopReturns_t expectParams = { 0 };
+    MQTTPubAckInfo_t pIncomingPublish[ 10 ];
 
     setupTransportInterface( &transport );
     setupNetworkBuffer( &networkBuffer );
 
     mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+
+    mqttStatus = MQTT_InitStatefulQoS( &context, NULL, 0, pIncomingPublish, 10 );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
 
     modifyIncomingPacketStatus = MQTTSuccess;
@@ -2422,11 +2429,15 @@ void test_MQTT_ProcessLoop_handleIncomingPublish_Happy_Path4( void )
     TransportInterface_t transport = { 0 };
     MQTTFixedBuffer_t networkBuffer = { 0 };
     ProcessLoopReturns_t expectParams = { 0 };
+    MQTTPubAckInfo_t pIncomingPublish[ 10 ];
 
     setupTransportInterface( &transport );
     setupNetworkBuffer( &networkBuffer );
 
     mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+
+    mqttStatus = MQTT_InitStatefulQoS( &context, NULL, 0, pIncomingPublish, 10 );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
 
     modifyIncomingPacketStatus = MQTTSuccess;
@@ -2459,11 +2470,15 @@ void test_MQTT_ProcessLoop_handleIncomingPublish_Happy_Path5( void )
     TransportInterface_t transport = { 0 };
     MQTTFixedBuffer_t networkBuffer = { 0 };
     ProcessLoopReturns_t expectParams = { 0 };
+    MQTTPubAckInfo_t pIncomingPublish[ 10 ];
 
     setupTransportInterface( &transport );
     setupNetworkBuffer( &networkBuffer );
 
     mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+
+    mqttStatus = MQTT_InitStatefulQoS( &context, NULL, 0, pIncomingPublish, 10 );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
 
     modifyIncomingPacketStatus = MQTTSuccess;
@@ -2493,11 +2508,15 @@ void test_MQTT_ProcessLoop_handleIncomingPublish_Happy_Path6( void )
     TransportInterface_t transport = { 0 };
     MQTTFixedBuffer_t networkBuffer = { 0 };
     ProcessLoopReturns_t expectParams = { 0 };
+    MQTTPubAckInfo_t pIncomingPublish[ 10 ];
 
     setupTransportInterface( &transport );
     setupNetworkBuffer( &networkBuffer );
 
     mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+
+    mqttStatus = MQTT_InitStatefulQoS( &context, NULL, 0, pIncomingPublish, 10 );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
 
     modifyIncomingPacketStatus = MQTTSuccess;
@@ -3193,7 +3212,7 @@ void test_MQTT_ProcessLoop_Timer_Overflow( void )
     MQTTPacketInfo_t incomingPacket = { 0 };
     MQTTPublishState_t publishState = MQTTPubAckSend;
     MQTTPublishState_t ackState = MQTTPublishDone;
-
+    MQTTPubAckInfo_t incomingPublishRecords[10];
 
     setupTransportInterface( &transport );
     setupNetworkBuffer( &networkBuffer );
@@ -3205,6 +3224,9 @@ void test_MQTT_ProcessLoop_Timer_Overflow( void )
     globalEntryTime = UINT32_MAX - MQTT_OVERFLOW_OFFSET;
 
     mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+
+    mqttStatus = MQTT_InitStatefulQoS( &context, NULL, 0, incomingPublishRecords, 10 );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
 
     MQTT_ProcessIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );

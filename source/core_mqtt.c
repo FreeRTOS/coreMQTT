@@ -1729,7 +1729,7 @@ static MQTTStatus_t receiveSingleIteration( MQTTContext_t * pContext,
     }
     else
     {
-        /* MISRA else */
+        /* MISRA else. */
     }
 
     /* Handle received packet. If incomplete data was read then this will not execute. */
