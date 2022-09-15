@@ -698,11 +698,6 @@ MQTTStatus_t MQTT_SerializePublishHeaderWithoutTopic( const MQTTPublishInfo_t * 
 
     *headerSize = headerLength;
 
-    if( headerLength > 7 )
-    {
-        status = MQTTBadParameter;
-    }
-
     return status;
 }
 
