@@ -537,7 +537,7 @@ static void resetProcessLoopParams( ProcessLoopReturns_t * pExpectParams )
  *
  * @param[out] context to initialize
  */
-static setUPContext( MQTTContext_t * mqttContext )
+static void setUPContext( MQTTContext_t * mqttContext )
 {
     MQTTStatus_t mqttStatus;
     static TransportInterface_t transport = { 0 };
@@ -548,7 +548,7 @@ static setUPContext( MQTTContext_t * mqttContext )
     setupTransportInterface( &transport );
     setupNetworkBuffer( &networkBuffer );
 
-    memset( mqttContext, 0x0, sizeof( mqttContext ) );
+    memset( mqttContext, 0x0, sizeof( MQTTContext_t ) );
 
     mqttStatus = MQTT_Init( mqttContext,
                             &transport,
