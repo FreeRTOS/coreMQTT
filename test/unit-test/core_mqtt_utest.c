@@ -4535,8 +4535,6 @@ void test_MQTT_InitStatefulQoS_fail_null_context( void )
     MQTTPubAckInfo_t pOutgoingPublishRecords[ 10 ] = { 0 };
     MQTTPubAckInfo_t pIncomingPublishRecords[ 10 ] = { 0 };
 
-    MQTTContext_t mqttContext = { 0 };
-
     mqttStatus = MQTT_InitStatefulQoS( NULL,
                                        pOutgoingPublishRecords,
                                        10,
