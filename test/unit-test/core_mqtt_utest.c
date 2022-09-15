@@ -1551,7 +1551,7 @@ void test_MQTT_Connect_happy_path6()
 {
     MQTTContext_t mqttContext = { 0 };
     MQTTConnectInfo_t connectInfo = { 0 };
-    bool sessionPresent;
+    bool sessionPresent = false;
     MQTTStatus_t status;
     TransportInterface_t transport = { 0 };
     MQTTFixedBuffer_t networkBuffer = { 0 };
