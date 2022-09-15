@@ -680,10 +680,10 @@ static void expectProcessLoopCalls( MQTTContext_t * const pContext,
  */
 void test_MQTT_Init_Happy_Path( void )
 {
-    MQTTStatus_t mqttStatus;
-    MQTTContext_t context;
-    TransportInterface_t transport;
-    MQTTFixedBuffer_t networkBuffer;
+    MQTTStatus_t mqttStatus = { 0 };
+    MQTTContext_t context = { 0 };
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
 
     setupTransportInterface( &transport );
     setupNetworkBuffer( &networkBuffer );
@@ -704,12 +704,13 @@ void test_MQTT_Init_Happy_Path( void )
  */
 void test_MQTT_Init_Invalid_Params( void )
 {
-    MQTTStatus_t mqttStatus;
-    MQTTContext_t context;
-    TransportInterface_t transport;
-    MQTTFixedBuffer_t networkBuffer;
+    MQTTStatus_t mqttStatus = { 0 };
+    MQTTContext_t context = { 0 };
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
 
     setupTransportInterface( &transport );
+    setupNetworkBuffer( &networkBuffer );
 
     /* Check that MQTTBadParameter is returned if any NULL parameters are passed. */
     mqttStatus = MQTT_Init( NULL, &transport, getTime, eventCallback, &networkBuffer );
@@ -759,13 +760,13 @@ static uint8_t * MQTT_SerializeConnectFixedHeader_cb( uint8_t * pIndex,
  */
 void test_MQTT_Connect_sendConnect1( void )
 {
-    MQTTContext_t mqttContext;
-    MQTTConnectInfo_t connectInfo;
+    MQTTContext_t mqttContext = { 0 };
+    MQTTConnectInfo_t connectInfo = { 0 };
     uint32_t timeout = 2;
     bool sessionPresent;
     MQTTStatus_t status;
-    TransportInterface_t transport;
-    MQTTFixedBuffer_t networkBuffer;
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
     size_t remainingLength;
     size_t packetSize;
 
@@ -795,13 +796,13 @@ void test_MQTT_Connect_sendConnect1( void )
  */
 void test_MQTT_Connect_sendConnect2( void )
 {
-    MQTTContext_t mqttContext;
-    MQTTConnectInfo_t connectInfo;
+    MQTTContext_t mqttContext = { 0 };
+    MQTTConnectInfo_t connectInfo = { 0 };
     uint32_t timeout = 2;
     bool sessionPresent;
     MQTTStatus_t status;
-    TransportInterface_t transport;
-    MQTTFixedBuffer_t networkBuffer;
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
     size_t remainingLength;
     size_t packetSize;
 
@@ -838,13 +839,13 @@ void test_MQTT_Connect_sendConnect2( void )
  */
 void test_MQTT_Connect_sendConnect3( void )
 {
-    MQTTContext_t mqttContext;
-    MQTTConnectInfo_t connectInfo;
+    MQTTContext_t mqttContext = { 0 };
+    MQTTConnectInfo_t connectInfo = { 0 };
     uint32_t timeout = 2;
     bool sessionPresent;
     MQTTStatus_t status;
-    TransportInterface_t transport;
-    MQTTFixedBuffer_t networkBuffer;
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
 
     setupTransportInterface( &transport );
     setupNetworkBuffer( &networkBuffer );
@@ -870,13 +871,13 @@ void test_MQTT_Connect_sendConnect3( void )
  */
 void test_MQTT_Connect_sendConnect4( void )
 {
-    MQTTContext_t mqttContext;
-    MQTTConnectInfo_t connectInfo;
+    MQTTContext_t mqttContext = { 0 };
+    MQTTConnectInfo_t connectInfo = { 0 };
     uint32_t timeout = 2;
     bool sessionPresent;
     MQTTStatus_t status;
-    TransportInterface_t transport;
-    MQTTFixedBuffer_t networkBuffer;
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
 
     setupTransportInterface( &transport );
     setupNetworkBuffer( &networkBuffer );
@@ -900,13 +901,13 @@ void test_MQTT_Connect_sendConnect4( void )
  */
 void test_MQTT_Connect_sendConnect5( void )
 {
-    MQTTContext_t mqttContext;
-    MQTTConnectInfo_t connectInfo;
+    MQTTContext_t mqttContext = { 0 };
+    MQTTConnectInfo_t connectInfo = { 0 };
     uint32_t timeout = 2;
     bool sessionPresent;
     MQTTStatus_t status;
-    TransportInterface_t transport;
-    MQTTFixedBuffer_t networkBuffer;
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
     size_t remainingLength;
     size_t packetSize;
 
@@ -937,13 +938,13 @@ void test_MQTT_Connect_sendConnect5( void )
  */
 void test_MQTT_Connect_sendConnect6( void )
 {
-    MQTTContext_t mqttContext;
-    MQTTConnectInfo_t connectInfo;
+    MQTTContext_t mqttContext = { 0 };
+    MQTTConnectInfo_t connectInfo = { 0 };
     uint32_t timeout = 2;
     bool sessionPresent;
     MQTTStatus_t status;
-    TransportInterface_t transport;
-    MQTTFixedBuffer_t networkBuffer;
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
 
     setupTransportInterface( &transport );
     setupNetworkBuffer( &networkBuffer );
@@ -968,14 +969,14 @@ void test_MQTT_Connect_sendConnect6( void )
  */
 void test_MQTT_Connect_receiveConnack( void )
 {
-    MQTTContext_t mqttContext;
-    MQTTConnectInfo_t connectInfo;
+    MQTTContext_t mqttContext = { 0 };
+    MQTTConnectInfo_t connectInfo = { 0 };
     uint32_t timeout = 0;
     bool sessionPresent, sessionPresentExpected;
     MQTTStatus_t status;
-    TransportInterface_t transport;
-    MQTTFixedBuffer_t networkBuffer;
-    MQTTPacketInfo_t incomingPacket;
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
+    MQTTPacketInfo_t incomingPacket = { 0 };
 
     setupTransportInterface( &transport );
     setupNetworkBuffer( &networkBuffer );
@@ -1040,13 +1041,13 @@ void test_MQTT_Connect_receiveConnack( void )
  */
 void test_MQTT_Connect_receiveConnack_retries( void )
 {
-    MQTTContext_t mqttContext;
-    MQTTConnectInfo_t connectInfo;
+    MQTTContext_t mqttContext = { 0 };
+    MQTTConnectInfo_t connectInfo = { 0 };
     bool sessionPresent;
     MQTTStatus_t status;
-    TransportInterface_t transport;
-    MQTTFixedBuffer_t networkBuffer;
-    MQTTPacketInfo_t incomingPacket;
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
+    MQTTPacketInfo_t incomingPacket = { 0 };
 
     /* Same set of tests with retries. MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT is 2*/
     setupTransportInterface( &transport );
@@ -1101,14 +1102,14 @@ void test_MQTT_Connect_receiveConnack_retries( void )
  */
 void test_MQTT_Connect_partial_receive( void )
 {
-    MQTTContext_t mqttContext;
-    MQTTConnectInfo_t connectInfo;
+    MQTTContext_t mqttContext = { 0 };
+    MQTTConnectInfo_t connectInfo = { 0 };
     uint32_t timeout = 0;
     bool sessionPresent;
     MQTTStatus_t status;
-    TransportInterface_t transport;
-    MQTTFixedBuffer_t networkBuffer;
-    MQTTPacketInfo_t incomingPacket;
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
+    MQTTPacketInfo_t incomingPacket = { 0 };
 
     setupTransportInterface( &transport );
     setupNetworkBuffer( &networkBuffer );
@@ -1177,14 +1178,14 @@ void test_MQTT_Connect_partial_receive( void )
  */
 void test_MQTT_Connect_resendPendingAcks( void )
 {
-    MQTTContext_t mqttContext;
-    MQTTConnectInfo_t connectInfo;
+    MQTTContext_t mqttContext = { 0 };
+    MQTTConnectInfo_t connectInfo = { 0 };
     uint32_t timeout = 2;
     bool sessionPresent, sessionPresentResult;
     MQTTStatus_t status;
-    TransportInterface_t transport;
-    MQTTFixedBuffer_t networkBuffer;
-    MQTTPacketInfo_t incomingPacket;
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
+    MQTTPacketInfo_t incomingPacket = { 0 };
     uint16_t packetIdentifier = 1;
     MQTTPublishState_t pubRelState = MQTTPubRelSend;
 
@@ -1313,13 +1314,13 @@ void test_MQTT_Connect_resendPendingAcks( void )
 
 void test_MQTT_Connect_happy_path1()
 {
-    MQTTContext_t mqttContext;
-    MQTTConnectInfo_t connectInfo;
+    MQTTContext_t mqttContext = { 0 };
+    MQTTConnectInfo_t connectInfo = { 0 };
     bool sessionPresent;
     MQTTStatus_t status;
-    TransportInterface_t transport;
-    MQTTFixedBuffer_t networkBuffer;
-    MQTTPacketInfo_t incomingPacket;
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
+    MQTTPacketInfo_t incomingPacket = { 0 };
 
     setupTransportInterface( &transport );
     setupNetworkBuffer( &networkBuffer );
@@ -1352,14 +1353,14 @@ void test_MQTT_Connect_happy_path1()
  */
 void test_MQTT_Connect_happy_path2()
 {
-    MQTTContext_t mqttContext;
-    MQTTConnectInfo_t connectInfo;
+    MQTTContext_t mqttContext = { 0 };
+    MQTTConnectInfo_t connectInfo = { 0 };
     uint32_t timeout = 2;
     bool sessionPresent;
     MQTTStatus_t status;
-    TransportInterface_t transport;
-    MQTTFixedBuffer_t networkBuffer;
-    MQTTPacketInfo_t incomingPacket;
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
+    MQTTPacketInfo_t incomingPacket = { 0 };
 
     setupTransportInterface( &transport );
     setupNetworkBuffer( &networkBuffer );
@@ -1388,15 +1389,15 @@ void test_MQTT_Connect_happy_path2()
  */
 void test_MQTT_Connect_happy_path3()
 {
-    MQTTContext_t mqttContext;
-    MQTTConnectInfo_t connectInfo;
-    MQTTPublishInfo_t willInfo;
+    MQTTContext_t mqttContext = { 0 };
+    MQTTConnectInfo_t connectInfo = { 0 };
+    MQTTPublishInfo_t willInfo = { 0 };
     uint32_t timeout = 2;
     bool sessionPresent;
     MQTTStatus_t status;
-    TransportInterface_t transport;
-    MQTTFixedBuffer_t networkBuffer;
-    MQTTPacketInfo_t incomingPacket;
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
+    MQTTPacketInfo_t incomingPacket = { 0 };
 
     setupTransportInterface( &transport );
     setupNetworkBuffer( &networkBuffer );
@@ -1409,6 +1410,7 @@ void test_MQTT_Connect_happy_path3()
     /* With non-NULL Will. */
     mqttContext.connectStatus = MQTTNotConnected;
     mqttContext.keepAliveIntervalSec = 0;
+
     willInfo.pTopicName = "test";
     willInfo.topicNameLength = 4;
     incomingPacket.type = MQTT_PACKET_TYPE_CONNACK;
@@ -1431,15 +1433,15 @@ void test_MQTT_Connect_happy_path3()
  */
 void test_MQTT_Connect_happy_path4()
 {
-    MQTTContext_t mqttContext;
-    MQTTConnectInfo_t connectInfo;
+    MQTTContext_t mqttContext = { 0 };
+    MQTTConnectInfo_t connectInfo = { 0 };
     uint32_t timeout = 2;
     bool sessionPresent;
     bool sessionPresentExpected;
     MQTTStatus_t status;
-    TransportInterface_t transport;
-    MQTTFixedBuffer_t networkBuffer;
-    MQTTPacketInfo_t incomingPacket;
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
+    MQTTPacketInfo_t incomingPacket = { 0 };
     MQTTPubAckInfo_t incomingRecords = { 0 };
     MQTTPubAckInfo_t outgoingRecords = { 0 };
 
@@ -1498,14 +1500,14 @@ void test_MQTT_Connect_happy_path4()
  */
 void test_MQTT_Connect_happy_path5()
 {
-    MQTTContext_t mqttContext;
-    MQTTConnectInfo_t connectInfo;
+    MQTTContext_t mqttContext = { 0 };
+    MQTTConnectInfo_t connectInfo = { 0 };
     uint32_t timeout = 2;
     bool sessionPresent, sessionPresentExpected;
     MQTTStatus_t status;
-    TransportInterface_t transport;
-    MQTTFixedBuffer_t networkBuffer;
-    MQTTPacketInfo_t incomingPacket;
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
+    MQTTPacketInfo_t incomingPacket = { 0 };
 
 
     setupTransportInterface( &transport );
@@ -1547,13 +1549,13 @@ void test_MQTT_Connect_happy_path5()
  */
 void test_MQTT_Connect_happy_path6()
 {
-    MQTTContext_t mqttContext;
-    MQTTConnectInfo_t connectInfo;
+    MQTTContext_t mqttContext = { 0 };
+    MQTTConnectInfo_t connectInfo = { 0 };
     bool sessionPresent;
     MQTTStatus_t status;
-    TransportInterface_t transport;
-    MQTTFixedBuffer_t networkBuffer;
-    MQTTPacketInfo_t incomingPacket;
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
+    MQTTPacketInfo_t incomingPacket = { 0 };
 
     setupTransportInterface( &transport );
     setupNetworkBuffer( &networkBuffer );
@@ -1593,10 +1595,10 @@ void test_MQTT_Connect_happy_path6()
  */
 void test_MQTT_Publish( void )
 {
-    MQTTContext_t mqttContext;
-    MQTTPublishInfo_t publishInfo;
-    TransportInterface_t transport;
-    MQTTFixedBuffer_t networkBuffer;
+    MQTTContext_t mqttContext = { 0 };
+    MQTTPublishInfo_t publishInfo = { 0 };
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
     MQTTStatus_t status;
 
     const uint16_t PACKET_ID = 1;
@@ -1619,10 +1621,10 @@ void test_MQTT_Publish( void )
  */
 void test_MQTT_Publish2( void )
 {
-    MQTTContext_t mqttContext;
-    MQTTPublishInfo_t publishInfo;
-    TransportInterface_t transport;
-    MQTTFixedBuffer_t networkBuffer;
+    MQTTContext_t mqttContext = { 0 };
+    MQTTPublishInfo_t publishInfo = { 0 };
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
     MQTTStatus_t status;
 
     const uint16_t PACKET_ID = 1;
@@ -1644,10 +1646,10 @@ void test_MQTT_Publish2( void )
  */
 void test_MQTT_Publish3( void )
 {
-    MQTTContext_t mqttContext;
-    MQTTPublishInfo_t publishInfo;
-    TransportInterface_t transport;
-    MQTTFixedBuffer_t networkBuffer;
+    MQTTContext_t mqttContext = { 0 };
+    MQTTPublishInfo_t publishInfo = { 0 };
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
     MQTTStatus_t status;
 
     setupTransportInterface( &transport );
@@ -1668,10 +1670,10 @@ void test_MQTT_Publish3( void )
  */
 void test_MQTT_Publish4( void )
 {
-    MQTTContext_t mqttContext;
-    MQTTPublishInfo_t publishInfo;
-    TransportInterface_t transport;
-    MQTTFixedBuffer_t networkBuffer;
+    MQTTContext_t mqttContext = { 0 };
+    MQTTPublishInfo_t publishInfo = { 0 };
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
     MQTTStatus_t status;
 
     const uint16_t PACKET_ID = 1;
@@ -1695,10 +1697,10 @@ void test_MQTT_Publish4( void )
  */
 void test_MQTT_Publish5( void )
 {
-    MQTTContext_t mqttContext;
-    MQTTPublishInfo_t publishInfo;
-    TransportInterface_t transport;
-    MQTTFixedBuffer_t networkBuffer;
+    MQTTContext_t mqttContext = { 0 };
+    MQTTPublishInfo_t publishInfo = { 0 };
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
     MQTTStatus_t status;
 
     setupTransportInterface( &transport );
@@ -1721,10 +1723,10 @@ void test_MQTT_Publish5( void )
  */
 void test_MQTT_Publish6( void )
 {
-    MQTTContext_t mqttContext;
-    MQTTPublishInfo_t publishInfo;
-    TransportInterface_t transport;
-    MQTTFixedBuffer_t networkBuffer;
+    MQTTContext_t mqttContext = { 0 };
+    MQTTPublishInfo_t publishInfo = { 0 };
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
     MQTTStatus_t status;
 
     setupTransportInterface( &transport );
@@ -1748,10 +1750,10 @@ void test_MQTT_Publish6( void )
  */
 void test_MQTT_Publish7( void )
 {
-    MQTTContext_t mqttContext;
-    MQTTPublishInfo_t publishInfo;
-    TransportInterface_t transport;
-    MQTTFixedBuffer_t networkBuffer;
+    MQTTContext_t mqttContext = { 0 };
+    MQTTPublishInfo_t publishInfo = { 0 };
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
     MQTTStatus_t status;
 
     setupTransportInterface( &transport );
@@ -1779,10 +1781,10 @@ void test_MQTT_Publish7( void )
  */
 void test_MQTT_Publish8( void )
 {
-    MQTTContext_t mqttContext;
-    MQTTPublishInfo_t publishInfo;
-    TransportInterface_t transport;
-    MQTTFixedBuffer_t networkBuffer;
+    MQTTContext_t mqttContext = { 0 };
+    MQTTPublishInfo_t publishInfo = { 0 };
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
     MQTTStatus_t status;
 
     setupTransportInterface( &transport );
@@ -1809,10 +1811,10 @@ void test_MQTT_Publish8( void )
  */
 void test_MQTT_Publish9( void )
 {
-    MQTTContext_t mqttContext;
-    MQTTPublishInfo_t publishInfo;
-    TransportInterface_t transport;
-    MQTTFixedBuffer_t networkBuffer;
+    MQTTContext_t mqttContext = { 0 };
+    MQTTPublishInfo_t publishInfo = { 0 };
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
     MQTTStatus_t status;
 
     setupTransportInterface( &transport );
@@ -1835,10 +1837,10 @@ void test_MQTT_Publish9( void )
  */
 void test_MQTT_Publish10( void )
 {
-    MQTTContext_t mqttContext;
-    MQTTPublishInfo_t publishInfo;
-    TransportInterface_t transport;
-    MQTTFixedBuffer_t networkBuffer;
+    MQTTContext_t mqttContext = { 0 };
+    MQTTPublishInfo_t publishInfo = { 0 };
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
     MQTTStatus_t status;
 
     setupTransportInterface( &transport );
@@ -1863,10 +1865,10 @@ void test_MQTT_Publish10( void )
  */
 void test_MQTT_Publish11( void )
 {
-    MQTTContext_t mqttContext;
-    MQTTPublishInfo_t publishInfo;
-    TransportInterface_t transport;
-    MQTTFixedBuffer_t networkBuffer;
+    MQTTContext_t mqttContext = { 0 };
+    MQTTPublishInfo_t publishInfo = { 0 };
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
     MQTTStatus_t status;
     const uint16_t PACKET_ID = 1;
 
@@ -1894,12 +1896,12 @@ void test_MQTT_Publish11( void )
  */
 void test_MQTT_Publish12( void )
 {
-    MQTTContext_t mqttContext;
-    MQTTPublishInfo_t publishInfo;
-    TransportInterface_t transport;
-    MQTTFixedBuffer_t networkBuffer;
+    MQTTContext_t mqttContext = { 0 };
+    MQTTPublishInfo_t publishInfo = { 0 };
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
     MQTTStatus_t status;
-    MQTTPublishState_t expectedState;
+    MQTTPublishState_t expectedState = { 0 };
 
     MQTTPubAckInfo_t incomingRecords = { 0 };
     MQTTPubAckInfo_t outgoingRecords = { 0 };
@@ -1945,10 +1947,10 @@ void test_MQTT_Publish12( void )
  */
 void test_MQTT_Publish13( void )
 {
-    MQTTContext_t mqttContext;
-    MQTTPublishInfo_t publishInfo;
-    TransportInterface_t transport;
-    MQTTFixedBuffer_t networkBuffer;
+    MQTTContext_t mqttContext = { 0 };
+    MQTTPublishInfo_t publishInfo = { 0 };
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
     MQTTStatus_t status;
     MQTTPubAckInfo_t incomingRecords = { 0 };
     MQTTPubAckInfo_t outgoingRecords = { 0 };
@@ -1982,10 +1984,10 @@ void test_MQTT_Publish13( void )
  */
 void test_MQTT_Publish14( void )
 {
-    MQTTContext_t mqttContext;
-    MQTTPublishInfo_t publishInfo;
-    TransportInterface_t transport;
-    MQTTFixedBuffer_t networkBuffer;
+    MQTTContext_t mqttContext = { 0 };
+    MQTTPublishInfo_t publishInfo = { 0 };
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
     MQTTStatus_t status;
 
     const uint16_t PACKET_ID = 1;
@@ -2013,10 +2015,10 @@ void test_MQTT_Publish14( void )
  */
 void test_MQTT_Publish15( void )
 {
-    MQTTContext_t mqttContext;
-    MQTTPublishInfo_t publishInfo;
-    TransportInterface_t transport;
-    MQTTFixedBuffer_t networkBuffer;
+    MQTTContext_t mqttContext = { 0 };
+    MQTTPublishInfo_t publishInfo = { 0 };
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
     MQTTStatus_t status;
     const uint16_t PACKET_ID = 1;
 
@@ -2046,10 +2048,10 @@ void test_MQTT_Publish15( void )
  */
 void test_MQTT_Publish_Send_Timeout( void )
 {
-    MQTTContext_t mqttContext;
-    MQTTPublishInfo_t publishInfo;
-    TransportInterface_t transport;
-    MQTTFixedBuffer_t networkBuffer;
+    MQTTContext_t mqttContext = { 0 };
+    MQTTPublishInfo_t publishInfo = { 0 };
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
     MQTTStatus_t status;
 
     setupNetworkBuffer( &networkBuffer );
@@ -2085,13 +2087,13 @@ void test_MQTT_Publish_Send_Timeout( void )
  */
 void test_MQTT_Disconnect1( void )
 {
-    MQTTContext_t mqttContext;
+    MQTTContext_t mqttContext = { 0 };
     MQTTStatus_t status;
     uint8_t buffer[ 10 ];
     uint8_t * bufPtr = buffer;
-    NetworkContext_t networkContext;
-    TransportInterface_t transport;
-    MQTTFixedBuffer_t networkBuffer;
+    NetworkContext_t networkContext = { 0 };
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
 
     setupTransportInterface( &transport );
     setupNetworkBuffer( &networkBuffer );
@@ -2114,13 +2116,13 @@ void test_MQTT_Disconnect1( void )
  */
 void test_MQTT_Disconnect2( void )
 {
-    MQTTContext_t mqttContext;
+    MQTTContext_t mqttContext = { 0 };
     MQTTStatus_t status;
     uint8_t buffer[ 10 ];
     uint8_t * bufPtr = buffer;
-    NetworkContext_t networkContext;
-    TransportInterface_t transport;
-    MQTTFixedBuffer_t networkBuffer;
+    NetworkContext_t networkContext = { 0 };
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
     size_t disconnectSize = 2;
 
     setupTransportInterface( &transport );
@@ -2147,13 +2149,13 @@ void test_MQTT_Disconnect2( void )
  */
 void test_MQTT_Disconnect3( void )
 {
-    MQTTContext_t mqttContext;
+    MQTTContext_t mqttContext = { 0 };
     MQTTStatus_t status;
     uint8_t buffer[ 10 ];
     uint8_t * bufPtr = buffer;
-    NetworkContext_t networkContext;
-    TransportInterface_t transport;
-    MQTTFixedBuffer_t networkBuffer;
+    NetworkContext_t networkContext = { 0 };
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
     size_t disconnectSize = 2;
 
     setupTransportInterface( &transport );
@@ -2192,13 +2194,13 @@ MQTTStatus_t MQTT_SerializeDisconnect_stub( const MQTTFixedBuffer_t * pFixedBuff
  */
 void test_MQTT_Disconnect4( void )
 {
-    MQTTContext_t mqttContext;
+    MQTTContext_t mqttContext = { 0 };
     MQTTStatus_t status;
     uint8_t buffer[ 10 ];
     uint8_t * bufPtr = buffer;
-    NetworkContext_t networkContext;
-    TransportInterface_t transport;
-    MQTTFixedBuffer_t networkBuffer;
+    NetworkContext_t networkContext = { 0 };
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
     size_t disconnectSize = 2;
 
     setupTransportInterface( &transport );
@@ -2235,9 +2237,9 @@ void test_MQTT_Disconnect4( void )
  */
 void test_MQTT_GetPacketId( void )
 {
-    MQTTContext_t mqttContext;
-    TransportInterface_t transport;
-    MQTTFixedBuffer_t networkBuffer;
+    MQTTContext_t mqttContext = { 0 };
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
     uint16_t packetId;
 
     setupTransportInterface( &transport );
@@ -2266,9 +2268,9 @@ void test_MQTT_GetPacketId( void )
  */
 void test_MQTT_ProcessLoop_Invalid_Params( void )
 {
-    MQTTContext_t context;
-    TransportInterface_t transport;
-    MQTTFixedBuffer_t networkBuffer;
+    MQTTContext_t context = { 0 };
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
     MQTTStatus_t mqttStatus = MQTT_ProcessLoop( NULL );
 
     TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
@@ -2298,9 +2300,9 @@ void test_MQTT_ProcessLoop_Invalid_Params( void )
 void test_MQTT_ProcessLoop_handleIncomingPublish_Happy_Path1( void )
 {
     MQTTStatus_t mqttStatus;
-    MQTTContext_t context;
-    TransportInterface_t transport;
-    MQTTFixedBuffer_t networkBuffer;
+    MQTTContext_t context = { 0 };
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
     ProcessLoopReturns_t expectParams = { 0 };
 
     setupTransportInterface( &transport );
@@ -2331,9 +2333,9 @@ void test_MQTT_ProcessLoop_handleIncomingPublish_Happy_Path1( void )
 void test_MQTT_ProcessLoop_handleIncomingPublish_Happy_Path2( void )
 {
     MQTTStatus_t mqttStatus;
-    MQTTContext_t context;
-    TransportInterface_t transport;
-    MQTTFixedBuffer_t networkBuffer;
+    MQTTContext_t context = { 0 };
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
     ProcessLoopReturns_t expectParams = { 0 };
 
     setupTransportInterface( &transport );
@@ -2364,10 +2366,10 @@ void test_MQTT_ProcessLoop_handleIncomingPublish_Happy_Path2( void )
 void test_MQTT_ProcessLoop_handleIncomingPublish_Happy_Path3( void )
 {
     MQTTStatus_t mqttStatus;
-    MQTTContext_t context;
-    TransportInterface_t transport;
-    MQTTFixedBuffer_t networkBuffer;
-    MQTTPublishInfo_t pubInfo;
+    MQTTContext_t context = { 0 };
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
+    MQTTPublishInfo_t pubInfo = { 0 };
     ProcessLoopReturns_t expectParams = { 0 };
     MQTTPubAckInfo_t incomingRecords = { 0 };
     MQTTPubAckInfo_t outgoingRecords = { 0 };
@@ -2417,9 +2419,9 @@ void test_MQTT_ProcessLoop_handleIncomingPublish_Happy_Path3( void )
 void test_MQTT_ProcessLoop_handleIncomingPublish_Happy_Path4( void )
 {
     MQTTStatus_t mqttStatus;
-    MQTTContext_t context;
-    TransportInterface_t transport;
-    MQTTFixedBuffer_t networkBuffer;
+    MQTTContext_t context = { 0 };
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
     ProcessLoopReturns_t expectParams = { 0 };
 
     setupTransportInterface( &transport );
@@ -2454,9 +2456,9 @@ void test_MQTT_ProcessLoop_handleIncomingPublish_Happy_Path4( void )
 void test_MQTT_ProcessLoop_handleIncomingPublish_Happy_Path5( void )
 {
     MQTTStatus_t mqttStatus;
-    MQTTContext_t context;
-    TransportInterface_t transport;
-    MQTTFixedBuffer_t networkBuffer;
+    MQTTContext_t context = { 0 };
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
     ProcessLoopReturns_t expectParams = { 0 };
 
     setupTransportInterface( &transport );
@@ -2488,9 +2490,9 @@ void test_MQTT_ProcessLoop_handleIncomingPublish_Happy_Path5( void )
 void test_MQTT_ProcessLoop_handleIncomingPublish_Happy_Path6( void )
 {
     MQTTStatus_t mqttStatus;
-    MQTTContext_t context;
-    TransportInterface_t transport;
-    MQTTFixedBuffer_t networkBuffer;
+    MQTTContext_t context = { 0 };
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
     ProcessLoopReturns_t expectParams = { 0 };
 
     setupTransportInterface( &transport );
@@ -2525,9 +2527,9 @@ void test_MQTT_ProcessLoop_handleIncomingPublish_Happy_Path6( void )
 void test_MQTT_ProcessLoop_handleIncomingPublish_Error_Paths( void )
 {
     MQTTStatus_t mqttStatus;
-    MQTTContext_t context;
-    TransportInterface_t transport;
-    MQTTFixedBuffer_t networkBuffer;
+    MQTTContext_t context = { 0 };
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
     MQTTPublishInfo_t publishInfo = { 0 };
     ProcessLoopReturns_t expectParams = { 0 };
     MQTTPubAckInfo_t incomingRecords = { 0 };
@@ -2583,9 +2585,9 @@ void test_MQTT_ProcessLoop_handleIncomingPublish_Error_Paths( void )
 void test_MQTT_ProcessLoop_Zero_Duration_And_Partial_Network_Read( void )
 {
     MQTTStatus_t mqttStatus;
-    MQTTContext_t context;
-    TransportInterface_t transport;
-    MQTTFixedBuffer_t networkBuffer;
+    MQTTContext_t context = { 0 };
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
     ProcessLoopReturns_t expectParams = { 0 };
 
     setupNetworkBuffer( &networkBuffer );
@@ -2631,10 +2633,10 @@ void test_MQTT_ProcessLoop_Zero_Duration_And_Partial_Network_Read( void )
 void test_MQTT_ProcessLoop_handleIncomingAck_Happy_Paths( void )
 {
     MQTTStatus_t mqttStatus;
-    MQTTContext_t context;
-    TransportInterface_t transport;
-    MQTTFixedBuffer_t networkBuffer;
-    ProcessLoopReturns_t expectParams;
+    MQTTContext_t context = { 0 };
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
+    ProcessLoopReturns_t expectParams = { 0 };
 
     setupTransportInterface( &transport );
     setupNetworkBuffer( &networkBuffer );
@@ -2729,10 +2731,10 @@ void test_MQTT_ProcessLoop_handleIncomingAck_Happy_Paths( void )
 void test_MQTT_ProcessLoop_handleIncomingAck_Error_Paths( void )
 {
     MQTTStatus_t mqttStatus;
-    MQTTContext_t context;
-    TransportInterface_t transport;
-    MQTTFixedBuffer_t networkBuffer;
-    ProcessLoopReturns_t expectParams;
+    MQTTContext_t context = { 0 };
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
+    ProcessLoopReturns_t expectParams = { 0 };
 
     setupTransportInterface( &transport );
     setupNetworkBuffer( &networkBuffer );
@@ -2813,13 +2815,12 @@ void test_MQTT_ProcessLoop_handleIncomingAck_Error_Paths( void )
 void test_MQTT_ProcessLoop_handleKeepAlive_Happy_Paths1( void )
 {
     MQTTStatus_t mqttStatus;
-    MQTTContext_t context;
-    TransportInterface_t transport;
-    MQTTFixedBuffer_t networkBuffer;
-    ProcessLoopReturns_t expectParams;
+    MQTTContext_t context = { 0 };
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
+    ProcessLoopReturns_t expectParams = { 0 };
 
     resetProcessLoopParams( &expectParams );
-
     setupNetworkBuffer( &networkBuffer );
     setupTransportInterface( &transport );
 
@@ -2868,10 +2869,10 @@ void test_MQTT_ProcessLoop_handleKeepAlive_Happy_Paths1( void )
 void test_MQTT_ProcessLoop_handleKeepAlive_Happy_Paths2( void )
 {
     MQTTStatus_t mqttStatus;
-    MQTTContext_t context;
-    TransportInterface_t transport;
-    MQTTFixedBuffer_t networkBuffer;
-    ProcessLoopReturns_t expectParams;
+    MQTTContext_t context = { 0 };
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
+    ProcessLoopReturns_t expectParams = { 0 };
 
     setupNetworkBuffer( &networkBuffer );
     setupTransportInterface( &transport );
@@ -2917,10 +2918,10 @@ void test_MQTT_ProcessLoop_handleKeepAlive_Happy_Paths2( void )
 void test_MQTT_ProcessLoop_handleKeepAlive_Happy_Paths3( void )
 {
     MQTTStatus_t mqttStatus;
-    MQTTContext_t context;
-    TransportInterface_t transport;
-    MQTTFixedBuffer_t networkBuffer;
-    ProcessLoopReturns_t expectParams;
+    MQTTContext_t context = { 0 };
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
+    ProcessLoopReturns_t expectParams = { 0 };
 
     resetProcessLoopParams( &expectParams );
     setupNetworkBuffer( &networkBuffer );
@@ -2966,10 +2967,10 @@ void test_MQTT_ProcessLoop_handleKeepAlive_Happy_Paths3( void )
 void test_MQTT_ProcessLoop_handleKeepAlive_Happy_Paths4( void )
 {
     MQTTStatus_t mqttStatus;
-    MQTTContext_t context;
-    TransportInterface_t transport;
-    MQTTFixedBuffer_t networkBuffer;
-    ProcessLoopReturns_t expectParams;
+    MQTTContext_t context = { 0 };
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
+    ProcessLoopReturns_t expectParams = { 0 };
 
     resetProcessLoopParams( &expectParams );
     setupNetworkBuffer( &networkBuffer );
@@ -3013,12 +3014,13 @@ void test_MQTT_ProcessLoop_handleKeepAlive_Happy_Paths4( void )
  */
 void test_MQTT_ProcessLoop_handleKeepAlive_Error_Paths1( void )
 {
-    MQTTStatus_t mqttStatus;
-    MQTTContext_t context;
-    TransportInterface_t transport;
-    MQTTFixedBuffer_t networkBuffer;
-    ProcessLoopReturns_t expectParams;
+    MQTTStatus_t mqttStatus = { 0 };
+    MQTTContext_t context = { 0 };
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
+    ProcessLoopReturns_t expectParams = { 0 };
 
+    setupNetworkBuffer( &networkBuffer );
     setupTransportInterface( &transport );
     transport.writev = transportWritevSuccess;
 
@@ -3059,13 +3061,14 @@ void test_MQTT_ProcessLoop_handleKeepAlive_Error_Paths1( void )
  */
 void test_MQTT_ProcessLoop_handleKeepAlive_Error_Paths2( void )
 {
-    MQTTStatus_t mqttStatus;
-    MQTTContext_t context;
-    TransportInterface_t transport;
-    MQTTFixedBuffer_t networkBuffer;
-    ProcessLoopReturns_t expectParams;
+    MQTTStatus_t mqttStatus = { 0 };
+    MQTTContext_t context = { 0 };
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
+    ProcessLoopReturns_t expectParams = { 0 };
 
     setupTransportInterface( &transport );
+    setupNetworkBuffer( &networkBuffer );
 
     modifyIncomingPacketStatus = MQTTNoDataAvailable;
     globalEntryTime = MQTT_PINGRESP_TIMEOUT_MS + 1;
@@ -3106,12 +3109,13 @@ void test_MQTT_ProcessLoop_handleKeepAlive_Error_Paths2( void )
 void test_MQTT_ProcessLoop_handleKeepAlive_Error_Paths3( void )
 {
     MQTTStatus_t mqttStatus;
-    MQTTContext_t context;
-    TransportInterface_t transport;
-    MQTTFixedBuffer_t networkBuffer;
-    ProcessLoopReturns_t expectParams;
+    MQTTContext_t context = { 0 };
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
+    ProcessLoopReturns_t expectParams = { 0 };
 
     setupTransportInterface( &transport );
+    setupNetworkBuffer( &networkBuffer );
 
     modifyIncomingPacketStatus = MQTTNoDataAvailable;
     globalEntryTime = MQTT_PINGRESP_TIMEOUT_MS + 1;
@@ -3153,9 +3157,9 @@ void test_MQTT_ProcessLoop_handleKeepAlive_Error_Paths3( void )
 void test_MQTT_ProcessLoop_Receive_Failed( void )
 {
     MQTTStatus_t mqttStatus;
-    MQTTContext_t context;
-    TransportInterface_t transport;
-    MQTTFixedBuffer_t networkBuffer;
+    MQTTContext_t context = { 0 };
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
     MQTTPacketInfo_t incomingPacket = { 0 };
 
     setupNetworkBuffer( &networkBuffer );
@@ -3183,10 +3187,10 @@ void test_MQTT_ProcessLoop_Receive_Failed( void )
  */
 void test_MQTT_ProcessLoop_Timer_Overflow( void )
 {
-    MQTTStatus_t mqttStatus;
-    MQTTContext_t context;
-    TransportInterface_t transport;
-    MQTTFixedBuffer_t networkBuffer;
+    MQTTStatus_t mqttStatus = { 0 };
+    MQTTContext_t context = { 0 };
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
     MQTTPacketInfo_t incomingPacket = { 0 };
     MQTTPublishState_t publishState = MQTTPubAckSend;
     MQTTPublishState_t ackState = MQTTPublishDone;
@@ -3229,11 +3233,12 @@ void test_MQTT_ProcessLoop_Timer_Overflow( void )
 void test_MQTT_ReceiveLoop( void )
 {
     MQTTStatus_t mqttStatus;
-    MQTTContext_t context;
-    TransportInterface_t transport;
-    MQTTFixedBuffer_t networkBuffer;
+    MQTTContext_t context = { 0 };
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
 
     setupTransportInterface( &transport );
+    setupNetworkBuffer( &networkBuffer );
 
     mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
@@ -3286,8 +3291,8 @@ void test_MQTT_ReceiveLoop( void )
 void test_MQTT_Subscribe_invalid_params( void )
 {
     MQTTStatus_t mqttStatus;
-    MQTTContext_t context;
-    MQTTSubscribeInfo_t subscribeInfo;
+    MQTTContext_t context = { 0 };
+    MQTTSubscribeInfo_t subscribeInfo = { 0 };
 
     /* Call subscribe with a NULL context. */
     mqttStatus = MQTT_Subscribe( NULL, &subscribeInfo, 1, MQTT_FIRST_VALID_PACKET_ID );
@@ -3326,10 +3331,10 @@ static uint8_t * MQTT_SerializeSubscribedHeader_cb( size_t remainingLength,
 void test_MQTT_Subscribe_happy_path( void )
 {
     MQTTStatus_t mqttStatus;
-    MQTTContext_t context;
-    TransportInterface_t transport;
-    MQTTFixedBuffer_t networkBuffer;
-    MQTTSubscribeInfo_t subscribeInfo;
+    MQTTContext_t context = { 0 };
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
+    MQTTSubscribeInfo_t subscribeInfo = { 0 };
     size_t remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
     size_t packetSize = MQTT_SAMPLE_REMAINING_LENGTH;
     MQTTPubAckInfo_t incomingRecords = { 0 };
@@ -3366,11 +3371,11 @@ void test_MQTT_Subscribe_happy_path( void )
  */
 void test_MQTT_Subscribe_error_paths1( void )
 {
-    MQTTStatus_t mqttStatus;
-    MQTTContext_t context;
-    TransportInterface_t transport;
-    MQTTFixedBuffer_t networkBuffer;
-    MQTTSubscribeInfo_t subscribeInfo;
+    MQTTStatus_t mqttStatus = { 0 };
+    MQTTContext_t context = { 0 };
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
+    MQTTSubscribeInfo_t subscribeInfo = { 0 };
     size_t remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
     size_t packetSize = MQTT_SAMPLE_REMAINING_LENGTH;
 
@@ -3402,10 +3407,10 @@ void test_MQTT_Subscribe_error_paths1( void )
 void test_MQTT_Subscribe_error_paths2( void )
 {
     MQTTStatus_t mqttStatus;
-    MQTTContext_t context;
-    TransportInterface_t transport;
-    MQTTFixedBuffer_t networkBuffer;
-    MQTTSubscribeInfo_t subscribeInfo;
+    MQTTContext_t context = { 0 };
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
+    MQTTSubscribeInfo_t subscribeInfo = { 0 };
     size_t remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
     size_t packetSize = MQTT_SAMPLE_REMAINING_LENGTH;
 
@@ -3440,8 +3445,8 @@ void test_MQTT_Subscribe_error_paths2( void )
 void test_MQTT_Unsubscribe_invalid_params( void )
 {
     MQTTStatus_t mqttStatus;
-    MQTTContext_t context;
-    MQTTSubscribeInfo_t subscribeInfo;
+    MQTTContext_t context = { 0 };
+    MQTTSubscribeInfo_t subscribeInfo = { 0 };
 
     /* Call subscribe with a NULL context. */
     mqttStatus = MQTT_Unsubscribe( NULL, &subscribeInfo, 1, MQTT_FIRST_VALID_PACKET_ID );
@@ -3480,10 +3485,10 @@ static uint8_t * MQTT_SerializeUnsubscribeHeader_cb( size_t remainingLength,
 void test_MQTT_Unsubscribe_happy_path( void )
 {
     MQTTStatus_t mqttStatus;
-    MQTTContext_t context;
-    TransportInterface_t transport;
-    MQTTFixedBuffer_t networkBuffer;
-    MQTTSubscribeInfo_t subscribeInfo;
+    MQTTContext_t context = { 0 };
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
+    MQTTSubscribeInfo_t subscribeInfo = { 0 };
     size_t remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
     size_t packetSize = MQTT_SAMPLE_REMAINING_LENGTH;
 
@@ -3513,10 +3518,10 @@ void test_MQTT_Unsubscribe_happy_path( void )
 void test_MQTT_Unsubscribe_error_path1( void )
 {
     MQTTStatus_t mqttStatus;
-    MQTTContext_t context;
-    TransportInterface_t transport;
-    MQTTFixedBuffer_t networkBuffer;
-    MQTTSubscribeInfo_t subscribeInfo;
+    MQTTContext_t context = { 0 };
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
+    MQTTSubscribeInfo_t subscribeInfo = { 0 };
     size_t remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
     size_t packetSize = MQTT_SAMPLE_REMAINING_LENGTH;
 
@@ -3552,10 +3557,10 @@ void test_MQTT_Unsubscribe_error_path1( void )
 void test_MQTT_Unsubscribe_error_path2( void )
 {
     MQTTStatus_t mqttStatus;
-    MQTTContext_t context;
-    TransportInterface_t transport;
-    MQTTFixedBuffer_t networkBuffer;
-    MQTTSubscribeInfo_t subscribeInfo;
+    MQTTContext_t context = { 0 };
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
+    MQTTSubscribeInfo_t subscribeInfo = { 0 };
     size_t remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
     size_t packetSize = MQTT_SAMPLE_REMAINING_LENGTH;
 
@@ -3605,9 +3610,9 @@ void test_MQTT_Ping_invalid_params( void )
 void test_MQTT_Ping_happy_path( void )
 {
     MQTTStatus_t mqttStatus;
-    MQTTContext_t context;
-    TransportInterface_t transport;
-    MQTTFixedBuffer_t networkBuffer;
+    MQTTContext_t context = { 0 };
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
     size_t pingreqSize = MQTT_PACKET_PINGREQ_SIZE;
 
     setupTransportInterface( &transport );
@@ -3635,9 +3640,9 @@ void test_MQTT_Ping_happy_path( void )
 void test_MQTT_Ping_error_path( void )
 {
     MQTTStatus_t mqttStatus;
-    MQTTContext_t context;
-    TransportInterface_t transport;
-    MQTTFixedBuffer_t networkBuffer;
+    MQTTContext_t context = { 0 };
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
     size_t pingreqSize = MQTT_PACKET_PINGREQ_SIZE;
 
     setupTransportInterface( &transport );
@@ -4146,7 +4151,7 @@ void test_MQTT_MatchTopic_Wildcard_MultiLevel_No_Match_Cases( void )
  */
 void test_MQTT_GetSubAckStatusCodes( void )
 {
-    MQTTPacketInfo_t mqttPacketInfo;
+    MQTTPacketInfo_t mqttPacketInfo = { 0 };
     size_t payloadSize;
     uint8_t * pPayloadStart;
     MQTTStatus_t status = MQTTSuccess;
