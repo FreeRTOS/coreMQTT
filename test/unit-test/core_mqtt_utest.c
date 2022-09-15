@@ -1577,7 +1577,6 @@ void test_MQTT_Connect_happy_path6()
     MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_GetIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
     MQTT_DeserializeAck_IgnoreAndReturn( MQTTSuccess );
-    MQTT_PubrelToResend_ExpectAnyArgsAndReturn( 1 );
     MQTT_PubrelToResend_ExpectAnyArgsAndReturn( MQTT_PACKET_ID_INVALID );
 
     status = MQTT_Connect( &mqttContext, &connectInfo, NULL, 0U, &sessionPresent );
