@@ -172,6 +172,7 @@ static uint8_t mqttBuffer[ MQTT_TEST_BUFFER_LENGTH ] = { 0 };
  * MQTT_ProcessLoop.
  */
 static bool isEventCallbackInvoked = false;
+static bool receiveOnce = false;
 
 /* ============================   UNITY FIXTURES ============================ */
 
@@ -192,6 +193,7 @@ void tearDown()
 /* Called at the beginning of the whole suite. */
 void suiteSetUp()
 {
+    receiveOnce = 0;
 }
 
 /* Called at the end of the whole suite. */
@@ -426,6 +428,24 @@ static int32_t transportRecvSuccess( NetworkContext_t * pNetworkContext,
     TEST_ASSERT_EQUAL( MQTT_SAMPLE_NETWORK_CONTEXT, pNetworkContext );
     ( void ) pBuffer;
     return bytesToRead;
+}
+
+static int32_t transportRecvOneSuccessOneFail( NetworkContext_t * pNetworkContext,
+                                               void * pBuffer,
+                                               size_t bytesToRead )
+{
+    TEST_ASSERT_EQUAL( MQTT_SAMPLE_NETWORK_CONTEXT, pNetworkContext );
+    ( void ) pBuffer;
+
+    if( receiveOnce == false )
+    {
+        receiveOnce = true;
+        return bytesToRead;
+    }
+    else
+    {
+        return -1;
+    }
 }
 
 /**
@@ -2380,10 +2400,8 @@ void test_MQTT_ProcessLoop_discardPacket( void )
     TransportInterface_t transport = { 0 };
     MQTTFixedBuffer_t networkBuffer = { 0 };
     MQTTPacketInfo_t incomingPacket = { 0 };
-    ProcessLoopReturns_t expectParams = { 0 };
     MQTTStatus_t mqttStatus;
 
-    setupTransportInterface( &transport );
     setupNetworkBuffer( &networkBuffer );
     setupTransportInterface( &transport );
 
@@ -2396,20 +2414,41 @@ void test_MQTT_ProcessLoop_discardPacket( void )
     incomingPacket.remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
     incomingPacket.headerLength = MQTT_SAMPLE_REMAINING_LENGTH;
 
-    expectParams.incomingPublish = false;
-    expectParams.updateStateStatus = MQTTSuccess;
-    expectParams.processLoopStatus = MQTTSuccess;
-    expectParams.stateAfterDeserialize = MQTTPubRelSend;
-
     MQTT_ProcessIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_ProcessIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
-    /*MQTT_DeserializeAck_ExpectAnyArgsAndReturn( MQTTSuccess ); */
-    /*MQTT_UpdateStateAck_ExpectAnyArgsAndReturn( expectParams.updateStateStatus ); */
-    /*MQTT_UpdateStateAck_ReturnThruPtr_pNewState( &expectParams.stateAfterDeserialize ); */
 
     mqttStatus = MQTT_ProcessLoop( &context );
 
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+}
+
+void test_MQTT_ProcessLoop_discardPacket_second_recv_fail( void )
+{
+    MQTTContext_t context = { 0 };
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
+    MQTTPacketInfo_t incomingPacket = { 0 };
+    MQTTStatus_t mqttStatus;
+
+    setupTransportInterface( &transport );
+    transport.recv = transportRecvOneSuccessOneFail;
+    setupNetworkBuffer( &networkBuffer );
+
+    mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+
+    context.networkBuffer.size = 20;
+
+    incomingPacket.type = currentPacketType;
+    incomingPacket.remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
+    incomingPacket.headerLength = MQTT_SAMPLE_REMAINING_LENGTH;
+
+    MQTT_ProcessIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_ProcessIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
+
+    mqttStatus = MQTT_ProcessLoop( &context );
+
+    TEST_ASSERT_EQUAL( MQTTRecvFailed, mqttStatus );
 }
 
 /**

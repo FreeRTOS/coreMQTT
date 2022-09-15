@@ -1718,7 +1718,6 @@ static MQTTStatus_t receiveSingleIteration( MQTTContext_t * pContext,
     /* If the MQTT Packet size is bigger than the buffer itself. */
     else if( totalMQTTPacketLength > pContext->networkBuffer.size )
     {
-        printf( "discarding packet\n" );
         /* Discard the packet from the buffer and from the socket buffer. */
         status = discardStoredPacket( pContext,
                                       &incomingPacket );
