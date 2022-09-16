@@ -85,8 +85,7 @@ these low-level functions can be used directly:
 The MQTT 3.1.1 protocol allows for a client and server to maintain persistent sessions, which
 can be resumed after a reconnect. The elements of a session stored by this client library consist
 of the states of incomplete publishes with Quality of Service levels of 1 (at least once), or 2 (exactly once).
-These states are stored in the arrays @ref MQTTContext_t.outgoingPublishRecords and @ref MQTTContext_t.incomingPublishRecords;
-the length of each of these arrays can be configured with @ref MQTT_STATE_ARRAY_MAX_COUNT.
+These states are stored in the pointers pointed to by @ref MQTTContext_t.outgoingPublishRecords and @ref MQTTContext_t.incomingPublishRecords;
 This library does not store any subscription information, nor any information for QoS 0 publishes.
 
 When resuming a persistent session, the client library will resend PUBRELs for all PUBRECs that had been received
@@ -148,9 +147,6 @@ Some configuration settings are C pre-processor constants, and some are function
 
 @section MQTT_DO_NOT_USE_CUSTOM_CONFIG
 @copydoc MQTT_DO_NOT_USE_CUSTOM_CONFIG
-
-@section MQTT_STATE_ARRAY_MAX_COUNT
-@copydoc MQTT_STATE_ARRAY_MAX_COUNT
 
 @section MQTT_PINGRESP_TIMEOUT_MS
 @copydoc MQTT_PINGRESP_TIMEOUT_MS

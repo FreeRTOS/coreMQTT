@@ -1,5 +1,11 @@
 # Changelog for coreMQTT Client Library
 
+## v1.3.0 (September 2022)
+- [#199](https://github.com/FreeRTOS/coreMQTT/pull/199) Make use of user provided buffer only for packet reception. Stack space will be used for sending packets.
+- [#198](https://github.com/FreeRTOS/coreMQTT/pull/198) Remove timeout from MQTT\_ProcessLoop and MQTT\_ReceiveLoop and make the implementations non-blocking.
+- [#196](https://github.com/FreeRTOS/coreMQTT/pull/196) Add a cancel callback API to cancel sent publish packets.
+- [#191](https://github.com/FreeRTOS/coreMQTT/pull/191) Generate PINGREQ packets on idle input or output.
+
 ## v1.2.0 (November 2021)
 
 ### Changes
