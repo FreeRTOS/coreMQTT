@@ -459,6 +459,11 @@ static size_t findInRecord( const MQTTPubAckInfo_t * records,
         }
     }
 
+    if( index == recordCount )
+    {
+        index = MQTT_INVALID_STATE_COUNT;
+    }
+
     return index;
 }
 
@@ -791,7 +796,10 @@ static MQTTStatus_t updateStatePublish( MQTTContext_t * pMqttContext,
              * update is required. */
             if( currentState != newState )
             {
-                updateRecord( pMqttContext->outgoingPublishRecords, recordIndex, newState, false );
+                updateRecord( pMqttContext->outgoingPublishRecords,
+                              recordIndex,
+                              newState,
+                              false );
             }
         }
     }
@@ -1004,8 +1012,6 @@ MQTTStatus_t MQTT_UpdateStateAck( MQTTContext_t * pMqttContext,
     MQTTPubAckInfo_t * records = NULL;
     MQTTStatus_t status = MQTTBadResponse;
 
-
-
     if( ( pMqttContext == NULL ) || ( pNewState == NULL ) )
     {
         LogError( ( "Argument cannot be NULL: pMqttContext=%p, pNewState=%p.",
@@ -1043,8 +1049,7 @@ MQTTStatus_t MQTT_UpdateStateAck( MQTTContext_t * pMqttContext,
                                     &currentState );
     }
 
-    if( ( recordIndex < MQTT_INVALID_STATE_COUNT ) &&
-        ( recordIndex < maxRecordCount ) )
+    if( recordIndex != MQTT_INVALID_STATE_COUNT )
     {
         newState = MQTT_CalculateStateAck( packetType, opType, qos );
 
