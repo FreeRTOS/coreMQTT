@@ -698,11 +698,6 @@ MQTTStatus_t MQTT_SerializePublishHeaderWithoutTopic( const MQTTPublishInfo_t * 
 
     *headerSize = headerLength;
 
-    if( headerLength > 7 )
-    {
-        status = MQTTBadParameter;
-    }
-
     return status;
 }
 
@@ -1038,12 +1033,12 @@ static MQTTStatus_t processPublishFlags( uint8_t publishFlags,
         LogDebug( ( "QoS is %d.", ( int ) pPublishInfo->qos ) );
 
         /* Parse the Retain bit. */
-        pPublishInfo->retain = ( UINT8_CHECK_BIT( publishFlags, MQTT_PUBLISH_FLAG_RETAIN ) ) ? true : false;
+        pPublishInfo->retain = UINT8_CHECK_BIT( publishFlags, MQTT_PUBLISH_FLAG_RETAIN );
 
         LogDebug( ( "Retain bit is %d.", ( int ) pPublishInfo->retain ) );
 
         /* Parse the DUP bit. */
-        pPublishInfo->dup = ( UINT8_CHECK_BIT( publishFlags, MQTT_PUBLISH_FLAG_DUP ) ) ? true : false;
+        pPublishInfo->dup = UINT8_CHECK_BIT( publishFlags, MQTT_PUBLISH_FLAG_DUP );
 
         LogDebug( ( "DUP bit is %d.", ( int ) pPublishInfo->dup ) );
     }
@@ -1568,11 +1563,11 @@ uint8_t * MQTT_SerializeConnectFixedHeader( uint8_t * pIndex,
     /* The remaining length of the CONNECT packet is encoded starting from the
      * second byte. The remaining length does not include the length of the fixed
      * header or the encoding of the remaining length. */
-    pIndexLocal = encodeRemainingLength( pIndex, remainingLength );
+    pIndexLocal = encodeRemainingLength( pIndexLocal, remainingLength );
 
     /* The string "MQTT" is placed at the beginning of the CONNECT packet's variable
      * header. This string is 4 bytes long. */
-    pIndexLocal = encodeString( pIndex, "MQTT", 4 );
+    pIndexLocal = encodeString( pIndexLocal, "MQTT", 4 );
 
     /* The MQTT protocol version is the second field of the variable header. */
     *pIndexLocal = MQTT_VERSION_3_1_1;

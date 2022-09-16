@@ -67,6 +67,14 @@
 #endif
 
 /**
+ * @ingroup mqtt_constants
+ * @brief Maximum number of vectors in subscribe and unsubscribe packet.
+ */
+#ifndef MQTT_SUB_UNSUB_MAX_VECTORS
+    #define MQTT_SUB_UNSUB_MAX_VECTORS    ( 4U )
+#endif
+
+/**
  * @brief The number of retries for receiving CONNACK.
  *
  * The MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT will be used only when the
