@@ -225,7 +225,7 @@ void test_MQTT_ReserveState( void )
 
 /* ========================================================================== */
 
-void test_MQTT_RemoveStateRecord_ContextNULL(void)
+void test_MQTT_RemoveStateRecord_ContextNULL( void )
 {
     MQTTStatus_t status;
 
@@ -236,7 +236,7 @@ void test_MQTT_RemoveStateRecord_ContextNULL(void)
 
 /* ========================================================================== */
 
-void test_MQTT_RemoveStateRecord_RecordsNULL(void)
+void test_MQTT_RemoveStateRecord_RecordsNULL( void )
 {
     MQTTStatus_t status;
     MQTTContext_t context;
@@ -250,18 +250,18 @@ void test_MQTT_RemoveStateRecord_RecordsNULL(void)
 
 /* ========================================================================== */
 
-void test_MQTT_RemoveStateRecord_NoRecordFound(void)
+void test_MQTT_RemoveStateRecord_NoRecordFound( void )
 {
     MQTTStatus_t status;
     MQTTContext_t context;
-    MQTTPubAckInfo_t outgoingRecords[5];
+    MQTTPubAckInfo_t outgoingRecords[ 5 ];
 
     memset( &context, 0, sizeof( MQTTContext_t ) );
 
     context.outgoingPublishRecords = outgoingRecords;
     context.outgoingPublishRecordMaxCount = 5;
 
-    memset( context.outgoingPublishRecords,0,sizeof( outgoingRecords ) );
+    memset( context.outgoingPublishRecords, 0, sizeof( outgoingRecords ) );
 
     /* Any non-zero packet ID. */
     status = MQTT_RemoveStateRecord( &context, 12U );
@@ -271,11 +271,11 @@ void test_MQTT_RemoveStateRecord_NoRecordFound(void)
 
 /* ========================================================================== */
 
-void test_MQTT_RemoveStateRecord_RecordFoundIncorrectQoS(void)
+void test_MQTT_RemoveStateRecord_RecordFoundIncorrectQoS( void )
 {
     MQTTStatus_t status;
     MQTTContext_t context;
-    MQTTPubAckInfo_t outgoingRecords[5];
+    MQTTPubAckInfo_t outgoingRecords[ 5 ];
     const uint16_t packetID = 12;
     /* Any state except null state. */
     const MQTTPublishState_t state = MQTTPubRelSend;
@@ -285,11 +285,11 @@ void test_MQTT_RemoveStateRecord_RecordFoundIncorrectQoS(void)
     context.outgoingPublishRecords = outgoingRecords;
     context.outgoingPublishRecordMaxCount = 5;
 
-    memset( context.outgoingPublishRecords,0,sizeof( outgoingRecords ) );
+    memset( context.outgoingPublishRecords, 0, sizeof( outgoingRecords ) );
 
-    context.outgoingPublishRecords[0].packetId = packetID;
-    context.outgoingPublishRecords[0].publishState = state;
-    context.outgoingPublishRecords[0].qos = MQTTQoS0;    
+    context.outgoingPublishRecords[ 0 ].packetId = packetID;
+    context.outgoingPublishRecords[ 0 ].publishState = state;
+    context.outgoingPublishRecords[ 0 ].qos = MQTTQoS0;
 
     /* Any non-zero packet ID. */
     status = MQTT_RemoveStateRecord( &context, packetID );
@@ -299,11 +299,11 @@ void test_MQTT_RemoveStateRecord_RecordFoundIncorrectQoS(void)
 
 /* ========================================================================== */
 
-void test_MQTT_RemoveStateRecord_RemoveQoS1Record(void)
+void test_MQTT_RemoveStateRecord_RemoveQoS1Record( void )
 {
     MQTTStatus_t status;
     MQTTContext_t context;
-    MQTTPubAckInfo_t outgoingRecords[5];
+    MQTTPubAckInfo_t outgoingRecords[ 5 ];
     const uint16_t packetID = 12;
     /* Any state except null state. */
     const MQTTPublishState_t state = MQTTPubRelSend;
@@ -313,28 +313,28 @@ void test_MQTT_RemoveStateRecord_RemoveQoS1Record(void)
     context.outgoingPublishRecords = outgoingRecords;
     context.outgoingPublishRecordMaxCount = 5;
 
-    memset( context.outgoingPublishRecords,0,sizeof( outgoingRecords ) );
+    memset( context.outgoingPublishRecords, 0, sizeof( outgoingRecords ) );
 
-    context.outgoingPublishRecords[1].packetId = packetID;
-    context.outgoingPublishRecords[1].publishState = state;
-    context.outgoingPublishRecords[1].qos = MQTTQoS1;    
+    context.outgoingPublishRecords[ 1 ].packetId = packetID;
+    context.outgoingPublishRecords[ 1 ].publishState = state;
+    context.outgoingPublishRecords[ 1 ].qos = MQTTQoS1;
 
     /* Any non-zero packet ID. */
     status = MQTT_RemoveStateRecord( &context, packetID );
 
     TEST_ASSERT_EQUAL( MQTTSuccess, status );
-    TEST_ASSERT_EQUAL( context.outgoingPublishRecords[1].packetId, MQTT_PACKET_ID_INVALID );
-    TEST_ASSERT_EQUAL( context.outgoingPublishRecords[1].publishState, MQTTStateNull );
-    TEST_ASSERT_EQUAL( context.outgoingPublishRecords[1].qos, MQTTQoS0 );
+    TEST_ASSERT_EQUAL( context.outgoingPublishRecords[ 1 ].packetId, MQTT_PACKET_ID_INVALID );
+    TEST_ASSERT_EQUAL( context.outgoingPublishRecords[ 1 ].publishState, MQTTStateNull );
+    TEST_ASSERT_EQUAL( context.outgoingPublishRecords[ 1 ].qos, MQTTQoS0 );
 }
 
 /* ========================================================================== */
 
-void test_MQTT_RemoveStateRecord_RemoveQoS2Record(void)
+void test_MQTT_RemoveStateRecord_RemoveQoS2Record( void )
 {
     MQTTStatus_t status;
     MQTTContext_t context;
-    MQTTPubAckInfo_t outgoingRecords[5];
+    MQTTPubAckInfo_t outgoingRecords[ 5 ];
     const uint16_t packetID = 12;
     /* Any state except null state. */
     const MQTTPublishState_t state = MQTTPubRelSend;
@@ -344,19 +344,19 @@ void test_MQTT_RemoveStateRecord_RemoveQoS2Record(void)
     context.outgoingPublishRecords = outgoingRecords;
     context.outgoingPublishRecordMaxCount = 5;
 
-    memset( context.outgoingPublishRecords,0,sizeof( outgoingRecords ) );
+    memset( context.outgoingPublishRecords, 0, sizeof( outgoingRecords ) );
 
-    context.outgoingPublishRecords[1].packetId = packetID;
-    context.outgoingPublishRecords[1].publishState = state;
-    context.outgoingPublishRecords[1].qos = MQTTQoS2;    
+    context.outgoingPublishRecords[ 1 ].packetId = packetID;
+    context.outgoingPublishRecords[ 1 ].publishState = state;
+    context.outgoingPublishRecords[ 1 ].qos = MQTTQoS2;
 
     /* Any non-zero packet ID. */
     status = MQTT_RemoveStateRecord( &context, packetID );
 
     TEST_ASSERT_EQUAL( MQTTSuccess, status );
-    TEST_ASSERT_EQUAL( context.outgoingPublishRecords[1].packetId, MQTT_PACKET_ID_INVALID );
-    TEST_ASSERT_EQUAL( context.outgoingPublishRecords[1].publishState, MQTTStateNull );
-    TEST_ASSERT_EQUAL( context.outgoingPublishRecords[1].qos, MQTTQoS0 );
+    TEST_ASSERT_EQUAL( context.outgoingPublishRecords[ 1 ].packetId, MQTT_PACKET_ID_INVALID );
+    TEST_ASSERT_EQUAL( context.outgoingPublishRecords[ 1 ].publishState, MQTTStateNull );
+    TEST_ASSERT_EQUAL( context.outgoingPublishRecords[ 1 ].qos, MQTTQoS0 );
 }
 
 /* ========================================================================== */

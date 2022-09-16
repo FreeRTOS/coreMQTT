@@ -416,8 +416,8 @@ static int32_t transportSendSucceedThenFail( NetworkContext_t * pNetworkContext,
  * @brief Mocked transport send that only sends half of the bytes.
  */
 static int32_t transportWritevPartialByte( NetworkContext_t * pNetworkContext,
-                                       TransportOutVector_t * pIoVectorIterator,
-                                       size_t vectorsToBeSent )
+                                           TransportOutVector_t * pIoVectorIterator,
+                                           size_t vectorsToBeSent )
 {
     int32_t bytesToWrite = 0;
     size_t i;
@@ -2679,10 +2679,10 @@ void test_MQTT_ProcessLoop_IncomingBufferNotInit( void )
     mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
 
     /* First byte shows that it is a publish type packet. */
-    mqttBuffer[0] = MQTT_PACKET_TYPE_PUBLISH;
+    mqttBuffer[ 0 ] = MQTT_PACKET_TYPE_PUBLISH;
     /* Length of the packet. */
-    mqttBuffer[1] = 20;
-    
+    mqttBuffer[ 1 ] = 20;
+
     incomingPacket.type = MQTT_PACKET_TYPE_PUBLISH;
     incomingPacket.remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
     incomingPacket.headerLength = MQTT_SAMPLE_REMAINING_LENGTH;
@@ -2718,10 +2718,10 @@ void test_MQTT_ProcessLoop_IncomingBufferNotInitQoS0( void )
     mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
 
     /* First byte shows that it is a publish type packet. */
-    mqttBuffer[0] = MQTT_PACKET_TYPE_PUBLISH;
+    mqttBuffer[ 0 ] = MQTT_PACKET_TYPE_PUBLISH;
     /* Length of the packet. */
-    mqttBuffer[1] = 20;
-    
+    mqttBuffer[ 1 ] = 20;
+
     incomingPacket.type = MQTT_PACKET_TYPE_PUBLISH;
     incomingPacket.remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
     incomingPacket.headerLength = MQTT_SAMPLE_REMAINING_LENGTH;
@@ -3932,9 +3932,9 @@ static uint8_t * MQTT_SerializeSubscribedHeader_cb( size_t remainingLength,
 }
 
 static uint8_t * MQTT_SerializeSubscribedHeader_cb1( size_t remainingLength,
-                                                    uint8_t * pIndex,
-                                                    uint16_t packetId,
-                                                    int numcallbacks )
+                                                     uint8_t * pIndex,
+                                                     uint16_t packetId,
+                                                     int numcallbacks )
 {
     ( void ) remainingLength;
     ( void ) pIndex;
