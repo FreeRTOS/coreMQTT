@@ -581,8 +581,8 @@ static bool matchEndWildcardsSpecialCases( const char * pTopicFilter,
         ( pTopicFilter[ filterIndex ] == '/' ) )
     {
         /* Check that the last character is a wildcard. */
-        matchFound = ( ( pTopicFilter[ filterIndex + 1U ] == '+' ) ||
-                       ( pTopicFilter[ filterIndex + 1U ] == '#' ) ) ? true : false;
+        matchFound = ( pTopicFilter[ filterIndex + 1U ] == '+' ) ||
+                     ( pTopicFilter[ filterIndex + 1U ] == '#' );
     }
 
     return matchFound;
@@ -611,9 +611,8 @@ static bool matchWildcards( const char * pTopicName,
 
     /* Wild card in a topic filter is only valid either at the starting position
      * or when it is preceded by a '/'.*/
-    locationIsValidForWildcard = ( ( *pFilterIndex == 0u ) ||
-                                   ( pTopicFilter[ *pFilterIndex - 1U ] == '/' )
-                                   ) ? true : false;
+    locationIsValidForWildcard = ( *pFilterIndex == 0u ) ||
+                                 ( pTopicFilter[ *pFilterIndex - 1U ] == '/' );
 
     if( ( pTopicFilter[ *pFilterIndex ] == '+' ) && ( locationIsValidForWildcard == true ) )
     {
@@ -752,8 +751,8 @@ static bool matchTopicFilter( const char * pTopicName,
          * case when the topic filter contains the '+' wildcard at a non-starting position.
          * For example, when matching either of "sport/+/player" OR "sport/hockey/+" topic
          * filters with "sport/hockey/player" topic name. */
-        matchFound = ( ( nameIndex == topicNameLength ) &&
-                       ( filterIndex == topicFilterLength ) ) ? true : false;
+        matchFound = ( nameIndex == topicNameLength ) &&
+                     ( filterIndex == topicFilterLength );
     }
 
     return matchFound;
@@ -1617,7 +1616,7 @@ static MQTTStatus_t handleIncomingAck( MQTTContext_t * pContext,
 
         case MQTT_PACKET_TYPE_PINGRESP:
             status = MQTT_DeserializeAck( pIncomingPacket, &packetIdentifier, NULL );
-            invokeAppCallback = ( ( status == MQTTSuccess ) && ( manageKeepAlive == false ) ) ? true : false;
+            invokeAppCallback = ( status == MQTTSuccess ) && !manageKeepAlive;
 
             if( ( status == MQTTSuccess ) && ( manageKeepAlive == true ) )
             {
@@ -1630,7 +1629,7 @@ static MQTTStatus_t handleIncomingAck( MQTTContext_t * pContext,
         case MQTT_PACKET_TYPE_UNSUBACK:
             /* Deserialize and give these to the app provided callback. */
             status = MQTT_DeserializeAck( pIncomingPacket, &packetIdentifier, NULL );
-            invokeAppCallback = ( ( status == MQTTSuccess ) || ( status == MQTTServerRefused ) ) ? true : false;
+            invokeAppCallback = ( status == MQTTSuccess ) || ( status == MQTTServerRefused );
             break;
 
         default:
@@ -2238,11 +2237,11 @@ static MQTTStatus_t receiveConnack( const MQTTContext_t * pContext,
          *    A value of 0 for the config will try once to read CONNACK. */
         if( timeoutMs > 0U )
         {
-            breakFromLoop = ( calculateElapsedTime( getTimeStamp(), entryTimeMs ) >= timeoutMs ) ? true : false;
+            breakFromLoop = calculateElapsedTime( getTimeStamp(), entryTimeMs ) >= timeoutMs;
         }
         else
         {
-            breakFromLoop = ( loopCount >= MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT ) ? true : false;
+            breakFromLoop = loopCount >= MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT;
             loopCount++;
         }
 
@@ -3099,7 +3098,7 @@ MQTTStatus_t MQTT_MatchTopic( const char * pTopicName,
          * topic filter length match. */
         if( topicNameLength == topicFilterLength )
         {
-            matchStatus = ( strncmp( pTopicName, pTopicFilter, topicNameLength ) == 0 ) ? true : false;
+            matchStatus = strncmp( pTopicName, pTopicFilter, topicNameLength ) == 0;
         }
 
         if( matchStatus == false )
@@ -3108,8 +3107,8 @@ MQTTStatus_t MQTT_MatchTopic( const char * pTopicName,
              * topic filter.*/
 
             /* Determine if topic filter starts with a wildcard. */
-            topicFilterStartsWithWildcard = ( ( pTopicFilter[ 0 ] == '+' ) ||
-                                              ( pTopicFilter[ 0 ] == '#' ) ) ? true : false;
+            topicFilterStartsWithWildcard = ( pTopicFilter[ 0 ] == '+' ) ||
+                                            ( pTopicFilter[ 0 ] == '#' );
 
             /* Note: According to the MQTT 3.1.1 specification, incoming PUBLISH topic names
              * starting with "$" character cannot be matched against topic filter starting with
