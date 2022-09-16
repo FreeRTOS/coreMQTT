@@ -48,12 +48,6 @@
 
 /**
  * @ingroup mqtt_constants
- * @brief Maximum number of vectors in subscribe and unsubscribe packet.
- */
-#define MQTT_SUB_UNSUB_MAX_VECTORS    ( 4U )
-
-/**
- * @ingroup mqtt_constants
  * @brief Invalid packet identifier.
  *
  * Zero is an invalid packet identifier as per MQTT v3.1.1 spec.

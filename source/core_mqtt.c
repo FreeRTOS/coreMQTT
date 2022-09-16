@@ -835,7 +835,7 @@ static int32_t sendMessageVector( MQTTContext_t * pContext,
         if( ( bytesSentThisVector > 0U ) &&
             ( pIoVectIterator < &( pIoVec[ ioVecCount ] ) ) )
         {
-            ( *( ( uint8_t * ) pIoVectIterator->iov_base ) ) += bytesSentThisVector;
+            pIoVectIterator->iov_base = ( void  * ) &( ( ( uint8_t * ) pIoVectIterator->iov_base )[ bytesSentThisVector ] );
             pIoVectIterator->iov_len -= bytesSentThisVector;
         }
     }
@@ -1904,6 +1904,9 @@ static MQTTStatus_t sendSubscribeWithoutCopy( MQTTContext_t * pContext,
             pIterator->iov_len = 1U;
             totalPacketLength += pIterator->iov_len;
 
+            /* Increment the pointer. */
+            pIterator++;
+
             /* Two slots get used by the topic string length and topic string. And
              * one slot gets used by the quality of service. */
             ioVectorLength += subscriptionStringVectorSlots;
@@ -2142,13 +2145,7 @@ static MQTTStatus_t sendConnectWithoutCopy( MQTTContext_t * pContext,
     iterator = pIoVector;
 
     /* Validate arguments. */
-    if( pConnectInfo == NULL )
-    {
-        LogError( ( "Argument cannot be NULL: pConnectInfo=%p.",
-                    ( void * ) pConnectInfo ) );
-        status = MQTTBadParameter;
-    }
-    else if( ( pWillInfo != NULL ) && ( pWillInfo->pTopicName == NULL ) )
+    if( ( pWillInfo != NULL ) && ( pWillInfo->pTopicName == NULL ) )
     {
         LogError( ( "pWillInfo->pTopicName cannot be NULL if Will is present." ) );
         status = MQTTBadParameter;
