@@ -29,7 +29,8 @@
 
 #include "core_mqtt_state.h"
 
-#define MQTT_PACKET_ID_INVALID    ( ( uint16_t ) 0U )
+#define MQTT_PACKET_ID_INVALID         ( ( uint16_t ) 0U )
+#define  MQTT_STATE_ARRAY_MAX_COUNT    10
 
 /* ============================   UNITY FIXTURES ============================ */
 void setUp( void )
@@ -52,7 +53,6 @@ int suiteTearDown( int numFailures )
     return numFailures;
 }
 
-#define  MQTT_STATE_ARRAY_MAX_COUNT    10
 /* ========================================================================== */
 
 static int32_t transportRecvSuccess( NetworkContext_t * pNetworkContext,

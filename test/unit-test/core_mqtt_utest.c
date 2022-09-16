@@ -4208,7 +4208,7 @@ void test_MQTT_Unsubscribe_happy_path( void )
     MQTT_GetUnsubscribePacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_GetUnsubscribePacketSize_ReturnThruPtr_pPacketSize( &packetSize );
     MQTT_GetUnsubscribePacketSize_ReturnThruPtr_pRemainingLength( &remainingLength );
-    /*MQTT_SerializeUnsubscribe_ExpectAnyArgsAndReturn( MQTTSuccess ); */
+
     /* Expect the above calls when running MQTT_Unsubscribe. */
     mqttStatus = MQTT_Unsubscribe( &context, &subscribeInfo, 1, MQTT_FIRST_VALID_PACKET_ID );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
