@@ -197,6 +197,7 @@ mqttsubacksuccessqos
 mqttsubscribeinfo
 mqttsuccess
 msb
+mutex
 mynetworkrecvimplementation
 mynetworksendimplementation
 mytcpsocketcontext
@@ -410,6 +411,7 @@ tx
 typename
 uint
 un
+unacked
 unsuback
 unsubscribelist
 updatedlength
