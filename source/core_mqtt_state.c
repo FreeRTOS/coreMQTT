@@ -239,7 +239,7 @@ static bool validateTransitionPublish( MQTTPublishState_t currentState,
             /* Transitions from null occur when storing a new entry into the record. */
             if( opType == MQTT_RECEIVE )
             {
-                isValid = ( ( newState == MQTTPubAckSend ) || ( newState == MQTTPubRecSend ) ) ? true : false;
+                isValid = ( newState == MQTTPubAckSend ) || ( newState == MQTTPubRecSend );
             }
 
             break;
@@ -251,11 +251,11 @@ static bool validateTransitionPublish( MQTTPublishState_t currentState,
             switch( qos )
             {
                 case MQTTQoS1:
-                    isValid = ( newState == MQTTPubAckPending ) ? true : false;
+                    isValid = newState == MQTTPubAckPending;
                     break;
 
                 case MQTTQoS2:
-                    isValid = ( newState == MQTTPubRecPending ) ? true : false;
+                    isValid = newState == MQTTPubRecPending;
                     break;
 
                 case MQTTQoS0:
@@ -272,7 +272,7 @@ static bool validateTransitionPublish( MQTTPublishState_t currentState,
 
             /* When a session is reestablished, outgoing QoS1 publishes in state
              * #MQTTPubAckPending can be resent. The state remains the same. */
-            isValid = ( newState == MQTTPubAckPending ) ? true : false;
+            isValid = newState == MQTTPubAckPending;
 
             break;
 
@@ -280,7 +280,7 @@ static bool validateTransitionPublish( MQTTPublishState_t currentState,
 
             /* When a session is reestablished, outgoing QoS2 publishes in state
              * #MQTTPubRecPending can be resent. The state remains the same. */
-            isValid = ( newState == MQTTPubRecPending ) ? true : false;
+            isValid = newState == MQTTPubRecPending;
 
             break;
 
@@ -312,12 +312,12 @@ static bool validateTransitionAck( MQTTPublishState_t currentState,
         /* Incoming publish, QoS 1. */
         case MQTTPubAckPending:
             /* Outgoing publish, QoS 1. */
-            isValid = ( newState == MQTTPublishDone ) ? true : false;
+            isValid = newState == MQTTPublishDone;
             break;
 
         case MQTTPubRecSend:
             /* Incoming publish, QoS 2. */
-            isValid = ( newState == MQTTPubRelPending ) ? true : false;
+            isValid = newState == MQTTPubRelPending;
             break;
 
         case MQTTPubRelPending:
@@ -339,8 +339,8 @@ static bool validateTransitionAck( MQTTPublishState_t currentState,
              *       MQTTPubRelPending.
              *    7. Sending out a PUBREC will result in this transition
              *       to the same state. */
-            isValid = ( ( newState == MQTTPubCompSend ) ||
-                        ( newState == MQTTPubRelPending ) ) ? true : false;
+            isValid = ( newState == MQTTPubCompSend ) ||
+                      ( newState == MQTTPubRelPending );
             break;
 
         case MQTTPubCompSend:
@@ -359,18 +359,18 @@ static bool validateTransitionAck( MQTTPublishState_t currentState,
              *    3. MQTT broker resent the un-acked PUBREL.
              *    4. Receiving the PUBREL again will result in this transition
              *       to the same state. */
-            isValid = ( ( newState == MQTTPublishDone ) ||
-                        ( newState == MQTTPubCompSend ) ) ? true : false;
+            isValid = ( newState == MQTTPublishDone ) ||
+                      ( newState == MQTTPubCompSend );
             break;
 
         case MQTTPubRecPending:
             /* Outgoing publish, Qos 2. */
-            isValid = ( newState == MQTTPubRelSend ) ? true : false;
+            isValid = newState == MQTTPubRelSend;
             break;
 
         case MQTTPubRelSend:
             /* Outgoing publish, Qos 2. */
-            isValid = ( newState == MQTTPubCompPending ) ? true : false;
+            isValid = newState == MQTTPubCompPending;
             break;
 
         case MQTTPubCompPending:
@@ -390,8 +390,8 @@ static bool validateTransitionAck( MQTTPublishState_t currentState,
              *    2. An MQTT session is reestablished.
              *    3. Resending the un-acked PUBREL results in this transition
              *       to the same state. */
-            isValid = ( ( newState == MQTTPublishDone ) ||
-                        ( newState == MQTTPubCompPending ) ) ? true : false;
+            isValid = ( newState == MQTTPublishDone ) ||
+                      ( newState == MQTTPubCompPending );
             break;
 
         case MQTTPublishDone:
@@ -420,11 +420,11 @@ static bool isPublishOutgoing( MQTTPubAckType_t packetType,
         case MQTTPuback:
         case MQTTPubrec:
         case MQTTPubcomp:
-            isOutgoing = ( opType == MQTT_RECEIVE ) ? true : false;
+            isOutgoing = opType == MQTT_RECEIVE;
             break;
 
         case MQTTPubrel:
-            isOutgoing = ( opType == MQTT_SEND ) ? true : false;
+            isOutgoing = opType == MQTT_SEND;
             break;
 
         default:
@@ -457,6 +457,11 @@ static size_t findInRecord( const MQTTPubAckInfo_t * records,
             *pCurrentState = records[ index ].publishState;
             break;
         }
+    }
+
+    if( index == recordCount )
+    {
+        index = MQTT_INVALID_STATE_COUNT;
     }
 
     return index;
@@ -626,7 +631,7 @@ static uint16_t stateSelect( const MQTTContext_t * pMqttContext,
     while( *pCursor < maxCount )
     {
         /* Check if any of the search states are present. */
-        stateCheck = UINT16_CHECK_BIT( searchStates, records[ *pCursor ].publishState ) ? true : false;
+        stateCheck = UINT16_CHECK_BIT( searchStates, records[ *pCursor ].publishState );
 
         if( stateCheck == true )
         {
@@ -649,12 +654,12 @@ MQTTPublishState_t MQTT_CalculateStateAck( MQTTPubAckType_t packetType,
 {
     MQTTPublishState_t calculatedState = MQTTStateNull;
     /* There are more QoS2 cases than QoS1, so initialize to that. */
-    bool qosValid = ( qos == MQTTQoS2 ) ? true : false;
+    bool qosValid = qos == MQTTQoS2;
 
     switch( packetType )
     {
         case MQTTPuback:
-            qosValid = ( qos == MQTTQoS1 ) ? true : false;
+            qosValid = qos == MQTTQoS1;
             calculatedState = MQTTPublishDone;
             break;
 
@@ -709,7 +714,7 @@ static MQTTStatus_t updateStateAck( MQTTPubAckInfo_t * records,
      * is received for an outgoing QoS2 publish. When a PUBREC is received,
      * record is deleted and added back to the end of the records to maintain
      * ordering for PUBRELs. */
-    shouldDeleteRecord = ( ( newState == MQTTPublishDone ) || ( newState == MQTTPubRelSend ) ) ? true : false;
+    shouldDeleteRecord = ( newState == MQTTPublishDone ) || ( newState == MQTTPubRelSend );
     isTransitionValid = validateTransitionAck( currentState, newState );
 
     if( isTransitionValid == true )
@@ -791,7 +796,10 @@ static MQTTStatus_t updateStatePublish( MQTTContext_t * pMqttContext,
              * update is required. */
             if( currentState != newState )
             {
-                updateRecord( pMqttContext->outgoingPublishRecords, recordIndex, newState, false );
+                updateRecord( pMqttContext->outgoingPublishRecords,
+                              recordIndex,
+                              newState,
+                              false );
             }
         }
     }
@@ -1004,8 +1012,6 @@ MQTTStatus_t MQTT_UpdateStateAck( MQTTContext_t * pMqttContext,
     MQTTPubAckInfo_t * records = NULL;
     MQTTStatus_t status = MQTTBadResponse;
 
-
-
     if( ( pMqttContext == NULL ) || ( pNewState == NULL ) )
     {
         LogError( ( "Argument cannot be NULL: pMqttContext=%p, pNewState=%p.",
@@ -1043,8 +1049,7 @@ MQTTStatus_t MQTT_UpdateStateAck( MQTTContext_t * pMqttContext,
                                     &currentState );
     }
 
-    if( ( recordIndex < MQTT_INVALID_STATE_COUNT ) &&
-        ( recordIndex < maxRecordCount ) )
+    if( recordIndex != MQTT_INVALID_STATE_COUNT )
     {
         newState = MQTT_CalculateStateAck( packetType, opType, qos );
 

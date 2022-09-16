@@ -178,14 +178,15 @@ static TransportOutVector_t * addEncodedStringToVector( uint8_t serailizedLength
  * @note All the arrays must stay in scope until the message contained in the vector has
  * been sent.
  */
-static void addWillAndConnectInfo( const MQTTConnectInfo_t * pConnectInfo,
-                                   const MQTTPublishInfo_t * pWillInfo,
-                                   size_t * pTotalMessageLength,
-                                   TransportOutVector_t * origIterator,
-                                   uint8_t serializedTopicLength[ 2 ],
-                                   uint8_t serializedPayloadLength[ 2 ],
-                                   uint8_t serializedUsernameLength[ 2 ],
-                                   uint8_t serializedPasswordLength[ 2 ] );
+static TransportOutVector_t * addWillAndConnectInfo( const MQTTConnectInfo_t * pConnectInfo,
+                                                     const MQTTPublishInfo_t * pWillInfo,
+                                                     size_t * pTotalMessageLength,
+                                                     TransportOutVector_t * iterator,
+                                                     uint8_t serializedTopicLength[ 2 ],
+                                                     uint8_t serializedPayloadLength[ 2 ],
+                                                     uint8_t serializedUsernameLength[ 2 ],
+                                                     uint8_t serializedPasswordLength[ 2 ] );
+
 
 /**
  * @brief Send MQTT SUBSCRIBE message without copying the user data into a buffer and
@@ -581,8 +582,8 @@ static bool matchEndWildcardsSpecialCases( const char * pTopicFilter,
         ( pTopicFilter[ filterIndex ] == '/' ) )
     {
         /* Check that the last character is a wildcard. */
-        matchFound = ( ( pTopicFilter[ filterIndex + 1U ] == '+' ) ||
-                       ( pTopicFilter[ filterIndex + 1U ] == '#' ) ) ? true : false;
+        matchFound = ( pTopicFilter[ filterIndex + 1U ] == '+' ) ||
+                     ( pTopicFilter[ filterIndex + 1U ] == '#' );
     }
 
     return matchFound;
@@ -611,9 +612,8 @@ static bool matchWildcards( const char * pTopicName,
 
     /* Wild card in a topic filter is only valid either at the starting position
      * or when it is preceded by a '/'.*/
-    locationIsValidForWildcard = ( ( *pFilterIndex == 0u ) ||
-                                   ( pTopicFilter[ *pFilterIndex - 1U ] == '/' )
-                                   ) ? true : false;
+    locationIsValidForWildcard = ( *pFilterIndex == 0u ) ||
+                                 ( pTopicFilter[ *pFilterIndex - 1U ] == '/' );
 
     if( ( pTopicFilter[ *pFilterIndex ] == '+' ) && ( locationIsValidForWildcard == true ) )
     {
@@ -752,8 +752,8 @@ static bool matchTopicFilter( const char * pTopicName,
          * case when the topic filter contains the '+' wildcard at a non-starting position.
          * For example, when matching either of "sport/+/player" OR "sport/hockey/+" topic
          * filters with "sport/hockey/player" topic name. */
-        matchFound = ( ( nameIndex == topicNameLength ) &&
-                       ( filterIndex == topicFilterLength ) ) ? true : false;
+        matchFound = ( nameIndex == topicNameLength ) &&
+                     ( filterIndex == topicFilterLength );
     }
 
     return matchFound;
@@ -837,11 +837,7 @@ static int32_t sendMessageVector( MQTTContext_t * pContext,
         if( ( bytesSentThisVector > 0U ) &&
             ( pIoVectIterator < &( pIoVec[ ioVecCount ] ) ) )
         {
-            /* Use a bit mask to ensure there is no overflow per MISRA rule 10.3 */
-            /* MISRA Ref 11.8.1 [Removal of const from pointer] */
-            /* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-118 */
-            /* coverity[misra_c_2012_rule_11_8_violation] */
-            ( *( ( uint8_t * ) pIoVectIterator->iov_base ) ) += ( uint8_t ) ( 0xFFu & bytesSentThisVector );
+            pIoVectIterator->iov_base = ( void * ) &( ( ( uint8_t * ) pIoVectIterator->iov_base )[ bytesSentThisVector ] );
             pIoVectIterator->iov_len -= bytesSentThisVector;
         }
     }
@@ -1048,7 +1044,9 @@ static MQTTStatus_t discardPacket( const MQTTContext_t * pContext,
     MQTTStatus_t status = MQTTRecvFailed;
     int32_t bytesReceived = 0;
     size_t bytesToReceive = 0U;
-    uint32_t totalBytesReceived = 0U, entryTimeMs = 0U, elapsedTimeMs = 0U;
+    uint32_t totalBytesReceived = 0U;
+    uint32_t entryTimeMs = 0U;
+    uint32_t elapsedTimeMs = 0U;
     MQTTGetCurrentTimeFunc_t getTimeStampMs = NULL;
     bool receiveError = false;
 
@@ -1340,7 +1338,8 @@ static MQTTStatus_t sendPublishAcks( MQTTContext_t * pContext,
 static MQTTStatus_t handleKeepAlive( MQTTContext_t * pContext )
 {
     MQTTStatus_t status = MQTTSuccess;
-    uint32_t now = 0U, packetTxTimeoutMs = 0U;
+    uint32_t now = 0U;
+    uint32_t packetTxTimeoutMs = 0U;
 
     assert( pContext != NULL );
     assert( pContext->getTime != NULL );
@@ -1624,7 +1623,7 @@ static MQTTStatus_t handleIncomingAck( MQTTContext_t * pContext,
 
         case MQTT_PACKET_TYPE_PINGRESP:
             status = MQTT_DeserializeAck( pIncomingPacket, &packetIdentifier, NULL );
-            invokeAppCallback = ( ( status == MQTTSuccess ) && ( manageKeepAlive == false ) ) ? true : false;
+            invokeAppCallback = ( status == MQTTSuccess ) && !manageKeepAlive;
 
             if( ( status == MQTTSuccess ) && ( manageKeepAlive == true ) )
             {
@@ -1637,7 +1636,7 @@ static MQTTStatus_t handleIncomingAck( MQTTContext_t * pContext,
         case MQTT_PACKET_TYPE_UNSUBACK:
             /* Deserialize and give these to the app provided callback. */
             status = MQTT_DeserializeAck( pIncomingPacket, &packetIdentifier, NULL );
-            invokeAppCallback = ( ( status == MQTTSuccess ) || ( status == MQTTServerRefused ) ) ? true : false;
+            invokeAppCallback = ( status == MQTTSuccess ) || ( status == MQTTServerRefused );
             break;
 
         default:
@@ -1661,7 +1660,6 @@ static MQTTStatus_t handleIncomingAck( MQTTContext_t * pContext,
 
     return status;
 }
-
 /*-----------------------------------------------------------*/
 
 static MQTTStatus_t receiveSingleIteration( MQTTContext_t * pContext,
@@ -1737,7 +1735,7 @@ static MQTTStatus_t receiveSingleIteration( MQTTContext_t * pContext,
     }
     else
     {
-        /* MISRA else */
+        /* MISRA else. */
     }
 
     /* Handle received packet. If incomplete data was read then this will not execute. */
@@ -1912,6 +1910,10 @@ static MQTTStatus_t sendSubscribeWithoutCopy( MQTTContext_t * pContext,
             /* Lastly, the QoS gets sent. */
             pIterator->iov_base = &( pSubscriptionList[ subscriptionsSent ].qos );
             pIterator->iov_len = 1U;
+            totalPacketLength += pIterator->iov_len;
+
+            /* Increment the pointer. */
+            pIterator++;
 
             /* Two slots get used by the topic string length and topic string. And
              * one slot gets used by the quality of service. */
@@ -1920,7 +1922,9 @@ static MQTTStatus_t sendSubscribeWithoutCopy( MQTTContext_t * pContext,
             subscriptionsSent++;
         }
 
-        if( sendMessageVector( pContext, pIoVector, ioVectorLength ) != ( int32_t ) totalPacketLength )
+        if( sendMessageVector( pContext,
+                               pIoVector,
+                               ioVectorLength ) != ( int32_t ) totalPacketLength )
         {
             status = MQTTSendFailed;
         }
@@ -2073,14 +2077,14 @@ static MQTTStatus_t sendPublishWithoutCopy( MQTTContext_t * pContext,
 
 /*-----------------------------------------------------------*/
 
-static void addWillAndConnectInfo( const MQTTConnectInfo_t * pConnectInfo,
-                                   const MQTTPublishInfo_t * pWillInfo,
-                                   size_t * pTotalMessageLength,
-                                   TransportOutVector_t * origIterator,
-                                   uint8_t serializedTopicLength[ 2 ],
-                                   uint8_t serializedPayloadLength[ 2 ],
-                                   uint8_t serializedUsernameLength[ 2 ],
-                                   uint8_t serializedPasswordLength[ 2 ] )
+static TransportOutVector_t * addWillAndConnectInfo( const MQTTConnectInfo_t * pConnectInfo,
+                                                     const MQTTPublishInfo_t * pWillInfo,
+                                                     size_t * pTotalMessageLength,
+                                                     TransportOutVector_t * iterator,
+                                                     uint8_t serializedTopicLength[ 2 ],
+                                                     uint8_t serializedPayloadLength[ 2 ],
+                                                     uint8_t serializedUsernameLength[ 2 ],
+                                                     uint8_t serializedPasswordLength[ 2 ] )
 {
     TransportOutVector_t * iterator = origIterator;
 
@@ -2122,6 +2126,8 @@ static void addWillAndConnectInfo( const MQTTConnectInfo_t * pConnectInfo,
                                              iterator,
                                              pTotalMessageLength );
     }
+
+    return iterator;
 }
 
 /*-----------------------------------------------------------*/
@@ -2150,13 +2156,7 @@ static MQTTStatus_t sendConnectWithoutCopy( MQTTContext_t * pContext,
     iterator = pIoVector;
 
     /* Validate arguments. */
-    if( pConnectInfo == NULL )
-    {
-        LogError( ( "Argument cannot be NULL: pConnectInfo=%p.",
-                    ( void * ) pConnectInfo ) );
-        status = MQTTBadParameter;
-    }
-    else if( ( pWillInfo != NULL ) && ( pWillInfo->pTopicName == NULL ) )
+    if( ( pWillInfo != NULL ) && ( pWillInfo->pTopicName == NULL ) )
     {
         LogError( ( "pWillInfo->pTopicName cannot be NULL if Will is present." ) );
         status = MQTTBadParameter;
@@ -2184,14 +2184,14 @@ static MQTTStatus_t sendConnectWithoutCopy( MQTTContext_t * pContext,
                                              iterator,
                                              &totalMessageLength );
 
-        addWillAndConnectInfo( pConnectInfo,
-                               pWillInfo,
-                               &totalMessageLength,
-                               iterator,
-                               serializedTopicLength,
-                               serializedPayloadLength,
-                               serializedUsernameLength,
-                               serializedPasswordLength );
+        iterator = addWillAndConnectInfo( pConnectInfo,
+                                          pWillInfo,
+                                          &totalMessageLength,
+                                          iterator,
+                                          serializedTopicLength,
+                                          serializedPayloadLength,
+                                          serializedUsernameLength,
+                                          serializedPasswordLength );
 
         ioVectorLength = ( size_t ) ( int32_t ) ( iterator - pIoVector );
 
@@ -2250,11 +2250,11 @@ static MQTTStatus_t receiveConnack( const MQTTContext_t * pContext,
          *    A value of 0 for the config will try once to read CONNACK. */
         if( timeoutMs > 0U )
         {
-            breakFromLoop = ( calculateElapsedTime( getTimeStamp(), entryTimeMs ) >= timeoutMs ) ? true : false;
+            breakFromLoop = calculateElapsedTime( getTimeStamp(), entryTimeMs ) >= timeoutMs;
         }
         else
         {
-            breakFromLoop = ( loopCount >= MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT ) ? true : false;
+            breakFromLoop = loopCount >= MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT;
             loopCount++;
         }
 
@@ -2500,8 +2500,8 @@ MQTTStatus_t MQTT_InitStatefulQoS( MQTTContext_t * pContext,
              ( pOutgoingPublishRecords == NULL ) )
     {
         LogError( ( "Arguments do not match: pOutgoingPublishRecords=%p, "
-                    "outgoingPublishCount=%u",
-                    pOutgoingPublishRecords,
+                    "outgoingPublishCount=%lu",
+                    ( void * ) pOutgoingPublishRecords,
                     outgoingPublishCount ) );
         status = MQTTBadParameter;
     }
@@ -2509,8 +2509,8 @@ MQTTStatus_t MQTT_InitStatefulQoS( MQTTContext_t * pContext,
              ( pIncomingPublishRecords == NULL ) )
     {
         LogError( ( "Arguments do not match: pIncomingPublishRecords=%p, "
-                    "incomingPublishCount=%u",
-                    pIncomingPublishRecords,
+                    "incomingPublishCount=%lu",
+                    ( void * ) pIncomingPublishRecords,
                     incomingPublishCount ) );
         status = MQTTBadParameter;
     }
@@ -2695,7 +2695,9 @@ MQTTStatus_t MQTT_Publish( MQTTContext_t * pContext,
                            const MQTTPublishInfo_t * pPublishInfo,
                            uint16_t packetId )
 {
-    size_t headerSize = 0UL, remainingLength = 0UL, packetSize = 0UL;
+    size_t headerSize = 0UL;
+    size_t remainingLength = 0UL;
+    size_t packetSize = 0UL;
     MQTTPublishState_t publishStatus = MQTTStateNull;
     bool stateUpdateHookExecuted = false;
 
@@ -3109,7 +3111,7 @@ MQTTStatus_t MQTT_MatchTopic( const char * pTopicName,
          * topic filter length match. */
         if( topicNameLength == topicFilterLength )
         {
-            matchStatus = ( strncmp( pTopicName, pTopicFilter, topicNameLength ) == 0 ) ? true : false;
+            matchStatus = strncmp( pTopicName, pTopicFilter, topicNameLength ) == 0;
         }
 
         if( matchStatus == false )
@@ -3118,8 +3120,8 @@ MQTTStatus_t MQTT_MatchTopic( const char * pTopicName,
              * topic filter.*/
 
             /* Determine if topic filter starts with a wildcard. */
-            topicFilterStartsWithWildcard = ( ( pTopicFilter[ 0 ] == '+' ) ||
-                                              ( pTopicFilter[ 0 ] == '#' ) ) ? true : false;
+            topicFilterStartsWithWildcard = ( pTopicFilter[ 0 ] == '+' ) ||
+                                            ( pTopicFilter[ 0 ] == '#' );
 
             /* Note: According to the MQTT 3.1.1 specification, incoming PUBLISH topic names
              * starting with "$" character cannot be matched against topic filter starting with
