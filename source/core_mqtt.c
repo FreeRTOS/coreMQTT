@@ -2106,6 +2106,7 @@ static MQTTStatus_t sendConnectWithoutCopy( MQTTContext_t * pContext,
         iterator->iov_len = ( size_t ) ( pIndex - connectPacketHeader );
         totalMessageLength += iterator->iov_len;
         iterator++;
+        ioVectorLength++;
 
         /* Serialize the client ID. */
         vectorsAdded = addEncodedStringToVector( serializedClientIDLength,
