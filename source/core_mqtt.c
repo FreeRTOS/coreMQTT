@@ -291,7 +291,7 @@ static MQTTStatus_t discardPacket( const MQTTContext_t * pContext,
  * @return #MQTTRecvFailed or #MQTTNoDataAvailable.
  */
 static MQTTStatus_t discardStoredPacket( MQTTContext_t * pContext,
-                                         MQTTPacketInfo_t * pPacketInfo );
+                                         const MQTTPacketInfo_t * pPacketInfo );
 
 /**
  * @brief Receive a packet from the transport interface.
@@ -766,7 +766,7 @@ static int32_t sendMessageVector( MQTTContext_t * pContext,
 {
     uint32_t timeoutTime;
     uint32_t bytesToSend = 0U;
-    int32_t bytesSentOrError = 0U;
+    int32_t bytesSentOrError = 0;
     uint64_t temp = 0;
     TransportOutVector_t * pIoVectIterator;
     size_t vectorsToBeSent = ioVecCount;
@@ -780,10 +780,10 @@ static int32_t sendMessageVector( MQTTContext_t * pContext,
     timeoutTime = pContext->getTime() + MQTT_SEND_RETRY_TIMEOUT_MS;
 
     /* Count the total number of bytes to be sent as outlined in the vector. */
-    for( pIoVectIterator = pIoVec; pIoVectIterator < &( pIoVec[ ioVecCount ] ); pIoVectIterator++ )
+    for( pIoVectIterator = pIoVec; pIoVectIterator <= &( pIoVec[ ioVecCount - 1U ] ); pIoVectIterator++ )
     {
         temp += pIoVectIterator->iov_len;
-        bytesToSend += pIoVectIterator->iov_len;
+        bytesToSend += ( int32_t ) pIoVectIterator->iov_len;
     }
 
     /* Reset the iterator to point to the first entry in the array. */
@@ -811,7 +811,7 @@ static int32_t sendMessageVector( MQTTContext_t * pContext,
         if( sendResult >= 0 )
         {
             bytesSentOrError += sendResult;
-            bytesSentThisVector += sendResult;
+            bytesSentThisVector += ( uint32_t ) sendResult;
         }
         else
         {
@@ -819,10 +819,10 @@ static int32_t sendMessageVector( MQTTContext_t * pContext,
             break;
         }
 
-        while( ( pIoVectIterator < &( pIoVec[ ioVecCount ] ) ) &&
+        while( ( pIoVectIterator <= &( pIoVec[ ioVecCount - 1U ] ) ) &&
                ( bytesSentThisVector >= pIoVectIterator->iov_len ) )
         {
-            bytesSentThisVector -= pIoVectIterator->iov_len;
+            bytesSentThisVector -= ( int32_t ) pIoVectIterator->iov_len;
             pIoVectIterator++;
 
             /* Update the number of vector which are yet to be sent. */
@@ -832,9 +832,9 @@ static int32_t sendMessageVector( MQTTContext_t * pContext,
         /* Some of the bytes from this vector were sent as well, update the length
          * and the pointer to data in this vector. */
         if( ( bytesSentThisVector > 0U ) &&
-            ( pIoVectIterator < &( pIoVec[ ioVecCount ] ) ) )
+            ( pIoVectIterator <= &( pIoVec[ ioVecCount - 1U ] ) ) )
         {
-            pIoVectIterator->iov_base = ( void * ) &( ( ( uint8_t * ) pIoVectIterator->iov_base )[ bytesSentThisVector ] );
+            pIoVectIterator->iov_base = ( void * ) &( ( ( const uint8_t * ) pIoVectIterator->iov_base )[ bytesSentThisVector ] );
             pIoVectIterator->iov_len -= bytesSentThisVector;
         }
     }
@@ -1101,7 +1101,7 @@ static MQTTStatus_t discardPacket( const MQTTContext_t * pContext,
 /*-----------------------------------------------------------*/
 
 static MQTTStatus_t discardStoredPacket( MQTTContext_t * pContext,
-                                         MQTTPacketInfo_t * pPacketInfo )
+                                         const MQTTPacketInfo_t * pPacketInfo )
 {
     MQTTStatus_t status = MQTTRecvFailed;
     int32_t bytesReceived = 0;
@@ -1158,9 +1158,9 @@ static MQTTStatus_t discardStoredPacket( MQTTContext_t * pContext,
     }
 
     /* Clear the buffer */
-    memset( pContext->networkBuffer.pBuffer,
-            0,
-            pContext->networkBuffer.size );
+    ( void ) memset( pContext->networkBuffer.pBuffer,
+                     0,
+                     pContext->networkBuffer.size );
 
     /* Reset the index. */
     pContext->index = 0;
@@ -1372,6 +1372,7 @@ static MQTTStatus_t handleKeepAlive( MQTTContext_t * pContext )
         }
         else
         {
+            /* Empty MISRA else. */
         }
     }
 
@@ -1684,7 +1685,7 @@ static MQTTStatus_t receiveSingleIteration( MQTTContext_t * pContext,
     else
     {
         /* Update the number of bytes in the MQTT fixed buffer. */
-        pContext->index += recvBytes;
+        pContext->index += ( size_t ) recvBytes;
 
         status = MQTT_ProcessIncomingPacketTypeAndLength( pContext->networkBuffer.pBuffer,
                                                           &pContext->index,
@@ -1751,9 +1752,9 @@ static MQTTStatus_t receiveSingleIteration( MQTTContext_t * pContext,
         pContext->index -= totalMQTTPacketLength;
 
         /* Move the remaining bytes to the front of the buffer. */
-        memmove( pContext->networkBuffer.pBuffer,
-                 &( pContext->networkBuffer.pBuffer[ totalMQTTPacketLength ] ),
-                 pContext->index );
+        ( void ) memmove( pContext->networkBuffer.pBuffer,
+                          &( pContext->networkBuffer.pBuffer[ totalMQTTPacketLength ] ),
+                          pContext->index );
     }
 
     if( status == MQTTNoDataAvailable )
@@ -1827,23 +1828,24 @@ static TransportOutVector_t * addEncodedStringToVector( uint8_t serailizedLength
 {
     size_t packetLength = 0U;
     const size_t seralizedLengthFieldSize = 2U;
+    TransportOutVector_t * pLocalIterator = iterator;
 
     serailizedLength[ 0 ] = ( ( uint8_t ) ( ( length ) >> 8 ) );
     serailizedLength[ 1 ] = ( ( uint8_t ) ( ( length ) & 0x00ffU ) );
 
-    iterator->iov_base = serailizedLength;
-    iterator->iov_len = seralizedLengthFieldSize;
-    iterator++;
+    pLocalIterator->iov_base = serailizedLength;
+    pLocalIterator->iov_len = seralizedLengthFieldSize;
+    pLocalIterator++;
 
-    iterator->iov_base = string;
-    iterator->iov_len = length;
-    iterator++;
+    pLocalIterator->iov_base = string;
+    pLocalIterator->iov_len = length;
+    pLocalIterator++;
 
     packetLength = length + seralizedLengthFieldSize;
 
     ( *updatedLength ) = ( *updatedLength ) + packetLength;
 
-    return iterator;
+    return pLocalIterator;
 }
 
 /*-----------------------------------------------------------*/
@@ -2076,46 +2078,48 @@ static TransportOutVector_t * addWillAndConnectInfo( const MQTTConnectInfo_t * p
                                                      uint8_t serializedUsernameLength[ 2 ],
                                                      uint8_t serializedPasswordLength[ 2 ] )
 {
+    TransportOutVector_t * pLocalIterator = iterator;
+
     if( pWillInfo != NULL )
     {
         /* Serialize the topic. */
-        iterator = addEncodedStringToVector( serializedTopicLength,
-                                             pWillInfo->pTopicName,
-                                             pWillInfo->topicNameLength,
-                                             iterator,
-                                             pTotalMessageLength );
+        pLocalIterator = addEncodedStringToVector( serializedTopicLength,
+                                                   pWillInfo->pTopicName,
+                                                   pWillInfo->topicNameLength,
+                                                   pLocalIterator,
+                                                   pTotalMessageLength );
 
         /* Serialize the payload. */
-        iterator = addEncodedStringToVector( serializedPayloadLength,
-                                             pWillInfo->pPayload,
-                                             ( uint16_t ) pWillInfo->payloadLength,
-                                             iterator,
-                                             pTotalMessageLength );
+        pLocalIterator = addEncodedStringToVector( serializedPayloadLength,
+                                                   pWillInfo->pPayload,
+                                                   ( uint16_t ) pWillInfo->payloadLength,
+                                                   pLocalIterator,
+                                                   pTotalMessageLength );
     }
 
     /* Encode the user name if provided. */
     if( pConnectInfo->pUserName != NULL )
     {
         /* Serialize the user name string. */
-        iterator = addEncodedStringToVector( serializedUsernameLength,
-                                             pConnectInfo->pUserName,
-                                             pConnectInfo->userNameLength,
-                                             iterator,
-                                             pTotalMessageLength );
+        pLocalIterator = addEncodedStringToVector( serializedUsernameLength,
+                                                   pConnectInfo->pUserName,
+                                                   pConnectInfo->userNameLength,
+                                                   pLocalIterator,
+                                                   pTotalMessageLength );
     }
 
     /* Encode the password if provided. */
     if( pConnectInfo->pPassword != NULL )
     {
         /* Serialize the user name string. */
-        iterator = addEncodedStringToVector( serializedPasswordLength,
-                                             pConnectInfo->pPassword,
-                                             pConnectInfo->passwordLength,
-                                             iterator,
-                                             pTotalMessageLength );
+        pLocalIterator = addEncodedStringToVector( serializedPasswordLength,
+                                                   pConnectInfo->pPassword,
+                                                   pConnectInfo->passwordLength,
+                                                   pLocalIterator,
+                                                   pTotalMessageLength );
     }
 
-    return iterator;
+    return pLocalIterator;
 }
 
 /*-----------------------------------------------------------*/
@@ -2346,14 +2350,14 @@ static MQTTStatus_t handleSessionResumption( MQTTContext_t * pContext,
     else
     {
         /* Clear any existing records if a new session is established. */
-        if( pContext->outgoingPublishRecordMaxCount > 0 )
+        if( pContext->outgoingPublishRecordMaxCount > 0U )
         {
             ( void ) memset( pContext->outgoingPublishRecords,
                              0x00,
                              pContext->outgoingPublishRecordMaxCount * sizeof( *pContext->outgoingPublishRecords ) );
         }
 
-        if( pContext->incomingPublishRecordMaxCount > 0 )
+        if( pContext->incomingPublishRecordMaxCount > 0U )
         {
             ( void ) memset( pContext->incomingPublishRecords,
                              0x00,
@@ -2483,7 +2487,10 @@ MQTTStatus_t MQTT_InitStatefulQoS( MQTTContext_t * pContext,
                     ( void * ) pContext ) );
         status = MQTTBadParameter;
     }
-    else if( ( outgoingPublishCount == 0 ) ^
+
+    /* Check whether the arguments make sense. Not equal here behaves
+     * like an exclusive-or operator for boolean values. */
+    else if( ( outgoingPublishCount == 0U ) !=
              ( pOutgoingPublishRecords == NULL ) )
     {
         LogError( ( "Arguments do not match: pOutgoingPublishRecords=%p, "
@@ -2492,7 +2499,10 @@ MQTTStatus_t MQTT_InitStatefulQoS( MQTTContext_t * pContext,
                     outgoingPublishCount ) );
         status = MQTTBadParameter;
     }
-    else if( ( incomingPublishCount == 0 ) ^
+
+    /* Check whether the arguments make sense. Not equal here behaves
+     * like an exclusive-or operator for boolean values. */
+    else if( ( incomingPublishCount == 0U ) !=
              ( pIncomingPublishRecords == NULL ) )
     {
         LogError( ( "Arguments do not match: pIncomingPublishRecords=%p, "

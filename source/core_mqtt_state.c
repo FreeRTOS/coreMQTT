@@ -38,7 +38,7 @@
 /**
  * @brief This macro depicts the invalid value for the state publishes.
  */
-#define MQTT_INVALID_STATE_COUNT    ( ( size_t ) ( ~0UL ) )
+#define MQTT_INVALID_STATE_COUNT    ( ( size_t ) ( ~0U ) )
 
 /**
  * @brief Create a 16-bit bitmap with bit set at specified position.
@@ -215,7 +215,7 @@ static MQTTStatus_t updateStateAck( MQTTPubAckInfo_t * records,
  *
  * @return #MQTTIllegalState, #MQTTStateCollision or #MQTTSuccess.
  */
-static MQTTStatus_t updateStatePublish( MQTTContext_t * pMqttContext,
+static MQTTStatus_t updateStatePublish( const MQTTContext_t * pMqttContext,
                                         size_t recordIndex,
                                         uint16_t packetId,
                                         MQTTStateOperation_t opType,
@@ -758,7 +758,7 @@ static MQTTStatus_t updateStateAck( MQTTPubAckInfo_t * records,
 
 /*-----------------------------------------------------------*/
 
-static MQTTStatus_t updateStatePublish( MQTTContext_t * pMqttContext,
+static MQTTStatus_t updateStatePublish( const MQTTContext_t * pMqttContext,
                                         size_t recordIndex,
                                         uint16_t packetId,
                                         MQTTStateOperation_t opType,
@@ -816,7 +816,7 @@ static MQTTStatus_t updateStatePublish( MQTTContext_t * pMqttContext,
 
 /*-----------------------------------------------------------*/
 
-MQTTStatus_t MQTT_ReserveState( MQTTContext_t * pMqttContext,
+MQTTStatus_t MQTT_ReserveState( const MQTTContext_t * pMqttContext,
                                 uint16_t packetId,
                                 MQTTQoS_t qos )
 {
@@ -948,7 +948,7 @@ MQTTStatus_t MQTT_UpdateStatePublish( MQTTContext_t * pMqttContext,
 
 /*-----------------------------------------------------------*/
 
-MQTTStatus_t MQTT_RemoveStateRecord( MQTTContext_t * pMqttContext,
+MQTTStatus_t MQTT_RemoveStateRecord( const MQTTContext_t * pMqttContext,
                                      uint16_t packetId )
 {
     MQTTStatus_t status = MQTTSuccess;
@@ -996,7 +996,7 @@ MQTTStatus_t MQTT_RemoveStateRecord( MQTTContext_t * pMqttContext,
 
 /*-----------------------------------------------------------*/
 
-MQTTStatus_t MQTT_UpdateStateAck( MQTTContext_t * pMqttContext,
+MQTTStatus_t MQTT_UpdateStateAck( const MQTTContext_t * pMqttContext,
                                   uint16_t packetId,
                                   MQTTPubAckType_t packetType,
                                   MQTTStateOperation_t opType,
