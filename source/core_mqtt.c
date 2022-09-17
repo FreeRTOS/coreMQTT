@@ -556,7 +556,7 @@ static bool matchEndWildcardsSpecialCases( const char * pTopicFilter,
     bool matchFound = false;
 
     assert( pTopicFilter != NULL );
-    assert( topicFilterLength != 0 );
+    assert( topicFilterLength != 0U );
 
     /* Check if the topic filter has 2 remaining characters and it ends in
      * "/#". This check handles the case to match filter "sport/#" with topic
@@ -602,9 +602,9 @@ static bool matchWildcards( const char * pTopicName,
     bool locationIsValidForWildcard;
 
     assert( pTopicName != NULL );
-    assert( topicNameLength != 0 );
+    assert( topicNameLength != 0U );
     assert( pTopicFilter != NULL );
-    assert( topicFilterLength != 0 );
+    assert( topicFilterLength != 0U );
     assert( pNameIndex != NULL );
     assert( pFilterIndex != NULL );
     assert( pMatch != NULL );
@@ -775,7 +775,7 @@ static int32_t sendMessageVector( MQTTContext_t * pContext,
     assert( pIoVec != NULL );
     assert( pContext->getTime != NULL );
     /* Send must always be defined */
-    assert( pContext->transportInterface.send );
+    assert( pContext->transportInterface.send != NULL );
 
     timeoutTime = pContext->getTime() + MQTT_SEND_RETRY_TIMEOUT_MS;
 
@@ -783,7 +783,7 @@ static int32_t sendMessageVector( MQTTContext_t * pContext,
     for( pIoVectIterator = pIoVec; pIoVectIterator <= &( pIoVec[ ioVecCount - 1U ] ); pIoVectIterator++ )
     {
         temp += pIoVectIterator->iov_len;
-        bytesToSend += ( int32_t ) pIoVectIterator->iov_len;
+        bytesToSend += ( uint32_t ) pIoVectIterator->iov_len;
     }
 
     /* Reset the iterator to point to the first entry in the array. */
@@ -822,7 +822,7 @@ static int32_t sendMessageVector( MQTTContext_t * pContext,
         while( ( pIoVectIterator <= &( pIoVec[ ioVecCount - 1U ] ) ) &&
                ( bytesSentThisVector >= pIoVectIterator->iov_len ) )
         {
-            bytesSentThisVector -= ( int32_t ) pIoVectIterator->iov_len;
+            bytesSentThisVector -= ( uint32_t ) pIoVectIterator->iov_len;
             pIoVectIterator++;
 
             /* Update the number of vector which are yet to be sent. */
@@ -834,7 +834,7 @@ static int32_t sendMessageVector( MQTTContext_t * pContext,
         if( ( bytesSentThisVector > 0U ) &&
             ( pIoVectIterator <= &( pIoVec[ ioVecCount - 1U ] ) ) )
         {
-            pIoVectIterator->iov_base = ( void * ) &( ( ( const uint8_t * ) pIoVectIterator->iov_base )[ bytesSentThisVector ] );
+            pIoVectIterator->iov_base = ( const void * ) &( ( ( const uint8_t * ) pIoVectIterator->iov_base )[ bytesSentThisVector ] );
             pIoVectIterator->iov_len -= bytesSentThisVector;
         }
     }
@@ -885,7 +885,8 @@ static int32_t sendBuffer( MQTTContext_t * pContext,
 
             bytesRemaining -= ( size_t ) bytesSent;
             totalBytesSent += bytesSent;
-            pIndex += bytesSent;
+            /* Increment the index. */
+            pIndex = &pIndex[ bytesSent ];
             LogDebug( ( "BytesSent=%ld, BytesRemaining=%lu",
                         ( long int ) bytesSent,
                         ( unsigned long ) bytesRemaining ) );
@@ -1009,7 +1010,8 @@ static int32_t recvExact( const MQTTContext_t * pContext,
 
             bytesRemaining -= ( size_t ) bytesRecvd;
             totalBytesRecvd += ( int32_t ) bytesRecvd;
-            pIndex += bytesRecvd;
+            /* Increment the index. */
+            pIndex = &pIndex[ bytesRecvd ];
             LogDebug( ( "BytesReceived=%ld, BytesRemaining=%lu, TotalBytesReceived=%ld.",
                         ( long int ) bytesRecvd,
                         ( unsigned long ) bytesRemaining,
@@ -1399,7 +1401,8 @@ static MQTTStatus_t handleIncomingPublish( MQTTContext_t * pContext,
     LogInfo( ( "De-serialized incoming PUBLISH packet: DeserializerResult=%s.",
                MQTT_Status_strerror( status ) ) );
 
-    if( ( pContext->incomingPublishRecords == NULL ) &&
+    if( ( status == MQTTSuccess ) &&
+        ( pContext->incomingPublishRecords == NULL ) &&
         ( publishInfo.qos > MQTTQoS0 ) )
     {
         LogError( ( "Incoming publish has QoS > MQTTQoS0 but incoming "
@@ -2530,7 +2533,7 @@ MQTTStatus_t MQTT_InitStatefulQoS( MQTTContext_t * pContext,
 
 /*-----------------------------------------------------------*/
 
-MQTTStatus_t MQTT_CancelCallback( MQTTContext_t * pContext,
+MQTTStatus_t MQTT_CancelCallback( const MQTTContext_t * pContext,
                                   uint16_t packetId )
 {
     MQTTStatus_t status = MQTTSuccess;
@@ -3189,7 +3192,7 @@ MQTTStatus_t MQTT_GetSubAckStatusCodes( const MQTTPacketInfo_t * pSubackPacket,
          * length of the variable header (2 bytes) plus the length of the payload.
          * Therefore, we add 2 positions for the starting address of the payload, and
          * subtract 2 bytes from the remaining length for the length of the payload.*/
-        *pPayloadStart = pSubackPacket->pRemainingData + ( ( uint16_t ) sizeof( uint16_t ) );
+        *pPayloadStart = &pSubackPacket->pRemainingData[ sizeof( uint16_t ) ];
         *pPayloadSize = pSubackPacket->remainingLength - sizeof( uint16_t );
     }
 

@@ -1222,8 +1222,8 @@ MQTTStatus_t MQTT_GetIncomingPacketTypeAndLength( TransportRecv_t readFunc,
  * #MQTTNoDataAvailable if there is nothing to read.
  */
  /* @[declare_mqtt_processincomingpackettypeandlength] */
-MQTTStatus_t MQTT_ProcessIncomingPacketTypeAndLength( uint8_t * pBuffer,
-                                                      size_t * pIndex,
+MQTTStatus_t MQTT_ProcessIncomingPacketTypeAndLength( const uint8_t * pBuffer,
+                                                      const size_t * pIndex,
                                                       MQTTPacketInfo_t * pIncomingPacket );
 /* @[declare_mqtt_processincomingpackettypeandlength] */
 

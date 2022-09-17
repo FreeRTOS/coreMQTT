@@ -623,7 +623,7 @@ static uint16_t stateSelect( const MQTTContext_t * pMqttContext,
 
     /* Only outgoing publish records need to be searched. */
     assert( ( outgoingStates & searchStates ) > 0U );
-    assert( ( ~outgoingStates & searchStates ) == 0 );
+    assert( ( ~outgoingStates & searchStates ) == 0U );
 
     records = pMqttContext->outgoingPublishRecords;
     maxCount = pMqttContext->outgoingPublishRecordMaxCount;
@@ -874,7 +874,7 @@ MQTTPublishState_t MQTT_CalculateStatePublish( MQTTStateOperation_t opType,
 
 /*-----------------------------------------------------------*/
 
-MQTTStatus_t MQTT_UpdateStatePublish( MQTTContext_t * pMqttContext,
+MQTTStatus_t MQTT_UpdateStatePublish( const MQTTContext_t * pMqttContext,
                                       uint16_t packetId,
                                       MQTTStateOperation_t opType,
                                       MQTTQoS_t qos,
