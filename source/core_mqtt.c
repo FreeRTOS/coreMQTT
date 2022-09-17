@@ -148,13 +148,13 @@ static int32_t sendMessageVector( MQTTContext_t * pContext,
  * @param[out] updatedLength This parameter will be added to with the number of
  * bytes added to the vector.
  *
- * @return The updated pointer to the vector array.
+ * @return The number of vectors added.
  */
-static TransportOutVector_t * addEncodedStringToVector( uint8_t serailizedLength[ 2 ],
-                                                        const char * const string,
-                                                        uint16_t length,
-                                                        TransportOutVector_t * iterator,
-                                                        size_t * updatedLength );
+static size_t addEncodedStringToVector( uint8_t serailizedLength[ 2 ],
+                                        const char * const string,
+                                        uint16_t length,
+                                        TransportOutVector_t * iterator,
+                                        size_t * updatedLength );
 
 /**
  * @brief Send MQTT SUBSCRIBE message without copying the user data into a buffer and
@@ -1793,32 +1793,34 @@ static MQTTStatus_t validateSubscribeUnsubscribeParams( const MQTTContext_t * pC
 
 /*-----------------------------------------------------------*/
 
-static TransportOutVector_t * addEncodedStringToVector( uint8_t serailizedLength[ 2 ],
-                                                        const char * const string,
-                                                        uint16_t length,
-                                                        TransportOutVector_t * iterator,
-                                                        size_t * updatedLength )
+static size_t addEncodedStringToVector( uint8_t serailizedLength[ 2 ],
+                                        const char * const string,
+                                        uint16_t length,
+                                        TransportOutVector_t * iterator,
+                                        size_t * updatedLength )
 {
     size_t packetLength = 0U;
     const size_t seralizedLengthFieldSize = 2U;
     TransportOutVector_t * pLocalIterator = iterator;
+    /* This function always adds 2 vectors. */
+    const size_t vectorsAdded = 2U;
 
     serailizedLength[ 0 ] = ( ( uint8_t ) ( ( length ) >> 8 ) );
     serailizedLength[ 1 ] = ( ( uint8_t ) ( ( length ) & 0x00ffU ) );
 
-    pLocalIterator->iov_base = serailizedLength;
-    pLocalIterator->iov_len = seralizedLengthFieldSize;
-    pLocalIterator++;
+    /* Add the serialized length of the string first. */
+    pLocalIterator[ 0 ].iov_base = serailizedLength;
+    pLocalIterator[ 0 ].iov_len = seralizedLengthFieldSize;
 
-    pLocalIterator->iov_base = string;
-    pLocalIterator->iov_len = length;
-    pLocalIterator++;
+    /* Then add the pointer to the string itself. */
+    pLocalIterator[ 1 ].iov_base = string;
+    pLocalIterator[ 1 ].iov_len = length;
 
     packetLength = length + seralizedLengthFieldSize;
 
     ( *updatedLength ) = ( *updatedLength ) + packetLength;
 
-    return pLocalIterator;
+    return vectorsAdded;
 }
 
 /*-----------------------------------------------------------*/
@@ -1830,7 +1832,7 @@ static MQTTStatus_t sendSubscribeWithoutCopy( MQTTContext_t * pContext,
                                               size_t remainingLength )
 {
     MQTTStatus_t status = MQTTSuccess;
-    uint8_t subscribeheader[ 700 ];
+    uint8_t subscribeheader[ 7 ];
     uint8_t * pIndex;
     TransportOutVector_t pIoVector[ MQTT_SUB_UNSUB_MAX_VECTORS ];
     TransportOutVector_t * pIterator;
@@ -1840,6 +1842,7 @@ static MQTTStatus_t sendSubscribeWithoutCopy( MQTTContext_t * pContext,
     size_t subscriptionsSent = 0U;
     /* For subscribe, only three vector slots are required per topic string. */
     const size_t subscriptionStringVectorSlots = 3U;
+    size_t vectorsAdded;
 
     /* The vector array should be at least three element long as the topic
      * string needs these many vector elements to be stored. */
@@ -1871,11 +1874,14 @@ static MQTTStatus_t sendSubscribeWithoutCopy( MQTTContext_t * pContext,
                ( subscriptionsSent < subscriptionCount ) )
         {
             /* The topic filter gets sent next. */
-            pIterator = addEncodedStringToVector( serializedTopicFieldLength,
-                                                  pSubscriptionList[ subscriptionsSent ].pTopicFilter,
-                                                  pSubscriptionList[ subscriptionsSent ].topicFilterLength,
-                                                  pIterator,
-                                                  &totalPacketLength );
+            vectorsAdded = addEncodedStringToVector( serializedTopicFieldLength,
+                                                     pSubscriptionList[ subscriptionsSent ].pTopicFilter,
+                                                     pSubscriptionList[ subscriptionsSent ].topicFilterLength,
+                                                     pIterator,
+                                                     &totalPacketLength );
+
+            /* Update the pointer after the above operation. */
+            pIterator = &pIterator[ vectorsAdded ];
 
             /* Lastly, the QoS gets sent. */
             pIterator->iov_base = &( pSubscriptionList[ subscriptionsSent ].qos );
@@ -1929,6 +1935,7 @@ static MQTTStatus_t sendUnsubscribeWithoutCopy( MQTTContext_t * pContext,
     size_t ioVectorLength = 0U;
     /* For unsubscribe, only two vector slots are required per topic string. */
     const size_t subscriptionStringVectorSlots = 2U;
+    size_t vectorsAdded;
 
     /* The vector array should be at least three element long as the topic
      * string needs these many vector elements to be stored. */
@@ -1959,14 +1966,15 @@ static MQTTStatus_t sendUnsubscribeWithoutCopy( MQTTContext_t * pContext,
                ( unsubscriptionsSent < subscriptionCount ) )
         {
             /* The topic filter gets sent next. */
-            pIterator = addEncodedStringToVector( serializedTopicFieldLength,
-                                                  pSubscriptionList[ unsubscriptionsSent ].pTopicFilter,
-                                                  pSubscriptionList[ unsubscriptionsSent ].topicFilterLength,
-                                                  pIterator,
-                                                  &totalPacketLength );
+            vectorsAdded = addEncodedStringToVector( serializedTopicFieldLength,
+                                                     pSubscriptionList[ unsubscriptionsSent ].pTopicFilter,
+                                                     pSubscriptionList[ unsubscriptionsSent ].topicFilterLength,
+                                                     pIterator,
+                                                     &totalPacketLength );
 
-            /* Two slots get used by the topic string length and topic string. And
-             * one slot gets used by the quality of service. */
+            /* Update the iterator to point to the next empty location. */
+            pIterator = &pIterator[ vectorsAdded ];
+            /* Two slots get used by the topic string length and topic string. */
             ioVectorLength += subscriptionStringVectorSlots;
 
             unsubscriptionsSent++;
@@ -2070,6 +2078,7 @@ static MQTTStatus_t sendConnectWithoutCopy( MQTTContext_t * pContext,
     uint8_t serializedPayloadLength[ 2 ];
     uint8_t serializedUsernameLength[ 2 ];
     uint8_t serializedPasswordLength[ 2 ];
+    size_t vectorsAdded;
 
     iterator = pIoVector;
 
@@ -2099,56 +2108,70 @@ static MQTTStatus_t sendConnectWithoutCopy( MQTTContext_t * pContext,
         iterator++;
 
         /* Serialize the client ID. */
-        iterator = addEncodedStringToVector( serializedClientIDLength,
-                                             pConnectInfo->pClientIdentifier,
-                                             pConnectInfo->clientIdentifierLength,
-                                             iterator,
-                                             &totalMessageLength );
+        vectorsAdded = addEncodedStringToVector( serializedClientIDLength,
+                                                 pConnectInfo->pClientIdentifier,
+                                                 pConnectInfo->clientIdentifierLength,
+                                                 iterator,
+                                                 &totalMessageLength );
+
+        /* Update the iterator to point to the next empty slot. */
+        iterator = &iterator[ vectorsAdded ];
+        ioVectorLength += vectorsAdded;
 
         if( pWillInfo != NULL )
         {
             /* Serialize the topic. */
-            iterator = addEncodedStringToVector( serializedTopicLength,
-                                                 pWillInfo->pTopicName,
-                                                 pWillInfo->topicNameLength,
-                                                 iterator,
-                                                 &totalMessageLength );
+            vectorsAdded = addEncodedStringToVector( serializedTopicLength,
+                                                     pWillInfo->pTopicName,
+                                                     pWillInfo->topicNameLength,
+                                                     iterator,
+                                                     &totalMessageLength );
+
+            /* Update the iterator to point to the next empty slot. */
+            iterator = &iterator[ vectorsAdded ];
+            ioVectorLength += vectorsAdded;
+
 
             /* Serialize the payload. */
-            iterator = addEncodedStringToVector( serializedPayloadLength,
-                                                 pWillInfo->pPayload,
-                                                 ( uint16_t ) pWillInfo->payloadLength,
-                                                 iterator,
-                                                 &totalMessageLength );
+            vectorsAdded = addEncodedStringToVector( serializedPayloadLength,
+                                                     pWillInfo->pPayload,
+                                                     ( uint16_t ) pWillInfo->payloadLength,
+                                                     iterator,
+                                                     &totalMessageLength );
+
+            /* Update the iterator to point to the next empty slot. */
+            iterator = &iterator[ vectorsAdded ];
+            ioVectorLength += vectorsAdded;
         }
 
         /* Encode the user name if provided. */
         if( pConnectInfo->pUserName != NULL )
         {
             /* Serialize the user name string. */
-            iterator = addEncodedStringToVector( serializedUsernameLength,
-                                                 pConnectInfo->pUserName,
-                                                 pConnectInfo->userNameLength,
-                                                 iterator,
-                                                 &totalMessageLength );
+            vectorsAdded = addEncodedStringToVector( serializedUsernameLength,
+                                                     pConnectInfo->pUserName,
+                                                     pConnectInfo->userNameLength,
+                                                     iterator,
+                                                     &totalMessageLength );
+
+            /* Update the iterator to point to the next empty slot. */
+            iterator = &iterator[ vectorsAdded ];
+            ioVectorLength += vectorsAdded;
         }
 
         /* Encode the password if provided. */
         if( pConnectInfo->pPassword != NULL )
         {
             /* Serialize the user name string. */
-            iterator = addEncodedStringToVector( serializedPasswordLength,
-                                                 pConnectInfo->pPassword,
-                                                 pConnectInfo->passwordLength,
-                                                 iterator,
-                                                 &totalMessageLength );
+            vectorsAdded = addEncodedStringToVector( serializedPasswordLength,
+                                                     pConnectInfo->pPassword,
+                                                     pConnectInfo->passwordLength,
+                                                     iterator,
+                                                     &totalMessageLength );
+            /* Update the iterator to point to the next empty slot. */
+            iterator = &iterator[ vectorsAdded ];
+            ioVectorLength += vectorsAdded;
         }
-
-        /* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-182 */
-        /* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-108 */
-        /* coverity[misra_c_2012_rule_18_2_violation] */
-        /* coverity[misra_c_2012_rule_10_8_violation] */
-        ioVectorLength = ( size_t ) ( iterator - pIoVector );
 
         bytesSentOrError = sendMessageVector( pContext, pIoVector, ioVectorLength );
 
