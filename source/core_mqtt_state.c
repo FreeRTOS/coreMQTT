@@ -34,6 +34,7 @@
 #include "core_mqtt_default_logging.h"
 
 /*-----------------------------------------------------------*/
+
 /**
  * @brief A global static variable used to generate the macro
  * #MQTT_INVALID_STATE_COUNT of size_t length.

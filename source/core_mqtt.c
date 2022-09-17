@@ -1340,6 +1340,7 @@ static MQTTStatus_t handleKeepAlive( MQTTContext_t * pContext )
         else
         {
             const uint32_t timeElapsed = calculateElapsedTime( now, pContext->lastPacketRxTime );
+
             if( ( timeElapsed != 0U ) && ( timeElapsed >= PACKET_RX_TIMEOUT_MS ) )
             {
                 status = MQTT_Ping( pContext );

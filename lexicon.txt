@@ -43,6 +43,7 @@ connectpacketsize
 const
 copydoc
 coremqtt
+coverity
 csdk
 css
 currentstate
@@ -76,6 +77,7 @@ filterindex
 findinrecord
 fixedbuffer
 fn
+freertos
 gcc
 getconnectpacketsize
 getdisconnectpacketsize

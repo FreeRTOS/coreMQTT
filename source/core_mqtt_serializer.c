@@ -124,7 +124,7 @@
  *
  * @param[in] ptr A uint8_t* that points to the high byte.
  */
-#define UINT16_DECODE( ptr )                                \
+#define UINT16_DECODE( ptr )                            \
     ( uint16_t ) ( ( ( ( uint16_t ) ptr[ 0 ] ) << 8 ) | \
                    ( ( uint16_t ) ptr[ 1 ] ) )
 

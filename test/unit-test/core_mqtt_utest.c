@@ -2794,6 +2794,29 @@ void test_MQTT_ProcessLoop_HandleKeepAlive1( void )
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
 }
 
+void test_MQTT_ProcessLoop_HandleKeepAlive2( void )
+{
+    MQTTContext_t context = { 0 };
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
+    MQTTStatus_t mqttStatus;
+
+    setupTransportInterface( &transport );
+    transport.recv = transportRecvNoData;
+    setupNetworkBuffer( &networkBuffer );
+
+    mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
+
+    /* Set this value such that the library will be forced to send keep alive. */
+    context.waitingForPingResp = false;
+    context.keepAliveIntervalSec = 1;
+    /* Update the time so that there is timeout. */
+    globalEntryTime = 0;
+    mqttStatus = MQTT_ProcessLoop( &context );
+
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+}
+
 void test_MQTT_ProcessLoop_RecvFailed( void )
 {
     MQTTContext_t context = { 0 };
