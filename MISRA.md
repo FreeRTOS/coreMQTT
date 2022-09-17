@@ -19,8 +19,8 @@ grep 'MISRA Ref 18.2.1' . -rI
 _Ref 10.8.1_
 
 - MISRA C-2012 Rule 10.8 states that value of composite expressions should not be cast
-  to variables of different signedness. In this library, array of vectors and bytes are
-  used to process data. Functions which fill the arrays with data update an index to an
+  to variables of different signedness. In this library, array of bytes are used to
+  process data. Functions which fill the arrays with data update an index to an
   offset. To know the amount of data added to the array, the beginning address of the
   array has to be subtracted from the index. When the two pointers are subracted, it
   results in a signed value. It is verified however that the value will always be positive.
@@ -31,8 +31,8 @@ _Ref 10.8.1_
 _Ref 18.2.1_
 
 - MISRA C-2012 Rule 18.2 states that two pointers may only be subtracted if they point
-  to elements of the same array. In this library, array of vectors and bytes are used
-  to process data. Functions which fill the arrays with data update an index to an offset.
+  to elements of the same array. In this library, array of bytes are used to process
+  data. Functions which fill the arrays with data update an index to an offset.
   To know the amount of data added to the array, the beginning address of the array has
   to be subtracted from the index. It is manually verified that the index will always be
   within bounds of the array. However, Coverity is flagging this as a deviation. Thus, we
