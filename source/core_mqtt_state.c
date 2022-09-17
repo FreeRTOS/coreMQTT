@@ -34,11 +34,16 @@
 #include "core_mqtt_default_logging.h"
 
 /*-----------------------------------------------------------*/
+/**
+ * @brief A global static variable used to generate the macro
+ * #MQTT_INVALID_STATE_COUNT of size_t length.
+ */
+static const size_t ZERO_SIZE_T = 0U;
 
 /**
  * @brief This macro depicts the invalid value for the state publishes.
  */
-#define MQTT_INVALID_STATE_COUNT    ( ( size_t ) ( ~0U ) )
+#define MQTT_INVALID_STATE_COUNT    ( ~ZERO_SIZE_T )
 
 /**
  * @brief Create a 16-bit bitmap with bit set at specified position.

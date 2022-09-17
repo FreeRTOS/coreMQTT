@@ -157,37 +157,6 @@ static TransportOutVector_t * addEncodedStringToVector( uint8_t serailizedLength
                                                         size_t * updatedLength );
 
 /**
- * @brief Add the will and testament information along with the connection information
- * to the given vector.
- *
- * @param[in] pConnectInfo Connection information of MQTT.
- * @param[in] pWillInfo The last will and testament information.
- * @param[out] pTotalMessageLength This parameter will be added to with the number of
- * bytes added to the vector.
- * @param[in] iterator The iterator pointing to the first element in the
- * transport interface IO array.
- * @param[out] serializedTopicLength This array will be updated with the topic field
- * length in serialized MQTT format.
- * @param[out] serializedPayloadLength This array will be updated with the payload
- * field length in serialized MQTT format.
- * @param[out] serializedUsernameLength This array will be updated with the user name
- * field length in serialized MQTT format.
- * @param[out] serializedPasswordLength This array will be updated with the password
- * field length in serialized MQTT format.
- *
- * @note All the arrays must stay in scope until the message contained in the vector has
- * been sent.
- */
-static TransportOutVector_t * addWillAndConnectInfo( const MQTTConnectInfo_t * pConnectInfo,
-                                                     const MQTTPublishInfo_t * pWillInfo,
-                                                     size_t * pTotalMessageLength,
-                                                     TransportOutVector_t * iterator,
-                                                     uint8_t serializedTopicLength[ 2 ],
-                                                     uint8_t serializedPayloadLength[ 2 ],
-                                                     uint8_t serializedUsernameLength[ 2 ],
-                                                     uint8_t serializedPasswordLength[ 2 ] );
-
-/**
  * @brief Send MQTT SUBSCRIBE message without copying the user data into a buffer and
  * directly sending it.
  *
@@ -1368,13 +1337,13 @@ static MQTTStatus_t handleKeepAlive( MQTTContext_t * pContext )
         {
             status = MQTT_Ping( pContext );
         }
-        else if( ( PACKET_RX_TIMEOUT_MS != 0U ) && ( calculateElapsedTime( now, pContext->lastPacketRxTime ) >= PACKET_RX_TIMEOUT_MS ) )
-        {
-            status = MQTT_Ping( pContext );
-        }
         else
         {
-            /* Empty MISRA else. */
+            const uint32_t timeElapsed = calculateElapsedTime( now, pContext->lastPacketRxTime );
+            if( ( timeElapsed != 0U ) && ( timeElapsed >= PACKET_RX_TIMEOUT_MS ) )
+            {
+                status = MQTT_Ping( pContext );
+            }
         }
     }
 
@@ -1860,7 +1829,7 @@ static MQTTStatus_t sendSubscribeWithoutCopy( MQTTContext_t * pContext,
                                               size_t remainingLength )
 {
     MQTTStatus_t status = MQTTSuccess;
-    uint8_t subscribeheader[ 7 ];
+    uint8_t subscribeheader[ 700 ];
     uint8_t * pIndex;
     TransportOutVector_t pIoVector[ MQTT_SUB_UNSUB_MAX_VECTORS ];
     TransportOutVector_t * pIterator;
@@ -1884,10 +1853,14 @@ static MQTTStatus_t sendSubscribeWithoutCopy( MQTTContext_t * pContext,
 
     /* The header is to be sent first. */
     pIterator->iov_base = subscribeheader;
+    /* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-182 */
+    /* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-108 */
+    /* coverity[misra_c_2012_rule_18_2_violation] */
+    /* coverity[misra_c_2012_rule_10_8_violation] */
     pIterator->iov_len = ( size_t ) ( pIndex - subscribeheader );
+    totalPacketLength += pIterator->iov_len;
     pIterator++;
     ioVectorLength++;
-    totalPacketLength += ( size_t ) ( pIndex - subscribeheader );
 
     while( ( status == MQTTSuccess ) && ( subscriptionsSent < subscriptionCount ) )
     {
@@ -1969,8 +1942,12 @@ static MQTTStatus_t sendUnsubscribeWithoutCopy( MQTTContext_t * pContext,
 
     /* The header is to be sent first. */
     pIterator->iov_base = unsubscribeheader;
+    /* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-182 */
+    /* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-108 */
+    /* coverity[misra_c_2012_rule_18_2_violation] */
+    /* coverity[misra_c_2012_rule_10_8_violation] */
     pIterator->iov_len = ( size_t ) ( pIndex - unsubscribeheader );
-    totalPacketLength += ( size_t ) ( pIndex - unsubscribeheader );
+    totalPacketLength += pIterator->iov_len;
     pIterator++;
     ioVectorLength++;
 
@@ -2072,61 +2049,6 @@ static MQTTStatus_t sendPublishWithoutCopy( MQTTContext_t * pContext,
 
 /*-----------------------------------------------------------*/
 
-static TransportOutVector_t * addWillAndConnectInfo( const MQTTConnectInfo_t * pConnectInfo,
-                                                     const MQTTPublishInfo_t * pWillInfo,
-                                                     size_t * pTotalMessageLength,
-                                                     TransportOutVector_t * iterator,
-                                                     uint8_t serializedTopicLength[ 2 ],
-                                                     uint8_t serializedPayloadLength[ 2 ],
-                                                     uint8_t serializedUsernameLength[ 2 ],
-                                                     uint8_t serializedPasswordLength[ 2 ] )
-{
-    TransportOutVector_t * pLocalIterator = iterator;
-
-    if( pWillInfo != NULL )
-    {
-        /* Serialize the topic. */
-        pLocalIterator = addEncodedStringToVector( serializedTopicLength,
-                                                   pWillInfo->pTopicName,
-                                                   pWillInfo->topicNameLength,
-                                                   pLocalIterator,
-                                                   pTotalMessageLength );
-
-        /* Serialize the payload. */
-        pLocalIterator = addEncodedStringToVector( serializedPayloadLength,
-                                                   pWillInfo->pPayload,
-                                                   ( uint16_t ) pWillInfo->payloadLength,
-                                                   pLocalIterator,
-                                                   pTotalMessageLength );
-    }
-
-    /* Encode the user name if provided. */
-    if( pConnectInfo->pUserName != NULL )
-    {
-        /* Serialize the user name string. */
-        pLocalIterator = addEncodedStringToVector( serializedUsernameLength,
-                                                   pConnectInfo->pUserName,
-                                                   pConnectInfo->userNameLength,
-                                                   pLocalIterator,
-                                                   pTotalMessageLength );
-    }
-
-    /* Encode the password if provided. */
-    if( pConnectInfo->pPassword != NULL )
-    {
-        /* Serialize the user name string. */
-        pLocalIterator = addEncodedStringToVector( serializedPasswordLength,
-                                                   pConnectInfo->pPassword,
-                                                   pConnectInfo->passwordLength,
-                                                   pLocalIterator,
-                                                   pTotalMessageLength );
-    }
-
-    return pLocalIterator;
-}
-
-/*-----------------------------------------------------------*/
-
 static MQTTStatus_t sendConnectWithoutCopy( MQTTContext_t * pContext,
                                             const MQTTConnectInfo_t * pConnectInfo,
                                             const MQTTPublishInfo_t * pWillInfo,
@@ -2167,6 +2089,10 @@ static MQTTStatus_t sendConnectWithoutCopy( MQTTContext_t * pContext,
 
         /* The header gets sent first. */
         iterator->iov_base = connectPacketHeader;
+        /* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-182 */
+        /* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-108 */
+        /* coverity[misra_c_2012_rule_18_2_violation] */
+        /* coverity[misra_c_2012_rule_10_8_violation] */
         iterator->iov_len = ( size_t ) ( pIndex - connectPacketHeader );
         totalMessageLength += iterator->iov_len;
         iterator++;
@@ -2178,15 +2104,49 @@ static MQTTStatus_t sendConnectWithoutCopy( MQTTContext_t * pContext,
                                              iterator,
                                              &totalMessageLength );
 
-        iterator = addWillAndConnectInfo( pConnectInfo,
-                                          pWillInfo,
-                                          &totalMessageLength,
-                                          iterator,
-                                          serializedTopicLength,
-                                          serializedPayloadLength,
-                                          serializedUsernameLength,
-                                          serializedPasswordLength );
+        if( pWillInfo != NULL )
+        {
+            /* Serialize the topic. */
+            iterator = addEncodedStringToVector( serializedTopicLength,
+                                                 pWillInfo->pTopicName,
+                                                 pWillInfo->topicNameLength,
+                                                 iterator,
+                                                 &totalMessageLength );
 
+            /* Serialize the payload. */
+            iterator = addEncodedStringToVector( serializedPayloadLength,
+                                                 pWillInfo->pPayload,
+                                                 ( uint16_t ) pWillInfo->payloadLength,
+                                                 iterator,
+                                                 &totalMessageLength );
+        }
+
+        /* Encode the user name if provided. */
+        if( pConnectInfo->pUserName != NULL )
+        {
+            /* Serialize the user name string. */
+            iterator = addEncodedStringToVector( serializedUsernameLength,
+                                                 pConnectInfo->pUserName,
+                                                 pConnectInfo->userNameLength,
+                                                 iterator,
+                                                 &totalMessageLength );
+        }
+
+        /* Encode the password if provided. */
+        if( pConnectInfo->pPassword != NULL )
+        {
+            /* Serialize the user name string. */
+            iterator = addEncodedStringToVector( serializedPasswordLength,
+                                                 pConnectInfo->pPassword,
+                                                 pConnectInfo->passwordLength,
+                                                 iterator,
+                                                 &totalMessageLength );
+        }
+
+        /* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-182 */
+        /* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-108 */
+        /* coverity[misra_c_2012_rule_18_2_violation] */
+        /* coverity[misra_c_2012_rule_10_8_violation] */
         ioVectorLength = ( size_t ) ( iterator - pIoVector );
 
         bytesSentOrError = sendMessageVector( pContext, pIoVector, ioVectorLength );
