@@ -1,5 +1,5 @@
 /*
- * coreMQTT v1.2.0
+ * coreMQTT v2.0.0
  * Copyright (C) 2022 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -43,7 +43,7 @@
  * @cond DOXYGEN_IGNORE
  * The current version of this library.
  */
-#define MQTT_LIBRARY_VERSION    "v1.2.0"
+#define MQTT_LIBRARY_VERSION    "v2.0.0"
 /** @endcond */
 
 /**
