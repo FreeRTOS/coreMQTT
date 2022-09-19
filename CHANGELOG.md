@@ -1,6 +1,9 @@
 # Changelog for coreMQTT Client Library
 
-## v1.3.0 (September 2022)
+## v2.0.0 (September 2022)
+- [#213](https://github.com/FreeRTOS/coreMQTT/pull/213) Fix MISRA deviations in the source.
+- [#200](https://github.com/FreeRTOS/coreMQTT/pull/200) Add hooks to the code.
+- [#205](https://github.com/FreeRTOS/coreMQTT/pull/205) Update logging and add MQTT_InitStatefulQoS to prevent log leaks.
 - [#199](https://github.com/FreeRTOS/coreMQTT/pull/199) Make use of user provided buffer only for packet reception. Stack space will be used for sending packets.
 - [#198](https://github.com/FreeRTOS/coreMQTT/pull/198) Remove timeout from MQTT\_ProcessLoop and MQTT\_ReceiveLoop and make the implementations non-blocking.
 - [#196](https://github.com/FreeRTOS/coreMQTT/pull/196) Add a cancel callback API to cancel sent publish packets.

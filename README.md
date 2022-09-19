@@ -6,8 +6,6 @@ This library has gone through code quality checks including verification that no
 
 See memory requirements for this library [here](./docs/doxygen/include/size_table.md).
 
-**coreMQTT v1.1.0 [source code](https://github.com/FreeRTOS/coreMQTT/tree/v1.1.0/source) is part of the [FreeRTOS 202012.00 LTS](https://github.com/FreeRTOS/FreeRTOS-LTS/tree/202012.00-LTS) release.**
-
 ## MQTT Config File
 
 The MQTT client library exposes build configuration macros that are required for building the library.
