@@ -17,8 +17,9 @@ var searchData=
   ['ppublishinfo_14',['pPublishInfo',['../struct_m_q_t_t_deserialized_info__t.html#ac347273fae1e92b9cbeda1714066c1de',1,'MQTTDeserializedInfo_t']]],
   ['premainingdata_15',['pRemainingData',['../struct_m_q_t_t_packet_info__t.html#ac66cedff052bc844ec9b296387df60bc',1,'MQTTPacketInfo_t']]],
   ['processpublishflags_16',['processPublishFlags',['../core__mqtt__serializer_8c.html#a47a044115ee5df1ac7fe02d2ee37e1e0',1,'core_mqtt_serializer.c']]],
-  ['ptopicfilter_17',['pTopicFilter',['../struct_m_q_t_t_subscribe_info__t.html#adb0b28240fdcd82a85f11cf2f8b5bbf0',1,'MQTTSubscribeInfo_t']]],
-  ['ptopicname_18',['pTopicName',['../struct_m_q_t_t_publish_info__t.html#aa80e8ca282d01630f878ad0afe81d7a4',1,'MQTTPublishInfo_t']]],
-  ['publishstate_19',['publishState',['../struct_m_q_t_t_pub_ack_info__t.html#a61314203ef87a231c6489c68b579de34',1,'MQTTPubAckInfo_t']]],
-  ['pusername_20',['pUserName',['../struct_m_q_t_t_connect_info__t.html#a1118d7d3251a11445318557280db53b4',1,'MQTTConnectInfo_t']]]
+  ['processremaininglength_17',['processRemainingLength',['../core__mqtt__serializer_8c.html#a8a4f72e05cd72fa57ba5a90e204569b3',1,'core_mqtt_serializer.c']]],
+  ['ptopicfilter_18',['pTopicFilter',['../struct_m_q_t_t_subscribe_info__t.html#adb0b28240fdcd82a85f11cf2f8b5bbf0',1,'MQTTSubscribeInfo_t']]],
+  ['ptopicname_19',['pTopicName',['../struct_m_q_t_t_publish_info__t.html#aa80e8ca282d01630f878ad0afe81d7a4',1,'MQTTPublishInfo_t']]],
+  ['publishstate_20',['publishState',['../struct_m_q_t_t_pub_ack_info__t.html#a61314203ef87a231c6489c68b579de34',1,'MQTTPubAckInfo_t']]],
+  ['pusername_21',['pUserName',['../struct_m_q_t_t_connect_info__t.html#a1118d7d3251a11445318557280db53b4',1,'MQTTConnectInfo_t']]]
 ];

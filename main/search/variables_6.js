@@ -1,5 +1,5 @@
 var searchData=
 [
-  ['lastpacketrxtime_0',['lastPacketRxTime',['../struct_m_q_t_t_context__t.html#a7111ef16e4a4e75a72861f6f3ea8a7c3',1,'MQTTContext_t']]],
-  ['lastpackettxtime_1',['lastPacketTxTime',['../struct_m_q_t_t_context__t.html#a01acf90953e830ba3e7f44182cb1d482',1,'MQTTContext_t']]]
+  ['keepaliveintervalsec_0',['keepAliveIntervalSec',['../struct_m_q_t_t_context__t.html#afd6071827ef48b230212a5725c2075be',1,'MQTTContext_t']]],
+  ['keepaliveseconds_1',['keepAliveSeconds',['../struct_m_q_t_t_connect_info__t.html#a7d05d53261732ebdfbb9ee665a347591',1,'MQTTConnectInfo_t']]]
 ];

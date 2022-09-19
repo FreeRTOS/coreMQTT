@@ -1,7 +1,7 @@
 var core__mqtt__config__defaults_8h =
 [
     [ "MQTT_DO_NOT_USE_CUSTOM_CONFIG", "core__mqtt__config__defaults_8h.html#abd12bb401eecf3f6694447ea3b1c886d", null ],
-    [ "MQTT_STATE_ARRAY_MAX_COUNT", "core__mqtt__config__defaults_8h.html#a50b149716607c0b7974c391830f1b007", null ],
+    [ "MQTT_SUB_UNSUB_MAX_VECTORS", "group__mqtt__constants.html#ga928ea0bff12ebf9cf9fa9dfe5cafebbb", null ],
     [ "MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT", "core__mqtt__config__defaults_8h.html#a8ca6c96436d5e7c2c8a7933fb28a5c87", null ],
     [ "MQTT_PINGRESP_TIMEOUT_MS", "core__mqtt__config__defaults_8h.html#afa825fddb52da7df88fb56d2befcd2fa", null ],
     [ "PACKET_TX_TIMEOUT_MS", "core__mqtt__config__defaults_8h.html#a9b3c7c33badcafec477a205d916424bc", null ],
