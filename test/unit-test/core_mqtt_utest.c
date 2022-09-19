@@ -2810,8 +2810,10 @@ void test_MQTT_ProcessLoop_HandleKeepAlive2( void )
     /* Set this value such that the library will be forced to send keep alive. */
     context.waitingForPingResp = false;
     context.keepAliveIntervalSec = 1;
-    /* Update the time so that there is timeout. */
+
+    /* Update the time so that timeout does not occur and the ping is not sent. */
     globalEntryTime = 0;
+
     mqttStatus = MQTT_ProcessLoop( &context );
 
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
