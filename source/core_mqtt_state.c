@@ -36,9 +36,15 @@
 /*-----------------------------------------------------------*/
 
 /**
+ * @brief A global static variable used to generate the macro
+ * #MQTT_INVALID_STATE_COUNT of size_t length.
+ */
+static const size_t ZERO_SIZE_T = 0U;
+
+/**
  * @brief This macro depicts the invalid value for the state publishes.
  */
-#define MQTT_INVALID_STATE_COUNT    ( ( size_t ) ( ~0UL ) )
+#define MQTT_INVALID_STATE_COUNT    ( ~ZERO_SIZE_T )
 
 /**
  * @brief Create a 16-bit bitmap with bit set at specified position.
@@ -215,7 +221,7 @@ static MQTTStatus_t updateStateAck( MQTTPubAckInfo_t * records,
  *
  * @return #MQTTIllegalState, #MQTTStateCollision or #MQTTSuccess.
  */
-static MQTTStatus_t updateStatePublish( MQTTContext_t * pMqttContext,
+static MQTTStatus_t updateStatePublish( const MQTTContext_t * pMqttContext,
                                         size_t recordIndex,
                                         uint16_t packetId,
                                         MQTTStateOperation_t opType,
@@ -623,7 +629,7 @@ static uint16_t stateSelect( const MQTTContext_t * pMqttContext,
 
     /* Only outgoing publish records need to be searched. */
     assert( ( outgoingStates & searchStates ) > 0U );
-    assert( ( ~outgoingStates & searchStates ) == 0 );
+    assert( ( ~outgoingStates & searchStates ) == 0U );
 
     records = pMqttContext->outgoingPublishRecords;
     maxCount = pMqttContext->outgoingPublishRecordMaxCount;
@@ -758,7 +764,7 @@ static MQTTStatus_t updateStateAck( MQTTPubAckInfo_t * records,
 
 /*-----------------------------------------------------------*/
 
-static MQTTStatus_t updateStatePublish( MQTTContext_t * pMqttContext,
+static MQTTStatus_t updateStatePublish( const MQTTContext_t * pMqttContext,
                                         size_t recordIndex,
                                         uint16_t packetId,
                                         MQTTStateOperation_t opType,
@@ -816,7 +822,7 @@ static MQTTStatus_t updateStatePublish( MQTTContext_t * pMqttContext,
 
 /*-----------------------------------------------------------*/
 
-MQTTStatus_t MQTT_ReserveState( MQTTContext_t * pMqttContext,
+MQTTStatus_t MQTT_ReserveState( const MQTTContext_t * pMqttContext,
                                 uint16_t packetId,
                                 MQTTQoS_t qos )
 {
@@ -874,7 +880,7 @@ MQTTPublishState_t MQTT_CalculateStatePublish( MQTTStateOperation_t opType,
 
 /*-----------------------------------------------------------*/
 
-MQTTStatus_t MQTT_UpdateStatePublish( MQTTContext_t * pMqttContext,
+MQTTStatus_t MQTT_UpdateStatePublish( const MQTTContext_t * pMqttContext,
                                       uint16_t packetId,
                                       MQTTStateOperation_t opType,
                                       MQTTQoS_t qos,
@@ -948,7 +954,7 @@ MQTTStatus_t MQTT_UpdateStatePublish( MQTTContext_t * pMqttContext,
 
 /*-----------------------------------------------------------*/
 
-MQTTStatus_t MQTT_RemoveStateRecord( MQTTContext_t * pMqttContext,
+MQTTStatus_t MQTT_RemoveStateRecord( const MQTTContext_t * pMqttContext,
                                      uint16_t packetId )
 {
     MQTTStatus_t status = MQTTSuccess;
@@ -996,7 +1002,7 @@ MQTTStatus_t MQTT_RemoveStateRecord( MQTTContext_t * pMqttContext,
 
 /*-----------------------------------------------------------*/
 
-MQTTStatus_t MQTT_UpdateStateAck( MQTTContext_t * pMqttContext,
+MQTTStatus_t MQTT_UpdateStateAck( const MQTTContext_t * pMqttContext,
                                   uint16_t packetId,
                                   MQTTPubAckType_t packetType,
                                   MQTTStateOperation_t opType,

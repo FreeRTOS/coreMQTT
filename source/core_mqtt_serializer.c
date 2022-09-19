@@ -124,9 +124,9 @@
  *
  * @param[in] ptr A uint8_t* that points to the high byte.
  */
-#define UINT16_DECODE( ptr )                                \
-    ( uint16_t ) ( ( ( ( uint16_t ) ( *( ptr ) ) ) << 8 ) | \
-                   ( ( uint16_t ) ( *( ( ptr ) + 1 ) ) ) )
+#define UINT16_DECODE( ptr )                            \
+    ( uint16_t ) ( ( ( ( uint16_t ) ptr[ 0 ] ) << 8 ) | \
+                   ( ( uint16_t ) ptr[ 1 ] ) )
 
 /**
  * @brief A value that represents an invalid remaining length.
@@ -317,8 +317,8 @@ static size_t getRemainingLength( TransportRecv_t recvFunc,
  *         packet is not yet fully received and decoded. Otherwise, MQTTSuccess
  *         shows that processing of the packet was successful.
  */
-static MQTTStatus_t processRemainingLength( uint8_t * pBuffer,
-                                            size_t * pIndex,
+static MQTTStatus_t processRemainingLength( const uint8_t * pBuffer,
+                                            const size_t * pIndex,
                                             MQTTPacketInfo_t * pIncomingPacket );
 
 /**
@@ -549,7 +549,7 @@ static uint8_t * encodeString( uint8_t * pDestination,
     }
 
     /* Return the pointer to the end of the encoded string. */
-    pBuffer += sourceLength;
+    pBuffer = &pBuffer[ sourceLength ];
 
     return pBuffer;
 }
@@ -770,8 +770,8 @@ static void serializePublishCommon( const MQTTPublishInfo_t * pPublishInfo,
         LogDebug( ( "Adding packet Id in PUBLISH packet." ) );
         /* Place the packet identifier into the PUBLISH packet. */
         *pIndex = UINT16_HIGH_BYTE( packetIdentifier );
-        *( pIndex + 1 ) = UINT16_LOW_BYTE( packetIdentifier );
-        pIndex += 2;
+        pIndex[ 1U ] = UINT16_LOW_BYTE( packetIdentifier );
+        pIndex = &pIndex[ 2U ];
     }
 
     /* The payload is placed after the packet identifier.
@@ -789,7 +789,8 @@ static void serializePublishCommon( const MQTTPublishInfo_t * pPublishInfo,
         pPayloadBuffer = ( const uint8_t * ) pPublishInfo->pPayload;
 
         ( void ) memcpy( pIndex, pPayloadBuffer, pPublishInfo->payloadLength );
-        pIndex += pPublishInfo->payloadLength;
+        /* Move the index to after the payload. */
+        pIndex = &pIndex[ pPublishInfo->payloadLength ];
     }
 
     /* Ensure that the difference between the end and beginning of the buffer
@@ -849,8 +850,8 @@ static size_t getRemainingLength( TransportRecv_t recvFunc,
 
 /*-----------------------------------------------------------*/
 
-static MQTTStatus_t processRemainingLength( uint8_t * pBuffer,
-                                            size_t * pIndex,
+static MQTTStatus_t processRemainingLength( const uint8_t * pBuffer,
+                                            const size_t * pIndex,
                                             MQTTPacketInfo_t * pIncomingPacket )
 {
     size_t remainingLength = 0;
@@ -871,11 +872,11 @@ static MQTTStatus_t processRemainingLength( uint8_t * pBuffer,
         }
         else
         {
-            if( *pIndex > ( bytesDecoded + 1 ) )
+            if( *pIndex > ( bytesDecoded + 1U ) )
             {
                 /* Get the next byte. It is at the next position after the bytes
                  * decoded till now since the header of one byte was read before. */
-                encodedByte = pBuffer[ bytesDecoded + 1 ];
+                encodedByte = pBuffer[ bytesDecoded + 1U ];
 
                 remainingLength += ( ( size_t ) encodedByte & 0x7FU ) * multiplier;
                 multiplier *= 128U;
@@ -908,7 +909,7 @@ static MQTTStatus_t processRemainingLength( uint8_t * pBuffer,
         else
         {
             pIncomingPacket->remainingLength = remainingLength;
-            pIncomingPacket->headerLength = bytesDecoded + 1;
+            pIncomingPacket->headerLength = bytesDecoded + 1U;
         }
     }
 
@@ -1064,7 +1065,7 @@ static void logConnackResponse( uint8_t responseCode )
     ( void ) responseCode;
     ( void ) pConnackResponses;
 
-    assert( responseCode <= 5 );
+    assert( responseCode <= 5U );
 
     if( responseCode == 0u )
     {
@@ -1333,7 +1334,7 @@ static MQTTStatus_t deserializeSuback( const MQTTPacketInfo_t * pSuback,
         else
         {
             status = readSubackStatus( remainingLength - sizeof( uint16_t ),
-                                       pVariableHeader + sizeof( uint16_t ) );
+                                       &pVariableHeader[ sizeof( uint16_t ) ] );
         }
     }
 
@@ -1443,12 +1444,12 @@ static MQTTStatus_t deserializePublish( const MQTTPacketInfo_t * pIncomingPacket
     if( status == MQTTSuccess )
     {
         /* Parse the topic. */
-        pPublishInfo->pTopicName = ( const char * ) ( pVariableHeader + sizeof( uint16_t ) );
+        pPublishInfo->pTopicName = ( const char * ) ( &pVariableHeader[ sizeof( uint16_t ) ] );
         LogDebug( ( "Topic name length: %hu.", ( unsigned short ) pPublishInfo->topicNameLength ) );
 
         /* Extract the packet identifier for QoS 1 or 2 PUBLISH packets. Packet
          * identifier starts immediately after the topic name. */
-        pPacketIdentifierHigh = ( const uint8_t * ) ( pPublishInfo->pTopicName + pPublishInfo->topicNameLength );
+        pPacketIdentifierHigh = ( const uint8_t * ) ( &pPublishInfo->pTopicName[ pPublishInfo->topicNameLength ] );
 
         if( pPublishInfo->qos > MQTTQoS0 )
         {
@@ -1458,7 +1459,7 @@ static MQTTStatus_t deserializePublish( const MQTTPacketInfo_t * pIncomingPacket
                         ( unsigned short ) *pPacketId ) );
 
             /* Advance pointer two bytes to start of payload as in the QoS 0 case. */
-            pPacketIdentifierHigh += sizeof( uint16_t );
+            pPacketIdentifierHigh = &pPacketIdentifierHigh[ sizeof( uint16_t ) ];
 
             /* Packet identifier cannot be 0. */
             if( *pPacketId == 0U )
@@ -1619,9 +1620,9 @@ uint8_t * MQTT_SerializeConnectFixedHeader( uint8_t * pIndex,
     pIndexLocal++;
 
     /* Write the 2 bytes of the keep alive interval into the CONNECT packet. */
-    *pIndexLocal = UINT16_HIGH_BYTE( pConnectInfo->keepAliveSeconds );
-    *( pIndexLocal + 1 ) = UINT16_LOW_BYTE( pConnectInfo->keepAliveSeconds );
-    pIndexLocal += 2;
+    pIndexLocal[ 0 ] = UINT16_HIGH_BYTE( pConnectInfo->keepAliveSeconds );
+    pIndexLocal[ 1 ] = UINT16_LOW_BYTE( pConnectInfo->keepAliveSeconds );
+    pIndexLocal = &pIndexLocal[ 2 ];
 
     return pIndexLocal;
 }
@@ -1895,9 +1896,10 @@ uint8_t * MQTT_SerializeSubscribeHeader( size_t remainingLength,
     pIterator = encodeRemainingLength( pIterator, remainingLength );
 
     /* Place the packet identifier into the SUBSCRIBE packet. */
-    *pIterator = UINT16_HIGH_BYTE( packetId );
-    *( pIterator + 1 ) = UINT16_LOW_BYTE( packetId );
-    pIterator += 2;
+    pIterator[ 0 ] = UINT16_HIGH_BYTE( packetId );
+    pIterator[ 1 ] = UINT16_LOW_BYTE( packetId );
+    /* Advance the pointer. */
+    pIterator = &pIterator[ 2 ];
 
     return pIterator;
 }
@@ -1918,9 +1920,10 @@ uint8_t * MQTT_SerializeUnsubscribeHeader( size_t remainingLength,
     pIterator = encodeRemainingLength( pIterator, remainingLength );
 
     /* Place the packet identifier into the SUBSCRIBE packet. */
-    *pIterator = UINT16_HIGH_BYTE( packetId );
-    *( pIterator + 1 ) = UINT16_LOW_BYTE( packetId );
-    pIterator += 2;
+    pIterator[ 0 ] = UINT16_HIGH_BYTE( packetId );
+    pIterator[ 1 ] = UINT16_LOW_BYTE( packetId );
+    /* Increment the pointer. */
+    pIterator = &pIterator[ 2 ];
 
     return pIterator;
 }
@@ -2619,8 +2622,8 @@ MQTTStatus_t MQTT_GetIncomingPacketTypeAndLength( TransportRecv_t readFunc,
 
 /*-----------------------------------------------------------*/
 
-MQTTStatus_t MQTT_ProcessIncomingPacketTypeAndLength( uint8_t * pBuffer,
-                                                      size_t * pIndex,
+MQTTStatus_t MQTT_ProcessIncomingPacketTypeAndLength( const uint8_t * pBuffer,
+                                                      const size_t * pIndex,
                                                       MQTTPacketInfo_t * pIncomingPacket )
 {
     MQTTStatus_t status = MQTTSuccess;
@@ -2641,7 +2644,7 @@ MQTTStatus_t MQTT_ProcessIncomingPacketTypeAndLength( uint8_t * pBuffer,
         status = MQTTBadParameter;
     }
     /* There should be at least one byte in the buffer */
-    else if( *pIndex < 1 )
+    else if( *pIndex < 1U )
     {
         /* No data is available. There are 0 bytes received from the network
          * receive function. */
