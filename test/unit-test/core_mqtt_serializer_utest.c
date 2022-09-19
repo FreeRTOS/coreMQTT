@@ -1918,6 +1918,211 @@ void test_MQTT_GetIncomingPacketTypeAndLength( void )
 /* ========================================================================== */
 
 /**
+ * @brief Tests that MQTT_SerializePublishHeaderWithoutTopic works as intended.
+ */
+void test_MQTT_SerializePublishHeaderWithoutTopic_AllNULL( void )
+{
+    MQTTPublishInfo_t publishInfo;
+    size_t remainingLength = 0;
+    uint8_t buffer[ 7 ];
+    MQTTStatus_t status = MQTTSuccess;
+    size_t headerSize = 0;
+
+    /* Verify bad parameters fail. */
+    memset( &publishInfo, 0x00, sizeof( publishInfo ) );
+
+    status = MQTT_SerializePublishHeaderWithoutTopic( &publishInfo,
+                                                      remainingLength,
+                                                      buffer,
+                                                      &headerSize );
+
+    TEST_ASSERT_EQUAL( MQTTSuccess, status );
+    TEST_ASSERT_EQUAL( headerSize, 4U );
+    /* No flag should be set. Except publish flag. */
+    TEST_ASSERT_EQUAL( buffer[ 0 ], 0x30 );
+    /* The encoded length must be 0. */
+    TEST_ASSERT_EQUAL( buffer[ 1 ], 0U );
+    /* The topic name length should be 0 too. */
+    TEST_ASSERT_EQUAL( buffer[ 2 ], 0U );
+    TEST_ASSERT_EQUAL( buffer[ 3 ], 0U );
+}
+
+/* ========================================================================== */
+
+/**
+ * @brief Tests that MQTT_SerializePublishHeaderWithoutTopic works as intended.
+ */
+void test_MQTT_SerializePublishHeaderWithoutTopic_QoS1( void )
+{
+    MQTTPublishInfo_t publishInfo;
+    size_t remainingLength = 0;
+    uint8_t buffer[ 7 ];
+    MQTTStatus_t status = MQTTSuccess;
+    size_t headerSize = 0;
+
+    /* Verify bad parameters fail. */
+    memset( &publishInfo, 0x00, sizeof( publishInfo ) );
+
+    publishInfo.qos = MQTTQoS1;
+
+    status = MQTT_SerializePublishHeaderWithoutTopic( &publishInfo,
+                                                      remainingLength,
+                                                      buffer,
+                                                      &headerSize );
+
+    TEST_ASSERT_EQUAL( MQTTSuccess, status );
+    TEST_ASSERT_EQUAL( headerSize, 4U );
+    /* No flag should be set except QoS1 and publish flag. */
+    TEST_ASSERT_EQUAL( buffer[ 0 ], ( 1U << 1 ) | 0x30 );
+    /* The encoded length must be 0. */
+    TEST_ASSERT_EQUAL( buffer[ 1 ], 0U );
+    /* The topic name length should be 0 too. */
+    TEST_ASSERT_EQUAL( buffer[ 2 ], 0U );
+    TEST_ASSERT_EQUAL( buffer[ 3 ], 0U );
+}
+
+/* ========================================================================== */
+
+/**
+ * @brief Tests that MQTT_SerializePublishHeaderWithoutTopic works as intended.
+ */
+void test_MQTT_SerializePublishHeaderWithoutTopic_QoS2( void )
+{
+    MQTTPublishInfo_t publishInfo;
+    size_t remainingLength = 0;
+    uint8_t buffer[ 7 ];
+    MQTTStatus_t status = MQTTSuccess;
+    size_t headerSize = 0;
+
+    /* Verify bad parameters fail. */
+    memset( &publishInfo, 0x00, sizeof( publishInfo ) );
+
+    publishInfo.qos = MQTTQoS2;
+
+    status = MQTT_SerializePublishHeaderWithoutTopic( &publishInfo,
+                                                      remainingLength,
+                                                      buffer,
+                                                      &headerSize );
+
+    TEST_ASSERT_EQUAL( MQTTSuccess, status );
+    TEST_ASSERT_EQUAL( headerSize, 4U );
+    /* No flag should be set except QoS2. */
+    TEST_ASSERT_EQUAL( buffer[ 0 ], ( 1U << 2 ) | 0x30 );
+    /* The encoded length must be 0. */
+    TEST_ASSERT_EQUAL( buffer[ 1 ], 0U );
+    /* The topic name length should be 0 too. */
+    TEST_ASSERT_EQUAL( buffer[ 2 ], 0U );
+    TEST_ASSERT_EQUAL( buffer[ 3 ], 0U );
+}
+
+/* ========================================================================== */
+
+/**
+ * @brief Tests that MQTT_SerializePublishHeaderWithoutTopic works as intended.
+ */
+void test_MQTT_SerializePublishHeaderWithoutTopic_retain( void )
+{
+    MQTTPublishInfo_t publishInfo;
+    size_t remainingLength = 0;
+    uint8_t buffer[ 7 ];
+    MQTTStatus_t status = MQTTSuccess;
+    size_t headerSize = 0;
+
+    /* Verify bad parameters fail. */
+    memset( &publishInfo, 0x00, sizeof( publishInfo ) );
+
+    publishInfo.retain = true;
+
+    status = MQTT_SerializePublishHeaderWithoutTopic( &publishInfo,
+                                                      remainingLength,
+                                                      buffer,
+                                                      &headerSize );
+
+    TEST_ASSERT_EQUAL( MQTTSuccess, status );
+    TEST_ASSERT_EQUAL( headerSize, 4U );
+    /* No flag should be set except retain flag. */
+    TEST_ASSERT_EQUAL( buffer[ 0 ], ( 1U << 0 ) | 0x30 );
+    /* The encoded length must be 0. */
+    TEST_ASSERT_EQUAL( buffer[ 1 ], 0U );
+    /* The topic name length should be 0 too. */
+    TEST_ASSERT_EQUAL( buffer[ 2 ], 0U );
+    TEST_ASSERT_EQUAL( buffer[ 3 ], 0U );
+}
+
+/* ========================================================================== */
+
+/**
+ * @brief Tests that MQTT_SerializePublishHeaderWithoutTopic works as intended.
+ */
+void test_MQTT_SerializePublishHeaderWithoutTopic_Duplicate( void )
+{
+    MQTTPublishInfo_t publishInfo;
+    size_t remainingLength = 0;
+    uint8_t buffer[ 7 ];
+    MQTTStatus_t status = MQTTSuccess;
+    size_t headerSize = 0;
+
+    /* Verify bad parameters fail. */
+    memset( &publishInfo, 0x00, sizeof( publishInfo ) );
+
+    publishInfo.dup = true;
+
+    status = MQTT_SerializePublishHeaderWithoutTopic( &publishInfo,
+                                                      remainingLength,
+                                                      buffer,
+                                                      &headerSize );
+
+    TEST_ASSERT_EQUAL( MQTTSuccess, status );
+    TEST_ASSERT_EQUAL( headerSize, 4U );
+    /* No flag should be set except dup. */
+    TEST_ASSERT_EQUAL( buffer[ 0 ], ( 1U << 3 ) | 0x30 );
+    /* The encoded length must be 0. */
+    TEST_ASSERT_EQUAL( buffer[ 1 ], 0U );
+    /* The topic name length should be 0 too. */
+    TEST_ASSERT_EQUAL( buffer[ 2 ], 0U );
+    TEST_ASSERT_EQUAL( buffer[ 3 ], 0U );
+}
+
+/* ========================================================================== */
+
+/**
+ * @brief Tests that MQTT_SerializePublishHeaderWithoutTopic works as intended.
+ */
+void test_MQTT_SerializePublishHeaderWithoutTopic_VariousFlagsSetTopicLength( void )
+{
+    MQTTPublishInfo_t publishInfo;
+    size_t remainingLength = 0;
+    uint8_t buffer[ 7 ];
+    MQTTStatus_t status = MQTTSuccess;
+    size_t headerSize = 0;
+
+    /* Verify bad parameters fail. */
+    memset( &publishInfo, 0x00, sizeof( publishInfo ) );
+
+    publishInfo.qos = MQTTQoS2;
+    publishInfo.dup = true;
+    publishInfo.retain = true;
+    publishInfo.topicNameLength = 20;
+
+    status = MQTT_SerializePublishHeaderWithoutTopic( &publishInfo,
+                                                      remainingLength,
+                                                      buffer,
+                                                      &headerSize );
+
+    TEST_ASSERT_EQUAL( MQTTSuccess, status );
+    TEST_ASSERT_EQUAL( headerSize, 4U );
+    /* No flag should be set except QoS2/dup/retain. */
+    TEST_ASSERT_EQUAL( buffer[ 0 ], ( 1U << 2 ) | ( 1U << 3 ) | ( 1U << 0 ) | 0x30 );
+    /* The encoded length must be 0. */
+    TEST_ASSERT_EQUAL( buffer[ 1 ], 0U );
+    /* The topic name length should be 0 too. */
+    TEST_ASSERT_EQUAL( buffer[ 2 ], 0U );
+    TEST_ASSERT_EQUAL( buffer[ 3 ], 20U );
+}
+
+/* ========================================================================== */
+
+/**
  * @brief Tests that MQTT_SerializePublishHeader works as intended.
  */
 void test_MQTT_SerializePublishHeader( void )
@@ -2101,6 +2306,171 @@ void test_MQTT_SerializePublishHeader( void )
 
 /* ========================================================================== */
 
+void test_MQTT_ProcessIncomingPacketTypeAndLength_PacketNULL( void )
+{
+    uint8_t pBuffer[ 100 ];
+    size_t index = 0;
+    MQTTStatus_t status;
+
+    status = MQTT_ProcessIncomingPacketTypeAndLength( pBuffer, &index, NULL );
+
+    TEST_ASSERT_EQUAL( MQTTBadParameter, status );
+}
+
+/* ========================================================================== */
+
+void test_MQTT_ProcessIncomingPacketTypeAndLength_BufferNULL( void )
+{
+    MQTTPacketInfo_t packetInfo;
+    size_t index = 0;
+    MQTTStatus_t status;
+
+    status = MQTT_ProcessIncomingPacketTypeAndLength( NULL, &index, &packetInfo );
+
+    TEST_ASSERT_EQUAL( MQTTBadParameter, status );
+}
+
+/* ========================================================================== */
+
+void test_MQTT_ProcessIncomingPacketTypeAndLength_IndexNULL( void )
+{
+    MQTTPacketInfo_t packetInfo;
+    uint8_t pBuffer[ 100 ];
+    MQTTStatus_t status;
+
+    status = MQTT_ProcessIncomingPacketTypeAndLength( pBuffer, NULL, &packetInfo );
+
+    TEST_ASSERT_EQUAL( MQTTBadParameter, status );
+}
+
+/* ========================================================================== */
+
+void test_MQTT_ProcessIncomingPacketTypeAndLength_NoData( void )
+{
+    MQTTPacketInfo_t packetInfo;
+    uint8_t pBuffer[ 100 ];
+    size_t index = 0;
+    MQTTStatus_t status;
+
+    status = MQTT_ProcessIncomingPacketTypeAndLength( pBuffer, &index, &packetInfo );
+
+    TEST_ASSERT_EQUAL( MQTTNoDataAvailable, status );
+}
+
+/* ========================================================================== */
+
+void test_MQTT_ProcessIncomingPacketTypeAndLength_InvalidData( void )
+{
+    MQTTPacketInfo_t packetInfo;
+    uint8_t pBuffer[ 100 ];
+    size_t index = 2;
+    MQTTStatus_t status;
+
+    memset( &packetInfo, 0, sizeof( MQTTPacketInfo_t ) );
+    memset( pBuffer, 0, 100 );
+
+    pBuffer[ 0 ] = 0xF0;
+
+    status = MQTT_ProcessIncomingPacketTypeAndLength( pBuffer, &index, &packetInfo );
+
+    TEST_ASSERT_EQUAL( MQTTBadResponse, status );
+}
+
+/* ========================================================================== */
+
+void test_MQTT_ProcessIncomingPacketTypeAndLength_ValidDataOneByte( void )
+{
+    MQTTPacketInfo_t packetInfo;
+    uint8_t pBuffer[ 100 ];
+    size_t index = 1;
+    MQTTStatus_t status;
+
+    memset( &packetInfo, 0, sizeof( MQTTPacketInfo_t ) );
+    memset( pBuffer, 0, 100 );
+
+    pBuffer[ 0 ] = MQTT_PACKET_TYPE_PUBLISH;
+
+    status = MQTT_ProcessIncomingPacketTypeAndLength( pBuffer, &index, &packetInfo );
+
+    TEST_ASSERT_EQUAL( MQTTNeedMoreBytes, status );
+}
+
+/* ========================================================================== */
+
+void test_MQTT_ProcessIncomingPacketTypeAndLength_ValidDataTwoBytes( void )
+{
+    MQTTPacketInfo_t packetInfo;
+    uint8_t pBuffer[ 100 ];
+    size_t index = 2;
+    MQTTStatus_t status;
+
+    memset( &packetInfo, 0, sizeof( MQTTPacketInfo_t ) );
+    memset( pBuffer, 0, 100 );
+
+    pBuffer[ 0 ] = MQTT_PACKET_TYPE_PUBLISH;
+    /* 2nd byte is the length. */
+    pBuffer[ 1 ] = 10;
+
+    status = MQTT_ProcessIncomingPacketTypeAndLength( pBuffer, &index, &packetInfo );
+
+    TEST_ASSERT_EQUAL( MQTTSuccess, status );
+    TEST_ASSERT_EQUAL( packetInfo.remainingLength, 10U );
+    TEST_ASSERT_EQUAL( packetInfo.headerLength, 2U );
+}
+
+/* ========================================================================== */
+
+void test_MQTT_ProcessIncomingPacketTypeAndLength_InvalidLength( void )
+{
+    MQTTPacketInfo_t packetInfo;
+    uint8_t pBuffer[ 100 ];
+    size_t index = 6;
+    MQTTStatus_t status;
+
+    memset( &packetInfo, 0, sizeof( MQTTPacketInfo_t ) );
+    memset( pBuffer, 0, 100 );
+
+    pBuffer[ 0 ] = MQTT_PACKET_TYPE_PUBLISH;
+    /* 2nd byte onward is the length. */
+    pBuffer[ 1 ] = 0xFF;
+    pBuffer[ 2 ] = 0xFF;
+    pBuffer[ 3 ] = 0xFF;
+    /* This byte doesn't terminate the length. */
+    pBuffer[ 4 ] = 0xFF;
+    pBuffer[ 5 ] = 0xFF;
+
+    status = MQTT_ProcessIncomingPacketTypeAndLength( pBuffer, &index, &packetInfo );
+
+    TEST_ASSERT_EQUAL( MQTTBadResponse, status );
+}
+
+/* ========================================================================== */
+
+void test_MQTT_ProcessIncomingPacketTypeAndLength_NonConformingLength( void )
+{
+    MQTTPacketInfo_t packetInfo;
+    uint8_t pBuffer[ 100 ];
+    size_t index = 6;
+    MQTTStatus_t status;
+
+    memset( &packetInfo, 0, sizeof( MQTTPacketInfo_t ) );
+    memset( pBuffer, 0, 100 );
+
+    pBuffer[ 0 ] = MQTT_PACKET_TYPE_PUBLISH;
+    /* 2nd byte onward is the length. */
+    pBuffer[ 1 ] = 0x80;
+    pBuffer[ 2 ] = 0x80;
+    pBuffer[ 3 ] = 0x80;
+    /* This byte doesn't terminate the length. */
+    pBuffer[ 4 ] = 0x00;
+
+    status = MQTT_ProcessIncomingPacketTypeAndLength( pBuffer, &index, &packetInfo );
+
+    TEST_ASSERT_EQUAL( MQTTBadResponse, status );
+}
+
+/* ========================================================================== */
+
 /**
  * @brief Tests that MQTT_SerializeAck works as intended.
  */
@@ -2202,7 +2572,7 @@ static void verifySerializedConnectPacket( const MQTTConnectInfo_t * const pConn
 
     pIndex = pBuffer->pBuffer;
     /* The first byte in the CONNECT packet is the control packet type. */
-    TEST_ASSERT_EQUAL( MQTT_PACKET_TYPE_CONNECT, *pIndex );
+    TEST_ASSERT_EQUAL_MESSAGE( MQTT_PACKET_TYPE_CONNECT, *pIndex, "MQTT_PACKET_TYPE_CONNECT is not equal to *pIndex" );
     pIndex++;
 
     /* The remaining length of the CONNECT packet is encoded starting from the
@@ -2361,7 +2731,8 @@ void test_MQTT_SerializeConnect_Invalid_Params()
 void test_MQTT_SerializeConnect_Happy_Paths()
 {
     MQTTStatus_t mqttStatus = MQTTSuccess;
-    size_t remainingLength = 0, packetSize = 0;
+    size_t remainingLength = 0;
+    size_t packetSize = 0;
     MQTTFixedBuffer_t networkBuffer;
     MQTTConnectInfo_t connectInfo;
     MQTTPublishInfo_t willInfo;
@@ -2386,7 +2757,6 @@ void test_MQTT_SerializeConnect_Happy_Paths()
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
     verifySerializedConnectPacket( &connectInfo, &willInfo,
                                    remainingLength, &networkBuffer );
-
 
     /* Repeat with MQTTQoS1. */
     willInfo.qos = MQTTQoS1;

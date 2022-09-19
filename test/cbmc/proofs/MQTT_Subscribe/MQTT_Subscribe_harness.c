@@ -41,8 +41,8 @@ void harness()
      * mqtt_cbmc_state.c for more information. */
     __CPROVER_assume( subscriptionCount < SUBSCRIPTION_COUNT_MAX );
 
-    pSubscriptionList = allocateMqttSubscriptionList( NULL, subscriptionCount );
-    __CPROVER_assume( isValidMqttSubscriptionList( pSubscriptionList, subscriptionCount ) );
+    pSubscriptionList = allocateMqttSubscriptionList( NULL, 1U );
+    __CPROVER_assume( isValidMqttSubscriptionList( pSubscriptionList, 1U ) );
 
     MQTT_Subscribe( pContext, pSubscriptionList, subscriptionCount, packetId );
 }

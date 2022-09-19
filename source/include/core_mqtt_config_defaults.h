@@ -41,6 +41,14 @@
 #endif
 /* *INDENT-ON* */
 
+/* MQTT_DO_NOT_USE_CUSTOM_CONFIG allows building the MQTT library
+ * without a custom config. If a custom config is provided, the
+ * MQTT_DO_NOT_USE_CUSTOM_CONFIG macro should not be defined. */
+#ifndef MQTT_DO_NOT_USE_CUSTOM_CONFIG
+/* Include custom config file before other headers. */
+    #include "core_mqtt_config.h"
+#endif
+
 /* The macro definition for MQTT_DO_NOT_USE_CUSTOM_CONFIG is for Doxygen
  * documentation only. */
 
@@ -59,27 +67,11 @@
 #endif
 
 /**
- * @brief Determines the maximum number of MQTT PUBLISH messages, pending
- * acknowledgment at a time, that are supported for incoming and outgoing
- * direction of messages, separately.
- *
- * QoS 1 and 2 MQTT PUBLISHes require acknowledgment from the server before
- * they can be completed. While they are awaiting the acknowledgment, the
- * client must maintain information about their state. The value of this
- * macro sets the limit on how many simultaneous PUBLISH states an MQTT
- * context maintains, separately, for both incoming and outgoing direction of
- * PUBLISHes.
- *
- * @note The MQTT context maintains separate state records for outgoing
- * and incoming PUBLISHes, and thus, 2 * MQTT_STATE_ARRAY_MAX_COUNT amount
- * of memory is statically allocated for the state records.
- *
- * <b>Possible values:</b> Any positive 32 bit integer. <br>
- * <b>Default value:</b> `10`
+ * @ingroup mqtt_constants
+ * @brief Maximum number of vectors in subscribe and unsubscribe packet.
  */
-#ifndef MQTT_STATE_ARRAY_MAX_COUNT
-/* Default value for the maximum acknowledgment pending PUBLISH messages. */
-    #define MQTT_STATE_ARRAY_MAX_COUNT    ( 10U )
+#ifndef MQTT_SUB_UNSUB_MAX_VECTORS
+    #define MQTT_SUB_UNSUB_MAX_VECTORS    ( 4U )
 #endif
 
 /**

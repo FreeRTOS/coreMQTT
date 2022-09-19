@@ -45,6 +45,7 @@ jobs:
         uses: FreeRTOS/CI-CD-Github-Actions/complexity@main
         with:
           path: ./
+          horrid_threshold: 10
   doxygen:
     runs-on: ubuntu-20.04
     steps:

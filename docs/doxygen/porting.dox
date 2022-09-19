@@ -15,7 +15,6 @@ A port to a new platform must provide the following components:
 @see [Configurations](@ref core_mqtt_config)
 
 The following macros can be configured for the managed MQTT library:
- - @ref MQTT_STATE_ARRAY_MAX_COUNT <br>
  - @ref MQTT_PINGRESP_TIMEOUT_MS <br>
  - @ref MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT
 
