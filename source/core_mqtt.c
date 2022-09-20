@@ -758,8 +758,7 @@ static int32_t sendMessageVector( MQTTContext_t * pContext,
     /* Reset the iterator to point to the first entry in the array. */
     pIoVectIterator = pIoVec;
 
-    while( ( pContext->getTime() < timeoutTime ) &&
-           ( bytesSentOrError < ( int32_t ) bytesToSend ) )
+    while( bytesSentOrError < ( int32_t ) bytesToSend )
     {
         int32_t sendResult;
         uint32_t bytesSentThisVector = 0U;
@@ -785,7 +784,8 @@ static int32_t sendMessageVector( MQTTContext_t * pContext,
         else
         {
             bytesSentOrError = sendResult;
-            break;
+            /* We don't need to break here as this condition is checked in
+             * the loop. */
         }
 
         while( ( pIoVectIterator <= &( pIoVec[ ioVecCount - 1U ] ) ) &&
@@ -805,6 +805,12 @@ static int32_t sendMessageVector( MQTTContext_t * pContext,
         {
             pIoVectIterator->iov_base = ( const void * ) &( ( ( const uint8_t * ) pIoVectIterator->iov_base )[ bytesSentThisVector ] );
             pIoVectIterator->iov_len -= bytesSentThisVector;
+        }
+
+        /* Check for timeout. */
+        if( pContext->getTime() < timeoutTime )
+        {
+            break;
         }
     }
 
