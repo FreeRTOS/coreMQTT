@@ -784,7 +784,7 @@ static int32_t sendMessageVector( MQTTContext_t * pContext,
         else
         {
             bytesSentOrError = sendResult;
-            /* We don't need to break here as this condition is checked in
+            /* We do not need to break here as this condition is checked in
              * the loop. */
         }
 
@@ -808,7 +808,7 @@ static int32_t sendMessageVector( MQTTContext_t * pContext,
         }
 
         /* Check for timeout. */
-        if( pContext->getTime() < timeoutTime )
+        if( pContext->getTime() > timeoutTime )
         {
             break;
         }
@@ -822,7 +822,7 @@ static int32_t sendBuffer( MQTTContext_t * pContext,
                            size_t bytesToSend )
 {
     const uint8_t * pIndex = pBufferToSend;
-    size_t bytesRemaining = bytesToSend;
+    size_t bytesRemaining;
     int32_t totalBytesSent = 0, bytesSent;
     uint32_t lastSendTimeMs = 0U, timeSinceLastSendMs = 0U;
     bool sendError = false;
@@ -2327,6 +2327,10 @@ static MQTTStatus_t handleSessionResumption( MQTTContext_t * pContext,
 
     assert( pContext != NULL );
 
+    /* Reset the index and clear the buffer when a new session is established. */
+    pContext->index = 0;
+    memset( pContext->networkBuffer.pBuffer, 0, pContext->networkBuffer.size );
+
     if( sessionPresent == true )
     {
         /* Get the next packet ID for which a PUBREL need to be resent. */
@@ -2975,6 +2979,10 @@ MQTTStatus_t MQTT_Disconnect( MQTTContext_t * pContext )
     {
         LogInfo( ( "Disconnected from the broker." ) );
         pContext->connectStatus = MQTTNotConnected;
+
+        /* Reset the index and clean the buffer on a successful disconnect. */
+        pContext->index = 0;
+        ( void ) memset( pContext->networkBuffer.pBuffer, 0, pContext->networkBuffer.size );
     }
 
     return status;
