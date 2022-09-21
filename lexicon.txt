@@ -17,6 +17,7 @@ bytesreceived
 bytesrecvd
 bytesremaining
 bytessent
+bytessentthisvector
 bytestoread
 bytestoreceive
 bytestorecv

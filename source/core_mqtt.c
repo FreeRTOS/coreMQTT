@@ -786,7 +786,8 @@ static int32_t sendMessageVector( MQTTContext_t * pContext,
             bytesSentOrError = sendResult;
 
             /* We do not need to break here as this condition is checked in
-             * the loop. */
+             * the loop. The following code will not execute as bytesSentThisVector
+             * is not updated and is still 0. */
         }
 
         while( ( pIoVectIterator <= &( pIoVec[ ioVecCount - 1U ] ) ) &&
