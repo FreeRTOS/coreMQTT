@@ -868,6 +868,8 @@ static MQTTStatus_t processRemainingLength( const uint8_t * pBuffer,
         {
             remainingLength = MQTT_REMAINING_LENGTH_INVALID;
 
+            LogError( ( "Invalid remaining length in the packet.\n" ) );
+
             status = MQTTBadResponse;
         }
         else
@@ -904,6 +906,7 @@ static MQTTStatus_t processRemainingLength( const uint8_t * pBuffer,
 
         if( bytesDecoded != expectedSize )
         {
+            LogError( ( "Expected and actual length of decoded bytes do not match.\n" ) );
             status = MQTTBadResponse;
         }
         else

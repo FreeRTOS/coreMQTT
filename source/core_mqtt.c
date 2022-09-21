@@ -736,7 +736,6 @@ static int32_t sendMessageVector( MQTTContext_t * pContext,
     uint32_t timeoutTime;
     uint32_t bytesToSend = 0U;
     int32_t bytesSentOrError = 0;
-    uint64_t temp = 0;
     TransportOutVector_t * pIoVectIterator;
     size_t vectorsToBeSent = ioVecCount;
 
@@ -751,15 +750,13 @@ static int32_t sendMessageVector( MQTTContext_t * pContext,
     /* Count the total number of bytes to be sent as outlined in the vector. */
     for( pIoVectIterator = pIoVec; pIoVectIterator <= &( pIoVec[ ioVecCount - 1U ] ); pIoVectIterator++ )
     {
-        temp += pIoVectIterator->iov_len;
         bytesToSend += ( uint32_t ) pIoVectIterator->iov_len;
     }
 
     /* Reset the iterator to point to the first entry in the array. */
     pIoVectIterator = pIoVec;
 
-    while( ( pContext->getTime() < timeoutTime ) &&
-           ( bytesSentOrError < ( int32_t ) bytesToSend ) )
+    while( bytesSentOrError < ( int32_t ) bytesToSend )
     {
         int32_t sendResult;
         uint32_t bytesSentThisVector = 0U;
@@ -785,6 +782,7 @@ static int32_t sendMessageVector( MQTTContext_t * pContext,
         else
         {
             bytesSentOrError = sendResult;
+
             break;
         }
 
@@ -806,6 +804,12 @@ static int32_t sendMessageVector( MQTTContext_t * pContext,
             pIoVectIterator->iov_base = ( const void * ) &( ( ( const uint8_t * ) pIoVectIterator->iov_base )[ bytesSentThisVector ] );
             pIoVectIterator->iov_len -= bytesSentThisVector;
         }
+
+        /* Check for timeout. */
+        if( pContext->getTime() > timeoutTime )
+        {
+            break;
+        }
     }
 
     return bytesSentOrError;
@@ -816,7 +820,7 @@ static int32_t sendBuffer( MQTTContext_t * pContext,
                            size_t bytesToSend )
 {
     const uint8_t * pIndex = pBufferToSend;
-    size_t bytesRemaining = bytesToSend;
+    size_t bytesRemaining;
     int32_t totalBytesSent = 0, bytesSent;
     uint32_t lastSendTimeMs = 0U, timeSinceLastSendMs = 0U;
     bool sendError = false;
@@ -1650,11 +1654,15 @@ static MQTTStatus_t receiveSingleIteration( MQTTContext_t * pContext,
         /* The receive function has failed. Bubble up the error up to the user. */
         status = MQTTRecvFailed;
     }
-    else if( recvBytes == 0 )
+    else if( ( recvBytes == 0 ) && ( pContext->index == 0 ) )
     {
-        /* No more bytes available since the last read. */
+        /* No more bytes available since the last read and neither is anything in
+         * the buffer. */
         status = MQTTNoDataAvailable;
     }
+
+    /* Either something was received, or there is still data to be processed in the
+     * buffer, or both. */
     else
     {
         /* Update the number of bytes in the MQTT fixed buffer. */
@@ -2088,6 +2096,11 @@ static MQTTStatus_t sendConnectWithoutCopy( MQTTContext_t * pContext,
         LogError( ( "pWillInfo->pTopicName cannot be NULL if Will is present." ) );
         status = MQTTBadParameter;
     }
+    else if( ( pWillInfo != NULL ) && ( pWillInfo->pPayload == NULL ) )
+    {
+        LogError( ( "pWillInfo->pPayload cannot be NULL if Will is present." ) );
+        status = MQTTBadParameter;
+    }
     else
     {
         pIndex = MQTT_SerializeConnectFixedHeader( pIndex,
@@ -2320,6 +2333,10 @@ static MQTTStatus_t handleSessionResumption( MQTTContext_t * pContext,
     MQTTPublishState_t state = MQTTStateNull;
 
     assert( pContext != NULL );
+
+    /* Reset the index and clear the buffer when a new session is established. */
+    pContext->index = 0;
+    memset( pContext->networkBuffer.pBuffer, 0, pContext->networkBuffer.size );
 
     if( sessionPresent == true )
     {
@@ -2969,6 +2986,10 @@ MQTTStatus_t MQTT_Disconnect( MQTTContext_t * pContext )
     {
         LogInfo( ( "Disconnected from the broker." ) );
         pContext->connectStatus = MQTTNotConnected;
+
+        /* Reset the index and clean the buffer on a successful disconnect. */
+        pContext->index = 0;
+        ( void ) memset( pContext->networkBuffer.pBuffer, 0, pContext->networkBuffer.size );
     }
 
     return status;

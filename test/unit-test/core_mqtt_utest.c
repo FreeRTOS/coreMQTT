@@ -1025,6 +1025,8 @@ void test_MQTT_Connect_ProperWIllInfo( void )
 
     willInfo.pTopicName = "MQTTTopic";
     willInfo.topicNameLength = strlen( willInfo.pTopicName );
+    willInfo.pPayload = "MQTTPayload";
+    willInfo.payloadLength = strlen( willInfo.pPayload );
 
     connectInfo.pUserName = "MQTTUser";
     connectInfo.userNameLength = strlen( connectInfo.pUserName );
@@ -1052,6 +1054,60 @@ void test_MQTT_Connect_ProperWIllInfo( void )
     status = MQTT_Connect( &mqttContext, &connectInfo, &willInfo, timeout, &sessionPresent );
 
     TEST_ASSERT_EQUAL_INT( MQTTSendFailed, status );
+}
+
+/**
+ * @brief Test MQTT_Connect, with no payload in will message.
+ */
+void test_MQTT_Connect_ImproperWIllInfo( void )
+{
+    MQTTContext_t mqttContext = { 0 };
+    MQTTConnectInfo_t connectInfo = { 0 };
+    uint32_t timeout = 2;
+    bool sessionPresent;
+    MQTTStatus_t status;
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
+    size_t remainingLength;
+    size_t packetSize;
+    MQTTPublishInfo_t willInfo;
+
+    setupTransportInterface( &transport );
+    transport.writev = transportWritevFail;
+    setupNetworkBuffer( &networkBuffer );
+
+    memset( &mqttContext, 0x0, sizeof( mqttContext ) );
+    memset( &willInfo, 0, sizeof( MQTTPublishInfo_t ) );
+
+    willInfo.pTopicName = "MQTTTopic";
+    willInfo.topicNameLength = strlen( willInfo.pTopicName );
+
+    connectInfo.pUserName = "MQTTUser";
+    connectInfo.userNameLength = strlen( connectInfo.pUserName );
+    connectInfo.pPassword = "NotSafePassword";
+    connectInfo.passwordLength = strlen( connectInfo.pPassword );
+
+    MQTT_Init( &mqttContext, &transport, getTime, eventCallback, &networkBuffer );
+
+    /* Transport send failed when sending CONNECT. */
+
+    /* Choose 10 bytes variable header + 1 byte payload for the remaining
+     * length of the CONNECT. The packet size needs to be nonzero for this test
+     * as that is the amount of bytes used in the call to send the packet. */
+    packetSize = 13;
+    remainingLength = 11;
+    mqttContext.transportInterface.send = transportSendFailure;
+    MQTT_SerializeConnectFixedHeader_Stub( MQTT_SerializeConnectFixedHeader_cb );
+    MQTT_GetConnectPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_GetConnectPacketSize_IgnoreArg_pPacketSize();
+    MQTT_GetConnectPacketSize_IgnoreArg_pRemainingLength();
+    MQTT_GetConnectPacketSize_ReturnThruPtr_pPacketSize( &packetSize );
+    MQTT_GetConnectPacketSize_ReturnThruPtr_pRemainingLength( &remainingLength );
+    MQTT_SerializeConnect_IgnoreAndReturn( MQTTSuccess );
+
+    status = MQTT_Connect( &mqttContext, &connectInfo, &willInfo, timeout, &sessionPresent );
+
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
 }
 
 /**
@@ -1633,6 +1689,8 @@ void test_MQTT_Connect_happy_path3()
 
     willInfo.pTopicName = "test";
     willInfo.topicNameLength = 4;
+    willInfo.pPayload = "Payload";
+    willInfo.payloadLength = 7;
     incomingPacket.type = MQTT_PACKET_TYPE_CONNACK;
     MQTT_SerializeConnect_IgnoreAndReturn( MQTTSuccess );
     MQTT_GetConnectPacketSize_IgnoreAndReturn( MQTTSuccess );
@@ -2545,6 +2603,9 @@ void test_MQTT_Disconnect4( void )
     MQTTFixedBuffer_t networkBuffer = { 0 };
     size_t disconnectSize = 2;
 
+    /* Fill the buffer with garbage data. */
+    memset( mqttBuffer, 0xAB, MQTT_TEST_BUFFER_LENGTH );
+
     setupTransportInterface( &transport );
     setupNetworkBuffer( &networkBuffer );
     networkContext.buffer = &bufPtr;
@@ -2570,7 +2631,8 @@ void test_MQTT_Disconnect4( void )
 
     TEST_ASSERT_EQUAL( MQTTSuccess, status );
     TEST_ASSERT_EQUAL( MQTTNotConnected, mqttContext.connectStatus );
-    TEST_ASSERT_EQUAL_MEMORY( mqttBuffer, buffer, 1 );
+    /* At disconnect, the buffer is cleared of any pending packets. */
+    TEST_ASSERT_EACH_EQUAL_UINT8( 0, mqttBuffer, MQTT_TEST_BUFFER_LENGTH );
 }
 /* ========================================================================== */
 
@@ -3886,11 +3948,21 @@ void test_MQTT_ReceiveLoop( void )
     TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
     setupNetworkBuffer( &( context.networkBuffer ) );
 
-    MQTT_ProcessIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTRecvFailed );
+    MQTT_ProcessIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTBadResponse );
     /* Error case, for branch coverage. */
     mqttStatus = MQTT_ReceiveLoop( &context );
-    TEST_ASSERT_EQUAL( MQTTRecvFailed, mqttStatus );
+    TEST_ASSERT_EQUAL( MQTTBadResponse, mqttStatus );
 
+    /* This will cover the case when there is data available in the buffer to be processed but
+     * no additional bytes have been received by the transport interface. */
+    context.transportInterface.recv = transportRecvNoData;
+    MQTT_ProcessIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTBadResponse );
+    /* Error case, for branch coverage. */
+    mqttStatus = MQTT_ReceiveLoop( &context );
+    TEST_ASSERT_EQUAL( MQTTBadResponse, mqttStatus );
+
+    /* Reset the index to clear the buffer of any remaining data. */
+    context.index = 0;
     /* Keep Alive should not trigger.*/
     context.keepAliveIntervalSec = 1;
     mqttStatus = MQTT_ReceiveLoop( &context );
