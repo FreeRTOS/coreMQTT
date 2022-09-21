@@ -736,7 +736,6 @@ static int32_t sendMessageVector( MQTTContext_t * pContext,
     uint32_t timeoutTime;
     uint32_t bytesToSend = 0U;
     int32_t bytesSentOrError = 0;
-    uint64_t temp = 0;
     TransportOutVector_t * pIoVectIterator;
     size_t vectorsToBeSent = ioVecCount;
 
@@ -751,7 +750,6 @@ static int32_t sendMessageVector( MQTTContext_t * pContext,
     /* Count the total number of bytes to be sent as outlined in the vector. */
     for( pIoVectIterator = pIoVec; pIoVectIterator <= &( pIoVec[ ioVecCount - 1U ] ); pIoVectIterator++ )
     {
-        temp += pIoVectIterator->iov_len;
         bytesToSend += ( uint32_t ) pIoVectIterator->iov_len;
     }
 
@@ -785,9 +783,7 @@ static int32_t sendMessageVector( MQTTContext_t * pContext,
         {
             bytesSentOrError = sendResult;
 
-            /* We do not need to break here as this condition is checked in
-             * the loop. The following code will not execute as bytesSentThisVector
-             * is not updated and is still 0. */
+            break;
         }
 
         while( ( pIoVectIterator <= &( pIoVec[ ioVecCount - 1U ] ) ) &&
