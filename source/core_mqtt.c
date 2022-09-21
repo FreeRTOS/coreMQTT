@@ -2096,6 +2096,11 @@ static MQTTStatus_t sendConnectWithoutCopy( MQTTContext_t * pContext,
         LogError( ( "pWillInfo->pTopicName cannot be NULL if Will is present." ) );
         status = MQTTBadParameter;
     }
+    else if( ( pWillInfo != NULL ) && ( pWillInfo->pPayload == NULL ) )
+    {
+        LogError( ( "pWillInfo->pPayload cannot be NULL if Will is present." ) );
+        status = MQTTBadParameter;
+    }
     else
     {
         pIndex = MQTT_SerializeConnectFixedHeader( pIndex,
