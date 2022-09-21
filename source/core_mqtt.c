@@ -757,7 +757,7 @@ static int32_t sendMessageVector( MQTTContext_t * pContext,
     pIoVectIterator = pIoVec;
 
     while( ( bytesSentOrError < ( int32_t ) bytesToSend ) &&
-           ( bytesSentOrError >=0  ) )
+           ( bytesSentOrError >= 0 ) )
     {
         int32_t sendResult;
         uint32_t bytesSentThisVector = 0U;
