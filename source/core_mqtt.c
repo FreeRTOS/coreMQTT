@@ -1656,11 +1656,14 @@ static MQTTStatus_t receiveSingleIteration( MQTTContext_t * pContext,
         /* The receive function has failed. Bubble up the error up to the user. */
         status = MQTTRecvFailed;
     }
-    else if( recvBytes == 0 )
+    else if( ( recvBytes == 0 ) && ( pContext->index == 0 ) )
     {
-        /* No more bytes available since the last read. */
+        /* No more bytes available since the last read and neither is anything in
+         * the buffer. */
         status = MQTTNoDataAvailable;
     }
+    /* Either something was received, or there is still data to be processed in the
+     * buffer, or both. */
     else
     {
         /* Update the number of bytes in the MQTT fixed buffer. */
