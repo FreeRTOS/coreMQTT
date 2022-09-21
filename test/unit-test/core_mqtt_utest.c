@@ -2545,6 +2545,9 @@ void test_MQTT_Disconnect4( void )
     MQTTFixedBuffer_t networkBuffer = { 0 };
     size_t disconnectSize = 2;
 
+    /* Fill the buffer with garbage data. */
+    memset( mqttBuffer, 0xAB, MQTT_TEST_BUFFER_LENGTH );
+
     setupTransportInterface( &transport );
     setupNetworkBuffer( &networkBuffer );
     networkContext.buffer = &bufPtr;
@@ -2570,7 +2573,8 @@ void test_MQTT_Disconnect4( void )
 
     TEST_ASSERT_EQUAL( MQTTSuccess, status );
     TEST_ASSERT_EQUAL( MQTTNotConnected, mqttContext.connectStatus );
-    TEST_ASSERT_EQUAL_MEMORY( mqttBuffer, buffer, 1 );
+    /* At disconnect, the buffer is cleared of any pending packets. */
+    TEST_ASSERT_EACH_EQUAL_UINT8( 0, mqttBuffer, MQTT_TEST_BUFFER_LENGTH );
 }
 /* ========================================================================== */
 
@@ -3886,11 +3890,21 @@ void test_MQTT_ReceiveLoop( void )
     TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
     setupNetworkBuffer( &( context.networkBuffer ) );
 
-    MQTT_ProcessIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTRecvFailed );
+    MQTT_ProcessIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTBadResponse );
     /* Error case, for branch coverage. */
     mqttStatus = MQTT_ReceiveLoop( &context );
-    TEST_ASSERT_EQUAL( MQTTRecvFailed, mqttStatus );
+    TEST_ASSERT_EQUAL( MQTTBadResponse, mqttStatus );
 
+    /* This will cover the case when there is data available in the buffer to be processed but
+     * no additional bytes have been received by the transport interface. */
+    context.transportInterface.recv = transportRecvNoData;
+    MQTT_ProcessIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTBadResponse );
+    /* Error case, for branch coverage. */
+    mqttStatus = MQTT_ReceiveLoop( &context );
+    TEST_ASSERT_EQUAL( MQTTBadResponse, mqttStatus );
+
+    /* Reset the index to clear the buffer of any remaining data. */
+    context.index = 0;
     /* Keep Alive should not trigger.*/
     context.keepAliveIntervalSec = 1;
     mqttStatus = MQTT_ReceiveLoop( &context );

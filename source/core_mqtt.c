@@ -784,6 +784,7 @@ static int32_t sendMessageVector( MQTTContext_t * pContext,
         else
         {
             bytesSentOrError = sendResult;
+
             /* We do not need to break here as this condition is checked in
              * the loop. */
         }
@@ -1662,6 +1663,7 @@ static MQTTStatus_t receiveSingleIteration( MQTTContext_t * pContext,
          * the buffer. */
         status = MQTTNoDataAvailable;
     }
+
     /* Either something was received, or there is still data to be processed in the
      * buffer, or both. */
     else
