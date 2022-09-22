@@ -1827,7 +1827,7 @@ static size_t addEncodedStringToVector( uint8_t serailizedLength[ 2 ],
 
     /* Sometimes the string can be NULL that is, of 0 length. In that case,
      * only the length field should be encoded in the vector. */
-    if( ( string != NULL ) && ( length != 0 ) )
+    if( ( string != NULL ) && ( length != 0U ) )
     {
         /* Then add the pointer to the string itself. */
         pLocalIterator[ 1 ].iov_base = string;
