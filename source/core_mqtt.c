@@ -1817,7 +1817,7 @@ static size_t addEncodedStringToVector( uint8_t serailizedLength[ 2 ],
     size_t vectorsAdded = 0U;
 
     /* When length is non-zero, the string must be non-NULL. */
-    assert( ( length != 0U ) != ( string != NULL ) );
+    assert( ( length != 0U ) == ( string != NULL ) );
 
     serailizedLength[ 0 ] = ( ( uint8_t ) ( ( length ) >> 8 ) );
     serailizedLength[ 1 ] = ( ( uint8_t ) ( ( length ) & 0x00ffU ) );
