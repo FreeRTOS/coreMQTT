@@ -1,6 +1,8 @@
 # Changelog for coreMQTT Client Library
 
 ## v2.0.0 (September 2022)
+- [#219](https://github.com/FreeRTOS/coreMQTT/pull/219) Fix MISRA deviations in the source.
+- [#218](https://github.com/FreeRTOS/coreMQTT/pull/218) Fix bugs in receiveSingleIteration and optimize sendMessageVector.
 - [#213](https://github.com/FreeRTOS/coreMQTT/pull/213) Fix MISRA deviations in the source.
 - [#200](https://github.com/FreeRTOS/coreMQTT/pull/200) Add hooks to the code.
 - [#205](https://github.com/FreeRTOS/coreMQTT/pull/205) Update logging and add MQTT_InitStatefulQoS to prevent log leaks.
