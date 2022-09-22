@@ -1059,7 +1059,7 @@ void test_MQTT_Connect_ProperWIllInfo( void )
 /**
  * @brief Test MQTT_Connect, with no payload in will message.
  */
-void test_MQTT_Connect_ImproperWIllInfo( void )
+void test_MQTT_Connect_ProperWIllInfoWithNoPayload( void )
 {
     MQTTContext_t mqttContext = { 0 };
     MQTTConnectInfo_t connectInfo = { 0 };
@@ -1107,7 +1107,64 @@ void test_MQTT_Connect_ImproperWIllInfo( void )
 
     status = MQTT_Connect( &mqttContext, &connectInfo, &willInfo, timeout, &sessionPresent );
 
-    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+    TEST_ASSERT_EQUAL_INT( MQTTSendFailed, status );
+}
+
+/**
+ * @brief Test MQTT_Connect, with payload in will message but the length is
+ * zero.
+ */
+void test_MQTT_Connect_ProperWIllInfoWithPayloadButZeroLength( void )
+{
+    MQTTContext_t mqttContext = { 0 };
+    MQTTConnectInfo_t connectInfo = { 0 };
+    uint32_t timeout = 2;
+    bool sessionPresent;
+    MQTTStatus_t status;
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
+    size_t remainingLength;
+    size_t packetSize;
+    MQTTPublishInfo_t willInfo;
+
+    setupTransportInterface( &transport );
+    transport.writev = transportWritevFail;
+    setupNetworkBuffer( &networkBuffer );
+
+    memset( &mqttContext, 0x0, sizeof( mqttContext ) );
+    memset( &willInfo, 0, sizeof( MQTTPublishInfo_t ) );
+
+    willInfo.pTopicName = "MQTTTopic";
+    willInfo.topicNameLength = strlen( willInfo.pTopicName );
+    willInfo.pPayload = "Payload";
+    willInfo.payloadLength = 0;
+
+    connectInfo.pUserName = "MQTTUser";
+    connectInfo.userNameLength = strlen( connectInfo.pUserName );
+    connectInfo.pPassword = "NotSafePassword";
+    connectInfo.passwordLength = strlen( connectInfo.pPassword );
+
+    MQTT_Init( &mqttContext, &transport, getTime, eventCallback, &networkBuffer );
+
+    /* Transport send failed when sending CONNECT. */
+
+    /* Choose 10 bytes variable header + 1 byte payload for the remaining
+     * length of the CONNECT. The packet size needs to be nonzero for this test
+     * as that is the amount of bytes used in the call to send the packet. */
+    packetSize = 13;
+    remainingLength = 11;
+    mqttContext.transportInterface.send = transportSendFailure;
+    MQTT_SerializeConnectFixedHeader_Stub( MQTT_SerializeConnectFixedHeader_cb );
+    MQTT_GetConnectPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_GetConnectPacketSize_IgnoreArg_pPacketSize();
+    MQTT_GetConnectPacketSize_IgnoreArg_pRemainingLength();
+    MQTT_GetConnectPacketSize_ReturnThruPtr_pPacketSize( &packetSize );
+    MQTT_GetConnectPacketSize_ReturnThruPtr_pRemainingLength( &remainingLength );
+    MQTT_SerializeConnect_IgnoreAndReturn( MQTTSuccess );
+
+    status = MQTT_Connect( &mqttContext, &connectInfo, &willInfo, timeout, &sessionPresent );
+
+    TEST_ASSERT_EQUAL_INT( MQTTSendFailed, status );
 }
 
 /**

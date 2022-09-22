@@ -54,6 +54,33 @@ void harness()
         totalMessageLength += pConnectInfo->passwordLength;
         totalMessageLength += pConnectInfo->userNameLength;
         totalMessageLength += pConnectInfo->clientIdentifierLength;
+
+        if( pConnectInfo->passwordLength == 0 )
+        {
+            pConnectInfo->pPassword = NULL;
+        }
+        else
+        {
+            __CPROVER_assume( pConnectInfo->pPassword != NULL );
+        }
+
+        if( pConnectInfo->userNameLength == 0 )
+        {
+            pConnectInfo->pUserName = NULL;
+        }
+        else
+        {
+            __CPROVER_assume( pConnectInfo->pUserName != NULL );
+        }
+
+        if( pConnectInfo->clientIdentifierLength == 0 )
+        {
+            pConnectInfo->pClientIdentifier = NULL;
+        }
+        else
+        {
+            __CPROVER_assume( pConnectInfo->pClientIdentifier != NULL );
+        }
     }
 
     pWillInfo = allocateMqttPublishInfo( NULL );
@@ -64,6 +91,24 @@ void harness()
         /* 128^4 is the length imposed by the MQTT spec. */
         __CPROVER_assume( pWillInfo->topicNameLength < 268435456 );
         __CPROVER_assume( pWillInfo->payloadLength < 268435456 );
+
+        if( pWillInfo->topicNameLength == 0 )
+        {
+            pWillInfo->pTopicName = NULL;
+        }
+        else
+        {
+            __CPROVER_assume( pWillInfo->pTopicName != NULL );
+        }
+
+        if( pWillInfo->payloadLength == 0 )
+        {
+            pWillInfo->pPayload = NULL;
+        }
+        else
+        {
+            __CPROVER_assume( pWillInfo->pPayload != NULL );
+        }
 
         totalMessageLength += pWillInfo->topicNameLength;
         totalMessageLength += pWillInfo->payloadLength;
