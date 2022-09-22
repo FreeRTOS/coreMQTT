@@ -756,7 +756,8 @@ static int32_t sendMessageVector( MQTTContext_t * pContext,
     /* Reset the iterator to point to the first entry in the array. */
     pIoVectIterator = pIoVec;
 
-    while( bytesSentOrError < ( int32_t ) bytesToSend )
+    while( ( bytesSentOrError < ( int32_t ) bytesToSend ) &&
+           ( bytesSentOrError >= 0 ) )
     {
         int32_t sendResult;
         uint32_t bytesSentThisVector = 0U;
@@ -783,7 +784,9 @@ static int32_t sendMessageVector( MQTTContext_t * pContext,
         {
             bytesSentOrError = sendResult;
 
-            break;
+            /* We do not need to break here as the condition is checked in the loop.
+             * The following statements will not execute as bytesSentThisVector is not
+             * updated and is still 0. */
         }
 
         while( ( pIoVectIterator <= &( pIoVec[ ioVecCount - 1U ] ) ) &&
@@ -1654,7 +1657,7 @@ static MQTTStatus_t receiveSingleIteration( MQTTContext_t * pContext,
         /* The receive function has failed. Bubble up the error up to the user. */
         status = MQTTRecvFailed;
     }
-    else if( ( recvBytes == 0 ) && ( pContext->index == 0 ) )
+    else if( ( recvBytes == 0 ) && ( pContext->index == 0U ) )
     {
         /* No more bytes available since the last read and neither is anything in
          * the buffer. */
@@ -2336,7 +2339,7 @@ static MQTTStatus_t handleSessionResumption( MQTTContext_t * pContext,
 
     /* Reset the index and clear the buffer when a new session is established. */
     pContext->index = 0;
-    memset( pContext->networkBuffer.pBuffer, 0, pContext->networkBuffer.size );
+    ( void ) memset( pContext->networkBuffer.pBuffer, 0, pContext->networkBuffer.size );
 
     if( sessionPresent == true )
     {
