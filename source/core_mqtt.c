@@ -1814,7 +1814,7 @@ static size_t addEncodedStringToVector( uint8_t serailizedLength[ 2 ],
     const size_t seralizedLengthFieldSize = 2U;
     TransportOutVector_t * pLocalIterator = iterator;
     /* This function always adds 2 vectors. */
-    const size_t vectorsAdded = 2U;
+    size_t vectorsAdded = 0U;
 
     serailizedLength[ 0 ] = ( ( uint8_t ) ( ( length ) >> 8 ) );
     serailizedLength[ 1 ] = ( ( uint8_t ) ( ( length ) & 0x00ffU ) );
@@ -1822,12 +1822,19 @@ static size_t addEncodedStringToVector( uint8_t serailizedLength[ 2 ],
     /* Add the serialized length of the string first. */
     pLocalIterator[ 0 ].iov_base = serailizedLength;
     pLocalIterator[ 0 ].iov_len = seralizedLengthFieldSize;
+    vectorsAdded++;
+    packetLength = seralizedLengthFieldSize;
 
-    /* Then add the pointer to the string itself. */
-    pLocalIterator[ 1 ].iov_base = string;
-    pLocalIterator[ 1 ].iov_len = length;
-
-    packetLength = length + seralizedLengthFieldSize;
+    /* Sometimes the string can be NULL that is, of 0 length. In that case,
+     * only the length field should be encoded in the vector. */
+    if( ( string != NULL ) && ( length != 0 ) )
+    {
+        /* Then add the pointer to the string itself. */
+        pLocalIterator[ 1 ].iov_base = string;
+        pLocalIterator[ 1 ].iov_len = length;
+        vectorsAdded++;
+        packetLength += length;
+    }
 
     ( *updatedLength ) = ( *updatedLength ) + packetLength;
 
@@ -2099,11 +2106,6 @@ static MQTTStatus_t sendConnectWithoutCopy( MQTTContext_t * pContext,
         LogError( ( "pWillInfo->pTopicName cannot be NULL if Will is present." ) );
         status = MQTTBadParameter;
     }
-    else if( ( pWillInfo != NULL ) && ( pWillInfo->pPayload == NULL ) )
-    {
-        LogError( ( "pWillInfo->pPayload cannot be NULL if Will is present." ) );
-        status = MQTTBadParameter;
-    }
     else
     {
         pIndex = MQTT_SerializeConnectFixedHeader( pIndex,
@@ -2149,7 +2151,7 @@ static MQTTStatus_t sendConnectWithoutCopy( MQTTContext_t * pContext,
             ioVectorLength += vectorsAdded;
 
 
-            /* Serialize the payload. */
+            /* Serialize the payload. Payload of last will and testament can be NULL. */
             vectorsAdded = addEncodedStringToVector( serializedPayloadLength,
                                                      pWillInfo->pPayload,
                                                      ( uint16_t ) pWillInfo->payloadLength,
