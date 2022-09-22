@@ -1,7 +1,9 @@
 # Changelog for coreMQTT Client Library
 
 ## v2.0.0 (September 2022)
-- [#220](https://github.com/FreeRTOS/coreMQTT/pull/220) Remove LWT payload non-zero restriction.
+
+### Changes
+- [#221](https://github.com/FreeRTOS/coreMQTT/pull/221) Remove LWT payload non-zero restriction.
 - [#219](https://github.com/FreeRTOS/coreMQTT/pull/219) Fix MISRA deviations in the source.
 - [#218](https://github.com/FreeRTOS/coreMQTT/pull/218) Fix bugs in receiveSingleIteration and optimize sendMessageVector.
 - [#213](https://github.com/FreeRTOS/coreMQTT/pull/213) Fix MISRA deviations in the source.
