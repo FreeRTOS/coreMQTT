@@ -6,7 +6,7 @@ This library has gone through code quality checks including verification that no
 
 See memory requirements for this library [here](./docs/doxygen/include/size_table.md).
 
-**coreMQTT v2.0.0 [source code](https://github.com/FreeRTOS/coreMQTT/tree/v2.0.0/source) is part of the [FreeRTOS 202209.00 LTS](https://github.com/FreeRTOS/FreeRTOS-LTS/tree/202209.00-LTS) release.**
+**coreMQTT v2.0.0 [source code](https://github.com/FreeRTOS/coreMQTT/tree/v2.0.0/source) is part of the [FreeRTOS 202210.00 LTS](https://github.com/FreeRTOS/FreeRTOS-LTS/tree/202210.00-LTS) release.**
 
 ## MQTT Config File
 

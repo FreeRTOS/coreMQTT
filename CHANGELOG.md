@@ -1,6 +1,6 @@
 # Changelog for coreMQTT Client Library
 
-## v2.0.0 (September 2022)
+## v2.0.0 (October 2022)
 
 ### Changes
 - [#221](https://github.com/FreeRTOS/coreMQTT/pull/221) Remove LWT payload non-zero restriction.
