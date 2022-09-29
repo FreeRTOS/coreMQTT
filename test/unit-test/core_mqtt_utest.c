@@ -3766,6 +3766,7 @@ void test_MQTT_ProcessLoop_handleKeepAlive_Error_Paths1( void )
     setupNetworkBuffer( &networkBuffer );
     setupTransportInterface( &transport );
     transport.writev = transportWritevSuccess;
+    transport.recv = transportRecvNoData;
 
     globalEntryTime = MQTT_PINGRESP_TIMEOUT_MS + 1;
 
@@ -3778,20 +3779,10 @@ void test_MQTT_ProcessLoop_handleKeepAlive_Error_Paths1( void )
     context.lastPacketRxTime = 0;
     context.pingReqSendTimeMs = 0;
     context.waitingForPingResp = true;
+
     /* Set expected return values in the loop. */
     resetProcessLoopParams( &expectParams );
     expectParams.processLoopStatus = MQTTKeepAliveTimeout;
-
-    MQTTPacketInfo_t incomingPacket = { 0 };
-    /* Modify incoming packet depending on type to be tested. */
-    currentPacketType = MQTT_PACKET_TYPE_PINGRESP;
-    incomingPacket.type = currentPacketType;
-    incomingPacket.remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
-    incomingPacket.headerLength = MQTT_SAMPLE_REMAINING_LENGTH;
-
-    MQTT_ProcessIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTNoDataAvailable );
-    MQTT_ProcessIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
-
 
     mqttStatus = MQTT_ProcessLoop( &context );
     TEST_ASSERT_EQUAL( MQTTKeepAliveTimeout, mqttStatus );
@@ -3859,6 +3850,7 @@ void test_MQTT_ProcessLoop_handleKeepAlive_Error_Paths3( void )
 
     setupTransportInterface( &transport );
     setupNetworkBuffer( &networkBuffer );
+    transport.recv = transportRecvNoData;
 
     modifyIncomingPacketStatus = MQTTNoDataAvailable;
     globalEntryTime = MQTT_PINGRESP_TIMEOUT_MS + 1;
@@ -3876,6 +3868,52 @@ void test_MQTT_ProcessLoop_handleKeepAlive_Error_Paths3( void )
     /* Set expected return values in the loop. */
     resetProcessLoopParams( &expectParams );
 
+    MQTT_GetPingreqPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_SerializePingreq_ExpectAnyArgsAndReturn( MQTTSuccess );
+
+    mqttStatus = MQTT_ProcessLoop( &context );
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+}
+
+/**
+ * @brief This test case covers all calls to the private method,
+ * handleKeepAlive(...),
+ * that result in the process loop returning an error.
+ */
+void test_MQTT_ProcessLoop_handleKeepAlive_Error_Paths4( void )
+{
+    MQTTStatus_t mqttStatus;
+    MQTTContext_t context = { 0 };
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
+    ProcessLoopReturns_t expectParams = { 0 };
+
+    setupTransportInterface( &transport );
+    transport.recv = transportRecvNoData;
+
+    setupNetworkBuffer( &networkBuffer );
+
+    modifyIncomingPacketStatus = MQTTNoDataAvailable;
+    globalEntryTime = MQTT_PINGRESP_TIMEOUT_MS + 1;
+
+    /* Coverage for the branch path where PINGRESP timeout interval has expired. */
+    mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+
+    globalEntryTime = PACKET_RX_TIMEOUT_MS + 1;
+    context.keepAliveIntervalSec = ( PACKET_TX_TIMEOUT_MS / 1000 ) + 1U;
+    context.lastPacketTxTime = 0;
+    context.lastPacketRxTime = 0;
+    context.pingReqSendTimeMs = 0;
+    context.waitingForPingResp = false;
+
+    /* Set the index to non-zero value to show that there is some data in the buffer
+     * to be processed. */
+    context.index = 12;
+
+    /* Set expected return values in the loop. */
+    resetProcessLoopParams( &expectParams );
+
     MQTTPacketInfo_t incomingPacket = { 0 };
     /* Modify incoming packet depending on type to be tested. */
     currentPacketType = MQTT_PACKET_TYPE_PINGRESP;
@@ -3883,14 +3921,70 @@ void test_MQTT_ProcessLoop_handleKeepAlive_Error_Paths3( void )
     incomingPacket.remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
     incomingPacket.headerLength = MQTT_SAMPLE_REMAINING_LENGTH;
 
-    MQTT_ProcessIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTNoDataAvailable );
+    MQTT_ProcessIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTNeedMoreBytes );
     MQTT_ProcessIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
 
     MQTT_GetPingreqPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_SerializePingreq_ExpectAnyArgsAndReturn( MQTTSuccess );
 
     mqttStatus = MQTT_ProcessLoop( &context );
+    TEST_ASSERT_EQUAL( MQTTNeedMoreBytes, mqttStatus );
+}
+
+/**
+ * @brief This test case covers all calls to the private method,
+ * handleKeepAlive(...),
+ * that result in the process loop returning an error.
+ */
+void test_MQTT_ProcessLoop_handleKeepAlive_Error_Paths5( void )
+{
+    MQTTStatus_t mqttStatus;
+    MQTTContext_t context = { 0 };
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
+    ProcessLoopReturns_t expectParams = { 0 };
+
+    setupTransportInterface( &transport );
+    transport.recv = transportRecvNoData;
+
+    setupNetworkBuffer( &networkBuffer );
+
+    modifyIncomingPacketStatus = MQTTNoDataAvailable;
+    globalEntryTime = MQTT_PINGRESP_TIMEOUT_MS + 1;
+
+    /* Coverage for the branch path where PINGRESP timeout interval has expired. */
+    mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+
+    globalEntryTime = PACKET_RX_TIMEOUT_MS - 1U;
+    context.keepAliveIntervalSec = ( PACKET_TX_TIMEOUT_MS / 1000 ) + 1U;
+    context.lastPacketTxTime = 0;
+    context.lastPacketRxTime = 0;
+    context.pingReqSendTimeMs = 0;
+    context.waitingForPingResp = false;
+
+    /* Set the index to non-zero value to show that there is some data in the buffer
+     * to be processed. */
+    context.index = 12;
+
+    /* Set expected return values in the loop. */
+    resetProcessLoopParams( &expectParams );
+
+    MQTTPacketInfo_t incomingPacket = { 0 };
+    /* Modify incoming packet depending on type to be tested. */
+    currentPacketType = MQTT_PACKET_TYPE_PINGRESP;
+    incomingPacket.type = currentPacketType;
+    incomingPacket.remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
+    incomingPacket.headerLength = MQTT_SAMPLE_REMAINING_LENGTH;
+
+    MQTT_ProcessIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTNeedMoreBytes );
+    MQTT_ProcessIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
+
+    MQTT_GetPingreqPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_SerializePingreq_ExpectAnyArgsAndReturn( MQTTSuccess );
+
+    mqttStatus = MQTT_ProcessLoop( &context );
+    TEST_ASSERT_EQUAL( MQTTNeedMoreBytes, mqttStatus );
 }
 
 /**

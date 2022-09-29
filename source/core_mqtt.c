@@ -1663,6 +1663,7 @@ static MQTTStatus_t receiveSingleIteration( MQTTContext_t * pContext,
          * the buffer. */
         status = MQTTNoDataAvailable;
     }
+
     /* Either something was received, or there is still data to be processed in the
      * buffer, or both. */
     else
