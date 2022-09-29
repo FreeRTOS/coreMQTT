@@ -1678,31 +1678,48 @@ static MQTTStatus_t receiveSingleIteration( MQTTContext_t * pContext,
         totalMQTTPacketLength = incomingPacket.remainingLength + incomingPacket.headerLength;
     }
 
-    if( status == MQTTNoDataAvailable )
+    /* No data was received, check for keep alive timeout. */
+    if( recvBytes == 0 )
     {
         if( manageKeepAlive == true )
         {
+            /* Keep the copy of the status to be reset later. */
+            MQTTStatus_t statusCopy = status;
+
             /* Assign status so an error can be bubbled up to application,
              * but reset it on success. */
             status = handleKeepAlive( pContext );
-        }
 
-        if( status == MQTTSuccess )
-        {
-            /* Reset the status to indicate that nothing was read
-             * from the transport interface. */
-            status = MQTTNoDataAvailable;
+            if( status == MQTTSuccess )
+            {
+                /* Reset the status. */
+                status = statusCopy;
+            }
+            else
+            {
+                LogError( ( "Handling of keep alive failed. Status=%s",
+                            MQTT_Status_strerror( status ) ) );
+            }
         }
     }
+
+    /* Check whether there is data available before processing the packet further. */
+    if( ( status == MQTTNeedMoreBytes ) || ( status == MQTTNoDataAvailable ) )
+    {
+        /* Do nothing as there is nothing to be processed right now. The proper
+         * error code will be bubbled up to the user. */
+    }
+    /* Any other error code. */
     else if( status != MQTTSuccess )
     {
-        LogError( ( "Receiving incoming packet length failed. Status=%s",
+        LogError( ( "Call to receiveSingleIteration failed. Status=%s",
                     MQTT_Status_strerror( status ) ) );
     }
     /* If the MQTT Packet size is bigger than the buffer itself. */
     else if( totalMQTTPacketLength > pContext->networkBuffer.size )
     {
-        /* Discard the packet from the buffer and from the socket buffer. */
+        /* Discard the packet from the receive buffer and drain the pending
+         * data from the socket buffer. */
         status = discardStoredPacket( pContext,
                                       &incomingPacket );
     }
