@@ -1678,7 +1678,7 @@ static MQTTStatus_t receiveSingleIteration( MQTTContext_t * pContext,
         totalMQTTPacketLength = incomingPacket.remainingLength + incomingPacket.headerLength;
     }
 
-    if( status == MQTTNoDataAvailable )
+    if( recvBytes == 0 )
     {
         if( manageKeepAlive == true )
         {
