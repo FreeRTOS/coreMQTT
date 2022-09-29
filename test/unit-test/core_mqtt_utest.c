@@ -3980,9 +3980,6 @@ void test_MQTT_ProcessLoop_handleKeepAlive_Error_Paths5( void )
     MQTT_ProcessIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTNeedMoreBytes );
     MQTT_ProcessIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
 
-    MQTT_GetPingreqPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
-    MQTT_SerializePingreq_ExpectAnyArgsAndReturn( MQTTSuccess );
-
     mqttStatus = MQTT_ProcessLoop( &context );
     TEST_ASSERT_EQUAL( MQTTNeedMoreBytes, mqttStatus );
 }
