@@ -1695,6 +1695,11 @@ static MQTTStatus_t receiveSingleIteration( MQTTContext_t * pContext,
                 /* Reset the status. */
                 status = statusCopy;
             }
+            else
+            {
+                LogError( ( "Handling of keep alive failed. Status=%s",
+                            MQTT_Status_strerror( status ) ) );
+            }
         }
     }
 
@@ -1707,7 +1712,7 @@ static MQTTStatus_t receiveSingleIteration( MQTTContext_t * pContext,
     /* Any other error code. */
     else if( status != MQTTSuccess )
     {
-        LogError( ( "Receiving incoming packet length failed. Status=%s",
+        LogError( ( "Call to receiveSingleIteration failed. Status=%s",
                     MQTT_Status_strerror( status ) ) );
     }
     /* If the MQTT Packet size is bigger than the buffer itself. */
