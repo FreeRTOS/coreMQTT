@@ -762,7 +762,7 @@ static int32_t sendMessageVector( MQTTContext_t * pContext,
      * while loop. */
     lastSendTimeMs = pContext->getTime();
 
-    while( ( ( size_t ) bytesSentOrError < bytesToSend ) && ( bytesSentOrError >= 0 ) )
+    while( ( bytesSentOrError < ( int32_t ) bytesToSend ) && ( bytesSentOrError >= 0 ) )
     {
         if( pContext->transportInterface.writev != NULL )
         {
@@ -781,7 +781,7 @@ static int32_t sendMessageVector( MQTTContext_t * pContext,
         {
             /* It is a bug in the application's transport send implementation if
              * more bytes than expected are sent. */
-            assert( ( size_t ) sendResult <= ( bytesToSend - ( size_t ) bytesSentOrError ) );
+            assert( sendResult <= ( ( int32_t ) bytesToSend - bytesSentOrError ) );
 
             bytesSentOrError += sendResult;
 
@@ -812,7 +812,7 @@ static int32_t sendMessageVector( MQTTContext_t * pContext,
 
         /* Update the send pointer to the correct vector and offset. */
         while( ( pIoVectIterator <= &( pIoVec[ ioVecCount - 1U ] ) ) &&
-               ( ( size_t ) sendResult >= pIoVectIterator->iov_len ) )
+               ( sendResult >= ( int32_t ) pIoVectIterator->iov_len ) )
         {
             sendResult -= ( int32_t ) pIoVectIterator->iov_len;
             pIoVectIterator++;
@@ -826,11 +826,11 @@ static int32_t sendMessageVector( MQTTContext_t * pContext,
             ( pIoVectIterator <= &( pIoVec[ ioVecCount - 1U ] ) ) )
         {
             pIoVectIterator->iov_base = ( const void * ) &( ( ( const uint8_t * ) pIoVectIterator->iov_base )[ sendResult ] );
-            pIoVectIterator->iov_len -= ( uint32_t ) sendResult;
+            pIoVectIterator->iov_len -= ( size_t ) sendResult;
         }
     }
 
-    if( ( size_t ) bytesSentOrError == bytesToSend )
+    if( bytesSentOrError > 0 )
     {
         pContext->lastPacketTxTime = lastSendTimeMs;
         LogDebug( ( "sendMessageVector: Successfully sent packet at time %lu.",
@@ -860,7 +860,7 @@ static int32_t sendBuffer( MQTTContext_t * pContext,
      * while loop. */
     lastSendTimeMs = pContext->getTime();
 
-    while( ( ( size_t ) bytesSentOrError < bytesToSend ) && ( bytesSentOrError >= 0 ) )
+    while( ( bytesSentOrError < ( int32_t ) bytesToSend ) && ( bytesSentOrError >= 0 ) )
     {
         sendResult = pContext->transportInterface.send( pContext->transportInterface.pNetworkContext,
                                                         pIndex,
@@ -870,7 +870,7 @@ static int32_t sendBuffer( MQTTContext_t * pContext,
         {
             /* It is a bug in the application's transport send implementation if
              * more bytes than expected are sent. */
-            assert( ( size_t ) sendResult <= ( bytesToSend - ( size_t ) bytesSentOrError ) );
+            assert( sendResult <= ( ( int32_t ) bytesToSend - bytesSentOrError ) );
 
             bytesSentOrError += sendResult;
             pIndex = &pIndex[ sendResult ];
@@ -901,7 +901,7 @@ static int32_t sendBuffer( MQTTContext_t * pContext,
         }
     }
 
-    if( ( size_t ) bytesSentOrError == bytesToSend )
+    if( bytesSentOrError > 0 )
     {
         pContext->lastPacketTxTime = lastSendTimeMs;
         LogDebug( ( "sendBuffer: Successfully sent packet at time %lu.",
