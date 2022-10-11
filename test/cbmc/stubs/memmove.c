@@ -1,6 +1,8 @@
 #include <stdlib.h>
 
 void * memmove( void * destination,
+ *
+ * SPDX-License-Identifier: MIT
                 const void * source,
                 size_t num )
 {
