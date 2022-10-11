@@ -826,7 +826,7 @@ static int32_t sendMessageVector( MQTTContext_t * pContext,
             ( pIoVectIterator <= &( pIoVec[ ioVecCount - 1U ] ) ) )
         {
             pIoVectIterator->iov_base = ( const void * ) &( ( ( const uint8_t * ) pIoVectIterator->iov_base )[ sendResult ] );
-            pIoVectIterator->iov_len -= (uint32_t) sendResult;
+            pIoVectIterator->iov_len -= ( uint32_t ) sendResult;
         }
     }
 
@@ -886,10 +886,10 @@ static int32_t sendBuffer( MQTTContext_t * pContext,
         {
             bytesSentOrError = sendResult;
         }
-		else
-		{
-			/* MISRA Empty body */
-		}
+        else
+        {
+            /* MISRA Empty body */
+        }
 
         timeSinceLastSendMs = calculateElapsedTime( pContext->getTime(), lastSendTimeMs );
 
