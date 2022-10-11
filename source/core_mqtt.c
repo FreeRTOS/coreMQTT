@@ -738,7 +738,7 @@ static int32_t sendMessageVector( MQTTContext_t * pContext,
     uint32_t timeSinceLastSendMs;
     TransportOutVector_t * pIoVectIterator;
     size_t vectorsToBeSent = ioVecCount;
-    size_t bytesToSend = 0;
+    size_t bytesToSend = 0U;
     int32_t bytesSentOrError = 0;
 
 
@@ -796,6 +796,10 @@ static int32_t sendMessageVector( MQTTContext_t * pContext,
         {
             bytesSentOrError = sendResult;
         }
+        else
+        {
+            /* MISRA Empty body */
+        }
 
         /* Check for timeout if we have been waiting to send any data over the network. */
         timeSinceLastSendMs = calculateElapsedTime( pContext->getTime(), lastSendTimeMs );
@@ -822,7 +826,7 @@ static int32_t sendMessageVector( MQTTContext_t * pContext,
             ( pIoVectIterator <= &( pIoVec[ ioVecCount - 1U ] ) ) )
         {
             pIoVectIterator->iov_base = ( const void * ) &( ( ( const uint8_t * ) pIoVectIterator->iov_base )[ sendResult ] );
-            pIoVectIterator->iov_len -= sendResult;
+            pIoVectIterator->iov_len -= (uint32_t) sendResult;
         }
     }
 
@@ -882,6 +886,10 @@ static int32_t sendBuffer( MQTTContext_t * pContext,
         {
             bytesSentOrError = sendResult;
         }
+		else
+		{
+			/* MISRA Empty body */
+		}
 
         timeSinceLastSendMs = calculateElapsedTime( pContext->getTime(), lastSendTimeMs );
 
