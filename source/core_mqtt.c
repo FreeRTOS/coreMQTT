@@ -762,7 +762,7 @@ static int32_t sendMessageVector( MQTTContext_t * pContext,
      * while loop. */
     lastSendTimeMs = pContext->getTime();
 
-    while( ( bytesSentOrError < ( int32_t ) bytesToSend ) && ( bytesSentOrError >= 0 ) )
+    while( bytesSentOrError < ( int32_t ) bytesToSend )
     {
         if( pContext->transportInterface.writev != NULL )
         {
@@ -795,6 +795,7 @@ static int32_t sendMessageVector( MQTTContext_t * pContext,
         else if( sendResult < 0 )
         {
             bytesSentOrError = sendResult;
+            break;
         }
         else
         {
@@ -860,7 +861,7 @@ static int32_t sendBuffer( MQTTContext_t * pContext,
      * while loop. */
     lastSendTimeMs = pContext->getTime();
 
-    while( ( bytesSentOrError < ( int32_t ) bytesToSend ) && ( bytesSentOrError >= 0 ) )
+    while( bytesSentOrError < ( int32_t ) bytesToSend )
     {
         sendResult = pContext->transportInterface.send( pContext->transportInterface.pNetworkContext,
                                                         pIndex,
@@ -885,6 +886,7 @@ static int32_t sendBuffer( MQTTContext_t * pContext,
         else if( sendResult < 0 )
         {
             bytesSentOrError = sendResult;
+            break;
         }
         else
         {
