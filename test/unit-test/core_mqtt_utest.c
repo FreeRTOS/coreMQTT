@@ -4699,6 +4699,9 @@ void test_MQTT_Ping_error_path( void )
     /* Case when there is timeout in sending data through transport send. */
     transport.recv = transportRecvSuccess;
     transport.send = transportSendNoBytes; /* Use the mock function that returns zero bytes sent. */
+    /* Initialize context. */
+    mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
     MQTT_GetPingreqPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_GetPingreqPacketSize_ReturnThruPtr_pPacketSize( &pingreqSize );
     MQTT_SerializePingreq_ExpectAnyArgsAndReturn( MQTTSuccess );
