@@ -27,6 +27,31 @@
 #include "core_mqtt.h"
 #include "mqtt_cbmc_state.h"
 
+/**
+ * @brief Implement a get time function to return timeout after certain
+ * iterations have been made in the code. This ensures that we do not hit
+ * unwinding error in CBMC. In real life scenarios, the send function will
+ * not just keep accepting 1 byte at a time for a long time since it just
+ * gets added to the TCP buffer.
+ *
+ * @return The global system time.
+ */
+static uint32_t ulGetTimeFunction( void )
+{
+    static uint32_t systemTime = 0;
+
+    if( systemTime >= MAX_NETWORK_SEND_TRIES )
+    {
+        systemTime = systemTime + MQTT_SEND_RETRY_TIMEOUT_MS + 1;
+    }
+    else
+    {
+        systemTime = systemTime + 1;
+    }
+
+    return systemTime;
+}
+
 void harness()
 {
     MQTTContext_t * pContext;
@@ -40,6 +65,8 @@ void harness()
     __CPROVER_assume( isValidMqttContext( pContext ) );
     __CPROVER_assume( pContext != NULL );
     __CPROVER_assume( pContext->networkBuffer.pBuffer != NULL );
+
+    pContext->getTime = ulGetTimeFunction;
 
     pConnectInfo = allocateMqttConnectInfo( NULL );
     __CPROVER_assume( isValidMqttConnectInfo( pConnectInfo ) );
