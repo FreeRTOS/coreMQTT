@@ -750,6 +750,8 @@ MQTTStatus_t MQTT_Disconnect( MQTTContext_t * pContext );
  * #MQTT_PINGRESP_TIMEOUT_MS milliseconds;
  * #MQTTIllegalState if an incoming QoS 1/2 publish or ack causes an
  * invalid transition for the internal state machine;
+ * #MQTTNeedMoreBytes if MQTT_ProcessLoop has received
+ * incomplete data; it should be called again (probably after a delay);
  * #MQTTSuccess on success.
  *
  * <b>Example</b>
@@ -764,7 +766,7 @@ MQTTStatus_t MQTT_Disconnect( MQTTContext_t * pContext );
  * {
  *      status = MQTT_ProcessLoop( pContext );
  *
- *      if( status != MQTTSuccess )
+ *      if( status != MQTTSuccess && status != MQTTNeedMoreBytes )
  *      {
  *          // Determine the error. It's possible we might need to disconnect
  *          // the underlying transport connection.
@@ -804,6 +806,8 @@ MQTTStatus_t MQTT_ProcessLoop( MQTTContext_t * pContext );
  * #MQTTBadResponse if an invalid packet is received;
  * #MQTTIllegalState if an incoming QoS 1/2 publish or ack causes an
  * invalid transition for the internal state machine;
+ * #MQTTNeedMoreBytes if MQTT_ReceiveLoop has received
+ * incomplete data; it should be called again (probably after a delay);
  * #MQTTSuccess on success.
  *
  * <b>Example</b>
@@ -819,7 +823,7 @@ MQTTStatus_t MQTT_ProcessLoop( MQTTContext_t * pContext );
  * {
  *      status = MQTT_ReceiveLoop( pContext );
  *
- *      if( status != MQTTSuccess )
+ *      if( status != MQTTSuccess && status != MQTTNeedMoreBytes )
  *      {
  *          // Determine the error. It's possible we might need to disconnect
  *          // the underlying transport connection.
