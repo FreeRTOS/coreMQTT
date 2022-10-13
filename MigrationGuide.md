@@ -243,3 +243,4 @@ maximum time for sending a packet was variable. In order to remedy this, the `MQ
 The `MQTT_CancelCallback` function has been added to allow a program to prevent the event callback from being called when receiving an ACK 
 for a sent packet. For example, if a program sends a publish with packet ID 2 and QoS > 0 using `MQTT_Publish`, the program could then call 
 `MQTT_CancelCallback` on packet ID 2 to prevent coreMQTT from calling the event callback when it receives the `PUBACK` for packet ID 2.
+
