@@ -66,6 +66,9 @@ connectInfo.userNameLength = USERNAME_STRING_LENGTH;
 mqttStatus = MQTT_Connect( pMqttContext, &connectInfo, NULL, CONNACK_RECV_TIMEOUT_MS, pSessionPresent );
 ```
 
+## Upgrading to v2.0.0 and above
+
+With coreMQTT versions >=v2.0.0, there are breaking changes. Please refer to the [coreMQTT version >=v2.0.0 Migration Guide](MigrationGuide.md).
 
 ## Building the Library
 
