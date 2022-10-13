@@ -2,8 +2,6 @@
  * coreMQTT v2.0.0
  * Copyright (C) 2022 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
- * SPDX-License-Identifier: MIT
- *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
  * the Software without restriction, including without limitation the rights to
@@ -169,28 +167,30 @@
 #endif
 
 /**
- * @brief The maximum duration between non-empty network transmissions while
- * sending an MQTT packet via the #MQTT_ProcessLoop or #MQTT_ReceiveLoop
- * API functions.
+ * @brief The maximum duration allowed to send an MQTT packet over the transport
+ * interface.
  *
- * When sending an MQTT packet, the transport send function may be called multiple
- * times until all of the required number of bytes are sent.
- * This timeout represents the maximum duration that is allowed for no data
- * transmission over the network through the transport send function.
+ * When sending an MQTT packet, the transport send or writev functions may be
+ * called multiple times until all of the required number of bytes are sent.
+ * This timeout represents the maximum duration that is allowed to send the MQTT
+ * packet while calling the transport send or writev functions.
  *
- * If the timeout expires, the #MQTT_ProcessLoop and #MQTT_ReceiveLoop functions
- * return #MQTTSendFailed.
+ * If the timeout expires, #MQTTSendFailed will be returned by the public API
+ * functions.
  *
  * @note If a dummy implementation of the #MQTTGetCurrentTimeFunc_t timer function,
- * is supplied to the library, then #MQTT_SEND_RETRY_TIMEOUT_MS MUST be set to 0.
+ * is supplied to the library, then #MQTT_SEND_TIMEOUT_MS MUST be set to 0.
  *
- * <b>Possible values:</b> Any positive 32 bit integer. Recommended to use a small
- * timeout value. <br>
- * <b>Default value:</b> `10`
+ * <b>Possible values:</b> Any positive 32 bit integer. <br>
+ * <b>Default value:</b> `20000`
  *
  */
-#ifndef MQTT_SEND_RETRY_TIMEOUT_MS
-    #define MQTT_SEND_RETRY_TIMEOUT_MS    ( 10U )
+#ifndef MQTT_SEND_TIMEOUT_MS
+    #define MQTT_SEND_TIMEOUT_MS    ( 20000U )
+#endif
+
+#ifdef MQTT_SEND_RETRY_TIMEOUT_MS
+    #warning MQTT_SEND_RETRY_TIMEOUT_MS is deprecated. Instead use MQTT_SEND_TIMEOUT_MS
 #endif
 
 /* *INDENT-OFF* */
