@@ -41,7 +41,7 @@ var NAVTREE =
       [ "MQTT_DO_NOT_USE_CUSTOM_CONFIG", "core_mqtt_config.html#MQTT_DO_NOT_USE_CUSTOM_CONFIG", null ],
       [ "MQTT_PINGRESP_TIMEOUT_MS", "core_mqtt_config.html#MQTT_PINGRESP_TIMEOUT_MS", null ],
       [ "MQTT_RECV_POLLING_TIMEOUT_MS", "core_mqtt_config.html#MQTT_RECV_POLLING_TIMEOUT_MS", null ],
-      [ "MQTT_SEND_RETRY_TIMEOUT_MS", "core_mqtt_config.html#MQTT_SEND_RETRY_TIMEOUT_MS", null ],
+      [ "MQTT_SEND_TIMEOUT_MS", "core_mqtt_config.html#MQTT_SEND_TIMEOUT_MS", null ],
       [ "MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT", "core_mqtt_config.html#MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT", null ],
       [ "LogError", "core_mqtt_config.html#mqtt_logerror", null ],
       [ "LogWarn", "core_mqtt_config.html#mqtt_logwarn", null ],
@@ -59,7 +59,7 @@ var NAVTREE =
       [ "MQTT Keep Alive interval", "mqtt_timeouts.html#mqtt_timeouts_keep_alive", null ],
       [ "MQTT Ping Response timeout", "mqtt_timeouts.html#mqtt_timeouts_ping_response", null ],
       [ "MQTT Receive Polling timeout", "mqtt_timeouts.html#mqtt_timeouts_receive_polling", null ],
-      [ "MQTT Send Retry timeout", "mqtt_timeouts.html#mqtt_timeouts_send_retry", null ],
+      [ "MQTT Send timeout", "mqtt_timeouts.html#mqtt_timeouts_send", null ],
       [ "Timeouts for MQTT_ProcessLoop and MQTT_ReceiveLoop APIs", "mqtt_timeouts.html#mqtt_timeouts_process_receive_loop", null ],
       [ "Timeout for MQTT_Connect", "mqtt_timeouts.html#mqtt_timeouts_connect", null ]
     ] ],

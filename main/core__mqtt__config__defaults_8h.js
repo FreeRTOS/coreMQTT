@@ -7,5 +7,5 @@ var core__mqtt__config__defaults_8h =
     [ "PACKET_TX_TIMEOUT_MS", "core__mqtt__config__defaults_8h.html#a9b3c7c33badcafec477a205d916424bc", null ],
     [ "PACKET_RX_TIMEOUT_MS", "core__mqtt__config__defaults_8h.html#a46ef647d5a8315f626dc17d62e264aed", null ],
     [ "MQTT_RECV_POLLING_TIMEOUT_MS", "core__mqtt__config__defaults_8h.html#a43dc9a67427d9e420a65955eea0e2671", null ],
-    [ "MQTT_SEND_RETRY_TIMEOUT_MS", "core__mqtt__config__defaults_8h.html#a73228316a06bbbb91c931dbade56de35", null ]
+    [ "MQTT_SEND_TIMEOUT_MS", "core__mqtt__config__defaults_8h.html#ac262cab68c4c713ebc2b91a2e4ab8b19", null ]
 ];

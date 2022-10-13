@@ -86,7 +86,7 @@ var NAVTREEINDEX1 =
 "mqtt_timeouts.html#mqtt_timeouts_ping_response":[5,2],
 "mqtt_timeouts.html#mqtt_timeouts_process_receive_loop":[5,5],
 "mqtt_timeouts.html#mqtt_timeouts_receive_polling":[5,3],
-"mqtt_timeouts.html#mqtt_timeouts_send_retry":[5,4],
+"mqtt_timeouts.html#mqtt_timeouts_send":[5,4],
 "mqtt_timeouts.html#mqtt_timeouts_transport_send_receive":[5,0],
 "mqtt_transport_interface.html":[6],
 "mqtt_transport_interface.html#mqtt_transport_interface_implementation":[6,1],

@@ -170,17 +170,21 @@ $(document).ready(function(){initNavTree('core__mqtt__config__defaults_8h_source
 <div class="line"><a id="l00168" name="l00168"></a><span class="lineno"><a class="line" href="core__mqtt__config__defaults_8h.html#a43dc9a67427d9e420a65955eea0e2671">  168</a></span><span class="preprocessor">    #define MQTT_RECV_POLLING_TIMEOUT_MS    ( 10U )</span></div>
 <div class="line"><a id="l00169" name="l00169"></a><span class="lineno">  169</span><span class="preprocessor">#endif</span></div>
 <div class="line"><a id="l00170" name="l00170"></a><span class="lineno">  170</span> </div>
-<div class="line"><a id="l00192" name="l00192"></a><span class="lineno">  192</span><span class="preprocessor">#ifndef MQTT_SEND_RETRY_TIMEOUT_MS</span></div>
-<div class="line"><a id="l00193" name="l00193"></a><span class="lineno"><a class="line" href="core__mqtt__config__defaults_8h.html#a73228316a06bbbb91c931dbade56de35">  193</a></span><span class="preprocessor">    #define MQTT_SEND_RETRY_TIMEOUT_MS    ( 10U )</span></div>
-<div class="line"><a id="l00194" name="l00194"></a><span class="lineno">  194</span><span class="preprocessor">#endif</span></div>
-<div class="line"><a id="l00195" name="l00195"></a><span class="lineno">  195</span> </div>
-<div class="line"><a id="l00196" name="l00196"></a><span class="lineno">  196</span><span class="comment">/* *INDENT-OFF* */</span></div>
-<div class="line"><a id="l00197" name="l00197"></a><span class="lineno">  197</span><span class="preprocessor">#ifdef __cplusplus</span></div>
-<div class="line"><a id="l00198" name="l00198"></a><span class="lineno">  198</span>    }</div>
-<div class="line"><a id="l00199" name="l00199"></a><span class="lineno">  199</span><span class="preprocessor">#endif</span></div>
-<div class="line"><a id="l00200" name="l00200"></a><span class="lineno">  200</span><span class="comment">/* *INDENT-ON* */</span></div>
-<div class="line"><a id="l00201" name="l00201"></a><span class="lineno">  201</span> </div>
-<div class="line"><a id="l00202" name="l00202"></a><span class="lineno">  202</span><span class="preprocessor">#endif </span><span class="comment">/* ifndef CORE_MQTT_CONFIG_DEFAULTS_H_ */</span><span class="preprocessor"></span></div>
+<div class="line"><a id="l00190" name="l00190"></a><span class="lineno">  190</span><span class="preprocessor">#ifndef MQTT_SEND_TIMEOUT_MS</span></div>
+<div class="line"><a id="l00191" name="l00191"></a><span class="lineno"><a class="line" href="core__mqtt__config__defaults_8h.html#ac262cab68c4c713ebc2b91a2e4ab8b19">  191</a></span><span class="preprocessor">    #define MQTT_SEND_TIMEOUT_MS    ( 20000U )</span></div>
+<div class="line"><a id="l00192" name="l00192"></a><span class="lineno">  192</span><span class="preprocessor">#endif</span></div>
+<div class="line"><a id="l00193" name="l00193"></a><span class="lineno">  193</span> </div>
+<div class="line"><a id="l00194" name="l00194"></a><span class="lineno">  194</span><span class="preprocessor">#ifdef MQTT_SEND_RETRY_TIMEOUT_MS</span></div>
+<div class="line"><a id="l00195" name="l00195"></a><span class="lineno">  195</span><span class="preprocessor">    #error MQTT_SEND_RETRY_TIMEOUT_MS is deprecated. Instead use MQTT_SEND_TIMEOUT_MS.</span></div>
+<div class="line"><a id="l00196" name="l00196"></a><span class="lineno">  196</span><span class="preprocessor">#endif</span></div>
+<div class="line"><a id="l00197" name="l00197"></a><span class="lineno">  197</span> </div>
+<div class="line"><a id="l00198" name="l00198"></a><span class="lineno">  198</span><span class="comment">/* *INDENT-OFF* */</span></div>
+<div class="line"><a id="l00199" name="l00199"></a><span class="lineno">  199</span><span class="preprocessor">#ifdef __cplusplus</span></div>
+<div class="line"><a id="l00200" name="l00200"></a><span class="lineno">  200</span>    }</div>
+<div class="line"><a id="l00201" name="l00201"></a><span class="lineno">  201</span><span class="preprocessor">#endif</span></div>
+<div class="line"><a id="l00202" name="l00202"></a><span class="lineno">  202</span><span class="comment">/* *INDENT-ON* */</span></div>
+<div class="line"><a id="l00203" name="l00203"></a><span class="lineno">  203</span> </div>
+<div class="line"><a id="l00204" name="l00204"></a><span class="lineno">  204</span><span class="preprocessor">#endif </span><span class="comment">/* ifndef CORE_MQTT_CONFIG_DEFAULTS_H_ */</span><span class="preprocessor"></span></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
