@@ -83,8 +83,8 @@
  * repeatedly to send bytes over the network until either:
  * 1. The requested number of bytes @a bytesToSend have been sent.
  *                    OR
- * 2. No byte cannot be sent over the network for the MQTT_SEND_RETRY_TIMEOUT_MS
- * duration.
+ * 2. MQTT_SEND_TIMEOUT_MS milliseconds have gone by since entering this
+ * function.
  *                    OR
  * 3. There is an error in sending data over the network.
  *
@@ -107,8 +107,8 @@ static int32_t sendBuffer( MQTTContext_t * pContext,
  * repeatedly to send bytes over the network until either:
  * 1. The requested number of bytes @a remainingLength have been sent.
  *                    OR
- * 2. No byte cannot be sent over the network for the MQTT_SEND_RETRY_TIMEOUT_MS
- * duration.
+ * 2. MQTT_SEND_TIMEOUT_MS milliseconds have gone by since entering this
+ * function.
  *                    OR
  * 3. There is an error in sending data over the network.
  *
@@ -122,13 +122,22 @@ static MQTTStatus_t sendConnectWithoutCopy( MQTTContext_t * pContext,
 /**
  * @brief Sends the vector array passed through the parameters over the network.
  *
- * @note The preference is given to 'write' function if it is present in the
+ * @note The preference is given to 'writev' function if it is present in the
  * transport interface. Otherwise, a send call is made repeatedly to achieve the
  * result.
  *
  * @param[in] pContext Initialized MQTT context.
  * @param[in] pIoVec The vector array to be sent.
  * @param[in] ioVecCount The number of elements in the array.
+ *
+ * @note This operation may call the transport send or writev functions
+ * repeatedly to send bytes over the network until either:
+ * 1. The requested number of bytes have been sent.
+ *                    OR
+ * 2. MQTT_SEND_TIMEOUT_MS milliseconds have gone by since entering this
+ * function.
+ *                    OR
+ * 3. There is an error in sending data over the network.
  *
  * @return The total number of bytes sent or the error code as received from the
  * transport interface.
@@ -735,11 +744,12 @@ static int32_t sendMessageVector( MQTTContext_t * pContext,
                                   TransportOutVector_t * pIoVec,
                                   size_t ioVecCount )
 {
-    uint32_t timeoutTime;
-    uint32_t bytesToSend = 0U;
-    int32_t bytesSentOrError = 0;
+    int32_t sendResult;
+    uint32_t timeoutMs;
     TransportOutVector_t * pIoVectIterator;
     size_t vectorsToBeSent = ioVecCount;
+    size_t bytesToSend = 0U;
+    int32_t bytesSentOrError = 0;
 
     assert( pContext != NULL );
     assert( pIoVec != NULL );
@@ -747,23 +757,20 @@ static int32_t sendMessageVector( MQTTContext_t * pContext,
     /* Send must always be defined */
     assert( pContext->transportInterface.send != NULL );
 
-    timeoutTime = pContext->getTime() + MQTT_SEND_RETRY_TIMEOUT_MS;
-
     /* Count the total number of bytes to be sent as outlined in the vector. */
     for( pIoVectIterator = pIoVec; pIoVectIterator <= &( pIoVec[ ioVecCount - 1U ] ); pIoVectIterator++ )
     {
-        bytesToSend += ( uint32_t ) pIoVectIterator->iov_len;
+        bytesToSend += pIoVectIterator->iov_len;
     }
 
     /* Reset the iterator to point to the first entry in the array. */
     pIoVectIterator = pIoVec;
 
-    while( ( bytesSentOrError < ( int32_t ) bytesToSend ) &&
-           ( bytesSentOrError >= 0 ) )
-    {
-        int32_t sendResult;
-        uint32_t bytesSentThisVector = 0U;
+    /* Set the timeout. */
+    timeoutMs = pContext->getTime() + MQTT_SEND_TIMEOUT_MS;
 
+    while( ( bytesSentOrError < ( int32_t ) bytesToSend ) && ( bytesSentOrError >= 0 ) )
+    {
         if( pContext->transportInterface.writev != NULL )
         {
             sendResult = pContext->transportInterface.writev( pContext->transportInterface.pNetworkContext,
@@ -772,48 +779,60 @@ static int32_t sendMessageVector( MQTTContext_t * pContext,
         }
         else
         {
-            sendResult = sendBuffer( pContext,
-                                     pIoVectIterator->iov_base,
-                                     pIoVectIterator->iov_len );
+            sendResult = pContext->transportInterface.send( pContext->transportInterface.pNetworkContext,
+                                                            pIoVectIterator->iov_base,
+                                                            pIoVectIterator->iov_len );
         }
 
-        if( sendResult >= 0 )
+        if( sendResult > 0 )
         {
+            /* It is a bug in the application's transport send implementation if
+             * more bytes than expected are sent. */
+            assert( sendResult <= ( ( int32_t ) bytesToSend - bytesSentOrError ) );
+
             bytesSentOrError += sendResult;
-            bytesSentThisVector += ( uint32_t ) sendResult;
+
+            /* Set last transmission time. */
+            pContext->lastPacketTxTime = pContext->getTime();
+
+            LogDebug( ( "sendMessageVector: Bytes Sent=%ld, Bytes Remaining=%lu",
+                        ( long int ) sendResult,
+                        ( unsigned long ) ( bytesToSend - ( size_t ) bytesSentOrError ) ) );
+        }
+        else if( sendResult < 0 )
+        {
+            bytesSentOrError = sendResult;
+            LogError( ( "sendMessageVector: Unable to send packet: Network Error." ) );
         }
         else
         {
-            bytesSentOrError = sendResult;
-
-            /* We do not need to break here as the condition is checked in the loop.
-             * The following statements will not execute as bytesSentThisVector is not
-             * updated and is still 0. */
+            /* MISRA Empty body */
         }
 
-        while( ( pIoVectIterator <= &( pIoVec[ ioVecCount - 1U ] ) ) &&
-               ( bytesSentThisVector >= pIoVectIterator->iov_len ) )
+        /* Check for timeout. */
+        if( pContext->getTime() >= timeoutMs )
         {
-            bytesSentThisVector -= ( uint32_t ) pIoVectIterator->iov_len;
-            pIoVectIterator++;
+            LogError( ( "sendMessageVector: Unable to send packet: Timed out." ) );
+            break;
+        }
 
+        /* Update the send pointer to the correct vector and offset. */
+        while( ( pIoVectIterator <= &( pIoVec[ ioVecCount - 1U ] ) ) &&
+               ( sendResult >= ( int32_t ) pIoVectIterator->iov_len ) )
+        {
+            sendResult -= ( int32_t ) pIoVectIterator->iov_len;
+            pIoVectIterator++;
             /* Update the number of vector which are yet to be sent. */
             vectorsToBeSent--;
         }
 
         /* Some of the bytes from this vector were sent as well, update the length
          * and the pointer to data in this vector. */
-        if( ( bytesSentThisVector > 0U ) &&
+        if( ( sendResult > 0 ) &&
             ( pIoVectIterator <= &( pIoVec[ ioVecCount - 1U ] ) ) )
         {
-            pIoVectIterator->iov_base = ( const void * ) &( ( ( const uint8_t * ) pIoVectIterator->iov_base )[ bytesSentThisVector ] );
-            pIoVectIterator->iov_len -= bytesSentThisVector;
-        }
-
-        /* Check for timeout. */
-        if( pContext->getTime() > timeoutTime )
-        {
-            break;
+            pIoVectIterator->iov_base = ( const void * ) &( ( ( const uint8_t * ) pIoVectIterator->iov_base )[ sendResult ] );
+            pIoVectIterator->iov_len -= ( size_t ) sendResult;
         }
     }
 
@@ -824,74 +843,60 @@ static int32_t sendBuffer( MQTTContext_t * pContext,
                            const uint8_t * pBufferToSend,
                            size_t bytesToSend )
 {
+    int32_t sendResult;
+    uint32_t timeoutMs;
+    int32_t bytesSentOrError = 0;
     const uint8_t * pIndex = pBufferToSend;
-    size_t bytesRemaining;
-    int32_t totalBytesSent = 0, bytesSent;
-    uint32_t lastSendTimeMs = 0U, timeSinceLastSendMs = 0U;
-    bool sendError = false;
 
     assert( pContext != NULL );
     assert( pContext->getTime != NULL );
     assert( pContext->transportInterface.send != NULL );
     assert( pIndex != NULL );
 
-    bytesRemaining = bytesToSend;
+    /* Set the timeout. */
+    timeoutMs = pContext->getTime() + MQTT_SEND_TIMEOUT_MS;
 
-    /* Loop until the entire packet is sent. */
-    while( ( bytesRemaining > 0UL ) && ( sendError == false ) )
+    while( ( bytesSentOrError < ( int32_t ) bytesToSend ) && ( bytesSentOrError >= 0 ) )
     {
-        bytesSent = pContext->transportInterface.send( pContext->transportInterface.pNetworkContext,
-                                                       pIndex,
-                                                       bytesRemaining );
+        sendResult = pContext->transportInterface.send( pContext->transportInterface.pNetworkContext,
+                                                        pIndex,
+                                                        bytesToSend - ( size_t ) bytesSentOrError );
 
-        if( bytesSent < 0 )
+        if( sendResult > 0 )
         {
-            LogError( ( "Transport send failed. Error code=%ld.", ( long int ) bytesSent ) );
-            totalBytesSent = bytesSent;
-            sendError = true;
-        }
-        else if( bytesSent > 0 )
-        {
-            /* Record the most recent time of successful transmission. */
-            lastSendTimeMs = pContext->getTime();
-
             /* It is a bug in the application's transport send implementation if
-             * more bytes than expected are sent. To avoid a possible overflow
-             * in converting bytesRemaining from unsigned to signed, this assert
-             * must exist after the check for bytesSent being negative. */
-            assert( ( size_t ) bytesSent <= bytesRemaining );
+             * more bytes than expected are sent. */
+            assert( sendResult <= ( ( int32_t ) bytesToSend - bytesSentOrError ) );
 
-            bytesRemaining -= ( size_t ) bytesSent;
-            totalBytesSent += bytesSent;
-            /* Increment the index. */
-            pIndex = &pIndex[ bytesSent ];
-            LogDebug( ( "BytesSent=%ld, BytesRemaining=%lu",
-                        ( long int ) bytesSent,
-                        ( unsigned long ) bytesRemaining ) );
+            bytesSentOrError += sendResult;
+            pIndex = &pIndex[ sendResult ];
+
+            /* Set last transmission time. */
+            pContext->lastPacketTxTime = pContext->getTime();
+
+            LogDebug( ( "sendBuffer: Bytes Sent=%ld, Bytes Remaining=%lu",
+                        ( long int ) sendResult,
+                        ( unsigned long ) ( bytesToSend - ( size_t ) bytesSentOrError ) ) );
+        }
+        else if( sendResult < 0 )
+        {
+            bytesSentOrError = sendResult;
+            LogError( ( "sendBuffer: Unable to send packet: Network Error." ) );
         }
         else
         {
-            /* No bytes were sent over the network. */
-            timeSinceLastSendMs = calculateElapsedTime( pContext->getTime(), lastSendTimeMs );
+            /* MISRA Empty body */
+        }
 
-            /* Check for timeout if we have been waiting to send any data over the network. */
-            if( timeSinceLastSendMs >= MQTT_SEND_RETRY_TIMEOUT_MS )
-            {
-                LogError( ( "Unable to send packet: Timed out in transport send." ) );
-                sendError = true;
-            }
+        /* Check for timeout. */
+        if( pContext->getTime() >= timeoutMs )
+        {
+            LogError( ( "sendBuffer: Unable to send packet: Timed out." ) );
+            break;
         }
     }
 
-    /* Update time of last transmission if the entire packet is successfully sent. */
-    if( totalBytesSent > 0 )
-    {
-        pContext->lastPacketTxTime = lastSendTimeMs;
-        LogDebug( ( "Successfully sent packet at time %lu.",
-                    ( unsigned long ) lastSendTimeMs ) );
-    }
-
-    return totalBytesSent;
+    return bytesSentOrError;
 }
 
 /*-----------------------------------------------------------*/
@@ -1243,7 +1248,7 @@ static MQTTStatus_t sendPublishAcks( MQTTContext_t * pContext,
 {
     MQTTStatus_t status = MQTTSuccess;
     MQTTPublishState_t newState = MQTTStateNull;
-    int32_t bytesSent = 0;
+    int32_t sendResult = 0;
     uint8_t packetTypeByte = 0U;
     MQTTPubAckType_t packetType;
     MQTTFixedBuffer_t localBuffer;
@@ -1270,14 +1275,14 @@ static MQTTStatus_t sendPublishAcks( MQTTContext_t * pContext,
 
             /* Here, we are not using the vector approach for efficiency. There is just one buffer
              * to be sent which can be achieved with a normal send call. */
-            bytesSent = sendBuffer( pContext,
-                                    localBuffer.pBuffer,
-                                    MQTT_PUBLISH_ACK_PACKET_SIZE );
+            sendResult = sendBuffer( pContext,
+                                     localBuffer.pBuffer,
+                                     MQTT_PUBLISH_ACK_PACKET_SIZE );
 
             MQTT_POST_SEND_HOOK( pContext );
         }
 
-        if( bytesSent == ( int32_t ) MQTT_PUBLISH_ACK_PACKET_SIZE )
+        if( sendResult == ( int32_t ) MQTT_PUBLISH_ACK_PACKET_SIZE )
         {
             pContext->controlPacketSent = true;
 
@@ -1301,7 +1306,7 @@ static MQTTStatus_t sendPublishAcks( MQTTContext_t * pContext,
         {
             LogError( ( "Failed to send ACK packet: PacketType=%02x, SentBytes=%ld, "
                         "PacketSize=%lu.",
-                        ( unsigned int ) packetTypeByte, ( long int ) bytesSent,
+                        ( unsigned int ) packetTypeByte, ( long int ) sendResult,
                         MQTT_PUBLISH_ACK_PACKET_SIZE ) );
             status = MQTTSendFailed;
         }
@@ -2830,7 +2835,7 @@ MQTTStatus_t MQTT_Publish( MQTTContext_t * pContext,
 
 MQTTStatus_t MQTT_Ping( MQTTContext_t * pContext )
 {
-    int32_t bytesSent = 0;
+    int32_t sendResult = 0;
     MQTTStatus_t status = MQTTSuccess;
     size_t packetSize = 0U;
     /* MQTT ping packets are of fixed length. */
@@ -2878,15 +2883,15 @@ MQTTStatus_t MQTT_Ping( MQTTContext_t * pContext )
          * Here, we do not use the vectored IO approach for efficiency as the
          * Ping packet does not have numerous fields which need to be copied
          * from the user provided buffers. Thus it can be sent directly. */
-        bytesSent = sendBuffer( pContext,
-                                localBuffer.pBuffer,
-                                2U );
+        sendResult = sendBuffer( pContext,
+                                 localBuffer.pBuffer,
+                                 2U );
 
         /* Give the mutex away. */
         MQTT_POST_SEND_HOOK( pContext );
 
         /* It is an error to not send the entire PINGREQ packet. */
-        if( bytesSent < ( int32_t ) packetSize )
+        if( sendResult < ( int32_t ) packetSize )
         {
             LogError( ( "Transport send failed for PINGREQ packet." ) );
             status = MQTTSendFailed;
@@ -2896,7 +2901,7 @@ MQTTStatus_t MQTT_Ping( MQTTContext_t * pContext )
             pContext->pingReqSendTimeMs = pContext->lastPacketTxTime;
             pContext->waitingForPingResp = true;
             LogDebug( ( "Sent %ld bytes of PINGREQ packet.",
-                        ( long int ) bytesSent ) );
+                        ( long int ) sendResult ) );
         }
     }
 
@@ -2953,7 +2958,7 @@ MQTTStatus_t MQTT_Unsubscribe( MQTTContext_t * pContext,
 MQTTStatus_t MQTT_Disconnect( MQTTContext_t * pContext )
 {
     size_t packetSize = 0U;
-    int32_t bytesSent = 0;
+    int32_t sendResult = 0;
     MQTTStatus_t status = MQTTSuccess;
     MQTTFixedBuffer_t localBuffer;
     uint8_t disconnectPacket[ 2U ];
@@ -2990,14 +2995,14 @@ MQTTStatus_t MQTT_Disconnect( MQTTContext_t * pContext )
         /* Here we do not use vectors as the disconnect packet has fixed fields
          * which do not reside in user provided buffers. Thus, it can be sent
          * using a simple send call. */
-        bytesSent = sendBuffer( pContext,
-                                localBuffer.pBuffer,
-                                packetSize );
+        sendResult = sendBuffer( pContext,
+                                 localBuffer.pBuffer,
+                                 packetSize );
 
         /* Give the mutex away. */
         MQTT_POST_SEND_HOOK( pContext );
 
-        if( bytesSent < ( int32_t ) packetSize )
+        if( sendResult < ( int32_t ) packetSize )
         {
             LogError( ( "Transport send failed for DISCONNECT packet." ) );
             status = MQTTSendFailed;
@@ -3005,7 +3010,7 @@ MQTTStatus_t MQTT_Disconnect( MQTTContext_t * pContext )
         else
         {
             LogDebug( ( "Sent %ld bytes of DISCONNECT packet.",
-                        ( long int ) bytesSent ) );
+                        ( long int ) sendResult ) );
         }
     }
 
