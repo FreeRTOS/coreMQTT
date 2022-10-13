@@ -4,12 +4,7 @@ With coreMQTT versions >=v2.0.0, there are some breaking changes that need to be
 
 ### Breaking Changes
 
-The `MQTT_ProcessLoop` function no longer uses a timeout as this led to unavoidable busy-waiting. Thus, the signature of `MQTT_ProcessLoop` 
-changed from `MQTTStatus_t MQTT_ProcessLoop( MQTTContext_t * pContext, uint32_t timeoutMs )`  to  
-`MQTTStatus_t MQTT_ProcessLoop( MQTTContext_t * pContext )`. Additionally, `MQTT_ProcessLoop` can now return `MQTTNeedMoreBytes`. 
-A return of `MQTTNeedMoreBytes` means that `MQTT_ProcessLoop` received only a part of an MQTT packet and will need to be called 
-again (probably after a bit of delay) in order to finish receiving the MQTT packet. Thus, to migrate, simply remove the timeout from the 
-`MQTT_ProcessLoop` call and additionally check for if `MQTTNeedMoreBytes` has been returned when checking the status of `MQTT_ProcessLoop`. For example:
+The `MQTT_ProcessLoop` function no longer uses a timeout as this led to unavoidable busy-waiting. Thus, the signature of `MQTT_ProcessLoop` changed from `MQTTStatus_t MQTT_ProcessLoop( MQTTContext_t * pContext, uint32_t timeoutMs )`  to  `MQTTStatus_t MQTT_ProcessLoop( MQTTContext_t * pContext )`. Additionally, `MQTT_ProcessLoop` can now return `MQTTNeedMoreBytes`. A return of `MQTTNeedMoreBytes` means that `MQTT_ProcessLoop` received only a part of an MQTT packet and will need to be called again (probably after a bit of delay) in order to finish receiving the MQTT packet. Thus, to migrate, simply remove the timeout from the `MQTT_ProcessLoop` call and additionally check for if `MQTTNeedMoreBytes` has been returned when checking the status of `MQTT_ProcessLoop`. For example:
 
 **Old Code Snippet**:
 ```
@@ -57,12 +52,7 @@ while( true )
 }
 ```
 
-The `MQTT_ReceiveLoop` function no longer uses a timeout as this led to unavoidable busy-waiting. Thus, the signature of `MQTT_ReceiveLoop` 
-changed from `MQTTStatus_t MQTT_ReceiveLoop( MQTTContext_t * pContext, uint32_t timeoutMs )`  to  
-`MQTTStatus_t MQTT_ReceiveLoop( MQTTContext_t * pContext )`. Additionally, `MQTT_ReceiveLoop` can now return `MQTTNeedMoreBytes`. 
-A return of `MQTTNeedMoreBytes` means that `MQTT_ReceiveLoop` received only a part of an MQTT packet and will need to be called 
-again (probably after a bit of delay) in order to finish receiving the MQTT packet. Thus, to migrate, simply remove the timeout from the 
-`MQTT_ReceiveLoop` call and additionally check for if `MQTTNeedMoreBytes` has been returned when checking the status of `MQTT_ReceiveLoop`. For example:
+The `MQTT_ReceiveLoop` function no longer uses a timeout as this led to unavoidable busy-waiting. Thus, the signature of `MQTT_ReceiveLoop` changed from `MQTTStatus_t MQTT_ReceiveLoop( MQTTContext_t * pContext, uint32_t timeoutMs )`  to  `MQTTStatus_t MQTT_ReceiveLoop( MQTTContext_t * pContext )`. Additionally, `MQTT_ReceiveLoop` can now return `MQTTNeedMoreBytes`. A return of `MQTTNeedMoreBytes` means that `MQTT_ReceiveLoop` received only a part of an MQTT packet and will need to be called again (probably after a bit of delay) in order to finish receiving the MQTT packet. Thus, to migrate, simply remove the timeout from the `MQTT_ReceiveLoop` call and additionally check for if `MQTTNeedMoreBytes` has been returned when checking the status of `MQTT_ReceiveLoop`. For example:
 
 **Old Code Snippet**:
 ```
@@ -110,10 +100,7 @@ while( true )
 }
 ```
 
-The `TransportInterface_t` structure now has a new member `writev` that can be defined to allow sending multiple MQTT message 
-vectors as a single packet. This can improve performance, but is not necessary to implement. However, when programs initialize a 
-`TransportInterface_t` structure, they **MUST** either set `writev` to a working implementation or set it `NULL`. Not doing this will 
-lead to undefined behavior as the coreMQTT library checks if `writev` is `NULL` to determine if it should be used. For example:
+The `TransportInterface_t` structure now has a new member `writev` that can be defined to allow sending multiple MQTT message vectors as a single packet. This can improve performance, but is not necessary to implement. However, when programs initialize a `TransportInterface_t` structure, they **MUST** either set `writev` to a working implementation or set it `NULL`. Not doing this will lead to undefined behavior as the coreMQTT library checks if `writev` is `NULL` to determine if it should be used. For example:
 
 **Old Code Snippet**:
 ```
@@ -133,9 +120,7 @@ transport.recv = networkRecv;
 transport.writev = NULL;
 ```
 
-The `MQTT_Init` function no longer creates buffers to handle QoS > 0 packets, so if planning to use QoS > 0, the `MQTT_InitStatefulQoS` function 
-must also be called on an `MQTTContext_t` after calling `MQTT_Init` on it and before using any other coreMQTT functions with it. If not using QoS > 0, 
-`MQTT_InitStatefulQoS` does not need to be called. For example (code that uses QoS > 0):
+The `MQTT_Init` function no longer creates buffers to handle QoS > 0 packets, so if planning to use QoS > 0, the `MQTT_InitStatefulQoS` function must also be called on an `MQTTContext_t` after calling `MQTT_Init` on it and before using any other coreMQTT functions with it. If not using QoS > 0, `MQTT_InitStatefulQoS` does not need to be called. For example (code that uses QoS > 0):
 
 **Old Code Snippet**:
 ```
@@ -232,15 +217,8 @@ if( status == MQTTSuccess )
 }
 ```
 
-For coreMQTT version >=v2.1.0, the `MQTT_SEND_RETRY_TIMEOUT_MS` macro configuration has been deprecated. It has been replaced with `MQTT_SEND_TIMEOUT_MS`.
-`MQTT_SEND_RETRY_TIMEOUT_MS` was formerly used to timeout sending an MQTT packet after the transport `send` function sent 0 bytes for too long. This timeout would
-reset each time the transport `send` function sent any bytes, leading to the actual timeout scaling with the number of bytes being sent. In other words, the 
-maximum time for sending a packet was variable. In order to remedy this, the `MQTT_SEND_RETRY_TIMEOUT_MS` macro was replaced with `MQTT_SEND_TIMEOUT_MS`.
-`MQTT_SEND_TIMEOUT_MS` now sets the maximum duration that coreMQTT will attempt to send an MQTT packet, leading to more consistent timeout behavior.
+For coreMQTT version >=v2.1.0, the `MQTT_SEND_RETRY_TIMEOUT_MS` macro configuration has been deprecated. It has been replaced with `MQTT_SEND_TIMEOUT_MS`. `MQTT_SEND_RETRY_TIMEOUT_MS` was formerly used to timeout sending an MQTT packet after the transport `send` function sent 0 bytes for too long. This timeout would reset each time the transport `send` function sent any bytes, leading to the actual timeout scaling with the number of bytes being sent. In other words, the maximum time for sending a packet was variable. In order to remedy this, the `MQTT_SEND_RETRY_TIMEOUT_MS` macro was replaced with `MQTT_SEND_TIMEOUT_MS`. `MQTT_SEND_TIMEOUT_MS` now sets the maximum duration that coreMQTT will attempt to send an MQTT packet, leading to more consistent timeout behavior.
 
 ### Additional Changes
 
-The `MQTT_CancelCallback` function has been added to allow a program to prevent the event callback from being called when receiving an ACK 
-for a sent packet. For example, if a program sends a publish with packet ID 2 and QoS > 0 using `MQTT_Publish`, the program could then call 
-`MQTT_CancelCallback` on packet ID 2 to prevent coreMQTT from calling the event callback when it receives the `PUBACK` for packet ID 2.
-
+The `MQTT_CancelCallback` function has been added to allow a program to prevent the event callback from being called when receiving an ACK for a sent packet. For example, if a program sends a publish with packet ID 2 and QoS > 0 using `MQTT_Publish`, the program could then call `MQTT_CancelCallback` on packet ID 2 to prevent coreMQTT from calling the event callback when it receives the `PUBACK` for packet ID 2.
