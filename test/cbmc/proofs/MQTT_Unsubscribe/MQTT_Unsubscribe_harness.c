@@ -44,7 +44,7 @@ static uint32_t ulGetTimeFunction( void )
 
     if( systemTime >= MAX_NETWORK_SEND_TRIES )
     {
-        systemTime = systemTime + MQTT_SEND_RETRY_TIMEOUT_MS + 1;
+        systemTime = systemTime + MQTT_SEND_TIMEOUT_MS + 1;
     }
     else
     {
