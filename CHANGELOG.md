@@ -1,5 +1,12 @@
 # Changelog for coreMQTT Client Library
 
+## v2.1.0 (October 2022)
+
+### Changes
+- [#224](https://github.com/FreeRTOS/coreMQTT/pull/224) Update timeout duration to be constant for all transmit functions. Timeout shall occur if the whole packet is not sent within the configured timeout value.
+- [#225](https://github.com/FreeRTOS/coreMQTT/pull/225) Updated the documentation of ReceiveLoop and ProcessLoop.
+- [#223](https://github.com/FreeRTOS/coreMQTT/pull/223) Modify a check to make sure that keep alive is sent even when data is in the buffer.
+
 ## v2.0.0 (September 2022)
 
 ### Changes
