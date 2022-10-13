@@ -98,6 +98,11 @@ while( true )
          // Determine the error. It's possible we might need to disconnect
          // the underlying transport connection.
      }
+     /* else if only required if the terminating else is empty and the application doesn't want a scenario akin to busy waiting. */
+     else if( status == MQTTNeedMoreBytes )
+     {
+         /* Only a partial MQTT packet is received. Call MQTT_ReceiveLoop again; ideally after a small delay. */
+     }
      else
      {
          // Other application functions.
