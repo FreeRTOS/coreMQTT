@@ -129,7 +129,7 @@ static MQTTStatus_t sendConnectWithoutCopy( MQTTContext_t * pContext,
  * @param[in] pContext Initialized MQTT context.
  * @param[in] pIoVec The vector array to be sent.
  * @param[in] ioVecCount The number of elements in the array.
- * 
+ *
  * @note This operation may call the transport send or writev functions
  * repeatedly to send bytes over the network until either:
  * 1. The requested number of bytes have been sent.
