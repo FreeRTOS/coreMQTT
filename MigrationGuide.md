@@ -1,6 +1,6 @@
-## coreMQTT version >v2.0.0 Migration Guide
+## coreMQTT version >=v2.0.0 Migration Guide
 
-With coreMQTT versions >v2.0.0, there are some breaking changes that need to be addressed when upgrading.
+With coreMQTT versions >=v2.0.0, there are some breaking changes that need to be addressed when upgrading.
 
 ### Breaking Changes
 
