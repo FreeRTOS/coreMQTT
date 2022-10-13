@@ -9,7 +9,7 @@ The timeouts and the recommended configurations are listed below.
 2. [MQTT Keep Alive interval](@ref mqtt_timeouts_keep_alive)
 3. [MQTT Ping Response timeout](@ref mqtt_timeouts_ping_response)
 4. [MQTT Receive Polling timeout](@ref mqtt_timeouts_receive_polling)
-5. [MQTT Send Retry timeout](@ref mqtt_timeouts_send_retry)
+5. [MQTT Send timeout](@ref mqtt_timeouts_send)
 6. [Timeouts for MQTT_ProcessLoop and MQTT_ReceiveLoop APIs](@ref mqtt_timeouts_process_receive_loop)
 7. [Timeout for MQTT_Connect](@ref mqtt_timeouts_connect)
 
@@ -67,10 +67,8 @@ without any data received, we recommend using a value larger than the Transport 
 
 The MQTT Receive Polling timeout can be set by defining the configuration @ref MQTT_RECV_POLLING_TIMEOUT_MS.
 
-@section mqtt_timeouts_send_retry MQTT Send Retry timeout
-MQTT Send Retry timeout is the maximum duration between non-empty network transmissions while sending an MQTT packet via the
-@ref mqtt_processloop_function or @ref mqtt_receiveloop_function API functions. This timeout represents the maximum duration
-that is allowed for no data transmission over the network through the Transport Send function.
+@section mqtt_timeouts_send MQTT Send timeout
+MQTT Send timeout is the maximum duration allowed to send an MQTT packet over the transport interface.
 
 It is important to note that having this timeout too short will result in MQTT being disconnected due to the possibility
 of partial data being sent. If you have small TCP buffers and a high latency network, the optimum value for the timeout
@@ -80,7 +78,7 @@ hitting a timeout of Transport Send before any data could be sent to transport l
 than the Transport Send timeout. If a dummy implementation of the @ref MQTTGetCurrentTimeFunc_t timer function,
 that always returns 0, is used, then this timeout must be set to 0.
 
-The MQTT Send Retry timeout can be set by defining the configuration @ref MQTT_SEND_RETRY_TIMEOUT_MS.
+The MQTT Send timeout can be set by defining the configuration @ref MQTT_SEND_TIMEOUT_MS.
 
 @section mqtt_timeouts_process_receive_loop Timeouts for MQTT_ProcessLoop and MQTT_ReceiveLoop APIs
 This timeout is passed as an argument to @ref mqtt_processloop_function or @ref mqtt_receiveloop_function API functions.
