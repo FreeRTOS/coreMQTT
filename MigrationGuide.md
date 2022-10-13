@@ -222,7 +222,7 @@ if( status == MQTTSuccess )
 }
 ```
 
-For coreMQTT version >=v2.1.0, the `MQTT_SEND_RETRY_TIMEOUT_MS` macro configuration has been deprecated. It has been replaced with `MQTT_SEND_TIMEOUT_MS`. `MQTT_SEND_RETRY_TIMEOUT_MS` was formerly used to timeout sending an MQTT packet after the transport `send` function sent 0 bytes for too long. This timeout would reset each time the transport `send` function sent any bytes, leading to the actual timeout scaling with the number of bytes being sent. In other words, the maximum time for sending a packet was variable. In order to remedy this, the `MQTT_SEND_RETRY_TIMEOUT_MS` macro was replaced with `MQTT_SEND_TIMEOUT_MS`. `MQTT_SEND_TIMEOUT_MS` now sets the maximum duration that coreMQTT will attempt to send an MQTT packet, leading to more consistent timeout behavior.
+For coreMQTT version >=v2.1.0, the `MQTT_SEND_RETRY_TIMEOUT_MS` macro configuration has been deprecated. It has been replaced with `MQTT_SEND_TIMEOUT_MS`. `MQTT_SEND_RETRY_TIMEOUT_MS` was formerly used to timeout sending an MQTT packet after the transport `send` function failed to transmit any bytes for too long. This timeout would reset each time the transport `send` function sent any bytes, leading to the actual timeout scaling with the number of bytes being sent. In other words, the maximum time for sending a packet was variable. In order to remedy this, the `MQTT_SEND_RETRY_TIMEOUT_MS` macro was replaced with `MQTT_SEND_TIMEOUT_MS`. `MQTT_SEND_TIMEOUT_MS` now sets the maximum duration that coreMQTT will attempt to send an MQTT packet, leading to more consistent timeout behavior across various APIs and packet lengths.
 
 ### Additional Changes
 
