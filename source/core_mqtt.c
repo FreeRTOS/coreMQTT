@@ -81,8 +81,8 @@
  * repeatedly to send bytes over the network until either:
  * 1. The requested number of bytes @a bytesToSend have been sent.
  *                    OR
- * 2. No byte cannot be sent over the network for the MQTT_SEND_RETRY_TIMEOUT_MS
- * duration.
+ * 2. MQTT_SEND_TIMEOUT_MS milliseconds have gone by since entering this
+ * function.
  *                    OR
  * 3. There is an error in sending data over the network.
  *
@@ -105,8 +105,8 @@ static int32_t sendBuffer( MQTTContext_t * pContext,
  * repeatedly to send bytes over the network until either:
  * 1. The requested number of bytes @a remainingLength have been sent.
  *                    OR
- * 2. No byte cannot be sent over the network for the MQTT_SEND_RETRY_TIMEOUT_MS
- * duration.
+ * 2. MQTT_SEND_TIMEOUT_MS milliseconds have gone by since entering this
+ * function.
  *                    OR
  * 3. There is an error in sending data over the network.
  *
@@ -120,13 +120,22 @@ static MQTTStatus_t sendConnectWithoutCopy( MQTTContext_t * pContext,
 /**
  * @brief Sends the vector array passed through the parameters over the network.
  *
- * @note The preference is given to 'write' function if it is present in the
+ * @note The preference is given to 'writev' function if it is present in the
  * transport interface. Otherwise, a send call is made repeatedly to achieve the
  * result.
  *
  * @param[in] pContext Initialized MQTT context.
  * @param[in] pIoVec The vector array to be sent.
  * @param[in] ioVecCount The number of elements in the array.
+ * 
+ * @note This operation may call the transport send or writev functions
+ * repeatedly to send bytes over the network until either:
+ * 1. The requested number of bytes have been sent.
+ *                    OR
+ * 2. MQTT_SEND_TIMEOUT_MS milliseconds have gone by since entering this
+ * function.
+ *                    OR
+ * 3. There is an error in sending data over the network.
  *
  * @return The total number of bytes sent or the error code as received from the
  * transport interface.
@@ -734,13 +743,11 @@ static int32_t sendMessageVector( MQTTContext_t * pContext,
                                   size_t ioVecCount )
 {
     int32_t sendResult;
-    uint32_t lastSendTimeMs;
-    uint32_t timeSinceLastSendMs;
+    uint32_t timeoutMs;
     TransportOutVector_t * pIoVectIterator;
     size_t vectorsToBeSent = ioVecCount;
     size_t bytesToSend = 0U;
     int32_t bytesSentOrError = 0;
-
 
     assert( pContext != NULL );
     assert( pIoVec != NULL );
@@ -757,10 +764,8 @@ static int32_t sendMessageVector( MQTTContext_t * pContext,
     /* Reset the iterator to point to the first entry in the array. */
     pIoVectIterator = pIoVec;
 
-    /* This initializes the last send time to the current time to cover the case
-     * where the transport send function returns 0 on the first iteration of the
-     * while loop. */
-    lastSendTimeMs = pContext->getTime();
+    /* Set the timeout. */
+    timeoutMs = pContext->getTime() + MQTT_SEND_TIMEOUT_MS;
 
     while( ( bytesSentOrError < ( int32_t ) bytesToSend ) && ( bytesSentOrError >= 0 ) )
     {
@@ -785,8 +790,8 @@ static int32_t sendMessageVector( MQTTContext_t * pContext,
 
             bytesSentOrError += sendResult;
 
-            /* Reset timeout since data was sent. */
-            lastSendTimeMs = pContext->getTime();
+            /* Set last transmission time. */
+            pContext->lastPacketTxTime = pContext->getTime();
 
             LogDebug( ( "sendMessageVector: Bytes Sent=%ld, Bytes Remaining=%lu",
                         ( long int ) sendResult,
@@ -795,16 +800,15 @@ static int32_t sendMessageVector( MQTTContext_t * pContext,
         else if( sendResult < 0 )
         {
             bytesSentOrError = sendResult;
+            LogError( ( "sendMessageVector: Unable to send packet: Network Error." ) );
         }
         else
         {
             /* MISRA Empty body */
         }
 
-        /* Check for timeout if we have been waiting to send any data over the network. */
-        timeSinceLastSendMs = calculateElapsedTime( pContext->getTime(), lastSendTimeMs );
-
-        if( timeSinceLastSendMs >= MQTT_SEND_RETRY_TIMEOUT_MS )
+        /* Check for timeout. */
+        if( pContext->getTime() >= timeoutMs )
         {
             LogError( ( "sendMessageVector: Unable to send packet: Timed out." ) );
             break;
@@ -830,13 +834,6 @@ static int32_t sendMessageVector( MQTTContext_t * pContext,
         }
     }
 
-    if( bytesSentOrError > 0 )
-    {
-        pContext->lastPacketTxTime = lastSendTimeMs;
-        LogDebug( ( "sendMessageVector: Successfully sent packet at time %lu.",
-                    ( unsigned long ) lastSendTimeMs ) );
-    }
-
     return bytesSentOrError;
 }
 
@@ -845,8 +842,7 @@ static int32_t sendBuffer( MQTTContext_t * pContext,
                            size_t bytesToSend )
 {
     int32_t sendResult;
-    uint32_t lastSendTimeMs;
-    uint32_t timeSinceLastSendMs;
+    uint32_t timeoutMs;
     int32_t bytesSentOrError = 0;
     const uint8_t * pIndex = pBufferToSend;
 
@@ -855,10 +851,8 @@ static int32_t sendBuffer( MQTTContext_t * pContext,
     assert( pContext->transportInterface.send != NULL );
     assert( pIndex != NULL );
 
-    /* This initializes the last send time to the current time to cover the case
-     * where the transport send function returns 0 on the first iteration of the
-     * while loop. */
-    lastSendTimeMs = pContext->getTime();
+    /* Set the timeout. */
+    timeoutMs = pContext->getTime() + MQTT_SEND_TIMEOUT_MS;
 
     while( ( bytesSentOrError < ( int32_t ) bytesToSend ) && ( bytesSentOrError >= 0 ) )
     {
@@ -875,8 +869,8 @@ static int32_t sendBuffer( MQTTContext_t * pContext,
             bytesSentOrError += sendResult;
             pIndex = &pIndex[ sendResult ];
 
-            /* Reset timeout since data was sent. */
-            lastSendTimeMs = pContext->getTime();
+            /* Set last transmission time. */
+            pContext->lastPacketTxTime = pContext->getTime();
 
             LogDebug( ( "sendBuffer: Bytes Sent=%ld, Bytes Remaining=%lu",
                         ( long int ) sendResult,
@@ -885,27 +879,19 @@ static int32_t sendBuffer( MQTTContext_t * pContext,
         else if( sendResult < 0 )
         {
             bytesSentOrError = sendResult;
+            LogError( ( "sendBuffer: Unable to send packet: Network Error." ) );
         }
         else
         {
             /* MISRA Empty body */
         }
 
-        timeSinceLastSendMs = calculateElapsedTime( pContext->getTime(), lastSendTimeMs );
-
-        /* Check for timeout if we have been waiting to send any data over the network. */
-        if( timeSinceLastSendMs >= MQTT_SEND_RETRY_TIMEOUT_MS )
+        /* Check for timeout. */
+        if( pContext->getTime() >= timeoutMs )
         {
             LogError( ( "sendBuffer: Unable to send packet: Timed out." ) );
             break;
         }
-    }
-
-    if( bytesSentOrError > 0 )
-    {
-        pContext->lastPacketTxTime = lastSendTimeMs;
-        LogDebug( ( "sendBuffer: Successfully sent packet at time %lu.",
-                    ( unsigned long ) lastSendTimeMs ) );
     }
 
     return bytesSentOrError;
