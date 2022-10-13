@@ -36,12 +36,6 @@ INCLUDES +=
 
 REMOVE_FUNCTION_BODY +=
 REMOVE_FUNCTION_BODY +=
-# Unlike recvExact, sendBuffer is not bounded by the timeout. The loop in
-# sendBuffer will continue until all the bytes are sent or a network error
-# occurs. Please see NetworkInterfaceReceiveStub in
-# libraries\standard\mqtt\cbmc\stubs\network_interface_stubs.c for more
-# information.
-UNWINDSET += __CPROVER_file_local_core_mqtt_c_sendBuffer.0:$(MAX_NETWORK_SEND_TRIES)
 # These loops will run for the maximum number of publishes pending acknowledgement.
 # This is set in test/cbmc/include/core_mqtt_config.h.
 UNWINDSET += __CPROVER_file_local_core_mqtt_state_c_addRecord.0:$(MQTT_STATE_ARRAY_MAX_COUNT)
