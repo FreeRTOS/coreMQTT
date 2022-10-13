@@ -258,7 +258,7 @@ typedef struct MQTTDeserializedInfo
  * there is no time implementation, it is the responsibility of the application
  * to provide a dummy function to always return 0, provide 0 timeouts for
  * all calls to #MQTT_Connect, #MQTT_ProcessLoop, and #MQTT_ReceiveLoop and configure
- * the #MQTT_RECV_POLLING_TIMEOUT_MS and #MQTT_SEND_RETRY_TIMEOUT_MS configurations
+ * the #MQTT_RECV_POLLING_TIMEOUT_MS and #MQTT_SEND_TIMEOUT_MS configurations
  * to be 0. This will result in loop functions running for a single iteration, and
  * #MQTT_Connect relying on #MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT to receive the CONNACK packet.
  *
@@ -420,7 +420,7 @@ MQTTStatus_t MQTT_InitStatefulQoS( MQTTContext_t * pContext,
  *
  * @note If a dummy #MQTTGetCurrentTimeFunc_t was passed to #MQTT_Init, then a
  * timeout value of 0 MUST be passed to the API, and the #MQTT_RECV_POLLING_TIMEOUT_MS
- * and #MQTT_SEND_RETRY_TIMEOUT_MS timeout configurations MUST be set to 0.
+ * and #MQTT_SEND_TIMEOUT_MS timeout configurations MUST be set to 0.
  *
  * @param[in] pContext Initialized MQTT context.
  * @param[in] pConnectInfo MQTT CONNECT packet information.
@@ -736,7 +736,7 @@ MQTTStatus_t MQTT_Disconnect( MQTTContext_t * pContext );
  *
  * @note Calling this function blocks the calling context for a time period that
  * depends on the passed the configuration macros, #MQTT_RECV_POLLING_TIMEOUT_MS
- * and #MQTT_SEND_RETRY_TIMEOUT_MS, and the underlying transport interface implementation
+ * and #MQTT_SEND_TIMEOUT_MS, and the underlying transport interface implementation
  * timeouts, unless an error occurs. The blocking period also depends on the execution time of the
  * #MQTTEventCallback_t callback supplied to the library. It is recommended that the supplied
  * #MQTTEventCallback_t callback does not contain blocking operations to prevent potential
@@ -787,14 +787,14 @@ MQTTStatus_t MQTT_ProcessLoop( MQTTContext_t * pContext );
  * keep alive.
  *
  * @note If a dummy #MQTTGetCurrentTimeFunc_t was passed to #MQTT_Init, then the
- * #MQTT_RECV_POLLING_TIMEOUT_MS and #MQTT_SEND_RETRY_TIMEOUT_MS timeout configurations
+ * #MQTT_RECV_POLLING_TIMEOUT_MS and #MQTT_SEND_TIMEOUT_MS timeout configurations
  * MUST be set to 0.
  *
  * @param[in] pContext Initialized and connected MQTT context.
  *
  * @note Calling this function blocks the calling context for a time period that
  * depends on the the configuration macros, #MQTT_RECV_POLLING_TIMEOUT_MS and
- * #MQTT_SEND_RETRY_TIMEOUT_MS, and the underlying transport interface implementation
+ * #MQTT_SEND_TIMEOUT_MS, and the underlying transport interface implementation
  * timeouts, unless an error occurs. The blocking period also depends on the execution time of the
  * #MQTTEventCallback_t callback supplied to the library. It is recommended that the supplied
  * #MQTTEventCallback_t callback does not contain blocking operations to prevent potential
