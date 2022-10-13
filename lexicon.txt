@@ -148,6 +148,7 @@ mib
 min
 minimise
 misra
+mit
 modifyincomingpacket
 mq
 mqtt
@@ -370,6 +371,7 @@ somepassword
 sometransportcontext
 someusername
 sourcelength
+spdx
 src
 stateafterdeserialize
 stateafterserialize
