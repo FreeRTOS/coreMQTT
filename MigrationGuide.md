@@ -13,11 +13,11 @@ MQTTStatus_t status;
 uint32_t timeoutMs = 100;
 // This context is assumed to be initialized and connected.
 MQTTContext_t * pContext;
- 
+
 while( true )
 {
      status = MQTT_ProcessLoop( pContext, timeoutMs );
- 
+
      if( status != MQTTSuccess )
      {
          // Determine the error. It's possible we might need to disconnect
@@ -35,11 +35,11 @@ while( true )
 MQTTStatus_t status;
 // This context is assumed to be initialized and connected.
 MQTTContext_t * pContext;
- 
+
 while( true )
 {
      status = MQTT_ProcessLoop( pContext );
- 
+
      if( status != MQTTSuccess && status != MQTTNeedMoreBytes )
      {
          // Determine the error. It's possible we might need to disconnect
@@ -61,11 +61,11 @@ MQTTStatus_t status;
 uint32_t timeoutMs = 100;
 // This context is assumed to be initialized and connected.
 MQTTContext_t * pContext;
- 
+
 while( true )
 {
      status = MQTT_ReceiveLoop( pContext, timeoutMs );
- 
+
      if( status != MQTTSuccess )
      {
          // Determine the error. It's possible we might need to disconnect
@@ -83,11 +83,11 @@ while( true )
 MQTTStatus_t status;
 // This context is assumed to be initialized and connected.
 MQTTContext_t * pContext;
- 
+
 while( true )
 {
      status = MQTT_ReceiveLoop( pContext );
- 
+
      if( status != MQTTSuccess && status != MQTTNeedMoreBytes )
      {
          // Determine the error. It's possible we might need to disconnect
@@ -136,26 +136,26 @@ void eventCallback(
 int32_t networkSend( NetworkContext_t * pContext, const void * pBuffer, size_t bytes );
 // Network receive.
 int32_t networkRecv( NetworkContext_t * pContext, void * pBuffer, size_t bytes );
- 
+
 MQTTContext_t mqttContext;
 TransportInterface_t transport;
 MQTTFixedBuffer_t fixedBuffer;
 uint8_t buffer[ 1024 ];
- 
+
 // Clear context.
 memset( ( void * ) &mqttContext, 0x00, sizeof( MQTTContext_t ) );
- 
+
 // Set transport interface members.
 transport.pNetworkInterface = &someNetworkInterface;
 transport.send = networkSend;
 transport.recv = networkRecv;
- 
+
 // Set buffer members.
 fixedBuffer.pBuffer = buffer;
 fixedBuffer.size = 1024;
- 
+
 status = MQTT_Init( &mqttContext, &transport, getTimeStampMs, eventCallback, &fixedBuffer );
- 
+
 if( status == MQTTSuccess )
 {
      // Do something with mqttContext. The transport and fixedBuffer structs were
@@ -176,7 +176,7 @@ void eventCallback(
 int32_t networkSend( NetworkContext_t * pContext, const void * pBuffer, size_t bytes );
 // Network receive.
 int32_t networkRecv( NetworkContext_t * pContext, void * pBuffer, size_t bytes );
- 
+
 MQTTContext_t mqttContext;
 TransportInterface_t transport;
 MQTTFixedBuffer_t fixedBuffer;
@@ -186,27 +186,27 @@ static MQTTPubAckInfo_t pIncomingPublishRecords[ INCOMING_PUBLISH_RECORD_COUNT ]
 
 // Clear context.
 memset( ( void * ) &mqttContext, 0x00, sizeof( MQTTContext_t ) );
- 
+
 // Set transport interface members.
 transport.pNetworkInterface = &someNetworkInterface;
 transport.send = networkSend;
 transport.recv = networkRecv;
 transport.writev = NULL;
- 
+
 // Set buffer members.
 fixedBuffer.pBuffer = buffer;
 fixedBuffer.size = 1024;
- 
+
 status = MQTT_Init( &mqttContext, &transport, getTimeStampMs, eventCallback, &fixedBuffer );
 
 if( status == MQTTSuccess )
 {
     // Initialize MQTT context for QoS > 0. This only has to be done if
     // performing QoS > 0 operations.
-    status = MQTT_InitStatefulQoS(pxMQTTContext, 
-                                   pOutgoingPublishRecords, 
-                                   OUTGOING_PUBLISH_RECORD_COUNT, 
-                                   pIncomingPublishRecords, 
+    status = MQTT_InitStatefulQoS(pxMQTTContext,
+                                   pOutgoingPublishRecords,
+                                   OUTGOING_PUBLISH_RECORD_COUNT,
+                                   pIncomingPublishRecords,
                                    INCOMING_PUBLISH_RECORD_COUNT);
 }
 
