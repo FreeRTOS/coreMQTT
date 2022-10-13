@@ -192,7 +192,7 @@
 #endif
 
 #ifdef MQTT_SEND_RETRY_TIMEOUT_MS
-    #warning MQTT_SEND_RETRY_TIMEOUT_MS is deprecated. Instead use MQTT_SEND_TIMEOUT_MS
+    #error MQTT_SEND_RETRY_TIMEOUT_MS is deprecated. Instead use MQTT_SEND_TIMEOUT_MS.
 #endif
 
 /* *INDENT-OFF* */
