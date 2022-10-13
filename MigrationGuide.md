@@ -105,7 +105,7 @@ while( true )
 }
 ```
 
-The `TransportInterface_t` structure now has a new member `writev` that can be defined to allow sending multiple MQTT message vectors as a single packet. This can improve performance, but is not necessary to implement. However, when programs initialize a `TransportInterface_t` structure, they **MUST** either set `writev` to a working implementation or set it `NULL`. Not doing this will lead to undefined behavior as the coreMQTT library checks if `writev` is `NULL` to determine if it should be used. For example:
+The `TransportInterface_t` structure now has a new member `writev`. It uses scatter-gather approach to send multiple MQTT packet components as a single packet to reduce overhead and improve performance. However, it is COMPLETELY OPTIONAL to implement. To that end, when application(s) initialize a `TransportInterface_t` structure, they **MUST** either set `writev` to a working implementation or set it `NULL`. Not doing this will lead to undefined behavior as the coreMQTT library checks if `writev` is `NULL` to determine if it should be used. For example:
 
 **Old Code Snippet**:
 ```
