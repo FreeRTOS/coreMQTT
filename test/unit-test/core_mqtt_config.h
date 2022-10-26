@@ -75,6 +75,6 @@ struct NetworkContext
     uint8_t ** buffer;
 };
 
-#define MQTT_SUB_UNSUB_MAX_VECTORS    ( 8U )
+#define MQTT_SUB_UNSUB_MAX_VECTORS    ( 6U )
 
 #endif /* ifndef CORE_MQTT_CONFIG_H_ */

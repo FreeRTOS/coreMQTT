@@ -1881,13 +1881,14 @@ static MQTTStatus_t sendSubscribeWithoutCopy( MQTTContext_t * pContext,
     uint8_t * pIndex;
     TransportOutVector_t pIoVector[ MQTT_SUB_UNSUB_MAX_VECTORS ];
     TransportOutVector_t * pIterator;
-    uint8_t serializedTopicFieldLength[ 2 ];
+    uint8_t serializedTopicFieldLength[ MQTT_SUB_UNSUB_MAX_VECTORS ][ 2 ];
     size_t totalPacketLength = 0U;
     size_t ioVectorLength = 0U;
     size_t subscriptionsSent = 0U;
     /* For subscribe, only three vector slots are required per topic string. */
     const size_t subscriptionStringVectorSlots = 3U;
     size_t vectorsAdded;
+    size_t topicFieldLengthIndex;
 
     /* The vector array should be at least three element long as the topic
      * string needs these many vector elements to be stored. */
@@ -1913,13 +1914,16 @@ static MQTTStatus_t sendSubscribeWithoutCopy( MQTTContext_t * pContext,
 
     while( ( status == MQTTSuccess ) && ( subscriptionsSent < subscriptionCount ) )
     {
+        /* Reset the index for next iteration. */
+        topicFieldLengthIndex = 0;
+
         /* Check whether the subscription topic (with QoS) will fit in the
          * given vector. */
         while( ( ioVectorLength <= ( MQTT_SUB_UNSUB_MAX_VECTORS - subscriptionStringVectorSlots ) ) &&
                ( subscriptionsSent < subscriptionCount ) )
         {
             /* The topic filter gets sent next. */
-            vectorsAdded = addEncodedStringToVector( serializedTopicFieldLength,
+            vectorsAdded = addEncodedStringToVector( serializedTopicFieldLength[ topicFieldLengthIndex ],
                                                      pSubscriptionList[ subscriptionsSent ].pTopicFilter,
                                                      pSubscriptionList[ subscriptionsSent ].topicFilterLength,
                                                      pIterator,
@@ -1941,6 +1945,9 @@ static MQTTStatus_t sendSubscribeWithoutCopy( MQTTContext_t * pContext,
             ioVectorLength += subscriptionStringVectorSlots;
 
             subscriptionsSent++;
+
+            /* The index needs to be updated for next iteration. */
+            topicFieldLengthIndex++;
         }
 
         if( sendMessageVector( pContext,
@@ -1974,13 +1981,14 @@ static MQTTStatus_t sendUnsubscribeWithoutCopy( MQTTContext_t * pContext,
     uint8_t * pIndex;
     TransportOutVector_t pIoVector[ MQTT_SUB_UNSUB_MAX_VECTORS ];
     TransportOutVector_t * pIterator;
-    uint8_t serializedTopicFieldLength[ 2 ];
+    uint8_t serializedTopicFieldLength[ MQTT_SUB_UNSUB_MAX_VECTORS ][ 2 ];
     size_t totalPacketLength = 0U;
     size_t unsubscriptionsSent = 0U;
     size_t ioVectorLength = 0U;
     /* For unsubscribe, only two vector slots are required per topic string. */
     const size_t subscriptionStringVectorSlots = 2U;
     size_t vectorsAdded;
+    size_t topicFieldLengthIndex;
 
     /* The vector array should be at least three element long as the topic
      * string needs these many vector elements to be stored. */
@@ -2006,12 +2014,15 @@ static MQTTStatus_t sendUnsubscribeWithoutCopy( MQTTContext_t * pContext,
 
     while( ( status == MQTTSuccess ) && ( unsubscriptionsSent < subscriptionCount ) )
     {
+        /* Reset the index for next iteration. */
+        topicFieldLengthIndex = 0;
+
         /* Check whether the subscription topic will fit in the given vector. */
         while( ( ioVectorLength <= ( MQTT_SUB_UNSUB_MAX_VECTORS - subscriptionStringVectorSlots ) ) &&
                ( unsubscriptionsSent < subscriptionCount ) )
         {
             /* The topic filter gets sent next. */
-            vectorsAdded = addEncodedStringToVector( serializedTopicFieldLength,
+            vectorsAdded = addEncodedStringToVector( serializedTopicFieldLength[ topicFieldLengthIndex ],
                                                      pSubscriptionList[ unsubscriptionsSent ].pTopicFilter,
                                                      pSubscriptionList[ unsubscriptionsSent ].topicFilterLength,
                                                      pIterator,
@@ -2023,6 +2034,9 @@ static MQTTStatus_t sendUnsubscribeWithoutCopy( MQTTContext_t * pContext,
             ioVectorLength += subscriptionStringVectorSlots;
 
             unsubscriptionsSent++;
+
+            /* Update the index for next iteration. */
+            topicFieldLengthIndex++;
         }
 
         if( sendMessageVector( pContext, pIoVector, ioVectorLength ) != ( int32_t ) totalPacketLength )
