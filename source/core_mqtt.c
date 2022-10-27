@@ -1940,9 +1940,9 @@ static MQTTStatus_t sendSubscribeWithoutCopy( MQTTContext_t * pContext,
             /* Increment the pointer. */
             pIterator++;
 
-            /* Two slots get used by the topic string length and topic string. And
-             * one slot gets used by the quality of service. */
-            ioVectorLength += subscriptionStringVectorSlots;
+            /* Two slots get used by the topic string length and topic string.
+             * One slot gets used by the quality of service. */
+            ioVectorLength += vectorsAdded + 1U;
 
             subscriptionsSent++;
 
@@ -1986,13 +1986,13 @@ static MQTTStatus_t sendUnsubscribeWithoutCopy( MQTTContext_t * pContext,
     size_t unsubscriptionsSent = 0U;
     size_t ioVectorLength = 0U;
     /* For unsubscribe, only two vector slots are required per topic string. */
-    const size_t subscriptionStringVectorSlots = 2U;
+    const size_t unsubscribeStringVectorSlots = 2U;
     size_t vectorsAdded;
     size_t topicFieldLengthIndex;
 
     /* The vector array should be at least three element long as the topic
      * string needs these many vector elements to be stored. */
-    assert( MQTT_SUB_UNSUB_MAX_VECTORS >= subscriptionStringVectorSlots );
+    assert( MQTT_SUB_UNSUB_MAX_VECTORS >= unsubscribeStringVectorSlots );
 
     pIndex = unsubscribeheader;
     pIterator = pIoVector;
@@ -2018,7 +2018,7 @@ static MQTTStatus_t sendUnsubscribeWithoutCopy( MQTTContext_t * pContext,
         topicFieldLengthIndex = 0;
 
         /* Check whether the subscription topic will fit in the given vector. */
-        while( ( ioVectorLength <= ( MQTT_SUB_UNSUB_MAX_VECTORS - subscriptionStringVectorSlots ) ) &&
+        while( ( ioVectorLength <= ( MQTT_SUB_UNSUB_MAX_VECTORS - unsubscribeStringVectorSlots ) ) &&
                ( unsubscriptionsSent < subscriptionCount ) )
         {
             /* The topic filter gets sent next. */
@@ -2030,8 +2030,8 @@ static MQTTStatus_t sendUnsubscribeWithoutCopy( MQTTContext_t * pContext,
 
             /* Update the iterator to point to the next empty location. */
             pIterator = &pIterator[ vectorsAdded ];
-            /* Two slots get used by the topic string length and topic string. */
-            ioVectorLength += subscriptionStringVectorSlots;
+            /* Update the total count based on how many vectors were added. */
+            ioVectorLength += vectorsAdded;
 
             unsubscriptionsSent++;
 
