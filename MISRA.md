@@ -1,6 +1,6 @@
 # MISRA Compliance
 
-The coreMQTT library files conform to the [MISRA C:2012](https://www.misra.org.uk/MISRAHome/MISRAC2012/tabid/196/Default.aspx)
+The coreMQTT library files conform to the [MISRA C:2012](https://www.misra.org.uk/misra-c)
 guidelines, with the deviations listed below. Compliance is checked with Coverity static analysis.
 Since the coreMQTT library is designed for small-embedded devices, it needs to have a very small memory footprint and has to
 be efficient. To achieve that and to increase the performace of the library, it deviates from some MISRA rules.
