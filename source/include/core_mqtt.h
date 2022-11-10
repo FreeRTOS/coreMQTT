@@ -1,5 +1,5 @@
 /*
- * coreMQTT v2.1.0
+ * coreMQTT v2.1.1
  * Copyright (C) 2022 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * SPDX-License-Identifier: MIT
@@ -45,7 +45,7 @@
  * @cond DOXYGEN_IGNORE
  * The current version of this library.
  */
-#define MQTT_LIBRARY_VERSION    "v2.1.0"
+#define MQTT_LIBRARY_VERSION    "v2.1.1"
 /** @endcond */
 
 /**

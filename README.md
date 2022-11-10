@@ -6,7 +6,7 @@ This library has gone through code quality checks including verification that no
 
 See memory requirements for this library [here](./docs/doxygen/include/size_table.md).
 
-**coreMQTT v2.1.0 [source code](https://github.com/FreeRTOS/coreMQTT/tree/v2.1.0/source) is part of the [FreeRTOS 202210.00 LTS](https://github.com/FreeRTOS/FreeRTOS-LTS/tree/202210.00-LTS) release.**
+**coreMQTT v2.1.1 [source code](https://github.com/FreeRTOS/coreMQTT/tree/v2.1.1/source) is part of the [FreeRTOS 202210.01 LTS](https://github.com/FreeRTOS/FreeRTOS-LTS/tree/202210.01-LTS) release.**
 
 ## MQTT Config File
 
@@ -47,17 +47,17 @@ is an empty value.
 
 Example
 
-*  Actual_Username = “iotuser”, OS_Name = FreeRTOS, OS_Version = V10.4.3, Hardware_Platform_Name = WinSim, MQTT_Library_Name = coremqtt, MQTT_Library_version = 2.1.0. If username is not used, then “iotuser” can be removed.
+*  Actual_Username = “iotuser”, OS_Name = FreeRTOS, OS_Version = V10.4.3, Hardware_Platform_Name = WinSim, MQTT_Library_Name = coremqtt, MQTT_Library_version = 2.1.1. If username is not used, then “iotuser” can be removed.
 
 ```
 /* Username string:
- * iotuser?SDK=FreeRTOS&Version=v10.4.3&Platform=WinSim&MQTTLib=coremqtt@2.1.0
+ * iotuser?SDK=FreeRTOS&Version=v10.4.3&Platform=WinSim&MQTTLib=coremqtt@2.1.1
  */
 
 #define OS_NAME                   "FreeRTOS"
 #define OS_VERSION                "V10.4.3"
 #define HARDWARE_PLATFORM_NAME    "WinSim"
-#define MQTT_LIB                  "coremqtt@2.1.0"
+#define MQTT_LIB                  "coremqtt@2.1.1"
 
 #define USERNAME_STRING           "iotuser?SDK=" OS_NAME "&Version=" OS_VERSION "&Platform=" HARDWARE_PLATFORM_NAME "&MQTTLib=" MQTT_LIB
 #define USERNAME_STRING_LENGTH    ( ( uint16_t ) ( sizeof( USERNAME_STRING ) - 1 ) )
