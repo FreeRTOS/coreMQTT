@@ -522,7 +522,7 @@ void test_MQTT_GetConnectPacketSize( void )
 void test_MQTT_SerializeConnect( void )
 {
     MQTTConnectInfo_t connectInfo;
-    MQTTPublishInfo_t willInfo;
+    MQTTPublishInfo_t willInfo = { 0 };
     size_t remainingLength = 0;
     uint8_t buffer[ 70 + 2 * BUFFER_PADDING_LENGTH ];
     size_t bufferSize = sizeof( buffer ) - 2 * BUFFER_PADDING_LENGTH;
@@ -2310,7 +2310,7 @@ void test_MQTT_SerializePublishHeader( void )
 
 void test_MQTT_ProcessIncomingPacketTypeAndLength_PacketNULL( void )
 {
-    uint8_t pBuffer[ 100 ];
+    uint8_t pBuffer[ 100 ] = { 0 };
     size_t index = 0;
     MQTTStatus_t status;
 
@@ -2337,7 +2337,7 @@ void test_MQTT_ProcessIncomingPacketTypeAndLength_BufferNULL( void )
 void test_MQTT_ProcessIncomingPacketTypeAndLength_IndexNULL( void )
 {
     MQTTPacketInfo_t packetInfo;
-    uint8_t pBuffer[ 100 ];
+    uint8_t pBuffer[ 100 ] = { 0 };
     MQTTStatus_t status;
 
     status = MQTT_ProcessIncomingPacketTypeAndLength( pBuffer, NULL, &packetInfo );
@@ -2350,7 +2350,7 @@ void test_MQTT_ProcessIncomingPacketTypeAndLength_IndexNULL( void )
 void test_MQTT_ProcessIncomingPacketTypeAndLength_NoData( void )
 {
     MQTTPacketInfo_t packetInfo;
-    uint8_t pBuffer[ 100 ];
+    uint8_t pBuffer[ 100 ] = { 0 };
     size_t index = 0;
     MQTTStatus_t status;
 
@@ -2698,7 +2698,7 @@ void test_MQTT_SerializeConnect_Invalid_Params()
 {
     MQTTStatus_t mqttStatus = MQTTSuccess;
     size_t remainingLength = 0UL, packetSize = 0UL;
-    MQTTFixedBuffer_t networkBuffer;
+    MQTTFixedBuffer_t networkBuffer = { 0 };
     MQTTConnectInfo_t connectInfo;
 
     /* Test NULL pConnectInfo. */

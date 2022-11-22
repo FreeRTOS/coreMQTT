@@ -164,7 +164,7 @@ void test_MQTT_ReserveState( void )
     const uint16_t PACKET_ID3 = 3;
     const size_t index = MQTT_STATE_ARRAY_MAX_COUNT / 2;
     TransportInterface_t transport;
-    MQTTFixedBuffer_t networkBuffer;
+    MQTTFixedBuffer_t networkBuffer = { 0 };
 
     transport.recv = transportRecvSuccess;
     transport.send = transportSendSuccess;
@@ -371,7 +371,7 @@ void test_MQTT_ReserveState_compactRecords( void )
     const uint16_t PACKET_ID2 = 2;
 
     TransportInterface_t transport;
-    MQTTFixedBuffer_t networkBuffer;
+    MQTTFixedBuffer_t networkBuffer = { 0 };
 
     transport.recv = transportRecvSuccess;
     transport.send = transportSendSuccess;
@@ -547,7 +547,7 @@ void test_MQTT_UpdateStatePublish( void )
     MQTTStatus_t status;
 
     TransportInterface_t transport;
-    MQTTFixedBuffer_t networkBuffer;
+    MQTTFixedBuffer_t networkBuffer = { 0 };
 
     transport.recv = transportRecvSuccess;
     transport.send = transportSendSuccess;
@@ -757,7 +757,7 @@ void test_MQTT_UpdateStateAck( void )
 
     const uint16_t PACKET_ID = 1;
     TransportInterface_t transport;
-    MQTTFixedBuffer_t networkBuffer;
+    MQTTFixedBuffer_t networkBuffer = { 0 };
 
     transport.recv = transportRecvSuccess;
     transport.send = transportSendSuccess;
@@ -954,7 +954,7 @@ void test_MQTT_AckToResend( void )
     MQTTPubAckInfo_t outgoingRecords[ MQTT_STATE_ARRAY_MAX_COUNT ] = { 0 };
     MQTTStatus_t status;
     TransportInterface_t transport;
-    MQTTFixedBuffer_t networkBuffer;
+    MQTTFixedBuffer_t networkBuffer = { 0 };
 
     transport.recv = transportRecvSuccess;
     transport.send = transportSendSuccess;
