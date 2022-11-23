@@ -172,8 +172,6 @@ typedef enum MQTTSubscriptionType
  * serialized.
  * @brief param[in] serializePayload Copy payload to the serialized buffer
  * only if true. Only PUBLISH header will be serialized if false.
- *
- * @return Total number of bytes sent; -1 if there is an error.
  */
 static void serializePublishCommon( const MQTTPublishInfo_t * pPublishInfo,
                                     size_t remainingLength,
