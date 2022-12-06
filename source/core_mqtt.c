@@ -773,13 +773,13 @@ static int32_t sendMessageVector( MQTTContext_t * pContext,
     {
         if( pContext->transportInterface.writev != NULL )
         {
-            sendResult = pContext->transportInterface.writev( pContext->transportInterface.pNetworkContext,
+            sendResult = pContext->transportInterface.writev( pContext->pNetworkContext,
                                                               pIoVectIterator,
                                                               vectorsToBeSent );
         }
         else
         {
-            sendResult = pContext->transportInterface.send( pContext->transportInterface.pNetworkContext,
+            sendResult = pContext->transportInterface.send( pContext->pNetworkContext,
                                                             pIoVectIterator->iov_base,
                                                             pIoVectIterator->iov_len );
         }
@@ -858,7 +858,7 @@ static int32_t sendBuffer( MQTTContext_t * pContext,
 
     while( ( bytesSentOrError < ( int32_t ) bytesToSend ) && ( bytesSentOrError >= 0 ) )
     {
-        sendResult = pContext->transportInterface.send( pContext->transportInterface.pNetworkContext,
+        sendResult = pContext->transportInterface.send( pContext->pNetworkContext,
                                                         pIndex,
                                                         bytesToSend - ( size_t ) bytesSentOrError );
 
@@ -968,7 +968,7 @@ static int32_t recvExact( const MQTTContext_t * pContext,
 
     while( ( bytesRemaining > 0U ) && ( receiveError == false ) )
     {
-        bytesRecvd = recvFunc( pContext->transportInterface.pNetworkContext,
+        bytesRecvd = recvFunc( pContext->pNetworkContext,
                                pIndex,
                                bytesRemaining );
 
@@ -1655,7 +1655,7 @@ static MQTTStatus_t receiveSingleIteration( MQTTContext_t * pContext,
     assert( pContext->networkBuffer.pBuffer != NULL );
 
     /* Read as many bytes as possible into the network buffer. */
-    recvBytes = pContext->transportInterface.recv( pContext->transportInterface.pNetworkContext,
+    recvBytes = pContext->transportInterface.recv( pContext->pNetworkContext,
                                                    &( pContext->networkBuffer.pBuffer[ pContext->index ] ),
                                                    pContext->networkBuffer.size - pContext->index );
 
@@ -2274,7 +2274,7 @@ static MQTTStatus_t receiveConnack( const MQTTContext_t * pContext,
          * returned after a transport receive timeout, an error, or a successful
          * receive of packet type and length. */
         status = MQTT_GetIncomingPacketTypeAndLength( pContext->transportInterface.recv,
-                                                      pContext->transportInterface.pNetworkContext,
+                                                      pContext->pNetworkContext,
                                                       pIncomingPacket );
 
         /* The loop times out based on 2 conditions.
@@ -2467,6 +2467,7 @@ static MQTTStatus_t validatePublishParams( const MQTTContext_t * pContext,
 
 MQTTStatus_t MQTT_Init( MQTTContext_t * pContext,
                         const TransportInterface_t * pTransportInterface,
+                        void * pNetworkContext,
                         MQTTGetCurrentTimeFunc_t getTimeFunction,
                         MQTTEventCallback_t userCallback,
                         const MQTTFixedBuffer_t * pNetworkBuffer )
@@ -2475,14 +2476,16 @@ MQTTStatus_t MQTT_Init( MQTTContext_t * pContext,
 
     /* Validate arguments. */
     if( ( pContext == NULL ) || ( pTransportInterface == NULL ) ||
-        ( pNetworkBuffer == NULL ) )
+        ( pNetworkBuffer == NULL ) || ( pNetworkContext == NULL ) )
     {
         LogError( ( "Argument cannot be NULL: pContext=%p, "
                     "pTransportInterface=%p, "
-                    "pNetworkBuffer=%p",
+                    "pNetworkBuffer=%p, "
+                    "pNetworkContext=%p",
                     ( void * ) pContext,
                     ( void * ) pTransportInterface,
-                    ( void * ) pNetworkBuffer ) );
+                    ( void * ) pNetworkBuffer,
+                    ( void * ) pNetworkContext ) );
         status = MQTTBadParameter;
     }
     else if( getTimeFunction == NULL )
@@ -2511,6 +2514,7 @@ MQTTStatus_t MQTT_Init( MQTTContext_t * pContext,
 
         pContext->connectStatus = MQTTNotConnected;
         pContext->transportInterface = *pTransportInterface;
+        pContext->pNetworkContext = pNetworkContext;
         pContext->getTime = getTimeFunction;
         pContext->appCallback = userCallback;
         pContext->networkBuffer = *pNetworkBuffer;

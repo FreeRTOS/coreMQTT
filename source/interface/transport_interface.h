@@ -58,34 +58,14 @@
  * - [Transport Receive](@ref TransportRecv_t)
  * - [Transport Send](@ref TransportSend_t)
  *
- * Each of the functions above take in an opaque context @ref NetworkContext_t.
+ * Each of the functions above take in an opaque context.
  * The functions above and the context are also grouped together in the
- * @ref TransportInterface_t structure:<br><br>
  * @snippet this define_transportinterface
  * <br>
  *
  * @transportsectionimplementation
  *
  * The following steps give guidance on implementing the transport interface:
- *
- * -# Implementing @ref NetworkContext_t<br><br>
- * @snippet this define_networkcontext
- * <br>
- * @ref NetworkContext_t is the incomplete type <b>struct NetworkContext</b>.
- * The implemented struct NetworkContext must contain all of the information
- * that is needed to receive and send data with the @ref TransportRecv_t
- * and the @ref TransportSend_t implementations.<br>
- * In the case of TLS over TCP, struct NetworkContext is typically implemented
- * with the TCP socket context and a TLS context.<br><br>
- * <b>Example code:</b>
- * @code{c}
- * struct NetworkContext
- * {
- *     struct MyTCPSocketContext tcpSocketContext;
- *     struct MyTLSContext tlsContext;
- * };
- * @endcode
- * <br>
  * -# Implementing @ref TransportRecv_t<br><br>
  * @snippet this define_transportrecv
  * <br>
@@ -99,19 +79,20 @@
  * <br><br>
  * <b>Example code:</b>
  * @code{c}
- * int32_t myNetworkRecvImplementation( NetworkContext_t * pNetworkContext,
+ * int32_t myNetworkRecvImplementation( void * pNetworkContext,
  *                                      void * pBuffer,
  *                                      size_t bytesToRecv )
  * {
  *     int32_t bytesReceived = 0;
  *     bool callTlsRecvFunc = true;
+ *     NetworkContext_t * pContext = ( NetworkContext_t * ) pNetworkContext;
  *
  *     // For a single byte read request, check if data is available on the network.
  *     if( bytesToRecv == 1 )
  *     {
  *        // If no data is available on the network, do not call TLSRecv
  *        // to avoid blocking for socket timeout.
- *        if( TLSRecvCount( pNetworkContext->tlsContext ) == 0 )
+ *        if( TLSRecvCount( pContext->tlsContext ) == 0 )
  *        {
  *            callTlsRecvFunc = false;
  *        }
@@ -119,7 +100,7 @@
  *
  *     if( callTlsRecvFunc == true )
  *     {
- *        bytesReceived = TLSRecv( pNetworkContext->tlsContext,
+ *        bytesReceived = TLSRecv( pContext->tlsContext,
  *                                 pBuffer,
  *                                 bytesToRecv,
  *                                 MY_SOCKET_TIMEOUT );
@@ -152,12 +133,13 @@
  * <br><br>
  * <b>Example code:</b>
  * @code{c}
- * int32_t myNetworkSendImplementation( NetworkContext_t * pNetworkContext,
+ * int32_t myNetworkSendImplementation( void * pNetworkContext,
  *                                      const void * pBuffer,
  *                                      size_t bytesToSend )
  * {
  *     int32_t bytesSent = 0;
- *     bytesSent = TLSSend( pNetworkContext->tlsContext,
+ *     NetworkContext_t * pContext = ( NetworkContext_t * ) pNetworkContext;
+ *     bytesSent = TLSSend( pContext->tlsContext,
  *                          pBuffer,
  *                          bytesToSend,
  *                          MY_SOCKET_TIMEOUT );
@@ -178,18 +160,6 @@
  * }
  * @endcode
  */
-
-/**
- * @transportstruct
- * @typedef NetworkContext_t
- * @brief The NetworkContext is an incomplete type. An implementation of this
- * interface must define struct NetworkContext for the system requirements.
- * This context is passed into the network interface functions.
- */
-/* @[define_networkcontext] */
-struct NetworkContext;
-typedef struct NetworkContext NetworkContext_t;
-/* @[define_networkcontext] */
 
 /**
  * @transportcallback
@@ -218,7 +188,7 @@ typedef struct NetworkContext NetworkContext_t;
  * has occurred.
  */
 /* @[define_transportrecv] */
-typedef int32_t ( * TransportRecv_t )( NetworkContext_t * pNetworkContext,
+typedef int32_t ( * TransportRecv_t )( void * pNetworkContext,
                                        void * pBuffer,
                                        size_t bytesToRecv );
 /* @[define_transportrecv] */
@@ -240,7 +210,7 @@ typedef int32_t ( * TransportRecv_t )( NetworkContext_t * pNetworkContext,
  * has occurred.
  */
 /* @[define_transportsend] */
-typedef int32_t ( * TransportSend_t )( NetworkContext_t * pNetworkContext,
+typedef int32_t ( * TransportSend_t )( void * pNetworkContext,
                                        const void * pBuffer,
                                        size_t bytesToSend );
 /* @[define_transportsend] */
@@ -288,7 +258,7 @@ typedef struct TransportOutVector
  * has occurred.
  */
 /* @[define_transportwritev] */
-typedef int32_t ( * TransportWritev_t )( NetworkContext_t * pNetworkContext,
+typedef int32_t ( * TransportWritev_t )( void * pNetworkContext,
                                          TransportOutVector_t * pIoVec,
                                          size_t ioVecCount );
 /* @[define_transportwritev] */
@@ -303,7 +273,6 @@ typedef struct TransportInterface
     TransportRecv_t recv;               /**< Transport receive function pointer. */
     TransportSend_t send;               /**< Transport send function pointer. */
     TransportWritev_t writev;           /**< Transport writev function pointer. */
-    NetworkContext_t * pNetworkContext; /**< Implementation-defined network context. */
 } TransportInterface_t;
 /* @[define_transportinterface] */
 

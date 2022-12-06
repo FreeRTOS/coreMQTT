@@ -57,7 +57,7 @@ int suiteTearDown( int numFailures )
 
 /* ========================================================================== */
 
-static int32_t transportRecvSuccess( NetworkContext_t * pNetworkContext,
+static int32_t transportRecvSuccess( void * pNetworkContext,
                                      void * pBuffer,
                                      size_t bytesToRead )
 {
@@ -66,7 +66,7 @@ static int32_t transportRecvSuccess( NetworkContext_t * pNetworkContext,
     return bytesToRead;
 }
 
-static int32_t transportSendSuccess( NetworkContext_t * pNetworkContext,
+static int32_t transportSendSuccess( void * pNetworkContext,
                                      const void * pBuffer,
                                      size_t bytesToWrite )
 {
