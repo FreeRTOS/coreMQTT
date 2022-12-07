@@ -480,8 +480,8 @@ static MQTTStatus_t validatePublishParams( const MQTTContext_t * pContext,
  * @return Returns whether the topic filter and the topic name match.
  */
 static bool matchEndWildcardsSpecialCases( const char * pTopicFilter,
-                                           uint16_t topicFilterLength,
-                                           uint16_t filterIndex );
+                                           size_t topicFilterLength,
+                                           size_t filterIndex );
 
 /**
  * @brief Attempt to match topic name with a topic filter starting with a wildcard.
@@ -505,11 +505,11 @@ static bool matchEndWildcardsSpecialCases( const char * pTopicFilter,
  * caller should continue parsing the topics.
  */
 static bool matchWildcards( const char * pTopicName,
-                            uint16_t topicNameLength,
+                            size_t topicNameLength,
                             const char * pTopicFilter,
-                            uint16_t topicFilterLength,
-                            uint16_t * pNameIndex,
-                            uint16_t * pFilterIndex,
+                            size_t topicFilterLength,
+                            size_t * pNameIndex,
+                            size_t * pFilterIndex,
                             bool * pMatch );
 
 /**
@@ -523,15 +523,15 @@ static bool matchWildcards( const char * pTopicName,
  * @return `true` if the topic name and topic filter match; `false` otherwise.
  */
 static bool matchTopicFilter( const char * pTopicName,
-                              uint16_t topicNameLength,
+                              size_t topicNameLength,
                               const char * pTopicFilter,
-                              uint16_t topicFilterLength );
+                              size_t topicFilterLength );
 
 /*-----------------------------------------------------------*/
 
 static bool matchEndWildcardsSpecialCases( const char * pTopicFilter,
-                                           uint16_t topicFilterLength,
-                                           uint16_t filterIndex )
+                                           size_t topicFilterLength,
+                                           size_t filterIndex )
 {
     bool matchFound = false;
 
@@ -571,11 +571,11 @@ static bool matchEndWildcardsSpecialCases( const char * pTopicFilter,
 /*-----------------------------------------------------------*/
 
 static bool matchWildcards( const char * pTopicName,
-                            uint16_t topicNameLength,
+                            size_t topicNameLength,
                             const char * pTopicFilter,
-                            uint16_t topicFilterLength,
-                            uint16_t * pNameIndex,
-                            uint16_t * pFilterIndex,
+                            size_t topicFilterLength,
+                            size_t * pNameIndex,
+                            size_t * pFilterIndex,
                             bool * pMatch )
 {
     bool shouldStopMatching = false;
@@ -675,12 +675,13 @@ static bool matchWildcards( const char * pTopicName,
 /*-----------------------------------------------------------*/
 
 static bool matchTopicFilter( const char * pTopicName,
-                              uint16_t topicNameLength,
+                              size_t topicNameLength,
                               const char * pTopicFilter,
-                              uint16_t topicFilterLength )
+                              size_t topicFilterLength )
 {
     bool matchFound = false, shouldStopMatching = false;
-    uint16_t nameIndex = 0, filterIndex = 0;
+    size_t nameIndex = 0;
+    size_t filterIndex = 0;
 
     assert( pTopicName != NULL );
     assert( topicNameLength != 0 );
@@ -2195,7 +2196,7 @@ static MQTTStatus_t sendConnectWithoutCopy( MQTTContext_t * pContext,
             /* Serialize the payload. Payload of last will and testament can be NULL. */
             vectorsAdded = addEncodedStringToVector( serializedPayloadLength,
                                                      pWillInfo->pPayload,
-                                                     ( uint16_t ) pWillInfo->payloadLength,
+                                                     pWillInfo->payloadLength,
                                                      iterator,
                                                      &totalMessageLength );
 
@@ -3126,9 +3127,9 @@ uint16_t MQTT_GetPacketId( MQTTContext_t * pContext )
 /*-----------------------------------------------------------*/
 
 MQTTStatus_t MQTT_MatchTopic( const char * pTopicName,
-                              const uint16_t topicNameLength,
+                              const size_t topicNameLength,
                               const char * pTopicFilter,
-                              const uint16_t topicFilterLength,
+                              const size_t topicFilterLength,
                               bool * pIsMatch )
 {
     MQTTStatus_t status = MQTTSuccess;

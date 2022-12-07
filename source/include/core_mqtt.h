@@ -902,9 +902,9 @@ uint16_t MQTT_GetPacketId( MQTTContext_t * pContext );
  * @endcode
  */
 MQTTStatus_t MQTT_MatchTopic( const char * pTopicName,
-                              const uint16_t topicNameLength,
+                              const size_t topicNameLength,
                               const char * pTopicFilter,
-                              const uint16_t topicFilterLength,
+                              const size_t topicFilterLength,
                               bool * pIsMatch );
 
 /**
