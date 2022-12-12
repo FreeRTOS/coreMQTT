@@ -1764,7 +1764,10 @@ static MQTTStatus_t receiveSingleIteration( MQTTContext_t * pContext,
                           &( pContext->networkBuffer.pBuffer[ totalMQTTPacketLength ] ),
                           pContext->index );
 
-        pContext->lastPacketRxTime = pContext->getTime();
+        if( status == MQTTSuccess )
+        {
+            pContext->lastPacketRxTime = pContext->getTime();
+        }
     }
 
     if( status == MQTTNoDataAvailable )
