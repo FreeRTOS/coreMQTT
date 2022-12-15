@@ -1763,6 +1763,11 @@ static MQTTStatus_t receiveSingleIteration( MQTTContext_t * pContext,
         ( void ) memmove( pContext->networkBuffer.pBuffer,
                           &( pContext->networkBuffer.pBuffer[ totalMQTTPacketLength ] ),
                           pContext->index );
+
+        if( status == MQTTSuccess )
+        {
+            pContext->lastPacketRxTime = pContext->getTime();
+        }
     }
 
     if( status == MQTTNoDataAvailable )
