@@ -118,7 +118,7 @@ jobs:
             config: .github/memory_statistics_config.json
             check_against: docs/doxygen/include/size_table.md
   proof_ci:
-    runs-on: cbmc_ubuntu-latest_32-core
+    runs-on: cbmc_ubuntu-latest_64-core
     steps:
       - name: Set up CBMC runner
         uses: FreeRTOS/CI-CD-Github-Actions/set_up_cbmc_runner@main
