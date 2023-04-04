@@ -72,9 +72,9 @@
 
 /**
  * @brief Bytes required to encode any string length in an MQTT packet header.
- * Length is always encoded in two bytes according to the MQTT specification. 
+ * Length is always encoded in two bytes according to the MQTT specification.
  */
-#define CORE_MQTT_SERIALIZED_LENGTH_FIELD_BYTES        ( 2U )
+#define CORE_MQTT_SERIALIZED_LENGTH_FIELD_BYTES           ( 2U )
 
 /**
  * @brief Number of vectors required to encode one topic filter in a subscribe
@@ -82,7 +82,7 @@
  * subscribe request namely:
  * 1. Topic filter length; 2. Topic filter; and 3. QoS in this order.
  */
-#define CORE_MQTT_SUBSCRIBE_PER_TOPIC_VECTOR_LENGTH     ( 3U )
+#define CORE_MQTT_SUBSCRIBE_PER_TOPIC_VECTOR_LENGTH       ( 3U )
 
 /**
  * @brief Number of vectors required to encode one topic filter in an
@@ -90,13 +90,13 @@
  * unsubscribe request namely:
  * 1. Topic filter length; and 2. Topic filter in this order.
  */
-#define CORE_MQTT_UNSUBSCRIBE_PER_TOPIC_VECTOR_LENGTH   ( 2U )
+#define CORE_MQTT_UNSUBSCRIBE_PER_TOPIC_VECTOR_LENGTH     ( 2U )
 
 /**
  * @brief Bytes required to encode the packet ID in an MQTT header according
  * to the MQTT specification.
  */
-#define CORE_MQTT_SERIALIZED_PACKET_ID_BYTES            ( 2U )
+#define CORE_MQTT_SERIALIZED_PACKET_ID_BYTES              ( 2U )
 
 /**
  * @brief Maximum number of bytes required by the 'fixed' part of the CONNECT
@@ -109,7 +109,7 @@
  * Connect flags            + 1 = 13
  * Keep alive               + 2 = 15
  */
-#define CORE_MQTT_CONNECT_PACKET_HEADER_MAX_LENGTH      ( 15U )
+#define CORE_MQTT_CONNECT_PACKET_HEADER_MAX_LENGTH        ( 15U )
 
 /**
  * @brief Maximum number of bytes required by the 'fixed' part of the SUBSCRIBE
@@ -127,7 +127,7 @@
  * Remaining length (max)   + 4 = 5
  * Packet ID                + 2 = 7
  */
-#define CORE_MQTT_UNSUBSCRIBE_PACKET_HEADER_MAX_LENGTH      ( 7U )
+#define CORE_MQTT_UNSUBSCRIBE_PACKET_HEADER_MAX_LENGTH    ( 7U )
 
 /**
  * @brief Maximum number of bytes required by the 'fixed' part of the PUBLISH
@@ -135,13 +135,13 @@
  * Header byte           0 + 1 = 1
  * Length (max)            + 4 = 5
  * Topic string length     + 2 = 7
- * 
+ *
  * @note Since publish is one of the most common operations in MQTT connection,
  * we have moved the topic string length to the 'fixed' part of the header so
  * efficiency. Otherwise, we would need an extra vector and an extra call to
  * 'send' (in case writev is not defined) to send the topic length.
  */
-#define CORE_MQTT_PUBLISH_PACKET_HEADER_MAX_LENGTH      ( 7U )
+#define CORE_MQTT_PUBLISH_PACKET_HEADER_MAX_LENGTH        ( 7U )
 
 /**
  * @brief The maximum vectors required to encode and send a connect packet. The
@@ -153,7 +153,7 @@
  * Username            + 2 = 9
  * Password            + 2 = 11
  */
-#define CORE_MQTT_CONNECT_PACKET_MAX_VECTORS    ( 11U )
+#define CORE_MQTT_CONNECT_PACKET_MAX_VECTORS              ( 11U )
 
 /**
  * @brief Maximum number of vectors required to encode and send a publish
@@ -163,7 +163,7 @@
  * Packet ID (only when QoS > QoS0)                    + 1 = 3
  * Payload                                             + 1 = 4
  */
-#define CORE_MQTT_PUBLISH_PACKET_MAX_VECTORS    ( 4U )
+#define CORE_MQTT_PUBLISH_PACKET_MAX_VECTORS              ( 4U )
 
 /*-----------------------------------------------------------*/
 
