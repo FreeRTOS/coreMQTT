@@ -349,7 +349,7 @@ serializeack
 serializeconnect
 serializeconnectpacket
 serializedisconnect
-serailizedlength
+serializedlength
 serializedpasswordlength
 serializedpayloadlength
 serializedtopiclength
