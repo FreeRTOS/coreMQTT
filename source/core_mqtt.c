@@ -1609,6 +1609,7 @@ static MQTTStatus_t handleIncomingAck( MQTTContext_t * pContext,
             if( ( status == MQTTSuccess ) && ( manageKeepAlive == true ) )
             {
                 pContext->waitingForPingResp = false;
+                pContext->lastPacketRxTime = pContext->getTime();
             }
 
             break;
