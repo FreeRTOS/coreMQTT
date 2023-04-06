@@ -74,7 +74,7 @@
  * @brief Bytes required to encode any string length in an MQTT packet header.
  * Length is always encoded in two bytes according to the MQTT specification.
  */
-#define CORE_MQTT_SERIALIZED_LENGTH_FIELD_BYTES           ( 2U )
+#define CORE_MQTT_SERIALIZED_LENGTH_FIELD_BYTES          ( 2U )
 
 /**
  * @brief Number of vectors required to encode one topic filter in a subscribe
@@ -82,7 +82,7 @@
  * subscribe request namely:
  * 1. Topic filter length; 2. Topic filter; and 3. QoS in this order.
  */
-#define CORE_MQTT_SUBSCRIBE_PER_TOPIC_VECTOR_LENGTH       ( 3U )
+#define CORE_MQTT_SUBSCRIBE_PER_TOPIC_VECTOR_LENGTH      ( 3U )
 
 /**
  * @brief Number of vectors required to encode one topic filter in an
@@ -90,7 +90,7 @@
  * unsubscribe request namely:
  * 1. Topic filter length; and 2. Topic filter in this order.
  */
-#define CORE_MQTT_UNSUBSCRIBE_PER_TOPIC_VECTOR_LENGTH     ( 2U )
+#define CORE_MQTT_UNSUBSCRIBE_PER_TOPIC_VECTOR_LENGTH    ( 2U )
 
 /*-----------------------------------------------------------*/
 
@@ -1911,6 +1911,7 @@ static MQTTStatus_t sendSubscribeWithoutCopy( MQTTContext_t * pContext,
     size_t subscriptionsSent = 0U;
     size_t vectorsAdded;
     size_t topicFieldLengthIndex;
+
     /* Maximum number of bytes required by the 'fixed' part of the SUBSCRIBE
      * packet header according to the MQTT specification.
      * MQTT Control Byte      0 + 1 = 1
@@ -2014,6 +2015,7 @@ static MQTTStatus_t sendUnsubscribeWithoutCopy( MQTTContext_t * pContext,
     size_t ioVectorLength = 0U;
     size_t vectorsAdded;
     size_t topicFieldLengthIndex;
+
     /* Maximum number of bytes required by the 'fixed' part of the UNSUBSCRIBE
      * packet header according to the MQTT specification.
      * MQTT Control Byte      0 + 1 = 1
@@ -2097,9 +2099,11 @@ static MQTTStatus_t sendPublishWithoutCopy( MQTTContext_t * pContext,
     MQTTStatus_t status = MQTTSuccess;
     size_t ioVectorLength;
     size_t totalMessageLength;
+
     /* Bytes required to encode the packet ID in an MQTT header according to
      * the MQTT specification. */
     uint8_t serializedPacketID[ 2U ];
+
     /* Maximum number of vectors required to encode and send a publish
      * packet. The breakdown is shown below.
      * Fixed header (including topic string length)      0 + 1 = 1
@@ -2165,13 +2169,14 @@ static MQTTStatus_t sendConnectWithoutCopy( MQTTContext_t * pContext,
     size_t ioVectorLength = 0U;
     size_t totalMessageLength = 0U;
     int32_t bytesSentOrError;
-    uint8_t * pIndex = connectPacketHeader;
+    uint8_t * pIndex;
     uint8_t serializedClientIDLength[ 2 ];
     uint8_t serializedTopicLength[ 2 ];
     uint8_t serializedPayloadLength[ 2 ];
     uint8_t serializedUsernameLength[ 2 ];
     uint8_t serializedPasswordLength[ 2 ];
     size_t vectorsAdded;
+
     /* Maximum number of bytes required by the 'fixed' part of the CONNECT
      * packet header according to the MQTT specification.
      * MQTT Control Byte      0 + 1 = 1
@@ -2194,6 +2199,7 @@ static MQTTStatus_t sendConnectWithoutCopy( MQTTContext_t * pContext,
     TransportOutVector_t pIoVector[ 11U ];
 
     iterator = pIoVector;
+    pIndex = connectPacketHeader;
 
     /* Validate arguments. */
     if( ( pWillInfo != NULL ) && ( pWillInfo->pTopicName == NULL ) )
@@ -2802,6 +2808,7 @@ MQTTStatus_t MQTT_Publish( MQTTContext_t * pContext,
     size_t packetSize = 0UL;
     MQTTPublishState_t publishStatus = MQTTStateNull;
     bool stateUpdateHookExecuted = false;
+
     /* Maximum number of bytes required by the 'fixed' part of the PUBLISH
      * packet header according to the MQTT specifications.
      * Header byte           0 + 1 = 1
