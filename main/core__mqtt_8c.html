@@ -131,6 +131,16 @@ Macros</h2></td></tr>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>MQTT_POST_STATE_UPDATE_HOOK</b>(pContext)</td></tr>
 <tr class="memdesc:a436983fba04e3d13cabea35efc4e9bf8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Hook called just after an update to the MQTT state has been made. <br /></td></tr>
 <tr class="separator:a436983fba04e3d13cabea35efc4e9bf8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a989426922a1f5f04ea8b612fd1f4b185"><td class="memItemLeft" align="right" valign="top"><a id="a989426922a1f5f04ea8b612fd1f4b185" name="a989426922a1f5f04ea8b612fd1f4b185"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>CORE_MQTT_SERIALIZED_LENGTH_FIELD_BYTES</b>&#160;&#160;&#160;( 2U )</td></tr>
+<tr class="memdesc:a989426922a1f5f04ea8b612fd1f4b185"><td class="mdescLeft">&#160;</td><td class="mdescRight">Bytes required to encode any string length in an MQTT packet header. Length is always encoded in two bytes according to the MQTT specification. <br /></td></tr>
+<tr class="separator:a989426922a1f5f04ea8b612fd1f4b185"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a97f180c9cc32ca9e354e7c22378a386b"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="core__mqtt_8c.html#a97f180c9cc32ca9e354e7c22378a386b">CORE_MQTT_SUBSCRIBE_PER_TOPIC_VECTOR_LENGTH</a>&#160;&#160;&#160;( 3U )</td></tr>
+<tr class="memdesc:a97f180c9cc32ca9e354e7c22378a386b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Number of vectors required to encode one topic filter in a subscribe request. Three vectors are required as there are three fields in the subscribe request namely:  <br /></td></tr>
+<tr class="separator:a97f180c9cc32ca9e354e7c22378a386b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a42477ec456354f2b944b47646ee5a9ce"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="core__mqtt_8c.html#a42477ec456354f2b944b47646ee5a9ce">CORE_MQTT_UNSUBSCRIBE_PER_TOPIC_VECTOR_LENGTH</a>&#160;&#160;&#160;( 2U )</td></tr>
+<tr class="memdesc:a42477ec456354f2b944b47646ee5a9ce"><td class="mdescLeft">&#160;</td><td class="mdescRight">Number of vectors required to encode one topic filter in an unsubscribe request. Two vectors are required as there are two fields in the unsubscribe request namely:  <br /></td></tr>
+<tr class="separator:a42477ec456354f2b944b47646ee5a9ce"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
@@ -143,9 +153,9 @@ Functions</h2></td></tr>
 <tr class="memitem:a39f478d2bb0366a5f14bfa90316d8d26"><td class="memItemLeft" align="right" valign="top">static int32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="core__mqtt_8c.html#a39f478d2bb0366a5f14bfa90316d8d26">sendMessageVector</a> (<a class="el" href="struct_m_q_t_t_context__t.html">MQTTContext_t</a> *pContext, <a class="el" href="struct_transport_out_vector__t.html">TransportOutVector_t</a> *pIoVec, size_t ioVecCount)</td></tr>
 <tr class="memdesc:a39f478d2bb0366a5f14bfa90316d8d26"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sends the vector array passed through the parameters over the network.  <br /></td></tr>
 <tr class="separator:a39f478d2bb0366a5f14bfa90316d8d26"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab2f948687c9a8a45b6eae09efe14d964"><td class="memItemLeft" align="right" valign="top">static size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="core__mqtt_8c.html#ab2f948687c9a8a45b6eae09efe14d964">addEncodedStringToVector</a> (uint8_t serailizedLength[2], const char *const string, uint16_t length, <a class="el" href="struct_transport_out_vector__t.html">TransportOutVector_t</a> *iterator, size_t *updatedLength)</td></tr>
-<tr class="memdesc:ab2f948687c9a8a45b6eae09efe14d964"><td class="mdescLeft">&#160;</td><td class="mdescRight">Add a string and its length after serializing it in a manner outlined by the MQTT specification.  <br /></td></tr>
-<tr class="separator:ab2f948687c9a8a45b6eae09efe14d964"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a35952c4a02872c18702e7fbbdb1c467f"><td class="memItemLeft" align="right" valign="top">static size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="core__mqtt_8c.html#a35952c4a02872c18702e7fbbdb1c467f">addEncodedStringToVector</a> (uint8_t serializedLength[<a class="el" href="core__mqtt_8c.html#a989426922a1f5f04ea8b612fd1f4b185">CORE_MQTT_SERIALIZED_LENGTH_FIELD_BYTES</a>], const char *const string, uint16_t length, <a class="el" href="struct_transport_out_vector__t.html">TransportOutVector_t</a> *iterator, size_t *updatedLength)</td></tr>
+<tr class="memdesc:a35952c4a02872c18702e7fbbdb1c467f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Add a string and its length after serializing it in a manner outlined by the MQTT specification.  <br /></td></tr>
+<tr class="separator:a35952c4a02872c18702e7fbbdb1c467f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a86259fe46a81f7981a7b43b677ab896d"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="group__mqtt__enum__types.html#gaba7ec045874a1c3432f99173367f735c">MQTTStatus_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="core__mqtt_8c.html#a86259fe46a81f7981a7b43b677ab896d">sendSubscribeWithoutCopy</a> (<a class="el" href="struct_m_q_t_t_context__t.html">MQTTContext_t</a> *pContext, const <a class="el" href="struct_m_q_t_t_subscribe_info__t.html">MQTTSubscribeInfo_t</a> *pSubscriptionList, size_t subscriptionCount, uint16_t packetId, size_t remainingLength)</td></tr>
 <tr class="memdesc:a86259fe46a81f7981a7b43b677ab896d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Send MQTT SUBSCRIBE message without copying the user data into a buffer and directly sending it.  <br /></td></tr>
 <tr class="separator:a86259fe46a81f7981a7b43b677ab896d"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -263,7 +273,46 @@ Functions</h2></td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Implements the user-facing functions in <a class="el" href="core__mqtt_8h.html" title="User-facing functions of the MQTT 3.1.1 library.">core_mqtt.h</a>. </p>
-</div><h2 class="groupheader">Function Documentation</h2>
+</div><h2 class="groupheader">Macro Definition Documentation</h2>
+<a id="a97f180c9cc32ca9e354e7c22378a386b" name="a97f180c9cc32ca9e354e7c22378a386b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a97f180c9cc32ca9e354e7c22378a386b">&#9670;&#160;</a></span>CORE_MQTT_SUBSCRIBE_PER_TOPIC_VECTOR_LENGTH</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define CORE_MQTT_SUBSCRIBE_PER_TOPIC_VECTOR_LENGTH&#160;&#160;&#160;( 3U )</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Number of vectors required to encode one topic filter in a subscribe request. Three vectors are required as there are three fields in the subscribe request namely: </p>
+<ol type="1">
+<li>Topic filter length; 2. Topic filter; and 3. QoS in this order. </li>
+</ol>
+
+</div>
+</div>
+<a id="a42477ec456354f2b944b47646ee5a9ce" name="a42477ec456354f2b944b47646ee5a9ce"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a42477ec456354f2b944b47646ee5a9ce">&#9670;&#160;</a></span>CORE_MQTT_UNSUBSCRIBE_PER_TOPIC_VECTOR_LENGTH</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define CORE_MQTT_UNSUBSCRIBE_PER_TOPIC_VECTOR_LENGTH&#160;&#160;&#160;( 2U )</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Number of vectors required to encode one topic filter in an unsubscribe request. Two vectors are required as there are two fields in the unsubscribe request namely: </p>
+<ol type="1">
+<li>Topic filter length; and 2. Topic filter in this order. </li>
+</ol>
+
+</div>
+</div>
+<h2 class="groupheader">Function Documentation</h2>
 <a id="a7f4f9871c75f8f987e3c86ae910bd982" name="a7f4f9871c75f8f987e3c86ae910bd982"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a7f4f9871c75f8f987e3c86ae910bd982">&#9670;&#160;</a></span>sendBuffer()</h2>
 
@@ -439,8 +488,8 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="ab2f948687c9a8a45b6eae09efe14d964" name="ab2f948687c9a8a45b6eae09efe14d964"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ab2f948687c9a8a45b6eae09efe14d964">&#9670;&#160;</a></span>addEncodedStringToVector()</h2>
+<a id="a35952c4a02872c18702e7fbbdb1c467f" name="a35952c4a02872c18702e7fbbdb1c467f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a35952c4a02872c18702e7fbbdb1c467f">&#9670;&#160;</a></span>addEncodedStringToVector()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -452,7 +501,7 @@ Functions</h2></td></tr>
           <td class="memname">static size_t addEncodedStringToVector </td>
           <td>(</td>
           <td class="paramtype">uint8_t&#160;</td>
-          <td class="paramname"><em>serailizedLength</em>[2], </td>
+          <td class="paramname"><em>serializedLength</em>[CORE_MQTT_SERIALIZED_LENGTH_FIELD_BYTES], </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -494,7 +543,7 @@ Functions</h2></td></tr>
 <p>Add a string and its length after serializing it in a manner outlined by the MQTT specification. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">serailizedLength</td><td>Array of two bytes to which the vector will point. The array must remain in scope until the message has been sent. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">serializedLength</td><td>Array of two bytes to which the vector will point. The array must remain in scope until the message has been sent. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">string</td><td>The string to be serialized. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">length</td><td>The length of the string to be serialized. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">iterator</td><td>The iterator pointing to the first element in the transport interface IO array. </td></tr>
@@ -1825,7 +1874,7 @@ MQTTRecvFailed if transport recv failed;</h2>
 <div class="line">     <span class="comment">// copied into the context, so the original structs do not need to stay in scope.</span></div>
 <div class="line">     <span class="comment">// However, the memory pointed to by the fixedBuffer.pBuffer must remain in scope.</span></div>
 <div class="line">}</div>
-<div class="ttc" id="acore__mqtt_8h_html_ae8444f3a85535e62cdb1ae9c192677d6"><div class="ttname"><a href="core__mqtt_8h.html#ae8444f3a85535e62cdb1ae9c192677d6">MQTT_Init</a></div><div class="ttdeci">MQTTStatus_t MQTT_Init(MQTTContext_t *pContext, const TransportInterface_t *pTransportInterface, MQTTGetCurrentTimeFunc_t getTimeFunction, MQTTEventCallback_t userCallback, const MQTTFixedBuffer_t *pNetworkBuffer)</div><div class="ttdoc">Initialize an MQTT context.</div><div class="ttdef"><b>Definition:</b> core_mqtt.c:2473</div></div>
+<div class="ttc" id="acore__mqtt_8h_html_ae8444f3a85535e62cdb1ae9c192677d6"><div class="ttname"><a href="core__mqtt_8h.html#ae8444f3a85535e62cdb1ae9c192677d6">MQTT_Init</a></div><div class="ttdeci">MQTTStatus_t MQTT_Init(MQTTContext_t *pContext, const TransportInterface_t *pTransportInterface, MQTTGetCurrentTimeFunc_t getTimeFunction, MQTTEventCallback_t userCallback, const MQTTFixedBuffer_t *pNetworkBuffer)</div><div class="ttdoc">Initialize an MQTT context.</div><div class="ttdef"><b>Definition:</b> core_mqtt.c:2528</div></div>
 <div class="ttc" id="agroup__mqtt__enum__types_html_ggaba7ec045874a1c3432f99173367f735ca484e062cb4f3fccc1858dd25cfeee056"><div class="ttname"><a href="group__mqtt__enum__types.html#ggaba7ec045874a1c3432f99173367f735ca484e062cb4f3fccc1858dd25cfeee056">MQTTSuccess</a></div><div class="ttdeci">@ MQTTSuccess</div><div class="ttdef"><b>Definition:</b> core_mqtt_serializer.h:100</div></div>
 <div class="ttc" id="agroup__mqtt__struct__types_html_ga7769e434e7811caed8cd6fd7f9ec26ec"><div class="ttname"><a href="group__mqtt__struct__types.html#ga7769e434e7811caed8cd6fd7f9ec26ec">NetworkContext_t</a></div><div class="ttdeci">struct NetworkContext NetworkContext_t</div><div class="ttdoc">The NetworkContext is an incomplete type. An implementation of this interface must define struct Netw...</div><div class="ttdef"><b>Definition:</b> transport_interface.h:191</div></div>
 <div class="ttc" id="astruct_m_q_t_t_context__t_html"><div class="ttname"><a href="struct_m_q_t_t_context__t.html">MQTTContext_t</a></div><div class="ttdoc">A struct representing an MQTT connection.</div><div class="ttdef"><b>Definition:</b> core_mqtt.h:162</div></div>
@@ -1940,7 +1989,7 @@ MQTTRecvFailed if transport recv failed;</h2>
 <div class="line"> </div>
 <div class="line">     <span class="comment">// Now QoS1 and/or QoS2 publishes can be sent with this context.</span></div>
 <div class="line">}</div>
-<div class="ttc" id="acore__mqtt_8h_html_afe4c020749e3b9ca044e0e9ad96025c5"><div class="ttname"><a href="core__mqtt_8h.html#afe4c020749e3b9ca044e0e9ad96025c5">MQTT_InitStatefulQoS</a></div><div class="ttdeci">MQTTStatus_t MQTT_InitStatefulQoS(MQTTContext_t *pContext, MQTTPubAckInfo_t *pOutgoingPublishRecords, size_t outgoingPublishCount, MQTTPubAckInfo_t *pIncomingPublishRecords, size_t incomingPublishCount)</div><div class="ttdoc">Initialize an MQTT context for QoS &gt; 0.</div><div class="ttdef"><b>Definition:</b> core_mqtt.c:2532</div></div>
+<div class="ttc" id="acore__mqtt_8h_html_afe4c020749e3b9ca044e0e9ad96025c5"><div class="ttname"><a href="core__mqtt_8h.html#afe4c020749e3b9ca044e0e9ad96025c5">MQTT_InitStatefulQoS</a></div><div class="ttdeci">MQTTStatus_t MQTT_InitStatefulQoS(MQTTContext_t *pContext, MQTTPubAckInfo_t *pOutgoingPublishRecords, size_t outgoingPublishCount, MQTTPubAckInfo_t *pIncomingPublishRecords, size_t incomingPublishCount)</div><div class="ttdoc">Initialize an MQTT context for QoS &gt; 0.</div><div class="ttdef"><b>Definition:</b> core_mqtt.c:2587</div></div>
 <div class="ttc" id="astruct_m_q_t_t_pub_ack_info__t_html"><div class="ttname"><a href="struct_m_q_t_t_pub_ack_info__t.html">MQTTPubAckInfo_t</a></div><div class="ttdoc">An element of the state engine records for QoS 1 or Qos 2 publishes.</div><div class="ttdef"><b>Definition:</b> core_mqtt.h:151</div></div>
 </div><!-- fragment --> 
 </div>
@@ -2092,7 +2141,7 @@ MQTTRecvFailed if transport recv failed;</h2>
 <div class="line"> </div>
 <div class="line">     <span class="comment">// Do something with the connection.</span></div>
 <div class="line">}</div>
-<div class="ttc" id="acore__mqtt_8h_html_aed1e4dc123a8ba79ac569cb17c69bfa0"><div class="ttname"><a href="core__mqtt_8h.html#aed1e4dc123a8ba79ac569cb17c69bfa0">MQTT_Connect</a></div><div class="ttdeci">MQTTStatus_t MQTT_Connect(MQTTContext_t *pContext, const MQTTConnectInfo_t *pConnectInfo, const MQTTPublishInfo_t *pWillInfo, uint32_t timeoutMs, bool *pSessionPresent)</div><div class="ttdoc">Establish an MQTT session.</div><div class="ttdef"><b>Definition:</b> core_mqtt.c:2621</div></div>
+<div class="ttc" id="acore__mqtt_8h_html_aed1e4dc123a8ba79ac569cb17c69bfa0"><div class="ttname"><a href="core__mqtt_8h.html#aed1e4dc123a8ba79ac569cb17c69bfa0">MQTT_Connect</a></div><div class="ttdeci">MQTTStatus_t MQTT_Connect(MQTTContext_t *pContext, const MQTTConnectInfo_t *pConnectInfo, const MQTTPublishInfo_t *pWillInfo, uint32_t timeoutMs, bool *pSessionPresent)</div><div class="ttdoc">Establish an MQTT session.</div><div class="ttdef"><b>Definition:</b> core_mqtt.c:2676</div></div>
 <div class="ttc" id="agroup__mqtt__enum__types_html_gaba7ec045874a1c3432f99173367f735c"><div class="ttname"><a href="group__mqtt__enum__types.html#gaba7ec045874a1c3432f99173367f735c">MQTTStatus_t</a></div><div class="ttdeci">MQTTStatus_t</div><div class="ttdoc">Return codes from MQTT functions.</div><div class="ttdef"><b>Definition:</b> core_mqtt_serializer.h:99</div></div>
 <div class="ttc" id="agroup__mqtt__enum__types_html_ggae308a5928d7f537379c29a894228093aaad51b23a1ae1417f96d8f343c788d1d2"><div class="ttname"><a href="group__mqtt__enum__types.html#ggae308a5928d7f537379c29a894228093aaad51b23a1ae1417f96d8f343c788d1d2">MQTTQoS0</a></div><div class="ttdeci">@ MQTTQoS0</div><div class="ttdef"><b>Definition:</b> core_mqtt_serializer.h:122</div></div>
 <div class="ttc" id="astruct_m_q_t_t_connect_info__t_html"><div class="ttname"><a href="struct_m_q_t_t_connect_info__t.html">MQTTConnectInfo_t</a></div><div class="ttdoc">MQTT CONNECT packet parameters.</div><div class="ttdef"><b>Definition:</b> core_mqtt_serializer.h:145</div></div>
@@ -2191,8 +2240,8 @@ MQTTRecvFailed if transport recv failed;</h2>
 <div class="line">     <span class="comment">// If the broker accepts the subscription we can now receive publishes</span></div>
 <div class="line">     <span class="comment">// on the requested topics.</span></div>
 <div class="line">}</div>
-<div class="ttc" id="acore__mqtt_8h_html_a00e1a3eba2c21899a6b4312c7d65d090"><div class="ttname"><a href="core__mqtt_8h.html#a00e1a3eba2c21899a6b4312c7d65d090">MQTT_GetPacketId</a></div><div class="ttdeci">uint16_t MQTT_GetPacketId(MQTTContext_t *pContext)</div><div class="ttdoc">Get a packet ID that is valid according to the MQTT 3.1.1 spec.</div><div class="ttdef"><b>Definition:</b> core_mqtt.c:3104</div></div>
-<div class="ttc" id="acore__mqtt_8h_html_a567aa9c38726a7879f9cbf943e813e8f"><div class="ttname"><a href="core__mqtt_8h.html#a567aa9c38726a7879f9cbf943e813e8f">MQTT_Subscribe</a></div><div class="ttdeci">MQTTStatus_t MQTT_Subscribe(MQTTContext_t *pContext, const MQTTSubscribeInfo_t *pSubscriptionList, size_t subscriptionCount, uint16_t packetId)</div><div class="ttdoc">Sends MQTT SUBSCRIBE for the given list of topic filters to the broker.</div><div class="ttdef"><b>Definition:</b> core_mqtt.c:2703</div></div>
+<div class="ttc" id="acore__mqtt_8h_html_a00e1a3eba2c21899a6b4312c7d65d090"><div class="ttname"><a href="core__mqtt_8h.html#a00e1a3eba2c21899a6b4312c7d65d090">MQTT_GetPacketId</a></div><div class="ttdeci">uint16_t MQTT_GetPacketId(MQTTContext_t *pContext)</div><div class="ttdoc">Get a packet ID that is valid according to the MQTT 3.1.1 spec.</div><div class="ttdef"><b>Definition:</b> core_mqtt.c:3169</div></div>
+<div class="ttc" id="acore__mqtt_8h_html_a567aa9c38726a7879f9cbf943e813e8f"><div class="ttname"><a href="core__mqtt_8h.html#a567aa9c38726a7879f9cbf943e813e8f">MQTT_Subscribe</a></div><div class="ttdeci">MQTTStatus_t MQTT_Subscribe(MQTTContext_t *pContext, const MQTTSubscribeInfo_t *pSubscriptionList, size_t subscriptionCount, uint16_t packetId)</div><div class="ttdoc">Sends MQTT SUBSCRIBE for the given list of topic filters to the broker.</div><div class="ttdef"><b>Definition:</b> core_mqtt.c:2758</div></div>
 <div class="ttc" id="astruct_m_q_t_t_subscribe_info__t_html"><div class="ttname"><a href="struct_m_q_t_t_subscribe_info__t.html">MQTTSubscribeInfo_t</a></div><div class="ttdoc">MQTT SUBSCRIBE packet parameters.</div><div class="ttdef"><b>Definition:</b> core_mqtt_serializer.h:192</div></div>
 <div class="ttc" id="astruct_m_q_t_t_subscribe_info__t_html_a64cf2e423f60cfec122eeaef80c0fd86"><div class="ttname"><a href="struct_m_q_t_t_subscribe_info__t.html#a64cf2e423f60cfec122eeaef80c0fd86">MQTTSubscribeInfo_t::qos</a></div><div class="ttdeci">MQTTQoS_t qos</div><div class="ttdoc">Quality of Service for subscription.</div><div class="ttdef"><b>Definition:</b> core_mqtt_serializer.h:196</div></div>
 <div class="ttc" id="astruct_m_q_t_t_subscribe_info__t_html_a6972f8e036f8bde9b1f23a2aacb61382"><div class="ttname"><a href="struct_m_q_t_t_subscribe_info__t.html#a6972f8e036f8bde9b1f23a2aacb61382">MQTTSubscribeInfo_t::topicFilterLength</a></div><div class="ttdeci">uint16_t topicFilterLength</div><div class="ttdoc">Length of subscription topic filter.</div><div class="ttdef"><b>Definition:</b> core_mqtt_serializer.h:206</div></div>
@@ -2266,7 +2315,7 @@ MQTTRecvFailed if transport recv failed;</h2>
 <div class="line">     <span class="comment">// Since the QoS is &gt; 0, we will need to call MQTT_ReceiveLoop()</span></div>
 <div class="line">     <span class="comment">// or MQTT_ProcessLoop() to process the publish acknowledgments.</span></div>
 <div class="line">}</div>
-<div class="ttc" id="acore__mqtt_8h_html_a1d8217e9d30fb2aed002060a8c97c63e"><div class="ttname"><a href="core__mqtt_8h.html#a1d8217e9d30fb2aed002060a8c97c63e">MQTT_Publish</a></div><div class="ttdeci">MQTTStatus_t MQTT_Publish(MQTTContext_t *pContext, const MQTTPublishInfo_t *pPublishInfo, uint16_t packetId)</div><div class="ttdoc">Publishes a message to the given topic name.</div><div class="ttdef"><b>Definition:</b> core_mqtt.c:2747</div></div>
+<div class="ttc" id="acore__mqtt_8h_html_a1d8217e9d30fb2aed002060a8c97c63e"><div class="ttname"><a href="core__mqtt_8h.html#a1d8217e9d30fb2aed002060a8c97c63e">MQTT_Publish</a></div><div class="ttdeci">MQTTStatus_t MQTT_Publish(MQTTContext_t *pContext, const MQTTPublishInfo_t *pPublishInfo, uint16_t packetId)</div><div class="ttdoc">Publishes a message to the given topic name.</div><div class="ttdef"><b>Definition:</b> core_mqtt.c:2802</div></div>
 <div class="ttc" id="agroup__mqtt__enum__types_html_ggae308a5928d7f537379c29a894228093aa019d0b8a8cfadb6f98462b046bdacbb2"><div class="ttname"><a href="group__mqtt__enum__types.html#ggae308a5928d7f537379c29a894228093aa019d0b8a8cfadb6f98462b046bdacbb2">MQTTQoS1</a></div><div class="ttdeci">@ MQTTQoS1</div><div class="ttdef"><b>Definition:</b> core_mqtt_serializer.h:123</div></div>
 </div><!-- fragment --> 
 </div>
@@ -2375,7 +2424,7 @@ MQTTRecvFailed if transport recv failed;</h2>
 <div class="line">     <span class="comment">// We must now call MQTT_ReceiveLoop() or MQTT_ProcessLoop() to receive the UNSUBACK.</span></div>
 <div class="line">     <span class="comment">// After this the broker should no longer send publishes for these topics.</span></div>
 <div class="line">}</div>
-<div class="ttc" id="acore__mqtt_8h_html_a77c911dbe24c5a51aaea88250895dba4"><div class="ttname"><a href="core__mqtt_8h.html#a77c911dbe24c5a51aaea88250895dba4">MQTT_Unsubscribe</a></div><div class="ttdeci">MQTTStatus_t MQTT_Unsubscribe(MQTTContext_t *pContext, const MQTTSubscribeInfo_t *pSubscriptionList, size_t subscriptionCount, uint16_t packetId)</div><div class="ttdoc">Sends MQTT UNSUBSCRIBE for the given list of topic filters to the broker.</div><div class="ttdef"><b>Definition:</b> core_mqtt.c:2932</div></div>
+<div class="ttc" id="acore__mqtt_8h_html_a77c911dbe24c5a51aaea88250895dba4"><div class="ttname"><a href="core__mqtt_8h.html#a77c911dbe24c5a51aaea88250895dba4">MQTT_Unsubscribe</a></div><div class="ttdeci">MQTTStatus_t MQTT_Unsubscribe(MQTTContext_t *pContext, const MQTTSubscribeInfo_t *pSubscriptionList, size_t subscriptionCount, uint16_t packetId)</div><div class="ttdoc">Sends MQTT UNSUBSCRIBE for the given list of topic filters to the broker.</div><div class="ttdef"><b>Definition:</b> core_mqtt.c:2997</div></div>
 </div><!-- fragment --> 
 </div>
 </div>
@@ -2451,7 +2500,7 @@ MQTTRecvFailed if transport recv failed;</h2>
 <div class="line">         <span class="comment">// Other application functions.</span></div>
 <div class="line">     }</div>
 <div class="line">}</div>
-<div class="ttc" id="acore__mqtt_8h_html_ab95d3d6b3eed98a6184fb2018c5b55d7"><div class="ttname"><a href="core__mqtt_8h.html#ab95d3d6b3eed98a6184fb2018c5b55d7">MQTT_ProcessLoop</a></div><div class="ttdeci">MQTTStatus_t MQTT_ProcessLoop(MQTTContext_t *pContext)</div><div class="ttdoc">Loop to receive packets from the transport interface. Handles keep alive.</div><div class="ttdef"><b>Definition:</b> core_mqtt.c:3051</div></div>
+<div class="ttc" id="acore__mqtt_8h_html_ab95d3d6b3eed98a6184fb2018c5b55d7"><div class="ttname"><a href="core__mqtt_8h.html#ab95d3d6b3eed98a6184fb2018c5b55d7">MQTT_ProcessLoop</a></div><div class="ttdeci">MQTTStatus_t MQTT_ProcessLoop(MQTTContext_t *pContext)</div><div class="ttdoc">Loop to receive packets from the transport interface. Handles keep alive.</div><div class="ttdef"><b>Definition:</b> core_mqtt.c:3116</div></div>
 <div class="ttc" id="agroup__mqtt__enum__types_html_ggaba7ec045874a1c3432f99173367f735caa97df53014d919df5ecd54398f89f9b9"><div class="ttname"><a href="group__mqtt__enum__types.html#ggaba7ec045874a1c3432f99173367f735caa97df53014d919df5ecd54398f89f9b9">MQTTNeedMoreBytes</a></div><div class="ttdeci">@ MQTTNeedMoreBytes</div><div class="ttdef"><b>Definition:</b> core_mqtt_serializer.h:111</div></div>
 </div><!-- fragment --> 
 </div>
@@ -2509,8 +2558,8 @@ MQTTRecvFailed if transport recv failed;</h2>
 <div class="line">         <span class="comment">// Other application functions.</span></div>
 <div class="line">     }</div>
 <div class="line">}</div>
-<div class="ttc" id="acore__mqtt_8h_html_a66eced0c62ace790354ae3de40fc0959"><div class="ttname"><a href="core__mqtt_8h.html#a66eced0c62ace790354ae3de40fc0959">MQTT_Ping</a></div><div class="ttdeci">MQTTStatus_t MQTT_Ping(MQTTContext_t *pContext)</div><div class="ttdoc">Sends an MQTT PINGREQ to broker.</div><div class="ttdef"><b>Definition:</b> core_mqtt.c:2855</div></div>
-<div class="ttc" id="acore__mqtt_8h_html_aeb7c37284fcf6f68eb577427a6763fc6"><div class="ttname"><a href="core__mqtt_8h.html#aeb7c37284fcf6f68eb577427a6763fc6">MQTT_ReceiveLoop</a></div><div class="ttdeci">MQTTStatus_t MQTT_ReceiveLoop(MQTTContext_t *pContext)</div><div class="ttdoc">Loop to receive packets from the transport interface. Does not handle keep alive.</div><div class="ttdef"><b>Definition:</b> core_mqtt.c:3078</div></div>
+<div class="ttc" id="acore__mqtt_8h_html_a66eced0c62ace790354ae3de40fc0959"><div class="ttname"><a href="core__mqtt_8h.html#a66eced0c62ace790354ae3de40fc0959">MQTT_Ping</a></div><div class="ttdeci">MQTTStatus_t MQTT_Ping(MQTTContext_t *pContext)</div><div class="ttdoc">Sends an MQTT PINGREQ to broker.</div><div class="ttdef"><b>Definition:</b> core_mqtt.c:2919</div></div>
+<div class="ttc" id="acore__mqtt_8h_html_aeb7c37284fcf6f68eb577427a6763fc6"><div class="ttname"><a href="core__mqtt_8h.html#aeb7c37284fcf6f68eb577427a6763fc6">MQTT_ReceiveLoop</a></div><div class="ttdeci">MQTTStatus_t MQTT_ReceiveLoop(MQTTContext_t *pContext)</div><div class="ttdoc">Loop to receive packets from the transport interface. Does not handle keep alive.</div><div class="ttdef"><b>Definition:</b> core_mqtt.c:3143</div></div>
 <div class="ttc" id="astruct_m_q_t_t_context__t_html_a01acf90953e830ba3e7f44182cb1d482"><div class="ttname"><a href="struct_m_q_t_t_context__t.html#a01acf90953e830ba3e7f44182cb1d482">MQTTContext_t::lastPacketTxTime</a></div><div class="ttdeci">uint32_t lastPacketTxTime</div><div class="ttdoc">Timestamp of the last packet sent by the library.</div><div class="ttdef"><b>Definition:</b> core_mqtt.h:216</div></div>
 <div class="ttc" id="astruct_m_q_t_t_context__t_html_aabe1d302a16771292151013e8e30c582"><div class="ttname"><a href="struct_m_q_t_t_context__t.html#aabe1d302a16771292151013e8e30c582">MQTTContext_t::getTime</a></div><div class="ttdeci">MQTTGetCurrentTimeFunc_t getTime</div><div class="ttdoc">Function used to get millisecond timestamps.</div><div class="ttdef"><b>Definition:</b> core_mqtt.h:206</div></div>
 </div><!-- fragment --> 
@@ -2620,7 +2669,7 @@ MQTTRecvFailed if transport recv failed;</h2>
 <div class="line">{</div>
 <div class="line">     <span class="comment">// Application can decide what to do with the matching topic name.</span></div>
 <div class="line">}</div>
-<div class="ttc" id="acore__mqtt_8h_html_a633409812b18547365ec9b853069021b"><div class="ttname"><a href="core__mqtt_8h.html#a633409812b18547365ec9b853069021b">MQTT_MatchTopic</a></div><div class="ttdeci">MQTTStatus_t MQTT_MatchTopic(const char *pTopicName, const uint16_t topicNameLength, const char *pTopicFilter, const uint16_t topicFilterLength, bool *pIsMatch)</div><div class="ttdoc">A utility function that determines whether the passed topic filter and topic name match according to ...</div><div class="ttdef"><b>Definition:</b> core_mqtt.c:3133</div></div>
+<div class="ttc" id="acore__mqtt_8h_html_a633409812b18547365ec9b853069021b"><div class="ttname"><a href="core__mqtt_8h.html#a633409812b18547365ec9b853069021b">MQTT_MatchTopic</a></div><div class="ttdeci">MQTTStatus_t MQTT_MatchTopic(const char *pTopicName, const uint16_t topicNameLength, const char *pTopicFilter, const uint16_t topicFilterLength, bool *pIsMatch)</div><div class="ttdoc">A utility function that determines whether the passed topic filter and topic name match according to ...</div><div class="ttdef"><b>Definition:</b> core_mqtt.c:3198</div></div>
 </div><!-- fragment --> 
 </div>
 </div>
@@ -2728,7 +2777,7 @@ MQTTRecvFailed if transport recv failed;</h2>
 <div class="line">     }</div>
 <div class="line">     <span class="comment">// Handle other packet types.</span></div>
 <div class="line">}</div>
-<div class="ttc" id="acore__mqtt_8h_html_ac43449e06856c6703cda73359c222bd2"><div class="ttname"><a href="core__mqtt_8h.html#ac43449e06856c6703cda73359c222bd2">MQTT_GetSubAckStatusCodes</a></div><div class="ttdeci">MQTTStatus_t MQTT_GetSubAckStatusCodes(const MQTTPacketInfo_t *pSubackPacket, uint8_t **pPayloadStart, size_t *pPayloadSize)</div><div class="ttdoc">Parses the payload of an MQTT SUBACK packet that contains status codes corresponding to topic filter ...</div><div class="ttdef"><b>Definition:</b> core_mqtt.c:3202</div></div>
+<div class="ttc" id="acore__mqtt_8h_html_ac43449e06856c6703cda73359c222bd2"><div class="ttname"><a href="core__mqtt_8h.html#ac43449e06856c6703cda73359c222bd2">MQTT_GetSubAckStatusCodes</a></div><div class="ttdeci">MQTTStatus_t MQTT_GetSubAckStatusCodes(const MQTTPacketInfo_t *pSubackPacket, uint8_t **pPayloadStart, size_t *pPayloadSize)</div><div class="ttdoc">Parses the payload of an MQTT SUBACK packet that contains status codes corresponding to topic filter ...</div><div class="ttdef"><b>Definition:</b> core_mqtt.c:3267</div></div>
 <div class="ttc" id="acore__mqtt__default__logging_8h_html_a7da92048aaf0cbfcacde9539c98a0e05"><div class="ttname"><a href="core__mqtt__default__logging_8h.html#a7da92048aaf0cbfcacde9539c98a0e05">LogWarn</a></div><div class="ttdeci">#define LogWarn(message)</div><div class="ttdoc">Macro that is called in the MQTT library for logging &quot;Warning&quot; level messages.</div><div class="ttdef"><b>Definition:</b> core_mqtt_default_logging.h:83</div></div>
 <div class="ttc" id="agroup__mqtt__constants_html_ga307e0186aa17fdd0d6d181d3d2715766"><div class="ttname"><a href="group__mqtt__constants.html#ga307e0186aa17fdd0d6d181d3d2715766">MQTT_PACKET_TYPE_SUBACK</a></div><div class="ttdeci">#define MQTT_PACKET_TYPE_SUBACK</div><div class="ttdoc">SUBACK (server-to-client).</div><div class="ttdef"><b>Definition:</b> core_mqtt_serializer.h:73</div></div>
 <div class="ttc" id="agroup__mqtt__enum__types_html_gga48dabc1579e3c0ac6058ce9068054611aeb83b20da8eda934cde6b92db225a808"><div class="ttname"><a href="group__mqtt__enum__types.html#gga48dabc1579e3c0ac6058ce9068054611aeb83b20da8eda934cde6b92db225a808">MQTTSubAckFailure</a></div><div class="ttdeci">@ MQTTSubAckFailure</div><div class="ttdoc">Failure.</div><div class="ttdef"><b>Definition:</b> core_mqtt.h:143</div></div>
