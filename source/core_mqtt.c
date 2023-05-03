@@ -767,7 +767,7 @@ static int32_t sendMessageVector( MQTTContext_t * pContext,
                                   size_t ioVecCount )
 {
     int32_t sendResult;
-    uint32_t timeoutMs;
+    uint32_t startTime;
     TransportOutVector_t * pIoVectIterator;
     size_t vectorsToBeSent = ioVecCount;
     size_t bytesToSend = 0U;
@@ -788,8 +788,8 @@ static int32_t sendMessageVector( MQTTContext_t * pContext,
     /* Reset the iterator to point to the first entry in the array. */
     pIoVectIterator = pIoVec;
 
-    /* Set the timeout. */
-    timeoutMs = pContext->getTime() + MQTT_SEND_TIMEOUT_MS;
+    /* Note the start time. */
+    startTime = pContext->getTime();
 
     while( ( bytesSentOrError < ( int32_t ) bytesToSend ) && ( bytesSentOrError >= 0 ) )
     {
@@ -832,7 +832,7 @@ static int32_t sendMessageVector( MQTTContext_t * pContext,
         }
 
         /* Check for timeout. */
-        if( pContext->getTime() >= timeoutMs )
+        if( calculateElapsedTime( pContext->getTime(), startTime ) > MQTT_SEND_TIMEOUT_MS )
         {
             LogError( ( "sendMessageVector: Unable to send packet: Timed out." ) );
             break;
@@ -1701,7 +1701,7 @@ static MQTTStatus_t receiveSingleIteration( MQTTContext_t * pContext,
         pContext->index += ( size_t ) recvBytes;
 
         status = MQTT_ProcessIncomingPacketTypeAndLength( pContext->networkBuffer.pBuffer,
-                                                          &pContext->index,
+                                                          &( pContext->index ),
                                                           &incomingPacket );
 
         totalMQTTPacketLength = incomingPacket.remainingLength + incomingPacket.headerLength;
