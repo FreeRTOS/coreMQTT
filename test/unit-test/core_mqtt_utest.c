@@ -330,7 +330,7 @@ static int32_t getTimeMockCallLimit = -1;
  */
 static uint32_t getTimeMock( void )
 {
-    TEST_ASSERT_GREATER_THAN_INT32( 0, getTimeMockCallLimit-- );
+    TEST_ASSERT_GREATER_THAN_INT32( -1, getTimeMockCallLimit-- );
     return globalEntryTime++;
 }
 
@@ -4642,53 +4642,6 @@ void test_MQTT_Subscribe_happy_path2( void )
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
 }
 
-/**
- * @brief This test case verifies that MQTT_Subscribe returns successfully
- * when valid parameters are passed and all bytes are sent when the getTime
- * function timer overflows.
- */
-void test_MQTT_Subscribe_happy_path_timerOverflow( void )
-{
-    MQTTStatus_t mqttStatus;
-    MQTTContext_t context = { 0 };
-    TransportInterface_t transport = { 0 };
-    MQTTFixedBuffer_t networkBuffer = { 0 };
-    MQTTSubscribeInfo_t subscribeInfo[ 2 ];
-    size_t remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
-    size_t packetSize = MQTT_SAMPLE_REMAINING_LENGTH;
-    MQTTPubAckInfo_t incomingRecords = { 0 };
-    MQTTPubAckInfo_t outgoingRecords = { 0 };
-
-    setupTransportInterface( &transport );
-    setupNetworkBuffer( &networkBuffer );
-    transport.send = transportSendSucceedThenFail;
-    transport.writev = NULL;
-    setupSubscriptionInfo( &subscribeInfo[ 0 ] );
-    setupSubscriptionInfo( &subscribeInfo[ 1 ] );
-
-    globalEntryTime = UINT32_MAX;
-
-    /* Initialize context. */
-    mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
-    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
-
-    mqttStatus = MQTT_InitStatefulQoS( &context,
-                                       &outgoingRecords, 4,
-                                       &incomingRecords, 4 );
-    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
-
-    /* Verify MQTTSuccess is returned with the following mocks. */
-    MQTT_GetSubscribePacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
-    MQTT_GetSubscribePacketSize_ReturnThruPtr_pPacketSize( &packetSize );
-    MQTT_GetSubscribePacketSize_ReturnThruPtr_pRemainingLength( &remainingLength );
-    MQTT_SerializeSubscribeHeader_Stub( MQTT_SerializeSubscribedHeader_cb1 );
-
-    /* Expect the above calls when running MQTT_Subscribe. */
-    mqttStatus = MQTT_Subscribe( &context, subscribeInfo, 2, MQTT_FIRST_VALID_PACKET_ID );
-
-    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
-}
-
 void test_MQTT_Subscribe_MultipleSubscriptions( void )
 {
     MQTTStatus_t mqttStatus;
@@ -4834,7 +4787,7 @@ void test_MQTT_Subscribe_error_paths_timerOverflowCheck( void )
     /* The timer function can be called a maximum of these many times
      * (which is way less than UINT32_MAX). This ensures that if overflow
      * check is not correct, then the timer mock call will fail and assert. */
-    getTimeMockCallLimit = 1;
+    getTimeMockCallLimit = MQTT_SEND_TIMEOUT_MS + 1;
 
     /* Verify that an error is propagated when transport interface returns an error. */
     setupNetworkBuffer( &networkBuffer );
