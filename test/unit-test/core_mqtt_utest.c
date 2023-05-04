@@ -4800,7 +4800,7 @@ void test_MQTT_Subscribe_error_paths_timerOverflowCheck( void )
     size_t remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
     size_t packetSize = MQTT_SAMPLE_REMAINING_LENGTH;
 
-    globalEntryTime = UINT32_MAX;
+    globalEntryTime = UINT32_MAX - 2U;
 
     /* The timer function can be called a maximum of these many times
      * (which is way less than UINT32_MAX). This ensures that if overflow
