@@ -77,4 +77,6 @@ struct NetworkContext
 
 #define MQTT_SUB_UNSUB_MAX_VECTORS    ( 6U )
 
+#define MQTT_SEND_TIMEOUT_MS          ( 20U )
+
 #endif /* ifndef CORE_MQTT_CONFIG_H_ */
