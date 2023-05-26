@@ -1866,7 +1866,7 @@ static size_t addEncodedStringToVector( uint8_t serializedLength[ CORE_MQTT_SERI
     size_t vectorsAdded = 0U;
 
     /* When length is non-zero, the string must be non-NULL. */
-    assert( ( length != 0U ) == ( string != NULL ) );
+    assert( ( length != 0U ) ? ( string != NULL ) : true );
 
     serializedLength[ 0 ] = ( ( uint8_t ) ( ( length ) >> 8 ) );
     serializedLength[ 1 ] = ( ( uint8_t ) ( ( length ) & 0x00ffU ) );
