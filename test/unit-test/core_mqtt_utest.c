@@ -320,6 +320,37 @@ static uint32_t getTime( void )
     return globalEntryTime++;
 }
 
+static int32_t getTimeMockCallLimit = -1;
+
+/**
+ * @brief A mocked timer query function that increments on every call. This
+ * guarantees that only a single iteration runs in the ProcessLoop for ease
+ * of testing. Additionally, this tests whether the number of calls to this
+ * function have exceeded than the set limit and asserts.
+ */
+static uint32_t getTimeMock( void )
+{
+    TEST_ASSERT_GREATER_THAN_INT32( -1, getTimeMockCallLimit-- );
+    return globalEntryTime++;
+}
+
+static int32_t getTimeMockBigTimeStepCallLimit = -1;
+
+/**
+ * @brief A mocked timer query function that increments by MQTT_SEND_TIMEOUT_MS
+ * to simulate the time consumed by a long running high priority task on every
+ * call. Additionally, this tests whether the number of calls to this function
+ * have exceeded than the set limit and asserts.
+ */
+static uint32_t getTimeMockBigTimeStep( void )
+{
+    TEST_ASSERT_GREATER_THAN_INT32( -1, getTimeMockBigTimeStepCallLimit-- );
+
+    globalEntryTime += MQTT_SEND_TIMEOUT_MS;
+    return globalEntryTime;
+}
+
+
 /**
  * @brief A mocked timer function that could be used on a device with no system
  * time.
@@ -4753,6 +4784,92 @@ void test_MQTT_Subscribe_error_paths2( void )
     MQTT_SerializeSubscribeHeader_Stub( MQTT_SerializeSubscribedHeader_cb );
     mqttStatus = MQTT_Subscribe( &context, &subscribeInfo, 1, MQTT_FIRST_VALID_PACKET_ID );
     TEST_ASSERT_EQUAL( MQTTSendFailed, mqttStatus );
+}
+
+/**
+ * @brief This test case verifies that MQTT_Subscribe returns MQTTSendFailed
+ * if transport interface send fails and timer overflows.
+ */
+void test_MQTT_Subscribe_error_paths_timerOverflowCheck( void )
+{
+    MQTTStatus_t mqttStatus;
+    MQTTContext_t context = { 0 };
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
+    MQTTSubscribeInfo_t subscribeInfo = { 0 };
+    size_t remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
+    size_t packetSize = MQTT_SAMPLE_REMAINING_LENGTH;
+
+    globalEntryTime = UINT32_MAX - 2U;
+
+    /* The timer function can be called a maximum of these many times
+     * (which is way less than UINT32_MAX). This ensures that if overflow
+     * check is not correct, then the timer mock call will fail and assert. */
+    getTimeMockCallLimit = MQTT_SEND_TIMEOUT_MS + 1;
+
+    /* Verify that an error is propagated when transport interface returns an error. */
+    setupNetworkBuffer( &networkBuffer );
+    setupSubscriptionInfo( &subscribeInfo );
+    subscribeInfo.qos = MQTTQoS0;
+    setupTransportInterface( &transport );
+    transport.writev = NULL;
+    /* Case when there is timeout in sending data through transport send. */
+    transport.send = transportSendNoBytes; /* Use the mock function that returns zero bytes sent. */
+
+    /* Initialize context. */
+    mqttStatus = MQTT_Init( &context, &transport, getTimeMock, eventCallback, &networkBuffer );
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+
+    MQTT_GetSubscribePacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_GetSubscribePacketSize_ReturnThruPtr_pPacketSize( &packetSize );
+    MQTT_GetSubscribePacketSize_ReturnThruPtr_pRemainingLength( &remainingLength );
+    MQTT_SerializeSubscribeHeader_Stub( MQTT_SerializeSubscribedHeader_cb );
+    mqttStatus = MQTT_Subscribe( &context, &subscribeInfo, 1, MQTT_FIRST_VALID_PACKET_ID );
+    TEST_ASSERT_EQUAL( MQTTSendFailed, mqttStatus );
+    TEST_ASSERT_EQUAL( -1, getTimeMockCallLimit );
+}
+
+/**
+ * @brief This test case verifies that MQTT_Subscribe returns MQTTSendFailed
+ * if transport interface send fails and timer overflows.
+ */
+void test_MQTT_Subscribe_error_paths_timerOverflowCheck1( void )
+{
+    MQTTStatus_t mqttStatus;
+    MQTTContext_t context = { 0 };
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
+    MQTTSubscribeInfo_t subscribeInfo = { 0 };
+    size_t remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
+    size_t packetSize = MQTT_SAMPLE_REMAINING_LENGTH;
+
+    globalEntryTime = UINT32_MAX - MQTT_SEND_TIMEOUT_MS + 1;
+
+    /* The timer function can be called a exactly 2 times. First when setting
+     * the initial time, next time when checking for timeout.
+     */
+    getTimeMockBigTimeStepCallLimit = 2;
+
+    /* Verify that an error is propagated when transport interface returns an error. */
+    setupNetworkBuffer( &networkBuffer );
+    setupSubscriptionInfo( &subscribeInfo );
+    subscribeInfo.qos = MQTTQoS0;
+    setupTransportInterface( &transport );
+    transport.writev = NULL;
+    /* Case when there is timeout in sending data through transport send. */
+    transport.send = transportSendNoBytes; /* Use the mock function that returns zero bytes sent. */
+
+    /* Initialize context. */
+    mqttStatus = MQTT_Init( &context, &transport, getTimeMockBigTimeStep, eventCallback, &networkBuffer );
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+
+    MQTT_GetSubscribePacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_GetSubscribePacketSize_ReturnThruPtr_pPacketSize( &packetSize );
+    MQTT_GetSubscribePacketSize_ReturnThruPtr_pRemainingLength( &remainingLength );
+    MQTT_SerializeSubscribeHeader_Stub( MQTT_SerializeSubscribedHeader_cb );
+    mqttStatus = MQTT_Subscribe( &context, &subscribeInfo, 1, MQTT_FIRST_VALID_PACKET_ID );
+    TEST_ASSERT_EQUAL( MQTTSendFailed, mqttStatus );
+    TEST_ASSERT_EQUAL( -1, getTimeMockBigTimeStepCallLimit );
 }
 
 /* ========================================================================== */
