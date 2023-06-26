@@ -3373,6 +3373,10 @@ const char * MQTT_Status_strerror( MQTTStatus_t status )
             str = "MQTTKeepAliveTimeout";
             break;
 
+        case MQTTNeedMoreBytes:
+            str = "MQTTNeedMoreBytes";
+            break;
+
         default:
             str = "Invalid MQTT Status code";
             break;
