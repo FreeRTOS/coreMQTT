@@ -5842,7 +5842,11 @@ void test_MQTT_Status_strerror( void )
     str = MQTT_Status_strerror( status );
     TEST_ASSERT_EQUAL_STRING( "MQTTKeepAliveTimeout", str );
 
-    status = MQTTKeepAliveTimeout + 1;
+    status = MQTTNeedMoreBytes;
+    str = MQTT_Status_strerror( status );
+    TEST_ASSERT_EQUAL_STRING( "MQTTNeedMoreBytes", str );
+
+    status = MQTTNeedMoreBytes + 1;
     str = MQTT_Status_strerror( status );
     TEST_ASSERT_EQUAL_STRING( "Invalid MQTT Status code", str );
 }
