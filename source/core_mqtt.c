@@ -1344,6 +1344,7 @@ static MQTTStatus_t handleKeepAlive( MQTTContext_t * pContext )
     MQTTStatus_t status = MQTTSuccess;
     uint32_t now = 0U;
     uint32_t packetTxTimeoutMs = 0U;
+    uint32_t lastPacketTxTime = 0U;
 
     assert( pContext != NULL );
     assert( pContext->getTime != NULL );
@@ -1369,7 +1370,11 @@ static MQTTStatus_t handleKeepAlive( MQTTContext_t * pContext )
     }
     else
     {
-        if( ( packetTxTimeoutMs != 0U ) && ( calculateElapsedTime( now, pContext->lastPacketTxTime ) >= packetTxTimeoutMs ) )
+        MQTT_PRE_STATE_UPDATE_HOOK( pContext );
+        lastPacketTxTime = pContext->lastPacketTxTime;
+        MQTT_POST_STATE_UPDATE_HOOK( pContext );
+
+        if( ( packetTxTimeoutMs != 0U ) && ( calculateElapsedTime( now, lastPacketTxTime ) >= packetTxTimeoutMs ) )
         {
             status = MQTT_Ping( pContext );
         }
