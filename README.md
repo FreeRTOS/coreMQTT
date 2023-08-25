@@ -11,7 +11,7 @@ See memory requirements for this library [here](./docs/doxygen/include/size_tabl
 ## MQTT Config File
 
 The MQTT client library exposes build configuration macros that are required for building the library.
-A list of all the configurations and their default values are defined in [core_mqtt_config_defaults.h](source/include/core_mqtt_config_defaults.h). 
+A list of all the configurations and their default values are defined in [core_mqtt_config_defaults.h](source/include/core_mqtt_config_defaults.h).
 To provide custom values for the configuration macros, a custom config file named `core_mqtt_config.h` can be
 provided by the application to the library.
 
@@ -19,7 +19,7 @@ By default, a `core_mqtt_config.h` custom config is required to build the librar
 and build the library with default configuration values, provide `MQTT_DO_NOT_USE_CUSTOM_CONFIG` as a compile time preprocessor macro.
 
 **Thus, the MQTT library can be built by either**:
-* Defining a `core_mqtt_config.h` file in the application, and adding it to the include directories list of the library  
+* Defining a `core_mqtt_config.h` file in the application, and adding it to the include directories list of the library
 **OR**
 * Defining the `MQTT_DO_NOT_USE_CUSTOM_CONFIG` preprocessor macro for the library build.
 
