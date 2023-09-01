@@ -57,7 +57,7 @@ jobs:
           echo -e "${{ env.bashPass }} ${{env.stepName}} ${{ env.bashEnd }}"
 
       - name: Check Coverage
-        uses: FreeRTOS/CI-CD-Github-Actions/coverage-cop@v2
+        uses: FreeRTOS/CI-CD-Github-Actions/coverage-cop@main
         with:
           coverage-file: ./build/coverage.info
 
@@ -66,7 +66,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Check complexity
-        uses: FreeRTOS/CI-CD-Github-Actions/complexity@v2
+        uses: FreeRTOS/CI-CD-Github-Actions/complexity@main
         with:
           path: ./
           horrid_threshold: 12
@@ -178,7 +178,7 @@ jobs:
           fetch-depth: 0
 
       - name: Run manifest verifier
-        uses: FreeRTOS/CI-CD-GitHub-Actions/manifest-verifier@v2
+        uses: FreeRTOS/CI-CD-GitHub-Actions/manifest-verifier@main
         with:
           path: ./
           fail-on-incorrect-version: true
