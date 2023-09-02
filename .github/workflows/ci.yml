@@ -95,7 +95,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Check formatting
-        uses: FreeRTOS/CI-CD-Github-Actions/formatting@v2
+        uses: FreeRTOS/CI-CD-Github-Actions/formatting@main
         with:
           path: ./
 
