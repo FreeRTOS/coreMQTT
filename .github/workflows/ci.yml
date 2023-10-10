@@ -163,8 +163,6 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Check Links
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         uses: FreeRTOS/CI-CD-Github-Actions/link-verifier@main
         with:
           path: ./
