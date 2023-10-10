@@ -30,6 +30,9 @@ of the
 [FreeRTOS 202210.00 LTS](https://github.com/FreeRTOS/FreeRTOS-LTS/tree/202210.00-LTS)
 release.**
 
+Also for contributing and creating a Pull Request please refer to
+[the instructions here](.github/CONTRIBUTING.md#contributing-via-pull-request).
+
 ## MQTT Config File
 
 The MQTT client library exposes build configuration macros that are required for
