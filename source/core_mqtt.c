@@ -2612,7 +2612,7 @@ MQTTStatus_t MQTT_InitStatefulQoS( MQTTContext_t * pContext,
         LogError( ( "Arguments do not match: pOutgoingPublishRecords=%p, "
                     "outgoingPublishCount=%lu",
                     ( void * ) pOutgoingPublishRecords,
-                    outgoingPublishCount ) );
+                    ( unsigned long ) outgoingPublishCount ) );
         status = MQTTBadParameter;
     }
 
@@ -2624,7 +2624,7 @@ MQTTStatus_t MQTT_InitStatefulQoS( MQTTContext_t * pContext,
         LogError( ( "Arguments do not match: pIncomingPublishRecords=%p, "
                     "incomingPublishCount=%lu",
                     ( void * ) pIncomingPublishRecords,
-                    incomingPublishCount ) );
+                    ( unsigned long ) incomingPublishCount ) );
         status = MQTTBadParameter;
     }
     else if( pContext->appCallback == NULL )
