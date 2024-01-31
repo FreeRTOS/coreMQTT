@@ -69,14 +69,8 @@
  */
 #define MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT    ( 2U )
 
-/* Set network context to double pointer to buffer (uint8_t**). */
-struct NetworkContext
-{
-    uint8_t ** buffer;
-};
+#define MQTT_SUB_UNSUB_MAX_VECTORS              ( 6U )
 
-#define MQTT_SUB_UNSUB_MAX_VECTORS    ( 6U )
-
-#define MQTT_SEND_TIMEOUT_MS          ( 20U )
+#define MQTT_SEND_TIMEOUT_MS                    ( 20U )
 
 #endif /* ifndef CORE_MQTT_CONFIG_H_ */
