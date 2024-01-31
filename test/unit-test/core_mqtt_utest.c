@@ -28,6 +28,7 @@
  */
 #include <string.h>
 #include <stdbool.h>
+#include <stdint.h>
 
 #include "unity.h"
 
@@ -36,6 +37,12 @@
 
 #include "mock_core_mqtt_serializer.h"
 #include "mock_core_mqtt_state.h"
+
+/* Set network context to double pointer to buffer (uint8_t**). */
+struct NetworkContext
+{
+    uint8_t ** buffer;
+};
 
 /**
  * @brief MQTT client identifier.
