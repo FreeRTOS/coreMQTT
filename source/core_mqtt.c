@@ -35,8 +35,6 @@
 /* Include config defaults header to get default values of configs. */
 #include "core_mqtt_config_defaults.h"
 
-#include "core_mqtt_default_logging.h"
-
 #ifndef MQTT_PRE_SEND_HOOK
 
 /**

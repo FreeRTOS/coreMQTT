@@ -34,8 +34,6 @@
 /* Include config defaults header to get default values of configs. */
 #include "core_mqtt_config_defaults.h"
 
-#include "core_mqtt_default_logging.h"
-
 /**
  * @brief MQTT protocol version 3.1.1.
  */
