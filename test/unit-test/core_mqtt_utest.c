@@ -38,6 +38,8 @@
 #include "mock_core_mqtt_serializer.h"
 #include "mock_core_mqtt_state.h"
 
+#include "core_mqtt_config_defaults.h"
+
 /* Set network context to double pointer to buffer (uint8_t**). */
 struct NetworkContext
 {
