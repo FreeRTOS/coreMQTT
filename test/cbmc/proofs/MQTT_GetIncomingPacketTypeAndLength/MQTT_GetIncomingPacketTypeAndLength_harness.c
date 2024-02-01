@@ -30,6 +30,11 @@
 #include "network_interface_stubs.h"
 #include "mqtt_cbmc_state.h"
 
+struct NetworkContext
+{
+    int NetworkContext;
+};
+
 void harness()
 {
     /* NetworkContext_t is an application defined network interface context. It
