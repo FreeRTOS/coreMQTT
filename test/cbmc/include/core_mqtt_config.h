@@ -29,12 +29,6 @@
 #ifndef CORE_MQTT_CONFIG_H_
 #define CORE_MQTT_CONFIG_H_
 
-/* Mock a network context for the CBMC proofs. */
-struct NetworkContext
-{
-    int NetworkContext;
-};
-
 /**
  * @brief Determines the maximum number of MQTT PUBLISH messages, pending
  * acknowledgement at a time, that are supported for incoming and outgoing
