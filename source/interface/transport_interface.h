@@ -195,14 +195,11 @@ typedef struct NetworkContext NetworkContext_t;
  * @transportcallback
  * @brief Transport interface for receiving data on the network.
  *
- * @note It is RECOMMENDED that the transport receive implementation
- * does NOT block when requested to read a single byte. A single byte
- * read request can be made by the caller to check whether there is a
- * new frame available on the network for reading.
- * However, the receive implementation MAY block for a timeout period when
- * it is requested to read more than 1 byte. This is because once the caller
- * is aware that a new frame is available to read on the network, then
- * the likelihood of reading more than one byte over the network becomes high.
+ * @note It is HIGHLY RECOMMENDED that the transport receive
+ * implementation does NOT block.
+ * coreMQTT will continue to call the transport interface if it receives
+ * a partial packet until it accumulates enough data to get the complete
+ * MQTT packet.
  *
  * @param[in] pNetworkContext Implementation-defined network context.
  * @param[in] pBuffer Buffer to receive the data into.
