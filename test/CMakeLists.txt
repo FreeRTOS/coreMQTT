@@ -14,7 +14,7 @@ if( NOT DEFINED CMAKE_C_STANDARD_REQUIRED )
     set( CMAKE_C_STANDARD_REQUIRED ON )
 endif()
 
-# If no configuration is defined, turn everythin on.
+# If no configuration is defined, turn everything on.
 if( NOT DEFINED COV_ANALYSIS AND NOT DEFINED UNITTEST )
     set( COV_ANALYSIS TRUE )
     set( UNITTEST TRUE )
