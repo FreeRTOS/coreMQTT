@@ -268,7 +268,7 @@ int suiteTearDown( int numFailures )
  * @brief Mock successful transport send, and write data into buffer for
  * verification.
  */
-static int32_t mockSend( NetworkContext_t * pNetworkContext,
+static int32_t mockSend( void * pNetworkContext,
                          const void * pMessage,
                          size_t bytesToSend )
 {
@@ -379,7 +379,7 @@ static uint32_t getTimeDummy( void )
  * @return Number of bytes sent; negative value on error;
  * 0 for timeout or 0 bytes sent.
  */
-static int32_t transportWritevSuccess( NetworkContext_t * pNetworkContext,
+static int32_t transportWritevSuccess( void * pNetworkContext,
                                        TransportOutVector_t * pIoVectorIterator,
                                        size_t vectorsToBeSent )
 {
@@ -474,7 +474,7 @@ static void verifyEncodedTopicStringUnsubscribe( TransportOutVector_t * pIoVecto
  * @return Number of bytes sent; negative value on error;
  * 0 for timeout or 0 bytes sent.
  */
-static int32_t transportWritevSubscribeSuccess( NetworkContext_t * pNetworkContext,
+static int32_t transportWritevSubscribeSuccess( void * pNetworkContext,
                                                 TransportOutVector_t * pIoVectorIterator,
                                                 size_t vectorsToBeSent )
 {
@@ -563,7 +563,7 @@ static int32_t transportWritevSubscribeSuccess( NetworkContext_t * pNetworkConte
  * @return Number of bytes sent; negative value on error;
  * 0 for timeout or 0 bytes sent.
  */
-static int32_t transportWritevUnsubscribeSuccess( NetworkContext_t * pNetworkContext,
+static int32_t transportWritevUnsubscribeSuccess( void * pNetworkContext,
                                                   TransportOutVector_t * pIoVectorIterator,
                                                   size_t vectorsToBeSent )
 {
@@ -641,7 +641,7 @@ static int32_t transportWritevUnsubscribeSuccess( NetworkContext_t * pNetworkCon
  * @return Number of bytes sent; negative value on error;
  * 0 for timeout or 0 bytes sent.
  */
-static int32_t transportWritevFail( NetworkContext_t * pNetworkContext,
+static int32_t transportWritevFail( void * pNetworkContext,
                                     TransportOutVector_t * pIoVectorIterator,
                                     size_t vectorsToBeSent )
 {
@@ -658,7 +658,7 @@ static int32_t transportWritevFail( NetworkContext_t * pNetworkContext,
     return bytesToWrite + 3;
 }
 
-static int32_t transportWritevError( NetworkContext_t * pNetworkContext,
+static int32_t transportWritevError( void * pNetworkContext,
                                      TransportOutVector_t * pIoVectorIterator,
                                      size_t vectorsToBeSent )
 {
@@ -680,7 +680,7 @@ static int32_t transportWritevError( NetworkContext_t * pNetworkContext,
  * @return Number of bytes sent; negative value on error;
  * 0 for timeout or 0 bytes sent.
  */
-static int32_t transportSendSuccess( NetworkContext_t * pNetworkContext,
+static int32_t transportSendSuccess( void * pNetworkContext,
                                      const void * pBuffer,
                                      size_t bytesToWrite )
 {
@@ -692,7 +692,7 @@ static int32_t transportSendSuccess( NetworkContext_t * pNetworkContext,
 /**
  * @brief Mocked failed transport send.
  */
-static int32_t transportSendFailure( NetworkContext_t * pNetworkContext,
+static int32_t transportSendFailure( void * pNetworkContext,
                                      const void * pBuffer,
                                      size_t bytesToWrite )
 {
@@ -705,7 +705,7 @@ static int32_t transportSendFailure( NetworkContext_t * pNetworkContext,
 /**
  * @brief Mocked transport send that always returns 0 bytes sent.
  */
-static int32_t transportSendNoBytes( NetworkContext_t * pNetworkContext,
+static int32_t transportSendNoBytes( void * pNetworkContext,
                                      const void * pBuffer,
                                      size_t bytesToWrite )
 {
@@ -718,7 +718,7 @@ static int32_t transportSendNoBytes( NetworkContext_t * pNetworkContext,
 /**
  * @brief Mocked transport send that succeeds then fails.
  */
-static int32_t transportSendSucceedThenFail( NetworkContext_t * pNetworkContext,
+static int32_t transportSendSucceedThenFail( void * pNetworkContext,
                                              const void * pMessage,
                                              size_t bytesToSend )
 {
@@ -740,7 +740,7 @@ static int32_t transportSendSucceedThenFail( NetworkContext_t * pNetworkContext,
 /**
  * @brief Mocked transport send that only sends half of the bytes.
  */
-static int32_t transportWritevPartialByte( NetworkContext_t * pNetworkContext,
+static int32_t transportWritevPartialByte( void * pNetworkContext,
                                            TransportOutVector_t * pIoVectorIterator,
                                            size_t vectorsToBeSent )
 {
@@ -772,7 +772,7 @@ static int32_t transportWritevPartialByte( NetworkContext_t * pNetworkContext,
  *
  * @return Number of bytes received; negative value on error.
  */
-static int32_t transportRecvSuccess( NetworkContext_t * pNetworkContext,
+static int32_t transportRecvSuccess( void * pNetworkContext,
                                      void * pBuffer,
                                      size_t bytesToRead )
 {
@@ -781,7 +781,7 @@ static int32_t transportRecvSuccess( NetworkContext_t * pNetworkContext,
     return bytesToRead;
 }
 
-static int32_t transportRecvOneSuccessOneFail( NetworkContext_t * pNetworkContext,
+static int32_t transportRecvOneSuccessOneFail( void * pNetworkContext,
                                                void * pBuffer,
                                                size_t bytesToRead )
 {
@@ -802,7 +802,7 @@ static int32_t transportRecvOneSuccessOneFail( NetworkContext_t * pNetworkContex
 /**
  * @brief Mocked failed transport read.
  */
-static int32_t transportRecvFailure( NetworkContext_t * pNetworkContext,
+static int32_t transportRecvFailure( void * pNetworkContext,
                                      void * pBuffer,
                                      size_t bytesToRead )
 {
@@ -815,7 +815,7 @@ static int32_t transportRecvFailure( NetworkContext_t * pNetworkContext,
 /**
  * @brief Mocked transport reading one byte at a time.
  */
-static int32_t transportRecvOneByte( NetworkContext_t * pNetworkContext,
+static int32_t transportRecvOneByte( void * pNetworkContext,
                                      void * pBuffer,
                                      size_t bytesToRead )
 {
@@ -829,7 +829,7 @@ static int32_t transportRecvOneByte( NetworkContext_t * pNetworkContext,
  * @brief Mocked transport returning zero bytes to simulate reception
  * of no data over network.
  */
-static int32_t transportRecvNoData( NetworkContext_t * pNetworkContext,
+static int32_t transportRecvNoData( void * pNetworkContext,
                                     void * pBuffer,
                                     size_t bytesToRead )
 {
