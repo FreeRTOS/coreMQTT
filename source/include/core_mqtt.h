@@ -69,6 +69,14 @@ struct MQTTDeserializedInfo;
  * @note The timer should be a monotonic timer. It just needs to provide an
  * incrementing count of milliseconds elapsed since a given epoch.
  *
+ * @note As the timer is supposed to be a millisecond timer returning a 32-bit
+ * value, it will overflow in just under 50 days. But it will not cause any issues
+ * in the library as the time function is only used for calculating durations for
+ * timeouts and keep alive periods. The difference in unsigned numbers is
+ * used where unsigned wrap around is defined. Unless the timeout is bigger than
+ * 100 days (50*2) where the numbers can wrap around more than once the code
+ * should work properly.
+ *
  * @return The time elapsed in milliseconds.
  */
 typedef uint32_t (* MQTTGetCurrentTimeFunc_t )( void );
