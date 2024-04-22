@@ -3,7 +3,10 @@
   "version": "main",
   "description": "portable, embedded friendly MQTT client library",
   "homepage": "https://freertos.github.io/coreMQTT/",
-  "repository": "https://github.com/FreeRTOS/coreMQTT.git",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/FreeRTOS/coreMQTT.git"
+  },
   "license": "MIT",
   "headers": ["core_mqtt.h", "core_mqtt_serializer.h", "transport_interface.h"],
   "build": {
