@@ -2217,7 +2217,7 @@ static MQTTStatus_t sendConnectWithoutCopy( MQTTContext_t * pContext,
                                                    pWillInfo,
                                                    remainingLength );
 
-        assert( ( pIndex - connectPacketHeader ) <= sizeof( connectPacketHeader ) );
+        assert( ( ( size_t ) ( pIndex - connectPacketHeader ) ) <= sizeof( connectPacketHeader ) );
 
         /* The header gets sent first. */
         iterator->iov_base = connectPacketHeader;
