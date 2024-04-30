@@ -43,4 +43,5 @@ utest
 vect
 Vect
 VECT
+Werror
 Wunused
