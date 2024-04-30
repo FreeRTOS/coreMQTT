@@ -18,7 +18,7 @@
 ## v2.1.1 (November 2022)
 
 ### Changes
-- [#230](https://github.com/FreeRTOS/coreMQTT/pull/230) Fix a broken link in MISRA.md 
+- [#230](https://github.com/FreeRTOS/coreMQTT/pull/230) Fix a broken link in MISRA.md.
 - [#229](https://github.com/FreeRTOS/coreMQTT/pull/229) Fixed multiple Sub/Unsub request sending logic.
 
 ## v2.1.0 (October 2022)
