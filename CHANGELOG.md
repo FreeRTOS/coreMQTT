@@ -1,5 +1,26 @@
 # Changelog for coreMQTT Client Library
 
+## v2.2.0 (April 2024)
+
+### Changes
+
+- [#283](https://github.com/FreeRTOS/coreMQTT/pull/283) Fix build error with Werror=sign-compare is enabled.
+- [#279](https://github.com/FreeRTOS/coreMQTT/pull/279) Add documentation about timer behavior when it overflows.
+- [#275](https://github.com/FreeRTOS/coreMQTT/pull/275) Correct TransportRecv_t documentation.
+- [#268](https://github.com/FreeRTOS/coreMQTT/pull/268) Typecast outgoing and incoming publish count to unsigned longs to match format specifier.
+- [#255](https://github.com/FreeRTOS/coreMQTT/pull/255) Fix MQTT_Status_strerror to return correct error on NeedMoreBytes error.
+- [#252](https://github.com/FreeRTOS/coreMQTT/pull/252) Fix sending empty strings in MQTT packets.
+- [#258](https://github.com/FreeRTOS/coreMQTT/pull/258) Fix race condition in handleKeepAlive.
+- [#250](https://github.com/FreeRTOS/coreMQTT/pull/250) Fix timeout calculation in sendVector function to account for overflow.
+- [#249](https://github.com/FreeRTOS/coreMQTT/pull/249) Replace magic numbers with macros and add explaining comments.
+- [#235](https://github.com/FreeRTOS/coreMQTT/pull/235) Fix to update the timestamp of the last packet received.
+
+## v2.1.1 (November 2022)
+
+### Changes
+- [#230](https://github.com/FreeRTOS/coreMQTT/pull/230) Fix a broken link in MISRA.md.
+- [#229](https://github.com/FreeRTOS/coreMQTT/pull/229) Fixed multiple Sub/Unsub request sending logic.
+
 ## v2.1.0 (October 2022)
 
 ### Changes
