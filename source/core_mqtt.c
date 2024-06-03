@@ -864,7 +864,7 @@ static int32_t sendBuffer( MQTTContext_t * pContext,
                            size_t bytesToSend )
 {
     int32_t sendResult;
-    uint32_t timeoutMs;
+    uint32_t startTime;
     int32_t bytesSentOrError = 0;
     const uint8_t * pIndex = pBufferToSend;
 
@@ -874,7 +874,7 @@ static int32_t sendBuffer( MQTTContext_t * pContext,
     assert( pIndex != NULL );
 
     /* Set the timeout. */
-    timeoutMs = pContext->getTime() + MQTT_SEND_TIMEOUT_MS;
+    startTime = pContext->getTime();
 
     while( ( bytesSentOrError < ( int32_t ) bytesToSend ) && ( bytesSentOrError >= 0 ) )
     {
@@ -909,7 +909,7 @@ static int32_t sendBuffer( MQTTContext_t * pContext,
         }
 
         /* Check for timeout. */
-        if( pContext->getTime() >= timeoutMs )
+        if( calculateElapsedTime( pContext->getTime(), startTime ) >= ( MQTT_SEND_TIMEOUT_MS ) )
         {
             LogError( ( "sendBuffer: Unable to send packet: Timed out." ) );
             break;
