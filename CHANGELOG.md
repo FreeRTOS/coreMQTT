@@ -1,5 +1,11 @@
 # Changelog for coreMQTT Client Library
 
+## v2.2.1 (June 2024)
+
+### Changes
+
+- [#288](https://github.com/FreeRTOS/coreMQTT/pull/288) Fix time comparison overflow.
+
 ## v2.2.0 (April 2024)
 
 ### Changes
