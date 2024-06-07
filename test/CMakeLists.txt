@@ -1,6 +1,6 @@
 cmake_minimum_required ( VERSION 3.22.0 )
 project ( "CoreMQTT tests"
-          VERSION 2.1.0
+          VERSION 2.3.0
           LANGUAGES C )
 
 # Allow the project to be organized into folders.
