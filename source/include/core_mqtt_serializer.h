@@ -43,6 +43,7 @@
 /* *INDENT-ON */
 
 #include "transport_interface.h"
+#include "core_mqtt_config_defaults.h"
 
 /* MQTT packet types. */
 
@@ -99,6 +100,12 @@ typedef enum MQTTStatus
     MQTTNeedMoreBytes     /**< MQTT_ProcessLoop/MQTT_ReceiveLoop has received
                           incomplete data; it should be called again (probably after
                           a delay). */
+    #if (MQTT_VERSION_5_ENABLED)
+    ,
+    MQTTMalformedPacket = 0x81,
+    MQTTProtocolError = 0x82,
+
+    #endif
 } MQTTStatus_t;
 
 /**
@@ -194,6 +201,76 @@ typedef struct MQTTSubscribeInfo
     uint16_t topicFilterLength;
 } MQTTSubscribeInfo_t;
 
+#if (MQTT_VERSION_5_ENABLED)
+
+   /**
+ * @ingroup mqtt_struct_types
+ * @brief Struct to hold authentication method and authentication data.
+ */
+typedef struct MQTTAuthInfo
+{
+  const char* authMethod;
+  uint16_t authMethodLength;
+  const char* authData;
+  uint16_t authDataLength;
+}MQTTAuthInfo_t;
+
+typedef struct MQTTUserProperty
+{
+    const char* key;
+    uint16_t keyLength;
+    const char* value;
+    uint16_t valueLength;
+}MQTTUserProperty_t;
+   /**
+ * @ingroup mqtt_struct_types
+ * @brief Struct to hold connect and connack properties.
+ */
+typedef struct MQTTConnectProperties
+{
+    uint32_t sessionExpiry;
+    uint16_t receiveMax;
+    uint32_t maxPacketSize;
+    uint16_t topicAliasMax;
+    bool  reqResInfo;
+    bool  reqProbInfo;
+    size_t propertyLength;
+//  Add user property
+// Pointer to array of userProperty;
+//  UserProperty_t userProperty;
+// array of user property -> with size as maximum value of user property configured
+//  add authenticationenecccdkcnfvkejgbniughcdhnlelkkhdrbhvkelthjn
+
+    MQTTUserProperty_t *incomingUserProperty;
+    uint16_t incomingUserPropSize;
+    MQTTUserProperty_t *outgoingUserProperty;
+    uint16_t outgoingUserPropSize;
+    MQTTAuthInfo_t *incomingAuth;
+    uint32_t willDelay;
+    // CONNECT
+    uint16_t serverReceiveMax;
+    uint8_t serverMaxQos;
+    int8_t returnAvailable;
+    uint32_t serverMaxPacketSize;
+    const char* clientIdentifier;
+    uint16_t clientIdLength;
+    uint16_t serverTopicAliasMax;
+    const char* reasonString;
+    uint16_t reasonStringLength;
+    bool isWildcardAvaiable;
+    bool subscriptionId;
+    bool isSharedAvailable;
+    uint16_t serverKeepAlive;
+    const char* responseInfo;
+    uint16_t responseInfoLength;
+    const char* serverRef;
+    uint16_t serverRefLength;
+    MQTTAuthInfo_t *outgoingAuth;
+    
+} MQTTConnectProperties_t;
+#endif
+
+
 /**
  * @ingroup mqtt_struct_types
  * @brief MQTT PUBLISH packet parameters.
@@ -234,6 +311,22 @@ typedef struct MQTTPublishInfo
      * @brief Message payload length.
      */
     size_t payloadLength;
+    
+#if (MQTT_VERSION_5_ENABLED)
+    size_t propertyLength;
+    uint8_t payloadFormat;
+    uint64_t msgExpiryInterval;
+    uint16_t contentTypeLength;
+    const char *contentType;
+    uint16_t responseTopicLength;
+    const char *responseTopic;
+    uint16_t correlationLength;
+    const void *correlationData;
+    MQTTUserProperty_t* userProperty;
+    uint16_t userPropertySize;
+//    Add user property
+#endif
+
 } MQTTPublishInfo_t;
 
 /**

@@ -90,6 +90,13 @@
  */
 #define CORE_MQTT_UNSUBSCRIBE_PER_TOPIC_VECTOR_LENGTH    ( 2U )
 
+#if (MQTT_VERSION_5_ENABLED)
+#define  CORE_MQTT_ID_SIZE                          ( 1U )
+#define  MQTT_USER_PROPERTY_ID                      (0x17)
+#define  MQTT_AUTH_METHOD_ID                        (0x15)
+#define  MQTT_AUTH_DATA_ID                          (0x16)
+#endif
+
 /*-----------------------------------------------------------*/
 
 /**
@@ -547,7 +554,66 @@ static bool matchTopicFilter( const char * pTopicName,
                               const char * pTopicFilter,
                               uint16_t topicFilterLength );
 
+
+#if (MQTT_VERSION_5_ENABLED)
+static size_t addEncodedStringToVectorWithId( uint8_t serializedLength[ CORE_MQTT_SERIALIZED_LENGTH_FIELD_BYTES ],
+                                        const char * const string,
+                                        uint16_t length,
+                                        TransportOutVector_t * iterator,
+                                        size_t * updatedLength,uint8_t packetId );
+
+
+
 /*-----------------------------------------------------------*/
+
+static size_t addEncodedStringToVectorWithId( uint8_t serializedLength[ CORE_MQTT_SERIALIZED_LENGTH_FIELD_BYTES ],
+                                        const char * const string,
+                                        uint16_t length,
+                                        TransportOutVector_t * iterator,
+                                        size_t * updatedLength,uint8_t packetId )
+{
+    size_t packetLength = 0U;
+    TransportOutVector_t * pLocalIterator = iterator;
+    size_t vectorsAdded = 0U;
+
+    /* When length is non-zero, the string must be non-NULL. */
+    assert( ( length != 0U ) ? ( string != NULL ) : true );
+
+    serializedLength[ 0 ] = ( ( uint8_t ) ( ( length ) >> 8 ) );
+    serializedLength[ 1 ] = ( ( uint8_t ) ( ( length ) & 0x00ffU ) );
+
+    /* Add the serialized length of the string first. */
+    pLocalIterator[ 0 ].iov_base = packetId;
+    pLocalIterator[ 0 ].iov_len = CORE_MQTT_ID_SIZE;
+    vectorsAdded++;
+    packetLength = CORE_MQTT_ID_SIZE;
+
+    /* Add the serialized length of the string first. */
+    pLocalIterator[ 1 ].iov_base = serializedLength;
+    pLocalIterator[ 1 ].iov_len = CORE_MQTT_SERIALIZED_LENGTH_FIELD_BYTES;
+    vectorsAdded++;
+    packetLength = CORE_MQTT_SERIALIZED_LENGTH_FIELD_BYTES;
+
+    /* Sometimes the string can be NULL that is, of 0 length. In that case,
+     * only the length field should be encoded in the vector. */
+    if( ( string != NULL ) && ( length != 0U ) )
+    {
+        /* Then add the pointer to the string itself. */
+        pLocalIterator[ 2 ].iov_base = string;
+        pLocalIterator[ 2 ].iov_len = length;
+        vectorsAdded++;
+        packetLength += length;
+    }
+
+    ( *updatedLength ) = ( *updatedLength ) + packetLength;
+
+    return vectorsAdded;
+}
+
+#endif
+
+/*-----------------------------------------------------------*/
+
 
 static bool matchEndWildcardsSpecialCases( const char * pTopicFilter,
                                            uint16_t topicFilterLength,
@@ -2180,6 +2246,7 @@ static MQTTStatus_t sendConnectWithoutCopy( MQTTContext_t * pContext,
     uint8_t serializedPasswordLength[ 2 ];
     size_t vectorsAdded;
 
+    #if (!MQTT_VERSION_5_ENABLED)
     /* Maximum number of bytes required by the 'fixed' part of the CONNECT
      * packet header according to the MQTT specification.
      * MQTT Control Byte      0 + 1 = 1
@@ -2191,6 +2258,22 @@ static MQTTStatus_t sendConnectWithoutCopy( MQTTContext_t * pContext,
      * Keep alive               + 2 = 15 */
     uint8_t connectPacketHeader[ 15U ];
 
+     #else
+    /*Properties
+    * Properties length- max- 4
+    *Session Expiry - 5
+    * receive Maximum - 3
+    * Max packet Size 5
+    * Topic Alias Maximum - 3
+    * Request response Information- 2
+    * Request problem Information-2
+    * User property- MAX USER PROPERTY- separate vector 
+    * Authentication Data- UTF-8 so separate vector for method and data.
+    * Total- 24
+    */
+    uint8_t connectPacketHeader[39U];
+
+    #endif
     /* The maximum vectors required to encode and send a connect packet. The
      * breakdown is shown below.
      * Fixed header      0 + 1 = 1
@@ -2199,7 +2282,18 @@ static MQTTStatus_t sendConnectWithoutCopy( MQTTContext_t * pContext,
      * Will payload        + 2 = 7
      * Username            + 2 = 9
      * Password            + 2 = 11 */
+    #if (MQTT_VERSION_5_ENABLED==0)
     TransportOutVector_t pIoVector[ 11U ];
+    #else
+    /*
+    *
+    * User Property- 2* Max userProperty
+    * Authentication- 2
+    * 6 for wiill properties
+    * 
+    */
+    TransportOutVector_t pIoVector[ 19U + 2* MAX_USER_PROPERTY];
+    #endif
 
     iterator = pIoVector;
     pIndex = connectPacketHeader;
@@ -2217,6 +2311,11 @@ static MQTTStatus_t sendConnectWithoutCopy( MQTTContext_t * pContext,
                                                    pWillInfo,
                                                    remainingLength );
 
+    #if (MQTT_VERSION_5_ENABLED)
+
+       pIndex = MQTT_SerializeConnectProperties(pIndex,pContext->connectProperties);
+
+    #endif
         assert( ( ( size_t ) ( pIndex - connectPacketHeader ) ) <= sizeof( connectPacketHeader ) );
 
         /* The header gets sent first. */
@@ -2229,6 +2328,42 @@ static MQTTStatus_t sendConnectWithoutCopy( MQTTContext_t * pContext,
         totalMessageLength += iterator->iov_len;
         iterator++;
         ioVectorLength++;
+
+        #if (MQTT_VERSION_5_ENABLED)
+        // User Properties
+         uint8_t serializedAuthMethodLength[ 2 ];
+         uint8_t serializedAuthDataLength[ 2 ];
+        MQTTAuthInfo_t *pAuthInfo=pContext->connectProperties->outgoingAuth;
+        if(pAuthInfo!= NULL )
+        {
+            /* Serialize the authentication method  string. */
+            vectorsAdded = addEncodedStringToVectorWithId( serializedAuthMethodLength,
+                                                     pAuthInfo->authMethod,
+                                                     pAuthInfo->authMethodLength,
+                                                     iterator,
+                                                     &totalMessageLength,MQTT_AUTH_METHOD_ID );
+
+            /* Update the iterator to point to the next empty slot. */
+            iterator = &iterator[ vectorsAdded ];
+            ioVectorLength += vectorsAdded;
+            if(pAuthInfo->authDataLength!=0U){
+             vectorsAdded = addEncodedStringToVectorWithId(serializedAuthDataLength,
+                                                     pAuthInfo->authData,
+                                                     pAuthInfo->authDataLength,
+                                                     iterator,
+                                                     &totalMessageLength,MQTT_AUTH_DATA_ID);
+
+            /* Update the iterator to point to the next empty slot. */
+            iterator = &iterator[ vectorsAdded ];
+            ioVectorLength += vectorsAdded;
+            }
+        }
+            
+        if(pContext->connectProperties->outgoingUserPropSize!=0){
+            ioVectorLength += MQTT_SerializeUserProperty(pContext->connectProperties->outgoingUserProperty,pContext->connectProperties->outgoingUserPropSize,&iterator,&totalMessageLength);
+        }
+
+        #endif
 
         /* Serialize the client ID. */
         vectorsAdded = addEncodedStringToVector( serializedClientIDLength,
@@ -2243,6 +2378,10 @@ static MQTTStatus_t sendConnectWithoutCopy( MQTTContext_t * pContext,
 
         if( pWillInfo != NULL )
         {
+            #if (MQTT_VERSION_5_ENABLED)
+            //Add the will properties 
+            vectorsAdded= MQTT_SerializePublishProperties(pWillInfo,iterator,&totalMessageLength);
+            #endif
             /* Serialize the topic. */
             vectorsAdded = addEncodedStringToVector( serializedTopicLength,
                                                      pWillInfo->pTopicName,
@@ -2403,7 +2542,11 @@ static MQTTStatus_t receiveConnack( const MQTTContext_t * pContext,
         pIncomingPacket->pRemainingData = pContext->networkBuffer.pBuffer;
 
         /* Deserialize CONNACK. */
+        #if (MQTT_VERSION_5_ENABLED==0)
         status = MQTT_DeserializeAck( pIncomingPacket, NULL, pSessionPresent );
+        #else
+        status = MQTTV5_DeserializeConnack( pIncomingPacket, NULL, pSessionPresent);
+        #endif 
     }
 
     /* If a clean session is requested, a session present should not be set by
@@ -2698,6 +2841,37 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
         status = MQTTBadParameter;
     }
 
+    #if (MQTT_VERSION_5_ENABLED)
+    if(status==MQTTSuccess){
+     if(pContext->connectProperties==NULL)
+      {
+        LogError( ( "Argument cannot be NULL: connectProperties=%p, ",
+                    ( void * ) pContext->connectProperties,
+                     ));
+        status = MQTTBadParameter;
+      }
+     else if(pContext->connectProperties->outgoingAuth!=NULL && pContext->connectProperties->incomingAuth==NULL){
+        LogError( ( "Argument cannot be NULL: incomingAuth=%p, ",
+                    ( void * ) pContext->connectProperties->incomingAuth,
+                     ));
+        status = MQTTBadParameter;
+      }
+      else{
+
+      }
+    }
+    if( status == MQTTSuccess )
+    {
+        status= MQTT_GetConnectPropertiesSize(pContext->connectProperties, &packetSize);
+        remainingLength +=pContext->connectProperties->propertyLength;
+        remainingLength += remainingLengthEncodedSize(pContext->connectProperties->propertyLength);
+       if(status==MQTTSuccess){ 
+        status = MQTT_GetWillPropertiesSize(pWillInfo,pContext->connectProperties->willDelay);
+        remainingLength += pWillInfo->propertyLength;
+        remainingLength += remainingLengthEncodedSize( pWillInfo->propertyLength);
+       }
+    } 
+    #endif
     if( status == MQTTSuccess )
     {
         /* Get MQTT connect packet size and remaining length. */
