@@ -1419,6 +1419,8 @@ size_t addEncodedStringToVectorWithId( uint8_t serializedLength[ 2 ],
                                         uint16_t length,
                                         TransportOutVector_t * iterator,
                                         size_t * updatedLength,uint8_t packetId );
+#endif
+
 
 size_t addEncodedStringToVector( uint8_t serializedLength[ CORE_MQTT_SERIALIZED_LENGTH_FIELD_BYTES ],
                                         const char * const string,
@@ -1426,7 +1428,6 @@ size_t addEncodedStringToVector( uint8_t serializedLength[ CORE_MQTT_SERIALIZED_
                                         TransportOutVector_t * iterator,
                                         size_t * updatedLength );
 
-#endif
 
 /* *INDENT-OFF* */
 #ifdef __cplusplus

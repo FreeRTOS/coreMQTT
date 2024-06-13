@@ -605,6 +605,7 @@ MQTTStatus_t MQTTV5_DeserializeConnack( MQTTConnectProperties_t *pConnackPropert
 
 MQTTStatus_t MQTT_GetUserPropertySize(MQTTUserProperty_t * userProperty, uint16_t size, size_t* length){
     MQTTStatus_t status= MQTTSuccess;
+    uint16_t i;
     if(size>MAX_USER_PROPERTY){
         status=MQTTBadParameter;
     }
@@ -612,7 +613,7 @@ MQTTStatus_t MQTT_GetUserPropertySize(MQTTUserProperty_t * userProperty, uint16_
         status=MQTTBadParameter;
     }
     else{
-        for(uint16_t i=0;i<size && status==MQTTSuccess;i++){
+        for(;i<size && status==MQTTSuccess;i++){
             if((userProperty+i)!=NULL || (userProperty+i)->keyLength==0 || (userProperty+i)->valueLength==0||(userProperty+i)->key==NULL || (userProperty+i)->value==NULL ){
                 status=MQTTBadParameter;
             }
@@ -793,7 +794,8 @@ size_t MQTT_SerializeUserProperty(MQTTUserProperty_t * userProperty, uint16_t si
     uint8_t serializedUserValueLength[MAX_USER_PROPERTY][ 2 ];
     size_t vectorsAdded = 0U;
     size_t ioVectorLength= 0U;
-        for(uint16_t i=0;i<size;i++){
+    uint16_t i=0;
+        for(;i<size;i++){
             vectorsAdded = addEncodedStringToVectorWithId(serializedUserKeyLength[i],
                                                     (userProperty+i)->key,
                                                      (userProperty+i)->keyLength,
