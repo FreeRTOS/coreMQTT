@@ -29,11 +29,11 @@
 #include <string.h>
 #include <assert.h>
 
-#include "core_mqtt.h"
 #include "core_mqtt_state.h"
 
 /* Include config defaults header to get default values of configs. */
 #include "core_mqtt_config_defaults.h"
+#include "core_mqtt_serializer.h"
 
 #ifndef MQTT_PRE_SEND_HOOK
 
@@ -72,7 +72,6 @@
  * @brief Bytes required to encode any string length in an MQTT packet header.
  * Length is always encoded in two bytes according to the MQTT specification.
  */
-#define CORE_MQTT_SERIALIZED_LENGTH_FIELD_BYTES          ( 2U )
 
 /**
  * @brief Number of vectors required to encode one topic filter in a subscribe
@@ -91,7 +90,6 @@
 #define CORE_MQTT_UNSUBSCRIBE_PER_TOPIC_VECTOR_LENGTH    ( 2U )
 
 #if (MQTT_VERSION_5_ENABLED)
-#define  CORE_MQTT_ID_SIZE                          ( 1U )
 #define  MQTT_USER_PROPERTY_ID                      (0x17)
 #define  MQTT_AUTH_METHOD_ID                        (0x15)
 #define  MQTT_AUTH_DATA_ID                          (0x16)
@@ -188,11 +186,6 @@ static int32_t sendMessageVector( MQTTContext_t * pContext,
  *
  * @return The number of vectors added.
  */
-static size_t addEncodedStringToVector( uint8_t serializedLength[ CORE_MQTT_SERIALIZED_LENGTH_FIELD_BYTES ],
-                                        const char * const string,
-                                        uint16_t length,
-                                        TransportOutVector_t * iterator,
-                                        size_t * updatedLength );
 
 /**
  * @brief Send MQTT SUBSCRIBE message without copying the user data into a buffer and
@@ -556,60 +549,6 @@ static bool matchTopicFilter( const char * pTopicName,
 
 
 #if (MQTT_VERSION_5_ENABLED)
-static size_t addEncodedStringToVectorWithId( uint8_t serializedLength[ CORE_MQTT_SERIALIZED_LENGTH_FIELD_BYTES ],
-                                        const char * const string,
-                                        uint16_t length,
-                                        TransportOutVector_t * iterator,
-                                        size_t * updatedLength,uint8_t packetId );
-
-
-
-/*-----------------------------------------------------------*/
-
-static size_t addEncodedStringToVectorWithId( uint8_t serializedLength[ CORE_MQTT_SERIALIZED_LENGTH_FIELD_BYTES ],
-                                        const char * const string,
-                                        uint16_t length,
-                                        TransportOutVector_t * iterator,
-                                        size_t * updatedLength,uint8_t packetId )
-{
-    size_t packetLength = 0U;
-    TransportOutVector_t * pLocalIterator = iterator;
-    size_t vectorsAdded = 0U;
-
-    /* When length is non-zero, the string must be non-NULL. */
-    assert( ( length != 0U ) ? ( string != NULL ) : true );
-
-    serializedLength[ 0 ] = ( ( uint8_t ) ( ( length ) >> 8 ) );
-    serializedLength[ 1 ] = ( ( uint8_t ) ( ( length ) & 0x00ffU ) );
-
-    /* Add the serialized length of the string first. */
-    pLocalIterator[ 0 ].iov_base = packetId;
-    pLocalIterator[ 0 ].iov_len = CORE_MQTT_ID_SIZE;
-    vectorsAdded++;
-    packetLength = CORE_MQTT_ID_SIZE;
-
-    /* Add the serialized length of the string first. */
-    pLocalIterator[ 1 ].iov_base = serializedLength;
-    pLocalIterator[ 1 ].iov_len = CORE_MQTT_SERIALIZED_LENGTH_FIELD_BYTES;
-    vectorsAdded++;
-    packetLength = CORE_MQTT_SERIALIZED_LENGTH_FIELD_BYTES;
-
-    /* Sometimes the string can be NULL that is, of 0 length. In that case,
-     * only the length field should be encoded in the vector. */
-    if( ( string != NULL ) && ( length != 0U ) )
-    {
-        /* Then add the pointer to the string itself. */
-        pLocalIterator[ 2 ].iov_base = string;
-        pLocalIterator[ 2 ].iov_len = length;
-        vectorsAdded++;
-        packetLength += length;
-    }
-
-    ( *updatedLength ) = ( *updatedLength ) + packetLength;
-
-    return vectorsAdded;
-}
-
 #endif
 
 /*-----------------------------------------------------------*/
@@ -1924,44 +1863,6 @@ static MQTTStatus_t validateSubscribeUnsubscribeParams( const MQTTContext_t * pC
 
 /*-----------------------------------------------------------*/
 
-static size_t addEncodedStringToVector( uint8_t serializedLength[ CORE_MQTT_SERIALIZED_LENGTH_FIELD_BYTES ],
-                                        const char * const string,
-                                        uint16_t length,
-                                        TransportOutVector_t * iterator,
-                                        size_t * updatedLength )
-{
-    size_t packetLength = 0U;
-    TransportOutVector_t * pLocalIterator = iterator;
-    size_t vectorsAdded = 0U;
-
-    /* When length is non-zero, the string must be non-NULL. */
-    assert( ( length != 0U ) ? ( string != NULL ) : true );
-
-    serializedLength[ 0 ] = ( ( uint8_t ) ( ( length ) >> 8 ) );
-    serializedLength[ 1 ] = ( ( uint8_t ) ( ( length ) & 0x00ffU ) );
-
-    /* Add the serialized length of the string first. */
-    pLocalIterator[ 0 ].iov_base = serializedLength;
-    pLocalIterator[ 0 ].iov_len = CORE_MQTT_SERIALIZED_LENGTH_FIELD_BYTES;
-    vectorsAdded++;
-    packetLength = CORE_MQTT_SERIALIZED_LENGTH_FIELD_BYTES;
-
-    /* Sometimes the string can be NULL that is, of 0 length. In that case,
-     * only the length field should be encoded in the vector. */
-    if( ( string != NULL ) && ( length != 0U ) )
-    {
-        /* Then add the pointer to the string itself. */
-        pLocalIterator[ 1 ].iov_base = string;
-        pLocalIterator[ 1 ].iov_len = length;
-        vectorsAdded++;
-        packetLength += length;
-    }
-
-    ( *updatedLength ) = ( *updatedLength ) + packetLength;
-
-    return vectorsAdded;
-}
-
 /*-----------------------------------------------------------*/
 
 static MQTTStatus_t sendSubscribeWithoutCopy( MQTTContext_t * pContext,
@@ -2360,7 +2261,7 @@ static MQTTStatus_t sendConnectWithoutCopy( MQTTContext_t * pContext,
         }
             
         if(pContext->connectProperties->outgoingUserPropSize!=0){
-            ioVectorLength += MQTT_SerializeUserProperty(pContext->connectProperties->outgoingUserProperty,pContext->connectProperties->outgoingUserPropSize,&iterator,&totalMessageLength);
+            ioVectorLength += MQTT_SerializeUserProperty(pContext->connectProperties->outgoingUserProperty,pContext->connectProperties->outgoingUserPropSize,iterator,&totalMessageLength);
         }
 
         #endif
@@ -2380,7 +2281,7 @@ static MQTTStatus_t sendConnectWithoutCopy( MQTTContext_t * pContext,
         {
             #if (MQTT_VERSION_5_ENABLED)
             //Add the will properties 
-            vectorsAdded= MQTT_SerializePublishProperties(pWillInfo,iterator,&totalMessageLength);
+            vectorsAdded= MQTT_SerializePublishProperties(pWillInfo,iterator,&totalMessageLength,pContext->connectProperties->willDelay);
             #endif
             /* Serialize the topic. */
             vectorsAdded = addEncodedStringToVector( serializedTopicLength,
@@ -2845,15 +2746,15 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
     if(status==MQTTSuccess){
      if(pContext->connectProperties==NULL)
       {
-        LogError( ( "Argument cannot be NULL: connectProperties=%p, ",
-                    ( void * ) pContext->connectProperties,
-                     ));
+        // LogError( ( "Argument cannot be NULL: connectProperties=%p,",
+        //             ( void * ) pContext->connectProperties,
+        //              ));
         status = MQTTBadParameter;
       }
      else if(pContext->connectProperties->outgoingAuth!=NULL && pContext->connectProperties->incomingAuth==NULL){
-        LogError( ( "Argument cannot be NULL: incomingAuth=%p, ",
-                    ( void * ) pContext->connectProperties->incomingAuth,
-                     ));
+        // LogError( ( "Argument cannot be NULL: incomingAuth=%p, ",
+        //             ( void * ) pContext->connectProperties->incomingAuth,
+        //              ));
         status = MQTTBadParameter;
       }
       else{
@@ -2865,7 +2766,7 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
         status= MQTT_GetConnectPropertiesSize(pContext->connectProperties, &packetSize);
         remainingLength +=pContext->connectProperties->propertyLength;
         remainingLength += remainingLengthEncodedSize(pContext->connectProperties->propertyLength);
-       if(status==MQTTSuccess){ 
+       if(status==MQTTSuccess && pWillInfo!=NULL){ 
         status = MQTT_GetWillPropertiesSize(pWillInfo,pContext->connectProperties->willDelay);
         remainingLength += pWillInfo->propertyLength;
         remainingLength += remainingLengthEncodedSize( pWillInfo->propertyLength);

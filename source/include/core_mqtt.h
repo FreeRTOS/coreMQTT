@@ -42,7 +42,7 @@
 #include "transport_interface.h"
 
 /* Include transport interface. */
-#include "core_mqtt_config_defaults.h"
+// #include "core_mqtt_config_defaults.h"
 
 /**
  * @cond DOXYGEN_IGNORE
@@ -63,12 +63,6 @@
 struct MQTTPubAckInfo;
 struct MQTTContext;
 struct MQTTDeserializedInfo;
-
-#if(MQTT_VERSION==5)
-struct MQTTConnectProperties;
-struct MQTTUserProperty;
-struict MQTTAuthInfo;
-#endif
 
 /**
  * @ingroup mqtt_callback_types
@@ -170,76 +164,6 @@ typedef struct MQTTPubAckInfo
     MQTTQoS_t qos;                   /**< @brief The QoS of the original PUBLISH. */
     MQTTPublishState_t publishState; /**< @brief The current state of the publish process. */
 } MQTTPubAckInfo_t;
-
-#if (MQTT_VERSION_5_ENABLED)
-
-   /**
- * @ingroup mqtt_struct_types
- * @brief Struct to hold authentication method and authentication data.
- */
-typedef struct MQTTAuthInfo
-{
-  const char* authMethod;
-  uint16_t authMethodLength;
-  const char* authData;
-  uint16_t authDataLength;
-}MQTTAuthInfo_t;
-
-typedef struct MQTTUserProperty
-{
-    const char* key;
-    uint16_t keyLength;
-    const char* value;
-    uint16_t valueLength;
-}MQTTUserProperty_t;
-
-   /**
- * @ingroup mqtt_struct_types
- * @brief Struct to hold connect and connack properties.
- */
-typedef struct MQTTConnectProperties
-{
-    uint32_t sessionExpiry;
-    uint16_t receiveMax;
-    uint32_t maxPacketSize;
-    uint16_t topicAliasMax;
-    bool  reqResInfo;
-    bool  reqProbInfo;
-    size_t propertyLength;
-//  Add user property
-// Pointer to array of userProperty;
-//  array of user property -> with size as maximum value of user property configured
-//  add authentication
-    MQTTUserProperty_t *incomingUserProperty;
-    uint16_t incomingUserPropSize;
-    MQTTUserProperty_t *outgoingUserProperty;
-    uint16_t outgoingUserPropSize;
-    MQTTAuthInfo_t *incomingAuth;
-    uint32_t willDelay;
-    
-    // CONNACK
-    uint16_t serverReceiveMax;
-    uint8_t serverMaxQos;
-    uint8_t returnAvailable;
-    uint32_t serverMaxPacketSize;
-    const char* clientIdentifier;
-    uint16_t clientIdLength;
-    uint16_t serverTopicAliasMax;
-    const char* reasonString;
-    uint16_t reasonStringLength;
-    bool isWildcardAvaiable;
-    bool subscriptionId;
-    bool isSharedAvailable;
-    uint16_t serverKeepAlive;
-    const char* responseInfo;
-    uint16_t responseInfoLength;
-    const char* serverRef;
-    uint16_t serverRefLength;
-    MQTTAuthInfo_t *outgoingAuth;
-    
-} MQTTConnectProperties_t;
-#endif
-
 
 
 /**

@@ -79,10 +79,6 @@
     #endif
 #endif
 
-#ifndef MQTT_MAX_USER_PROPERTY
-  #define MQTT_MAX_USER_PROPERTY ( 5U )
-#endif
-
 /**
  * @ingroup mqtt_constants
  * @brief Maximum number of vectors in subscribe and unsubscribe packet.

@@ -137,6 +137,9 @@
 #define  MQTT_SERVER_KEEP_ALIVE_ID                  (0x13)
 #define  MQTT_RESPONSE_INFO_ID                      (0x1A)
 #define  MQTT_SERVER_REF_ID                         (0x1C)
+
+#define  CORE_MQTT_ID_SIZE                          ( 1U )
+
 #endif
 
 /**
@@ -179,7 +182,7 @@
 
 #define UINT32_BYTE1( x )             ( ( uint8_t ) ( ( x ) >> 8 ) )
 
-#define UINT32_BYTE0( x )             ( ( uint8_t ) ( ( x ) >> 0x000000FFU ) )
+#define UINT32_BYTE0( x )             ( ( uint8_t ) ( ( x ) & 0x000000FFU ) )
 
 /**
  * @brief Get the low byte of a 16-bit unsigned integer.
@@ -339,7 +342,7 @@ static uint8_t * encodeRemainingLength( uint8_t * pDestination,
  *
  * @return The size of the remaining length if it were to be encoded.
  */
-static size_t remainingLengthEncodedSize( size_t length );
+size_t remainingLengthEncodedSize( size_t length );
 
 /**
  * @brief Encode a string whose size is at maximum 16 bits in length.
@@ -511,6 +514,12 @@ static MQTTStatus_t deserializeSimpleAck( const MQTTPacketInfo_t * pAck,
  */
 static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
 
+size_t addEncodedStringToVector( uint8_t serializedLength[ CORE_MQTT_SERIALIZED_LENGTH_FIELD_BYTES ],
+                                        const char * const string,
+                                        uint16_t length,
+                                        TransportOutVector_t * iterator,
+                                        size_t * updatedLength );
+
 #if (MQTT_VERSION_5_ENABLED)
 
 MQTTStatus_t MQTT_GetUserPropertySize(MQTTUserProperty_t * userProperty, uint16_t size,size_t *length); 
@@ -519,12 +528,12 @@ MQTTStatus_t MQTT_GetUserPropertySize(MQTTUserProperty_t * userProperty, uint16_
 MQTTStatus_t MQTT_GetConnectPropertiesSize (MQTTConnectProperties_t * pConnectProperties,
                                         size_t * pPacketSize );
 
-MQTTStatus_t MQTT_GetWillPropertiesSize ( const MQTTPublishInfo_t * pConnectProperties,
-                                        size_t *pWillLenght, uint32_t willDelay);
+MQTTStatus_t MQTT_GetWillPropertiesSize ( MQTTPublishInfo_t * pConnectProperties,
+                                         uint32_t willDelay);
 
 uint8_t* MQTT_SerializeConnectProperties(uint8_t* pIndex,const MQTTConnectProperties_t * pConnectProperties);
 
-size_t MQTT_SerializeUserProperty(MQTTUserProperty_t * userProperty, uint16_t size,TransportOutVector_t *iterator,size_t* updatedLength);
+size_t MQTT_SerializeUserProperty(MQTTUserProperty_t * userProperty, uint16_t size,TransportOutVector_t *iterator,size_t* totalMessageLength);
 
 size_t MQTT_SerializePublishProperties(const MQTTPublishInfo_t * pPublishInfo, TransportOutVector_t *iterator, size_t * updatedLength,uint32_t willDelay);
 
@@ -538,6 +547,59 @@ MQTTStatus_t MQTTV5_DeserializeConnack( MQTTConnectProperties_t *pConnackPropert
                                   
                                   bool * pSessionPresent );
 
+ size_t addEncodedStringToVectorWithId( uint8_t serializedLength[ CORE_MQTT_SERIALIZED_LENGTH_FIELD_BYTES ],
+                                        const char * const string,
+                                        uint16_t length,
+                                        TransportOutVector_t * iterator,
+                                        size_t * updatedLength,uint8_t packetId );
+
+
+
+/*-----------------------------------------------------------*/
+
+ size_t addEncodedStringToVectorWithId( uint8_t serializedLength[ CORE_MQTT_SERIALIZED_LENGTH_FIELD_BYTES ],
+                                        const char * const string,
+                                        uint16_t length,
+                                        TransportOutVector_t * iterator,
+                                        size_t * updatedLength,uint8_t packetId )
+{
+    size_t packetLength = 0U;
+    TransportOutVector_t * pLocalIterator = iterator;
+    size_t vectorsAdded = 0U;
+
+    /* When length is non-zero, the string must be non-NULL. */
+    assert( ( length != 0U ) ? ( string != NULL ) : true );
+
+    serializedLength[ 0 ] = ( ( uint8_t ) ( ( length ) >> 8 ) );
+    serializedLength[ 1 ] = ( ( uint8_t ) ( ( length ) & 0x00ffU ) );
+
+    /* Add the packet id first. */
+    pLocalIterator[ 0 ].iov_base = &packetId;
+    pLocalIterator[ 0 ].iov_len = CORE_MQTT_ID_SIZE;
+    vectorsAdded++;
+    packetLength = CORE_MQTT_ID_SIZE;
+
+    /* Add the serialized length of the string. */
+    pLocalIterator[ 1 ].iov_base = serializedLength;
+    pLocalIterator[ 1 ].iov_len = CORE_MQTT_SERIALIZED_LENGTH_FIELD_BYTES;
+    vectorsAdded++;
+    packetLength = CORE_MQTT_SERIALIZED_LENGTH_FIELD_BYTES;
+
+    /* Sometimes the string can be NULL that is, of 0 length. In that case,
+     * only the length field should be encoded in the vector. */
+    if( ( string != NULL ) && ( length != 0U ) )
+    {
+        /* Then add the pointer to the string itself. */
+        pLocalIterator[ 2 ].iov_base = string;
+        pLocalIterator[ 2 ].iov_len = length;
+        vectorsAdded++;
+        packetLength += length;
+    }
+
+    ( *updatedLength ) = ( *updatedLength ) + packetLength;
+
+    return vectorsAdded;
+}
 
 /*-----------------------------------------------------------*/
 
@@ -552,7 +614,7 @@ MQTTStatus_t MQTT_GetUserPropertySize(MQTTUserProperty_t * userProperty, uint16_
     else{
         for(uint16_t i=0;i<size && status==MQTTSuccess;i++){
             if((userProperty+i)!=NULL || (userProperty+i)->keyLength==0 || (userProperty+i)->valueLength==0||(userProperty+i)->key==NULL || (userProperty+i)->value==NULL ){
-                status==MQTTBadParameter;
+                status=MQTTBadParameter;
             }
             length+=(userProperty+i)->keyLength;
             length+=(userProperty+i)->valueLength;
@@ -617,7 +679,10 @@ MQTTStatus_t MQTT_GetConnectPropertiesSize(MQTTConnectProperties_t *pConnectProp
         }
     }
     if(status==MQTTSuccess){
-         status= GetUserPropertySize(pConnectProperties->outgoingUserProperty,pConnectProperties->outgoingUserPropSize,&propertyLength);
+         status= MQTT_GetUserPropertySize(pConnectProperties->outgoingUserProperty,pConnectProperties->outgoingUserPropSize,&propertyLength);
+    }
+    if(pConnectProperties->propertyLength){
+        status= MQTTBadParameter;
     }
     pConnectProperties->propertyLength = propertyLength;
 
@@ -625,8 +690,8 @@ MQTTStatus_t MQTT_GetConnectPropertiesSize(MQTTConnectProperties_t *pConnectProp
 
 }
 
-MQTTStatus_t MQTT_GetWillPropertiesSize(const MQTTPublishInfo_t *pWillProperties,
-                                        size_t *pWillLenght, uint32_t willDelay)
+MQTTStatus_t MQTT_GetWillPropertiesSize(MQTTPublishInfo_t *pWillProperties,
+                                         uint32_t willDelay)
 {
     size_t willLength = 0U;
     MQTTStatus_t status = MQTTSuccess;
@@ -655,9 +720,12 @@ MQTTStatus_t MQTT_GetWillPropertiesSize(const MQTTPublishInfo_t *pWillProperties
         willLength += pWillProperties->correlationLength + 1U;
     }
     if(status==MQTTSuccess){
-         status= GetUserPropertySize(pWillProperties->userProperty,pWillProperties->userPropertySize,&willLength);
+         status= MQTT_GetUserPropertySize(pWillProperties->userProperty,pWillProperties->userPropertySize,&willLength);
     }
-
+    if(willLength>0xffff){
+        status= MQTTBadParameter;
+    }
+    pWillProperties->propertyLength=willLength;
     return status;
 }
 
@@ -722,7 +790,7 @@ uint8_t * MQTT_SerializeConnectProperties(uint8_t *pIndex, const MQTTConnectProp
 size_t MQTT_SerializeUserProperty(MQTTUserProperty_t * userProperty, uint16_t size,TransportOutVector_t *iterator,size_t* totalMessageLength)
 {
     uint8_t serializedUserKeyLength[ MAX_USER_PROPERTY ][2];
-    uint8_t serializedUserValueLength[ 2 ];
+    uint8_t serializedUserValueLength[MAX_USER_PROPERTY][ 2 ];
     size_t vectorsAdded = 0U;
     size_t ioVectorLength= 0U;
         for(uint16_t i=0;i<size;i++){
@@ -730,7 +798,7 @@ size_t MQTT_SerializeUserProperty(MQTTUserProperty_t * userProperty, uint16_t si
                                                     (userProperty+i)->key,
                                                      (userProperty+i)->keyLength,
                                                      iterator,
-                                                     &totalMessageLength,MAX_USER_PROPERTY );
+                                                     totalMessageLength,MQTT_USER_PROPERTY_ID);
             iterator = &iterator[ vectorsAdded ];
             ioVectorLength += vectorsAdded;
 
@@ -738,7 +806,7 @@ size_t MQTT_SerializeUserProperty(MQTTUserProperty_t * userProperty, uint16_t si
                                                     (userProperty+i)->value,
                                                      (userProperty+i)->valueLength,
                                                      iterator,
-                                                     &totalMessageLength );
+                                                     totalMessageLength );
             iterator = &iterator[ vectorsAdded ];
             ioVectorLength += vectorsAdded;
         }
@@ -746,7 +814,7 @@ size_t MQTT_SerializeUserProperty(MQTTUserProperty_t * userProperty, uint16_t si
 }
 
 size_t MQTT_SerializePublishProperties(const MQTTPublishInfo_t * pPublishInfo, TransportOutVector_t *iterator, size_t * totalMessageLength,uint32_t willDelay){
-    uint8_t* pIndex;
+    uint8_t* pIndex=0;
     size_t vectorsAdded = 0U;
     size_t ioVectorLength= 0U;
     uint8_t serializedContentTypeLength[ 2 ];
@@ -790,11 +858,11 @@ size_t MQTT_SerializePublishProperties(const MQTTPublishInfo_t * pPublishInfo, T
 
     if ( pPublishInfo->contentTypeLength != 0U)
     {
-        vectorsAdded = addEncodedStringToVectorwithId( serializedContentTypeLength,
+        vectorsAdded = addEncodedStringToVectorWithId( serializedContentTypeLength,
                                                      pPublishInfo->contentType,
                                                      pPublishInfo->contentTypeLength,
                                                      iterator,
-                                                     &totalMessageLength,MQTT_CONTENT_TYPE_ID);
+                                                     totalMessageLength,MQTT_CONTENT_TYPE_ID);
         iterator = &iterator[ vectorsAdded ];
         ioVectorLength += vectorsAdded;
     }
@@ -804,7 +872,7 @@ size_t MQTT_SerializePublishProperties(const MQTTPublishInfo_t * pPublishInfo, T
                                                      pPublishInfo->responseTopic,
                                                      pPublishInfo->responseTopicLength,
                                                      iterator,
-                                                     &totalMessageLength,MQTT_RESPONSE_TOPIC_ID );
+                                                     totalMessageLength,MQTT_RESPONSE_TOPIC_ID );
         iterator = &iterator[ vectorsAdded ];
         ioVectorLength += vectorsAdded;
     }
@@ -814,12 +882,12 @@ size_t MQTT_SerializePublishProperties(const MQTTPublishInfo_t * pPublishInfo, T
                                                      pPublishInfo->correlationData,
                                                      pPublishInfo->correlationLength,
                                                      iterator,
-                                                     &totalMessageLength,MQTT_CORRELATION_DATA_ID);
+                                                     totalMessageLength,MQTT_CORRELATION_DATA_ID);
         iterator = &iterator[ vectorsAdded ];
         ioVectorLength += vectorsAdded;
     }
     if(pPublishInfo->userPropertySize!=0){
-         ioVectorLength += MQTT_SerializeUserProperty(pPublishInfo->userProperty,pPublishInfo->userPropertySize,&iterator,&totalMessageLength);
+         ioVectorLength += MQTT_SerializeUserProperty(pPublishInfo->userProperty,pPublishInfo->userPropertySize,iterator,totalMessageLength);
     }
    return  ioVectorLength;
 };
@@ -896,7 +964,7 @@ MQTTStatus_t status = MQTTSuccess;
         {
             /* Print the appropriate message for the CONNACK response code if logs are
              * enabled. */
-            logConnackVersion5Response( pRemainingData[ 1 ] );
+            logConnackResponse( pRemainingData[ 1 ] );
 
             /* A nonzero CONNACK response code means the connection was refused. */
             if( pRemainingData[ 1 ] > 0U )
@@ -981,7 +1049,7 @@ MQTTStatus_t MQTTV5_DeserializeConnack( MQTTConnectProperties_t *pConnackPropert
         uint8_t* pVariableHeader = pIncomingPacket->pRemainingData;
         pVariableHeader= &pVariableHeader[2];
         size_t remainingLengthSize= remainingLengthEncodedSize(pIncomingPacket->remainingLength);
-        pVariableHeader=pVariableHeader[remainingLengthSize];
+        pVariableHeader=&pVariableHeader[remainingLengthSize];
         status=decodeVariableLength(pVariableHeader,&propertyLength);
     }
     if(propertyLength==0U){
@@ -1011,7 +1079,7 @@ MQTTStatus_t MQTTV5_DeserializeConnack( MQTTConnectProperties_t *pConnackPropert
         
         while((propertyLength>0 )&& (status=MQTTSuccess)){
             uint8_t packetId = *pVariableHeader;
-            pVariableHeader= pVariableHeader[1];
+            pVariableHeader= &pVariableHeader[1];
             propertyLength-=1;
             switch (packetId){
                 case MQTT_SESSION_EXPIRY_ID:
@@ -1150,7 +1218,7 @@ MQTTStatus_t MQTTV5_DeserializeConnack( MQTTConnectProperties_t *pConnackPropert
                         }
                         else{
                         pConnackProperties->reasonString=( const char * )pVariableHeader;
-                        pVariableHeader=pVariableHeader[pConnackProperties->reasonStringLength];
+                        pVariableHeader=&pVariableHeader[pConnackProperties->reasonStringLength];
                         propertyLength-=pConnackProperties->reasonStringLength;
                         reasonString=true;
                         }
@@ -1340,7 +1408,46 @@ MQTTStatus_t MQTTV5_DeserializeConnack( MQTTConnectProperties_t *pConnackPropert
 #endif
 /*-----------------------------------------------------------*/
 
-static size_t remainingLengthEncodedSize( size_t length )
+
+size_t addEncodedStringToVector( uint8_t serializedLength[ CORE_MQTT_SERIALIZED_LENGTH_FIELD_BYTES ],
+                                        const char * const string,
+                                        uint16_t length,
+                                        TransportOutVector_t * iterator,
+                                        size_t * updatedLength )
+{
+    size_t packetLength = 0U;
+    TransportOutVector_t * pLocalIterator = iterator;
+    size_t vectorsAdded = 0U;
+
+    /* When length is non-zero, the string must be non-NULL. */
+    assert( ( length != 0U ) ? ( string != NULL ) : true );
+
+    serializedLength[ 0 ] = ( ( uint8_t ) ( ( length ) >> 8 ) );
+    serializedLength[ 1 ] = ( ( uint8_t ) ( ( length ) & 0x00ffU ) );
+
+    /* Add the serialized length of the string first. */
+    pLocalIterator[ 0 ].iov_base = serializedLength;
+    pLocalIterator[ 0 ].iov_len = CORE_MQTT_SERIALIZED_LENGTH_FIELD_BYTES;
+    vectorsAdded++;
+    packetLength = CORE_MQTT_SERIALIZED_LENGTH_FIELD_BYTES;
+
+    /* Sometimes the string can be NULL that is, of 0 length. In that case,
+     * only the length field should be encoded in the vector. */
+    if( ( string != NULL ) && ( length != 0U ) )
+    {
+        /* Then add the pointer to the string itself. */
+        pLocalIterator[ 1 ].iov_base = string;
+        pLocalIterator[ 1 ].iov_len = length;
+        vectorsAdded++;
+        packetLength += length;
+    }
+
+    ( *updatedLength ) = ( *updatedLength ) + packetLength;
+
+    return vectorsAdded;
+}
+
+size_t remainingLengthEncodedSize( size_t length )
 {
     size_t encodedSize;
 
@@ -1941,6 +2048,7 @@ static MQTTStatus_t processPublishFlags( uint8_t publishFlags,
 }
 
 /*-----------------------------------------------------------*/
+#if (!MQTT_VERSION_5_ENABLED)
 
 static void logConnackResponse( uint8_t responseCode )
 {
@@ -1972,6 +2080,57 @@ static void logConnackResponse( uint8_t responseCode )
     }
 }
 
+#else
+
+static void logConnackResponse( uint8_t responseCode )
+{
+    
+    const char * const pConnackResponses[ 6 ] =
+    {
+        "Connection refused: Unspecified error.",                               /* 0 */
+        "Connection refused: Malformed Packet.", /* 1 */
+        "Connection refused: Protocol Error.",           /* 2 */
+        "Connection refused: Impementation specific error.",             /* 3 */
+        "Connection refused: Unsupported Protocol Version.",     /* 4 */
+        "Connection refused: Client Identifier not valid."                 /* 5 */
+        "Connection refused: Bad User Name or Password."                 /* 6 */
+        "Connection refused: Not authorized."                 /* 7 */
+        "Connection refused: Server unavailable."                 /* 8 */
+        "Connection refused: Server busy."                 /* 9 */
+        "Connection refused: Banned."                 /* 10 */
+        "Connection refused: Bad authentication method."                 /* 11 */
+        "Connection refused: Topic Name invalid."                 /* 12 */
+        "Connection refused: Packet too large ."                 /* 13 */
+        "Connection refused: Quota exceeded."                 /* 14 */
+        "Connection refused: Payload format invalid."                 /* 15 */
+        "Connection refused: Retain not supported."                 /* 16 */
+        "Connection refused: QoS not supported."                 /* 17 */
+        "Connection refused: Use another server."                 /* 18 */
+        "Connection refused: Server moved."                 /* 19 */
+        "Connection refused: Connection rate exceeded."                 /* 20 */
+
+
+    };
+
+    /* Avoid unused parameter warning when assert and logs are disabled. */
+    ( void ) responseCode;
+    ( void ) pConnackResponses;
+    if( responseCode == 0u )
+    {
+        /* Log at Debug level for a success CONNACK response. */
+        LogDebug("The Connection is accepted");
+    }
+    else
+    {
+        responseCode-=128;
+        assert( responseCode <= 20 );
+        assert( responseCode >= 20 );
+        /* Log an error based on the CONNACK response code. */
+        LogError( ( "%s", pConnackResponses[ responseCode ] ) );
+    }
+}
+
+#endif
 /*-----------------------------------------------------------*/
 
 static MQTTStatus_t deserializeConnack( const MQTTPacketInfo_t * pConnack,
@@ -2495,7 +2654,7 @@ uint8_t * MQTT_SerializeConnectFixedHeader( uint8_t * pIndex,
         /* Flags only need to be changed for Will QoS 1 or 2. */
         if( pWillInfo->qos == MQTTQoS1 )
         {
-            UINT8_SET_BIvT( connectFlags, MQTT_CONNECT_FLAG_WILL_QOS1 );
+            UINT8_SET_BIT( connectFlags, MQTT_CONNECT_FLAG_WILL_QOS1 );
         }
         else if( pWillInfo->qos == MQTTQoS2 )
         {

@@ -72,6 +72,7 @@
  * @brief The size of MQTT PUBACK, PUBREC, PUBREL, and PUBCOMP packets, per MQTT spec.
  */
 #define MQTT_PUBLISH_ACK_PACKET_SIZE    ( 4UL )
+#define CORE_MQTT_SERIALIZED_LENGTH_FIELD_BYTES          ( 2U )
 
 /* Structures defined in this file. */
 struct MQTTFixedBuffer;
@@ -80,6 +81,11 @@ struct MQTTSubscribeInfo;
 struct MQTTPublishInfo;
 struct MQTTPacketInfo;
 
+#if (MQTT_VERSION_5_ENABLED)
+struct MQTTConnectProperties;
+struct MQTTUserProperty;
+struct MQTTAuthInfo;
+#endif
 /**
  * @ingroup mqtt_enum_types
  * @brief Return codes from MQTT functions.
@@ -97,16 +103,19 @@ typedef enum MQTTStatus
     MQTTIllegalState,     /**< An illegal state in the state record. */
     MQTTStateCollision,   /**< A collision with an existing state record entry. */
     MQTTKeepAliveTimeout, /**< Timeout while waiting for PINGRESP. */
-    MQTTNeedMoreBytes     /**< MQTT_ProcessLoop/MQTT_ReceiveLoop has received
+    MQTTNeedMoreBytes,     /**< MQTT_ProcessLoop/MQTT_ReceiveLoop has received
                           incomplete data; it should be called again (probably after
                           a delay). */
-    #if (MQTT_VERSION_5_ENABLED)
-    ,
-    MQTTMalformedPacket = 0x81,
-    MQTTProtocolError = 0x82,
 
+    #if(MQTT_VERSION_5_ENABLED)
+      MQTTMalformedPacket=0x81,
+      MQTTProtocolError=0x82
     #endif
+
+    // #endif
 } MQTTStatus_t;
+
+
 
 /**
  * @ingroup mqtt_enum_types
@@ -222,6 +231,7 @@ typedef struct MQTTUserProperty
     const char* value;
     uint16_t valueLength;
 }MQTTUserProperty_t;
+
    /**
  * @ingroup mqtt_struct_types
  * @brief Struct to hold connect and connack properties.
@@ -237,20 +247,19 @@ typedef struct MQTTConnectProperties
     size_t propertyLength;
 //  Add user property
 // Pointer to array of userProperty;
-//  UserProperty_t userProperty;
-// array of user property -> with size as maximum value of user property configured
-//  add authenticationenecccdkcnfvkejgbniughcdhnlelkkhdrbhvkelthjn
-
+//  array of user property -> with size as maximum value of user property configured
+//  add authentication
     MQTTUserProperty_t *incomingUserProperty;
     uint16_t incomingUserPropSize;
     MQTTUserProperty_t *outgoingUserProperty;
     uint16_t outgoingUserPropSize;
     MQTTAuthInfo_t *incomingAuth;
     uint32_t willDelay;
-    // CONNECT
+    
+    // CONNACK
     uint16_t serverReceiveMax;
     uint8_t serverMaxQos;
-    int8_t returnAvailable;
+    uint8_t returnAvailable;
     uint32_t serverMaxPacketSize;
     const char* clientIdentifier;
     uint16_t clientIdLength;
@@ -269,7 +278,6 @@ typedef struct MQTTConnectProperties
     
 } MQTTConnectProperties_t;
 #endif
-
 
 /**
  * @ingroup mqtt_struct_types
@@ -1377,6 +1385,48 @@ uint8_t * MQTT_SerializeUnsubscribeHeader( size_t remainingLength,
                                            uint8_t * pIndex,
                                            uint16_t packetId );
 /** @endcond */
+size_t remainingLengthEncodedSize( size_t length );
+
+
+#if(MQTT_VERSION_5_ENABLED)
+MQTTStatus_t MQTT_GetUserPropertySize(MQTTUserProperty_t * userProperty, uint16_t size,size_t *length); 
+
+
+MQTTStatus_t MQTT_GetConnectPropertiesSize (MQTTConnectProperties_t * pConnectProperties,
+                                        size_t * pPacketSize );
+
+MQTTStatus_t MQTT_GetWillPropertiesSize ( MQTTPublishInfo_t * pConnectProperties,
+                                         uint32_t willDelay);
+
+uint8_t* MQTT_SerializeConnectProperties(uint8_t* pIndex,const MQTTConnectProperties_t * pConnectProperties);
+
+size_t MQTT_SerializeUserProperty(MQTTUserProperty_t * userProperty, uint16_t size,TransportOutVector_t *iterator,size_t* updatedLength);
+
+size_t MQTT_SerializePublishProperties(const MQTTPublishInfo_t * pPublishInfo, TransportOutVector_t *iterator, size_t * updatedLength,uint32_t willDelay);
+
+MQTTStatus_t decodeVariableLength( const uint8_t * pBuffer, size_t* length);
+
+MQTTStatus_t validateConnackParams(const MQTTPacketInfo_t * pIncomingPacket,
+                                  bool * pSessionPresent );
+
+
+MQTTStatus_t MQTTV5_DeserializeConnack( MQTTConnectProperties_t *pConnackProperties,const MQTTPacketInfo_t * pIncomingPacket,
+                                  
+                                  bool * pSessionPresent );
+
+size_t addEncodedStringToVectorWithId( uint8_t serializedLength[ 2 ],
+                                        const char * const string,
+                                        uint16_t length,
+                                        TransportOutVector_t * iterator,
+                                        size_t * updatedLength,uint8_t packetId );
+
+size_t addEncodedStringToVector( uint8_t serializedLength[ CORE_MQTT_SERIALIZED_LENGTH_FIELD_BYTES ],
+                                        const char * const string,
+                                        uint16_t length,
+                                        TransportOutVector_t * iterator,
+                                        size_t * updatedLength );
+
+#endif
 
 /* *INDENT-OFF* */
 #ifdef __cplusplus
