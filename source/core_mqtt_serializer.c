@@ -44,6 +44,7 @@
  */
 #define MQTT_PACKET_CONNECT_HEADER_SIZE             ( 10UL )
 
+#define UINT16_MAX (65535U)
 
 /* MQTT CONNECT flags. */
 #define MQTT_CONNECT_FLAG_CLEAN                     ( 1 ) /**< @brief Clean session. */
@@ -583,7 +584,7 @@ MQTTStatus_t MQTTV5_DeserializeConnack( MQTTConnectProperties_t *pConnackPropert
     pLocalIterator[ 1 ].iov_base = serializedLength;
     pLocalIterator[ 1 ].iov_len = CORE_MQTT_SERIALIZED_LENGTH_FIELD_BYTES;
     vectorsAdded++;
-    packetLength = CORE_MQTT_SERIALIZED_LENGTH_FIELD_BYTES;
+    packetLength += CORE_MQTT_SERIALIZED_LENGTH_FIELD_BYTES;
 
     /* Sometimes the string can be NULL that is, of 0 length. In that case,
      * only the length field should be encoded in the vector. */
@@ -605,7 +606,7 @@ MQTTStatus_t MQTTV5_DeserializeConnack( MQTTConnectProperties_t *pConnackPropert
 
 MQTTStatus_t MQTT_GetUserPropertySize(MQTTUserProperty_t * userProperty, uint16_t size, size_t* length){
     MQTTStatus_t status= MQTTSuccess;
-    uint16_t i;
+    uint16_t i=0;
     if(size>MAX_USER_PROPERTY){
         status=MQTTBadParameter;
     }
@@ -614,10 +615,10 @@ MQTTStatus_t MQTT_GetUserPropertySize(MQTTUserProperty_t * userProperty, uint16_
     }
     else{
         for(;i<size && status==MQTTSuccess;i++){
-            if((userProperty+i)!=NULL || (userProperty+i)->keyLength==0 || (userProperty+i)->valueLength==0||(userProperty+i)->key==NULL || (userProperty+i)->value==NULL ){
+            if((userProperty+i)==NULL || (userProperty+i)->keyLength==0 || (userProperty+i)->valueLength==0||(userProperty+i)->key==NULL || (userProperty+i)->value==NULL ){
                 status=MQTTBadParameter;
             }
-            length+=(userProperty+i)->keyLength;
+            length+=(userProperty+i)->keyLength+1;
             length+=(userProperty+i)->valueLength;
         }
     }
@@ -655,7 +656,7 @@ MQTTStatus_t MQTT_GetConnectPropertiesSize(MQTTConnectProperties_t *pConnectProp
     {
         propertyLength += MQTT_REQUEST_PPOBLEM_SIZE;
     }
-    if (pConnectProperties->incomingAuth != NULL)
+    if (pConnectProperties->outgoingAuth != NULL)
     {
         if (pConnectProperties->outgoingAuth->authMethodLength == 0U && pConnectProperties->outgoingAuth->authDataLength != 0U)
         {
@@ -671,18 +672,18 @@ MQTTStatus_t MQTT_GetConnectPropertiesSize(MQTTConnectProperties_t *pConnectProp
         }
         else
         {
-            propertyLength += pConnectProperties->incomingAuth->authMethodLength;
+            propertyLength += pConnectProperties->outgoingAuth->authMethodLength;
             propertyLength += 1U;
             if(pConnectProperties->outgoingAuth->authDataLength != 0U){
-            propertyLength += pConnectProperties->incomingAuth->authDataLength;
+            propertyLength += pConnectProperties->outgoingAuth->authDataLength;
             propertyLength += 1U;
             }
         }
     }
-    if(status==MQTTSuccess){
+    if(status==MQTTSuccess && pConnectProperties->outgoingUserPropSize!=0){
          status= MQTT_GetUserPropertySize(pConnectProperties->outgoingUserProperty,pConnectProperties->outgoingUserPropSize,&propertyLength);
     }
-    if(pConnectProperties->propertyLength){
+    if(pConnectProperties->propertyLength>UINT16_MAX){
         status= MQTTBadParameter;
     }
     pConnectProperties->propertyLength = propertyLength;
@@ -791,22 +792,22 @@ uint8_t * MQTT_SerializeConnectProperties(uint8_t *pIndex, const MQTTConnectProp
 size_t MQTT_SerializeUserProperty(MQTTUserProperty_t * userProperty, uint16_t size,TransportOutVector_t *iterator,size_t* totalMessageLength)
 {
     uint8_t serializedUserKeyLength[ MAX_USER_PROPERTY ][2];
-    uint8_t serializedUserValueLength[MAX_USER_PROPERTY][ 2 ];
+    uint8_t serializedUserValueLength[MAX_USER_PROPERTY][2];
     size_t vectorsAdded = 0U;
     size_t ioVectorLength= 0U;
     uint16_t i=0;
         for(;i<size;i++){
             vectorsAdded = addEncodedStringToVectorWithId(serializedUserKeyLength[i],
-                                                    (userProperty+i)->key,
-                                                     (userProperty+i)->keyLength,
+                                                    userProperty[i].key,
+                                                     userProperty[i].keyLength,
                                                      iterator,
                                                      totalMessageLength,MQTT_USER_PROPERTY_ID);
             iterator = &iterator[ vectorsAdded ];
             ioVectorLength += vectorsAdded;
 
             vectorsAdded = addEncodedStringToVector(serializedUserValueLength[i],
-                                                    (userProperty+i)->value,
-                                                     (userProperty+i)->valueLength,
+                                                    userProperty[i].value,
+                                                    userProperty[i].valueLength,
                                                      iterator,
                                                      totalMessageLength );
             iterator = &iterator[ vectorsAdded ];
@@ -823,7 +824,8 @@ size_t MQTT_SerializePublishProperties(const MQTTPublishInfo_t * pPublishInfo, T
     uint8_t serializedResponseTopicLength[ 2 ];
     uint8_t serailizedCorrelationLength[ 2 ];
     // 4 byte + 4 byte delay + 2 byte payload format + 6 byte  
-    uint8_t fixedSizeProperties[ 16U];
+    uint8_t fixedSizeProperties[ 20U];
+    pIndex= fixedSizeProperties;
     // 1 for fixed, 5 for variable
     pIndex = encodeRemainingLength( pIndex, pPublishInfo->propertyLength);
     if (willDelay != 0U)
@@ -1367,15 +1369,15 @@ MQTTStatus_t MQTTV5_DeserializeConnack( MQTTConnectProperties_t *pConnackPropert
                         status=MQTTMalformedPacket;
                     }     
                     else{
-                        pConnackProperties->outgoingAuth->authMethodLength= UINT16_DECODE(pVariableHeader);
+                        pConnackProperties->incomingAuth->authMethodLength= UINT16_DECODE(pVariableHeader);
                         pVariableHeader= &pVariableHeader[sizeof(uint16_t)];
                         propertyLength-=2;
-                        if(propertyLength<pConnackProperties->outgoingAuth->authMethodLength){
+                        if(propertyLength<pConnackProperties->incomingAuth->authMethodLength){
                             status=MQTTMalformedPacket;
                         }
-                        pConnackProperties->outgoingAuth->authMethod=( const char * )pVariableHeader;
-                        pVariableHeader=&pVariableHeader[pConnackProperties->outgoingAuth->authMethodLength];
-                        propertyLength-=pConnackProperties->outgoingAuth->authMethodLength;
+                        pConnackProperties->incomingAuth->authMethod=( const char * )pVariableHeader;
+                        pVariableHeader=&pVariableHeader[pConnackProperties->incomingAuth->authMethodLength];
+                        propertyLength-=pConnackProperties->incomingAuth->authMethodLength;
                         authMethod=true;
                     }
                     break;
@@ -1387,15 +1389,15 @@ MQTTStatus_t MQTTV5_DeserializeConnack( MQTTConnectProperties_t *pConnackPropert
                         status=MQTTMalformedPacket;
                     }     
                     else{
-                        pConnackProperties->outgoingAuth->authDataLength= UINT16_DECODE(pVariableHeader);
+                        pConnackProperties->incomingAuth->authDataLength= UINT16_DECODE(pVariableHeader);
                         pVariableHeader= &pVariableHeader[sizeof(uint16_t)];
                         propertyLength-=2;
-                        if(propertyLength<pConnackProperties->outgoingAuth->authDataLength){
+                        if(propertyLength<pConnackProperties->incomingAuth->authDataLength){
                             status=MQTTMalformedPacket;
                         }
-                        pConnackProperties->outgoingAuth->authData=( const char * )pVariableHeader;
-                        pVariableHeader=&pVariableHeader[pConnackProperties->outgoingAuth->authDataLength];
-                        propertyLength-=pConnackProperties->outgoingAuth->authDataLength;
+                        pConnackProperties->incomingAuth->authData=( const char * )pVariableHeader;
+                        pVariableHeader=&pVariableHeader[pConnackProperties->incomingAuth->authDataLength];
+                        propertyLength-=pConnackProperties->incomingAuth->authDataLength;
                         authMethod=true;
                     }
                     break;

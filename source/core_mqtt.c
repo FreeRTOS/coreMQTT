@@ -2188,12 +2188,12 @@ static MQTTStatus_t sendConnectWithoutCopy( MQTTContext_t * pContext,
     #else
     /*
     *
-    * User Property- 2* Max userProperty
-    * Authentication- 2
-    * 6 for wiill properties
+    * User Property- 5* Max userProperty
+    * Authentication- 6
+    * 10 + 5*Max user for wiill properties
     * 
     */
-    TransportOutVector_t pIoVector[ 19U + 2* MAX_USER_PROPERTY];
+    TransportOutVector_t pIoVector[ 27 + 10* MAX_USER_PROPERTY];
     #endif
 
     iterator = pIoVector;
