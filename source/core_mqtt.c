@@ -93,6 +93,13 @@
 #define  MQTT_USER_PROPERTY_ID                      (0x17)
 #define  MQTT_AUTH_METHOD_ID                        (0x15)
 #define  MQTT_AUTH_DATA_ID                          (0x16)
+
+#define  MQTT_WILL_DELAY_ID                         (0x18)
+#define  MQTT_PAYLOAD_FORMAT_ID                     (0x01)
+#define  MQTT_MSG_EXPIRY_ID                         (0x02)
+#define  MQTT_CONTENT_TYPE_ID                       (0x03)
+#define  MQTT_RESPONSE_TOPIC_ID                     (0x08)
+#define  MQTT_CORRELATION_DATA_ID                   (0x09) 
 #endif
 
 /*-----------------------------------------------------------*/
@@ -549,6 +556,64 @@ static bool matchTopicFilter( const char * pTopicName,
 
 
 #if (MQTT_VERSION_5_ENABLED)
+
+size_t MQTT_SerializePublishProperties(const MQTTPublishInfo_t * pPublishInfo, TransportOutVector_t *iterator, size_t * totalMessageLength,uint32_t willDelay);
+
+size_t MQTT_SerializePublishProperties(const MQTTPublishInfo_t * pPublishInfo, TransportOutVector_t *iterator, size_t * totalMessageLength,uint32_t willDelay){
+    uint8_t* pIndex=0;
+    size_t vectorsAdded = 0U;
+    size_t ioVectorLength= 0U;
+    uint8_t serializedContentTypeLength[ 2 ];
+    uint8_t serializedResponseTopicLength[ 2 ];
+    uint8_t serailizedCorrelationLength[ 2 ];
+    // 4 byte + 4 byte delay + 2 byte payload format + 6 byte  
+    uint8_t fixedSizeProperties[ 20U];
+    pIndex= fixedSizeProperties;
+    // 1 for fixed, 5 for variable
+    pIndex=SerializePublishProperties(pIndex,pPublishInfo,willDelay);
+    
+
+    iterator->iov_base = fixedSizeProperties;
+    iterator->iov_len = ( size_t ) ( pIndex - fixedSizeProperties );
+    totalMessageLength += iterator->iov_len;
+    iterator++;
+    ioVectorLength++;
+
+    if ( pPublishInfo->contentTypeLength != 0U)
+    {
+        vectorsAdded = addEncodedStringToVectorWithId( serializedContentTypeLength,
+                                                     pPublishInfo->contentType,
+                                                     pPublishInfo->contentTypeLength,
+                                                     iterator,
+                                                     totalMessageLength,MQTT_CONTENT_TYPE_ID);
+        iterator = &iterator[ vectorsAdded ];
+        ioVectorLength += vectorsAdded;
+    }
+    if ( pPublishInfo->responseTopicLength != 0U)
+    {
+         vectorsAdded = addEncodedStringToVectorWithId( serializedResponseTopicLength,
+                                                     pPublishInfo->responseTopic,
+                                                     pPublishInfo->responseTopicLength,
+                                                     iterator,
+                                                     totalMessageLength,MQTT_RESPONSE_TOPIC_ID );
+        iterator = &iterator[ vectorsAdded ];
+        ioVectorLength += vectorsAdded;
+    }
+    if (pPublishInfo->correlationLength != 0U)
+    {
+        vectorsAdded = addEncodedStringToVectorWithId(serailizedCorrelationLength,
+                                                     pPublishInfo->correlationData,
+                                                     pPublishInfo->correlationLength,
+                                                     iterator,
+                                                     totalMessageLength,MQTT_CORRELATION_DATA_ID);
+        iterator = &iterator[ vectorsAdded ];
+        ioVectorLength += vectorsAdded;
+    }
+    if(pPublishInfo->userPropertySize!=0){
+         ioVectorLength += MQTT_SerializeUserProperty(pPublishInfo->userProperty,pPublishInfo->userPropertySize,iterator,totalMessageLength);
+    }
+   return  ioVectorLength;
+};
 #endif
 
 /*-----------------------------------------------------------*/
@@ -2281,7 +2346,7 @@ static MQTTStatus_t sendConnectWithoutCopy( MQTTContext_t * pContext,
         {
             #if (MQTT_VERSION_5_ENABLED)
             //Add the will properties 
-            vectorsAdded= MQTT_SerializePublishProperties(pWillInfo,iterator,&totalMessageLength,pContext->connectProperties->willDelay);
+            vectorsAdded= MQTT_SerializePublishProperties(pWillInfo,&iterator,&totalMessageLength,pContext->connectProperties->willDelay);
             #endif
             /* Serialize the topic. */
             vectorsAdded = addEncodedStringToVector( serializedTopicLength,
@@ -2446,7 +2511,7 @@ static MQTTStatus_t receiveConnack( const MQTTContext_t * pContext,
         #if (MQTT_VERSION_5_ENABLED==0)
         status = MQTT_DeserializeAck( pIncomingPacket, NULL, pSessionPresent );
         #else
-        status = MQTTV5_DeserializeConnack( pIncomingPacket, NULL, pSessionPresent);
+        status = MQTTV5_DeserializeConnack( pContext->connectProperties,pIncomingPacket, pSessionPresent);
         #endif 
     }
 

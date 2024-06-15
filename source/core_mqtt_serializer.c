@@ -38,6 +38,7 @@
  * @brief MQTT protocol version 3.1.1.
  */
 #define MQTT_VERSION_3_1_1                          ( ( uint8_t ) 4U )
+#define  MQTT_VERSION_5                             ( ( uint8_t ) 5U )
 
 /**
  * @brief Size of the fixed and variable header of a CONNECT packet.
@@ -112,7 +113,7 @@
 #define  MQTT_TOPIC_ALIAS_MAX_ID                    (0x22)
 #define  MQTT_REQUEST_RESPONSE_ID                   (0x19)
 #define  MQTT_REQUEST_PROBLEM_ID                    (0x17)
-#define  MQTT_USER_PROPERTY_ID                      (0x17)
+#define  MQTT_USER_PROPERTY_ID                      (0x26)
 #define  MQTT_AUTH_METHOD_ID                        (0x15)
 #define  MQTT_AUTH_DATA_ID                          (0x16)
 
@@ -534,6 +535,8 @@ MQTTStatus_t MQTT_GetWillPropertiesSize ( MQTTPublishInfo_t * pConnectProperties
 
 uint8_t* MQTT_SerializeConnectProperties(uint8_t* pIndex,const MQTTConnectProperties_t * pConnectProperties);
 
+uint8_t * SerializePublishProperties(uint8_t *pIndex, const MQTTPublishInfo_t *pPublishProperties, uint32_t willDelay);
+
 size_t MQTT_SerializeUserProperty(MQTTUserProperty_t * userProperty, uint16_t size,TransportOutVector_t *iterator,size_t* totalMessageLength);
 
 size_t MQTT_SerializePublishProperties(const MQTTPublishInfo_t * pPublishInfo, TransportOutVector_t *iterator, size_t * updatedLength,uint32_t willDelay);
@@ -618,8 +621,8 @@ MQTTStatus_t MQTT_GetUserPropertySize(MQTTUserProperty_t * userProperty, uint16_
             if((userProperty+i)==NULL || (userProperty+i)->keyLength==0 || (userProperty+i)->valueLength==0||(userProperty+i)->key==NULL || (userProperty+i)->value==NULL ){
                 status=MQTTBadParameter;
             }
-            length+=(userProperty+i)->keyLength+1;
-            length+=(userProperty+i)->valueLength;
+            *length+=(userProperty+i)->keyLength+3U;
+            *length+=(userProperty+i)->valueLength+2U;
         }
     }
     return status;
@@ -673,10 +676,10 @@ MQTTStatus_t MQTT_GetConnectPropertiesSize(MQTTConnectProperties_t *pConnectProp
         else
         {
             propertyLength += pConnectProperties->outgoingAuth->authMethodLength;
-            propertyLength += 1U;
+            propertyLength += 3U;
             if(pConnectProperties->outgoingAuth->authDataLength != 0U){
             propertyLength += pConnectProperties->outgoingAuth->authDataLength;
-            propertyLength += 1U;
+            propertyLength += 3U;
             }
         }
     }
@@ -788,7 +791,39 @@ uint8_t * MQTT_SerializeConnectProperties(uint8_t *pIndex, const MQTTConnectProp
     }
     return pIndexLocal;
 }
+uint8_t * SerializePublishProperties(uint8_t *pIndex, const MQTTPublishInfo_t *pPublishInfo, uint32_t willDelay)
+{
+    uint8_t *pIndexLocal = pIndex;
+    pIndex = encodeRemainingLength( pIndex, pPublishInfo->propertyLength);
+    if (willDelay != 0U)
+    {
+        *pIndex = MQTT_WILL_DELAY_ID;
+        pIndex++;
+        pIndex[0] = UINT32_BYTE3(willDelay);
+        pIndex[1] = UINT32_BYTE2(willDelay);
+        pIndex[2] = UINT32_BYTE1(willDelay);
+        pIndex[3] = UINT32_BYTE0(willDelay);
+        pIndex = &pIndex[4];
+    }
+    if (pPublishInfo->payloadFormat != 0)
+    {
+        *pIndex = MQTT_PAYLOAD_FORMAT_ID;
+         pIndex++;
+        *pIndex= pPublishInfo->payloadFormat;
+    }
+    if (pPublishInfo->msgExpiryInterval != 0U)
+    {
+       *pIndex = MQTT_MSG_EXPIRY_ID;
+        pIndex++;
+        pIndex[0] = UINT32_BYTE3(pPublishInfo->msgExpiryInterval);
+        pIndex[1] = UINT32_BYTE2(pPublishInfo->msgExpiryInterval);
+        pIndex[2] = UINT32_BYTE1(pPublishInfo->msgExpiryInterval);
+        pIndex[3] = UINT32_BYTE0(pPublishInfo->msgExpiryInterval);
+        pIndex = &pIndex[4];
 
+    }
+    return pIndexLocal;
+}
 size_t MQTT_SerializeUserProperty(MQTTUserProperty_t * userProperty, uint16_t size,TransportOutVector_t *iterator,size_t* totalMessageLength)
 {
     uint8_t serializedUserKeyLength[ MAX_USER_PROPERTY ][2];
@@ -852,6 +887,8 @@ size_t MQTT_SerializePublishProperties(const MQTTPublishInfo_t * pPublishInfo, T
         pIndex[1] = UINT32_BYTE2(pPublishInfo->msgExpiryInterval);
         pIndex[2] = UINT32_BYTE1(pPublishInfo->msgExpiryInterval);
         pIndex[3] = UINT32_BYTE0(pPublishInfo->msgExpiryInterval);
+        pIndex = &pIndex[4];
+
     }
 
     iterator->iov_base = fixedSizeProperties;
@@ -1047,13 +1084,12 @@ MQTTStatus_t MQTTV5_DeserializeConnack( MQTTConnectProperties_t *pConnackPropert
 {
     MQTTStatus_t status = MQTTSuccess;
     status= validateConnackParams( pIncomingPacket,pSessionPresent );
-        size_t propertyLength=0U;
+    size_t propertyLength=0U;
     uint8_t* pVariableHeader=NULL;
     if(status==MQTTSuccess){
-        uint8_t* pVariableHeader = pIncomingPacket->pRemainingData;
+        pVariableHeader = pIncomingPacket->pRemainingData;
         pVariableHeader= &pVariableHeader[2];
         size_t remainingLengthSize= remainingLengthEncodedSize(pIncomingPacket->remainingLength);
-        pVariableHeader=&pVariableHeader[remainingLengthSize];
         status=decodeVariableLength(pVariableHeader,&propertyLength);
     }
     if(propertyLength==0U){
@@ -1080,7 +1116,7 @@ MQTTStatus_t MQTTV5_DeserializeConnack( MQTTConnectProperties_t *pConnackPropert
         bool authMethod =false;
         bool authData=false;
         MQTTUserProperty_t *userProperty = pConnackProperties->incomingUserProperty;
-        
+        pVariableHeader=&pVariableHeader[remainingLengthEncodedSize(propertyLength)];
         while((propertyLength>0 )&& (status=MQTTSuccess)){
             uint8_t packetId = *pVariableHeader;
             pVariableHeader= &pVariableHeader[1];
@@ -2626,11 +2662,15 @@ uint8_t * MQTT_SerializeConnectFixedHeader( uint8_t * pIndex,
      * header. This string is 4 bytes long. */
 
     // Add the correct version
-
+   
     pIndexLocal = encodeString( pIndexLocal, "MQTT", 4 );
 
     /* The MQTT protocol version is the second field of the variable header. */
+    #if(MQTT_VERSION_5_ENABLED)
+    *pIndexLocal = MQTT_VERSION_5;
+    #else 
     *pIndexLocal = MQTT_VERSION_3_1_1;
+    #endif
     pIndexLocal++;
 
     /* Set the clean session flag if needed. */
