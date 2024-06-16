@@ -535,7 +535,7 @@ uint8_t* MQTT_SerializePublishProperties(const MQTTPublishInfo_t* pPublishInfo, 
 
 MQTTStatus_t decodeVariableLength(const uint8_t* pBuffer, size_t* length);
 
-MQTTStatus_t validateConnackParams(const MQTTPacketInfo_t* pIncomingPacket,
+static MQTTStatus_t validateConnackParams(const MQTTPacketInfo_t* pIncomingPacket,
     bool* pSessionPresent);
 
 
@@ -771,7 +771,7 @@ uint8_t* MQTT_SerializeConnectProperties(uint8_t* pIndex, const MQTTConnectPrope
 }
 
 
-MQTTStatus_t validateConnackParams(const MQTTPacketInfo_t* pIncomingPacket, bool* pSessionPresent)
+static MQTTStatus_t validateConnackParams(const MQTTPacketInfo_t* pIncomingPacket, bool* pSessionPresent)
 {
 
     MQTTStatus_t status = MQTTSuccess;

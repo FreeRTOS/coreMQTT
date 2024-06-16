@@ -564,7 +564,6 @@ size_t addEncodedStringToVectorWithId(uint8_t serializedLength[CORE_MQTT_SERIALI
                                       TransportOutVector_t *iterator,
                                       size_t *updatedLength, uint8_t* packetId);
 
-size_t MQTT_SerializeUserProperty(MQTTUserProperty_t *userProperty, uint16_t size, TransportOutVector_t *iterator, size_t *totalMessageLength);
 
 size_t addEncodedStringToVectorWithId(uint8_t serializedLength[CORE_MQTT_SERIALIZED_LENGTH_FIELD_BYTES],
                                       const char *const string,
@@ -609,34 +608,6 @@ size_t addEncodedStringToVectorWithId(uint8_t serializedLength[CORE_MQTT_SERIALI
 
     return vectorsAdded;
 }
-
-// size_t MQTT_SerializeUserProperty(MQTTUserProperty_t *userProperty, uint16_t size, TransportOutVector_t *iterator, size_t *totalMessageLength)
-// {
-//     uint8_t serializedUserKeyLength[MAX_USER_PROPERTY][2];
-//     uint8_t serializedUserValueLength[MAX_USER_PROPERTY][2];
-//     size_t vectorsAdded = 0U;
-//     size_t ioVectorLength = 0U;
-//     uint16_t i = 0;
-//     for (; i < size; i++)
-//     {
-//         vectorsAdded = addEncodedStringToVectorWithId(serializedUserKeyLength[i],
-//                                                       userProperty[i].key,
-//                                                       userProperty[i].keyLength,
-//                                                       iterator,
-//                                                       totalMessageLength, MQTT_USER_PROPERTY_ID);
-//         iterator = &iterator[vectorsAdded];
-//         ioVectorLength += vectorsAdded;
-
-//         vectorsAdded = addEncodedStringToVector(serializedUserValueLength[i],
-//                                                 userProperty[i].value,
-//                                                 userProperty[i].valueLength,
-//                                                 iterator,
-//                                                 totalMessageLength);
-//         iterator = &iterator[vectorsAdded];
-//         ioVectorLength += vectorsAdded;
-//     }
-//     return ioVectorLength;
-// }
 
 #endif
 
@@ -2266,20 +2237,7 @@ static MQTTStatus_t sendConnectWithoutCopy(MQTTContext_t *pContext,
     size_t totalMessageLength = 0U;
     int32_t bytesSentOrError;
     uint8_t *pIndex;
-    uint8_t serializedUserKeyLength[2];
-    uint8_t userId=MQTT_USER_PROPERTY_ID;
-    uint8_t serializedUserValueLength[2];
-    uint8_t serializedAuthMethodLength[2];
-    uint8_t authMethodId=MQTT_AUTH_METHOD_ID;
-    uint8_t serializedAuthDataLength[2];
-    uint8_t authDataId=MQTT_AUTH_DATA_ID;
     uint8_t serializedClientIDLength[2];
-    uint8_t serializedContentTypeLength[2];
-    uint8_t contentTypeId=MQTT_CONTENT_TYPE_ID;
-    uint8_t serializedResponseTopicLength[2];
-    uint8_t responseTopicId=MQTT_RESPONSE_TOPIC_ID;
-    uint8_t serailizedCorrelationLength[2];
-    uint8_t correlationDataId=MQTT_CORRELATION_DATA_ID;
     uint8_t serializedTopicLength[2];
     uint8_t serializedPayloadLength[2];
     uint8_t serializedUsernameLength[2];
@@ -2297,6 +2255,19 @@ static MQTTStatus_t sendConnectWithoutCopy(MQTTContext_t *pContext,
      * Connect flags            + 1 = 13
      * Keep alive               + 2 = 15 */
     uint8_t connectPacketHeader[15U];
+    uint8_t serializedUserKeyLength[2];
+    uint8_t userId = MQTT_USER_PROPERTY_ID;
+    uint8_t serializedUserValueLength[2];
+    uint8_t serializedAuthMethodLength[2];
+    uint8_t authMethodId = MQTT_AUTH_METHOD_ID;
+    uint8_t serializedAuthDataLength[2];
+    uint8_t authDataId = MQTT_AUTH_DATA_ID;
+    uint8_t serializedContentTypeLength[2];
+    uint8_t contentTypeId = MQTT_CONTENT_TYPE_ID;
+    uint8_t serializedResponseTopicLength[2];
+    uint8_t responseTopicId = MQTT_RESPONSE_TOPIC_ID;
+    uint8_t serailizedCorrelationLength[2];
+    uint8_t correlationDataId = MQTT_CORRELATION_DATA_ID;
 
 #else
     /*Properties
@@ -2489,8 +2460,27 @@ static MQTTStatus_t sendConnectWithoutCopy(MQTTContext_t *pContext,
             }
             if (pWillInfo->userPropertySize != 0)
             {
+                    uint16_t i = 0;
+                    uint16_t size = pWillInfo->usePropertySize;
+                    MQTTUserProperty_t* userProperty = pWillInfo->userProperty;
+                    for (; i < size; i++)
+                    {
+                        vectorsAdded = addEncodedStringToVectorWithId(serializedUserKeyLength,
+                            userProperty[i].key,
+                            userProperty[i].keyLength,
+                            iterator,
+                            &totalMessageLength, &userId);
+                        iterator = &iterator[vectorsAdded];
+                        ioVectorLength += vectorsAdded;
 
-                ioVectorLength += MQTT_SerializeUserProperty(pWillInfo->userProperty, pWillInfo->userPropertySize, iterator, totalMessageLength);
+                        vectorsAdded = addEncodedStringToVector(serializedUserValueLength,
+                            userProperty[i].value,
+                            userProperty[i].valueLength,
+                            iterator,
+                            &totalMessageLength);
+                        iterator = &iterator[vectorsAdded];
+                        ioVectorLength += vectorsAdded;
+
             }
 
             // vectorsAdded= MQTT_SerializePublishProperties(pWillInfo,iterator,&totalMessageLength,pContext->connectProperties->willDelay);
