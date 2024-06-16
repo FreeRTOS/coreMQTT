@@ -1399,12 +1399,12 @@ MQTTStatus_t MQTT_GetWillPropertiesSize ( MQTTPublishInfo_t * pConnectProperties
                                          uint32_t willDelay);
 
 uint8_t* MQTT_SerializeConnectProperties(uint8_t* pIndex,const MQTTConnectProperties_t * pConnectProperties);
-uint8_t * SerializePublishProperties(uint8_t *pIndex, const MQTTPublishInfo_t *pPublishProperties, uint32_t willDelay);
 
+// size_t MQTT_SerializeUserProperty(MQTTUserProperty_t * userProperty, uint16_t size,TransportOutVector_t *iterator,size_t* updatedLength);
 
-size_t MQTT_SerializeUserProperty(MQTTUserProperty_t * userProperty, uint16_t size,TransportOutVector_t *iterator,size_t* updatedLength);
+// size_t MQTT_SerializePublishProperties(const MQTTPublishInfo_t * pPublishInfo, TransportOutVector_t *iterator, size_t * updatedLength,uint32_t willDelay);
 
-size_t MQTT_SerializePublishProperties(const MQTTPublishInfo_t * pPublishInfo, TransportOutVector_t *iterator, size_t * updatedLength,uint32_t willDelay);
+uint8_t* MQTT_SerializePublishProperties(const MQTTPublishInfo_t * pPublishInfo, uint8_t* pIndex,uint32_t willDelay);
 
 MQTTStatus_t decodeVariableLength( const uint8_t * pBuffer, size_t* length);
 
@@ -1416,22 +1416,7 @@ MQTTStatus_t MQTTV5_DeserializeConnack( MQTTConnectProperties_t *pConnackPropert
                                   
                                   bool * pSessionPresent );
 
-size_t addEncodedStringToVectorWithId( uint8_t serializedLength[ 2 ],
-                                        const char * const string,
-                                        uint16_t length,
-                                        TransportOutVector_t * iterator,
-                                        size_t * updatedLength,uint8_t packetId );
-
 #endif
-
-
-size_t addEncodedStringToVector( uint8_t serializedLength[ CORE_MQTT_SERIALIZED_LENGTH_FIELD_BYTES ],
-                                        const char * const string,
-                                        uint16_t length,
-                                        TransportOutVector_t * iterator,
-                                        size_t * updatedLength );
-
-
 
 /* *INDENT-OFF* */
 #ifdef __cplusplus
