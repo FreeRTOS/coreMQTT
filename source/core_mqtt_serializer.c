@@ -771,87 +771,6 @@ uint8_t* MQTT_SerializeConnectProperties(uint8_t* pIndex, const MQTTConnectPrope
 }
 
 
-// size_t MQTT_SerializePublishProperties(const MQTTPublishInfo_t * pPublishInfo, TransportOutVector_t *iterator, size_t * updatedLength,uint32_t willDelay){
-//     uint8_t* pIndex=0;
-//     size_t vectorsAdded = 0U;
-//     size_t ioVectorLength= 0U;
-//     size_t * totalMessageLength=updatedLength;
-//     uint8_t serializedContentTypeLength[ 2 ];
-//     uint8_t serializedResponseTopicLength[ 2 ];
-//     uint8_t serailizedCorrelationLength[ 2 ];
-//     // 4 byte + 4 byte delay + 2 byte payload format + 6 byte  
-//     uint8_t fixedSizeProperties[ 20U];
-//     pIndex= fixedSizeProperties;
-//     // 1 for fixed, 5 for variable
-//     pIndex = encodeRemainingLength( pIndex, pPublishInfo->propertyLength);
-//     if (willDelay != 0U)
-//     {
-//         *pIndex = MQTT_WILL_DELAY_ID;
-//         pIndex++;
-//         pIndex[0] = UINT32_BYTE3(willDelay);
-//         pIndex[1] = UINT32_BYTE2(willDelay);
-//         pIndex[2] = UINT32_BYTE1(willDelay);
-//         pIndex[3] = UINT32_BYTE0(willDelay);
-//         pIndex = &pIndex[4];
-//     }
-//     if (pPublishInfo->payloadFormat != 0)
-//     {
-//         *pIndex = MQTT_PAYLOAD_FORMAT_ID;
-//          pIndex++;
-//         *pIndex= pPublishInfo->payloadFormat;
-//     }
-//     if (pPublishInfo->msgExpiryInterval != 0U)
-//     {
-//        *pIndex = MQTT_MSG_EXPIRY_ID;
-//         pIndex++;
-//         pIndex[0] = UINT32_BYTE3(pPublishInfo->msgExpiryInterval);
-//         pIndex[1] = UINT32_BYTE2(pPublishInfo->msgExpiryInterval);
-//         pIndex[2] = UINT32_BYTE1(pPublishInfo->msgExpiryInterval);
-//         pIndex[3] = UINT32_BYTE0(pPublishInfo->msgExpiryInterval);
-//     }
-
-//     iterator->iov_base = fixedSizeProperties;
-//     iterator->iov_len = ( size_t ) ( pIndex - fixedSizeProperties );
-//     totalMessageLength += iterator->iov_len;
-//     iterator++;
-//     ioVectorLength++;
-
-//     if ( pPublishInfo->contentTypeLength != 0U)
-//     {
-//         vectorsAdded = addEncodedStringToVectorWithId( serializedContentTypeLength,
-//                                                      pPublishInfo->contentType,
-//                                                      pPublishInfo->contentTypeLength,
-//                                                      iterator,
-//                                                      totalMessageLength,MQTT_CONTENT_TYPE_ID);
-//         iterator = &iterator[ vectorsAdded ];
-//         ioVectorLength += vectorsAdded;
-//     }
-//     if ( pPublishInfo->responseTopicLength != 0U)
-//     {
-//          vectorsAdded = addEncodedStringToVectorWithId( serializedResponseTopicLength,
-//                                                      pPublishInfo->responseTopic,
-//                                                      pPublishInfo->responseTopicLength,
-//                                                      iterator,
-//                                                      totalMessageLength,MQTT_RESPONSE_TOPIC_ID );
-//         iterator = &iterator[ vectorsAdded ];
-//         ioVectorLength += vectorsAdded;
-//     }
-//     if (pPublishInfo->correlationLength != 0U)
-//     {
-//         vectorsAdded = addEncodedStringToVectorWithId(serailizedCorrelationLength,
-//                                                      pPublishInfo->correlationData,
-//                                                      pPublishInfo->correlationLength,
-//                                                      iterator,
-//                                                      totalMessageLength,MQTT_CORRELATION_DATA_ID);
-//         iterator = &iterator[ vectorsAdded ];
-//         ioVectorLength += vectorsAdded;
-//     }
-//     if(pPublishInfo->userPropertySize!=0){
-//          ioVectorLength += MQTT_SerializeUserProperty(pPublishInfo->userProperty,pPublishInfo->userPropertySize,iterator,totalMessageLength);
-//     }
-//    return  ioVectorLength;
-// };
-
 MQTTStatus_t validateConnackParams(const MQTTPacketInfo_t* pIncomingPacket, bool* pSessionPresent)
 {
 
@@ -2045,7 +1964,7 @@ static void logConnackResponse(uint8_t responseCode)
     {
         responseCode -= 128;
         assert(responseCode <= 20);
-        assert(responseCode >= 20);
+        assert(responseCode >= 0);
         /* Log an error based on the CONNACK response code. */
         LogError(("%s", pConnackResponses[responseCode]));
     }
