@@ -81,11 +81,11 @@ struct MQTTSubscribeInfo;
 struct MQTTPublishInfo;
 struct MQTTPacketInfo;
 
-#if (MQTT_VERSION_5_ENABLED)
+// #if (MQTT_VERSION_5_ENABLED)
 struct MQTTConnectProperties;
 struct MQTTUserProperty;
 struct MQTTAuthInfo;
-#endif
+// #endif
 /**
  * @ingroup mqtt_enum_types
  * @brief Return codes from MQTT functions.
@@ -107,10 +107,10 @@ typedef enum MQTTStatus
                           incomplete data; it should be called again (probably after
                           a delay). */
 
-    #if(MQTT_VERSION_5_ENABLED)
+    // #if(MQTT_VERSION_5_ENABLED)
       MQTTMalformedPacket=0x81,
       MQTTProtocolError=0x82
-    #endif
+    // #endif
 
     // #endif
 } MQTTStatus_t;
@@ -210,7 +210,7 @@ typedef struct MQTTSubscribeInfo
     uint16_t topicFilterLength;
 } MQTTSubscribeInfo_t;
 
-#if (MQTT_VERSION_5_ENABLED)
+// #if (MQTT_VERSION_5_ENABLED)
 
    /**
  * @ingroup mqtt_struct_types
@@ -277,7 +277,7 @@ typedef struct MQTTConnectProperties
     MQTTAuthInfo_t *outgoingAuth;
     
 } MQTTConnectProperties_t;
-#endif
+// #endif
 
 /**
  * @ingroup mqtt_struct_types
@@ -323,7 +323,8 @@ typedef struct MQTTPublishInfo
 #if (MQTT_VERSION_5_ENABLED)
     size_t propertyLength;
     uint8_t payloadFormat;
-    uint64_t msgExpiryInterval;
+    uint32_t msgExpiryInterval;
+    bool msgExpiryPresent;
     uint16_t contentTypeLength;
     const char *contentType;
     uint16_t responseTopicLength;
@@ -1387,7 +1388,7 @@ uint8_t * MQTT_SerializeUnsubscribeHeader( size_t remainingLength,
 /** @endcond */
 
 
-#if(MQTT_VERSION_5_ENABLED)
+// #if(MQTT_VERSION_5_ENABLED)
 MQTTStatus_t MQTT_GetUserPropertySize(MQTTUserProperty_t * userProperty, uint16_t size,size_t *length); 
 
 
@@ -1407,7 +1408,7 @@ MQTTStatus_t MQTTV5_DeserializeConnack( MQTTConnectProperties_t *pConnackPropert
                                   
                                   bool * pSessionPresent );
 
-#endif
+// #endif
 
 /* *INDENT-OFF* */
 #ifdef __cplusplus

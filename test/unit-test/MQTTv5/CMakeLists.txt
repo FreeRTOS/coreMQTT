@@ -81,35 +81,35 @@ create_test(${utest_name}
             "${test_include_directories}"
         )
 
-# # need to redefine because the tests below don't use any mocks
-# set(utest_link_list "")
-# list(APPEND utest_link_list
-#                 lib${real_name}.a
-#         )
+# need to redefine because the tests below don't use any mocks
+set(utest_link_list "")
+list(APPEND utest_link_list
+                lib${real_name}.a
+        )
 
-# # mqtt_state_utest
-# set(utest_name "${project_name}_state_utest")
-# set(utest_source "${project_name}_state_utest.c")
+# mqtt_state_utest
+set(utest_name "${project_name}_state_utest")
+set(utest_source "${project_name}_state_utest.c")
 
-# create_test(${utest_name}
-#             ${utest_source}
-#             "${utest_link_list}"
-#             "${utest_dep_list}"
-#             "${test_include_directories}"
-#         )
+create_test(${utest_name}
+            ${utest_source}
+            "${utest_link_list}"
+            "${utest_dep_list}"
+            "${test_include_directories}"
+        )
 
-# # mqtt_serializer_utest
-# set(utest_name "${project_name}_serializer_utest")
-# set(utest_source "${project_name}_serializer_utest.c")
+# mqtt_serializer_utest
+set(utest_name "${project_name}_serializer_utest")
+set(utest_source "${project_name}_serializer_utest.c")
 
-# set(utest_link_list "")
-# list(APPEND utest_link_list
-#             lib${real_name}.a
-#         )
+set(utest_link_list "")
+list(APPEND utest_link_list
+            lib${real_name}.a
+        )
 
-# create_test(${utest_name}
-#             ${utest_source}
-#             "${utest_link_list}"
-#             "${utest_dep_list}"
-#             "${test_include_directories}"
-#         )
+create_test(${utest_name}
+            ${utest_source}
+            "${utest_link_list}"
+            "${utest_dep_list}"
+            "${test_include_directories}"
+        )
