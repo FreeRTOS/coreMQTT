@@ -31,7 +31,6 @@
 
 /* Standard include. */
 #include <stdint.h>
-#define MQTT_VERSION_5_ENABLED (false)
 
 /**************************************************/
 /******* DO NOT CHANGE the following order ********/
@@ -44,7 +43,7 @@
  * 3. Include the header file "logging_stack.h", if logging is enabled for MQTT.
  */
 
-#include "logging_levels.h"
+#include "../logging/logging_levels.h"
 
 /* Logging configuration for the MQTT library. */
 #ifndef LIBRARY_LOG_NAME
@@ -55,7 +54,7 @@
     #define LIBRARY_LOG_LEVEL    LOG_NONE
 #endif
 
-#include "logging_stack.h"
+#include "../logging/logging_stack.h"
 
 /************ End of logging configuration ****************/
 
@@ -73,5 +72,7 @@
 #define MQTT_SUB_UNSUB_MAX_VECTORS              ( 6U )
 
 #define MQTT_SEND_TIMEOUT_MS                    ( 20U )
+
+// #define MQTT_VERSION_5_ENABLED    (false)
 
 #endif /* ifndef CORE_MQTT_CONFIG_H_ */

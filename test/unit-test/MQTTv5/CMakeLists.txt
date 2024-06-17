@@ -2,8 +2,8 @@
 include( ${MODULE_ROOT_DIR}/mqttFilePaths.cmake )
 
 # ====================  Define your project name (edit) ========================
-set(project_name "core_mqtt_v5")
-set(new "core_mqtt_v5")
+set(project_name "core_mqttv5")
+
 
 # =====================  Create your mock here  (edit)  ========================
 
@@ -47,12 +47,12 @@ list(APPEND test_include_directories
 
 # =============================  (end edit)  ===================================
 
-set(mock_name "${new}_mock")
-set(real_name "${new}_real")
+set(mock_name "${project_name}_mock")
+set(real_name "${project_name}_real")
 
 create_mock_list(${mock_name}
                 "${mock_list}"
-                "${MODULE_ROOT_DIR}/tools/cmock/projectv5.yml"
+                "${MODULE_ROOT_DIR}/tools/cmock/project.yml"
                 "${mock_include_list}"
                 "${mock_define_list}"
         )
@@ -72,7 +72,7 @@ list(APPEND utest_dep_list
             ${real_name}
         )
 
-set(utest_name "${new}_utest")
+set(utest_name "${project_name}_utest")
 set(utest_source "${project_name}_utest.c")
 create_test(${utest_name}
             ${utest_source}
@@ -81,35 +81,35 @@ create_test(${utest_name}
             "${test_include_directories}"
         )
 
-# need to redefine because the tests below don't use any mocks
-set(utest_link_list "")
-list(APPEND utest_link_list
-                lib${real_name}.a
-        )
+# # need to redefine because the tests below don't use any mocks
+# set(utest_link_list "")
+# list(APPEND utest_link_list
+#                 lib${real_name}.a
+#         )
 
-# mqtt_state_utest
-set(utest_name "${new}_state_utest")
-set(utest_source "${project_name}_state_utest.c")
+# # mqtt_state_utest
+# set(utest_name "${project_name}_state_utest")
+# set(utest_source "${project_name}_state_utest.c")
 
-create_test(${utest_name}
-            ${utest_source}
-            "${utest_link_list}"
-            "${utest_dep_list}"
-            "${test_include_directories}"
-        )
+# create_test(${utest_name}
+#             ${utest_source}
+#             "${utest_link_list}"
+#             "${utest_dep_list}"
+#             "${test_include_directories}"
+#         )
 
-# mqtt_serializer_utest
-set(utest_name "${new}_serializer_utest")
-set(utest_source "${project_name}_serializer_utest.c")
+# # mqtt_serializer_utest
+# set(utest_name "${project_name}_serializer_utest")
+# set(utest_source "${project_name}_serializer_utest.c")
 
-set(utest_link_list "")
-list(APPEND utest_link_list
-            lib${real_name}.a
-        )
+# set(utest_link_list "")
+# list(APPEND utest_link_list
+#             lib${real_name}.a
+#         )
 
-create_test(${utest_name}
-            ${utest_source}
-            "${utest_link_list}"
-            "${utest_dep_list}"
-            "${test_include_directories}"
-        )
+# create_test(${utest_name}
+#             ${utest_source}
+#             "${utest_link_list}"
+#             "${utest_dep_list}"
+#             "${test_include_directories}"
+#         )

@@ -22,38 +22,15 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-/**
- * @file core_mqtt_state_utest.c
- * @brief Unit tests for functions in core_mqtt_state.h.
- */
-#include <string.h>
-#include "unity.h"
+#ifndef CMOCK_OPAQUE_TYPES_H_
+#define CMOCK_OPAQUE_TYPES_H_
 
-#include "core_mqtt_state.h"
+/* CMock does not support opaque types so needs concrete definitions for them.
+ * This file is included in CMock .c files. */
 
-#define MQTT_PACKET_ID_INVALID         ( ( uint16_t ) 0U )
-#define  MQTT_STATE_ARRAY_MAX_COUNT    10
-
-/* ============================   UNITY FIXTURES ============================ */
-void setUp( void )
+struct NetworkContext
 {
-}
+    int a;
+};
 
-/* called before each testcase */
-void tearDown( void )
-{
-}
-
-/* called at the beginning of the whole suite */
-void suiteSetUp()
-{
-}
-
-/* called at the end of the whole suite */
-int suiteTearDown( int numFailures )
-{
-    return numFailures;
-}
-
-/* ========================================================================== */
-
+#endif /* ifndef CMOCK_OPAQUE_TYPES_H_ */

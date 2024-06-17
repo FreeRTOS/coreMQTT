@@ -1385,7 +1385,6 @@ uint8_t * MQTT_SerializeUnsubscribeHeader( size_t remainingLength,
                                            uint8_t * pIndex,
                                            uint16_t packetId );
 /** @endcond */
-size_t remainingLengthEncodedSize( size_t length );
 
 
 #if(MQTT_VERSION_5_ENABLED)

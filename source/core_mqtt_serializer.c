@@ -345,7 +345,7 @@ static uint8_t* encodeRemainingLength(uint8_t* pDestination,
  *
  * @return The size of the remaining length if it were to be encoded.
  */
-size_t remainingLengthEncodedSize(size_t length);
+ static size_t remainingLengthEncodedSize(size_t length);
 
 /**
  * @brief Encode a string whose size is at maximum 16 bits in length.
@@ -611,6 +611,9 @@ MQTTStatus_t MQTT_GetConnectPropertiesSize(MQTTConnectProperties_t* pConnectProp
     size_t propertyLength = 0;
     MQTTStatus_t status = MQTTSuccess;
     if(pConnectProperties==NULL){
+        status=MQTTBadParameter;
+    }
+    else if(pConnectProperties->maxPacketSize==0){
         status=MQTTBadParameter;
     }
     if(status==MQTTSuccess){
@@ -1300,7 +1303,7 @@ MQTTStatus_t MQTTV5_DeserializeConnack(MQTTConnectProperties_t* pConnackProperti
 #endif
 /*-----------------------------------------------------------*/
 
-size_t remainingLengthEncodedSize(size_t length)
+ static size_t remainingLengthEncodedSize(size_t length)
 {
     size_t encodedSize;
 

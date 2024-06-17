@@ -2472,7 +2472,7 @@ static MQTTStatus_t sendConnectWithoutCopy(MQTTContext_t *pContext,
                             userProperty[i].key,
                             userProperty[i].keyLength,
                             iterator,
-                            &totalMessageLength, willUserId[i]);
+                            &totalMessageLength, &willUserId[i]);
                         iterator = &iterator[vectorsAdded];
                         ioVectorLength += vectorsAdded;
 

@@ -32,7 +32,7 @@
 #include "unity.h"
 
 /* Include paths for public enums, structures, and macros. */
-#include "core_mqtt_serializer.h"
+#include "/home/ubuntu/coreMQTT/source/include/core_mqtt_serializer.h"
 
 /* Set network context to double pointer to buffer (uint8_t**). */
 struct NetworkContext
@@ -183,3 +183,61 @@ int suiteTearDown( int numFailures )
 
 /* ========================================================================== */
 
+void test_MQTT_GetConnectpropertiesSize(void){
+    MQTTConnectInfo_t connectInfo;
+    MQTTStatus_t status = MQTTSuccess;
+    MQTTPublishInfo_t willInfo = { 0 };
+
+    /* Call MQTT_GetConnectPropertiesSize() with various combinations of
+     * incorrect paramters */
+
+    status = MQTT_GetConnectpropertiesSize(NULL);
+    TEST_ASSERT_EQUAL (MQTTBadParameter,status);
+   /*
+    *Max Packet Size cannot be null
+   */ 
+    MQTTConnectProperties_t connectProperties;
+    memset(&connectProperties, 0x0, sizeof(connectProperties));
+    status = MQTT_GetConnectPropertiesSize(&connectProperties);
+    TEST_ASSERT_EQUAL (MQTTBadParameter,status);
+    
+    connectProperties.reqProbInfo=1;
+    connectProperties.maxPacketSize=40;
+    status = MQTT_GetConnectPropertiesSize(&connectProperties);
+    TEST_ASSERT_EQUAL (MQTTSuccess,status);
+    TEST_ASSERT_EQUAL_size_t (5,connectProperties.propertyLength);
+
+     connectProperties.sessionExpiry=24;
+     status = MQTT_GetConnectPropertiesSize(&connectProperties);
+    TEST_ASSERT_EQUAL (MQTTSuccess,status);
+     TEST_ASSERT_EQUAL_size_t (10,connectProperties.propertyLength);
+     
+     connectProperties.receiveMax=24;
+     status = MQTT_GetConnectPropertiesSize(&connectProperties);
+     TEST_ASSERT_EQUAL (MQTTSuccess,status);
+     TEST_ASSERT_EQUAL_size_t (13,connectProperties.propertyLength);
+
+
+     connectProperties.topicAliasMax=24;
+     status = MQTT_GetConnectPropertiesSize(&connectProperties);
+     TEST_ASSERT_EQUAL (MQTTSuccess,status);
+     TEST_ASSERT_EQUAL_size_t (16,connectProperties.propertyLength);
+
+     connectProperties.reqResInfo=0;
+     status = MQTT_GetConnectPropertiesSize(&connectProperties);
+     TEST_ASSERT_EQUAL (MQTTSuccess,status);
+     TEST_ASSERT_EQUAL_size_t (18,connectProperties.propertyLength);
+
+    connectProperties.reqProbInfo=1;
+    status = MQTT_GetConnectPropertiesSize(&connectProperties);
+    TEST_ASSERT_EQUAL (MQTTSuccess,status);
+    TEST_ASSERT_EQUAL_size_t (20,connectProperties.propertyLength);
+
+    MQTTUserProperty_t userProperty;
+    memset(&userProperty, 0x0, sizeof(userProperty));
+    
+    connectProperties.outgoingUserPropSize=1;
+    status = MQTT_GetConnectPropertiesSize(&connectProperties);
+    TEST_ASSERT_EQUAL (MQTTBadParameter,status);
+    
+}
