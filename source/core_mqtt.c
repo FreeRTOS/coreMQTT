@@ -2255,19 +2255,6 @@ static MQTTStatus_t sendConnectWithoutCopy(MQTTContext_t *pContext,
      * Connect flags            + 1 = 13
      * Keep alive               + 2 = 15 */
     uint8_t connectPacketHeader[15U];
-    uint8_t serializedUserKeyLength[2];
-    uint8_t userId = MQTT_USER_PROPERTY_ID;
-    uint8_t serializedUserValueLength[2];
-    uint8_t serializedAuthMethodLength[2];
-    uint8_t authMethodId = MQTT_AUTH_METHOD_ID;
-    uint8_t serializedAuthDataLength[2];
-    uint8_t authDataId = MQTT_AUTH_DATA_ID;
-    uint8_t serializedContentTypeLength[2];
-    uint8_t contentTypeId = MQTT_CONTENT_TYPE_ID;
-    uint8_t serializedResponseTopicLength[2];
-    uint8_t responseTopicId = MQTT_RESPONSE_TOPIC_ID;
-    uint8_t serailizedCorrelationLength[2];
-    uint8_t correlationDataId = MQTT_CORRELATION_DATA_ID;
 
 #else
     /*Properties
@@ -2285,7 +2272,22 @@ static MQTTStatus_t sendConnectWithoutCopy(MQTTContext_t *pContext,
     
     uint8_t connectPacketHeader[39U];
     uint8_t fixedSizeProperties[20U];
-
+    uint8_t serializedUserKeyLength[MAX_USER_PROPERTY][2];
+    uint8_t userId[MAX_USER_PROPERTY];
+    uint8_t serializedUserValueLength[MAX_USER_PROPERTY][2];
+    uint8_t serializedWillUserKeyLength[MAX_USER_PROPERTY][2];
+    uint8_t willUserId[MAX_USER_PROPERTY];
+    uint8_t serializedWillUserValueLength[MAX_USER_PROPERTY][2];
+    uint8_t serializedAuthMethodLength[2];
+    uint8_t authMethodId = MQTT_AUTH_METHOD_ID;
+    uint8_t serializedAuthDataLength[2];
+    uint8_t authDataId = MQTT_AUTH_DATA_ID;
+    uint8_t serializedContentTypeLength[2];
+    uint8_t contentTypeId = MQTT_CONTENT_TYPE_ID;
+    uint8_t serializedResponseTopicLength[2];
+    uint8_t responseTopicId = MQTT_RESPONSE_TOPIC_ID;
+    uint8_t serailizedCorrelationLength[2];
+    uint8_t correlationDataId = MQTT_CORRELATION_DATA_ID;
 
 #endif
     /* The maximum vectors required to encode and send a connect packet. The
@@ -2353,15 +2355,16 @@ static MQTTStatus_t sendConnectWithoutCopy(MQTTContext_t *pContext,
             MQTTUserProperty_t *userProperty = pContext->connectProperties->outgoingUserProperty;
             for (; i < size; i++)
             {
-                vectorsAdded = addEncodedStringToVectorWithId(serializedUserKeyLength,
+                userId[i]=MQTT_USER_PROPERTY_ID;
+                vectorsAdded = addEncodedStringToVectorWithId(serializedUserKeyLength[i],
                                                               userProperty[i].key,
                                                               userProperty[i].keyLength,
                                                               iterator,
-                                                              &totalMessageLength,&userId);
+                                                              &totalMessageLength,&userId[i]);
                 iterator = &iterator[vectorsAdded];
                 ioVectorLength += vectorsAdded;
 
-                vectorsAdded = addEncodedStringToVector(serializedUserValueLength,
+                vectorsAdded = addEncodedStringToVector(serializedUserValueLength[i],
                                                         userProperty[i].value,
                                                         userProperty[i].valueLength,
                                                         iterator,
@@ -2398,7 +2401,6 @@ static MQTTStatus_t sendConnectWithoutCopy(MQTTContext_t *pContext,
                 }
             }
 
-            // ioVectorLength += MQTT_SerializeUserProperty(pContext->connectProperties->outgoingUserProperty, pContext->connectProperties->outgoingUserPropSize, iterator, &totalMessageLength);
         }
 
 #endif
@@ -2461,19 +2463,20 @@ static MQTTStatus_t sendConnectWithoutCopy(MQTTContext_t *pContext,
             if (pWillInfo->userPropertySize != 0)
             {
                     uint16_t i = 0;
-                    uint16_t size = pWillInfo->usePropertySize;
+                    uint16_t size = pWillInfo->userPropertySize;
                     MQTTUserProperty_t* userProperty = pWillInfo->userProperty;
                     for (; i < size; i++)
                     {
-                        vectorsAdded = addEncodedStringToVectorWithId(serializedUserKeyLength,
+                        willUserId[i]=MQTT_USER_PROPERTY_ID;
+                        vectorsAdded = addEncodedStringToVectorWithId(serializedWillUserKeyLength[i],
                             userProperty[i].key,
                             userProperty[i].keyLength,
                             iterator,
-                            &totalMessageLength, &userId);
+                            &totalMessageLength, willUserId[i]);
                         iterator = &iterator[vectorsAdded];
                         ioVectorLength += vectorsAdded;
 
-                        vectorsAdded = addEncodedStringToVector(serializedUserValueLength,
+                        vectorsAdded = addEncodedStringToVector(serializedWillUserValueLength[i],
                             userProperty[i].value,
                             userProperty[i].valueLength,
                             iterator,
@@ -2483,7 +2486,8 @@ static MQTTStatus_t sendConnectWithoutCopy(MQTTContext_t *pContext,
 
             }
 
-            // vectorsAdded= MQTT_SerializePublishProperties(pWillInfo,iterator,&totalMessageLength,pContext->connectProperties->willDelay);
+            }
+
 #endif
             /* Serialize the topic. */
             vectorsAdded = addEncodedStringToVector(serializedTopicLength,
@@ -2923,7 +2927,7 @@ MQTTStatus_t MQTT_CancelCallback(const MQTTContext_t *pContext,
 
 MQTTStatus_t MQTT_Connect(MQTTContext_t *pContext,
                           const MQTTConnectInfo_t *pConnectInfo,
-                          const MQTTPublishInfo_t *pWillInfo,
+                           MQTTPublishInfo_t *pWillInfo,
                           uint32_t timeoutMs,
                           bool *pSessionPresent)
 {
@@ -2966,7 +2970,7 @@ MQTTStatus_t MQTT_Connect(MQTTContext_t *pContext,
     }
     if (status == MQTTSuccess)
     {
-        status = MQTT_GetConnectPropertiesSize(pContext->connectProperties, &packetSize);
+        status = MQTT_GetConnectPropertiesSize(pContext->connectProperties);
         remainingLength += pContext->connectProperties->propertyLength;
         remainingLength += remainingLengthEncodedSize(pContext->connectProperties->propertyLength);
         if (status == MQTTSuccess && pWillInfo != NULL)

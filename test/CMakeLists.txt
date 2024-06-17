@@ -94,6 +94,8 @@ if( UNITTEST )
 
     # Include build configuration for unit tests.
     add_subdirectory( unit-test )
+    
+    include( ${MODULE_ROOT_DIR}/test/unit-test/MQTTV5/CMakeLists.txt)
 
     #  ==================================== Coverage Analysis configuration ========================================
 

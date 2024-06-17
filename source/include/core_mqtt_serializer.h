@@ -1392,8 +1392,7 @@ size_t remainingLengthEncodedSize( size_t length );
 MQTTStatus_t MQTT_GetUserPropertySize(MQTTUserProperty_t * userProperty, uint16_t size,size_t *length); 
 
 
-MQTTStatus_t MQTT_GetConnectPropertiesSize (MQTTConnectProperties_t * pConnectProperties,
-                                        size_t * pPacketSize );
+MQTTStatus_t MQTT_GetConnectPropertiesSize (MQTTConnectProperties_t * pConnectProperties);
 
 MQTTStatus_t MQTT_GetWillPropertiesSize ( MQTTPublishInfo_t * pConnectProperties,
                                          uint32_t willDelay);

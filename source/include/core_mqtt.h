@@ -524,7 +524,7 @@ MQTTStatus_t MQTT_InitStatefulQoS( MQTTContext_t * pContext,
 /* @[declare_mqtt_connect] */
 MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
                            const MQTTConnectInfo_t * pConnectInfo,
-                           const MQTTPublishInfo_t * pWillInfo,
+                            MQTTPublishInfo_t * pWillInfo,
                            uint32_t timeoutMs,
                            bool * pSessionPresent );
 /* @[declare_mqtt_connect] */
