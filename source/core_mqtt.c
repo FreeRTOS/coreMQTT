@@ -2946,43 +2946,20 @@ MQTTStatus_t MQTT_Connect(MQTTContext_t *pContext,
                   (void *)pSessionPresent));
         status = MQTTBadParameter;
     }
-
+   if (status == MQTTSuccess)
+    {
 #if (MQTT_VERSION_5_ENABLED)
-    if (status == MQTTSuccess)
-    {
-        if (pContext->connectProperties == NULL)
-        {
-            // LogError( ( "Argument cannot be NULL: connectProperties=%p,",
-            //             ( void * ) pContext->connectProperties,
-            //              ));
-            status = MQTTBadParameter;
-        }
-        else if (pContext->connectProperties->outgoingAuth != NULL && pContext->connectProperties->incomingAuth == NULL)
-        {
-            // LogError( ( "Argument cannot be NULL: incomingAuth=%p, ",
-            //             ( void * ) pContext->connectProperties->incomingAuth,
-            //              ));
-            status = MQTTBadParameter;
-        }
-        else
-        {
-        }
-    }
-    if (status == MQTTSuccess)
-    {
-        status = MQTT_GetConnectPropertiesSize(pContext->connectProperties);
-        remainingLength += pContext->connectProperties->propertyLength;
-        remainingLength += remainingLengthEncodedSize(pContext->connectProperties->propertyLength);
-        if (status == MQTTSuccess && pWillInfo != NULL)
-        {
-            status = MQTT_GetWillPropertiesSize(pWillInfo, pContext->connectProperties->willDelay);
-            remainingLength += pWillInfo->propertyLength;
-            remainingLength += remainingLengthEncodedSize(pWillInfo->propertyLength);
-        }
-    }
-#endif
-    if (status == MQTTSuccess)
-    {
+     /* Get MQTT connect packet size and remaining length. */
+        status = MQTT_GetConnectPacketSizeV5(pConnectInfo,
+                                           pWillInfo,
+                                           pContext->connectProperties,
+                                           &remainingLength,
+                                           &packetSize);
+        LogDebug(("CONNECT packet size is %lu and remaining length is %lu.",
+                  (unsigned long)packetSize,
+                  (unsigned long)remainingLength));
+#else
+ 
         /* Get MQTT connect packet size and remaining length. */
         status = MQTT_GetConnectPacketSize(pConnectInfo,
                                            pWillInfo,
@@ -2991,8 +2968,8 @@ MQTTStatus_t MQTT_Connect(MQTTContext_t *pContext,
         LogDebug(("CONNECT packet size is %lu and remaining length is %lu.",
                   (unsigned long)packetSize,
                   (unsigned long)remainingLength));
+#endif
     }
-
     if (status == MQTTSuccess)
     {
         MQTT_PRE_SEND_HOOK(pContext);

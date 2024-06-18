@@ -116,6 +116,44 @@ typedef enum MQTTStatus
 } MQTTStatus_t;
 
 
+typedef enum ReasonCode {
+    MQTT_REASON_UNSPECIFIED_ERR = 0x80,
+    MQTT_REASON_MALFORMED_PACKET = 0x81,
+    MQTT_REASON_PROTOCOL_ERR = 0x82,
+    MQTT_REASON_IMPL_SPECIFIC_ERR = 0x83,
+    MQTT_REASON_UNSUP_PROTO_VER = 0x84,
+    MQTT_REASON_CLIENT_ID_NOT_VALID = 0x85,
+    MQTT_REASON_BAD_USER_OR_PASS = 0x86,
+    MQTT_REASON_NOT_AUTHORIZED = 0x87,
+    MQTT_REASON_SERVER_UNAVAILABLE = 0x88,
+    MQTT_REASON_SERVER_BUSY = 0x89,
+    MQTT_REASON_BANNED = 0x8A,
+    MQTT_REASON_SERVER_SHUTTING_DOWN = 0x8B,
+    MQTT_REASON_BAD_AUTH_METHOD = 0x8C,
+    MQTT_REASON_KEEP_ALIVE_TIMEOUT = 0x8D,
+    MQTT_REASON_SESSION_TAKEN_OVER = 0x8E,
+    MQTT_REASON_TOPIC_FILTER_INVALID = 0x8F,
+    MQTT_REASON_TOPIC_NAME_INVALID = 0x90,
+    MQTT_REASON_PACKET_ID_IN_USE = 0x91,
+    MQTT_REASON_PACKET_ID_NOT_FOUND = 0x92,
+    MQTT_REASON_RX_MAX_EXCEEDED = 0x93,
+    MQTT_REASON_TOPIC_ALIAS_INVALID = 0x94,
+    MQTT_REASON_PACKET_TOO_LARGE = 0x95,
+    MQTT_REASON_MSG_RATE_TOO_HIGH = 0x96,
+    MQTT_REASON_QUOTA_EXCEEDED = 0x97,
+    MQTT_REASON_ADMIN_ACTION = 0x98,
+    MQTT_REASON_PAYLOAD_FORMAT_INVALID = 0x99,
+    MQTT_REASON_RETAIN_NOT_SUPPORTED = 0x9A,
+    MQTT_REASON_QOS_NOT_SUPPORTED = 0x9B,
+    MQTT_REASON_USE_ANOTHER_SERVER = 0x9C,
+    MQTT_REASON_SERVER_MOVED = 0x9D,
+    MQTT_REASON_SS_NOT_SUPPORTED = 0x9E,
+    MQTT_REASON_CON_RATE_EXCEED = 0x9F,
+    MQTT_REASON_MAX_CON_TIME = 0xA0,
+    MQTT_REASON_SUB_ID_NOT_SUP = 0xA1,
+    MQTT_REASON_WILDCARD_SUB_NOT_SUP = 0xA2
+}ReasonCode_t;
+
 
 /**
  * @ingroup mqtt_enum_types
@@ -1388,7 +1426,6 @@ uint8_t * MQTT_SerializeUnsubscribeHeader( size_t remainingLength,
 /** @endcond */
 
 
-// #if(MQTT_VERSION_5_ENABLED)
 MQTTStatus_t MQTT_GetUserPropertySize(MQTTUserProperty_t * userProperty, uint16_t size,size_t *length); 
 
 
@@ -1407,8 +1444,12 @@ MQTTStatus_t decodeVariableLength( const uint8_t * pBuffer, size_t* length);
 MQTTStatus_t MQTTV5_DeserializeConnack( MQTTConnectProperties_t *pConnackProperties,const MQTTPacketInfo_t * pIncomingPacket,
                                   
                                   bool * pSessionPresent );
-
-// #endif
+                        
+MQTTStatus_t MQTT_GetConnectPacketSizeV5(const MQTTConnectInfo_t* pConnectInfo,
+    const MQTTPublishInfo_t* pWillInfo,
+    MQTTConnectProperties_t* pConnectProperties,
+    size_t* pRemainingLength,
+    size_t* pPacketSize);
 
 /* *INDENT-OFF* */
 #ifdef __cplusplus

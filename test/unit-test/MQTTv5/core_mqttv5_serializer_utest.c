@@ -170,7 +170,7 @@ struct NetworkContext
 
 #define UINT32_BYTE0( x )             ( ( uint8_t ) ( ( x ) & 0x000000FFU ) )
 
-#define MQTT_VERSION_5    (5U)
+#define  MQTT_VERSION_5    (5U)
 #define  MQTT_SESSION_EXPIRY_SIZE                     (5U)
 #define  MQTT_RECEIVE_MAX_SIZE                        (3U)
 #define  MQTT_MAX_PACKET_SIZE                         (5U)
@@ -567,7 +567,54 @@ void  test_MQTT_SerializePublishProperties(void){
 }
 
 void test_MQTTV5_DeserializeConnackOnlyStatus(void){
+    MQTTPacketInfo_t packetInfo;
+    MQTTConnectProperties_t properties;
+    MQTTStatus_t status;
+    uint8_t buffer[50];
+    uint8_t* index= buffer;
+    memset(&properties, 0x0, sizeof(properties));
+    memset(&packetInfo, 0x0, sizeof(packetInfo));
+    status = MQTTV5_DeserializeConnack(NULL,NULL,NULL);
+    TEST_ASSERT_EQUAL(MQTTBadParameter,status);
 
+    bool sessionPresent;
+    status = MQTTV5_DeserializeConnack(NULL,&packetInfo,&sessionPresent);
+    TEST_ASSERT_EQUAL(MQTTBadParameter,status);
+
+    status = MQTTV5_DeserializeConnack(&properties,&packetInfo,&sessionPresent);
+    TEST_ASSERT_EQUAL(MQTTBadParameter,status);
+    
+    packetInfo.type=MQTT_PACKET_TYPE_CONNACK;
+    status = MQTTV5_DeserializeConnack(&properties,&packetInfo,&sessionPresent);
+    TEST_ASSERT_EQUAL(MQTTBadParameter,status);
+
+    packetInfo.pRemainingData=index;
+    packetInfo.type =MQTT_PACKET_TYPE_CONNECT;
+    status = MQTTV5_DeserializeConnack(&properties,&packetInfo,&sessionPresent);
+    TEST_ASSERT_EQUAL(MQTTBadParameter,status);
+
+/*
+* Session Present Bit is set but reason code is not equal to 0;
+*/
+    buffer[0] = 0x01;
+    buffer[1] = 0x01;
+    packetInfo.type=MQTT_PACKET_TYPE_CONNACK;
+    status = MQTTV5_DeserializeConnack(&properties,&packetInfo,&sessionPresent);
+    TEST_ASSERT_EQUAL(MQTTBadResponse,status);
+
+    buffer[0] = 0x00;
+    status = MQTTV5_DeserializeConnack(&properties,&packetInfo,&sessionPresent);
+    TEST_ASSERT_EQUAL(MQTTSuccess,status);
+    TEST_ASSERT_EQUAL(false,sessionPresent);
+
+    buffer[1] = 0x01;
+    status = MQTTV5_DeserializeConnack(&properties,&packetInfo,&sessionPresent);
+    TEST_ASSERT_EQUAL(MQTTSuccess,status);
+    TEST_ASSERT_EQUAL(true,sessionPresent);
+
+
+    buffer[1] = 0x01;
+    
 
 
 

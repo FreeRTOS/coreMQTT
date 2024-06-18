@@ -143,6 +143,7 @@
 
 #define  CORE_MQTT_ID_SIZE                          ( 1U )
 
+
 #endif
 
 /**
@@ -542,11 +543,151 @@ MQTTStatus_t MQTTV5_DeserializeConnack(MQTTConnectProperties_t* pConnackProperti
 
     bool* pSessionPresent);
 
+static MQTTStatus_t  logConnackResponseV5(uint8_t responseCode);
 
+MQTTStatus_t MQTTV5_SerializeConnect(const MQTTConnectInfo_t* pConnectInfo,
+    const MQTTPublishInfo_t* pWillInfo,
+    const MQTTConnectProperties_t *pConnectProperties,
+    size_t remainingLength,
+    const MQTTFixedBuffer_t* pFixedBuffer);
 
+static void  serializeConnectPacketV5(const MQTTConnectInfo_t* pConnectInfo,
+    const MQTTPublishInfo_t* pWillInfo,
+    MQTTConnectProperties_t*pConnectProperties,
+    size_t remainingLength,
+    const MQTTFixedBuffer_t* pFixedBuffer);
+
+static uint8_t* serializeUserProperties(uint8_t * pIndex,const MQTTUserProperty_t* pUserProperty, uint16_t size);
 
 /*-----------------------------------------------------------*/
 
+MQTTStatus_t MQTT_GetConnectPacketSizeV5(const MQTTConnectInfo_t* pConnectInfo,
+    const MQTTPublishInfo_t* pWillInfo,
+    MQTTConnectProperties_t* pConnectProperties,
+    size_t* pRemainingLength,
+    size_t* pPacketSize)
+{
+    MQTTStatus_t status = MQTTSuccess;
+    size_t remainingLength;
+
+    /* The CONNECT packet will always include a 10-byte variable header. */
+    size_t connectPacketSize = MQTT_PACKET_CONNECT_HEADER_SIZE;
+
+    /* Validate arguments. */
+    if ((pConnectInfo == NULL) || (pRemainingLength == NULL) ||
+        (pPacketSize == NULL))
+    {
+        LogError(("Argument cannot be NULL: pConnectInfo=%p, "
+            "pRemainingLength=%p, pPacketSize=%p.",
+            (void*)pConnectInfo,
+            (void*)pRemainingLength,
+            (void*)pPacketSize));
+        status = MQTTBadParameter;
+    }
+    else if ((pConnectInfo->clientIdentifierLength == 0U) || (pConnectInfo->pClientIdentifier == NULL))
+    {
+        LogError(("Mqtt_GetConnectPacketSize() client identifier must be set."));
+        status = MQTTBadParameter;
+    }
+    else if ((pWillInfo != NULL) && (pWillInfo->payloadLength > (size_t)UINT16_MAX))
+    {
+        /* The MQTTPublishInfo_t is reused for the will message. The payload
+         * length for any other message could be larger than 65,535, but
+         * the will message length is required to be represented in 2 bytes.
+         * By bounding the payloadLength of the will message, the CONNECT
+         * packet will never be larger than 327699 bytes. */
+        LogError(("The Will Message length must not exceed %d. "
+            "pWillInfo->payloadLength=%lu.",
+            UINT16_MAX,
+            (unsigned long)pWillInfo->payloadLength));
+        status = MQTTBadParameter;
+    }
+    else if (pContext->connectProperties == NULL)
+        {
+            // LogError( ( "Argument cannot be NULL: connectProperties=%p,",
+            //             ( void * ) pContext->connectProperties,
+            //              ));
+            status = MQTTBadParameter;
+        }
+    else if (pContext->connectProperties->outgoingAuth != NULL && pContext->connectProperties->incomingAuth == NULL)
+        {
+            // LogError( ( "Argument cannot be NULL: incomingAuth=%p, ",
+            //             ( void * ) pContext->connectProperties->incomingAuth,
+            //              ));
+            status = MQTTBadParameter;
+        }
+    else
+    {
+        /* Add the connect properties size. */
+        status = MQTT_GetConnectPropertiesSize(pContext->connectProperties);
+    }
+    if(status== MQTTSuccess){
+        connectPacketSize += pContext->connectProperties->propertyLength;
+        connectPacketSize += remainingLengthEncodedSize(pContext->connectProperties->propertyLength);
+        /* Add the length of the client identifier. */
+        connectPacketSize += pConnectInfo->clientIdentifierLength + sizeof(uint16_t);
+
+        /* Add the lengths of the will message and topic name if provided. */
+        if (pWillInfo != NULL)
+        {   
+            status = MQTT_GetWillPropertiesSize(pWillInfo, pContext->connectProperties->willDelay);
+        }
+    }
+    if(status==MQTTSuccess){
+        if(willInfo!=NULL){
+            connectPacketSize += pWillInfo->propertyLength;
+            connectPacketSize += remainingLengthEncodedSize(pWillInfo->propertyLength);
+            connectPacketSize += pWillInfo->topicNameLength + sizeof(uint16_t) +
+            pWillInfo->payloadLength + sizeof(uint16_t);
+        }
+
+        /* Add the lengths of the user name and password if provided. */
+        if (pConnectInfo->pUserName != NULL)
+        {
+            connectPacketSize += pConnectInfo->userNameLength + sizeof(uint16_t);
+        }
+
+        if (pConnectInfo->pPassword != NULL)
+        {
+            connectPacketSize += pConnectInfo->passwordLength + sizeof(uint16_t);
+        }
+
+      
+        /* At this point, the "Remaining Length" field of the MQTT CONNECT packet has
+         * been calculated. */
+        remainingLength = connectPacketSize;
+
+        /* Calculate the full size of the MQTT CONNECT packet by adding the size of
+         * the "Remaining Length" field plus 1 byte for the "Packet Type" field. */
+        connectPacketSize += 1U + remainingLengthEncodedSize(connectPacketSize);
+
+        /* The connectPacketSize calculated from this function's parameters is
+         * guaranteed to be less than the maximum MQTT CONNECT packet size, which
+         * is 327700. If the maximum client identifier length, the maximum will
+         * message topic length, the maximum will topic payload length, the
+         * maximum username length, and the maximum password length are all present
+         * in the MQTT CONNECT packet, the total size will be calculated to be
+         * 327699:
+         * (variable length header)10 +
+         * (maximum client identifier length) 65535 + (encoded length) 2 +
+         * (maximum will message topic name length) 65535 + (encoded length)2 +
+         * (maximum will message payload length) 65535 + 2 +
+         * (maximum username length) 65535 + (encoded length) 2 +
+         * (maximum password length) 65535 + (encoded length) 2 +
+         * (packet type field length) 1 +
+         * (CONNECT packet encoded length) 3 = 327699 */
+
+        *pRemainingLength = remainingLength;
+        *pPacketSize = connectPacketSize;
+
+        LogDebug(("CONNECT packet remaining length=%lu and packet size=%lu.",
+            (unsigned long)*pRemainingLength,
+            (unsigned long)*pPacketSize));
+    }
+    
+
+    return status;
+}
 
 uint8_t* MQTT_SerializePublishProperties(const MQTTPublishInfo_t* pPublishInfo, uint8_t* pIndex, uint32_t willDelay) {
     uint8_t* pIndexLocal = pIndex;
@@ -805,6 +946,263 @@ uint8_t* MQTT_SerializeConnectProperties(uint8_t* pIndex, const MQTTConnectPrope
     }
     return pIndexLocal;
 }
+static uint8_t* serializeUserProperties(uint8_t * pIndex,const MQTTUserProperty_t* pUserProperty, uint16_t size){
+             uint16_t i = 0;
+    for (; i < size; i++)
+    {
+        *pIndex = MQTT_USER_PROPERTY_ID;
+        pIndex++;
+        pIndex = encodeString(pIndex,(pUserProperty+i)->key,(pUserProperty+i)->keyLength);
+        pIndex = encodeString(pIndex,(pUserProperty+i)->value,(pUserProperty+i)->valueLength);
+    }
+  return pIndex;
+}
+
+
+static void  serializeConnectPacketV5(const MQTTConnectInfo_t* pConnectInfo,
+    const MQTTPublishInfo_t* pWillInfo,
+    MQTTConnectProperties_t* pConnectProperties,
+    size_t remainingLength,
+    const MQTTFixedBuffer_t* pFixedBuffer)
+{
+    uint8_t* pIndex = NULL;
+
+    assert(pConnectInfo != NULL);
+    assert(pFixedBuffer != NULL);
+    assert(pFixedBuffer->pBuffer != NULL);
+
+    pIndex = pFixedBuffer->pBuffer;
+
+    /* Serialize the header. */
+    pIndex = MQTT_SerializeConnectFixedHeader(pIndex,
+        pConnectInfo,
+        pWillInfo,
+        remainingLength);
+
+    /* Serialize the Properties. */
+
+    pIndex= MQTT_SerializeConnectProperties(pIndex,pConnectProperties);
+
+    if( pConnectProperties->outgoingUserPropSize >0){
+    pIndex= serializeUserProperties(pIndex, pConnectProperties->outgoingUserProperty, pConnectProperties->outgoingUserPropSize);
+    }
+    
+    MQTTAuthInfo_t *pAuthInfo = pConnectProperties->outgoingAuth;
+    if (pAuthInfo != NULL)
+    {
+        /* Serialize the authentication method  string. */
+        *pIndex = MQTT_AUTH_METHOD_ID;
+        pIndex++;
+        pIndex = encodeString(pIndex,pAuthInfo->authMethod,pAuthInfo->authMethodLength);
+        if (pAuthInfo->authDataLength != 0U)
+        {
+        *pIndex = MQTT_AUTH_DATA_ID;
+        pIndex++;
+        pIndex = encodeString(pIndex,pAuthInfo->authData,pAuthInfo->authDataLength);
+        }
+    }
+
+    /* Write the client identifier into the CONNECT packet. */
+    pIndex = encodeString(pIndex,
+        pConnectInfo->pClientIdentifier,
+        pConnectInfo->clientIdentifierLength);
+
+    /* Write the will properties,topic name and message into the CONNECT packet if provided. */
+    if (pWillInfo != NULL)
+    {
+        pIndex= MQTT_SerializePublishProperties(pWillInfo,pIndex,pConnectProperties->willDelay);
+        if (pWillInfo->contentTypeLength != 0U)
+        {
+        *pIndex = MQTT_CONTENT_TYPE_ID;
+        pIndex++;
+        pIndex = encodeString(pIndex,pWillInfo->contentType,pWillInfo->contentTypeLength);
+        }
+        if (pWillInfo->responseTopicLength != 0U)
+        {
+       *pIndex = MQTT_RESPONSE_TOPIC_ID;
+        pIndex++;
+        pIndex = encodeString(pIndex,pWillInfo->responseTopic,pWillInfo->responseTopicLength);
+        }
+        if (pWillInfo->correlationLength != 0U)
+        {
+        *pIndex = MQTT_CORRELATION_DATA_ID;
+        pIndex++;
+        pIndex = encodeString(pIndex,pWillInfo->correlationData,pWillInfo->correlationLength);
+        }
+        if (pWillInfo->userPropertySize != 0)
+        {
+         pIndex = serializeUserProperties(pIndex,pWillInfo->userProperty,pWillInfo->userPropertySize);
+        }
+        pIndex = encodeString(pIndex, pWillInfo->pTopicName,pWillInfo->topicNameLength);
+        pIndex = encodeString(pIndex,pWillInfo->pPayload,(uint16_t)pWillInfo->payloadLength);
+     
+    }
+    /* Encode the user name if provided. */
+    if (pConnectInfo->pUserName != NULL)
+    {
+        pIndex = encodeString(pIndex, pConnectInfo->pUserName, pConnectInfo->userNameLength);
+    }
+
+    /* Encode the password if provided. */
+    if (pConnectInfo->pPassword != NULL)
+    {
+        pIndex = encodeString(pIndex, pConnectInfo->pPassword, pConnectInfo->passwordLength);
+    }
+
+    LogDebug(("Length of serialized CONNECT packet is %lu.",
+        ((unsigned long)(pIndex - pFixedBuffer->pBuffer))));
+
+    /* Ensure that the difference between the end and beginning of the buffer
+     * is less than the buffer size. */
+    assert(((size_t)(pIndex - pFixedBuffer->pBuffer)) <= pFixedBuffer->size);
+}
+
+
+MQTTStatus_t MQTTV5_SerializeConnect(const MQTTConnectInfo_t* pConnectInfo,
+    const MQTTPublishInfo_t* pWillInfo,
+    const MQTTConnectProperties_t *pConnectProperties,
+    size_t remainingLength,
+    const MQTTFixedBuffer_t* pFixedBuffer)
+{
+    MQTTStatus_t status = MQTTSuccess;
+    size_t connectPacketSize = 0;
+
+    /* Validate arguments. */
+    if ((pConnectInfo == NULL) || (pFixedBuffer == NULL))
+    {
+        LogError(("Argument cannot be NULL: pConnectInfo=%p, "
+            "pFixedBuffer=%p.",
+            (void*)pConnectInfo,
+            (void*)pFixedBuffer));
+        status = MQTTBadParameter;
+    }
+    /* A buffer must be configured for serialization. */
+    else if (pFixedBuffer->pBuffer == NULL)
+    {
+        LogError(("Argument cannot be NULL: pFixedBuffer->pBuffer is NULL."));
+        status = MQTTBadParameter;
+    }
+    else if ((pWillInfo != NULL) && (pWillInfo->pTopicName == NULL))
+    {
+        LogError(("pWillInfo->pTopicName cannot be NULL if Will is present."));
+        status = MQTTBadParameter;
+    }
+
+    else if (pConnectProperties == NULL)
+        {
+            // LogError( ( "Argument cannot be NULL: connectProperties=%p,",
+            //             ( void * ) pContext->connectProperties,
+            //              ));
+            status = MQTTBadParameter;
+        }
+    else if (pConnectProperties->outgoingAuth != NULL && pConnectProperties->incomingAuth == NULL)
+        {
+            // LogError( ( "Argument cannot be NULL: incomingAuth=%p, ",
+            //             ( void * ) pContext->connectProperties->incomingAuth,
+            //              ));
+            status = MQTTBadParameter;
+        }
+    else
+    {
+        /* Calculate CONNECT packet size. Overflow in in this addition is not checked
+         * because it is part of the API contract to call Mqtt_GetConnectPacketSize()
+         * before this function. */
+        connectPacketSize = remainingLength + remainingLengthEncodedSize(remainingLength) + 1U;
+
+        /* Check that the full packet size fits within the given buffer. */
+        if (connectPacketSize > pFixedBuffer->size)
+        {
+            LogError(("Buffer size of %lu is not sufficient to hold "
+                "serialized CONNECT packet of size of %lu.",
+                (unsigned long)pFixedBuffer->size,
+                (unsigned long)connectPacketSize));
+            status = MQTTNoMemory;
+        }
+        else
+        {
+            serializeConnectPacketV5(pConnectInfo,
+                pWillInfo,
+               pConnectProperties,
+                remainingLength,
+                pFixedBuffer);
+        }
+    }
+
+    return status;
+}
+
+ static MQTTStatus_t  logConnackResponseV5(uint8_t responseCode){
+    
+    MQTTStatus_t status= MQTTBadParametr;
+    switch(responseCode){
+        case MQTT_REASON_UNSPECIFIED_ERR :
+            LogError("Connection refused: Unspecified error");
+            break;
+        case  MQTT_REASON_MALFORMED_PACKET  :
+            LogError("Connection refused: Malformed Packet.");
+            break;
+        case MQTT_REASON_PROTOCOL_ERR:
+            LogError("Connection refused: Protocol Error.");
+            break;
+        case MQTT_REASON_IMPL_SPECIFIC_ERR :
+            LogError("Connection refused: Impementation specific error.");
+            break;
+        case MQTT_REASON_UNSUP_PROTO_VER :
+            LogError("Connection refused: Unsupported Protocol Version.");
+            break;
+        case MQTT_REASON_CLIENT_ID_NOT_VALID :
+            LogError( "Connection refused: Client Identifier not valid.");
+            break;
+        case MQTT_REASON_BAD_USER_OR_PASS :
+            LogError("Connection refused: Bad User Name or Password.");
+            break;
+        case MQTT_REASON_NOT_AUTHORIZED :
+            LogError("Connection refused: Not authorized.");
+            break;
+        case  MQTT_REASON_SERVER_UNAVAILABLE :
+            LogError "Connection refused: Server unavailable.");
+            break;
+        case MQTT_REASON_SERVER_BUSY :
+            LogError( "Connection refused: Server busy." );
+            break;
+        case MQTT_REASON_BANNED :
+            LogError("Connection refused: Banned.");
+            break;
+        case MQTT_REASON_BAD_AUTH_METHOD :
+            LogError("Connection refused: Bad authentication method.");
+            break;
+        case MQTT_REASON_TOPIC_NAME_INVALID  :
+            LogError("Connection refused: Topic Name invalid.");
+            break;
+        case MQTT_REASON_PACKET_TOO_LARGE :
+            LogError( "Connection refused: Packet too large .");
+            break;
+        case   MQTT_REASON_QUOTA_EXCEEDED :
+            LogError("Connection refused: Quota exceeded.");
+            break;
+        case  MQTT_REASON_PAYLOAD_FORMAT_INVALID :
+            LogError( "Connection refused: Payload format invalid." );
+            break;
+        case  MQTT_REASON_RETAIN_NOT_SUPPORTED  :
+            LogError("Connection refused: Retain not supported.");
+            break;
+        case  MQTT_REASON_QOS_NOT_SUPPORTED :
+            LogError("Connection refused: QoS not supported.");
+            break;
+        case  MQTT_REASON_USE_ANOTHER_SERVER  :
+            LogError("Connection refused: Use another server." );
+            break;
+        case MQTT_REASON_SERVER_MOVED :
+            LogError("Connection refused: Server moved.");
+            break;
+        case MQTT_REASON_CON_RATE_EXCEED :
+            LogError("Connection refused: Connection rate exceeded.");
+            break;
+        default:
+            status= MQTTProtocolError;
+    }
+    return status;
+}
 
 
 static MQTTStatus_t validateConnackParams(const MQTTPacketInfo_t* pIncomingPacket, bool* pSessionPresent)
@@ -868,7 +1266,8 @@ static MQTTStatus_t validateConnackParams(const MQTTPacketInfo_t* pIncomingPacke
         if (status == MQTTSuccess)
         {
             /* In MQTT 5, only values 0 , 80 through 9F are valid CONNACK response codes. */
-            if (pRemainingData[1] != 0u && (pRemainingData[1] < 0x80 || pRemainingData[1]>0x9F))
+            // Change this
+            if (pRemainingData[1] != 0u && (pRemainingData[1] < 0x80 || pRemainingData[1]>0x9F || pRemainingData[1]==0x8B))
             {
                 LogError(("CONNACK response %u is invalid.",
                     (unsigned int)pRemainingData[1]));
@@ -956,8 +1355,14 @@ MQTTStatus_t MQTTV5_DeserializeConnack(MQTTConnectProperties_t* pConnackProperti
 
     bool* pSessionPresent)
 {
+   
     MQTTStatus_t status = MQTTSuccess;
-    status = validateConnackParams(pIncomingPacket, pSessionPresent);
+     if(pConnackProperties==NULL){
+        status=MQTTBadParameter;
+     }
+     if(status==MQTTSuccess){
+     status = validateConnackParams(pIncomingPacket, pSessionPresent);
+     }
     size_t propertyLength = 0U;
     size_t remainingLengthSize=0U;
     uint8_t* pVariableHeader = NULL;
@@ -1931,7 +2336,6 @@ static MQTTStatus_t processPublishFlags(uint8_t publishFlags,
 }
 
 /*-----------------------------------------------------------*/
-#if (!MQTT_VERSION_5_ENABLED)
 
 static void logConnackResponse(uint8_t responseCode)
 {
@@ -1963,57 +2367,6 @@ static void logConnackResponse(uint8_t responseCode)
     }
 }
 
-#else
-
-static void logConnackResponse(uint8_t responseCode)
-{
-
-    const char* const pConnackResponses[6] =
-    {
-        "Connection refused: Unspecified error.",                               /* 0 */
-        "Connection refused: Malformed Packet.", /* 1 */
-        "Connection refused: Protocol Error.",           /* 2 */
-        "Connection refused: Impementation specific error.",             /* 3 */
-        "Connection refused: Unsupported Protocol Version.",     /* 4 */
-        "Connection refused: Client Identifier not valid."                 /* 5 */
-        "Connection refused: Bad User Name or Password."                 /* 6 */
-        "Connection refused: Not authorized."                 /* 7 */
-        "Connection refused: Server unavailable."                 /* 8 */
-        "Connection refused: Server busy."                 /* 9 */
-        "Connection refused: Banned."                 /* 10 */
-        "Connection refused: Bad authentication method."                 /* 11 */
-        "Connection refused: Topic Name invalid."                 /* 12 */
-        "Connection refused: Packet too large ."                 /* 13 */
-        "Connection refused: Quota exceeded."                 /* 14 */
-        "Connection refused: Payload format invalid."                 /* 15 */
-        "Connection refused: Retain not supported."                 /* 16 */
-        "Connection refused: QoS not supported."                 /* 17 */
-        "Connection refused: Use another server."                 /* 18 */
-        "Connection refused: Server moved."                 /* 19 */
-        "Connection refused: Connection rate exceeded."                 /* 20 */
-
-
-    };
-
-    /* Avoid unused parameter warning when assert and logs are disabled. */
-    (void)responseCode;
-    (void)pConnackResponses;
-    if (responseCode == 0u)
-    {
-        /* Log at Debug level for a success CONNACK response. */
-        LogDebug("The Connection is accepted");
-    }
-    else
-    {
-        responseCode -= 128;
-        assert(responseCode <= 20);
-        assert(responseCode >= 0);
-        /* Log an error based on the CONNACK response code. */
-        LogError(("%s", pConnackResponses[responseCode]));
-    }
-}
-
-#endif
 /*-----------------------------------------------------------*/
 
 static MQTTStatus_t deserializeConnack(const MQTTPacketInfo_t* pConnack,
@@ -2588,6 +2941,7 @@ static void serializeConnectPacket(const MQTTConnectInfo_t* pConnectInfo,
         pWillInfo,
         remainingLength);
 
+
     /* Write the client identifier into the CONNECT packet. */
     pIndex = encodeString(pIndex,
         pConnectInfo->pClientIdentifier,
@@ -2714,8 +3068,8 @@ MQTTStatus_t MQTT_GetConnectPacketSize(const MQTTConnectInfo_t* pConnectInfo,
          * (packet type field length) 1 +
          * (CONNECT packet encoded length) 3 = 327699 */
 
-        *pRemainingLength += remainingLength;
-        *pPacketSize += connectPacketSize;
+        *pRemainingLength = remainingLength;
+        *pPacketSize = connectPacketSize;
 
         LogDebug(("CONNECT packet remaining length=%lu and packet size=%lu.",
             (unsigned long)*pRemainingLength,
