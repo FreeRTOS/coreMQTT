@@ -90,6 +90,7 @@
 #define CORE_MQTT_UNSUBSCRIBE_PER_TOPIC_VECTOR_LENGTH (2U)
 
 #if (MQTT_VERSION_5_ENABLED)
+/*Connect and will packet id's*/
 #define MQTT_USER_PROPERTY_ID (0x26)
 #define MQTT_AUTH_METHOD_ID (0x15)
 #define MQTT_AUTH_DATA_ID (0x16)
@@ -190,6 +191,11 @@ static int32_t sendMessageVector(MQTTContext_t *pContext,
  *
  * @return The number of vectors added.
  */
+static size_t addEncodedStringToVector( uint8_t serializedLength[ CORE_MQTT_SERIALIZED_LENGTH_FIELD_BYTES ],
+                                        const char * const string,
+                                        uint16_t length,
+                                        TransportOutVector_t * iterator,
+                                        size_t * updatedLength );
 
 /**
  * @brief Send MQTT SUBSCRIBE message without copying the user data into a buffer and
@@ -550,22 +556,36 @@ static bool matchTopicFilter(const char *pTopicName,
                              const char *pTopicFilter,
                              uint16_t topicFilterLength);
 
-size_t addEncodedStringToVector(uint8_t serializedLength[CORE_MQTT_SERIALIZED_LENGTH_FIELD_BYTES],
-                                const char *const string,
-                                uint16_t length,
-                                TransportOutVector_t *iterator,
-                                size_t *updatedLength);
 
 #if (MQTT_VERSION_5_ENABLED)
 
-size_t addEncodedStringToVectorWithId(uint8_t serializedLength[CORE_MQTT_SERIALIZED_LENGTH_FIELD_BYTES],
+/**
+ * @brief Add a string ,its length and its id after serializing it in a manner outlined by
+ * the MQTT specification.
+ *
+ * @param[in] serializedLength Array of two bytes to which the vector will point.
+ * The array must remain in scope until the message has been sent.
+ * @param[in] string The string to be serialized.
+ * @param[in] length The length of the string to be serialized.
+ * @param[in] iterator The iterator pointing to the first element in the
+ * transport interface IO array.
+ * @param[out] updatedLength This parameter will be added to with the number of
+ * bytes added to the vector.
+ *@param[in] packetId Pointer to one byte used to add packet Id to the packet which must 
+ * remain in scope until the message is sent.
+ * 
+ * @return The number of vectors added.
+ */
+
+static size_t addEncodedStringToVectorWithId(uint8_t serializedLength[CORE_MQTT_SERIALIZED_LENGTH_FIELD_BYTES],
                                       const char *const string,
                                       uint16_t length,
                                       TransportOutVector_t *iterator,
                                       size_t *updatedLength, uint8_t* packetId);
 
+/*-----------------------------------------------------------*/
 
-size_t addEncodedStringToVectorWithId(uint8_t serializedLength[CORE_MQTT_SERIALIZED_LENGTH_FIELD_BYTES],
+static size_t addEncodedStringToVectorWithId(uint8_t serializedLength[CORE_MQTT_SERIALIZED_LENGTH_FIELD_BYTES],
                                       const char *const string,
                                       uint16_t length,
                                       TransportOutVector_t *iterator,
@@ -575,17 +595,16 @@ size_t addEncodedStringToVectorWithId(uint8_t serializedLength[CORE_MQTT_SERIALI
     TransportOutVector_t *pLocalIterator = iterator;
     size_t vectorsAdded = 0U;
 
-    /* When length is non-zero, the string must be non-NULL. */
-    assert((length != 0U) ? (string != NULL) : true);
-
-    serializedLength[0] = ((uint8_t)((length) >> 8));
-    serializedLength[1] = ((uint8_t)((length) & 0x00ffU));
-
-    /* Add the packet id first. */
+    /* Add the packet Id. */
     pLocalIterator[0].iov_base = packetId;
     pLocalIterator[0].iov_len = CORE_MQTT_ID_SIZE;
     vectorsAdded++;
     packetLength = CORE_MQTT_ID_SIZE;
+
+    /* When length is non-zero, the string must be non-NULL. */
+    assert((length != 0U) ? (string != NULL) : true);
+    serializedLength[0] = ((uint8_t)((length) >> 8));
+    serializedLength[1] = ((uint8_t)((length) & 0x00ffU));
 
     /* Add the serialized length of the string. */
     pLocalIterator[1].iov_base = serializedLength;
@@ -2257,17 +2276,23 @@ static MQTTStatus_t sendConnectWithoutCopy(MQTTContext_t *pContext,
     uint8_t connectPacketHeader[15U];
 
 #else
-    /*Properties
-     * Properties length- max- 4
-     *Session Expiry - 5
-     * receive Maximum - 3
-     * Max packet Size 5
-     * Topic Alias Maximum - 3
-     * Request response Information- 2
-     * Request problem Information-2
-     * User property- MAX USER PROPERTY- separate vector
-     * Authentication Data- UTF-8 so separate vector for method and data.
-     * Total- 24
+     /* Maximum number of bytes required by the fixed  part of the CONNECT
+     * packet header according to the MQTT specification.
+     * MQTT Control Byte          0 + 1 = 1
+     * Remaining length (max)       + 4 = 5
+     * Protocol Name Length         + 2 = 7
+     * Protocol Name (MQTT)         + 4 = 11
+     * Protocol level               + 1 = 12
+     * Connect flags                + 1 = 13
+     * Keep alive                   + 2 = 15 
+     * Properties length            + 4 = 19
+     * Session Expiry               + 5 = 24
+     * receive Maximum              + 3  = 27
+     * Max packet Size              +  5  = 32
+     * Topic Alias Maximum          + 3  = 35
+     * Request response Information + 2  = 37
+     * Request problem Information  + 2  =  39
+     * Total- 39
      */
     
     uint8_t connectPacketHeader[39U];
@@ -2303,9 +2328,9 @@ static MQTTStatus_t sendConnectWithoutCopy(MQTTContext_t *pContext,
 #else
     /*
      *
-     * User Property- 5* Max userProperty
-     * Authentication- 6
-     * 10 + 5*Max user for wiill properties
+     * User Property-      11 +  5* Max userProperty
+     * Authentication      17 +  5* Max userProperty
+     * Will Properties     27 +  10* Max userProperty
      *
      */
     TransportOutVector_t pIoVector[27 + 10 * MAX_USER_PROPERTY];
@@ -2346,7 +2371,7 @@ static MQTTStatus_t sendConnectWithoutCopy(MQTTContext_t *pContext,
         ioVectorLength++;
 
 #if (MQTT_VERSION_5_ENABLED)
-        // User Properties
+        /*Encode the user Properties if provided*/
         if (pContext->connectProperties->outgoingUserPropSize != 0)
         {
             
@@ -2356,24 +2381,27 @@ static MQTTStatus_t sendConnectWithoutCopy(MQTTContext_t *pContext,
             for (; i < size; i++)
             {
                 userId[i]=MQTT_USER_PROPERTY_ID;
+                /* Serialize the user key string. */
                 vectorsAdded = addEncodedStringToVectorWithId(serializedUserKeyLength[i],
                                                               userProperty[i].key,
                                                               userProperty[i].keyLength,
                                                               iterator,
                                                               &totalMessageLength,&userId[i]);
+                /* Update the iterator to point to the next empty slot. */
                 iterator = &iterator[vectorsAdded];
                 ioVectorLength += vectorsAdded;
-
+                /* Serialize the  user value string. */
                 vectorsAdded = addEncodedStringToVector(serializedUserValueLength[i],
                                                         userProperty[i].value,
                                                         userProperty[i].valueLength,
                                                         iterator,
                                                         &totalMessageLength);
+                /* Update the iterator to point to the next empty slot. */
                 iterator = &iterator[vectorsAdded];
                 ioVectorLength += vectorsAdded;
             }
 
-            
+            /*Encodethe authentication method and data if provided*/
             MQTTAuthInfo_t *pAuthInfo = pContext->connectProperties->outgoingAuth;
             if (pAuthInfo != NULL)
             {
@@ -2389,6 +2417,7 @@ static MQTTStatus_t sendConnectWithoutCopy(MQTTContext_t *pContext,
                 ioVectorLength += vectorsAdded;
                 if (pAuthInfo->authDataLength != 0U)
                 {
+                    /* Serialize the authentication data  string. */
                     vectorsAdded = addEncodedStringToVectorWithId(serializedAuthDataLength,
                                                                   pAuthInfo->authData,
                                                                   pAuthInfo->authDataLength,
@@ -2419,47 +2448,55 @@ static MQTTStatus_t sendConnectWithoutCopy(MQTTContext_t *pContext,
         if (pWillInfo != NULL)
         {
 #if (MQTT_VERSION_5_ENABLED)
-            // Add the will properties
             
-            // 4 byte + 4 byte delay + 2 byte payload format + 6 byte
+            /*Serialize the will properties*/
             pIndex = fixedSizeProperties;
-            pIndex = MQTT_SerializePublishProperties(pWillInfo, pIndex, pContext->connectProperties->willDelay);
+            pIndex = MQTT_SerializePublishProperties(pWillInfo, pIndex);
             iterator->iov_base = fixedSizeProperties;
             iterator->iov_len = (size_t)(pIndex - fixedSizeProperties);
             totalMessageLength += iterator->iov_len;
             iterator++;
             ioVectorLength++;
-
+            /* Encode the content type if provided. */
             if (pWillInfo->contentTypeLength != 0U)
             {
+                /* Serialize the content type string. */
                 vectorsAdded = addEncodedStringToVectorWithId(serializedContentTypeLength,
                                                               pWillInfo->contentType,
                                                               pWillInfo->contentTypeLength,
                                                               iterator,
                                                               &totalMessageLength, &contentTypeId);
+                /* Update the iterator to point to the next empty slot. */
                 iterator = &iterator[vectorsAdded];
                 ioVectorLength += vectorsAdded;
             }
+            /* Encode the response topic  if provided. */
             if (pWillInfo->responseTopicLength != 0U)
             {
+                /* Serialize the response topic string. */
                 vectorsAdded = addEncodedStringToVectorWithId(serializedResponseTopicLength,
                                                               pWillInfo->responseTopic,
                                                               pWillInfo->responseTopicLength,
                                                               iterator,
                                                               &totalMessageLength, &responseTopicId);
+                /* Update the iterator to point to the next empty slot. */
                 iterator = &iterator[vectorsAdded];
                 ioVectorLength += vectorsAdded;
             }
+            /* Encode the correlation lenght if provided. */
             if (pWillInfo->correlationLength != 0U)
             {
+                /* Serialize the correlation data string. */
                 vectorsAdded = addEncodedStringToVectorWithId(serailizedCorrelationLength,
                                                               pWillInfo->correlationData,
                                                               pWillInfo->correlationLength,
                                                               iterator,
                                                               &totalMessageLength, &correlationDataId);
+                /* Update the iterator to point to the next empty slot. */
                 iterator = &iterator[vectorsAdded];
                 ioVectorLength += vectorsAdded;
             }
+            /* Encode the user properties if provided. */
             if (pWillInfo->userPropertySize != 0)
             {
                     uint16_t i = 0;
@@ -2473,6 +2510,7 @@ static MQTTStatus_t sendConnectWithoutCopy(MQTTContext_t *pContext,
                             userProperty[i].keyLength,
                             iterator,
                             &totalMessageLength, &willUserId[i]);
+                        /* Update the iterator to point to the next empty slot. */ 
                         iterator = &iterator[vectorsAdded];
                         ioVectorLength += vectorsAdded;
 
@@ -2481,6 +2519,7 @@ static MQTTStatus_t sendConnectWithoutCopy(MQTTContext_t *pContext,
                             userProperty[i].valueLength,
                             iterator,
                             &totalMessageLength);
+                        /* Update the iterator to point to the next empty slot. */           
                         iterator = &iterator[vectorsAdded];
                         ioVectorLength += vectorsAdded;
 

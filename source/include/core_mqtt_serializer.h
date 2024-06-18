@@ -278,6 +278,7 @@ typedef struct MQTTConnectProperties
 {
     uint32_t sessionExpiry;
     uint16_t receiveMax;
+    bool isMaxPacketSize;
     uint32_t maxPacketSize;
     uint16_t topicAliasMax;
     bool  reqResInfo;
@@ -292,12 +293,11 @@ typedef struct MQTTConnectProperties
     MQTTUserProperty_t *outgoingUserProperty;
     uint16_t outgoingUserPropSize;
     MQTTAuthInfo_t *incomingAuth;
-    uint32_t willDelay;
     
     // CONNACK
     uint16_t serverReceiveMax;
     uint8_t serverMaxQos;
-    uint8_t returnAvailable;
+    uint8_t retainAvailable;
     uint32_t serverMaxPacketSize;
     const char* clientIdentifier;
     uint16_t clientIdLength;
@@ -360,6 +360,7 @@ typedef struct MQTTPublishInfo
     
 #if (MQTT_VERSION_5_ENABLED)
     size_t propertyLength;
+    uint32_t willDelay;
     uint8_t payloadFormat;
     uint32_t msgExpiryInterval;
     bool msgExpiryPresent;
@@ -1426,30 +1427,162 @@ uint8_t * MQTT_SerializeUnsubscribeHeader( size_t remainingLength,
 /** @endcond */
 
 
-MQTTStatus_t MQTT_GetUserPropertySize(MQTTUserProperty_t * userProperty, uint16_t size,size_t *length); 
+/**
+ * @fnuint8_t* MQTT_SerializeConnectProperties(uint8_t* pIndex,const MQTTConnectProperties_t * pConnectProperties);
+ * @brief Serialize the connect properties of the connect packet header.
+ *
+ * @param[out] pIndex Pointer to the buffer where the header is to
+ * be serialized.
+ * @param[in] pConnectProperties The connect properties information.
+ *
+ * @return A pointer to the end of the encoded string.
+ */
 
-
-MQTTStatus_t MQTT_GetConnectPropertiesSize (MQTTConnectProperties_t * pConnectProperties);
-
-MQTTStatus_t MQTT_GetWillPropertiesSize ( MQTTPublishInfo_t * pConnectProperties,
-                                         uint32_t willDelay);
-
+/**
+ * @cond DOXYGEN_IGNORE
+ * Doxygen should ignore this definition, this function is private.
+ */
 uint8_t* MQTT_SerializeConnectProperties(uint8_t* pIndex,const MQTTConnectProperties_t * pConnectProperties);
 
+/**
+ * @fnuint8_t* MQTT_SerializePublishProperties(const MQTTPublishInfo_t * pPublishInfo, uint8_t* pIndex);
+ * @brief Serialize the connect properties of the connect packet header.
+ *@param[in] pPublishInfo The publish/will properties information.
+ * @param[out] pIndex Pointer to the buffer where the header is to
+ * be serialized.
+ *
+ * @return A pointer to the end of the encoded string.
+ */
 
-uint8_t* MQTT_SerializePublishProperties(const MQTTPublishInfo_t * pPublishInfo, uint8_t* pIndex,uint32_t willDelay);
+/**
+ * @cond DOXYGEN_IGNORE
+ * Doxygen should ignore this definition, this function is private.
+ */
+uint8_t* MQTT_SerializePublishProperties(const MQTTPublishInfo_t * pPublishInfo, uint8_t* pIndex);
 
-MQTTStatus_t decodeVariableLength( const uint8_t * pBuffer, size_t* length);
 
 MQTTStatus_t MQTTV5_DeserializeConnack( MQTTConnectProperties_t *pConnackProperties,const MQTTPacketInfo_t * pIncomingPacket,
                                   
                                   bool * pSessionPresent );
-                        
-MQTTStatus_t MQTT_GetConnectPacketSizeV5(const MQTTConnectInfo_t* pConnectInfo,
+
+/**
+ * @brief Get the size and Remaining Length of an MQTT Version 5 CONNECT packet .
+ *
+ * This function must be called before #MQTT_SerializeConnect in order to get
+ * the size of the MQTT CONNECT packet that is generated from #MQTTConnectInfo_t,
+ * MQTTConnectProperties_t and  optional #MQTTPublishInfo_t. The size of the #MQTTFixedBuffer_t supplied
+ * to #MQTT_SerializeConnect must be at least @p pPacketSize. The provided
+ * @p pConnectInfo, @p pConnectProperties and  @p pWillInfo are valid for serialization with
+ * #MQTT_SerializeConnect only if this function returns #MQTTSuccess. The
+ * remaining length returned in @p pRemainingLength and the packet size returned
+ * in @p pPacketSize are valid only if this function returns #MQTTSuccess.
+ *
+ * @param[in] pConnectInfo MQTT CONNECT packet parameters.
+ * @param[in] pWillInfo Last Will and Testament. Pass NULL if not used.
+ * @param[in] pConnectProperties MQTT CONNECT properties parameters.
+ * @param[out] pRemainingLength The Remaining Length of the MQTT CONNECT packet.
+ * @param[out] pPacketSize The total size of the MQTT CONNECT packet.
+ *
+ * @return #MQTTBadParameter if the packet would exceed the size allowed by the
+ * MQTT spec; #MQTTSuccess otherwise.
+ *
+ * <b>Example</b>
+ * @code{c}
+ *
+ * // Variables used in this example.
+ * MQTTStatus_t status;
+ * MQTTConnectInfo_t connectInfo = { 0 };
+ * MQTTPublishInfo_t willInfo = { 0 };
+ * MQTTConnectProperties_t connectProperties ={0};
+ * size_t remainingLength = 0, packetSize = 0;
+ *
+ * // Initialize the connection info, the details are out of scope for this example.
+ * initializeConnectInfo( &connectInfo );
+ *
+ * // Initialize the optional will info, the details are out of scope for this example.
+ * initializeWillInfo( &willInfo );
+ * 
+ * // Initialize the connection properties, the details are out of scope for this example.
+ * initializeConnectProperties( &connectProperties );
+ * 
+ * // Get the size requirement for the connect packet.
+ * status = MQTT_GetConnectPacketSize(
+ *      &connectInfo, &willInfo, &remainingLength, &packetSize
+ * );
+ *
+ * if( status == MQTTSuccess )
+ * {
+ *      // The application should allocate or use a static #MQTTFixedBuffer_t
+ *      // of size >= packetSize to serialize the connect request.
+ * }
+ * @endcode
+ */
+/* @[declare_mqttv5_getconnectpacketsize] */     
+MQTTStatus_t MQTTV5_GetConnectPacketSize(const MQTTConnectInfo_t* pConnectInfo,
     const MQTTPublishInfo_t* pWillInfo,
-    MQTTConnectProperties_t* pConnectProperties,
+    const MQTTConnectProperties_t* pConnectProperties,
     size_t* pRemainingLength,
     size_t* pPacketSize);
+/* @[declare_mqttv5_getconnectpacketsize] */     
+
+/**
+ * @brief Serialize an MQTT CONNECT packet in the given fixed buffer @p pFixedBuffer.
+ *
+ * #MQTT_GetConnectPacketSize should be called with @p pConnectInfo, @p pConnectProperties and
+ * @p pWillInfo before invoking this function to get the size of the required
+ * #MQTTFixedBuffer_t and @p remainingLength. The @p remainingLength must be
+ * the same as returned by #MQTT_GetConnectPacketSize. The #MQTTFixedBuffer_t
+ * must be at least as large as the size returned by #MQTT_GetConnectPacketSize.
+ *
+ * @param[in] pConnectInfo MQTT CONNECT packet parameters.
+ * @param[in] pWillInfo Last Will and Testament. Pass NULL if not used.
+ * @param[in] pConnectProperties MQTT CONNECT properties parameters.
+ * @param[in] remainingLength Remaining Length provided by #MQTT_GetConnectPacketSize.
+ * @param[out] pFixedBuffer Buffer for packet serialization.
+ *
+ * @return #MQTTNoMemory if pFixedBuffer is too small to hold the MQTT packet;
+ * #MQTTBadParameter if invalid parameters are passed;
+ * #MQTTSuccess otherwise.
+ *
+ * <b>Example</b>
+ * @code{c}
+ *
+ * // Variables used in this example.
+ * MQTTStatus_t status;
+ * MQTTConnectInfo_t connectInfo = { 0 };
+ * MQTTPublishInfo_t willInfo = { 0 };
+ * MQTTConnectProperties_t connectProperties ={0};
+ * MQTTFixedBuffer_t fixedBuffer;
+ * uint8_t buffer[ BUFFER_SIZE ];
+ * size_t remainingLength = 0, packetSize = 0;
+ *
+ * fixedBuffer.pBuffer = buffer;
+ * fixedBuffer.size = BUFFER_SIZE;
+ *
+ * // Assume connectInfo and willInfo are initialized. Get the size requirement for
+ * // the connect packet.
+ * status = MQTT_GetConnectPacketSize(
+ *      &connectInfo, &willInfo,&connectProperties &remainingLength, &packetSize
+ * );
+ * assert( status == MQTTSuccess );
+ * assert( packetSize <= BUFFER_SIZE );
+ *
+ * // Serialize the connect packet into the fixed buffer.
+ * status = MQTT_SerializeConnect( &connectInfo, &willInfo,&connectProperties,remainingLength, &fixedBuffer );
+ *
+ * if( status == MQTTSuccess )
+ * {
+ *      // The connect packet can now be sent to the broker.
+ * }
+ * @endcode
+ */
+/* @[declare_mqttv5_serializeconnect] */
+MQTTStatus_t MQTTV5_SerializeConnect(const MQTTConnectInfo_t* pConnectInfo,
+    const MQTTPublishInfo_t* pWillInfo,
+    const MQTTConnectProperties_t *pConnectProperties,
+    size_t remainingLength,
+    const MQTTFixedBuffer_t* pFixedBuffer);
+/* @[declare_mqttv5_serializeconnect] */
 
 /* *INDENT-OFF* */
 #ifdef __cplusplus
