@@ -1022,15 +1022,15 @@ uint8_t* MQTT_SerializeConnectProperties(uint8_t* pIndex, const MQTTConnectPrope
 static uint8_t* serializeUserProperties(uint8_t * pIndex,const MQTTUserProperty_t* pUserProperty, uint16_t size){
              uint16_t i = 0;
              assert(pIndex!=NULL);
-             uint8_t* pIndexLocal = pIndex;
+             assert(pUserProperty !=NULL);
     for (; i < size; i++)
     {
-        *pIndexLocal = MQTT_USER_PROPERTY_ID;
-        pIndexLocal++;
-        pIndexLocal = encodeString(pIndexLocal,(pUserProperty+i)->key,(pUserProperty+i)->keyLength);
-        pIndexLocal = encodeString(pIndexLocal,(pUserProperty+i)->value,(pUserProperty+i)->valueLength);
+        *pIndex = MQTT_USER_PROPERTY_ID;
+        pIndex++;
+        pIndex = encodeString(pIndex,(pUserProperty+i)->key,(pUserProperty+i)->keyLength);
+        pIndex = encodeString(pIndex,(pUserProperty+i)->value,(pUserProperty+i)->valueLength);
     }
-    return pIndexLocal;
+    return pIndex;
 }
 
 
@@ -1058,7 +1058,16 @@ static void  serializeConnectPacketV5(const MQTTConnectInfo_t* pConnectInfo,
     pIndex= MQTT_SerializeConnectProperties(pIndex,pConnectProperties);
 
     if( pConnectProperties->outgoingUserPropSize >0){
-    pIndex= serializeUserProperties(pIndex, pConnectProperties->outgoingUserProperty, pConnectProperties->outgoingUserPropSize);
+            uint16_t i = 0;
+            uint16_t size = pConnectProperties->outgoingUserPropSize;
+             MQTTUserProperty_t * pUserProperty = pConnectProperties->outgoingUserProperty;
+            for (; i < size; i++)
+            {
+                *pIndex = MQTT_USER_PROPERTY_ID;
+                pIndex++;
+                pIndex = encodeString(pIndex, (pUserProperty + i)->key, (pUserProperty + i)->keyLength);
+                pIndex = encodeString(pIndex, (pUserProperty + i)->value, (pUserProperty + i)->valueLength);
+            }
     }
     
     MQTTAuthInfo_t *pAuthInfo = pConnectProperties->outgoingAuth;
@@ -1105,7 +1114,16 @@ static void  serializeConnectPacketV5(const MQTTConnectInfo_t* pConnectInfo,
         }
         if (pWillInfo->userPropertySize != 0)
         {
-         pIndex = serializeUserProperties(pIndex,pWillInfo->userProperty,pWillInfo->userPropertySize);
+            uint16_t i = 0;
+            uint16_t size = pWillInfo->userPropertySize;
+             MQTTUserProperty_t * pUserProperty = pWillInfo->userProperty;
+            for (; i < size; i++)
+            {
+                *pIndex = MQTT_USER_PROPERTY_ID;
+                pIndex++;
+                pIndex = encodeString(pIndex, (pUserProperty + i)->key, (pUserProperty + i)->keyLength);
+                pIndex = encodeString(pIndex, (pUserProperty + i)->value, (pUserProperty + i)->valueLength);
+            }
         }
         pIndex = encodeString(pIndex, pWillInfo->pTopicName,pWillInfo->topicNameLength);
         pIndex = encodeString(pIndex,pWillInfo->pPayload,(uint16_t)pWillInfo->payloadLength);
@@ -1407,7 +1425,8 @@ MQTTStatus_t MQTTV5_DeserializeConnack(MQTTConnectProperties_t* pConnackProperti
 
     bool* pSessionPresent)
 {
-   
+
+
     MQTTStatus_t status = MQTTSuccess;
      if(pConnackProperties==NULL){
         status=MQTTBadParameter;
@@ -1447,7 +1466,6 @@ MQTTStatus_t MQTTV5_DeserializeConnack(MQTTConnectProperties_t* pConnackProperti
         bool serverRef = false;
         bool authMethod = false;
         bool authData = false;
-        MQTTUserProperty_t* userProperty = pConnackProperties->incomingUserProperty;
         pVariableHeader=&pVariableHeader[remainingLengthEncodedSize(propertyLength)];
         while ((propertyLength > 0) && (status == MQTTSuccess)) {
             uint8_t packetId = *pVariableHeader;
@@ -1568,7 +1586,7 @@ MQTTStatus_t MQTTV5_DeserializeConnack(MQTTConnectProperties_t* pConnackProperti
                     status = MQTTMalformedPacket;
                 }
                 else {
-                    pConnackProperties->topicAliasMax = UINT16_DECODE(pVariableHeader);
+                    pConnackProperties->serverTopicAliasMax = UINT16_DECODE(pVariableHeader);
                     pVariableHeader = &pVariableHeader[sizeof(uint16_t)];
                     topicAlias = true;
                     propertyLength -= 2;
@@ -1599,12 +1617,13 @@ MQTTStatus_t MQTTV5_DeserializeConnack(MQTTConnectProperties_t* pConnackProperti
             case MQTT_USER_PROPERTY_ID:
                 //   Decode user property   
                 if (pConnackProperties->incomingUserPropSize == MAX_USER_PROPERTY) {
-
+                    
                 }
                 else if (propertyLength < 2) {
                     status = MQTTMalformedPacket;
                 }
                 else {
+                    MQTTUserProperty_t* userProperty = (pConnackProperties->incomingUserProperty + pConnackProperties->incomingUserPropSize);
                     pConnackProperties->incomingUserPropSize++;
                     userProperty->keyLength = UINT16_DECODE(pVariableHeader);
                     propertyLength -= 2;
@@ -1614,6 +1633,7 @@ MQTTStatus_t MQTTV5_DeserializeConnack(MQTTConnectProperties_t* pConnackProperti
                     else {
                         pVariableHeader=&pVariableHeader[sizeof(uint16_t)];
                         userProperty->key = (const char*)pVariableHeader;
+                        propertyLength-=userProperty->keyLength;
                         pVariableHeader = &pVariableHeader[ userProperty->keyLength];
                         userProperty->valueLength = UINT16_DECODE(pVariableHeader);
                         propertyLength -= 2;
@@ -1623,6 +1643,9 @@ MQTTStatus_t MQTTV5_DeserializeConnack(MQTTConnectProperties_t* pConnackProperti
                         else {
                            userProperty->value = (const char*)pVariableHeader;
                            pVariableHeader = &pVariableHeader[ userProperty->valueLength];
+                         propertyLength-=userProperty->valueLength;
+                           if (pConnackProperties->incomingUserPropSize != MAX_USER_PROPERTY -1){
+                           }
                         }
                     }
                 }
@@ -1769,7 +1792,7 @@ MQTTStatus_t MQTTV5_DeserializeConnack(MQTTConnectProperties_t* pConnackProperti
                     pConnackProperties->incomingAuth->authData = (const char*)pVariableHeader;
                     pVariableHeader = &pVariableHeader[pConnackProperties->incomingAuth->authDataLength];
                     propertyLength -= pConnackProperties->incomingAuth->authDataLength;
-                    authMethod = true;
+                    authData = true;
                 }
                 break;
             default:

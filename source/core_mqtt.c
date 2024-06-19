@@ -2989,7 +2989,7 @@ MQTTStatus_t MQTT_Connect(MQTTContext_t *pContext,
     {
 #if (MQTT_VERSION_5_ENABLED)
      /* Get MQTT connect packet size and remaining length. */
-        status = MQTT_GetConnectPacketSizeV5(pConnectInfo,
+        status = MQTTV5_GetConnectPacketSize(pConnectInfo,
                                            pWillInfo,
                                            pContext->connectProperties,
                                            &remainingLength,
