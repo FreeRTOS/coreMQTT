@@ -289,9 +289,9 @@ typedef struct MQTTConnectProperties
 //  array of user property -> with size as maximum value of user property configured
 //  add authentication
     MQTTUserProperty_t *incomingUserProperty;
-    uint16_t incomingUserPropSize;
+    uint32_t incomingUserPropSize;
     MQTTUserProperty_t *outgoingUserProperty;
-    uint16_t outgoingUserPropSize;
+    uint32_t outgoingUserPropSize;
     MQTTAuthInfo_t *incomingAuth;
     
     // CONNACK

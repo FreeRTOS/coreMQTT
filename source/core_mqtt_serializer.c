@@ -541,7 +541,7 @@ static MQTTStatus_t deserializePingresp(const MQTTPacketInfo_t* pPingresp);
  * 
  * @return #MQTTSuccess if user properties are valid and #MQTTBadParametr  if the user properties are not valid
  */
-static MQTTStatus_t MQTT_GetUserPropertySize(MQTTUserProperty_t* pUserProperty, uint16_t number, size_t* size);
+static MQTTStatus_t MQTT_GetUserPropertySize(MQTTUserProperty_t* pUserProperty, uint32_t number, size_t* size);
 
 /**
  * @brief Get the size of connect properties.
@@ -630,7 +630,7 @@ static void  serializeConnectPacketV5(const MQTTConnectInfo_t* pConnectInfo,
  * @param[in] pUserProperty User Property parameters.
  * @param[in] size Number of user properties
  */
-static uint8_t* serializeUserProperties(uint8_t * pIndex,const MQTTUserProperty_t* pUserProperty, uint16_t size);
+// static uint8_t* serializeUserProperties(uint8_t * pIndex,const MQTTUserProperty_t* pUserProperty, uint16_t size);
 
 /*-----------------------------------------------------------*/
 
@@ -790,7 +790,7 @@ uint8_t* MQTT_SerializePublishProperties(const MQTTPublishInfo_t* pPublishInfo, 
 
 /*-----------------------------------------------------------*/
 
-static MQTTStatus_t MQTT_GetUserPropertySize(MQTTUserProperty_t* pUserProperty, uint16_t number, size_t* size) {
+static MQTTStatus_t MQTT_GetUserPropertySize(MQTTUserProperty_t* pUserProperty, uint32_t number, size_t* size) {
     MQTTStatus_t status = MQTTSuccess;
     uint16_t i = 0;
     /*Number of user properties can't be more than the max user properties specified*/
@@ -820,11 +820,11 @@ static MQTTStatus_t MQTT_GetConnectPropertiesSize(MQTTConnectProperties_t* pConn
     size_t propertyLength = 0;
     MQTTStatus_t status = MQTTSuccess;
     /*Validate the arguments*/
-    if(pConnectProperties==NULL){
+    if(pConnectProperties->maxPacketSize==0  && pConnectProperties->isMaxPacketSize ==true ){
         status=MQTTBadParameter;
     }
-    else if(pConnectProperties->maxPacketSize==0 || pConnectProperties->receiveMax==0){
-        status=MQTTBadParameter;
+    else if(pConnectProperties->receiveMax==0){
+        status = MQTTBadParameter;
     }
     else{
     /*Add the lengths of the parameters if applicable*/
@@ -854,12 +854,8 @@ static MQTTStatus_t MQTT_GetConnectPropertiesSize(MQTTConnectProperties_t* pConn
     }
     if (pConnectProperties->outgoingAuth != NULL)
     {
-        /*Incoming auth cannot be NULL*/ 
-        if(pConnectProperties->incomingAuth==NULL){
-            status=MQTTBadParameter;
-        }
         /*Valid authentication parameters*/
-        else if (pConnectProperties->outgoingAuth->authMethodLength == 0U && pConnectProperties->outgoingAuth->authDataLength != 0U)
+        if (pConnectProperties->outgoingAuth->authMethodLength == 0U && pConnectProperties->outgoingAuth->authDataLength != 0U)
         {
             status = MQTTBadParameter;
         }
@@ -902,11 +898,6 @@ static MQTTStatus_t MQTT_GetWillPropertiesSize(MQTTPublishInfo_t* pWillPropertie
 {
     size_t willLength = 0U;
     MQTTStatus_t status = MQTTSuccess;
-    /*Validate the arguments*/
-    if(pWillProperties==NULL){
-        status=MQTTBadParameter;
-    }
-    else{
     /*Add the length of all the parameters which are applicable*/
     if (pWillProperties->willDelay != 0U)
     {
@@ -928,7 +919,6 @@ static MQTTStatus_t MQTT_GetWillPropertiesSize(MQTTPublishInfo_t* pWillPropertie
         else{
         willLength += pWillProperties->contentTypeLength + 3U;
         }
-    }
     }
     /*Validate if length and pointers are valid*/
     if(status==MQTTSuccess && pWillProperties->responseTopicLength != 0U){
@@ -1019,7 +1009,8 @@ uint8_t* MQTT_SerializeConnectProperties(uint8_t* pIndex, const MQTTConnectPrope
     }
     return pIndexLocal;
 }
-static uint8_t* serializeUserProperties(uint8_t * pIndex,const MQTTUserProperty_t* pUserProperty, uint16_t size){
+
+/*static uint8_t* serializeUserProperties(uint8_t * pIndex,const MQTTUserProperty_t* pUserProperty, uint16_t size){
              uint16_t i = 0;
              assert(pIndex!=NULL);
              assert(pUserProperty !=NULL);
@@ -1031,7 +1022,7 @@ static uint8_t* serializeUserProperties(uint8_t * pIndex,const MQTTUserProperty_
         pIndex = encodeString(pIndex,(pUserProperty+i)->value,(pUserProperty+i)->valueLength);
     }
     return pIndex;
-}
+}*/
 
 
 static void  serializeConnectPacketV5(const MQTTConnectInfo_t* pConnectInfo,
@@ -1058,8 +1049,8 @@ static void  serializeConnectPacketV5(const MQTTConnectInfo_t* pConnectInfo,
     pIndex= MQTT_SerializeConnectProperties(pIndex,pConnectProperties);
 
     if( pConnectProperties->outgoingUserPropSize >0){
-            uint16_t i = 0;
-            uint16_t size = pConnectProperties->outgoingUserPropSize;
+            uint32_t i = 0;
+            uint32_t size = pConnectProperties->outgoingUserPropSize;
              MQTTUserProperty_t * pUserProperty = pConnectProperties->outgoingUserProperty;
             for (; i < size; i++)
             {
@@ -1114,8 +1105,8 @@ static void  serializeConnectPacketV5(const MQTTConnectInfo_t* pConnectInfo,
         }
         if (pWillInfo->userPropertySize != 0)
         {
-            uint16_t i = 0;
-            uint16_t size = pWillInfo->userPropertySize;
+            uint32_t i = 0;
+            uint32_t size = pWillInfo->userPropertySize;
              MQTTUserProperty_t * pUserProperty = pWillInfo->userProperty;
             for (; i < size; i++)
             {
@@ -1211,6 +1202,7 @@ MQTTStatus_t MQTTV5_SerializeConnect(const MQTTConnectInfo_t* pConnectInfo,
                 remainingLength,
                 pFixedBuffer);
         }
+
     }
 
     return status;
@@ -1350,8 +1342,7 @@ static MQTTStatus_t validateConnackParams(const MQTTPacketInfo_t* pIncomingPacke
         }
         if (status == MQTTSuccess)
         {
-            /* In MQTT 5, only values 0 , 80 through 9F are valid CONNACK response codes. */
-            // Change this
+
             if(pRemainingData[1]!=0u){
              status= logConnackResponseV5(pRemainingData[1]);
             }

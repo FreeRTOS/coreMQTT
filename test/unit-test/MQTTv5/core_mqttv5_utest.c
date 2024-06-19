@@ -1157,7 +1157,22 @@ void test_MQTT_Connect_happy_path()
     TransportInterface_t transport = { 0 };
     MQTTFixedBuffer_t networkBuffer = { 0 };
     MQTTPacketInfo_t incomingPacket = { 0 };
-    MQTTConnectProperties_t properties ={0};
+    MQTTConnectProperties_t properties;
+    MQTTAuthInfo_t authInfo;
+    MQTTAuthInfo_t authInfo2;
+    MQTTUserProperty_t userProperty;
+    memset(&properties,0x0,sizeof(properties));
+    memset(&authInfo,0x0,sizeof(authInfo));
+    memset(&authInfo2,0x0,sizeof(authInfo2));
+    memset(&userProperty,0x0,sizeof(userProperty));
+    userProperty.key = "ab";
+    userProperty.value = "ab";
+    userProperty.keyLength = 2;
+    userProperty.valueLength = 2;
+    authInfo.authMethod= "2";
+    authInfo.authMethodLength = 1;
+    authInfo.authData ="ab";
+    authInfo.authDataLength = 2;
     setupTransportInterface( &transport );
     setupNetworkBuffer( &networkBuffer );
 
@@ -1177,13 +1192,33 @@ void test_MQTT_Connect_happy_path()
     properties.topicAliasMax = 13;
     properties.reqProbInfo= 0;
     properties.reqResInfo = 1;
+    properties.outgoingUserPropSize = 1;
+    properties.outgoingUserProperty = &userProperty;
+    properties.outgoingAuth= &authInfo;
+    properties.incomingAuth = &authInfo2;
+
     willInfo.pTopicName = "test";
     willInfo.topicNameLength = 4;
     willInfo.pPayload = "Payload";
     willInfo.payloadLength = 7;
-    willInfo.willDelay = 22;
-    willInfo.correlationData = "fhf";
-    willInfo.correlationLength = 3;
+    willInfo.payloadFormat = 1;
+    willInfo.msgExpiryPresent = 1;
+    willInfo.msgExpiryInterval = 10;
+    willInfo.msgExpiryPresent = 1;
+    willInfo.msgExpiryInterval = 10;
+    willInfo.contentTypeLength = 2;
+    willInfo.contentType = "ab";
+    willInfo.responseTopicLength = 2;
+    willInfo.responseTopic = "ab";
+    willInfo.correlationLength = 2;
+    willInfo.correlationData = "ab";
+    willInfo.willDelay = 3;
+    willInfo.userPropertySize = 1;
+    willInfo.userProperty=&userProperty;
+    connectInfo.pUserName ="hdhf";
+    connectInfo.userNameLength =3;
+    connectInfo.passwordLength =4;
+    connectInfo.pPassword ="1234";
     incomingPacket.type = MQTT_PACKET_TYPE_CONNACK;
     mqttContext.transportInterface.send = transportSendSuccess;
     MQTT_SerializeConnect_IgnoreAndReturn( MQTTSuccess );
@@ -1194,5 +1229,57 @@ void test_MQTT_Connect_happy_path()
     MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTRecvFailed );
     status = MQTT_Connect( &mqttContext, &connectInfo, &willInfo, timeout, &sessionPresent );
     TEST_ASSERT_EQUAL_INT( MQTTRecvFailed, status );
+
+
+    willInfo.pTopicName = NULL;
+    incomingPacket.type = MQTT_PACKET_TYPE_CONNACK;
+    mqttContext.transportInterface.send = transportSendSuccess;
+    MQTT_SerializeConnect_IgnoreAndReturn( MQTTSuccess );
+    MQTTV5_GetConnectPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_SerializeConnectFixedHeader_Stub( MQTT_SerializeConnectFixedHeader_cb );
+    MQTT_SerializeConnectProperties_Stub( MQTT_SerializeConnectProperties_cb );
+    MQTT_SerializePublishProperties_Stub( MQTT_SerializePublishProperties_cb );
+    status = MQTT_Connect( &mqttContext, &connectInfo, &willInfo, timeout, &sessionPresent );
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
 }
 
+
+// void test_MQTT_Connect_happy_path1()
+// {
+//     MQTTContext_t mqttContext = { 0 };
+//     MQTTConnectInfo_t connectInfo = { 0 };
+//     bool sessionPresent;
+//     MQTTStatus_t status;
+//     TransportInterface_t transport = { 0 };
+//     MQTTFixedBuffer_t networkBuffer = { 0 };
+//     MQTTPacketInfo_t incomingPacket = { 0 };
+//     MQTTConnectProperties_t properties ={0};
+//     properties.receiveMax = UINT16_MAX;
+//     properties.reqProbInfo = 1;
+//     setupTransportInterface( &transport );
+//     setupNetworkBuffer( &networkBuffer );
+
+//     memset( &mqttContext, 0x0, sizeof( mqttContext ) );
+//     MQTT_Init( &mqttContext, &transport, getTime, eventCallback, &networkBuffer );
+
+
+//     /* CONNACK receive with timeoutMs=0. Retry logic will be used. */
+//     mqttContext.connectStatus = MQTTNotConnected;
+//     mqttContext.keepAliveIntervalSec = 0;
+//     sessionPresent = false;
+//     incomingPacket.type = MQTT_PACKET_TYPE_CONNACK;
+//     incomingPacket.remainingLength = 3;
+//     MQTT_SerializeConnect_IgnoreAndReturn( MQTTSuccess );
+//     MQTTV5_GetConnectPacketSize_IgnoreAndReturn( MQTTSuccess );
+//     MQTT_SerializeConnectFixedHeader_Stub( MQTT_SerializeConnectFixedHeader_cb );
+//     MQTT_SerializeConnectProperties_Stub( MQTT_SerializeConnectProperties_cb );
+//     MQTT_SerializePublishProperties_Stub( MQTT_SerializePublishProperties_cb );
+//     MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
+//     // MQTT_GetIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
+//     // MQTTV5_DeserializeConnack_IgnoreAndReturn( MQTTSuccess );
+//     // status = MQTT_Connect( &mqttContext, &connectInfo, NULL, 0U, &sessionPresent );
+//     // TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
+//     // TEST_ASSERT_EQUAL_INT( MQTTConnected, mqttContext.connectStatus );
+//     // TEST_ASSERT_EQUAL_INT( connectInfo.keepAliveSeconds, mqttContext.keepAliveIntervalSec );
+//     // TEST_ASSERT_FALSE( mqttContext.waitingForPingResp );
+// }
