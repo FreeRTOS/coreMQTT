@@ -612,16 +612,11 @@ static size_t addEncodedStringToVectorWithId(uint8_t serializedLength[CORE_MQTT_
     vectorsAdded++;
     packetLength += CORE_MQTT_SERIALIZED_LENGTH_FIELD_BYTES;
 
-    /* Sometimes the string can be NULL that is, of 0 length. In that case,
-     * only the length field should be encoded in the vector. */
-    if ((string != NULL) && (length != 0U))
-    {
-        /* Then add the pointer to the string itself. */
+   /* Then add the pointer to the string itself. */
         pLocalIterator[2].iov_base = string;
         pLocalIterator[2].iov_len = length;
         vectorsAdded++;
         packetLength += length;
-    }
 
     (*updatedLength) = (*updatedLength) + packetLength;
 

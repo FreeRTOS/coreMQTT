@@ -494,6 +494,48 @@ void test_MQTT_Connect_happy_path()
     status = MQTT_Connect( &mqttContext, &connectInfo, &willInfo, timeout, &sessionPresent );
     TEST_ASSERT_EQUAL_INT( MQTTRecvFailed, status );
 
+    properties.outgoingUserPropSize =0;
+    MQTT_SerializeConnect_IgnoreAndReturn( MQTTSuccess );
+    MQTTV5_GetConnectPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_SerializeConnectFixedHeader_Stub( MQTT_SerializeConnectFixedHeader_cb );
+    MQTT_SerializeConnectProperties_Stub( MQTT_SerializeConnectProperties_cb );
+    MQTT_SerializePublishProperties_Stub( MQTT_SerializePublishProperties_cb );
+    MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTRecvFailed );
+    status = MQTT_Connect( &mqttContext, &connectInfo, &willInfo, timeout, &sessionPresent );
+    TEST_ASSERT_EQUAL_INT( MQTTRecvFailed, status );
+
+    authInfo.authDataLength = 0;
+    MQTT_SerializeConnect_IgnoreAndReturn( MQTTSuccess );
+    MQTTV5_GetConnectPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_SerializeConnectFixedHeader_Stub( MQTT_SerializeConnectFixedHeader_cb );
+    MQTT_SerializeConnectProperties_Stub( MQTT_SerializeConnectProperties_cb );
+    MQTT_SerializePublishProperties_Stub( MQTT_SerializePublishProperties_cb );
+    MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTRecvFailed );
+    status = MQTT_Connect( &mqttContext, &connectInfo, &willInfo, timeout, &sessionPresent );
+    TEST_ASSERT_EQUAL_INT( MQTTRecvFailed, status );
+
+    properties.outgoingAuth =NULL;
+    willInfo.contentTypeLength = 0;
+    willInfo.responseTopicLength = 0;
+    willInfo.correlationLength = 0;
+    willInfo.userPropertySize = 0;
+    MQTT_SerializeConnect_IgnoreAndReturn( MQTTSuccess );
+    MQTTV5_GetConnectPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_SerializeConnectFixedHeader_Stub( MQTT_SerializeConnectFixedHeader_cb );
+    MQTT_SerializeConnectProperties_Stub( MQTT_SerializeConnectProperties_cb );
+    MQTT_SerializePublishProperties_Stub( MQTT_SerializePublishProperties_cb );
+    MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTRecvFailed );
+    status = MQTT_Connect( &mqttContext, &connectInfo, &willInfo, timeout, &sessionPresent );
+    TEST_ASSERT_EQUAL_INT( MQTTRecvFailed, status );
+
+    MQTT_SerializeConnect_IgnoreAndReturn( MQTTSuccess );
+    MQTTV5_GetConnectPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_SerializeConnectFixedHeader_Stub( MQTT_SerializeConnectFixedHeader_cb );
+    MQTT_SerializeConnectProperties_Stub( MQTT_SerializeConnectProperties_cb );
+    MQTT_SerializePublishProperties_Stub( MQTT_SerializePublishProperties_cb );
+    MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
+    status = MQTT_Connect( &mqttContext, &connectInfo, &willInfo, timeout, &sessionPresent );
+    TEST_ASSERT_EQUAL_INT( MQTTRecvFailed, status );
 
     willInfo.pTopicName = NULL;
     mqttContext.transportInterface.send = transportSendSuccess;
@@ -506,4 +548,42 @@ void test_MQTT_Connect_happy_path()
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
 }
 
+void test_MQTT_Connect_receiveConnack( void )
+{
+    MQTTContext_t mqttContext = { 0 };
+    MQTTConnectInfo_t connectInfo = { 0 };
+    uint32_t timeout = 0;
+    bool sessionPresent;
+    MQTTStatus_t status;
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
+    MQTTPacketInfo_t incomingPacket = { 0 };
+    MQTTConnectProperties_t properties ={0};
 
+    setupTransportInterface( &transport );
+    setupNetworkBuffer( &networkBuffer );
+
+
+    memset( &mqttContext, 0x0, sizeof( mqttContext ) );
+    memset( &properties, 0x0, sizeof( properties ) );
+        properties.receiveMax = UINT16_MAX;
+    properties.reqProbInfo = 1;
+    mqttContext.connectProperties =&properties;
+    MQTT_Init( &mqttContext, &transport, getTime, eventCallback, &networkBuffer );
+   
+    /* Everything before receiving the CONNACK should succeed. */
+    MQTTV5_SerializeConnect_IgnoreAndReturn( MQTTSuccess );
+    MQTT_SerializeConnectFixedHeader_Stub( MQTT_SerializeConnectFixedHeader_cb );
+    MQTT_SerializeConnectProperties_Stub( MQTT_SerializeConnectProperties_cb );
+    MQTT_SerializePublishProperties_Stub( MQTT_SerializePublishProperties_cb );
+    MQTTV5_GetConnectPacketSize_IgnoreAndReturn( MQTTSuccess );
+    incomingPacket.type = MQTT_PACKET_TYPE_CONNACK;
+    incomingPacket.remainingLength = 3;
+    timeout = 2;
+    mqttContext.transportInterface.recv = transportRecvSuccess;
+    MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_GetIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
+    MQTTV5_DeserializeConnack_IgnoreAndReturn( MQTTBadResponse );
+    status = MQTT_Connect( &mqttContext, &connectInfo, NULL, timeout, &sessionPresent );
+    TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
+}

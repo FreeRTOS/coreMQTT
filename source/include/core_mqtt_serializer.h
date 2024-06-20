@@ -387,7 +387,7 @@ typedef struct MQTTPublishInfo
     uint16_t correlationLength;
     const void *correlationData;
     MQTTUserProperty_t* userProperty;
-    uint16_t userPropertySize;
+    uint32_t userPropertySize;
 #endif
 
 } MQTTPublishInfo_t;

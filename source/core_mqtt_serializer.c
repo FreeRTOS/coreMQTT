@@ -789,7 +789,7 @@ static MQTTStatus_t MQTT_GetUserPropertySize(MQTTUserProperty_t* pUserProperty, 
     MQTTStatus_t status = MQTTSuccess;
     uint16_t i = 0;
     /*Number of user properties can't be more than the max user properties specified*/
-    if (number > MAX_USER_PROPERTY || size == NULL) {
+    if (number > MAX_USER_PROPERTY) {
         status = MQTTBadParameter;
     }
     else if (number != 0 && pUserProperty == NULL) {
@@ -1596,7 +1596,7 @@ MQTTStatus_t MQTTV5_DeserializeConnack(MQTTConnectProperties_t* pConnackProperti
                 break;
             case MQTT_USER_PROPERTY_ID:
                 if (pConnackProperties->incomingUserPropSize == MAX_USER_PROPERTY) {
-                    
+                    status = MQTTProtocolError;
                 }
                 else if (propertyLength < 2) {
                     status = MQTTMalformedPacket;

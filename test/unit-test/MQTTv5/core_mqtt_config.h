@@ -73,6 +73,6 @@
 
 #define MQTT_SEND_TIMEOUT_MS                    ( 200U )
 #define MQTT_VERSION_5_ENABLED                   ( true )
-#define MAX_USER_PROPERTY                          (5000U)
+#define MAX_USER_PROPERTY                         (5000)
 
 #endif /* ifndef CORE_MQTT_CONFIG_H_ */
