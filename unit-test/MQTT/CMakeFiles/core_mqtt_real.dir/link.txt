@@ -1,0 +1,2 @@
+/usr/bin/ar qc lib/libcore_mqtt_real.a CMakeFiles/core_mqtt_real.dir/__/__/source/core_mqtt.c.o CMakeFiles/core_mqtt_real.dir/__/__/source/core_mqtt_state.c.o CMakeFiles/core_mqtt_real.dir/__/__/source/core_mqtt_serializer.c.o
+/usr/bin/ranlib lib/libcore_mqtt_real.a

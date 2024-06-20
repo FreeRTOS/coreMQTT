@@ -1,0 +1,2 @@
+/usr/bin/ar qc lib/libcmock.a "CMakeFiles/cmock.dir/unit-test/CMock/src/cmock.c.o"
+/usr/bin/ranlib lib/libcmock.a

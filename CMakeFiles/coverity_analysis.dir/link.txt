@@ -1,0 +1,2 @@
+/usr/bin/ar qc lib/libcoverity_analysis.a CMakeFiles/coverity_analysis.dir/source/core_mqtt.c.o CMakeFiles/coverity_analysis.dir/source/core_mqtt_state.c.o CMakeFiles/coverity_analysis.dir/source/core_mqtt_serializer.c.o
+/usr/bin/ranlib lib/libcoverity_analysis.a
