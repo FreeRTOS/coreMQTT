@@ -81,11 +81,9 @@ struct MQTTSubscribeInfo;
 struct MQTTPublishInfo;
 struct MQTTPacketInfo;
 
-// #if (MQTT_VERSION_5_ENABLED)
 struct MQTTConnectProperties;
 struct MQTTUserProperty;
 struct MQTTAuthInfo;
-// #endif
 /**
  * @ingroup mqtt_enum_types
  * @brief Return codes from MQTT functions.
@@ -107,12 +105,9 @@ typedef enum MQTTStatus
                           incomplete data; it should be called again (probably after
                           a delay). */
 
-    // #if(MQTT_VERSION_5_ENABLED)
-      MQTTMalformedPacket=0x81,
-      MQTTProtocolError=0x82
-    // #endif
+    MQTTMalformedPacket=0x81,
+    MQTTProtocolError=0x82
 
-    // #endif
 } MQTTStatus_t;
 
 
@@ -248,7 +243,6 @@ typedef struct MQTTSubscribeInfo
     uint16_t topicFilterLength;
 } MQTTSubscribeInfo_t;
 
-// #if (MQTT_VERSION_5_ENABLED)
 
    /**
  * @ingroup mqtt_struct_types
@@ -256,17 +250,45 @@ typedef struct MQTTSubscribeInfo
  */
 typedef struct MQTTAuthInfo
 {
-  const char* authMethod;
-  uint16_t authMethodLength;
-  const char* authData;
-  uint16_t authDataLength;
+    /**
+     * @brief Authentication method used for authentication.
+     */
+    const char* authMethod;
+    /**
+     * @brief Length of the authentication mathod.
+     */
+    uint16_t authMethodLength;
+    /**
+     * @brief Authentication data used for authentication.
+     */
+    const char* authData;
+     /**
+     * @brief Length of the authentication data.
+     */
+    uint16_t authDataLength;
 }MQTTAuthInfo_t;
 
+   /**
+ * @ingroup mqtt_struct_types
+ * @brief Struct to hold user property.
+ */
 typedef struct MQTTUserProperty
 {
+    /**
+     * @brief key.
+     */
     const char* key;
+    /**
+     * @brief Length of the key.
+     */
     uint16_t keyLength;
+    /**
+     * @brief value.
+     */
     const char* value;
+    /**
+     * @brief Length of the value.
+     */
     uint16_t valueLength;
 }MQTTUserProperty_t;
 
@@ -284,17 +306,12 @@ typedef struct MQTTConnectProperties
     bool  reqResInfo;
     bool  reqProbInfo;
     size_t propertyLength;
-//  Add user property
-// Pointer to array of userProperty;
-//  array of user property -> with size as maximum value of user property configured
-//  add authentication
     MQTTUserProperty_t *incomingUserProperty;
     uint32_t incomingUserPropSize;
     MQTTUserProperty_t *outgoingUserProperty;
     uint32_t outgoingUserPropSize;
     MQTTAuthInfo_t *incomingAuth;
     
-    // CONNACK
     uint16_t serverReceiveMax;
     uint8_t serverMaxQos;
     uint8_t retainAvailable;
@@ -315,7 +332,6 @@ typedef struct MQTTConnectProperties
     MQTTAuthInfo_t *outgoingAuth;
     
 } MQTTConnectProperties_t;
-// #endif
 
 /**
  * @ingroup mqtt_struct_types
@@ -372,7 +388,6 @@ typedef struct MQTTPublishInfo
     const void *correlationData;
     MQTTUserProperty_t* userProperty;
     uint16_t userPropertySize;
-//    Add user property
 #endif
 
 } MQTTPublishInfo_t;
@@ -1519,8 +1534,8 @@ MQTTStatus_t MQTTV5_DeserializeConnack( MQTTConnectProperties_t *pConnackPropert
  */
 /* @[declare_mqttv5_getconnectpacketsize] */     
 MQTTStatus_t MQTTV5_GetConnectPacketSize(const MQTTConnectInfo_t* pConnectInfo,
-    const MQTTPublishInfo_t* pWillInfo,
-    const MQTTConnectProperties_t* pConnectProperties,
+    MQTTPublishInfo_t* pWillInfo,
+    MQTTConnectProperties_t* pConnectProperties,
     size_t* pRemainingLength,
     size_t* pPacketSize);
 /* @[declare_mqttv5_getconnectpacketsize] */     

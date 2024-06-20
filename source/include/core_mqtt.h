@@ -42,7 +42,6 @@
 #include "transport_interface.h"
 
 /* Include transport interface. */
-// #include "core_mqtt_config_defaults.h"
 
 /**
  * @cond DOXYGEN_IGNORE

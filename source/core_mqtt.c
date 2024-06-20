@@ -2402,25 +2402,24 @@ static MQTTStatus_t sendConnectWithoutCopy(MQTTContext_t *pContext,
             }
 
             /*Encodethe authentication method and data if provided*/
-            MQTTAuthInfo_t *pAuthInfo = pContext->connectProperties->outgoingAuth;
-            if (pAuthInfo != NULL)
+            if (pContext->connectProperties->outgoingAuth != NULL)
             {
                 /* Serialize the authentication method  string. */
                 vectorsAdded = addEncodedStringToVectorWithId(serializedAuthMethodLength,
-                                                              pAuthInfo->authMethod,
-                                                              pAuthInfo->authMethodLength,
+                                                              pContext->connectProperties->outgoingAuth->authMethod,
+                                                              pContext->connectProperties->outgoingAuth->authMethodLength,
                                                               iterator,
                                                               &totalMessageLength, &authMethodId);
 
                 /* Update the iterator to point to the next empty slot. */
                 iterator = &iterator[vectorsAdded];
                 ioVectorLength += vectorsAdded;
-                if (pAuthInfo->authDataLength != 0U)
+                if (pContext->connectProperties->outgoingAuth->authDataLength != 0U)
                 {
                     /* Serialize the authentication data  string. */
                     vectorsAdded = addEncodedStringToVectorWithId(serializedAuthDataLength,
-                                                                  pAuthInfo->authData,
-                                                                  pAuthInfo->authDataLength,
+                                                                  pContext->connectProperties->outgoingAuth->authData,
+                                                                 pContext->connectProperties->outgoingAuth->authDataLength,
                                                                   iterator,
                                                                   &totalMessageLength, &authDataId);
 

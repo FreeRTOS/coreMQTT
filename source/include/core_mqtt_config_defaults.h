@@ -78,7 +78,6 @@
        #define MAX_USER_PROPERTY (5U)
     #endif
 #endif
-// #define MQTT_VERSION_5_ENABLED (false)
 
 /**
  * @ingroup mqtt_constants

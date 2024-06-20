@@ -44,7 +44,6 @@
   */
 #define MQTT_PACKET_CONNECT_HEADER_SIZE             ( 10UL )
 
-#define UINT16_MAX (65535U)
 
   /* MQTT CONNECT flags. */
 #define MQTT_CONNECT_FLAG_CLEAN                     ( 1 ) /**< @brief Clean session. */
@@ -630,13 +629,13 @@ static void  serializeConnectPacketV5(const MQTTConnectInfo_t* pConnectInfo,
  * @param[in] pUserProperty User Property parameters.
  * @param[in] size Number of user properties
  */
-// static uint8_t* serializeUserProperties(uint8_t * pIndex,const MQTTUserProperty_t* pUserProperty, uint16_t size);
+/*static uint8_t* serializeUserProperties(uint8_t * pIndex,const MQTTUserProperty_t* pUserProperty, uint16_t size);*/
 
 /*-----------------------------------------------------------*/
 
 MQTTStatus_t MQTTV5_GetConnectPacketSize(const MQTTConnectInfo_t* pConnectInfo,
-    const MQTTPublishInfo_t* pWillInfo,
-    const MQTTConnectProperties_t* pConnectProperties,
+     MQTTPublishInfo_t* pWillInfo,
+     MQTTConnectProperties_t* pConnectProperties,
     size_t* pRemainingLength,
     size_t* pPacketSize)
 {
@@ -675,16 +674,12 @@ MQTTStatus_t MQTTV5_GetConnectPacketSize(const MQTTConnectInfo_t* pConnectInfo,
     }
     else if (pConnectProperties == NULL)
         {
-            // LogError( ( "Argument cannot be NULL: connectProperties=%p,",
-            //             ( void * ) pContext->connectProperties,
-            //              ));
+            LogError(("Argument cannot be NULL: connectProperties"));
             status = MQTTBadParameter;
         }
     else if (pConnectProperties->outgoingAuth != NULL && pConnectProperties->incomingAuth == NULL)
         {
-            // LogError( ( "Argument cannot be NULL: incomingAuth=%p, ",
-            //             ( void * ) pContext->connectProperties->incomingAuth,
-            //              ));
+            LogError( ("Incoming Auth cannot bt NULL"));
             status = MQTTBadParameter;
         }
     else
@@ -1036,9 +1031,7 @@ static void  serializeConnectPacketV5(const MQTTConnectInfo_t* pConnectInfo,
     assert(pFixedBuffer != NULL);
     assert(pFixedBuffer->pBuffer != NULL);
     assert(pConnectProperties != NULL);
-
     pIndex = pFixedBuffer->pBuffer;
-
     /* Serialize the header. */
     pIndex = MQTT_SerializeConnectFixedHeader(pIndex,
         pConnectInfo,
@@ -1061,18 +1054,18 @@ static void  serializeConnectPacketV5(const MQTTConnectInfo_t* pConnectInfo,
             }
     }
     
-    MQTTAuthInfo_t *pAuthInfo = pConnectProperties->outgoingAuth;
-    if (pAuthInfo != NULL)
+    
+    if (pConnectProperties->outgoingAuth != NULL)
     {
         /* Serialize the authentication method  string. */
         *pIndex = MQTT_AUTH_METHOD_ID;
         pIndex++;
-        pIndex = encodeString(pIndex,pAuthInfo->authMethod,pAuthInfo->authMethodLength);
-        if (pAuthInfo->authDataLength != 0U)
+        pIndex = encodeString(pIndex,pConnectProperties->outgoingAuth->authMethod,pConnectProperties->outgoingAuth->authMethodLength);
+        if (pConnectProperties->outgoingAuth->authDataLength != 0U)
         {
         *pIndex = MQTT_AUTH_DATA_ID;
         pIndex++;
-        pIndex = encodeString(pIndex,pAuthInfo->authData,pAuthInfo->authDataLength);
+        pIndex = encodeString(pIndex,pConnectProperties->outgoingAuth->authData,pConnectProperties->outgoingAuth->authDataLength);
         }
     }
 
@@ -1173,9 +1166,7 @@ MQTTStatus_t MQTTV5_SerializeConnect(const MQTTConnectInfo_t* pConnectInfo,
 
     else if (pConnectProperties == NULL)
         {
-            // LogError( ( "Argument cannot be NULL: connectProperties=%p,",
-            //             ( void * ) pContext->connectProperties,
-            //              ));
+            LogError( ( "Argument cannot be NULL: connectProperties"));
             status = MQTTBadParameter;
         }
     else
@@ -1213,67 +1204,67 @@ MQTTStatus_t MQTTV5_SerializeConnect(const MQTTConnectInfo_t* pConnectInfo,
     MQTTStatus_t status= MQTTServerRefused;
     switch(responseCode){
         case MQTT_REASON_UNSPECIFIED_ERR :
-            LogError("Connection refused: Unspecified error");
+            LogError(("Connection refused: Unspecified error"));
             break;
         case  MQTT_REASON_MALFORMED_PACKET  :
-            LogError("Connection refused: Malformed Packet.");
+            LogError(("Connection refused: Malformed Packet."));
             break;
         case MQTT_REASON_PROTOCOL_ERR:
-            LogError("Connection refused: Protocol Error.");
+            LogError(("Connection refused: Protocol Error."));
             break;
         case MQTT_REASON_IMPL_SPECIFIC_ERR :
-            LogError("Connection refused: Impementation specific error.");
+            LogError(("Connection refused: Impementation specific error."));
             break;
         case MQTT_REASON_UNSUP_PROTO_VER :
-            LogError("Connection refused: Unsupported Protocol Version.");
+            LogError(("Connection refused: Unsupported Protocol Version."));
             break;
         case MQTT_REASON_CLIENT_ID_NOT_VALID :
-            LogError( "Connection refused: Client Identifier not valid.");
+            LogError(( "Connection refused: Client Identifier not valid."));
             break;
         case MQTT_REASON_BAD_USER_OR_PASS :
-            LogError("Connection refused: Bad User Name or Password.");
+            LogError(("Connection refused: Bad User Name or Password."));
             break;
         case MQTT_REASON_NOT_AUTHORIZED :
-            LogError("Connection refused: Not authorized.");
+            LogError(("Connection refused: Not authorized."));
             break;
         case  MQTT_REASON_SERVER_UNAVAILABLE :
-            LogError("Connection refused: Server unavailable.");
+            LogError(("Connection refused: Server unavailable."));
             break;
         case MQTT_REASON_SERVER_BUSY :
-            LogError( "Connection refused: Server busy." );
+            LogError(("Connection refused: Server busy." ));
             break;
         case MQTT_REASON_BANNED :
-            LogError("Connection refused: Banned.");
+            LogError(("Connection refused: Banned."));
             break;
         case MQTT_REASON_BAD_AUTH_METHOD :
-            LogError("Connection refused: Bad authentication method.");
+            LogError(("Connection refused: Bad authentication method."));
             break;
         case MQTT_REASON_TOPIC_NAME_INVALID  :
-            LogError("Connection refused: Topic Name invalid.");
+            LogError(("Connection refused: Topic Name invalid."));
             break;
         case MQTT_REASON_PACKET_TOO_LARGE :
-            LogError( "Connection refused: Packet too large .");
+            LogError(("Connection refused: Packet too large ."));
             break;
         case   MQTT_REASON_QUOTA_EXCEEDED :
-            LogError("Connection refused: Quota exceeded.");
+            LogError(("Connection refused: Quota exceeded."));
             break;
         case  MQTT_REASON_PAYLOAD_FORMAT_INVALID :
-            LogError( "Connection refused: Payload format invalid." );
+            LogError(( "Connection refused: Payload format invalid." ));
             break;
         case  MQTT_REASON_RETAIN_NOT_SUPPORTED  :
-            LogError("Connection refused: Retain not supported.");
+            LogError(("Connection refused: Retain not supported."));
             break;
         case  MQTT_REASON_QOS_NOT_SUPPORTED :
-            LogError("Connection refused: QoS not supported.");
+            LogError(("Connection refused: QoS not supported."));
             break;
         case  MQTT_REASON_USE_ANOTHER_SERVER  :
-            LogError("Connection refused: Use another server." );
+            LogError(("Connection refused: Use another server." ));
             break;
         case MQTT_REASON_SERVER_MOVED :
-            LogError("Connection refused: Server moved.");
+            LogError(("Connection refused: Server moved."));
             break;
         case MQTT_REASON_CON_RATE_EXCEED :
-            LogError("Connection refused: Connection rate exceeded.");
+            LogError(("Connection refused: Connection rate exceeded."));
             break;
         default:
             status= MQTTProtocolError;
@@ -1416,18 +1407,16 @@ MQTTStatus_t MQTTV5_DeserializeConnack(MQTTConnectProperties_t* pConnackProperti
 
     bool* pSessionPresent)
 {
-
-
     MQTTStatus_t status = MQTTSuccess;
+    size_t propertyLength;
+    size_t remainingLengthSize;
+    uint8_t* pVariableHeader = NULL;
      if(pConnackProperties==NULL){
         status=MQTTBadParameter;
      }
      if(status==MQTTSuccess){
      status = validateConnackParams(pIncomingPacket, pSessionPresent);
      }
-    size_t propertyLength = 0U;
-    size_t remainingLengthSize=0U;
-    uint8_t* pVariableHeader = NULL;
     if (status == MQTTSuccess) {
         pVariableHeader = pIncomingPacket->pRemainingData;
         pVariableHeader = &pVariableHeader[2];
@@ -1606,7 +1595,6 @@ MQTTStatus_t MQTTV5_DeserializeConnack(MQTTConnectProperties_t* pConnackProperti
                 }
                 break;
             case MQTT_USER_PROPERTY_ID:
-                //   Decode user property   
                 if (pConnackProperties->incomingUserPropSize == MAX_USER_PROPERTY) {
                     
                 }
@@ -1649,13 +1637,15 @@ MQTTStatus_t MQTTV5_DeserializeConnack(MQTTConnectProperties_t* pConnackProperti
                     status = MQTTMalformedPacket;
                 }
                 else {
+                    if (*pVariableHeader > 1) {
+                        status = MQTTProtocolError;
+                    }
+                    else{
                     pConnackProperties->isWildcardAvaiable = *pVariableHeader;
                     pVariableHeader = &pVariableHeader[sizeof(uint8_t)];
                     propertyLength -= 1;
-                    if (pConnackProperties->isSharedAvailable > 1) {
-                        status = MQTTProtocolError;
-                    }
                     wildcard = true;
+                    }
                 }
                 break;
             case MQTT_SUB_AVAILABLE_ID:
@@ -1666,13 +1656,15 @@ MQTTStatus_t MQTTV5_DeserializeConnack(MQTTConnectProperties_t* pConnackProperti
                     status = MQTTMalformedPacket;
                 }
                 else {
+                     if (*pVariableHeader > 1) {
+                        status = MQTTProtocolError;
+                    }
+                    else{
                     pConnackProperties->subscriptionId = *pVariableHeader;
                     pVariableHeader = &pVariableHeader[sizeof(uint8_t)];
                     propertyLength -= 1;
-                    if (pConnackProperties->subscriptionId > 1) {
-                        status = MQTTProtocolError;
-                    }
                     subId = true;
+                    }
                 }
                 break;
             case MQTT_SHARED_SUB_ID:
@@ -1683,13 +1675,15 @@ MQTTStatus_t MQTTV5_DeserializeConnack(MQTTConnectProperties_t* pConnackProperti
                     status = MQTTMalformedPacket;
                 }
                 else {
+                    if (*pVariableHeader > 1) {
+                         status = MQTTProtocolError;
+                    }
+                    else{
                     pConnackProperties->isSharedAvailable = *pVariableHeader;
                     pVariableHeader = &pVariableHeader[sizeof(uint8_t)];
                     propertyLength -= 1;
-                    if (pConnackProperties->isSharedAvailable > 1) {
-                        status = MQTTProtocolError;
-                    }
                     sharedsub = true;
+                    }
                 }
                 break;
             case MQTT_SERVER_KEEP_ALIVE_ID:
@@ -2919,7 +2913,6 @@ uint8_t* MQTT_SerializeConnectFixedHeader(uint8_t* pIndex,
     /* The string "MQTT" is placed at the beginning of the CONNECT packet's variable
      * header. This string is 4 bytes long. */
 
-     // Add the correct version
     pIndexLocal = encodeString(pIndexLocal, "MQTT", 4);
 
     /* The MQTT protocol version is the second field of the variable header. */
