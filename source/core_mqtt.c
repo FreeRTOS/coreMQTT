@@ -581,7 +581,7 @@ static size_t addEncodedStringToVectorWithId(uint8_t serializedLength[CORE_MQTT_
                                       const char *const string,
                                       uint16_t length,
                                       TransportOutVector_t *iterator,
-                                      size_t *updatedLength, uint8_t* packetId);
+                                      size_t *updatedLength, const uint8_t* packetId);
 
 /*-----------------------------------------------------------*/
 
@@ -589,7 +589,7 @@ static size_t addEncodedStringToVectorWithId(uint8_t serializedLength[CORE_MQTT_
                                       const char *const string,
                                       uint16_t length,
                                       TransportOutVector_t *iterator,
-                                      size_t *updatedLength, uint8_t* packetId)
+                                      size_t *updatedLength,const uint8_t* packetId)
 {
     size_t packetLength = 0U;
     TransportOutVector_t *pLocalIterator = iterator;
@@ -2372,7 +2372,7 @@ static MQTTStatus_t sendConnectWithoutCopy(MQTTContext_t *pContext,
             
             uint32_t i = 0;
             uint32_t size = pContext->connectProperties->outgoingUserPropSize;
-            MQTTUserProperty_t *userProperty = pContext->connectProperties->outgoingUserProperty;
+            const MQTTUserProperty_t *userProperty = pContext->connectProperties->outgoingUserProperty;
             for (; i < size; i++)
             {
                 userId[i]=MQTT_USER_PROPERTY_ID;
@@ -2498,7 +2498,7 @@ static MQTTStatus_t sendConnectWithoutCopy(MQTTContext_t *pContext,
             {
                     uint32_t i = 0;
                     uint32_t size = pWillInfo->userPropertySize;
-                    MQTTUserProperty_t* userProperty = pWillInfo->userProperty;
+                    const  MQTTUserProperty_t* userProperty = pWillInfo->userProperty;
                     for (; i < size; i++)
                     {
                         willUserId[i]=MQTT_USER_PROPERTY_ID;

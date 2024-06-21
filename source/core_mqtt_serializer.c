@@ -540,7 +540,7 @@ static MQTTStatus_t deserializePingresp(const MQTTPacketInfo_t* pPingresp);
  * 
  * @return #MQTTSuccess if user properties are valid and #MQTTBadParametr  if the user properties are not valid
  */
-static MQTTStatus_t MQTT_GetUserPropertySize(MQTTUserProperty_t* pUserProperty, uint32_t number, size_t* size);
+static MQTTStatus_t MQTT_GetUserPropertySize(const MQTTUserProperty_t* pUserProperty, uint32_t number, size_t* size);
 
 /**
  * @brief Get the size of connect properties.
@@ -776,7 +776,7 @@ uint8_t* MQTT_SerializePublishProperties(const MQTTPublishInfo_t* pPublishInfo, 
 
 /*-----------------------------------------------------------*/
 
-static MQTTStatus_t MQTT_GetUserPropertySize(MQTTUserProperty_t* pUserProperty, uint32_t number, size_t* size) {
+static MQTTStatus_t MQTT_GetUserPropertySize(const MQTTUserProperty_t* pUserProperty, uint32_t number, size_t* size) {
     MQTTStatus_t status = MQTTSuccess;
     uint32_t i = 0;
     /*Number of user properties can't be more than the max user properties specified*/
@@ -788,12 +788,12 @@ static MQTTStatus_t MQTT_GetUserPropertySize(MQTTUserProperty_t* pUserProperty, 
     }
     else {
         for (;(i < number) &&(status == MQTTSuccess);i++) {
-            if (((pUserProperty + i)->keyLength == 0U) || ((pUserProperty + i)->valueLength == 0U) || ((pUserProperty + i)->key == NULL) || ((pUserProperty + i)->value == NULL)) {
+            if ((pUserProperty[i].keyLength == 0U) || (pUserProperty[i].valueLength == 0U) || (pUserProperty[i].key == NULL) || (pUserProperty[i].value == NULL)) {
                 status = MQTTBadParameter;
             }
             else{
-            *size += (size_t)((pUserProperty + i)->keyLength + 3U);
-            *size += (size_t)((pUserProperty + i)->valueLength + 2U);
+            *size += (pUserProperty [i].keyLength + 3U);
+            *size += (pUserProperty [i].valueLength + 2U);
             }
         }
     }
@@ -905,7 +905,7 @@ static MQTTStatus_t MQTT_GetWillPropertiesSize(MQTTPublishInfo_t* pWillPropertie
             status= MQTTBadParameter;
         }
         else{
-        willLength +=(size_t) (pWillProperties->contentTypeLength + 3U);
+        willLength +=(pWillProperties->contentTypeLength + 3U);
         }
     }
     /*Validate if length and pointers are valid*/
@@ -914,7 +914,8 @@ static MQTTStatus_t MQTT_GetWillPropertiesSize(MQTTPublishInfo_t* pWillPropertie
             status= MQTTBadParameter;
         }
         else{
-        willLength += pWillProperties->responseTopicLength + 3U;
+        willLength += (pWillProperties->responseTopicLength + 3U);
+
         }
     }
     if (status==MQTTSuccess && pWillProperties->correlationLength != 0U)
@@ -923,7 +924,7 @@ static MQTTStatus_t MQTT_GetWillPropertiesSize(MQTTPublishInfo_t* pWillPropertie
                    status= MQTTBadParameter;
         }
         else{
-        willLength += (size_t)(pWillProperties->correlationLength + 3U);
+        willLength += (pWillProperties->correlationLength + 3U);
         }
     }
     /*Get the length of user properties*/ 
@@ -1247,6 +1248,7 @@ MQTTStatus_t MQTTV5_SerializeConnect(const MQTTConnectInfo_t* pConnectInfo,
             break;
         default:
             status= MQTTProtocolError;
+            break;
     }
     return status;
 }
@@ -1675,7 +1677,7 @@ MQTTStatus_t MQTTV5_DeserializeConnack(MQTTConnectProperties_t* pConnackProperti
                 }
                 break;
             case MQTT_RESPONSE_INFO_ID:
-                if ((responseInfo == true) || (pConnackProperties->reqResInfo == 0)) {
+                if ((responseInfo == true) || (pConnackProperties->reqResInfo == false)) {
                     status = MQTTProtocolError;
                 }
                 else if (propertyLength < 2U) {
@@ -1756,6 +1758,7 @@ MQTTStatus_t MQTTV5_DeserializeConnack(MQTTConnectProperties_t* pConnackProperti
                 break;
             default:
                 status = MQTTProtocolError;
+                break;
             }
         }
     }
