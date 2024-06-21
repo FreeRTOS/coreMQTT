@@ -2141,6 +2141,21 @@ void test_MQTTV5_DeserializeConnackOnlyUserProperty(void)
     pIndexLocal = &pIndexLocal[dummy2];
     status = MQTTV5_DeserializeConnack(&properties, &packetInfo, &session);
     TEST_ASSERT_EQUAL_INT(MQTTMalformedPacket, status);
+
+    /*Invalid property length*/
+    packetInfo.remainingLength = 9;
+    pIndexLocal = &buffer[2];
+    propertyLength = encodeRemainingLength(pIndexLocal, 6);
+    pIndexLocal++;
+    *pIndexLocal = MQTT_USER_PROPERTY_ID;
+    pIndexLocal++;
+    dummy = encodeString(pIndexLocal, string, 2);
+    pIndexLocal = &pIndexLocal[dummy];
+    dummy2 = encodeString(pIndexLocal, string2, 3);
+    pIndexLocal = &pIndexLocal[dummy2];
+    status = MQTTV5_DeserializeConnack(&properties, &packetInfo, &session);
+    TEST_ASSERT_EQUAL_INT(MQTTMalformedPacket, status);
+
 }
 
 void test_MQTTV5_DeserializeConnackOnlyServerRef(void)
