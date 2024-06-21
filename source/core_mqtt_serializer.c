@@ -787,9 +787,10 @@ static MQTTStatus_t MQTT_GetUserPropertySize(const MQTTUserProperty_t* pUserProp
         status = MQTTBadParameter;
     }
     else {
-        for (;(i < number) &&(status == MQTTSuccess);i++) {
+        for (;(i < number);i++) {
             if ((pUserProperty[i].keyLength == 0U) || (pUserProperty[i].valueLength == 0U) || (pUserProperty[i].key == NULL) || (pUserProperty[i].value == NULL)) {
-                status = MQTTBadParameter;
+              status = MQTTBadParameter;
+              break;
             }
             else{
             *size += (pUserProperty [i].keyLength );
@@ -1330,7 +1331,7 @@ static MQTTStatus_t validateConnackParams(const MQTTPacketInfo_t* pIncomingPacke
     return status;
 }
 
-MQTTStatus_t decodeVariableLength(const uint8_t* pBuffer, size_t* length)
+static MQTTStatus_t decodeVariableLength(const uint8_t* pBuffer, size_t* length)
 {
     size_t remainingLength = 0;
     size_t multiplier = 1;
@@ -1409,7 +1410,7 @@ MQTTStatus_t MQTTV5_DeserializeConnack(MQTTConnectProperties_t* pConnackProperti
         status = decodeVariableLength(pVariableHeader, &propertyLength);
     }
     else{
-        
+         /* MISRA Empty body */
     }
     if((status==MQTTSuccess) && (pConnackProperties->isMaxPacketSize==true) && ((pIncomingPacket->remainingLength + remainingLengthSize + 1U) > (pConnackProperties->maxPacketSize))){
         status= MQTTProtocolError;
@@ -1591,7 +1592,7 @@ MQTTStatus_t MQTTV5_DeserializeConnack(MQTTConnectProperties_t* pConnackProperti
                     pConnackProperties->incomingUserPropSize++;
                     userProperty->keyLength = UINT16_DECODE(pVariableHeader);
                     propertyLength -= 2U;
-                    if (propertyLength < (size_t)(userProperty->keyLength + 2U)) {
+                    if ((propertyLength - 2U) < (userProperty->keyLength)) {
                         status = MQTTMalformedPacket;
                     }
                     else {
@@ -1625,7 +1626,7 @@ MQTTStatus_t MQTTV5_DeserializeConnack(MQTTConnectProperties_t* pConnackProperti
                         status = MQTTProtocolError;
                     }
                     else{
-                    pConnackProperties->isWildcardAvaiable = (bool)*pVariableHeader;
+                    pConnackProperties->isWildcardAvaiable = *pVariableHeader;
                     pVariableHeader = &pVariableHeader[sizeof(uint8_t)];
                     propertyLength -= 1U;
                     wildcard = true;
@@ -1644,7 +1645,7 @@ MQTTStatus_t MQTTV5_DeserializeConnack(MQTTConnectProperties_t* pConnackProperti
                         status = MQTTProtocolError;
                     }
                     else{
-                    pConnackProperties->subscriptionId = (bool)*pVariableHeader;
+                    pConnackProperties->subscriptionId = *pVariableHeader;
                     pVariableHeader = &pVariableHeader[sizeof(uint8_t)];
                     propertyLength -= 1U;
                     subId = true;
@@ -1663,7 +1664,7 @@ MQTTStatus_t MQTTV5_DeserializeConnack(MQTTConnectProperties_t* pConnackProperti
                          status = MQTTProtocolError;
                     }
                     else{
-                    pConnackProperties->isSharedAvailable = (bool)*pVariableHeader;
+                    pConnackProperties->isSharedAvailable = *pVariableHeader;
                     pVariableHeader = &pVariableHeader[sizeof(uint8_t)];
                     propertyLength -= 1U;
                     sharedsub = true;
@@ -1769,6 +1770,9 @@ MQTTStatus_t MQTTV5_DeserializeConnack(MQTTConnectProperties_t* pConnackProperti
                 break;
             }
         }
+    }
+    else{
+       /* MISRA Empty body */
     }
     return status;
 }

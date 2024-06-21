@@ -627,7 +627,7 @@ static size_t addEncodedStringToVectorWithId(uint8_t serializedLength[CORE_MQTT_
 
 /*-----------------------------------------------------------*/
 
-size_t addEncodedStringToVector(uint8_t serializedLength[CORE_MQTT_SERIALIZED_LENGTH_FIELD_BYTES],
+static size_t addEncodedStringToVector(uint8_t serializedLength[CORE_MQTT_SERIALIZED_LENGTH_FIELD_BYTES],
                                 const char *const string,
                                 uint16_t length,
                                 TransportOutVector_t *iterator,
@@ -3026,6 +3026,7 @@ MQTTStatus_t MQTT_Connect(MQTTContext_t *pContext,
                                 pConnectInfo->cleanSession,
                                 &incomingPacket,
                                 pSessionPresent);
+                                
     }
 
     if (status == MQTTSuccess)

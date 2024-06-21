@@ -1,0 +1,8 @@
+Native Compiler invocation: /usr/bin/cc -DMAX_USER_PROPERTY=5 -DMQTT_DO_NOT_USE_CUSTOM_CONFIG=1 -DMQTT_VERSION_5_ENABLED=1 -DNDEBUG=1 -I/home/ubuntu/coreMQTT/source/include -I/home/ubuntu/coreMQTT/source/interface -std=gnu90 -MD -MT CMakeFiles/coverity_analysis.dir/source/core_mqtt.c.o -MF CMakeFiles/coverity_analysis.dir/source/core_mqtt.c.o.d -o CMakeFiles/coverity_analysis.dir/source/core_mqtt.c.o -c /home/ubuntu/coreMQTT/source/core_mqtt.c
+Working directory: /home/ubuntu/coreMQTT
+Comptype: gcc
+* Configuring /usr/bin/cc as a C compiler
+* Configuring /usr/bin/cc as a C++ compiler
+* Configuring /usr/bin/cc as a C compiler
+* Configuring /usr/bin/ld as a C++ linker
+* Configuring /usr/bin/ar as a C++ linker

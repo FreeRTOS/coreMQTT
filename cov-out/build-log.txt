@@ -1,0 +1,1324 @@
+2024-06-21T07:00:01.176518Z|cov-build|1761684|info|> cov-build 2023.6.1 (build 4ae07d0526 p-2023.6-push-61)
+2024-06-21T07:00:01.176565Z|cov-build|1761684|info|> Coverity Build Capture (64-bit) version 2023.6.1 on Linux 5.15.0-1050-aws x86_64
+2024-06-21T07:00:01.176565Z|cov-build|1761684|info|> Internal version numbers: 4ae07d0526 p-2023.6-push-61
+2024-06-21T07:00:01.176565Z|cov-build|1761684|info|> 
+2024-06-21T07:00:01.176584Z|cov-build|1761684|info|> Dumping from hostname : ip-172-31-80-220
+2024-06-21T07:00:01.176584Z|cov-build|1761684|info|> 
+2024-06-21T07:00:01.176593Z|cov-build|1761684|info|> Platform info:
+2024-06-21T07:00:01.176593Z|cov-build|1761684|info|> Sysname = Linux
+2024-06-21T07:00:01.176593Z|cov-build|1761684|info|> Release = 5.15.0-1050-aws
+2024-06-21T07:00:01.176593Z|cov-build|1761684|info|> Machine = x86_64
+2024-06-21T07:00:01.176593Z|cov-build|1761684|info|> 
+2024-06-21T07:00:01.176593Z|cov-build|1761684|info|> 
+2024-06-21T07:00:01.176614Z|cov-build|1761684|info|> cov-build command: cov-build --emit-complementary-info --dir cov-out make coverity_analysis 
+2024-06-21T07:00:01.176623Z|cov-build|1761684|info|> cov-build expanded command: cov-build --emit-complementary-info --dir cov-out make coverity_analysis 
+2024-06-21T07:00:01.176903Z|cov-build|1761684|info|> build command: /usr/bin/make coverity_analysis
+2024-06-21T07:00:01.176921Z|cov-build|1761684|info|> thunk command: /home/ubuntu/workspace/coverity/cov-analysis-linux64-2023.6.1/bin/cov-internal-thunk.sh make coverity_analysis
+2024-06-21T07:00:01.176921Z|cov-build|1761684|info|> 
+2024-06-21T07:00:01.176933Z|cov-build|1761684|info|> Set MSBUILDDISABLENODEREUSE to 1
+2024-06-21T07:00:01.176941Z|cov-build|1761684|info|> Set UseSharedCompilation to false.
+2024-06-21T07:00:01.176952Z|cov-build|1761684|info|> Set COVERITY_BIN to /home/ubuntu/workspace/coverity/cov-analysis-linux64-2023.6.1/bin
+2024-06-21T07:00:01.176969Z|cov-build|1761684|info|> Set COVERITY_SITE_CC to *-g++;*-gcc;ar;c++;cc;g++-*;gcc-*;ld
+2024-06-21T07:00:01.176977Z|cov-build|1761684|info|> Set COVERITY_SITE_CC_CAPTURE_DESCENDANTS to 
+2024-06-21T07:00:01.176986Z|cov-build|1761684|info|> Set COVERITY_TEMP to /tmp/cov-ubuntu/cfa911df378e2f9eb2a4797e35bf1596
+2024-06-21T07:00:01.177000Z|cov-build|1761684|info|> Set COVERITY_COMMON_TEMP to /tmp
+2024-06-21T07:00:01.177008Z|cov-build|1761684|info|> Set COVERITY_IDIR to /home/ubuntu/coreMQTT/cov-out
+2024-06-21T07:00:01.177035Z|cov-build|1761684|info|> Set COVERITY_OUTPUT to /home/ubuntu/coreMQTT/cov-out/build-log.txt
+2024-06-21T07:00:01.177042Z|cov-build|1761684|info|> Set COVERITY_LOG to /home/ubuntu/coreMQTT/cov-out/build-log.txt
+2024-06-21T07:00:01.177060Z|cov-build|1761684|info|> Set COVERITY_OUTPUT_ENCODING to UTF-8
+2024-06-21T07:00:01.177068Z|cov-build|1761684|info|> Set COVERITY_SYSTEM_ENCODING to UTF-8
+2024-06-21T07:00:01.177076Z|cov-build|1761684|info|> Set COVERITY_EMIT to /home/ubuntu/coreMQTT/cov-out/emit
+2024-06-21T07:00:01.177098Z|cov-build|1761684|info|> Set COVERITY_IS_COMPILER to 0
+2024-06-21T07:00:01.177105Z|cov-build|1761684|info|> Set COVERITY_TOP_PROCESS to 0
+2024-06-21T07:00:01.177110Z|cov-build|1761684|info|> Set COVERITY_IS_COMPILER_DESCENDANT to 0
+2024-06-21T07:00:01.177116Z|cov-build|1761684|info|> Set COVERITY_DISENGAGE_EXES to "qemuwrapper;qemu-aarch64;qemu-alpha;qemu-arm;qemu-armeb;qemu-cris;qemu-i386;qemu-m68k;qemu-microblaze;qemu-mips;qemu-mipsel;qemu-nios2;qemu-ppc;qemu-ppc64;qemu-ppc64abi32;qemu-sh4;qemu-sh4eb;qemu-sparc;qemu-sparc32plus;qemu-sparc64;qemu-x86_64"
+2024-06-21T07:00:01.177173Z|cov-build|1761684|info|> 
+2024-06-21T07:00:01.177173Z|cov-build|1761684|info|> 
+2024-06-21T07:00:01.177173Z|cov-build|1761684|info|> Dumping Environment Variables:
+2024-06-21T07:00:01.177173Z|cov-build|1761684|info|> 
+2024-06-21T07:00:01.177203Z|cov-build|1761684|info|> SHELL=/bin/bash
+2024-06-21T07:00:01.177209Z|cov-build|1761684|info|> COLORTERM=truecolor
+2024-06-21T07:00:01.177214Z|cov-build|1761684|info|> TERM_PROGRAM_VERSION=1.90.1
+2024-06-21T07:00:01.177220Z|cov-build|1761684|info|> PWD=/home/ubuntu/coreMQTT
+2024-06-21T07:00:01.177225Z|cov-build|1761684|info|> LOGNAME=ubuntu
+2024-06-21T07:00:01.177238Z|cov-build|1761684|info|> XDG_SESSION_TYPE=tty
+2024-06-21T07:00:01.177244Z|cov-build|1761684|info|> VSCODE_GIT_ASKPASS_NODE=/home/ubuntu/.vscode-server/cli/servers/Stable-611f9bfce64f25108829dd295f54a6894e87339d/server/node
+2024-06-21T07:00:01.177249Z|cov-build|1761684|info|> MOTD_SHOWN=pam
+2024-06-21T07:00:01.177254Z|cov-build|1761684|info|> HOME=/home/ubuntu
+2024-06-21T07:00:01.177260Z|cov-build|1761684|info|> LANG=C.UTF-8
+2024-06-21T07:00:01.177265Z|cov-build|1761684|info|> LS_COLORS=rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:
+2024-06-21T07:00:01.177273Z|cov-build|1761684|info|> SSL_CERT_DIR=/usr/lib/ssl/certs
+2024-06-21T07:00:01.177279Z|cov-build|1761684|info|> GIT_ASKPASS=/home/ubuntu/.vscode-server/cli/servers/Stable-611f9bfce64f25108829dd295f54a6894e87339d/server/extensions/git/dist/askpass.sh
+2024-06-21T07:00:01.177284Z|cov-build|1761684|info|> SSH_CONNECTION=15.248.4.151 1076 172.31.80.220 22
+2024-06-21T07:00:01.177290Z|cov-build|1761684|info|> VSCODE_GIT_ASKPASS_EXTRA_ARGS=
+2024-06-21T07:00:01.177295Z|cov-build|1761684|info|> LESSCLOSE=/usr/bin/lesspipe %s %s
+2024-06-21T07:00:01.177300Z|cov-build|1761684|info|> XDG_SESSION_CLASS=user
+2024-06-21T07:00:01.177306Z|cov-build|1761684|info|> TERM=xterm-256color
+2024-06-21T07:00:01.177311Z|cov-build|1761684|info|> LESSOPEN=| /usr/bin/lesspipe %s
+2024-06-21T07:00:01.177316Z|cov-build|1761684|info|> USER=ubuntu
+2024-06-21T07:00:01.177322Z|cov-build|1761684|info|> VSCODE_GIT_IPC_HANDLE=/run/user/1000/vscode-git-d220dbbd51.sock
+2024-06-21T07:00:01.177327Z|cov-build|1761684|info|> SHLVL=1
+2024-06-21T07:00:01.177333Z|cov-build|1761684|info|> XDG_SESSION_ID=5887
+2024-06-21T07:00:01.177338Z|cov-build|1761684|info|> XDG_RUNTIME_DIR=/run/user/1000
+2024-06-21T07:00:01.177343Z|cov-build|1761684|info|> SSL_CERT_FILE=/usr/lib/ssl/certs/ca-certificates.crt
+2024-06-21T07:00:01.177348Z|cov-build|1761684|info|> SSH_CLIENT=15.248.4.151 1076 22
+2024-06-21T07:00:01.177354Z|cov-build|1761684|info|> VSCODE_GIT_ASKPASS_MAIN=/home/ubuntu/.vscode-server/cli/servers/Stable-611f9bfce64f25108829dd295f54a6894e87339d/server/extensions/git/dist/askpass-main.js
+2024-06-21T07:00:01.177360Z|cov-build|1761684|info|> XDG_DATA_DIRS=/usr/local/share:/usr/share:/var/lib/snapd/desktop
+2024-06-21T07:00:01.177365Z|cov-build|1761684|info|> BROWSER=/home/ubuntu/.vscode-server/cli/servers/Stable-611f9bfce64f25108829dd295f54a6894e87339d/server/bin/helpers/browser.sh
+2024-06-21T07:00:01.177370Z|cov-build|1761684|info|> PATH=/tmp/cbmc-viewer/bin:/home/ubuntu/workspace/uncrustify-0.66.1/build:/home/ubuntu/workspace/coverity/cov-analysis-linux64-2023.6.1/bin/:/usr/bin/java:/opt/homebrew/opt/openjdk/bin:/home/ubuntu/.toolbox/bin:/opt/homebrew/opt/ruby/bin:/home/ubuntu/.vscode-server/cli/servers/Stable-611f9bfce64f25108829dd295f54a6894e87339d/server/bin/remote-cli:/home/ubuntu/bin:/tmp/cbmc-viewer/bin:/home/ubuntu/workspace/uncrustify-0.66.1/build:/home/ubuntu/workspace/coverity/cov-analysis-linux64-2023.6.1/bin/:/usr/bin/java:/opt/homebrew/opt/openjdk/bin:/home/ubuntu/.toolbox/bin:/opt/homebrew/opt/ruby/bin:/tmp/cbmc-viewer/bin:/home/ubuntu/workspace/uncrustify-0.66.1/build:/home/ubuntu/workspace/coverity/cov-analysis-linux64-2023.6.1/bin/:/usr/bin/java:/opt/homebrew/opt/openjdk/bin:/home/ubuntu/.toolbox/bin:/opt/homebrew/opt/ruby/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin
+2024-06-21T07:00:01.177381Z|cov-build|1761684|info|> DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus
+2024-06-21T07:00:01.177387Z|cov-build|1761684|info|> TERM_PROGRAM=vscode
+2024-06-21T07:00:01.177392Z|cov-build|1761684|info|> VSCODE_IPC_HOOK_CLI=/run/user/1000/vscode-ipc-34ea2f65-7eff-4b28-9ef7-2974233a0d32.sock
+2024-06-21T07:00:01.177398Z|cov-build|1761684|info|> _=/usr/bin/make
+2024-06-21T07:00:01.177403Z|cov-build|1761684|info|> COVERITY_PREV_XML_CATALOG_FILES=
+2024-06-21T07:00:01.177408Z|cov-build|1761684|info|> COVERITY_TOP_CONFIG=/tmp/cov-ubuntu/cfa911df378e2f9eb2a4797e35bf1596/cov-configure/coverity_config.xml
+2024-06-21T07:00:01.177414Z|cov-build|1761684|info|> COVERITY_BUILD_INVOCATION_ID=1
+2024-06-21T07:00:01.177419Z|cov-build|1761684|info|> COVERITY_CONFIG_FILE=/home/ubuntu/workspace/coverity/cov-analysis-linux64-2023.6.1/config/coverity_config.xml
+2024-06-21T07:00:01.177425Z|cov-build|1761684|info|> MSBUILDDISABLENODEREUSE=1
+2024-06-21T07:00:01.177430Z|cov-build|1761684|info|> UseSharedCompilation=false
+2024-06-21T07:00:01.177435Z|cov-build|1761684|info|> COVERITY_BIN=/home/ubuntu/workspace/coverity/cov-analysis-linux64-2023.6.1/bin
+2024-06-21T07:00:01.177441Z|cov-build|1761684|info|> COVERITY_SITE_CC=*-g++;*-gcc;ar;c++;cc;g++-*;gcc-*;ld
+2024-06-21T07:00:01.177446Z|cov-build|1761684|info|> COVERITY_SITE_CC_CAPTURE_DESCENDANTS=
+2024-06-21T07:00:01.177451Z|cov-build|1761684|info|> COVERITY_TEMP=/tmp/cov-ubuntu/cfa911df378e2f9eb2a4797e35bf1596
+2024-06-21T07:00:01.177457Z|cov-build|1761684|info|> COVERITY_COMMON_TEMP=/tmp
+2024-06-21T07:00:01.177468Z|cov-build|1761684|info|> COVERITY_IDIR=/home/ubuntu/coreMQTT/cov-out
+2024-06-21T07:00:01.177474Z|cov-build|1761684|info|> COVERITY_REWRITE_FROM=
+2024-06-21T07:00:01.177479Z|cov-build|1761684|info|> COVERITY_REWRITE_TO=
+2024-06-21T07:00:01.177485Z|cov-build|1761684|info|> COVERITY_ENABLE_JAVA_ANNOTATION_FRAMEWORK_SUPPORT=1
+2024-06-21T07:00:01.177490Z|cov-build|1761684|info|> COVERITY_OUTPUT=/home/ubuntu/coreMQTT/cov-out/build-log.txt
+2024-06-21T07:00:01.177495Z|cov-build|1761684|info|> COVERITY_LOG=/home/ubuntu/coreMQTT/cov-out/build-log.txt
+2024-06-21T07:00:01.177501Z|cov-build|1761684|info|> COVERITY_OUTPUT_ENCODING=UTF-8
+2024-06-21T07:00:01.177506Z|cov-build|1761684|info|> COVERITY_SYSTEM_ENCODING=UTF-8
+2024-06-21T07:00:01.177511Z|cov-build|1761684|info|> COVERITY_EMIT=/home/ubuntu/coreMQTT/cov-out/emit
+2024-06-21T07:00:01.177517Z|cov-build|1761684|info|> COVERITY_IS_COMPILER=0
+2024-06-21T07:00:01.177523Z|cov-build|1761684|info|> COVERITY_TOP_PROCESS=0
+2024-06-21T07:00:01.177528Z|cov-build|1761684|info|> COVERITY_IS_COMPILER_DESCENDANT=0
+2024-06-21T07:00:01.177533Z|cov-build|1761684|info|> COVERITY_DISENGAGE_EXES=qemuwrapper;qemu-aarch64;qemu-alpha;qemu-arm;qemu-armeb;qemu-cris;qemu-i386;qemu-m68k;qemu-microblaze;qemu-mips;qemu-mipsel;qemu-nios2;qemu-ppc;qemu-ppc64;qemu-ppc64abi32;qemu-sh4;qemu-sh4eb;qemu-sparc;qemu-sparc32plus;qemu-sparc64;qemu-x86_64
+2024-06-21T07:00:01.177539Z|cov-build|1761684|info|> COVERITY_COMPILER_PATH_MISMATCH_FILE=/home/ubuntu/coreMQTT/cov-out/has_path_mismatches
+2024-06-21T07:00:01.177545Z|cov-build|1761684|info|> COVERITY_PATHLESS_CONFIGS_FILE=/home/ubuntu/coreMQTT/cov-out/has_pathless_configs
+2024-06-21T07:00:01.177552Z|cov-build|1761684|info|> 
+2024-06-21T07:00:01.177552Z|cov-build|1761684|info|> 
+2024-06-21T07:00:01.177552Z|cov-build|1761684|info|> Dumping configuration:
+2024-06-21T07:00:01.177552Z|cov-build|1761684|info|> 
+2024-06-21T07:00:01.177569Z|cov-build|1761684|info|> User/default configuration:
+2024-06-21T07:00:01.177569Z|cov-build|1761684|info|> 
+2024-06-21T07:00:01.177577Z|cov-build|1761684|info|> Configuration read from: command-line
+2024-06-21T07:00:01.177577Z|cov-build|1761684|info|> Node: coverity
+2024-06-21T07:00:01.177577Z|cov-build|1761684|info|>   Node: config
+2024-06-21T07:00:01.177577Z|cov-build|1761684|info|>     Node: include Value: /home/ubuntu/workspace/coverity/cov-analysis-linux64-2023.6.1/config/coverity_config.xml
+2024-06-21T07:00:01.177577Z|cov-build|1761684|info|>   Node: config
+2024-06-21T07:00:01.177577Z|cov-build|1761684|info|>     Node: prevent
+2024-06-21T07:00:01.177577Z|cov-build|1761684|info|>       Node: dir Value: /home/ubuntu/coreMQTT/cov-out
+2024-06-21T07:00:01.177577Z|cov-build|1761684|info|>   Node: config
+2024-06-21T07:00:01.177577Z|cov-build|1761684|info|>     Node: prevent
+2024-06-21T07:00:01.177577Z|cov-build|1761684|info|>       Node: emit_options
+2024-06-21T07:00:01.177577Z|cov-build|1761684|info|>         Node: emit_complementary_info Value: true
+2024-06-21T07:00:01.177577Z|cov-build|1761684|info|> 
+2024-06-21T07:00:01.177619Z|cov-build|1761684|info|> Configuration read from: /home/ubuntu/workspace/coverity/cov-analysis-linux64-2023.6.1/config/coverity_config.xml
+2024-06-21T07:00:01.177619Z|cov-build|1761684|info|> Node: coverity
+2024-06-21T07:00:01.177619Z|cov-build|1761684|info|>   Node: cit_version Value: 1
+2024-06-21T07:00:01.177619Z|cov-build|1761684|info|>   Node: config
+2024-06-21T07:00:01.177619Z|cov-build|1761684|info|>     Node: include Value: /home/ubuntu/workspace/coverity/cov-analysis-linux64-2023.6.1/config/template-gcc-config-0/coverity_config.xml
+2024-06-21T07:00:01.177619Z|cov-build|1761684|info|>     Node: include Value: /home/ubuntu/workspace/coverity/cov-analysis-linux64-2023.6.1/config/template-gcc-config-1/coverity_config.xml
+2024-06-21T07:00:01.177619Z|cov-build|1761684|info|>     Node: include Value: /home/ubuntu/workspace/coverity/cov-analysis-linux64-2023.6.1/config/template-gcc-config-2/coverity_config.xml
+2024-06-21T07:00:01.177619Z|cov-build|1761684|info|>     Node: include Value: /home/ubuntu/workspace/coverity/cov-analysis-linux64-2023.6.1/config/template-g++-config-0/coverity_config.xml
+2024-06-21T07:00:01.177619Z|cov-build|1761684|info|>     Node: include Value: /home/ubuntu/workspace/coverity/cov-analysis-linux64-2023.6.1/config/template-g++-config-1/coverity_config.xml
+2024-06-21T07:00:01.177619Z|cov-build|1761684|info|>     Node: include Value: /home/ubuntu/workspace/coverity/cov-analysis-linux64-2023.6.1/config/template-ld-config-0/coverity_config.xml
+2024-06-21T07:00:01.177619Z|cov-build|1761684|info|>     Node: include Value: /home/ubuntu/workspace/coverity/cov-analysis-linux64-2023.6.1/config/template-ar-config-0/coverity_config.xml
+2024-06-21T07:00:01.177619Z|cov-build|1761684|info|>     Node: include Value: /home/ubuntu/workspace/coverity/cov-analysis-linux64-2023.6.1/config/template-g++-config-2/coverity_config.xml
+2024-06-21T07:00:01.177619Z|cov-build|1761684|info|>     Node: include Value: /home/ubuntu/workspace/coverity/cov-analysis-linux64-2023.6.1/config/gcc-config-0/coverity_config.xml
+2024-06-21T07:00:01.177619Z|cov-build|1761684|info|>     Node: include Value: /home/ubuntu/workspace/coverity/cov-analysis-linux64-2023.6.1/config/g++-config-0/coverity_config.xml
+2024-06-21T07:00:01.177619Z|cov-build|1761684|info|>     Node: include Value: /home/ubuntu/workspace/coverity/cov-analysis-linux64-2023.6.1/config/g++cc-config-0/coverity_config.xml
+2024-06-21T07:00:01.177619Z|cov-build|1761684|info|>     Node: include Value: /home/ubuntu/workspace/coverity/cov-analysis-linux64-2023.6.1/config/ld-config-0/coverity_config.xml
+2024-06-21T07:00:01.177619Z|cov-build|1761684|info|>     Node: include Value: /home/ubuntu/workspace/coverity/cov-analysis-linux64-2023.6.1/config/ar-config-0/coverity_config.xml
+2024-06-21T07:00:01.177619Z|cov-build|1761684|info|> 
+2024-06-21T07:00:01.177681Z|cov-build|1761684|info|> Configuration read from: /home/ubuntu/workspace/coverity/cov-analysis-linux64-2023.6.1/config/template-gcc-config-0/coverity_config.xml
+2024-06-21T07:00:01.177681Z|cov-build|1761684|info|> Node: coverity
+2024-06-21T07:00:01.177681Z|cov-build|1761684|info|>   Node: cit_version Value: 1
+2024-06-21T07:00:01.177681Z|cov-build|1761684|info|>   Node: config
+2024-06-21T07:00:01.177681Z|cov-build|1761684|info|>     Node: build
+2024-06-21T07:00:01.177681Z|cov-build|1761684|info|>       Node: compiler
+2024-06-21T07:00:01.177681Z|cov-build|1761684|info|>         Node: template_compiler Value: true
+2024-06-21T07:00:01.177681Z|cov-build|1761684|info|>         Node: comp_name Value: cc
+2024-06-21T07:00:01.177681Z|cov-build|1761684|info|>         Node: comp_translator Value: gcc
+2024-06-21T07:00:01.177681Z|cov-build|1761684|info|>         Node: comp_lang Value: C
+2024-06-21T07:00:01.177681Z|cov-build|1761684|info|>         Node: comp_generic Value: gnu
+2024-06-21T07:00:01.177681Z|cov-build|1761684|info|>       Node: options
+2024-06-21T07:00:01.177681Z|cov-build|1761684|info|>         Node: id Value: gcc-cc-.*
+2024-06-21T07:00:01.177681Z|cov-build|1761684|info|>         Node: opt_preinclude_file Value: /home/ubuntu/workspace/coverity/cov-analysis-linux64-2023.6.1/config/template-gcc-config-0/../user_nodefs.h
+2024-06-21T07:00:01.177681Z|cov-build|1761684|info|>         Node: begin_command_line_config
+2024-06-21T07:00:01.177681Z|cov-build|1761684|info|>       Node: options
+2024-06-21T07:00:01.177681Z|cov-build|1761684|info|>         Node: id Value: g++-cc-.*
+2024-06-21T07:00:01.177681Z|cov-build|1761684|info|>         Node: opt_preinclude_file Value: /home/ubuntu/workspace/coverity/cov-analysis-linux64-2023.6.1/config/template-gcc-config-0/../user_nodefs.h
+2024-06-21T07:00:01.177681Z|cov-build|1761684|info|>         Node: begin_command_line_config
+2024-06-21T07:00:01.177681Z|cov-build|1761684|info|>       Node: options
+2024-06-21T07:00:01.177681Z|cov-build|1761684|info|>         Node: id Value: g++cc-cc-.*
+2024-06-21T07:00:01.177681Z|cov-build|1761684|info|>         Node: opt_preinclude_file Value: /home/ubuntu/workspace/coverity/cov-analysis-linux64-2023.6.1/config/template-gcc-config-0/../user_nodefs.h
+2024-06-21T07:00:01.177681Z|cov-build|1761684|info|>         Node: begin_command_line_config
+2024-06-21T07:00:01.177681Z|cov-build|1761684|info|>   Node: md5 Value: 47a502735554e6c25b61a8bf08e5fa6d
+2024-06-21T07:00:01.177681Z|cov-build|1761684|info|> 
+2024-06-21T07:00:01.177761Z|cov-build|1761684|info|> Configuration read from: /home/ubuntu/workspace/coverity/cov-analysis-linux64-2023.6.1/config/template-gcc-config-1/coverity_config.xml
+2024-06-21T07:00:01.177761Z|cov-build|1761684|info|> Node: coverity
+2024-06-21T07:00:01.177761Z|cov-build|1761684|info|>   Node: cit_version Value: 1
+2024-06-21T07:00:01.177761Z|cov-build|1761684|info|>   Node: config
+2024-06-21T07:00:01.177761Z|cov-build|1761684|info|>     Node: build
+2024-06-21T07:00:01.177761Z|cov-build|1761684|info|>       Node: compiler
+2024-06-21T07:00:01.177761Z|cov-build|1761684|info|>         Node: template_compiler Value: true
+2024-06-21T07:00:01.177761Z|cov-build|1761684|info|>         Node: comp_name Value: gcc-*
+2024-06-21T07:00:01.177761Z|cov-build|1761684|info|>         Node: comp_translator Value: gcc
+2024-06-21T07:00:01.177761Z|cov-build|1761684|info|>         Node: comp_lang Value: C
+2024-06-21T07:00:01.177761Z|cov-build|1761684|info|>         Node: comp_generic Value: gnu
+2024-06-21T07:00:01.177761Z|cov-build|1761684|info|>       Node: options
+2024-06-21T07:00:01.177761Z|cov-build|1761684|info|>         Node: id Value: gcc-gcc-*-.*
+2024-06-21T07:00:01.177761Z|cov-build|1761684|info|>         Node: opt_preinclude_file Value: /home/ubuntu/workspace/coverity/cov-analysis-linux64-2023.6.1/config/template-gcc-config-1/../user_nodefs.h
+2024-06-21T07:00:01.177761Z|cov-build|1761684|info|>         Node: begin_command_line_config
+2024-06-21T07:00:01.177761Z|cov-build|1761684|info|>       Node: options
+2024-06-21T07:00:01.177761Z|cov-build|1761684|info|>         Node: id Value: g++-gcc-*-.*
+2024-06-21T07:00:01.177761Z|cov-build|1761684|info|>         Node: opt_preinclude_file Value: /home/ubuntu/workspace/coverity/cov-analysis-linux64-2023.6.1/config/template-gcc-config-1/../user_nodefs.h
+2024-06-21T07:00:01.177761Z|cov-build|1761684|info|>         Node: begin_command_line_config
+2024-06-21T07:00:01.177761Z|cov-build|1761684|info|>       Node: options
+2024-06-21T07:00:01.177761Z|cov-build|1761684|info|>         Node: id Value: g++cc-gcc-*-.*
+2024-06-21T07:00:01.177761Z|cov-build|1761684|info|>         Node: opt_preinclude_file Value: /home/ubuntu/workspace/coverity/cov-analysis-linux64-2023.6.1/config/template-gcc-config-1/../user_nodefs.h
+2024-06-21T07:00:01.177761Z|cov-build|1761684|info|>         Node: begin_command_line_config
+2024-06-21T07:00:01.177761Z|cov-build|1761684|info|>   Node: md5 Value: a78235e18925f1b08d266850c13072da
+2024-06-21T07:00:01.177761Z|cov-build|1761684|info|> 
+2024-06-21T07:00:01.177843Z|cov-build|1761684|info|> Configuration read from: /home/ubuntu/workspace/coverity/cov-analysis-linux64-2023.6.1/config/template-gcc-config-2/coverity_config.xml
+2024-06-21T07:00:01.177843Z|cov-build|1761684|info|> Node: coverity
+2024-06-21T07:00:01.177843Z|cov-build|1761684|info|>   Node: cit_version Value: 1
+2024-06-21T07:00:01.177843Z|cov-build|1761684|info|>   Node: config
+2024-06-21T07:00:01.177843Z|cov-build|1761684|info|>     Node: build
+2024-06-21T07:00:01.177843Z|cov-build|1761684|info|>       Node: compiler
+2024-06-21T07:00:01.177843Z|cov-build|1761684|info|>         Node: template_compiler Value: true
+2024-06-21T07:00:01.177843Z|cov-build|1761684|info|>         Node: comp_name Value: *-gcc
+2024-06-21T07:00:01.177843Z|cov-build|1761684|info|>         Node: comp_translator Value: gcc
+2024-06-21T07:00:01.177843Z|cov-build|1761684|info|>         Node: comp_lang Value: C
+2024-06-21T07:00:01.177843Z|cov-build|1761684|info|>         Node: comp_generic Value: gnu
+2024-06-21T07:00:01.177843Z|cov-build|1761684|info|>       Node: options
+2024-06-21T07:00:01.177843Z|cov-build|1761684|info|>         Node: id Value: gcc-*-gcc-.*
+2024-06-21T07:00:01.177843Z|cov-build|1761684|info|>         Node: opt_preinclude_file Value: /home/ubuntu/workspace/coverity/cov-analysis-linux64-2023.6.1/config/template-gcc-config-2/../user_nodefs.h
+2024-06-21T07:00:01.177843Z|cov-build|1761684|info|>         Node: begin_command_line_config
+2024-06-21T07:00:01.177843Z|cov-build|1761684|info|>       Node: options
+2024-06-21T07:00:01.177843Z|cov-build|1761684|info|>         Node: id Value: g++-*-gcc-.*
+2024-06-21T07:00:01.177843Z|cov-build|1761684|info|>         Node: opt_preinclude_file Value: /home/ubuntu/workspace/coverity/cov-analysis-linux64-2023.6.1/config/template-gcc-config-2/../user_nodefs.h
+2024-06-21T07:00:01.177843Z|cov-build|1761684|info|>         Node: begin_command_line_config
+2024-06-21T07:00:01.177843Z|cov-build|1761684|info|>       Node: options
+2024-06-21T07:00:01.177843Z|cov-build|1761684|info|>         Node: id Value: g++cc-*-gcc-.*
+2024-06-21T07:00:01.177843Z|cov-build|1761684|info|>         Node: opt_preinclude_file Value: /home/ubuntu/workspace/coverity/cov-analysis-linux64-2023.6.1/config/template-gcc-config-2/../user_nodefs.h
+2024-06-21T07:00:01.177843Z|cov-build|1761684|info|>         Node: begin_command_line_config
+2024-06-21T07:00:01.177843Z|cov-build|1761684|info|>   Node: md5 Value: 330d30838fa2e2405efcbf0025bbb1d9
+2024-06-21T07:00:01.177843Z|cov-build|1761684|info|> 
+2024-06-21T07:00:01.177923Z|cov-build|1761684|info|> Configuration read from: /home/ubuntu/workspace/coverity/cov-analysis-linux64-2023.6.1/config/template-g++-config-0/coverity_config.xml
+2024-06-21T07:00:01.177923Z|cov-build|1761684|info|> Node: coverity
+2024-06-21T07:00:01.177923Z|cov-build|1761684|info|>   Node: cit_version Value: 1
+2024-06-21T07:00:01.177923Z|cov-build|1761684|info|>   Node: config
+2024-06-21T07:00:01.177923Z|cov-build|1761684|info|>     Node: build
+2024-06-21T07:00:01.177923Z|cov-build|1761684|info|>       Node: compiler
+2024-06-21T07:00:01.177923Z|cov-build|1761684|info|>         Node: template_compiler Value: true
+2024-06-21T07:00:01.177923Z|cov-build|1761684|info|>         Node: comp_name Value: g++-*
+2024-06-21T07:00:01.177923Z|cov-build|1761684|info|>         Node: comp_translator Value: g++
+2024-06-21T07:00:01.177923Z|cov-build|1761684|info|>         Node: comp_lang Value: C++
+2024-06-21T07:00:01.177923Z|cov-build|1761684|info|>         Node: comp_generic Value: gnu
+2024-06-21T07:00:01.177923Z|cov-build|1761684|info|>       Node: options
+2024-06-21T07:00:01.177923Z|cov-build|1761684|info|>         Node: id Value: g++-g++-*-.*
+2024-06-21T07:00:01.177923Z|cov-build|1761684|info|>         Node: opt_preinclude_file Value: /home/ubuntu/workspace/coverity/cov-analysis-linux64-2023.6.1/config/template-g++-config-0/../user_nodefs.h
+2024-06-21T07:00:01.177923Z|cov-build|1761684|info|>         Node: begin_command_line_config
+2024-06-21T07:00:01.177923Z|cov-build|1761684|info|>       Node: options
+2024-06-21T07:00:01.177923Z|cov-build|1761684|info|>         Node: id Value: g++cc-g++-*-.*
+2024-06-21T07:00:01.177923Z|cov-build|1761684|info|>         Node: opt_preinclude_file Value: /home/ubuntu/workspace/coverity/cov-analysis-linux64-2023.6.1/config/template-g++-config-0/../user_nodefs.h
+2024-06-21T07:00:01.177923Z|cov-build|1761684|info|>         Node: begin_command_line_config
+2024-06-21T07:00:01.177923Z|cov-build|1761684|info|>   Node: md5 Value: e2e8095ec14432cf12688981162829bb
+2024-06-21T07:00:01.177923Z|cov-build|1761684|info|> 
+2024-06-21T07:00:01.177993Z|cov-build|1761684|info|> Configuration read from: /home/ubuntu/workspace/coverity/cov-analysis-linux64-2023.6.1/config/template-g++-config-1/coverity_config.xml
+2024-06-21T07:00:01.177993Z|cov-build|1761684|info|> Node: coverity
+2024-06-21T07:00:01.177993Z|cov-build|1761684|info|>   Node: cit_version Value: 1
+2024-06-21T07:00:01.177993Z|cov-build|1761684|info|>   Node: config
+2024-06-21T07:00:01.177993Z|cov-build|1761684|info|>     Node: build
+2024-06-21T07:00:01.177993Z|cov-build|1761684|info|>       Node: compiler
+2024-06-21T07:00:01.177993Z|cov-build|1761684|info|>         Node: template_compiler Value: true
+2024-06-21T07:00:01.177993Z|cov-build|1761684|info|>         Node: comp_name Value: *-g++
+2024-06-21T07:00:01.177993Z|cov-build|1761684|info|>         Node: comp_translator Value: g++
+2024-06-21T07:00:01.177993Z|cov-build|1761684|info|>         Node: comp_lang Value: C++
+2024-06-21T07:00:01.177993Z|cov-build|1761684|info|>         Node: comp_generic Value: gnu
+2024-06-21T07:00:01.177993Z|cov-build|1761684|info|>       Node: options
+2024-06-21T07:00:01.177993Z|cov-build|1761684|info|>         Node: id Value: g++-*-g++-.*
+2024-06-21T07:00:01.177993Z|cov-build|1761684|info|>         Node: opt_preinclude_file Value: /home/ubuntu/workspace/coverity/cov-analysis-linux64-2023.6.1/config/template-g++-config-1/../user_nodefs.h
+2024-06-21T07:00:01.177993Z|cov-build|1761684|info|>         Node: begin_command_line_config
+2024-06-21T07:00:01.177993Z|cov-build|1761684|info|>       Node: options
+2024-06-21T07:00:01.177993Z|cov-build|1761684|info|>         Node: id Value: g++cc-*-g++-.*
+2024-06-21T07:00:01.177993Z|cov-build|1761684|info|>         Node: opt_preinclude_file Value: /home/ubuntu/workspace/coverity/cov-analysis-linux64-2023.6.1/config/template-g++-config-1/../user_nodefs.h
+2024-06-21T07:00:01.177993Z|cov-build|1761684|info|>         Node: begin_command_line_config
+2024-06-21T07:00:01.177993Z|cov-build|1761684|info|>   Node: md5 Value: f63f9f20a2517b24ca5dec686eb6ca2d
+2024-06-21T07:00:01.177993Z|cov-build|1761684|info|> 
+2024-06-21T07:00:01.178060Z|cov-build|1761684|info|> Configuration read from: /home/ubuntu/workspace/coverity/cov-analysis-linux64-2023.6.1/config/template-ld-config-0/coverity_config.xml
+2024-06-21T07:00:01.178060Z|cov-build|1761684|info|> Node: coverity
+2024-06-21T07:00:01.178060Z|cov-build|1761684|info|>   Node: cit_version Value: 1
+2024-06-21T07:00:01.178060Z|cov-build|1761684|info|>   Node: config
+2024-06-21T07:00:01.178060Z|cov-build|1761684|info|>     Node: build
+2024-06-21T07:00:01.178060Z|cov-build|1761684|info|>       Node: compiler
+2024-06-21T07:00:01.178060Z|cov-build|1761684|info|>         Node: template_compiler Value: true
+2024-06-21T07:00:01.178060Z|cov-build|1761684|info|>         Node: comp_name Value: ld
+2024-06-21T07:00:01.178060Z|cov-build|1761684|info|>         Node: comp_translator Value: ld
+2024-06-21T07:00:01.178060Z|cov-build|1761684|info|>         Node: comp_lang Value: C++
+2024-06-21T07:00:01.178060Z|cov-build|1761684|info|>         Node: comp_generic Value: ld
+2024-06-21T07:00:01.178060Z|cov-build|1761684|info|>       Node: options
+2024-06-21T07:00:01.178060Z|cov-build|1761684|info|>         Node: id Value: ld-ld-.*
+2024-06-21T07:00:01.178060Z|cov-build|1761684|info|>         Node: opt_preinclude_file Value: /home/ubuntu/workspace/coverity/cov-analysis-linux64-2023.6.1/config/template-ld-config-0/../user_nodefs.h
+2024-06-21T07:00:01.178060Z|cov-build|1761684|info|>         Node: begin_command_line_config
+2024-06-21T07:00:01.178060Z|cov-build|1761684|info|>   Node: md5 Value: b7c847d801b0294a4f0f52192f7f3e16
+2024-06-21T07:00:01.178060Z|cov-build|1761684|info|> 
+2024-06-21T07:00:01.178118Z|cov-build|1761684|info|> Configuration read from: /home/ubuntu/workspace/coverity/cov-analysis-linux64-2023.6.1/config/template-ar-config-0/coverity_config.xml
+2024-06-21T07:00:01.178118Z|cov-build|1761684|info|> Node: coverity
+2024-06-21T07:00:01.178118Z|cov-build|1761684|info|>   Node: cit_version Value: 1
+2024-06-21T07:00:01.178118Z|cov-build|1761684|info|>   Node: config
+2024-06-21T07:00:01.178118Z|cov-build|1761684|info|>     Node: build
+2024-06-21T07:00:01.178118Z|cov-build|1761684|info|>       Node: compiler
+2024-06-21T07:00:01.178118Z|cov-build|1761684|info|>         Node: template_compiler Value: true
+2024-06-21T07:00:01.178118Z|cov-build|1761684|info|>         Node: comp_name Value: ar
+2024-06-21T07:00:01.178118Z|cov-build|1761684|info|>         Node: comp_translator Value: ar
+2024-06-21T07:00:01.178118Z|cov-build|1761684|info|>         Node: comp_lang Value: C++
+2024-06-21T07:00:01.178118Z|cov-build|1761684|info|>         Node: comp_generic Value: ar
+2024-06-21T07:00:01.178118Z|cov-build|1761684|info|>       Node: options
+2024-06-21T07:00:01.178118Z|cov-build|1761684|info|>         Node: id Value: ar-ar-.*
+2024-06-21T07:00:01.178118Z|cov-build|1761684|info|>         Node: opt_preinclude_file Value: /home/ubuntu/workspace/coverity/cov-analysis-linux64-2023.6.1/config/template-ar-config-0/../user_nodefs.h
+2024-06-21T07:00:01.178118Z|cov-build|1761684|info|>         Node: begin_command_line_config
+2024-06-21T07:00:01.178118Z|cov-build|1761684|info|>   Node: md5 Value: a125f1c14acadfc9d06e8f9e711705ce
+2024-06-21T07:00:01.178118Z|cov-build|1761684|info|> 
+2024-06-21T07:00:01.178172Z|cov-build|1761684|info|> Configuration read from: /home/ubuntu/workspace/coverity/cov-analysis-linux64-2023.6.1/config/template-g++-config-2/coverity_config.xml
+2024-06-21T07:00:01.178172Z|cov-build|1761684|info|> Node: coverity
+2024-06-21T07:00:01.178172Z|cov-build|1761684|info|>   Node: cit_version Value: 1
+2024-06-21T07:00:01.178172Z|cov-build|1761684|info|>   Node: config
+2024-06-21T07:00:01.178172Z|cov-build|1761684|info|>     Node: build
+2024-06-21T07:00:01.178172Z|cov-build|1761684|info|>       Node: compiler
+2024-06-21T07:00:01.178172Z|cov-build|1761684|info|>         Node: template_compiler Value: true
+2024-06-21T07:00:01.178172Z|cov-build|1761684|info|>         Node: comp_name Value: c++
+2024-06-21T07:00:01.178172Z|cov-build|1761684|info|>         Node: comp_translator Value: g++
+2024-06-21T07:00:01.178172Z|cov-build|1761684|info|>         Node: comp_lang Value: C++
+2024-06-21T07:00:01.178172Z|cov-build|1761684|info|>         Node: comp_generic Value: gnu
+2024-06-21T07:00:01.178172Z|cov-build|1761684|info|>       Node: options
+2024-06-21T07:00:01.178172Z|cov-build|1761684|info|>         Node: id Value: g++-c++-.*
+2024-06-21T07:00:01.178172Z|cov-build|1761684|info|>         Node: opt_preinclude_file Value: /home/ubuntu/workspace/coverity/cov-analysis-linux64-2023.6.1/config/template-g++-config-2/../user_nodefs.h
+2024-06-21T07:00:01.178172Z|cov-build|1761684|info|>         Node: begin_command_line_config
+2024-06-21T07:00:01.178172Z|cov-build|1761684|info|>       Node: options
+2024-06-21T07:00:01.178172Z|cov-build|1761684|info|>         Node: id Value: g++cc-c++-.*
+2024-06-21T07:00:01.178172Z|cov-build|1761684|info|>         Node: opt_preinclude_file Value: /home/ubuntu/workspace/coverity/cov-analysis-linux64-2023.6.1/config/template-g++-config-2/../user_nodefs.h
+2024-06-21T07:00:01.178172Z|cov-build|1761684|info|>         Node: begin_command_line_config
+2024-06-21T07:00:01.178172Z|cov-build|1761684|info|>   Node: md5 Value: 6110077f86d72b6001f0d20220e5c335
+2024-06-21T07:00:01.178172Z|cov-build|1761684|info|> 
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|> Configuration read from: /home/ubuntu/workspace/coverity/cov-analysis-linux64-2023.6.1/config/gcc-config-0/coverity_config.xml
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|> Node: coverity
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>   Node: cit_version Value: 1
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>   Node: config
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>     Node: build
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>       Node: compiler
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: comp_name Value: cc
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: comp_name Value: gcc
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: comp_name Value: gcc-9
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: comp_name Value: x86_64-linux-gnu-gcc-9
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: comp_dir Value: /usr/bin
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: comp_translator Value: gcc
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: comp_lang Value: C
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: comp_front_end Value: cov-emit
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: comp_desc Value: GNU C compiler
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: comp_next_type Value: g++
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: comp_generic Value: gnu
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: comp_require
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: id Value: gcc-cc-9.4.0-0
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: version Value: 9.4.0
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: is_compiler Value: true
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: is_linker Value: true
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: target_platform Value: all
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>       Node: options
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: id Value: gcc-cc-9.4.0-0
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: compile_options
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: sysinclude_dir Value: /usr/lib/gcc/x86_64-linux-gnu/9/include
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: sysinclude_dir Value: /usr/local/include
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: sysinclude_dir Value: /usr/include/x86_64-linux-gnu
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: sysinclude_dir Value: /usr/include
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: dryrun_switch Value: -E
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: dryrun_switch Value: -v
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: dump_macros_arg Value: -dM
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: dump_macros_arg Value: -E
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: preprocess_remove_arg Value: -o.+
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: preprocess_remove_arg Value: -c
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: preprocess_remove_arg Value: -Werror
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: preprocess_remove_next_arg Value: -o
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: preprocess_switch Value: -E
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: preprocess_switch Value: -U__BLOCKS__
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: preprocess_switch Value: -xc
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: preprocess_compile_switch Value: -C
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: preprocess_output Value: -
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: dryrun_output Value: 2
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: pre_preinclude_file Value: /home/ubuntu/workspace/coverity/cov-analysis-linux64-2023.6.1/config/gcc-config-0/coverity-compiler-compat.h
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: macro_pre_preinclude_file Value: /home/ubuntu/workspace/coverity/cov-analysis-linux64-2023.6.1/config/gcc-config-0/coverity-macro-compat.h
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: prepend_arg Value: --fixed_point
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: prepend_arg Value: --add_type_modifier=__coverity___fpreg
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: prepend_arg Value: --add_type_modifier=__coverity_decimal
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: prepend_arg Value: --add_type_modifier=__coverity_float
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: prepend_arg Value: --add_type_modifier=__coverity_floatx
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: prepend_arg Value: --no_predefined_feature_test_macros
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: prepend_arg Value: --no_stdarg_builtin
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: prepend_arg Value: --enable_128bit_int
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: prepend_arg Value: --no_predefined_cplusplus
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: prepend_arg Value: -w
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: prepend_arg Value: --no_predefines
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: prepend_arg Value: --comp_ver
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: prepend_arg Value: 9.4.0
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: prepend_arg Value: --size_t_type=m
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: prepend_arg Value: --ptrdiff_t_type=l
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: prepend_arg Value: --type_sizes=xl8i4s2e16d8f4P8
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: prepend_arg Value: --type_alignments=xl8i4s2e16d8f4P8
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: prepend_arg Value: --char_bit_size=8
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: prepend_arg Value: --restrict
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: prepend_arg Value: --gnu_carriage_return_line_terminator
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: prepend_arg Value: --wchar_t_type=i
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: prepend_arg Value: --no_multiline_string
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: prepend_arg Value: --no_trigraphs
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: prepend_arg Value: --ignore_calling_convention
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: prepend_arg Value: --c11
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: prepend_arg Value: --enable_80bit_float
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: prepend_arg Value: --enable_128bit_float
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: prepend_arg Value: --allow__bool
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: prepend_arg Value: --macro_stack_pragmas
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: prepend_arg Value: --inline_keyword
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: prepend_arg Value: --has_include_macro
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: prepend_arg Value: --has_include_next_macro
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: prepend_arg Value: --has_cpp_attribute_macro
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: prepend_arg Value: --no_predefines
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: skip_file Value: conftest\.c{1,2}$
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: skip_file Value: conftest\.cpp$
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: skip_file Value: cgo-cc-input-[0-9]+\.(c|cc|cpp|cxx)
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: opt_preinclude_file Value: /home/ubuntu/workspace/coverity/cov-analysis-linux64-2023.6.1/config/gcc-config-0/../user_nodefs.h
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: pch_options
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>           Node: archetype Value: gcc
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: link_options
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: library_search_path Value: /usr/lib/gcc/x86_64-linux-gnu/9/
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: library_search_path Value: /usr/lib/gcc/x86_64-linux-gnu/9/../../../../x86_64-linux-gnu/lib/x86_64-linux-gnu/9/
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: library_search_path Value: /usr/lib/gcc/x86_64-linux-gnu/9/../../../../x86_64-linux-gnu/lib/x86_64-linux-gnu/
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: library_search_path Value: /usr/lib/gcc/x86_64-linux-gnu/9/../../../../x86_64-linux-gnu/lib/../lib/
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: library_search_path Value: /usr/lib/gcc/x86_64-linux-gnu/9/../../../x86_64-linux-gnu/9/
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: library_search_path Value: /usr/lib/gcc/x86_64-linux-gnu/9/../../../x86_64-linux-gnu/
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: library_search_path Value: /usr/lib/gcc/x86_64-linux-gnu/9/../../../../lib/
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: library_search_path Value: /lib/x86_64-linux-gnu/9/
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: library_search_path Value: /lib/x86_64-linux-gnu/
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: library_search_path Value: /lib/../lib/
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: library_search_path Value: /usr/lib/x86_64-linux-gnu/9/
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: library_search_path Value: /usr/lib/x86_64-linux-gnu/
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: library_search_path Value: /usr/lib/../lib/
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: library_search_path Value: /usr/lib/gcc/x86_64-linux-gnu/9/../../../../x86_64-linux-gnu/lib/
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: library_search_path Value: /usr/lib/gcc/x86_64-linux-gnu/9/../../../
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: library_search_path Value: /lib/
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: library_search_path Value: /usr/lib/
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: implicit_link_input Value: /usr/lib/gcc/x86_64-linux-gnu/9/../../../x86_64-linux-gnu/Scrt1.o
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: implicit_link_input Value: /usr/lib/gcc/x86_64-linux-gnu/9/../../../x86_64-linux-gnu/crti.o
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: implicit_link_input Value: /usr/lib/gcc/x86_64-linux-gnu/9/crtbeginS.o
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: implicit_link_input Value: /usr/lib/gcc/x86_64-linux-gnu/9/libgcc.a
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: implicit_link_input Value: /usr/lib/gcc/x86_64-linux-gnu/9/libgcc_s.so
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: implicit_link_input Value: /usr/lib/gcc/x86_64-linux-gnu/9/../../../x86_64-linux-gnu/libgcc_s.so.1
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: implicit_link_input Value: /usr/lib/gcc/x86_64-linux-gnu/9/libgcc.a
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: implicit_link_input Value: /usr/lib/gcc/x86_64-linux-gnu/9/../../../x86_64-linux-gnu/libc.so
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: implicit_link_input Value: /lib/x86_64-linux-gnu/libc.so.6
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: implicit_link_input Value: /usr/lib/x86_64-linux-gnu/libc_nonshared.a
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: implicit_link_input Value: /lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: implicit_link_input Value: /usr/lib/x86_64-linux-gnu/libc_nonshared.a
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: implicit_link_input Value: /lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: implicit_link_input Value: /usr/lib/gcc/x86_64-linux-gnu/9/libgcc.a
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: implicit_link_input Value: /usr/lib/gcc/x86_64-linux-gnu/9/libgcc_s.so
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: implicit_link_input Value: /usr/lib/gcc/x86_64-linux-gnu/9/../../../x86_64-linux-gnu/libgcc_s.so.1
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: implicit_link_input Value: /usr/lib/gcc/x86_64-linux-gnu/9/libgcc.a
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: implicit_link_input Value: /usr/lib/gcc/x86_64-linux-gnu/9/crtendS.o
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: implicit_link_input Value: /usr/lib/gcc/x86_64-linux-gnu/9/../../../x86_64-linux-gnu/crtn.o
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: expand
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>           Node: options
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>             Node: replace_arg_regex
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>               Node: replace Value: @(.*)
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>               Node: with Value: --coverity_resp_file=$1
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: pre_trans
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>           Node: options
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>             Node: intern_trans Value: gnu_pre_translate
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: trans
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>           Node: options
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>             Node: includes_from_env_var Value: CPATH
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>             Node: includes_from_env_var_empty_is_cwd Value: true
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: trans
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>           Node: options
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>             Node: includes_from_env_var Value: C_INCLUDE_PATH
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>             Node: pre_prepend_arg Value: --c
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>         Node: begin_command_line_config
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|>   Node: md5 Value: fa43e70bd3a8a44c80caa7233d3b888a
+2024-06-21T07:00:01.178242Z|cov-build|1761684|info|> 
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|> Configuration read from: /home/ubuntu/workspace/coverity/cov-analysis-linux64-2023.6.1/config/g++-config-0/coverity_config.xml
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|> Node: coverity
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>   Node: cit_version Value: 1
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>   Node: config
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>     Node: build
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>       Node: compiler
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: comp_name Value: cc
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: comp_name Value: gcc
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: comp_name Value: gcc-9
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: comp_name Value: x86_64-linux-gnu-gcc-9
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: comp_dir Value: /usr/bin
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: comp_translator Value: g++
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: comp_lang Value: C++
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: comp_front_end Value: cov-emit
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: comp_desc Value: GNU C++ Compiler
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: comp_next_type Value: g++cc
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: comp_generic Value: gnu
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: comp_require
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: id Value: g++-cc-9.4.0-0
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: version Value: 9.4.0
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: is_compiler Value: true
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: is_linker Value: true
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: target_platform Value: all
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>       Node: options
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: id Value: g++-cc-9.4.0-0
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: compile_options
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: sysinclude_dir Value: /usr/include/c++/9
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: sysinclude_dir Value: /usr/include/x86_64-linux-gnu/c++/9
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: sysinclude_dir Value: /usr/include/c++/9/backward
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: sysinclude_dir Value: /usr/lib/gcc/x86_64-linux-gnu/9/include
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: sysinclude_dir Value: /usr/local/include
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: sysinclude_dir Value: /usr/include/x86_64-linux-gnu
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: sysinclude_dir Value: /usr/include
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: dryrun_switch Value: -E
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: dryrun_switch Value: -v
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: dump_macros_arg Value: -dM
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: dump_macros_arg Value: -E
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: preprocess_remove_arg Value: -o.+
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: preprocess_remove_arg Value: -c
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: preprocess_remove_arg Value: -Werror
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: preprocess_remove_next_arg Value: -o
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: preprocess_switch Value: -xc++
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: preprocess_switch Value: -E
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: preprocess_switch Value: -U__BLOCKS__
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: preprocess_compile_switch Value: -C
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: preprocess_output Value: -
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: dryrun_output Value: 2
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: pre_preinclude_file Value: /home/ubuntu/workspace/coverity/cov-analysis-linux64-2023.6.1/config/g++-config-0/coverity-compiler-compat.h
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: macro_pre_preinclude_file Value: /home/ubuntu/workspace/coverity/cov-analysis-linux64-2023.6.1/config/g++-config-0/coverity-macro-compat.h
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: prepend_arg Value: --add_type_modifier=__coverity___fpreg
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: prepend_arg Value: --add_type_modifier=__coverity_decimal
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: prepend_arg Value: --add_type_modifier=__coverity_float
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: prepend_arg Value: --add_type_modifier=__coverity_floatx
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: prepend_arg Value: --no_predefined_feature_test_macros
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: prepend_arg Value: --no_stdarg_builtin
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: prepend_arg Value: --enable_128bit_int
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: prepend_arg Value: --no_predefined_cplusplus
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: prepend_arg Value: -w
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: prepend_arg Value: --no_predefines
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: prepend_arg Value: --comp_ver
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: prepend_arg Value: 9.4.0
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: prepend_arg Value: --size_t_type=m
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: prepend_arg Value: --ptrdiff_t_type=l
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: prepend_arg Value: --type_sizes=w4xl8i4s2e16d8f4P8
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: prepend_arg Value: --type_alignments=w4xl8i4s2e16d8f4P8
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: prepend_arg Value: --char_bit_size=8
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: prepend_arg Value: --gnu_carriage_return_line_terminator
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: prepend_arg Value: --wchar_t_keyword
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: prepend_arg Value: --no_multiline_string
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: prepend_arg Value: --no_trigraphs
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: prepend_arg Value: --ignore_calling_convention
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: prepend_arg Value: --enable_80bit_float
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: prepend_arg Value: --enable_128bit_float
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: prepend_arg Value: --macro_stack_pragmas
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: prepend_arg Value: --exceptions
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: prepend_arg Value: --arg_dependent_overload
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: prepend_arg Value: --inline_keyword
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: prepend_arg Value: --has_include_macro
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: prepend_arg Value: --has_include_next_macro
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: prepend_arg Value: --has_cpp_attribute_macro
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: prepend_arg Value: --no_predefines
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: skip_file Value: conftest\.c{1,2}$
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: skip_file Value: conftest\.cpp$
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: skip_file Value: cgo-cc-input-[0-9]+\.(c|cc|cpp|cxx)
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: opt_preinclude_file Value: /home/ubuntu/workspace/coverity/cov-analysis-linux64-2023.6.1/config/g++-config-0/../user_nodefs.h
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: pch_options
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>           Node: archetype Value: gcc
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: link_options
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: library_search_path Value: /usr/lib/gcc/x86_64-linux-gnu/9/
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: library_search_path Value: /usr/lib/gcc/x86_64-linux-gnu/9/../../../../x86_64-linux-gnu/lib/x86_64-linux-gnu/9/
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: library_search_path Value: /usr/lib/gcc/x86_64-linux-gnu/9/../../../../x86_64-linux-gnu/lib/x86_64-linux-gnu/
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: library_search_path Value: /usr/lib/gcc/x86_64-linux-gnu/9/../../../../x86_64-linux-gnu/lib/../lib/
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: library_search_path Value: /usr/lib/gcc/x86_64-linux-gnu/9/../../../x86_64-linux-gnu/9/
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: library_search_path Value: /usr/lib/gcc/x86_64-linux-gnu/9/../../../x86_64-linux-gnu/
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: library_search_path Value: /usr/lib/gcc/x86_64-linux-gnu/9/../../../../lib/
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: library_search_path Value: /lib/x86_64-linux-gnu/9/
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: library_search_path Value: /lib/x86_64-linux-gnu/
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: library_search_path Value: /lib/../lib/
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: library_search_path Value: /usr/lib/x86_64-linux-gnu/9/
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: library_search_path Value: /usr/lib/x86_64-linux-gnu/
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: library_search_path Value: /usr/lib/../lib/
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: library_search_path Value: /usr/lib/gcc/x86_64-linux-gnu/9/../../../../x86_64-linux-gnu/lib/
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: library_search_path Value: /usr/lib/gcc/x86_64-linux-gnu/9/../../../
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: library_search_path Value: /lib/
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: library_search_path Value: /usr/lib/
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: implicit_link_input Value: /usr/lib/gcc/x86_64-linux-gnu/9/../../../x86_64-linux-gnu/Scrt1.o
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: implicit_link_input Value: /usr/lib/gcc/x86_64-linux-gnu/9/../../../x86_64-linux-gnu/crti.o
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: implicit_link_input Value: /usr/lib/gcc/x86_64-linux-gnu/9/crtbeginS.o
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: implicit_link_input Value: /usr/lib/gcc/x86_64-linux-gnu/9/libgcc.a
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: implicit_link_input Value: /usr/lib/gcc/x86_64-linux-gnu/9/libgcc_s.so
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: implicit_link_input Value: /usr/lib/gcc/x86_64-linux-gnu/9/../../../x86_64-linux-gnu/libgcc_s.so.1
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: implicit_link_input Value: /usr/lib/gcc/x86_64-linux-gnu/9/libgcc.a
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: implicit_link_input Value: /usr/lib/gcc/x86_64-linux-gnu/9/../../../x86_64-linux-gnu/libc.so
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: implicit_link_input Value: /lib/x86_64-linux-gnu/libc.so.6
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: implicit_link_input Value: /usr/lib/x86_64-linux-gnu/libc_nonshared.a
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: implicit_link_input Value: /lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: implicit_link_input Value: /usr/lib/x86_64-linux-gnu/libc_nonshared.a
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: implicit_link_input Value: /lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: implicit_link_input Value: /usr/lib/gcc/x86_64-linux-gnu/9/libgcc.a
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: implicit_link_input Value: /usr/lib/gcc/x86_64-linux-gnu/9/libgcc_s.so
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: implicit_link_input Value: /usr/lib/gcc/x86_64-linux-gnu/9/../../../x86_64-linux-gnu/libgcc_s.so.1
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: implicit_link_input Value: /usr/lib/gcc/x86_64-linux-gnu/9/libgcc.a
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: implicit_link_input Value: /usr/lib/gcc/x86_64-linux-gnu/9/crtendS.o
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: implicit_link_input Value: /usr/lib/gcc/x86_64-linux-gnu/9/../../../x86_64-linux-gnu/crtn.o
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: pre_trans
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>           Node: options
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>             Node: pre_prepend_arg Value: -coverity_c_suffixes_are_cxx
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: trans
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>           Node: options
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>             Node: includes_from_env_var Value: CPLUS_INCLUDE_PATH
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>             Node: pre_prepend_arg Value: --c++
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: expand
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>           Node: options
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>             Node: replace_arg_regex
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>               Node: replace Value: @(.*)
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>               Node: with Value: --coverity_resp_file=$1
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: pre_trans
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>           Node: options
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>             Node: intern_trans Value: gnu_pre_translate
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: trans
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>           Node: options
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>             Node: includes_from_env_var Value: CPATH
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>             Node: includes_from_env_var_empty_is_cwd Value: true
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>         Node: begin_command_line_config
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|>   Node: md5 Value: e4a8e0aa2d6b355e063647836a01d13e
+2024-06-21T07:00:01.178708Z|cov-build|1761684|info|> 
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|> Configuration read from: /home/ubuntu/workspace/coverity/cov-analysis-linux64-2023.6.1/config/g++cc-config-0/coverity_config.xml
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|> Node: coverity
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>   Node: cit_version Value: 1
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>   Node: config
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>     Node: build
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>       Node: compiler
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: comp_name Value: cc
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: comp_name Value: gcc
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: comp_name Value: gcc-9
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: comp_name Value: x86_64-linux-gnu-gcc-9
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: comp_dir Value: /usr/bin
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: comp_translator Value: g++cc
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: comp_lang Value: C
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: comp_front_end Value: cov-emit
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: comp_desc Value: GNU C++ Compiler
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: comp_generic Value: gnu
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: comp_require
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: id Value: g++cc-cc-9.4.0-0
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: version Value: 9.4.0
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: is_compiler Value: true
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: is_linker Value: true
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: target_platform Value: all
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>       Node: options
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: id Value: g++cc-cc-9.4.0-0
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: compile_options
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: sysinclude_dir Value: /usr/lib/gcc/x86_64-linux-gnu/9/include
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: sysinclude_dir Value: /usr/local/include
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: sysinclude_dir Value: /usr/include/x86_64-linux-gnu
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: sysinclude_dir Value: /usr/include
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: dryrun_switch Value: -xc
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: dryrun_switch Value: -E
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: dryrun_switch Value: -v
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: dump_macros_arg Value: -xc
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: dump_macros_arg Value: -dM
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: dump_macros_arg Value: -E
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: preprocess_remove_arg Value: -o.+
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: preprocess_remove_arg Value: -c
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: preprocess_remove_arg Value: -Werror
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: preprocess_remove_next_arg Value: -o
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: preprocess_switch Value: -E
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: preprocess_switch Value: -U__BLOCKS__
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: preprocess_switch Value: -xc
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: preprocess_compile_switch Value: -C
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: preprocess_output Value: -
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: dryrun_output Value: 2
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: pre_preinclude_file Value: /home/ubuntu/workspace/coverity/cov-analysis-linux64-2023.6.1/config/g++cc-config-0/coverity-compiler-compat.h
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: macro_pre_preinclude_file Value: /home/ubuntu/workspace/coverity/cov-analysis-linux64-2023.6.1/config/g++cc-config-0/coverity-macro-compat.h
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: prepend_arg Value: --fixed_point
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: prepend_arg Value: --add_type_modifier=__coverity___fpreg
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: prepend_arg Value: --add_type_modifier=__coverity_decimal
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: prepend_arg Value: --add_type_modifier=__coverity_float
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: prepend_arg Value: --add_type_modifier=__coverity_floatx
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: prepend_arg Value: --no_predefined_feature_test_macros
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: prepend_arg Value: --no_stdarg_builtin
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: prepend_arg Value: --enable_128bit_int
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: prepend_arg Value: --no_predefined_cplusplus
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: prepend_arg Value: -w
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: prepend_arg Value: --no_predefines
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: prepend_arg Value: --comp_ver
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: prepend_arg Value: 9.4.0
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: prepend_arg Value: --size_t_type=m
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: prepend_arg Value: --ptrdiff_t_type=l
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: prepend_arg Value: --type_sizes=xl8i4s2e16d8f4P8
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: prepend_arg Value: --type_alignments=xl8i4s2e16d8f4P8
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: prepend_arg Value: --char_bit_size=8
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: prepend_arg Value: --restrict
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: prepend_arg Value: --gnu_carriage_return_line_terminator
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: prepend_arg Value: --wchar_t_type=i
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: prepend_arg Value: --no_multiline_string
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: prepend_arg Value: --no_trigraphs
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: prepend_arg Value: --ignore_calling_convention
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: prepend_arg Value: --c11
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: prepend_arg Value: --enable_80bit_float
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: prepend_arg Value: --enable_128bit_float
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: prepend_arg Value: --allow__bool
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: prepend_arg Value: --macro_stack_pragmas
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: prepend_arg Value: --inline_keyword
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: prepend_arg Value: --has_include_macro
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: prepend_arg Value: --has_include_next_macro
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: prepend_arg Value: --has_cpp_attribute_macro
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: prepend_arg Value: --no_predefines
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: skip_file Value: conftest\.c{1,2}$
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: skip_file Value: conftest\.cpp$
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: skip_file Value: cgo-cc-input-[0-9]+\.(c|cc|cpp|cxx)
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: opt_preinclude_file Value: /home/ubuntu/workspace/coverity/cov-analysis-linux64-2023.6.1/config/g++cc-config-0/../user_nodefs.h
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: pch_options
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>           Node: archetype Value: gcc
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: link_options
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: library_search_path Value: /usr/lib/gcc/x86_64-linux-gnu/9/
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: library_search_path Value: /usr/lib/gcc/x86_64-linux-gnu/9/../../../../x86_64-linux-gnu/lib/x86_64-linux-gnu/9/
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: library_search_path Value: /usr/lib/gcc/x86_64-linux-gnu/9/../../../../x86_64-linux-gnu/lib/x86_64-linux-gnu/
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: library_search_path Value: /usr/lib/gcc/x86_64-linux-gnu/9/../../../../x86_64-linux-gnu/lib/../lib/
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: library_search_path Value: /usr/lib/gcc/x86_64-linux-gnu/9/../../../x86_64-linux-gnu/9/
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: library_search_path Value: /usr/lib/gcc/x86_64-linux-gnu/9/../../../x86_64-linux-gnu/
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: library_search_path Value: /usr/lib/gcc/x86_64-linux-gnu/9/../../../../lib/
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: library_search_path Value: /lib/x86_64-linux-gnu/9/
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: library_search_path Value: /lib/x86_64-linux-gnu/
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: library_search_path Value: /lib/../lib/
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: library_search_path Value: /usr/lib/x86_64-linux-gnu/9/
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: library_search_path Value: /usr/lib/x86_64-linux-gnu/
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: library_search_path Value: /usr/lib/../lib/
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: library_search_path Value: /usr/lib/gcc/x86_64-linux-gnu/9/../../../../x86_64-linux-gnu/lib/
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: library_search_path Value: /usr/lib/gcc/x86_64-linux-gnu/9/../../../
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: library_search_path Value: /lib/
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: library_search_path Value: /usr/lib/
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: implicit_link_input Value: /usr/lib/gcc/x86_64-linux-gnu/9/../../../x86_64-linux-gnu/Scrt1.o
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: implicit_link_input Value: /usr/lib/gcc/x86_64-linux-gnu/9/../../../x86_64-linux-gnu/crti.o
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: implicit_link_input Value: /usr/lib/gcc/x86_64-linux-gnu/9/crtbeginS.o
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: implicit_link_input Value: /usr/lib/gcc/x86_64-linux-gnu/9/libgcc.a
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: implicit_link_input Value: /usr/lib/gcc/x86_64-linux-gnu/9/libgcc_s.so
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: implicit_link_input Value: /usr/lib/gcc/x86_64-linux-gnu/9/../../../x86_64-linux-gnu/libgcc_s.so.1
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: implicit_link_input Value: /usr/lib/gcc/x86_64-linux-gnu/9/libgcc.a
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: implicit_link_input Value: /usr/lib/gcc/x86_64-linux-gnu/9/../../../x86_64-linux-gnu/libc.so
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: implicit_link_input Value: /lib/x86_64-linux-gnu/libc.so.6
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: implicit_link_input Value: /usr/lib/x86_64-linux-gnu/libc_nonshared.a
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: implicit_link_input Value: /lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: implicit_link_input Value: /usr/lib/x86_64-linux-gnu/libc_nonshared.a
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: implicit_link_input Value: /lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: implicit_link_input Value: /usr/lib/gcc/x86_64-linux-gnu/9/libgcc.a
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: implicit_link_input Value: /usr/lib/gcc/x86_64-linux-gnu/9/libgcc_s.so
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: implicit_link_input Value: /usr/lib/gcc/x86_64-linux-gnu/9/../../../x86_64-linux-gnu/libgcc_s.so.1
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: implicit_link_input Value: /usr/lib/gcc/x86_64-linux-gnu/9/libgcc.a
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: implicit_link_input Value: /usr/lib/gcc/x86_64-linux-gnu/9/crtendS.o
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: implicit_link_input Value: /usr/lib/gcc/x86_64-linux-gnu/9/../../../x86_64-linux-gnu/crtn.o
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: expand
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>           Node: options
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>             Node: replace_arg_regex
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>               Node: replace Value: @(.*)
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>               Node: with Value: --coverity_resp_file=$1
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: pre_trans
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>           Node: options
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>             Node: intern_trans Value: gnu_pre_translate
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: trans
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>           Node: options
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>             Node: includes_from_env_var Value: CPATH
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>             Node: includes_from_env_var_empty_is_cwd Value: true
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: trans
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>           Node: options
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>             Node: includes_from_env_var Value: C_INCLUDE_PATH
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>             Node: pre_prepend_arg Value: --c
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>         Node: begin_command_line_config
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|>   Node: md5 Value: fe08a0965bc5366760afc2269319554b
+2024-06-21T07:00:01.179182Z|cov-build|1761684|info|> 
+2024-06-21T07:00:01.179637Z|cov-build|1761684|info|> Configuration read from: /home/ubuntu/workspace/coverity/cov-analysis-linux64-2023.6.1/config/ld-config-0/coverity_config.xml
+2024-06-21T07:00:01.179637Z|cov-build|1761684|info|> Node: coverity
+2024-06-21T07:00:01.179637Z|cov-build|1761684|info|>   Node: cit_version Value: 1
+2024-06-21T07:00:01.179637Z|cov-build|1761684|info|>   Node: config
+2024-06-21T07:00:01.179637Z|cov-build|1761684|info|>     Node: build
+2024-06-21T07:00:01.179637Z|cov-build|1761684|info|>       Node: compiler
+2024-06-21T07:00:01.179637Z|cov-build|1761684|info|>         Node: comp_name Value: ld
+2024-06-21T07:00:01.179637Z|cov-build|1761684|info|>         Node: comp_name Value: x86_64-linux-gnu-ld
+2024-06-21T07:00:01.179637Z|cov-build|1761684|info|>         Node: comp_name Value: x86_64-linux-gnu-ld.bfd
+2024-06-21T07:00:01.179637Z|cov-build|1761684|info|>         Node: comp_dir Value: /usr/bin
+2024-06-21T07:00:01.179637Z|cov-build|1761684|info|>         Node: comp_translator Value: ld
+2024-06-21T07:00:01.179637Z|cov-build|1761684|info|>         Node: comp_lang Value: C++
+2024-06-21T07:00:01.179637Z|cov-build|1761684|info|>         Node: comp_front_end Value: cov-emit
+2024-06-21T07:00:01.179637Z|cov-build|1761684|info|>         Node: comp_desc Value: GNU C/C++ Linker
+2024-06-21T07:00:01.179637Z|cov-build|1761684|info|>         Node: comp_generic Value: ld
+2024-06-21T07:00:01.179637Z|cov-build|1761684|info|>         Node: id Value: ld-ld-0
+2024-06-21T07:00:01.179637Z|cov-build|1761684|info|>         Node: is_compiler Value: false
+2024-06-21T07:00:01.179637Z|cov-build|1761684|info|>         Node: is_linker Value: true
+2024-06-21T07:00:01.179637Z|cov-build|1761684|info|>       Node: options
+2024-06-21T07:00:01.179637Z|cov-build|1761684|info|>         Node: id Value: ld-ld-0
+2024-06-21T07:00:01.179637Z|cov-build|1761684|info|>         Node: link_options
+2024-06-21T07:00:01.179637Z|cov-build|1761684|info|>         Node: library_search_path Value: /usr/local/lib/x86_64-linux-gnu
+2024-06-21T07:00:01.179637Z|cov-build|1761684|info|>         Node: library_search_path Value: /lib/x86_64-linux-gnu
+2024-06-21T07:00:01.179637Z|cov-build|1761684|info|>         Node: library_search_path Value: /usr/lib/x86_64-linux-gnu
+2024-06-21T07:00:01.179637Z|cov-build|1761684|info|>         Node: library_search_path Value: /usr/lib/x86_64-linux-gnu64
+2024-06-21T07:00:01.179637Z|cov-build|1761684|info|>         Node: library_search_path Value: /usr/local/lib64
+2024-06-21T07:00:01.179637Z|cov-build|1761684|info|>         Node: library_search_path Value: /lib64
+2024-06-21T07:00:01.179637Z|cov-build|1761684|info|>         Node: library_search_path Value: /usr/lib64
+2024-06-21T07:00:01.179637Z|cov-build|1761684|info|>         Node: library_search_path Value: /usr/local/lib
+2024-06-21T07:00:01.179637Z|cov-build|1761684|info|>         Node: library_search_path Value: /lib
+2024-06-21T07:00:01.179637Z|cov-build|1761684|info|>         Node: library_search_path Value: /usr/lib
+2024-06-21T07:00:01.179637Z|cov-build|1761684|info|>         Node: library_search_path Value: /usr/x86_64-linux-gnu/lib64
+2024-06-21T07:00:01.179637Z|cov-build|1761684|info|>         Node: library_search_path Value: /usr/x86_64-linux-gnu/lib
+2024-06-21T07:00:01.179637Z|cov-build|1761684|info|>         Node: begin_command_line_config
+2024-06-21T07:00:01.179637Z|cov-build|1761684|info|>   Node: md5 Value: 1b5d7553988ecb815982d43c29ad861f
+2024-06-21T07:00:01.179637Z|cov-build|1761684|info|> 
+2024-06-21T07:00:01.179756Z|cov-build|1761684|info|> Configuration read from: /home/ubuntu/workspace/coverity/cov-analysis-linux64-2023.6.1/config/ar-config-0/coverity_config.xml
+2024-06-21T07:00:01.179756Z|cov-build|1761684|info|> Node: coverity
+2024-06-21T07:00:01.179756Z|cov-build|1761684|info|>   Node: cit_version Value: 1
+2024-06-21T07:00:01.179756Z|cov-build|1761684|info|>   Node: config
+2024-06-21T07:00:01.179756Z|cov-build|1761684|info|>     Node: build
+2024-06-21T07:00:01.179756Z|cov-build|1761684|info|>       Node: compiler
+2024-06-21T07:00:01.179756Z|cov-build|1761684|info|>         Node: comp_name Value: ar
+2024-06-21T07:00:01.179756Z|cov-build|1761684|info|>         Node: comp_name Value: x86_64-linux-gnu-ar
+2024-06-21T07:00:01.179756Z|cov-build|1761684|info|>         Node: comp_dir Value: /usr/bin
+2024-06-21T07:00:01.179756Z|cov-build|1761684|info|>         Node: comp_translator Value: ar
+2024-06-21T07:00:01.179756Z|cov-build|1761684|info|>         Node: comp_lang Value: C++
+2024-06-21T07:00:01.179756Z|cov-build|1761684|info|>         Node: comp_front_end Value: cov-emit
+2024-06-21T07:00:01.179756Z|cov-build|1761684|info|>         Node: comp_desc Value: UNIX-like 'ar` archiver
+2024-06-21T07:00:01.179756Z|cov-build|1761684|info|>         Node: comp_generic Value: ar
+2024-06-21T07:00:01.179756Z|cov-build|1761684|info|>         Node: id Value: ar-ar-0
+2024-06-21T07:00:01.179756Z|cov-build|1761684|info|>         Node: is_compiler Value: false
+2024-06-21T07:00:01.179756Z|cov-build|1761684|info|>         Node: is_linker Value: true
+2024-06-21T07:00:01.179756Z|cov-build|1761684|info|>       Node: options
+2024-06-21T07:00:01.179756Z|cov-build|1761684|info|>         Node: id Value: ar-ar-0
+2024-06-21T07:00:01.179756Z|cov-build|1761684|info|>         Node: link_options
+2024-06-21T07:00:01.179756Z|cov-build|1761684|info|>         Node: pre_trans
+2024-06-21T07:00:01.179756Z|cov-build|1761684|info|>           Node: options
+2024-06-21T07:00:01.179756Z|cov-build|1761684|info|>             Node: intern_trans Value: ar_pre_translate
+2024-06-21T07:00:01.179756Z|cov-build|1761684|info|>         Node: begin_command_line_config
+2024-06-21T07:00:01.179756Z|cov-build|1761684|info|>   Node: md5 Value: 0a88030e21142e1d5707f9a30278f834
+2024-06-21T07:00:01.179756Z|cov-build|1761684|info|> 
+2024-06-21T07:00:01.182508Z|cov-build|1761684|info|> Using LD_PRELOAD = /home/ubuntu/workspace/coverity/cov-analysis-linux64-2023.6.1/bin/libcapture-linux64-${PLATFORM}.so
+[1761687] EXECUTING: make coverity_analysis
+[1761688] EXECUTING: /home/ubuntu/cmake-3.30.0-rc3-linux-x86_64/bin/cmake -S/home/ubuntu/coreMQTT/test -B/home/ubuntu/coreMQTT --check-build-system CMakeFiles/Makefile.cmake 0
+[1761689] EXECUTING: make -s -f CMakeFiles/Makefile2 coverity_analysis
+[1761690] EXECUTING: /home/ubuntu/cmake-3.30.0-rc3-linux-x86_64/bin/cmake -S/home/ubuntu/coreMQTT/test -B/home/ubuntu/coreMQTT --check-build-system CMakeFiles/Makefile.cmake 0
+[1761691] EXECUTING: /home/ubuntu/cmake-3.30.0-rc3-linux-x86_64/bin/cmake -E cmake_progress_start /home/ubuntu/coreMQTT/CMakeFiles 4
+[1761692] EXECUTING: make -s -f CMakeFiles/Makefile2 CMakeFiles/coverity_analysis.dir/all
+[1761693] EXECUTING: make -s -f CMakeFiles/coverity_analysis.dir/build.make CMakeFiles/coverity_analysis.dir/depend
+[1761694] EXECUTING: /bin/sh -c "cd /home/ubuntu/coreMQTT && /home/ubuntu/cmake-3.30.0-rc3-linux-x86_64/bin/cmake -E cmake_depends "Unix Makefiles" /home/ubuntu/coreMQTT/test /home/ubuntu/coreMQTT/test /home/ubuntu/coreMQTT /home/ubuntu/coreMQTT /home/ubuntu/coreMQTT/CMakeFiles/coverity_analysis.dir/DependInfo.cmake "--color=""
+[1761695] EXECUTING: /home/ubuntu/cmake-3.30.0-rc3-linux-x86_64/bin/cmake -E cmake_depends "Unix Makefiles" /home/ubuntu/coreMQTT/test /home/ubuntu/coreMQTT/test /home/ubuntu/coreMQTT /home/ubuntu/coreMQTT /home/ubuntu/coreMQTT/CMakeFiles/coverity_analysis.dir/DependInfo.cmake --color=
+[1761696] EXECUTING: make -s -f CMakeFiles/coverity_analysis.dir/build.make CMakeFiles/coverity_analysis.dir/build
+[1761697] EXECUTING: /bin/sh -c "/home/ubuntu/cmake-3.30.0-rc3-linux-x86_64/bin/cmake -E cmake_echo_color "--switch=" --green --progress-dir=/home/ubuntu/coreMQTT/CMakeFiles --progress-num=45 "Building C object CMakeFiles/coverity_analysis.dir/source/core_mqtt.c.o""
+[1761698] EXECUTING: /home/ubuntu/cmake-3.30.0-rc3-linux-x86_64/bin/cmake -E cmake_echo_color --switch= --green --progress-dir=/home/ubuntu/coreMQTT/CMakeFiles --progress-num=45 "Building C object CMakeFiles/coverity_analysis.dir/source/core_mqtt.c.o"
+[1761699] EXECUTING: /usr/bin/cc -DMAX_USER_PROPERTY=5 -DMQTT_DO_NOT_USE_CUSTOM_CONFIG=1 -DMQTT_VERSION_5_ENABLED=1 -DNDEBUG=1 -I/home/ubuntu/coreMQTT/source/include -I/home/ubuntu/coreMQTT/source/interface -std=gnu90 -MD -MT CMakeFiles/coverity_analysis.dir/source/core_mqtt.c.o -MF CMakeFiles/coverity_analysis.dir/source/core_mqtt.c.o.d -o CMakeFiles/coverity_analysis.dir/source/core_mqtt.c.o -c /home/ubuntu/coreMQTT/source/core_mqtt.c
+[1761700] CWD: /home/ubuntu/coreMQTT
+[1761700] COMPILING: /home/ubuntu/workspace/coverity/cov-analysis-linux64-2023.6.1/bin/cov-translate /usr/bin/cc -DMAX_USER_PROPERTY=5 -DMQTT_DO_NOT_USE_CUSTOM_CONFIG=1 -DMQTT_VERSION_5_ENABLED=1 -DNDEBUG=1 -I/home/ubuntu/coreMQTT/source/include -I/home/ubuntu/coreMQTT/source/interface -std=gnu90 -MD -MT CMakeFiles/coverity_analysis.dir/source/core_mqtt.c.o -MF CMakeFiles/coverity_analysis.dir/source/core_mqtt.c.o.d -o CMakeFiles/coverity_analysis.dir/source/core_mqtt.c.o -c /home/ubuntu/coreMQTT/source/core_mqtt.c
+COV_TRANSLATE EXPANDED ARGS: "-DMAX_USER_PROPERTY=5" "-DMQTT_DO_NOT_USE_CUSTOM_CONFIG=1" "-DMQTT_VERSION_5_ENABLED=1" "-DNDEBUG=1" "-I/home/ubuntu/coreMQTT/source/include" "-I/home/ubuntu/coreMQTT/source/interface" "-std=gnu90" "-MD" "-MT" "CMakeFiles/coverity_analysis.dir/source/core_mqtt.c.o" "-MF" "CMakeFiles/coverity_analysis.dir/source/core_mqtt.c.o.d" "-o" "CMakeFiles/coverity_analysis.dir/source/core_mqtt.c.o" "-c" "/home/ubuntu/coreMQTT/source/core_mqtt.c"
+Encountered compiler invocation for first time, configuring it: /usr/bin/x86_64-linux-gnu-gcc-9 -std=gnu90
+[STATUS] Using comptype gcc
+* Configuring /usr/bin/cc as a C compiler
+[STATUS] gcc-config-0: Running sanity tests on native compiler
+[STATUS] gcc-config-0: Detecting size and alignment of fundamental types.
+[STATUS] gcc-config-0: Retrieving values for macros
+[STATUS] gcc-config-0: Running config probes
+* Configuring /usr/bin/cc as a C++ compiler
+[STATUS] g++-config-0: Running sanity tests on native compiler
+[STATUS] g++-config-0: Detecting size and alignment of fundamental types.
+[STATUS] g++-config-0: Retrieving values for macros
+[STATUS] g++-config-0: Running config probes
+* Configuring /usr/bin/cc as a C compiler
+[STATUS] g++cc-config-0: Running sanity tests on native compiler
+[STATUS] g++cc-config-0: Detecting size and alignment of fundamental types.
+[STATUS] g++cc-config-0: Retrieving values for macros
+[STATUS] g++cc-config-0: Running config probes
+* Configuring /usr/bin/ld as a C++ linker
+[WARNING] Config ld-config-0 already exists for ld x86_64-linux-gnu-ld x86_64-linux-gnu-ld.bfd as ld and will be reused. 
+* Configuring /usr/bin/ar as a C++ linker
+[WARNING] Config ar-config-0 already exists for ar x86_64-linux-gnu-ar as ar and will be reused. 
+Added template compiler configuration instance /home/ubuntu/coreMQTT/cov-out/emit/ip-172-31-80-220/config/660e697d2e8e4024af35c3f44545d3ec/coverity_config.xml
+Configuration read from: /home/ubuntu/coreMQTT/cov-out/emit/ip-172-31-80-220/config/660e697d2e8e4024af35c3f44545d3ec/coverity_config.xml
+Node: coverity
+  Node: cit_version Value: 1
+  Node: config
+    Node: include Value: /home/ubuntu/coreMQTT/cov-out/emit/ip-172-31-80-220/config/660e697d2e8e4024af35c3f44545d3ec/gcc-config-0/coverity_config.xml
+    Node: include Value: /home/ubuntu/coreMQTT/cov-out/emit/ip-172-31-80-220/config/660e697d2e8e4024af35c3f44545d3ec/g++-config-0/coverity_config.xml
+    Node: include Value: /home/ubuntu/coreMQTT/cov-out/emit/ip-172-31-80-220/config/660e697d2e8e4024af35c3f44545d3ec/g++cc-config-0/coverity_config.xml
+Configuration read from: /home/ubuntu/coreMQTT/cov-out/emit/ip-172-31-80-220/config/660e697d2e8e4024af35c3f44545d3ec/gcc-config-0/coverity_config.xml
+Node: coverity
+  Node: cit_version Value: 1
+  Node: config
+    Node: build
+      Node: compiler
+        Node: comp_name Value: cc
+        Node: comp_name Value: gcc
+        Node: comp_name Value: gcc-9
+        Node: comp_name Value: x86_64-linux-gnu-gcc-9
+        Node: comp_dir Value: /usr/bin
+        Node: comp_translator Value: gcc
+        Node: comp_lang Value: C
+        Node: comp_front_end Value: cov-emit
+        Node: comp_desc Value: GNU C compiler
+        Node: comp_next_type Value: g++
+        Node: comp_generic Value: gnu
+        Node: comp_require Value: -std=gnu90
+        Node: id Value: gcc-cc-9.4.0-660e697d2e8e4024af35c3f44545d3ec-0
+        Node: version Value: 9.4.0
+        Node: is_compiler Value: true
+        Node: is_linker Value: true
+        Node: target_platform Value: all
+      Node: options
+        Node: id Value: gcc-cc-9.4.0-660e697d2e8e4024af35c3f44545d3ec-0
+        Node: template_config_option_id Value: gcc-cc-.*
+        Node: compile_options
+        Node: sysinclude_dir Value: /usr/lib/gcc/x86_64-linux-gnu/9/include
+        Node: sysinclude_dir Value: /usr/local/include
+        Node: sysinclude_dir Value: /usr/include/x86_64-linux-gnu
+        Node: sysinclude_dir Value: /usr/include
+        Node: dryrun_switch Value: -E
+        Node: dryrun_switch Value: -v
+        Node: dump_macros_arg Value: -dM
+        Node: dump_macros_arg Value: -E
+        Node: preprocess_remove_arg Value: -o.+
+        Node: preprocess_remove_arg Value: -c
+        Node: preprocess_remove_arg Value: -Werror
+        Node: preprocess_remove_next_arg Value: -o
+        Node: preprocess_switch Value: -E
+        Node: preprocess_switch Value: -U__BLOCKS__
+        Node: preprocess_switch Value: -xc
+        Node: preprocess_compile_switch Value: -C
+        Node: preprocess_output Value: -
+        Node: dryrun_output Value: 2
+        Node: pre_preinclude_file Value: /home/ubuntu/coreMQTT/cov-out/emit/ip-172-31-80-220/config/660e697d2e8e4024af35c3f44545d3ec/gcc-config-0/coverity-compiler-compat.h
+        Node: macro_pre_preinclude_file Value: /home/ubuntu/coreMQTT/cov-out/emit/ip-172-31-80-220/config/660e697d2e8e4024af35c3f44545d3ec/gcc-config-0/coverity-macro-compat.h
+        Node: prepend_arg Value: --fixed_point
+        Node: prepend_arg Value: --add_type_modifier=__coverity___fpreg
+        Node: prepend_arg Value: --add_type_modifier=__coverity_decimal
+        Node: prepend_arg Value: --add_type_modifier=__coverity_float
+        Node: prepend_arg Value: --add_type_modifier=__coverity_floatx
+        Node: prepend_arg Value: --no_predefined_feature_test_macros
+        Node: prepend_arg Value: --no_stdarg_builtin
+        Node: prepend_arg Value: --enable_128bit_int
+        Node: prepend_arg Value: --no_predefined_cplusplus
+        Node: prepend_arg Value: -w
+        Node: prepend_arg Value: --no_predefines
+        Node: prepend_arg Value: --comp_ver
+        Node: prepend_arg Value: 9.4.0
+        Node: prepend_arg Value: --size_t_type=m
+        Node: prepend_arg Value: --ptrdiff_t_type=l
+        Node: prepend_arg Value: --type_sizes=xl8i4s2e16d8f4P8
+        Node: prepend_arg Value: --type_alignments=xl8i4s2e16d8f4P8
+        Node: prepend_arg Value: --char_bit_size=8
+        Node: prepend_arg Value: --gnu_carriage_return_line_terminator
+        Node: prepend_arg Value: --wchar_t_type=i
+        Node: prepend_arg Value: --no_multiline_string
+        Node: prepend_arg Value: --no_trigraphs
+        Node: prepend_arg Value: --ignore_calling_convention
+        Node: prepend_arg Value: --enable_80bit_float
+        Node: prepend_arg Value: --enable_128bit_float
+        Node: prepend_arg Value: --allow__bool
+        Node: prepend_arg Value: --macro_stack_pragmas
+        Node: prepend_arg Value: --inline_keyword
+        Node: prepend_arg Value: --has_include_macro
+        Node: prepend_arg Value: --has_include_next_macro
+        Node: prepend_arg Value: --has_cpp_attribute_macro
+        Node: prepend_arg Value: --no_predefines
+        Node: skip_file Value: conftest\.c{1,2}$
+        Node: skip_file Value: conftest\.cpp$
+        Node: skip_file Value: cgo-cc-input-[0-9]+\.(c|cc|cpp|cxx)
+        Node: opt_preinclude_file Value: /home/ubuntu/coreMQTT/cov-out/emit/ip-172-31-80-220/config/660e697d2e8e4024af35c3f44545d3ec/gcc-config-0/../user_nodefs.h
+        Node: pch_options
+          Node: archetype Value: gcc
+        Node: link_options
+        Node: library_search_path Value: /usr/lib/gcc/x86_64-linux-gnu/9/
+        Node: library_search_path Value: /usr/lib/gcc/x86_64-linux-gnu/9/../../../../x86_64-linux-gnu/lib/x86_64-linux-gnu/9/
+        Node: library_search_path Value: /usr/lib/gcc/x86_64-linux-gnu/9/../../../../x86_64-linux-gnu/lib/x86_64-linux-gnu/
+        Node: library_search_path Value: /usr/lib/gcc/x86_64-linux-gnu/9/../../../../x86_64-linux-gnu/lib/../lib/
+        Node: library_search_path Value: /usr/lib/gcc/x86_64-linux-gnu/9/../../../x86_64-linux-gnu/9/
+        Node: library_search_path Value: /usr/lib/gcc/x86_64-linux-gnu/9/../../../x86_64-linux-gnu/
+        Node: library_search_path Value: /usr/lib/gcc/x86_64-linux-gnu/9/../../../../lib/
+        Node: library_search_path Value: /lib/x86_64-linux-gnu/9/
+        Node: library_search_path Value: /lib/x86_64-linux-gnu/
+        Node: library_search_path Value: /lib/../lib/
+        Node: library_search_path Value: /usr/lib/x86_64-linux-gnu/9/
+        Node: library_search_path Value: /usr/lib/x86_64-linux-gnu/
+        Node: library_search_path Value: /usr/lib/../lib/
+        Node: library_search_path Value: /usr/lib/gcc/x86_64-linux-gnu/9/../../../../x86_64-linux-gnu/lib/
+        Node: library_search_path Value: /usr/lib/gcc/x86_64-linux-gnu/9/../../../
+        Node: library_search_path Value: /lib/
+        Node: library_search_path Value: /usr/lib/
+        Node: implicit_link_input Value: /usr/lib/gcc/x86_64-linux-gnu/9/../../../x86_64-linux-gnu/Scrt1.o
+        Node: implicit_link_input Value: /usr/lib/gcc/x86_64-linux-gnu/9/../../../x86_64-linux-gnu/crti.o
+        Node: implicit_link_input Value: /usr/lib/gcc/x86_64-linux-gnu/9/crtbeginS.o
+        Node: implicit_link_input Value: /usr/lib/gcc/x86_64-linux-gnu/9/libgcc.a
+        Node: implicit_link_input Value: /usr/lib/gcc/x86_64-linux-gnu/9/libgcc_s.so
+        Node: implicit_link_input Value: /usr/lib/gcc/x86_64-linux-gnu/9/../../../x86_64-linux-gnu/libgcc_s.so.1
+        Node: implicit_link_input Value: /usr/lib/gcc/x86_64-linux-gnu/9/libgcc.a
+        Node: implicit_link_input Value: /usr/lib/gcc/x86_64-linux-gnu/9/../../../x86_64-linux-gnu/libc.so
+        Node: implicit_link_input Value: /lib/x86_64-linux-gnu/libc.so.6
+        Node: implicit_link_input Value: /usr/lib/x86_64-linux-gnu/libc_nonshared.a
+        Node: implicit_link_input Value: /lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+        Node: implicit_link_input Value: /usr/lib/x86_64-linux-gnu/libc_nonshared.a
+        Node: implicit_link_input Value: /lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+        Node: implicit_link_input Value: /usr/lib/gcc/x86_64-linux-gnu/9/libgcc.a
+        Node: implicit_link_input Value: /usr/lib/gcc/x86_64-linux-gnu/9/libgcc_s.so
+        Node: implicit_link_input Value: /usr/lib/gcc/x86_64-linux-gnu/9/../../../x86_64-linux-gnu/libgcc_s.so.1
+        Node: implicit_link_input Value: /usr/lib/gcc/x86_64-linux-gnu/9/libgcc.a
+        Node: implicit_link_input Value: /usr/lib/gcc/x86_64-linux-gnu/9/crtendS.o
+        Node: implicit_link_input Value: /usr/lib/gcc/x86_64-linux-gnu/9/../../../x86_64-linux-gnu/crtn.o
+        Node: expand
+          Node: options
+            Node: replace_arg_regex
+              Node: replace Value: @(.*)
+              Node: with Value: --coverity_resp_file=$1
+        Node: pre_trans
+          Node: options
+            Node: intern_trans Value: gnu_pre_translate
+        Node: trans
+          Node: options
+            Node: includes_from_env_var Value: CPATH
+            Node: includes_from_env_var_empty_is_cwd Value: true
+        Node: trans
+          Node: options
+            Node: includes_from_env_var Value: C_INCLUDE_PATH
+            Node: pre_prepend_arg Value: --c
+        Node: begin_command_line_config
+  Node: md5 Value: 8f22057cb35e01414cb91c893028d6c8
+Configuration read from: /home/ubuntu/coreMQTT/cov-out/emit/ip-172-31-80-220/config/660e697d2e8e4024af35c3f44545d3ec/g++-config-0/coverity_config.xml
+Node: coverity
+  Node: cit_version Value: 1
+  Node: config
+    Node: build
+      Node: compiler
+        Node: comp_name Value: cc
+        Node: comp_name Value: gcc
+        Node: comp_name Value: gcc-9
+        Node: comp_name Value: x86_64-linux-gnu-gcc-9
+        Node: comp_dir Value: /usr/bin
+        Node: comp_translator Value: g++
+        Node: comp_lang Value: C++
+        Node: comp_front_end Value: cov-emit
+        Node: comp_desc Value: GNU C++ Compiler
+        Node: comp_next_type Value: g++cc
+        Node: comp_generic Value: gnu
+        Node: comp_require Value: -std=gnu90
+        Node: id Value: g++-cc-9.4.0-660e697d2e8e4024af35c3f44545d3ec-0
+        Node: version Value: 9.4.0
+        Node: is_compiler Value: true
+        Node: is_linker Value: true
+        Node: target_platform Value: all
+      Node: options
+        Node: id Value: g++-cc-9.4.0-660e697d2e8e4024af35c3f44545d3ec-0
+        Node: template_config_option_id Value: g++-cc-.*
+        Node: compile_options
+        Node: sysinclude_dir Value: /usr/include/c++/9
+        Node: sysinclude_dir Value: /usr/include/x86_64-linux-gnu/c++/9
+        Node: sysinclude_dir Value: /usr/include/c++/9/backward
+        Node: sysinclude_dir Value: /usr/lib/gcc/x86_64-linux-gnu/9/include
+        Node: sysinclude_dir Value: /usr/local/include
+        Node: sysinclude_dir Value: /usr/include/x86_64-linux-gnu
+        Node: sysinclude_dir Value: /usr/include
+        Node: dryrun_switch Value: -E
+        Node: dryrun_switch Value: -v
+        Node: dump_macros_arg Value: -dM
+        Node: dump_macros_arg Value: -E
+        Node: preprocess_remove_arg Value: -o.+
+        Node: preprocess_remove_arg Value: -c
+        Node: preprocess_remove_arg Value: -Werror
+        Node: preprocess_remove_next_arg Value: -o
+        Node: preprocess_switch Value: -xc++
+        Node: preprocess_switch Value: -E
+        Node: preprocess_switch Value: -U__BLOCKS__
+        Node: preprocess_compile_switch Value: -C
+        Node: preprocess_output Value: -
+        Node: dryrun_output Value: 2
+        Node: pre_preinclude_file Value: /home/ubuntu/coreMQTT/cov-out/emit/ip-172-31-80-220/config/660e697d2e8e4024af35c3f44545d3ec/g++-config-0/coverity-compiler-compat.h
+        Node: macro_pre_preinclude_file Value: /home/ubuntu/coreMQTT/cov-out/emit/ip-172-31-80-220/config/660e697d2e8e4024af35c3f44545d3ec/g++-config-0/coverity-macro-compat.h
+        Node: prepend_arg Value: --add_type_modifier=__coverity___fpreg
+        Node: prepend_arg Value: --add_type_modifier=__coverity_decimal
+        Node: prepend_arg Value: --add_type_modifier=__coverity_float
+        Node: prepend_arg Value: --add_type_modifier=__coverity_floatx
+        Node: prepend_arg Value: --no_predefined_feature_test_macros
+        Node: prepend_arg Value: --no_stdarg_builtin
+        Node: prepend_arg Value: --enable_128bit_int
+        Node: prepend_arg Value: --no_predefined_cplusplus
+        Node: prepend_arg Value: -w
+        Node: prepend_arg Value: --no_predefines
+        Node: prepend_arg Value: --comp_ver
+        Node: prepend_arg Value: 9.4.0
+        Node: prepend_arg Value: --size_t_type=m
+        Node: prepend_arg Value: --ptrdiff_t_type=l
+        Node: prepend_arg Value: --type_sizes=w4xl8i4s2e16d8f4P8
+        Node: prepend_arg Value: --type_alignments=w4xl8i4s2e16d8f4P8
+        Node: prepend_arg Value: --char_bit_size=8
+        Node: prepend_arg Value: --gnu_carriage_return_line_terminator
+        Node: prepend_arg Value: --wchar_t_keyword
+        Node: prepend_arg Value: --no_multiline_string
+        Node: prepend_arg Value: --no_trigraphs
+        Node: prepend_arg Value: --ignore_calling_convention
+        Node: prepend_arg Value: --enable_80bit_float
+        Node: prepend_arg Value: --enable_128bit_float
+        Node: prepend_arg Value: --macro_stack_pragmas
+        Node: prepend_arg Value: --exceptions
+        Node: prepend_arg Value: --arg_dependent_overload
+        Node: prepend_arg Value: --inline_keyword
+        Node: prepend_arg Value: --has_include_macro
+        Node: prepend_arg Value: --has_include_next_macro
+        Node: prepend_arg Value: --has_cpp_attribute_macro
+        Node: prepend_arg Value: --no_predefines
+        Node: skip_file Value: conftest\.c{1,2}$
+        Node: skip_file Value: conftest\.cpp$
+        Node: skip_file Value: cgo-cc-input-[0-9]+\.(c|cc|cpp|cxx)
+        Node: opt_preinclude_file Value: /home/ubuntu/coreMQTT/cov-out/emit/ip-172-31-80-220/config/660e697d2e8e4024af35c3f44545d3ec/g++-config-0/../user_nodefs.h
+        Node: pch_options
+          Node: archetype Value: gcc
+        Node: link_options
+        Node: library_search_path Value: /usr/lib/gcc/x86_64-linux-gnu/9/
+        Node: library_search_path Value: /usr/lib/gcc/x86_64-linux-gnu/9/../../../../x86_64-linux-gnu/lib/x86_64-linux-gnu/9/
+        Node: library_search_path Value: /usr/lib/gcc/x86_64-linux-gnu/9/../../../../x86_64-linux-gnu/lib/x86_64-linux-gnu/
+        Node: library_search_path Value: /usr/lib/gcc/x86_64-linux-gnu/9/../../../../x86_64-linux-gnu/lib/../lib/
+        Node: library_search_path Value: /usr/lib/gcc/x86_64-linux-gnu/9/../../../x86_64-linux-gnu/9/
+        Node: library_search_path Value: /usr/lib/gcc/x86_64-linux-gnu/9/../../../x86_64-linux-gnu/
+        Node: library_search_path Value: /usr/lib/gcc/x86_64-linux-gnu/9/../../../../lib/
+        Node: library_search_path Value: /lib/x86_64-linux-gnu/9/
+        Node: library_search_path Value: /lib/x86_64-linux-gnu/
+        Node: library_search_path Value: /lib/../lib/
+        Node: library_search_path Value: /usr/lib/x86_64-linux-gnu/9/
+        Node: library_search_path Value: /usr/lib/x86_64-linux-gnu/
+        Node: library_search_path Value: /usr/lib/../lib/
+        Node: library_search_path Value: /usr/lib/gcc/x86_64-linux-gnu/9/../../../../x86_64-linux-gnu/lib/
+        Node: library_search_path Value: /usr/lib/gcc/x86_64-linux-gnu/9/../../../
+        Node: library_search_path Value: /lib/
+        Node: library_search_path Value: /usr/lib/
+        Node: implicit_link_input Value: /usr/lib/gcc/x86_64-linux-gnu/9/../../../x86_64-linux-gnu/Scrt1.o
+        Node: implicit_link_input Value: /usr/lib/gcc/x86_64-linux-gnu/9/../../../x86_64-linux-gnu/crti.o
+        Node: implicit_link_input Value: /usr/lib/gcc/x86_64-linux-gnu/9/crtbeginS.o
+        Node: implicit_link_input Value: /usr/lib/gcc/x86_64-linux-gnu/9/libgcc.a
+        Node: implicit_link_input Value: /usr/lib/gcc/x86_64-linux-gnu/9/libgcc_s.so
+        Node: implicit_link_input Value: /usr/lib/gcc/x86_64-linux-gnu/9/../../../x86_64-linux-gnu/libgcc_s.so.1
+        Node: implicit_link_input Value: /usr/lib/gcc/x86_64-linux-gnu/9/libgcc.a
+        Node: implicit_link_input Value: /usr/lib/gcc/x86_64-linux-gnu/9/../../../x86_64-linux-gnu/libc.so
+        Node: implicit_link_input Value: /lib/x86_64-linux-gnu/libc.so.6
+        Node: implicit_link_input Value: /usr/lib/x86_64-linux-gnu/libc_nonshared.a
+        Node: implicit_link_input Value: /lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+        Node: implicit_link_input Value: /usr/lib/x86_64-linux-gnu/libc_nonshared.a
+        Node: implicit_link_input Value: /lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+        Node: implicit_link_input Value: /usr/lib/gcc/x86_64-linux-gnu/9/libgcc.a
+        Node: implicit_link_input Value: /usr/lib/gcc/x86_64-linux-gnu/9/libgcc_s.so
+        Node: implicit_link_input Value: /usr/lib/gcc/x86_64-linux-gnu/9/../../../x86_64-linux-gnu/libgcc_s.so.1
+        Node: implicit_link_input Value: /usr/lib/gcc/x86_64-linux-gnu/9/libgcc.a
+        Node: implicit_link_input Value: /usr/lib/gcc/x86_64-linux-gnu/9/crtendS.o
+        Node: implicit_link_input Value: /usr/lib/gcc/x86_64-linux-gnu/9/../../../x86_64-linux-gnu/crtn.o
+        Node: pre_trans
+          Node: options
+            Node: pre_prepend_arg Value: -coverity_c_suffixes_are_cxx
+        Node: trans
+          Node: options
+            Node: includes_from_env_var Value: CPLUS_INCLUDE_PATH
+            Node: pre_prepend_arg Value: --c++
+        Node: expand
+          Node: options
+            Node: replace_arg_regex
+              Node: replace Value: @(.*)
+              Node: with Value: --coverity_resp_file=$1
+        Node: pre_trans
+          Node: options
+            Node: intern_trans Value: gnu_pre_translate
+        Node: trans
+          Node: options
+            Node: includes_from_env_var Value: CPATH
+            Node: includes_from_env_var_empty_is_cwd Value: true
+        Node: begin_command_line_config
+  Node: md5 Value: 74dcbc851f07efc12a994173d38d61db
+Configuration read from: /home/ubuntu/coreMQTT/cov-out/emit/ip-172-31-80-220/config/660e697d2e8e4024af35c3f44545d3ec/g++cc-config-0/coverity_config.xml
+Node: coverity
+  Node: cit_version Value: 1
+  Node: config
+    Node: build
+      Node: compiler
+        Node: comp_name Value: cc
+        Node: comp_name Value: gcc
+        Node: comp_name Value: gcc-9
+        Node: comp_name Value: x86_64-linux-gnu-gcc-9
+        Node: comp_dir Value: /usr/bin
+        Node: comp_translator Value: g++cc
+        Node: comp_lang Value: C
+        Node: comp_front_end Value: cov-emit
+        Node: comp_desc Value: GNU C++ Compiler
+        Node: comp_generic Value: gnu
+        Node: comp_require Value: -std=gnu90
+        Node: id Value: g++cc-cc-9.4.0-660e697d2e8e4024af35c3f44545d3ec-0
+        Node: version Value: 9.4.0
+        Node: is_compiler Value: true
+        Node: is_linker Value: true
+        Node: target_platform Value: all
+      Node: options
+        Node: id Value: g++cc-cc-9.4.0-660e697d2e8e4024af35c3f44545d3ec-0
+        Node: template_config_option_id Value: g++cc-cc-.*
+        Node: compile_options
+        Node: sysinclude_dir Value: /usr/lib/gcc/x86_64-linux-gnu/9/include
+        Node: sysinclude_dir Value: /usr/local/include
+        Node: sysinclude_dir Value: /usr/include/x86_64-linux-gnu
+        Node: sysinclude_dir Value: /usr/include
+        Node: dryrun_switch Value: -xc
+        Node: dryrun_switch Value: -E
+        Node: dryrun_switch Value: -v
+        Node: dump_macros_arg Value: -xc
+        Node: dump_macros_arg Value: -dM
+        Node: dump_macros_arg Value: -E
+        Node: preprocess_remove_arg Value: -o.+
+        Node: preprocess_remove_arg Value: -c
+        Node: preprocess_remove_arg Value: -Werror
+        Node: preprocess_remove_next_arg Value: -o
+        Node: preprocess_switch Value: -E
+        Node: preprocess_switch Value: -U__BLOCKS__
+        Node: preprocess_switch Value: -xc
+        Node: preprocess_compile_switch Value: -C
+        Node: preprocess_output Value: -
+        Node: dryrun_output Value: 2
+        Node: pre_preinclude_file Value: /home/ubuntu/coreMQTT/cov-out/emit/ip-172-31-80-220/config/660e697d2e8e4024af35c3f44545d3ec/g++cc-config-0/coverity-compiler-compat.h
+        Node: macro_pre_preinclude_file Value: /home/ubuntu/coreMQTT/cov-out/emit/ip-172-31-80-220/config/660e697d2e8e4024af35c3f44545d3ec/g++cc-config-0/coverity-macro-compat.h
+        Node: prepend_arg Value: --fixed_point
+        Node: prepend_arg Value: --add_type_modifier=__coverity___fpreg
+        Node: prepend_arg Value: --add_type_modifier=__coverity_decimal
+        Node: prepend_arg Value: --add_type_modifier=__coverity_float
+        Node: prepend_arg Value: --add_type_modifier=__coverity_floatx
+        Node: prepend_arg Value: --no_predefined_feature_test_macros
+        Node: prepend_arg Value: --no_stdarg_builtin
+        Node: prepend_arg Value: --enable_128bit_int
+        Node: prepend_arg Value: --no_predefined_cplusplus
+        Node: prepend_arg Value: -w
+        Node: prepend_arg Value: --no_predefines
+        Node: prepend_arg Value: --comp_ver
+        Node: prepend_arg Value: 9.4.0
+        Node: prepend_arg Value: --size_t_type=m
+        Node: prepend_arg Value: --ptrdiff_t_type=l
+        Node: prepend_arg Value: --type_sizes=xl8i4s2e16d8f4P8
+        Node: prepend_arg Value: --type_alignments=xl8i4s2e16d8f4P8
+        Node: prepend_arg Value: --char_bit_size=8
+        Node: prepend_arg Value: --gnu_carriage_return_line_terminator
+        Node: prepend_arg Value: --wchar_t_type=i
+        Node: prepend_arg Value: --no_multiline_string
+        Node: prepend_arg Value: --no_trigraphs
+        Node: prepend_arg Value: --ignore_calling_convention
+        Node: prepend_arg Value: --enable_80bit_float
+        Node: prepend_arg Value: --enable_128bit_float
+        Node: prepend_arg Value: --allow__bool
+        Node: prepend_arg Value: --macro_stack_pragmas
+        Node: prepend_arg Value: --inline_keyword
+        Node: prepend_arg Value: --has_include_macro
+        Node: prepend_arg Value: --has_include_next_macro
+        Node: prepend_arg Value: --has_cpp_attribute_macro
+        Node: prepend_arg Value: --no_predefines
+        Node: skip_file Value: conftest\.c{1,2}$
+        Node: skip_file Value: conftest\.cpp$
+        Node: skip_file Value: cgo-cc-input-[0-9]+\.(c|cc|cpp|cxx)
+        Node: opt_preinclude_file Value: /home/ubuntu/coreMQTT/cov-out/emit/ip-172-31-80-220/config/660e697d2e8e4024af35c3f44545d3ec/g++cc-config-0/../user_nodefs.h
+        Node: pch_options
+          Node: archetype Value: gcc
+        Node: link_options
+        Node: library_search_path Value: /usr/lib/gcc/x86_64-linux-gnu/9/
+        Node: library_search_path Value: /usr/lib/gcc/x86_64-linux-gnu/9/../../../../x86_64-linux-gnu/lib/x86_64-linux-gnu/9/
+        Node: library_search_path Value: /usr/lib/gcc/x86_64-linux-gnu/9/../../../../x86_64-linux-gnu/lib/x86_64-linux-gnu/
+        Node: library_search_path Value: /usr/lib/gcc/x86_64-linux-gnu/9/../../../../x86_64-linux-gnu/lib/../lib/
+        Node: library_search_path Value: /usr/lib/gcc/x86_64-linux-gnu/9/../../../x86_64-linux-gnu/9/
+        Node: library_search_path Value: /usr/lib/gcc/x86_64-linux-gnu/9/../../../x86_64-linux-gnu/
+        Node: library_search_path Value: /usr/lib/gcc/x86_64-linux-gnu/9/../../../../lib/
+        Node: library_search_path Value: /lib/x86_64-linux-gnu/9/
+        Node: library_search_path Value: /lib/x86_64-linux-gnu/
+        Node: library_search_path Value: /lib/../lib/
+        Node: library_search_path Value: /usr/lib/x86_64-linux-gnu/9/
+        Node: library_search_path Value: /usr/lib/x86_64-linux-gnu/
+        Node: library_search_path Value: /usr/lib/../lib/
+        Node: library_search_path Value: /usr/lib/gcc/x86_64-linux-gnu/9/../../../../x86_64-linux-gnu/lib/
+        Node: library_search_path Value: /usr/lib/gcc/x86_64-linux-gnu/9/../../../
+        Node: library_search_path Value: /lib/
+        Node: library_search_path Value: /usr/lib/
+        Node: implicit_link_input Value: /usr/lib/gcc/x86_64-linux-gnu/9/../../../x86_64-linux-gnu/Scrt1.o
+        Node: implicit_link_input Value: /usr/lib/gcc/x86_64-linux-gnu/9/../../../x86_64-linux-gnu/crti.o
+        Node: implicit_link_input Value: /usr/lib/gcc/x86_64-linux-gnu/9/crtbeginS.o
+        Node: implicit_link_input Value: /usr/lib/gcc/x86_64-linux-gnu/9/libgcc.a
+        Node: implicit_link_input Value: /usr/lib/gcc/x86_64-linux-gnu/9/libgcc_s.so
+        Node: implicit_link_input Value: /usr/lib/gcc/x86_64-linux-gnu/9/../../../x86_64-linux-gnu/libgcc_s.so.1
+        Node: implicit_link_input Value: /usr/lib/gcc/x86_64-linux-gnu/9/libgcc.a
+        Node: implicit_link_input Value: /usr/lib/gcc/x86_64-linux-gnu/9/../../../x86_64-linux-gnu/libc.so
+        Node: implicit_link_input Value: /lib/x86_64-linux-gnu/libc.so.6
+        Node: implicit_link_input Value: /usr/lib/x86_64-linux-gnu/libc_nonshared.a
+        Node: implicit_link_input Value: /lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+        Node: implicit_link_input Value: /usr/lib/x86_64-linux-gnu/libc_nonshared.a
+        Node: implicit_link_input Value: /lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+        Node: implicit_link_input Value: /usr/lib/gcc/x86_64-linux-gnu/9/libgcc.a
+        Node: implicit_link_input Value: /usr/lib/gcc/x86_64-linux-gnu/9/libgcc_s.so
+        Node: implicit_link_input Value: /usr/lib/gcc/x86_64-linux-gnu/9/../../../x86_64-linux-gnu/libgcc_s.so.1
+        Node: implicit_link_input Value: /usr/lib/gcc/x86_64-linux-gnu/9/libgcc.a
+        Node: implicit_link_input Value: /usr/lib/gcc/x86_64-linux-gnu/9/crtendS.o
+        Node: implicit_link_input Value: /usr/lib/gcc/x86_64-linux-gnu/9/../../../x86_64-linux-gnu/crtn.o
+        Node: expand
+          Node: options
+            Node: replace_arg_regex
+              Node: replace Value: @(.*)
+              Node: with Value: --coverity_resp_file=$1
+        Node: pre_trans
+          Node: options
+            Node: intern_trans Value: gnu_pre_translate
+        Node: trans
+          Node: options
+            Node: includes_from_env_var Value: CPATH
+            Node: includes_from_env_var_empty_is_cwd Value: true
+        Node: trans
+          Node: options
+            Node: includes_from_env_var Value: C_INCLUDE_PATH
+            Node: pre_prepend_arg Value: --c
+        Node: begin_command_line_config
+  Node: md5 Value: 711f163ae15caa93f82b9002415f5467
+[STATUS] Compiling /home/ubuntu/coreMQTT/source/core_mqtt.c
+/home/ubuntu/workspace/coverity/cov-analysis-linux64-2023.6.1/bin/cov-emit --dir=/home/ubuntu/coreMQTT/cov-out --ignore_path=/tmp/cov-ubuntu/cfa911df378e2f9eb2a4797e35bf1596/cov-configure --ignore_path=/tmp/cov-ubuntu/cfa911df378e2f9eb2a4797e35bf1596/cov-ubuntu/405944e0ecb176c32a4bd1106d6a9383 --emit_complementary_info --pre_preinclude /home/ubuntu/coreMQTT/cov-out/emit/ip-172-31-80-220/config/660e697d2e8e4024af35c3f44545d3ec/gcc-config-0/coverity-macro-compat.h --pre_preinclude /home/ubuntu/coreMQTT/cov-out/emit/ip-172-31-80-220/config/660e697d2e8e4024af35c3f44545d3ec/gcc-config-0/coverity-compiler-compat.h --c --fixed_point --add_type_modifier=__coverity___fpreg --add_type_modifier=__coverity_decimal --add_type_modifier=__coverity_float --add_type_modifier=__coverity_floatx --no_predefined_feature_test_macros --no_stdarg_builtin --enable_128bit_int --no_predefined_cplusplus -w --no_predefines --comp_ver 9.4.0 --char_bit_size=8 --gnu_carriage_return_line_terminator --no_multiline_string --no_trigraphs --ignore_calling_convention --enable_80bit_float --enable_128bit_float --allow__bool --macro_stack_pragmas --inline_keyword --has_include_macro --has_include_next_macro --has_cpp_attribute_macro --no_predefines --preinclude /home/ubuntu/workspace/coverity/cov-analysis-linux64-2023.6.1/config/template-gcc-config-0/../user_nodefs.h --emit_pch_dependencies --builtin_emulation --gcc --c89 --gnu_version 90400 --no_trigraphs -I/home/ubuntu/coreMQTT/source/include -I/home/ubuntu/coreMQTT/source/interface --sys_include=/usr/lib/gcc/x86_64-linux-gnu/9/include --sys_include=/usr/local/include --sys_include=/usr/include/x86_64-linux-gnu --sys_include=/usr/include -DMAX_USER_PROPERTY=5 -DMQTT_DO_NOT_USE_CUSTOM_CONFIG=1 -DMQTT_VERSION_5_ENABLED=1 -DNDEBUG=1 -D__COVERITY_GCC_DIALECT_GNU89 -D__NO_INLINE__ --type_sizes=e16Pdlx8fi4s2 --type_alignments=e16Pdlx8fi4s2 --size_t_type=m --wchar_t_type=i --ptrdiff_t_type=l /home/ubuntu/coreMQTT/source/core_mqtt.c 
+Emit for file '/home/ubuntu/coreMQTT/source/core_mqtt.c' (TU 1) complete.
+[1762785] EXECUTING: /usr/lib/gcc/x86_64-linux-gnu/9/cc1 -quiet -I /home/ubuntu/coreMQTT/source/include -I /home/ubuntu/coreMQTT/source/interface -imultiarch x86_64-linux-gnu -MD CMakeFiles/coverity_analysis.dir/source/core_mqtt.c.d -MF CMakeFiles/coverity_analysis.dir/source/core_mqtt.c.o.d -MT CMakeFiles/coverity_analysis.dir/source/core_mqtt.c.o -D MAX_USER_PROPERTY=5 -D MQTT_DO_NOT_USE_CUSTOM_CONFIG=1 -D MQTT_VERSION_5_ENABLED=1 -D NDEBUG=1 /home/ubuntu/coreMQTT/source/core_mqtt.c -quiet -dumpbase core_mqtt.c -mtune=generic -march=x86-64 -auxbase-strip CMakeFiles/coverity_analysis.dir/source/core_mqtt.c.o -std=gnu90 -fasynchronous-unwind-tables -fstack-protector-strong -Wformat -Wformat-security -fstack-clash-protection -fcf-protection -o /tmp/ccUvpxXD.s
+[1762786] EXECUTING: as -I /home/ubuntu/coreMQTT/source/include -I /home/ubuntu/coreMQTT/source/interface --64 -o CMakeFiles/coverity_analysis.dir/source/core_mqtt.c.o /tmp/ccUvpxXD.s
+[1762787] EXECUTING: /bin/sh -c "/home/ubuntu/cmake-3.30.0-rc3-linux-x86_64/bin/cmake -E cmake_echo_color "--switch=" --green --progress-dir=/home/ubuntu/coreMQTT/CMakeFiles --progress-num=46 "Building C object CMakeFiles/coverity_analysis.dir/source/core_mqtt_state.c.o""
+[1762788] EXECUTING: /home/ubuntu/cmake-3.30.0-rc3-linux-x86_64/bin/cmake -E cmake_echo_color --switch= --green --progress-dir=/home/ubuntu/coreMQTT/CMakeFiles --progress-num=46 "Building C object CMakeFiles/coverity_analysis.dir/source/core_mqtt_state.c.o"
+[1762789] EXECUTING: /usr/bin/cc -DMAX_USER_PROPERTY=5 -DMQTT_DO_NOT_USE_CUSTOM_CONFIG=1 -DMQTT_VERSION_5_ENABLED=1 -DNDEBUG=1 -I/home/ubuntu/coreMQTT/source/include -I/home/ubuntu/coreMQTT/source/interface -std=gnu90 -MD -MT CMakeFiles/coverity_analysis.dir/source/core_mqtt_state.c.o -MF CMakeFiles/coverity_analysis.dir/source/core_mqtt_state.c.o.d -o CMakeFiles/coverity_analysis.dir/source/core_mqtt_state.c.o -c /home/ubuntu/coreMQTT/source/core_mqtt_state.c
+[1762790] CWD: /home/ubuntu/coreMQTT
+[1762790] COMPILING: /home/ubuntu/workspace/coverity/cov-analysis-linux64-2023.6.1/bin/cov-translate /usr/bin/cc -DMAX_USER_PROPERTY=5 -DMQTT_DO_NOT_USE_CUSTOM_CONFIG=1 -DMQTT_VERSION_5_ENABLED=1 -DNDEBUG=1 -I/home/ubuntu/coreMQTT/source/include -I/home/ubuntu/coreMQTT/source/interface -std=gnu90 -MD -MT CMakeFiles/coverity_analysis.dir/source/core_mqtt_state.c.o -MF CMakeFiles/coverity_analysis.dir/source/core_mqtt_state.c.o.d -o CMakeFiles/coverity_analysis.dir/source/core_mqtt_state.c.o -c /home/ubuntu/coreMQTT/source/core_mqtt_state.c
+COV_TRANSLATE EXPANDED ARGS: "-DMAX_USER_PROPERTY=5" "-DMQTT_DO_NOT_USE_CUSTOM_CONFIG=1" "-DMQTT_VERSION_5_ENABLED=1" "-DNDEBUG=1" "-I/home/ubuntu/coreMQTT/source/include" "-I/home/ubuntu/coreMQTT/source/interface" "-std=gnu90" "-MD" "-MT" "CMakeFiles/coverity_analysis.dir/source/core_mqtt_state.c.o" "-MF" "CMakeFiles/coverity_analysis.dir/source/core_mqtt_state.c.o.d" "-o" "CMakeFiles/coverity_analysis.dir/source/core_mqtt_state.c.o" "-c" "/home/ubuntu/coreMQTT/source/core_mqtt_state.c"
+Using cached template compiler configuration instance /home/ubuntu/coreMQTT/cov-out/emit/ip-172-31-80-220/config/660e697d2e8e4024af35c3f44545d3ec/coverity_config.xml
+[STATUS] Compiling /home/ubuntu/coreMQTT/source/core_mqtt_state.c
+/home/ubuntu/workspace/coverity/cov-analysis-linux64-2023.6.1/bin/cov-emit --dir=/home/ubuntu/coreMQTT/cov-out --ignore_path=/tmp/cov-ubuntu/cfa911df378e2f9eb2a4797e35bf1596/cov-configure --ignore_path=/tmp/cov-ubuntu/cfa911df378e2f9eb2a4797e35bf1596/cov-ubuntu/95330c603bc817d1c63574c63c55966e --emit_complementary_info --pre_preinclude /home/ubuntu/coreMQTT/cov-out/emit/ip-172-31-80-220/config/660e697d2e8e4024af35c3f44545d3ec/gcc-config-0/coverity-macro-compat.h --pre_preinclude /home/ubuntu/coreMQTT/cov-out/emit/ip-172-31-80-220/config/660e697d2e8e4024af35c3f44545d3ec/gcc-config-0/coverity-compiler-compat.h --c --fixed_point --add_type_modifier=__coverity___fpreg --add_type_modifier=__coverity_decimal --add_type_modifier=__coverity_float --add_type_modifier=__coverity_floatx --no_predefined_feature_test_macros --no_stdarg_builtin --enable_128bit_int --no_predefined_cplusplus -w --no_predefines --comp_ver 9.4.0 --char_bit_size=8 --gnu_carriage_return_line_terminator --no_multiline_string --no_trigraphs --ignore_calling_convention --enable_80bit_float --enable_128bit_float --allow__bool --macro_stack_pragmas --inline_keyword --has_include_macro --has_include_next_macro --has_cpp_attribute_macro --no_predefines --preinclude /home/ubuntu/workspace/coverity/cov-analysis-linux64-2023.6.1/config/template-gcc-config-0/../user_nodefs.h --emit_pch_dependencies --builtin_emulation --gcc --c89 --gnu_version 90400 --no_trigraphs -I/home/ubuntu/coreMQTT/source/include -I/home/ubuntu/coreMQTT/source/interface --sys_include=/usr/lib/gcc/x86_64-linux-gnu/9/include --sys_include=/usr/local/include --sys_include=/usr/include/x86_64-linux-gnu --sys_include=/usr/include -DMAX_USER_PROPERTY=5 -DMQTT_DO_NOT_USE_CUSTOM_CONFIG=1 -DMQTT_VERSION_5_ENABLED=1 -DNDEBUG=1 -D__COVERITY_GCC_DIALECT_GNU89 -D__NO_INLINE__ --type_sizes=e16Pdlx8fi4s2 --type_alignments=e16Pdlx8fi4s2 --size_t_type=m --wchar_t_type=i --ptrdiff_t_type=l /home/ubuntu/coreMQTT/source/core_mqtt_state.c 
+Emit for file '/home/ubuntu/coreMQTT/source/core_mqtt_state.c' (TU 2) complete.
+[1762800] EXECUTING: /usr/lib/gcc/x86_64-linux-gnu/9/cc1 -quiet -I /home/ubuntu/coreMQTT/source/include -I /home/ubuntu/coreMQTT/source/interface -imultiarch x86_64-linux-gnu -MD CMakeFiles/coverity_analysis.dir/source/core_mqtt_state.c.d -MF CMakeFiles/coverity_analysis.dir/source/core_mqtt_state.c.o.d -MT CMakeFiles/coverity_analysis.dir/source/core_mqtt_state.c.o -D MAX_USER_PROPERTY=5 -D MQTT_DO_NOT_USE_CUSTOM_CONFIG=1 -D MQTT_VERSION_5_ENABLED=1 -D NDEBUG=1 /home/ubuntu/coreMQTT/source/core_mqtt_state.c -quiet -dumpbase core_mqtt_state.c -mtune=generic -march=x86-64 -auxbase-strip CMakeFiles/coverity_analysis.dir/source/core_mqtt_state.c.o -std=gnu90 -fasynchronous-unwind-tables -fstack-protector-strong -Wformat -Wformat-security -fstack-clash-protection -fcf-protection -o /tmp/cc5o4pS0.s
+[1762801] EXECUTING: as -I /home/ubuntu/coreMQTT/source/include -I /home/ubuntu/coreMQTT/source/interface --64 -o CMakeFiles/coverity_analysis.dir/source/core_mqtt_state.c.o /tmp/cc5o4pS0.s
+[1762802] EXECUTING: /bin/sh -c "/home/ubuntu/cmake-3.30.0-rc3-linux-x86_64/bin/cmake -E cmake_echo_color "--switch=" --green --progress-dir=/home/ubuntu/coreMQTT/CMakeFiles --progress-num=47 "Building C object CMakeFiles/coverity_analysis.dir/source/core_mqtt_serializer.c.o""
+[1762803] EXECUTING: /home/ubuntu/cmake-3.30.0-rc3-linux-x86_64/bin/cmake -E cmake_echo_color --switch= --green --progress-dir=/home/ubuntu/coreMQTT/CMakeFiles --progress-num=47 "Building C object CMakeFiles/coverity_analysis.dir/source/core_mqtt_serializer.c.o"
+[1762804] EXECUTING: /usr/bin/cc -DMAX_USER_PROPERTY=5 -DMQTT_DO_NOT_USE_CUSTOM_CONFIG=1 -DMQTT_VERSION_5_ENABLED=1 -DNDEBUG=1 -I/home/ubuntu/coreMQTT/source/include -I/home/ubuntu/coreMQTT/source/interface -std=gnu90 -MD -MT CMakeFiles/coverity_analysis.dir/source/core_mqtt_serializer.c.o -MF CMakeFiles/coverity_analysis.dir/source/core_mqtt_serializer.c.o.d -o CMakeFiles/coverity_analysis.dir/source/core_mqtt_serializer.c.o -c /home/ubuntu/coreMQTT/source/core_mqtt_serializer.c
+[1762805] CWD: /home/ubuntu/coreMQTT
+[1762805] COMPILING: /home/ubuntu/workspace/coverity/cov-analysis-linux64-2023.6.1/bin/cov-translate /usr/bin/cc -DMAX_USER_PROPERTY=5 -DMQTT_DO_NOT_USE_CUSTOM_CONFIG=1 -DMQTT_VERSION_5_ENABLED=1 -DNDEBUG=1 -I/home/ubuntu/coreMQTT/source/include -I/home/ubuntu/coreMQTT/source/interface -std=gnu90 -MD -MT CMakeFiles/coverity_analysis.dir/source/core_mqtt_serializer.c.o -MF CMakeFiles/coverity_analysis.dir/source/core_mqtt_serializer.c.o.d -o CMakeFiles/coverity_analysis.dir/source/core_mqtt_serializer.c.o -c /home/ubuntu/coreMQTT/source/core_mqtt_serializer.c
+COV_TRANSLATE EXPANDED ARGS: "-DMAX_USER_PROPERTY=5" "-DMQTT_DO_NOT_USE_CUSTOM_CONFIG=1" "-DMQTT_VERSION_5_ENABLED=1" "-DNDEBUG=1" "-I/home/ubuntu/coreMQTT/source/include" "-I/home/ubuntu/coreMQTT/source/interface" "-std=gnu90" "-MD" "-MT" "CMakeFiles/coverity_analysis.dir/source/core_mqtt_serializer.c.o" "-MF" "CMakeFiles/coverity_analysis.dir/source/core_mqtt_serializer.c.o.d" "-o" "CMakeFiles/coverity_analysis.dir/source/core_mqtt_serializer.c.o" "-c" "/home/ubuntu/coreMQTT/source/core_mqtt_serializer.c"
+Using cached template compiler configuration instance /home/ubuntu/coreMQTT/cov-out/emit/ip-172-31-80-220/config/660e697d2e8e4024af35c3f44545d3ec/coverity_config.xml
+[STATUS] Compiling /home/ubuntu/coreMQTT/source/core_mqtt_serializer.c
+/home/ubuntu/workspace/coverity/cov-analysis-linux64-2023.6.1/bin/cov-emit --dir=/home/ubuntu/coreMQTT/cov-out --ignore_path=/tmp/cov-ubuntu/cfa911df378e2f9eb2a4797e35bf1596/cov-configure --ignore_path=/tmp/cov-ubuntu/cfa911df378e2f9eb2a4797e35bf1596/cov-ubuntu/1b8d0ca72854800704a483802af103cb --emit_complementary_info --pre_preinclude /home/ubuntu/coreMQTT/cov-out/emit/ip-172-31-80-220/config/660e697d2e8e4024af35c3f44545d3ec/gcc-config-0/coverity-macro-compat.h --pre_preinclude /home/ubuntu/coreMQTT/cov-out/emit/ip-172-31-80-220/config/660e697d2e8e4024af35c3f44545d3ec/gcc-config-0/coverity-compiler-compat.h --c --fixed_point --add_type_modifier=__coverity___fpreg --add_type_modifier=__coverity_decimal --add_type_modifier=__coverity_float --add_type_modifier=__coverity_floatx --no_predefined_feature_test_macros --no_stdarg_builtin --enable_128bit_int --no_predefined_cplusplus -w --no_predefines --comp_ver 9.4.0 --char_bit_size=8 --gnu_carriage_return_line_terminator --no_multiline_string --no_trigraphs --ignore_calling_convention --enable_80bit_float --enable_128bit_float --allow__bool --macro_stack_pragmas --inline_keyword --has_include_macro --has_include_next_macro --has_cpp_attribute_macro --no_predefines --preinclude /home/ubuntu/workspace/coverity/cov-analysis-linux64-2023.6.1/config/template-gcc-config-0/../user_nodefs.h --emit_pch_dependencies --builtin_emulation --gcc --c89 --gnu_version 90400 --no_trigraphs -I/home/ubuntu/coreMQTT/source/include -I/home/ubuntu/coreMQTT/source/interface --sys_include=/usr/lib/gcc/x86_64-linux-gnu/9/include --sys_include=/usr/local/include --sys_include=/usr/include/x86_64-linux-gnu --sys_include=/usr/include -DMAX_USER_PROPERTY=5 -DMQTT_DO_NOT_USE_CUSTOM_CONFIG=1 -DMQTT_VERSION_5_ENABLED=1 -DNDEBUG=1 -D__COVERITY_GCC_DIALECT_GNU89 -D__NO_INLINE__ --type_sizes=e16Pdlx8fi4s2 --type_alignments=e16Pdlx8fi4s2 --size_t_type=m --wchar_t_type=i --ptrdiff_t_type=l /home/ubuntu/coreMQTT/source/core_mqtt_serializer.c 
+Emit for file '/home/ubuntu/coreMQTT/source/core_mqtt_serializer.c' (TU 3) complete.
+[1762807] EXECUTING: /usr/lib/gcc/x86_64-linux-gnu/9/cc1 -quiet -I /home/ubuntu/coreMQTT/source/include -I /home/ubuntu/coreMQTT/source/interface -imultiarch x86_64-linux-gnu -MD CMakeFiles/coverity_analysis.dir/source/core_mqtt_serializer.c.d -MF CMakeFiles/coverity_analysis.dir/source/core_mqtt_serializer.c.o.d -MT CMakeFiles/coverity_analysis.dir/source/core_mqtt_serializer.c.o -D MAX_USER_PROPERTY=5 -D MQTT_DO_NOT_USE_CUSTOM_CONFIG=1 -D MQTT_VERSION_5_ENABLED=1 -D NDEBUG=1 /home/ubuntu/coreMQTT/source/core_mqtt_serializer.c -quiet -dumpbase core_mqtt_serializer.c -mtune=generic -march=x86-64 -auxbase-strip CMakeFiles/coverity_analysis.dir/source/core_mqtt_serializer.c.o -std=gnu90 -fasynchronous-unwind-tables -fstack-protector-strong -Wformat -Wformat-security -fstack-clash-protection -fcf-protection -o /tmp/ccBQRmfb.s
+[1762808] EXECUTING: as -I /home/ubuntu/coreMQTT/source/include -I /home/ubuntu/coreMQTT/source/interface --64 -o CMakeFiles/coverity_analysis.dir/source/core_mqtt_serializer.c.o /tmp/ccBQRmfb.s
+[1762809] EXECUTING: /bin/sh -c "/home/ubuntu/cmake-3.30.0-rc3-linux-x86_64/bin/cmake -E cmake_echo_color "--switch=" --green --bold --progress-dir=/home/ubuntu/coreMQTT/CMakeFiles --progress-num=48 "Linking C static library lib/libcoverity_analysis.a""
+[1762810] EXECUTING: /home/ubuntu/cmake-3.30.0-rc3-linux-x86_64/bin/cmake -E cmake_echo_color --switch= --green --bold --progress-dir=/home/ubuntu/coreMQTT/CMakeFiles --progress-num=48 "Linking C static library lib/libcoverity_analysis.a"
+[1762811] EXECUTING: /home/ubuntu/cmake-3.30.0-rc3-linux-x86_64/bin/cmake -P CMakeFiles/coverity_analysis.dir/cmake_clean_target.cmake
+[1762812] EXECUTING: /home/ubuntu/cmake-3.30.0-rc3-linux-x86_64/bin/cmake -E cmake_link_script CMakeFiles/coverity_analysis.dir/link.txt --verbose=
+[1762813] EXECUTING: /usr/bin/ar qc lib/libcoverity_analysis.a CMakeFiles/coverity_analysis.dir/source/core_mqtt.c.o CMakeFiles/coverity_analysis.dir/source/core_mqtt_state.c.o CMakeFiles/coverity_analysis.dir/source/core_mqtt_serializer.c.o
+[1762814] CWD: /home/ubuntu/coreMQTT
+[1762814] COMPILING: /home/ubuntu/workspace/coverity/cov-analysis-linux64-2023.6.1/bin/cov-translate /usr/bin/ar qc lib/libcoverity_analysis.a CMakeFiles/coverity_analysis.dir/source/core_mqtt.c.o CMakeFiles/coverity_analysis.dir/source/core_mqtt_state.c.o CMakeFiles/coverity_analysis.dir/source/core_mqtt_serializer.c.o
+COV_TRANSLATE EXPANDED ARGS: "qc" "lib/libcoverity_analysis.a" "CMakeFiles/coverity_analysis.dir/source/core_mqtt.c.o" "CMakeFiles/coverity_analysis.dir/source/core_mqtt_state.c.o" "CMakeFiles/coverity_analysis.dir/source/core_mqtt_serializer.c.o"
+[1762815] EXECUTING: /usr/bin/ranlib lib/libcoverity_analysis.a
+[1762816] EXECUTING: /bin/sh -c "/home/ubuntu/cmake-3.30.0-rc3-linux-x86_64/bin/cmake -E cmake_echo_color "--switch=" --progress-dir=/home/ubuntu/coreMQTT/CMakeFiles --progress-num=45,46,47,48 "Built target coverity_analysis""
+[1762817] EXECUTING: /home/ubuntu/cmake-3.30.0-rc3-linux-x86_64/bin/cmake -E cmake_echo_color --switch= --progress-dir=/home/ubuntu/coreMQTT/CMakeFiles --progress-num=45,46,47,48 "Built target coverity_analysis"
+[1762818] EXECUTING: /home/ubuntu/cmake-3.30.0-rc3-linux-x86_64/bin/cmake -E cmake_progress_start /home/ubuntu/coreMQTT/CMakeFiles 0
+2024-06-21T07:00:09.094567Z|cov-build|1761684|info|> Invoking cov-security-da with commands: /home/ubuntu/workspace/coverity/cov-analysis-linux64-2023.6.1/bin/cov-security-da --dir /home/ubuntu/coreMQTT/cov-out
+2024-06-21T07:00:09.125224Z|cov-build|1761684|info|> Dynamic analyzer took 30 ms
+2024-06-21T07:00:09.125224Z|cov-build|1761684|info|> Build time (cov-build overall): 00:00:07.986407
+2024-06-21T07:00:09.125224Z|cov-build|1761684|info|> 
+2024-06-21T07:00:09.126234Z|cov-build|1761684|info|> Build time (C/C++ emits total): 00:00:07.319676
+2024-06-21T07:00:09.126234Z|cov-build|1761684|info|> 
+2024-06-21T07:00:09.126234Z|cov-build|1761684|info|> 
+2024-06-21T07:00:09.126308Z|cov-build|1761684|info|> Emitted 3 C/C++ compilation units (100%) successfully
+2024-06-21T07:00:09.126308Z|cov-build|1761684|info|> 
+2024-06-21T07:00:09.126308Z|cov-build|1761684|info|> 3 C/C++ compilation units (100%) are ready for analysis
+2024-06-21T07:00:09.126308Z|cov-build|1761684|info|> The cov-build utility completed successfully.

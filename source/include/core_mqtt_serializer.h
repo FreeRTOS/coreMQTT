@@ -298,38 +298,134 @@ typedef struct MQTTUserProperty
  */
 typedef struct MQTTConnectProperties
 {
+     /**
+     * @brief Four Byte Integer representing the Session Expiry Interval in seconds.
+     */
     uint32_t sessionExpiry;
+     /**
+     * @brief Maximum number of unacknowledged PUBLISH packets client is willing to receive.
+     */
     uint16_t receiveMax;
+     /**
+     * @brief Whether the maximum packet size is defined.
+     */
     bool isMaxPacketSize;
+     /**
+     * @brief Four Byte Integer representing the Maximum Packet Size the Client is willing to accept.
+     */
     uint32_t maxPacketSize;
+     /**
+     * @brief Two Byte Integer representing the Topic Alias Maximum value.
+     */
     uint16_t topicAliasMax;
+     /**
+     * @brief  A value of 0 indicates that the Server MUST NOT return Response Information.
+     */
     bool  reqResInfo;
+     /**
+     * @brief The Client uses this value to indicate whether the Reason String or User Properties
+     *  are sent in the case of failures
+     */
     bool  reqProbInfo;
+     /**
+     * @brief Length of the connect properties.
+     */
     size_t propertyLength;
-    MQTTUserProperty_t *incomingUserProperty;
-    uint32_t incomingUserPropSize;
+     /**
+     * @brief   Pointer to the outgoing user properties.
+     */
     MQTTUserProperty_t *outgoingUserProperty;
+     /**
+     * @brief  Total number of outgoing user properties.
+     */
     uint32_t outgoingUserPropSize;
-    MQTTAuthInfo_t *incomingAuth;
-    
-    uint16_t serverReceiveMax;
-    uint8_t serverMaxQos;
-    uint8_t retainAvailable;
-    uint32_t serverMaxPacketSize;
-    const char* clientIdentifier;
-    uint16_t clientIdLength;
-    uint16_t serverTopicAliasMax;
-    const char* reasonString;
-    uint16_t reasonStringLength;
-    bool isWildcardAvaiable;
-    bool subscriptionId;
-    bool isSharedAvailable;
-    uint16_t serverKeepAlive;
-    const char* responseInfo;
-    uint16_t responseInfoLength;
-    const char* serverRef;
-    uint16_t serverRefLength;
+
+     /**
+     * @brief  Pointer to the incoming authentication information.
+     */
     MQTTAuthInfo_t *outgoingAuth;
+
+    /**
+     * @brief Maximum number of unacknowledged PUBLISH packets client is willing to receive.
+     */
+    uint16_t serverReceiveMax;
+     /**
+     * @brief  Max qos supported by the server.
+     */
+    uint8_t serverMaxQos;
+     /**
+     * @brief Byte declares whether the Server supports retained messages.
+     */
+    uint8_t retainAvailable;
+     /**
+     * @brief Four Byte Integer representing the Maximum Packet Size the Server is willing to accept.
+     */
+    uint32_t serverMaxPacketSize;
+     /**
+     * @brief Client identifier assigned by the client.
+     */
+    const char* clientIdentifier;
+     /**
+     * @brief Length of the assigned client identifier.
+     */
+    uint16_t clientIdLength;
+     /**
+     * @brief Two Byte Integer representing the Topic Alias Maximum value.
+     */
+    uint16_t serverTopicAliasMax;
+     /**
+     * @brief Reason String is a human readable string designed for diagnostics.
+     */
+    const char* reasonString;
+     /**
+     * @brief Length of reason string.
+     */
+    uint16_t reasonStringLength;
+      /**
+     * @brief Pointer to the incoming user properties.
+     */
+    MQTTUserProperty_t *incomingUserProperty;
+     /**
+     * @brief  Total number of user properties received.
+     */
+    uint32_t incomingUserPropSize;
+     /**
+     * @brief Whether wildcard subscription is available.
+     */
+    uint8_t isWildcardAvaiable;
+     /**
+     * @brief Whether the Server supports Subscription Identifiers.
+     */
+    uint8_t subscriptionId;
+     /**
+     * @brief Whether the Server supports Shared Subscription.
+     */
+    uint8_t isSharedAvailable;
+     /**
+     * @brief Keep Alive value given by the server.
+     */
+    uint16_t serverKeepAlive;
+     /**
+     * @brief UTF-8 Encoded String which is used as the basis for creating a Response Topic.
+     */
+    const char* responseInfo;
+     /**
+     * @brief Length of the response information.
+     */
+    uint16_t responseInfoLength;
+     /**
+     * @brief UTF-8 Encoded String which can be used by the Client to identify another Server to use
+     */
+    const char* serverRef;
+     /**
+     * @brief Length of the server reference.
+     */
+    uint16_t serverRefLength;
+     /**
+     * @brief  Pointer to the incoming authentication information.
+     */
+    MQTTAuthInfo_t *incomingAuth;
+
     
 } MQTTConnectProperties_t;
 
@@ -375,18 +471,57 @@ typedef struct MQTTPublishInfo
     size_t payloadLength;
     
 #if (MQTT_VERSION_5_ENABLED)
+     /**
+     * @brief Length of the properties.
+     */
     size_t propertyLength;
+     /**
+     * @brief  Four Byte Integer representing the Will Delay Interval in seconds.
+     */
     uint32_t willDelay;
-    uint8_t payloadFormat;
+     /**
+     * @brief Payload Format Indicator.
+     **/
+      uint8_t payloadFormat;
+     /**
+     * @brief e Four Byte Integer representing the Message Expiry Interval.
+     */
     uint32_t msgExpiryInterval;
+     /**
+     * @brief Wheter the message expiry is specified.
+     */
     bool msgExpiryPresent;
+     /**
+     * @brief Length of the content type.
+     */
     uint16_t contentTypeLength;
+     /**
+     * @brief UTF-8 Encoded String describing the content of the Will Message.
+     */
     const char *contentType;
+     /**
+     * @brief Length of the response topic.
+     */
     uint16_t responseTopicLength;
+     /**
+     * @brief UTF-8 Encoded String which is used as the Topic Name for a response message.
+     */
     const char *responseTopic;
+     /**
+     * @brief Length of the correlation lenght.
+     */
     uint16_t correlationLength;
+     /**
+     * @brief To identify which request the Response Message is for.
+     */
     const void *correlationData;
+     /**
+     * @brief Pointer to the user properties.
+     */
     MQTTUserProperty_t* userProperty;
+     /**
+     * @brief  Number of user properties.
+     */
     uint32_t userPropertySize;
 #endif
 
