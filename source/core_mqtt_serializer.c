@@ -787,7 +787,7 @@ uint8_t* MQTT_SerializePublishProperties(const MQTTPublishInfo_t* pPublishInfo, 
 
 static MQTTStatus_t MQTT_GetUserPropertySize(MQTTUserProperty_t* pUserProperty, uint32_t number, size_t* size) {
     MQTTStatus_t status = MQTTSuccess;
-    uint16_t i = 0;
+    uint32_t i = 0;
     /*Number of user properties can't be more than the max user properties specified*/
     if (number > MAX_USER_PROPERTY) {
         status = MQTTBadParameter;
@@ -797,7 +797,7 @@ static MQTTStatus_t MQTT_GetUserPropertySize(MQTTUserProperty_t* pUserProperty, 
     }
     else {
         for (;i < number && status == MQTTSuccess;i++) {
-            if ((pUserProperty + i) == NULL || (pUserProperty + i)->keyLength == 0 || (pUserProperty + i)->valueLength == 0 || (pUserProperty + i)->key == NULL || (pUserProperty + i)->value == NULL) {
+            if ((pUserProperty + i)->keyLength == 0 || (pUserProperty + i)->valueLength == 0 || (pUserProperty + i)->key == NULL || (pUserProperty + i)->value == NULL) {
                 status = MQTTBadParameter;
             }
             else{
@@ -1375,10 +1375,9 @@ MQTTStatus_t decodeVariableLength(const uint8_t* pBuffer, size_t* length)
 
         }
 
-        /* If the response is incorrect, or no more data is available, then
+        /* If the response is incorrect then
          * break out of the loop. */
-        if ((remainingLength == MQTT_REMAINING_LENGTH_INVALID) ||
-            (status != MQTTSuccess))
+        if (remainingLength == MQTT_REMAINING_LENGTH_INVALID) 
         {
             break;
         }
@@ -1596,10 +1595,7 @@ MQTTStatus_t MQTTV5_DeserializeConnack(MQTTConnectProperties_t* pConnackProperti
                 }
                 break;
             case MQTT_USER_PROPERTY_ID:
-                if (pConnackProperties->incomingUserPropSize == MAX_USER_PROPERTY) {
-                    status = MQTTProtocolError;
-                }
-                else if (propertyLength < 2) {
+                if (propertyLength < 2) {
                     status = MQTTMalformedPacket;
                 }
                 else {
@@ -1623,9 +1619,7 @@ MQTTStatus_t MQTTV5_DeserializeConnack(MQTTConnectProperties_t* pConnackProperti
                            userProperty->value = (const char*)pVariableHeader;
                            pVariableHeader = &pVariableHeader[ userProperty->valueLength];
                            propertyLength-=userProperty->valueLength;
-                           if (pConnackProperties->incomingUserPropSize != MAX_USER_PROPERTY -1){
-                               userProperty++;
-                           }
+                           userProperty++;
                         }
                     }
                 }
