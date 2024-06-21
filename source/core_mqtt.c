@@ -2446,6 +2446,10 @@ static MQTTStatus_t sendConnectWithoutCopy(MQTTContext_t *pContext,
             pIndex = fixedSizeProperties;
             pIndex = MQTT_SerializePublishProperties(pWillInfo, pIndex);
             iterator->iov_base = fixedSizeProperties;
+            /* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-182 */
+            /* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-108 */
+            /* coverity[misra_c_2012_rule_18_2_violation] */
+            /* coverity[misra_c_2012_rule_10_8_violation] */
             iterator->iov_len = (size_t)(pIndex - fixedSizeProperties);
             totalMessageLength += iterator->iov_len;
             iterator++;
