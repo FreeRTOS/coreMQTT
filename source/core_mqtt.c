@@ -2395,7 +2395,7 @@ static MQTTStatus_t sendConnectWithoutCopy(MQTTContext_t *pContext,
                 iterator = &iterator[vectorsAdded];
                 ioVectorLength += vectorsAdded;
             }
-
+        }
             /*Encodethe authentication method and data if provided*/
             if (pContext->connectProperties->outgoingAuth != NULL)
             {
@@ -2422,7 +2422,6 @@ static MQTTStatus_t sendConnectWithoutCopy(MQTTContext_t *pContext,
                     iterator = &iterator[vectorsAdded];
                     ioVectorLength += vectorsAdded;
                 }
-            }
 
         }
 

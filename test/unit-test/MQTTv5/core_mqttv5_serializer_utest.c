@@ -2078,7 +2078,7 @@ void test_MQTTV5_DeserializeConnackOnlyUserProperty(void)
     MQTTPacketInfo_t packetInfo;
     MQTTConnectProperties_t properties;
     MQTTUserProperty_t userProperty[5];
-    MQTTUserProperty_t userProperty2[5];
+    MQTTUserProperty_t userProperty2[5000];
     memset(&properties, 0x0, sizeof(properties));
     memset(&packetInfo, 0x0, sizeof(packetInfo));
     properties.outgoingUserPropSize = 1;
@@ -2764,14 +2764,14 @@ void test_MQTTV5_GetConnectPacketSize(void)
       /*5*/
       properties.receiveMax = UINT16_MAX;
       properties.reqProbInfo = 1;
-      MQTTUserProperty_t  userPropArr[3000];
-      properties.outgoingUserPropSize = 3000;
+      MQTTUserProperty_t  userPropArr[3500];
+      properties.outgoingUserPropSize = 2078;
       properties.outgoingUserProperty = userPropArr;
       uint16_t i = 0;
       char str[65535];
        memset(str, '.', 65535*sizeof(char)); 
        
-       for(;i<3000;i++){
+       for(;i<3500;i++){
         userPropArr[i].keyLength = UINT16_MAX;
         userPropArr[i].key = str;
         userPropArr[i].value = str;
@@ -2786,12 +2786,12 @@ void test_MQTTV5_GetConnectPacketSize(void)
         willInfo.userProperty = userPropArr;
         status = MQTTV5_GetConnectPacketSize(&connectInfo, &willInfo, &properties, &remainingLength, &packetSize);
         TEST_ASSERT_EQUAL(MQTTBadParameter, status);
-    
-        willInfo.userPropertySize = 3000;
-        willInfo.userProperty = userPropArr;
+         
+        properties.outgoingUserPropSize = 0;
+        willInfo.userPropertySize = 2051;
         status = MQTTV5_GetConnectPacketSize(&connectInfo, &willInfo, &properties, &remainingLength, &packetSize);
         TEST_ASSERT_EQUAL(MQTTBadParameter, status);
-
+        
 }
 
 // /**
@@ -2976,6 +2976,17 @@ void test_MQTTV5_SerializeConnect(void)
     checkBufferOverflow(buffer, sizeof(buffer));
 
     auth.authDataLength = 0;
+    status = MQTTV5_GetConnectPacketSize(&connectInfo, NULL, &properties, &remainingLength, &packetSize);
+    TEST_ASSERT_EQUAL(MQTTSuccess, status);
+    TEST_ASSERT_GREATER_OR_EQUAL(packetSize, bufferSize);
+    /* Set the fixed buffer to exactly the size of the packet. */
+    fixedBuffer.size = packetSize;
+    padAndResetBuffer(buffer, sizeof(buffer));
+    status = MQTTV5_SerializeConnect(&connectInfo, NULL, &properties, remainingLength, &fixedBuffer);
+    TEST_ASSERT_EQUAL(MQTTSuccess, status);
+    checkBufferOverflow(buffer, sizeof(buffer));
+
+    properties.outgoingAuth=NULL;
     status = MQTTV5_GetConnectPacketSize(&connectInfo, NULL, &properties, &remainingLength, &packetSize);
     TEST_ASSERT_EQUAL(MQTTSuccess, status);
     TEST_ASSERT_GREATER_OR_EQUAL(packetSize, bufferSize);
