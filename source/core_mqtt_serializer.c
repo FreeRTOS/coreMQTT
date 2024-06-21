@@ -792,8 +792,10 @@ static MQTTStatus_t MQTT_GetUserPropertySize(const MQTTUserProperty_t* pUserProp
                 status = MQTTBadParameter;
             }
             else{
-            *size += (pUserProperty [i].keyLength + 3U);
-            *size += (pUserProperty [i].valueLength + 2U);
+            *size += (pUserProperty [i].keyLength );
+            *size+= 3U;
+            *size += (pUserProperty [i].valueLength);
+            *size+= 2U;
             }
         }
     }
@@ -867,11 +869,11 @@ static MQTTStatus_t MQTT_GetConnectPropertiesSize(MQTTConnectProperties_t* pConn
     }
     }
     /*Get the length of the user properties*/
-    if (status == MQTTSuccess && pConnectProperties->outgoingUserPropSize != 0U) {
+    if ((status == MQTTSuccess) && (pConnectProperties->outgoingUserPropSize != 0U)) {
         status = MQTT_GetUserPropertySize(pConnectProperties->outgoingUserProperty, pConnectProperties->outgoingUserPropSize, &propertyLength);
     }
     /*Variable length encoded values cannot have valued more than 268435455U*/
-    if (status == MQTTSuccess && pConnectProperties->propertyLength > MQTT_MAX_REMAINING_LENGTH) {
+    if ((status == MQTTSuccess) && (pConnectProperties->propertyLength > MQTT_MAX_REMAINING_LENGTH)) {
         status = MQTTBadParameter;
     }
     if(status==MQTTSuccess){
@@ -905,7 +907,8 @@ static MQTTStatus_t MQTT_GetWillPropertiesSize(MQTTPublishInfo_t* pWillPropertie
             status= MQTTBadParameter;
         }
         else{
-        willLength +=(pWillProperties->contentTypeLength + 3U);
+        willLength +=(pWillProperties->contentTypeLength);
+        willLength += 3U;
         }
     }
     /*Validate if length and pointers are valid*/
@@ -914,17 +917,19 @@ static MQTTStatus_t MQTT_GetWillPropertiesSize(MQTTPublishInfo_t* pWillPropertie
             status= MQTTBadParameter;
         }
         else{
-        willLength += (pWillProperties->responseTopicLength + 3U);
+        willLength += (pWillProperties->responseTopicLength);
+        willLength += 3U;
 
         }
     }
-    if (status==MQTTSuccess && pWillProperties->correlationLength != 0U)
+    if ((status==MQTTSuccess) && (pWillProperties->correlationLength != 0U))
     {
         if(pWillProperties->correlationData==NULL){
                    status= MQTTBadParameter;
         }
         else{
-        willLength += (pWillProperties->correlationLength + 3U);
+        willLength += (pWillProperties->correlationLength);
+        willLength += 3U;
         }
     }
     /*Get the length of user properties*/ 
@@ -1402,6 +1407,9 @@ MQTTStatus_t MQTTV5_DeserializeConnack(MQTTConnectProperties_t* pConnackProperti
         pVariableHeader = &pVariableHeader[2];
         remainingLengthSize = remainingLengthEncodedSize(pIncomingPacket->remainingLength);
         status = decodeVariableLength(pVariableHeader, &propertyLength);
+    }
+    else{
+        
     }
     if((status==MQTTSuccess) && (pConnackProperties->isMaxPacketSize==true) && ((pIncomingPacket->remainingLength + remainingLengthSize + 1U) > (pConnackProperties->maxPacketSize))){
         status= MQTTProtocolError;
