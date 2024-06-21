@@ -2367,7 +2367,7 @@ static MQTTStatus_t sendConnectWithoutCopy(MQTTContext_t *pContext,
 
 #if (MQTT_VERSION_5_ENABLED)
         /*Encode the user Properties if provided*/
-        if (pContext->connectProperties->outgoingUserPropSize != 0)
+        if (pContext->connectProperties->outgoingUserPropSize != 0U)
         {
             
             uint32_t i = 0;
@@ -2490,7 +2490,7 @@ static MQTTStatus_t sendConnectWithoutCopy(MQTTContext_t *pContext,
                 ioVectorLength += vectorsAdded;
             }
             /* Encode the user properties if provided. */
-            if (pWillInfo->userPropertySize != 0)
+            if (pWillInfo->userPropertySize != 0U)
             {
                     uint32_t i = 0;
                     uint32_t size = pWillInfo->userPropertySize;
