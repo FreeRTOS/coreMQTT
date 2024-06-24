@@ -1,4 +1,0 @@
-/home/ubuntu/workspace/coverity/cov-analysis-linux64-2023.6.1/bin/cov-security-da --dir /home/ubuntu/coreMQTT/cov-out 
-cov-security-da version 2023.6.1 on Linux 5.15.0-1050-aws x86_64
-Internal version numbers: 4ae07d0526 p-2023.6-push-61
-

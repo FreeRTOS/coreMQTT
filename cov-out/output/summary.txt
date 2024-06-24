@@ -1,1 +1,0 @@
-cov-analyze --dir . --coding-standard-config ../../tools/coverity/misra.config --tu-pattern file('.*/source/.*') 

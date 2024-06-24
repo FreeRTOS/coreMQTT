@@ -1,9 +1,0 @@
-# Version: 4ae07d0526 p-2023.6-push-61
-# Command Line: /home/ubuntu/workspace/coverity/cov-analysis-linux64-2023.6.1/bin/cov-security-da --dir /home/ubuntu/coreMQTT/cov-out
-timer                         ms      calls
--------------------------------------------
-cov_security_da::run           0          1
-
-activity                      ms      calls
--------------------------------------------
-cov_security_da::run           0          1
