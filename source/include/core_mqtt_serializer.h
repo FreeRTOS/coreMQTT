@@ -266,7 +266,7 @@ typedef struct MQTTAuthInfo
      * @brief Length of the authentication data.
      */
     uint16_t authDataLength;
-}MQTTAuthInfo_t;
+} MQTTAuthInfo_t;
 
    /**
  * @ingroup mqtt_struct_types
@@ -290,7 +290,7 @@ typedef struct MQTTUserProperty
      * @brief Length of the value.
      */
     uint16_t valueLength;
-}MQTTUserProperty_t;
+} MQTTUserProperty_t;
 
    /**
  * @ingroup mqtt_struct_types
@@ -1593,6 +1593,8 @@ uint8_t * MQTT_SerializeUnsubscribeHeader( size_t remainingLength,
  * Doxygen should ignore this definition, this function is private.
  */
 uint8_t* MQTT_SerializeConnectProperties(uint8_t* pIndex,const MQTTConnectProperties_t * pConnectProperties);
+/** @endcond */
+
 
 /**
  * @fnuint8_t* MQTT_SerializePublishProperties(const MQTTPublishInfo_t * pPublishInfo, uint8_t* pIndex);
@@ -1609,6 +1611,7 @@ uint8_t* MQTT_SerializeConnectProperties(uint8_t* pIndex,const MQTTConnectProper
  * Doxygen should ignore this definition, this function is private.
  */
 uint8_t* MQTT_SerializePublishProperties(const MQTTPublishInfo_t * pPublishInfo, uint8_t* pIndex);
+/** @endcond */
 
 
 MQTTStatus_t MQTTV5_DeserializeConnack( MQTTConnectProperties_t *pConnackProperties,const MQTTPacketInfo_t * pIncomingPacket,
