@@ -1,2 +1,0 @@
-/usr/bin/ar qc lib/libunity.a "CMakeFiles/unity.dir/unit-test/CMock/vendor/unity/src/unity.c.o" "CMakeFiles/unity.dir/unit-test/CMock/vendor/unity/extras/fixture/src/unity_fixture.c.o" "CMakeFiles/unity.dir/unit-test/CMock/vendor/unity/extras/memory/src/unity_memory.c.o"
-/usr/bin/ranlib lib/libunity.a
