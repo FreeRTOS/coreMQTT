@@ -617,6 +617,18 @@ static void serializeConnectPacketV5(const MQTTConnectInfo_t *pConnectInfo,
                                      size_t remainingLength,
                                      const MQTTFixedBuffer_t *pFixedBuffer);
 
+
+static MQTTStatus_t decodeuint32_t(uint32_t *property,size_t * propertyLength, bool * used, uint8_t** index);
+
+static MQTTStatus_t decodeuint16_t(uint16_t *property,size_t * propertyLength, bool * used, uint8_t** index);
+
+static MQTTStatus_t decodeuint8_t(uint8_t *property,size_t * propertyLength, bool * used, uint8_t** index);
+
+static MQTTStatus_t decodeutf_8(const char ** property,uint16_t *length,size_t * propertyLength, bool * used, uint8_t** index);
+
+static MQTTStatus_t decodeutf_8pair(MQTTUserProperty_t* userProperty,size_t * propertyLength, uint8_t** index);
+
+static MQTTStatus_t deserializeConnackV5(MQTTConnectProperties_t *pConnackProperties, size_t propertyLength,uint8_t ** index);
 /*-----------------------------------------------------------*/
 
 MQTTStatus_t MQTTV5_GetConnectPacketSize(const MQTTConnectInfo_t *pConnectInfo,
@@ -773,7 +785,7 @@ uint8_t *MQTT_SerializePublishProperties(const MQTTPublishInfo_t *pPublishInfo, 
 
 /*-----------------------------------------------------------*/
 
-static MQTTStatus_t MQTT_GetUserPropertySize(const MQTTUserProperty_t *pUserProperty, uint32_t number, size_t *size)
+static MQTTStatus_t MQTT_GetUserPropertySize(const MQTTUserProperty_t *pUserProperty, uint32_t number, size_t *pSize)
 {
     MQTTStatus_t status = MQTTSuccess;
     uint32_t i = 0;
@@ -797,40 +809,40 @@ static MQTTStatus_t MQTT_GetUserPropertySize(const MQTTUserProperty_t *pUserProp
             }
             else
             {
-                *size += (pUserProperty[i].keyLength);
-                *size += 3U;
-                *size += (pUserProperty[i].valueLength);
-                *size += 2U;
+                *pSize += (pUserProperty[i].keyLength);
+                *pSize += 3U;
+                *pSize += (pUserProperty[i].valueLength);
+                *pSize += 2U;
             }
         }
     }
     return status;
 }
 
-static MQTTStatus_t MQTT_GetAuthInfoSize(const MQTTAuthInfo_t *authInfo,size_t *propertyLength){
+static MQTTStatus_t MQTT_GetAuthInfoSize(const MQTTAuthInfo_t *pAuthInfo,size_t *pPropertyLength){
     MQTTStatus_t status= MQTTSuccess;
-    if ((authInfo->authMethodLength == 0U) && (authInfo->authDataLength != 0U))
+    if ((pAuthInfo->authMethodLength == 0U) && (pAuthInfo->authDataLength != 0U))
     {
         status = MQTTBadParameter;
     }
-    else if ((authInfo->authMethodLength != 0U) && (authInfo->pAuthMethod == NULL))
+    else if ((pAuthInfo->authMethodLength != 0U) && (pAuthInfo->pAuthMethod == NULL))
     {
         status = MQTTBadParameter;
     }
-    else if ((authInfo->authDataLength != 0U) && (authInfo->pAuthData == NULL))
+    else if ((pAuthInfo->authDataLength != 0U) && (pAuthInfo->pAuthData == NULL))
     {
         status = MQTTBadParameter;
     }
     else
     {
-        if (authInfo->authMethodLength != 0U)
+        if (pAuthInfo->authMethodLength != 0U)
         {
-            propertyLength += authInfo->authMethodLength;
-            propertyLength += 3U;
-            if (authInfo->authDataLength != 0U)
+            pPropertyLength += pAuthInfo->authMethodLength;
+            pPropertyLength += 3U;
+            if (pAuthInfo->authDataLength != 0U)
             {
-                propertyLength += authInfo->authDataLength;
-                propertyLength += 3U;
+                pPropertyLength += pAuthInfo->authDataLength;
+                pPropertyLength += 3U;
             }
         }
     }
@@ -1353,7 +1365,7 @@ static MQTTStatus_t validateConnackParams(const MQTTPacketInfo_t *pIncomingPacke
     return status;
 }
 
-static MQTTStatus_t decodeVariableLength(const uint8_t *pBuffer, size_t *length)
+static MQTTStatus_t decodeVariableLength(const uint8_t *pBuffer, size_t *pLength)
 {
     size_t remainingLength = 0;
     size_t multiplier = 1;
@@ -1403,91 +1415,91 @@ static MQTTStatus_t decodeVariableLength(const uint8_t *pBuffer, size_t *length)
         }
         else
         {
-            *length = remainingLength;
+            *pLength = remainingLength;
         }
     }
 
     return status;
 }
 
-static MQTTStatus_t decodeuint32_t(uint32_t *property,size_t * propertyLength, bool * used, uint8_t** index){
-    uint8_t * pVariableHeader = *index;
+static MQTTStatus_t decodeuint32_t(uint32_t *pProperty,size_t * pPropertyLength, bool * pUsed, uint8_t** pIndex){
+    uint8_t * pVariableHeader = *pIndex;
     MQTTStatus_t status = MQTTSuccess;        
-    if (*used == true)
+    if (*pUsed == true)
     {
         status = MQTTProtocolError;
     }
-    else if (*propertyLength < 4U)
+    else if (*pPropertyLength < 4U)
     {
         status = MQTTMalformedPacket;
     }
     else
     {
-        *property = UINT32_DECODE(pVariableHeader);
+        *pProperty = UINT32_DECODE(pVariableHeader);
         pVariableHeader = &pVariableHeader[sizeof(uint32_t)];
-        *used = true;
-        *propertyLength -= 4U;
+        *pUsed = true;
+        *pPropertyLength -= 4U;
     }
-    *index = pVariableHeader;
+    *pIndex = pVariableHeader;
     return status;
 }
 
-static MQTTStatus_t decodeuint16_t(uint16_t *property,size_t * propertyLength, bool * used, uint8_t** index){
-    uint8_t * pVariableHeader = *index;
+static MQTTStatus_t decodeuint16_t(uint16_t *pProperty,size_t * pPropertyLength, bool * pUsed, uint8_t** pIndex){
+    uint8_t * pVariableHeader = *pIndex;
     MQTTStatus_t status = MQTTSuccess;        
-    if (*used == true)
+    if (*pUsed == true)
     {
         status = MQTTProtocolError;
     }
-    else if (*propertyLength < 2U)
+    else if (*pPropertyLength < 2U)
     {
         status = MQTTMalformedPacket;
     }
     else
     {
-        *property = UINT16_DECODE(pVariableHeader);
+        *pProperty = UINT16_DECODE(pVariableHeader);
         pVariableHeader = &pVariableHeader[sizeof(uint16_t)];
-        *used = true;
-        *propertyLength -= 2U;
+        *pUsed = true;
+        *pPropertyLength -= 2U;
     }
-    *index = pVariableHeader;
+    *pIndex = pVariableHeader;
     return status;
 }
 
-static MQTTStatus_t decodeuint8_t(uint8_t *property,size_t * propertyLength, bool * used, uint8_t** index){
-    uint8_t * pVariableHeader = *index;
+static MQTTStatus_t decodeuint8_t(uint8_t *pProperty,size_t * pPropertyLength, bool * pUsed, uint8_t** pIndex){
+    uint8_t * pVariableHeader = *pIndex;
     MQTTStatus_t status = MQTTSuccess;        
-     if (*used == true)
+     if (*pUsed == true)
     {
         status = MQTTProtocolError;
     }
-    else if (*propertyLength < 1U)
+    else if (*pPropertyLength < 1U)
     {
         status = MQTTMalformedPacket;
     }
     else
     {
-        *property = *pVariableHeader;
+        *pProperty = *pVariableHeader;
          pVariableHeader = &pVariableHeader[sizeof(uint8_t)];
-        *used = true;
-        *propertyLength -= 1U;
-        if (*property > 1U)
+        *pUsed = true;
+        *pPropertyLength -= 1U;
+        if (*pProperty > 1U)
         {
             status = MQTTProtocolError;
         }
     }
-    *index = pVariableHeader;
+    *pIndex = pVariableHeader;
     return status;
 }
 
-static MQTTStatus_t decodeutf_8(const char ** property,uint16_t *length,size_t * propertyLength, bool * used, uint8_t** index){
-    uint8_t * pVariableHeader = *index;
+static MQTTStatus_t decodeutf_8(const char ** pProperty,uint16_t *pLength,size_t * pPropertyLength, bool * pUsed, uint8_t** pIndex){
+    uint8_t * pVariableHeader = *pIndex;
     MQTTStatus_t status = MQTTSuccess ;
-    if (*used == true)
+    if (*pUsed == true)
     {
         status = MQTTProtocolError;
     }
-    else if (*propertyLength < 2U)
+    else if (*pPropertyLength < 2U)
     {
         status = MQTTMalformedPacket;
     }
@@ -1495,72 +1507,72 @@ static MQTTStatus_t decodeutf_8(const char ** property,uint16_t *length,size_t *
     {
         *length = UINT16_DECODE(pVariableHeader);
         pVariableHeader = &pVariableHeader[sizeof(uint16_t)];
-        *propertyLength -= 2U;
-        if (*propertyLength < *length)
+        *pPropertyLength -= 2U;
+        if (*pPropertyLength < *pLength)
         {
             status = MQTTMalformedPacket;
         }
         else
         {
-            *property = (const char *)pVariableHeader;
+            *pProperty = (const char *)pVariableHeader;
             pVariableHeader = &pVariableHeader[*length];
-            *propertyLength -= *length;
-            *used = true;
+            *pPropertyLength -= *pLength;
+            *pUsed = true;
         }
     }
-    *index= pVariableHeader;
+    *pIndex= pVariableHeader;
     return status;
 }
 
-static MQTTStatus_t decodeutf_8pair(MQTTUserProperty_t* userProperty,size_t * propertyLength, uint8_t** index){
-    uint8_t * pVariableHeader = *index;
+static MQTTStatus_t decodeutf_8pair(MQTTUserProperty_t* pUserProperty,size_t * pPropertyLength, uint8_t** pIndex){
+    uint8_t * pVariableHeader = *pIndex;
     MQTTStatus_t status = MQTTSuccess ;
-    if (*propertyLength < 2U)
+    if (*pPropertyLength < 2U)
     {
         status = MQTTMalformedPacket;
     }
     else
     {
-        userProperty->keyLength = UINT16_DECODE(pVariableHeader);
-        *propertyLength -= 2U;
-        if (*propertyLength < userProperty->keyLength)
+       pUserProperty->keyLength = UINT16_DECODE(pVariableHeader);
+        *pPropertyLength -= 2U;
+        if (*pPropertyLength < pUserProperty->keyLength)
         {
             status = MQTTMalformedPacket;
         }
         else
         {
             pVariableHeader = &pVariableHeader[sizeof(uint16_t)];
-            userProperty->pKey = (const char *)pVariableHeader;
-            *propertyLength -= userProperty->keyLength;
-            pVariableHeader = &pVariableHeader[userProperty->keyLength];
-            userProperty->valueLength = UINT16_DECODE(pVariableHeader);
-            if (*propertyLength < 2U)
+            pUserProperty->pKey = (const char *)pVariableHeader;
+            *pPropertyLength -= pUserProperty->keyLength;
+            pVariableHeader = &pVariableHeader[pUserProperty->keyLength];
+            pUserProperty->valueLength = UINT16_DECODE(pVariableHeader);
+            if (*pPropertyLength < 2U)
             {
                 status = MQTTMalformedPacket;
             }
             else
             {
-                *propertyLength -= 2U;
-                if (*propertyLength < (size_t)(userProperty->valueLength))
+                *pPropertyLength -= 2U;
+                if (*pPropertyLength < (size_t)(pUserProperty->valueLength))
                 {
                     status = MQTTMalformedPacket;
                 }
                 else
                 {
-                    userProperty->pValue = (const char *)pVariableHeader;
-                    pVariableHeader = &pVariableHeader[userProperty->valueLength];
-                    *propertyLength -= userProperty->valueLength;
+                    pUserProperty->pValue = (const char *)pVariableHeader;
+                    pVariableHeader = &pVariableHeader[pUserProperty->valueLength];
+                    *pPropertyLength -= pUserProperty->valueLength;
                 }
             }
         }
     }
-    *index = pVariableHeader;
+    *pIndex = pVariableHeader;
     return status;
 }
 
-static MQTTStatus_t deserializeConnackV5(MQTTConnectProperties_t *pConnackProperties, size_t propertyLength,uint8_t ** index){
+static MQTTStatus_t deserializeConnackV5(MQTTConnectProperties_t *pConnackProperties, size_t propertyLength,uint8_t ** pIndex){
         MQTTStatus_t status = MQTTSuccess;
-        uint8_t * pVariableHeader = *index;
+        uint8_t * pVariableHeader = *pIndex;
         bool sessionExpiry = false;
         bool serverReceiveMax = false;
         bool maxQos = false;

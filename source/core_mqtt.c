@@ -723,6 +723,7 @@ static size_t sendWillProperties(const MQTTPublishInfo_t* pWillInfo, WillVector_
 
             }
         }
+        *vectorIterator = iterator;
             return ioVectorLength;
 }
 
@@ -790,6 +791,7 @@ static size_t sendConnectProperties(const MQTTConnectProperties_t* pConnectPrope
                 }
 
         }
+        *vectorIterator = iterator;
         return ioVectorLength;
 }
 #endif
