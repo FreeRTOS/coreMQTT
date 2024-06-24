@@ -539,8 +539,6 @@ static MQTTStatus_t MQTT_GetUserPropertySize(const MQTTUserProperty_t *pUserProp
 
 static MQTTStatus_t MQTT_GetAuthInfoSize(const MQTTAuthInfo_t *authInfo,size_t *propertyLength);
 
-static decodeSessionExpiry(uint32_t property,size_t * porpertyLength);
-
 /**
  * @brief Get the size of connect properties.
  *
@@ -665,7 +663,7 @@ MQTTStatus_t MQTTV5_GetConnectPacketSize(const MQTTConnectInfo_t *pConnectInfo,
         LogError(("Argument cannot be NULL: connectProperties"));
         status = MQTTBadParameter;
     }
-    else if ((pConnectProperties->outgoingAuth != NULL) && (pConnectProperties->incomingAuth == NULL))
+    else if ((pConnectProperties->pOutgoingAuth != NULL) && (pConnectProperties->pIncomingAuth == NULL))
     {
         LogError(("Incoming Auth cannot be NULL"));
         status = MQTTBadParameter;
@@ -792,7 +790,7 @@ static MQTTStatus_t MQTT_GetUserPropertySize(const MQTTUserProperty_t *pUserProp
     {
         for (; (i < number); i++)
         {
-            if ((pUserProperty[i].keyLength == 0U) || (pUserProperty[i].valueLength == 0U) || (pUserProperty[i].key == NULL) || (pUserProperty[i].value == NULL))
+            if ((pUserProperty[i].keyLength == 0U) || (pUserProperty[i].valueLength == 0U) || (pUserProperty[i].pKey == NULL) || (pUserProperty[i].pValue == NULL))
             {
                 status = MQTTBadParameter;
                 break;
@@ -815,11 +813,11 @@ static MQTTStatus_t MQTT_GetAuthInfoSize(const MQTTAuthInfo_t *authInfo,size_t *
     {
         status = MQTTBadParameter;
     }
-    else if ((authInfo->authMethodLength != 0U) && (authInfo->authMethod == NULL))
+    else if ((authInfo->authMethodLength != 0U) && (authInfo->pAuthMethod == NULL))
     {
         status = MQTTBadParameter;
     }
-    else if ((authInfo->authDataLength != 0U) && (authInfo->authData == NULL))
+    else if ((authInfo->authDataLength != 0U) && (authInfo->pAuthData == NULL))
     {
         status = MQTTBadParameter;
     }
@@ -879,16 +877,16 @@ static MQTTStatus_t MQTT_GetConnectPropertiesSize(MQTTConnectProperties_t *pConn
         {
             propertyLength += MQTT_REQUEST_PPOBLEM_SIZE;
         }
-        if (pConnectProperties->outgoingAuth != NULL)
+        if (pConnectProperties->pOutgoingAuth != NULL)
         {
             /*Valid authentication parameters*/
-            status = MQTT_GetAuthInfoSize(pConnectProperties->outgoingAuth,&propertyLength);
+            status = MQTT_GetAuthInfoSize(pConnectProperties->pOutgoingAuth,&propertyLength);
         }
     }
     /*Get the length of the user properties*/
     if ((status == MQTTSuccess) && (pConnectProperties->outgoingUserPropSize != 0U))
     {
-        status = MQTT_GetUserPropertySize(pConnectProperties->outgoingUserProperty, pConnectProperties->outgoingUserPropSize, &propertyLength);
+        status = MQTT_GetUserPropertySize(pConnectProperties->pOutgoingUserProperty, pConnectProperties->outgoingUserPropSize, &propertyLength);
     }
     /*Variable length encoded values cannot have valued more than 268435455U*/
     if ((status == MQTTSuccess) && (pConnectProperties->propertyLength > MQTT_MAX_REMAINING_LENGTH))
@@ -922,7 +920,7 @@ static MQTTStatus_t MQTT_GetWillPropertiesSize(MQTTPublishInfo_t *pWillPropertie
     }
     if (pWillProperties->contentTypeLength != 0U)
     {
-        if (pWillProperties->contentType == NULL)
+        if (pWillProperties->pContentType == NULL)
         {
             status = MQTTBadParameter;
         }
@@ -935,7 +933,7 @@ static MQTTStatus_t MQTT_GetWillPropertiesSize(MQTTPublishInfo_t *pWillPropertie
     /*Validate if length and pointers are valid*/
     if ((status == MQTTSuccess) && (pWillProperties->responseTopicLength != 0U))
     {
-        if (pWillProperties->responseTopic == NULL)
+        if (pWillProperties->pResponseTopic == NULL)
         {
             status = MQTTBadParameter;
         }
@@ -947,7 +945,7 @@ static MQTTStatus_t MQTT_GetWillPropertiesSize(MQTTPublishInfo_t *pWillPropertie
     }
     if ((status == MQTTSuccess) && (pWillProperties->correlationLength != 0U))
     {
-        if (pWillProperties->correlationData == NULL)
+        if (pWillProperties->pCorrelationData == NULL)
         {
             status = MQTTBadParameter;
         }
@@ -960,7 +958,7 @@ static MQTTStatus_t MQTT_GetWillPropertiesSize(MQTTPublishInfo_t *pWillPropertie
     /*Get the length of user properties*/
     if (status == MQTTSuccess)
     {
-        status = MQTT_GetUserPropertySize(pWillProperties->userProperty, pWillProperties->userPropertySize, &willLength);
+        status = MQTT_GetUserPropertySize(pWillProperties->pUserProperty, pWillProperties->userPropertySize, &willLength);
     }
     /*Variable encoded can't have a value more than 268435455UL*/
     if (willLength > MQTT_MAX_REMAINING_LENGTH)
@@ -1056,27 +1054,27 @@ static void serializeConnectPacketV5(const MQTTConnectInfo_t *pConnectInfo,
     {
         uint32_t i = 0;
         uint32_t size = pConnectProperties->outgoingUserPropSize;
-        const MQTTUserProperty_t *pUserProperty = pConnectProperties->outgoingUserProperty;
+        const MQTTUserProperty_t *pUserProperty = pConnectProperties->pOutgoingUserProperty;
         for (; i < size; i++)
         {
             *pIndex = MQTT_USER_PROPERTY_ID;
             pIndex++;
-            pIndex = encodeString(pIndex, pUserProperty[i].key, pUserProperty[i].keyLength);
-            pIndex = encodeString(pIndex, pUserProperty[i].value, pUserProperty[i].valueLength);
+            pIndex = encodeString(pIndex, pUserProperty[i].pKey, pUserProperty[i].keyLength);
+            pIndex = encodeString(pIndex, pUserProperty[i].pValue, pUserProperty[i].valueLength);
         }
     }
 
-    if (pConnectProperties->outgoingAuth != NULL)
+    if (pConnectProperties->pOutgoingAuth != NULL)
     {
         /* Serialize the authentication method  string. */
         *pIndex = MQTT_AUTH_METHOD_ID;
         pIndex++;
-        pIndex = encodeString(pIndex, pConnectProperties->outgoingAuth->authMethod, pConnectProperties->outgoingAuth->authMethodLength);
-        if (pConnectProperties->outgoingAuth->authDataLength != 0U)
+        pIndex = encodeString(pIndex, pConnectProperties->pOutgoingAuth->pAuthMethod, pConnectProperties->pOutgoingAuth->authMethodLength);
+        if (pConnectProperties->pOutgoingAuth->authDataLength != 0U)
         {
             *pIndex = MQTT_AUTH_DATA_ID;
             pIndex++;
-            pIndex = encodeString(pIndex, pConnectProperties->outgoingAuth->authData, pConnectProperties->outgoingAuth->authDataLength);
+            pIndex = encodeString(pIndex, pConnectProperties->pOutgoingAuth->pAuthData, pConnectProperties->pOutgoingAuth->authDataLength);
         }
     }
 
@@ -1093,31 +1091,31 @@ static void serializeConnectPacketV5(const MQTTConnectInfo_t *pConnectInfo,
         {
             *pIndex = MQTT_CONTENT_TYPE_ID;
             pIndex++;
-            pIndex = encodeString(pIndex, pWillInfo->contentType, pWillInfo->contentTypeLength);
+            pIndex = encodeString(pIndex, pWillInfo->pContentType, pWillInfo->contentTypeLength);
         }
         if (pWillInfo->responseTopicLength != 0U)
         {
             *pIndex = MQTT_RESPONSE_TOPIC_ID;
             pIndex++;
-            pIndex = encodeString(pIndex, pWillInfo->responseTopic, pWillInfo->responseTopicLength);
+            pIndex = encodeString(pIndex, pWillInfo->pResponseTopic, pWillInfo->responseTopicLength);
         }
         if (pWillInfo->correlationLength != 0U)
         {
             *pIndex = MQTT_CORRELATION_DATA_ID;
             pIndex++;
-            pIndex = encodeString(pIndex, pWillInfo->correlationData, pWillInfo->correlationLength);
+            pIndex = encodeString(pIndex, pWillInfo->pCorrelationData, pWillInfo->correlationLength);
         }
         if (pWillInfo->userPropertySize != 0U)
         {
             uint32_t i = 0;
             uint32_t size = pWillInfo->userPropertySize;
-            const MQTTUserProperty_t *pUserProperty = pWillInfo->userProperty;
+            const MQTTUserProperty_t *pUserProperty = pWillInfo->pUserProperty;
             for (; i < size; i++)
             {
                 *pIndex = MQTT_USER_PROPERTY_ID;
                 pIndex++;
-                pIndex = encodeString(pIndex, pUserProperty[i].key, pUserProperty[i].keyLength);
-                pIndex = encodeString(pIndex, pUserProperty[i].value, pUserProperty[i].valueLength);
+                pIndex = encodeString(pIndex, pUserProperty[i].pKey, pUserProperty[i].keyLength);
+                pIndex = encodeString(pIndex, pUserProperty[i].pValue, pUserProperty[i].valueLength);
             }
         }
         pIndex = encodeString(pIndex, pWillInfo->pTopicName, pWillInfo->topicNameLength);
@@ -1532,7 +1530,7 @@ static MQTTStatus_t decodeutf_8pair(MQTTUserProperty_t* userProperty,size_t * pr
         else
         {
             pVariableHeader = &pVariableHeader[sizeof(uint16_t)];
-            userProperty->key = (const char *)pVariableHeader;
+            userProperty->pKey = (const char *)pVariableHeader;
             *propertyLength -= userProperty->keyLength;
             pVariableHeader = &pVariableHeader[userProperty->keyLength];
             userProperty->valueLength = UINT16_DECODE(pVariableHeader);
@@ -1549,7 +1547,7 @@ static MQTTStatus_t decodeutf_8pair(MQTTUserProperty_t* userProperty,size_t * pr
                 }
                 else
                 {
-                    userProperty->value = (const char *)pVariableHeader;
+                    userProperty->pValue = (const char *)pVariableHeader;
                     pVariableHeader = &pVariableHeader[userProperty->valueLength];
                     *propertyLength -= userProperty->valueLength;
                 }
@@ -1579,7 +1577,7 @@ static MQTTStatus_t deserializeConnackV5(MQTTConnectProperties_t *pConnackProper
         bool serverRef = false;
         bool authMethod = false;
         bool authData = false;
-        MQTTUserProperty_t *userProperty = pConnackProperties->incomingUserProperty;
+        MQTTUserProperty_t *userProperty = pConnackProperties->pIncomingUserProperty;
         pVariableHeader = &pVariableHeader[remainingLengthEncodedSize(propertyLength)];
         while ((propertyLength > 0U) && (status == MQTTSuccess))
         {
@@ -1612,13 +1610,13 @@ static MQTTStatus_t deserializeConnackV5(MQTTConnectProperties_t *pConnackProper
                 }
                 break;
             case MQTT_ASSIGNED_CLIENT_ID:
-                status = decodeutf_8(&pConnackProperties->clientIdentifier,&pConnackProperties->clientIdLength,&propertyLength,&clientId,&pVariableHeader);
+                status = decodeutf_8(&pConnackProperties->pClientIdentifier,&pConnackProperties->clientIdLength,&propertyLength,&clientId,&pVariableHeader);
                 break;
             case MQTT_TOPIC_ALIAS_MAX_ID:
                 status= decodeuint16_t(&pConnackProperties->serverTopicAliasMax,&propertyLength,&topicAlias,&pVariableHeader);
                 break;
             case MQTT_REASON_STRING_ID:
-                status = decodeutf_8(&pConnackProperties->reasonString,&pConnackProperties->reasonStringLength,&propertyLength,&reasonString,&pVariableHeader);
+                status = decodeutf_8(&pConnackProperties->pReasonString,&pConnackProperties->reasonStringLength,&propertyLength,&reasonString,&pVariableHeader);
                 break;
             case MQTT_USER_PROPERTY_ID:
                 status = decodeutf_8pair(userProperty,&propertyLength,&pVariableHeader);
@@ -1644,28 +1642,28 @@ static MQTTStatus_t deserializeConnackV5(MQTTConnectProperties_t *pConnackProper
                 }
                 else
                 {
-                    status = decodeutf_8(&pConnackProperties->responseInfo,&pConnackProperties->responseInfoLength,&propertyLength,&reasonString,&pVariableHeader);
+                    status = decodeutf_8(&pConnackProperties->pResponseInfo,&pConnackProperties->responseInfoLength,&propertyLength,&responseInfo,&pVariableHeader);
                 }
                 break;
             case MQTT_SERVER_REF_ID:
-                status = decodeutf_8(&pConnackProperties->serverRef,&pConnackProperties->serverRefLength,&propertyLength,&serverRef,&pVariableHeader);
+                status = decodeutf_8(&pConnackProperties->pServerRef,&pConnackProperties->serverRefLength,&propertyLength,&serverRef,&pVariableHeader);
                 break;
             case MQTT_AUTH_METHOD_ID:
-                if (pConnackProperties->outgoingAuth == NULL)
+                if (pConnackProperties->pOutgoingAuth == NULL)
                 {
                     status = MQTTProtocolError;
                 }
                 else{
-                status = decodeutf_8(&pConnackProperties->incomingAuth->authMethod,&pConnackProperties->incomingAuth->authMethodLength ,&propertyLength,&authMethod,&pVariableHeader);
+                status = decodeutf_8(&pConnackProperties->pIncomingAuth->pAuthMethod,&pConnackProperties->pIncomingAuth->authMethodLength ,&propertyLength,&authMethod,&pVariableHeader);
                 }
                 break;
             case MQTT_AUTH_DATA_ID:
-                if ((pConnackProperties->outgoingAuth == NULL))
+                if ((pConnackProperties->pOutgoingAuth == NULL))
                 {
                     status = MQTTProtocolError;
                 }
                 else{
-                status = decodeutf_8(&pConnackProperties->incomingAuth->authData,&pConnackProperties->incomingAuth->authDataLength ,&propertyLength,&authData,&pVariableHeader);
+                status = decodeutf_8(&pConnackProperties->pIncomingAuth->pAuthData,&pConnackProperties->pIncomingAuth->authDataLength ,&propertyLength,&authData,&pVariableHeader);
                 }
                 break;
             default:

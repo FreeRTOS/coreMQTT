@@ -253,7 +253,7 @@ typedef struct MQTTAuthInfo
     /**
      * @brief Authentication method used for authentication.
      */
-    const char* authMethod;
+    const char* pAuthMethod;
     /**
      * @brief Length of the authentication mathod.
      */
@@ -261,7 +261,7 @@ typedef struct MQTTAuthInfo
     /**
      * @brief Authentication data used for authentication.
      */
-    const char* authData;
+    const char* pAuthData;
      /**
      * @brief Length of the authentication data.
      */
@@ -277,7 +277,7 @@ typedef struct MQTTUserProperty
     /**
      * @brief key.
      */
-    const char* key;
+    const char* pKey;
     /**
      * @brief Length of the key.
      */
@@ -285,7 +285,7 @@ typedef struct MQTTUserProperty
     /**
      * @brief value.
      */
-    const char* value;
+    const char* pValue;
     /**
      * @brief Length of the value.
      */
@@ -334,7 +334,7 @@ typedef struct MQTTConnectProperties
      /**
      * @brief   Pointer to the outgoing user properties.
      */
-    MQTTUserProperty_t *outgoingUserProperty;
+    MQTTUserProperty_t *pOutgoingUserProperty;
      /**
      * @brief  Total number of outgoing user properties.
      */
@@ -343,7 +343,7 @@ typedef struct MQTTConnectProperties
      /**
      * @brief  Pointer to the incoming authentication information.
      */
-    MQTTAuthInfo_t *outgoingAuth;
+    MQTTAuthInfo_t *pOutgoingAuth;
 
     /**
      * @brief Maximum number of unacknowledged PUBLISH packets client is willing to receive.
@@ -364,7 +364,7 @@ typedef struct MQTTConnectProperties
      /**
      * @brief Client identifier assigned by the client.
      */
-    const char* clientIdentifier;
+    const char* pClientIdentifier;
      /**
      * @brief Length of the assigned client identifier.
      */
@@ -376,7 +376,7 @@ typedef struct MQTTConnectProperties
      /**
      * @brief Reason String is a human readable string designed for diagnostics.
      */
-    const char* reasonString;
+    const char* pReasonString;
      /**
      * @brief Length of reason string.
      */
@@ -384,7 +384,7 @@ typedef struct MQTTConnectProperties
       /**
      * @brief Pointer to the incoming user properties.
      */
-    MQTTUserProperty_t *incomingUserProperty;
+    MQTTUserProperty_t *pIncomingUserProperty;
      /**
      * @brief  Total number of user properties received.
      */
@@ -408,7 +408,7 @@ typedef struct MQTTConnectProperties
      /**
      * @brief UTF-8 Encoded String which is used as the basis for creating a Response Topic.
      */
-    const char* responseInfo;
+    const char* pResponseInfo;
      /**
      * @brief Length of the response information.
      */
@@ -416,7 +416,7 @@ typedef struct MQTTConnectProperties
      /**
      * @brief UTF-8 Encoded String which can be used by the Client to identify another Server to use
      */
-    const char* serverRef;
+    const char* pServerRef;
      /**
      * @brief Length of the server reference.
      */
@@ -424,7 +424,7 @@ typedef struct MQTTConnectProperties
      /**
      * @brief  Pointer to the incoming authentication information.
      */
-    MQTTAuthInfo_t *incomingAuth;
+    MQTTAuthInfo_t *pIncomingAuth;
 
     
 } MQTTConnectProperties_t;
@@ -498,7 +498,7 @@ typedef struct MQTTPublishInfo
      /**
      * @brief UTF-8 Encoded String describing the content of the Will Message.
      */
-    const char *contentType;
+    const char *pContentType;
      /**
      * @brief Length of the response topic.
      */
@@ -506,7 +506,7 @@ typedef struct MQTTPublishInfo
      /**
      * @brief UTF-8 Encoded String which is used as the Topic Name for a response message.
      */
-    const char *responseTopic;
+    const char *pResponseTopic;
      /**
      * @brief Length of the correlation lenght.
      */
@@ -514,11 +514,11 @@ typedef struct MQTTPublishInfo
      /**
      * @brief To identify which request the Response Message is for.
      */
-    const void *correlationData;
+    const void *pCorrelationData;
      /**
      * @brief Pointer to the user properties.
      */
-    MQTTUserProperty_t* userProperty;
+    MQTTUserProperty_t* pUserProperty;
      /**
      * @brief  Number of user properties.
      */
