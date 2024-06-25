@@ -1,2 +1,0 @@
-/usr/bin/ar qc lib/libcore_mqttv5_real.a CMakeFiles/core_mqttv5_real.dir/__/__/source/core_mqtt.c.o CMakeFiles/core_mqttv5_real.dir/__/__/source/core_mqtt_state.c.o CMakeFiles/core_mqttv5_real.dir/__/__/source/core_mqtt_serializer.c.o
-/usr/bin/ranlib lib/libcore_mqttv5_real.a

@@ -1,1 +1,0 @@
-/usr/bin/cc -fPIC -shared -Wl,-soname,libcore_mqtt_mock.so -o lib/libcore_mqtt_mock.so CMakeFiles/core_mqtt_mock.dir/mocks/mock_core_mqtt_serializer.c.o CMakeFiles/core_mqtt_mock.dir/mocks/mock_core_mqtt_state.c.o  ../../lib/libcmock.a ../../lib/libunity.a

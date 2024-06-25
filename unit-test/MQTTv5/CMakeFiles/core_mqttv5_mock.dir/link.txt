@@ -1,1 +1,0 @@
-/usr/bin/cc -fPIC -shared -Wl,-soname,libcore_mqttv5_mock.so -o lib/libcore_mqttv5_mock.so CMakeFiles/core_mqttv5_mock.dir/mocks/mock_core_mqtt_serializer.c.o CMakeFiles/core_mqttv5_mock.dir/mocks/mock_core_mqtt_state.c.o  ../../lib/libcmock.a ../../lib/libunity.a
