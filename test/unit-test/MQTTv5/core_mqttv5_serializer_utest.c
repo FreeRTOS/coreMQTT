@@ -936,8 +936,8 @@ void test_MQTT_SerializeConnectProperties( void )
     connect.isMaxPacketSize = true;
     connect.maxPacketSize = 56;
     connect.topicAliasMax = 11;
-    connect.reqResInfo = 1;
-    connect.reqProbInfo = 0;
+    connect.requestResponseInfo = 1;
+    connect.requestProblemInfo = 0;
     connect.propertyLength = 20;
     pIndex = MQTT_SerializeConnectProperties( pIndex, &connect );
     TEST_ASSERT_EQUAL_INT( 21, ( pIndex - properties ) );
@@ -968,12 +968,12 @@ void test_MQTT_SerializeConnectProperties( void )
 
     TEST_ASSERT_EQUAL_INT( MQTT_REQUEST_RESPONSE_ID, *index );
     index++;
-    TEST_ASSERT_EQUAL_INT( connect.reqResInfo, *index );
+    TEST_ASSERT_EQUAL_INT( connect.requestResponseInfo, *index );
     index++;
 
     TEST_ASSERT_EQUAL_INT( MQTT_REQUEST_PROBLEM_ID, *index );
     index++;
-    TEST_ASSERT_EQUAL_INT( connect.reqProbInfo, *index );
+    TEST_ASSERT_EQUAL_INT( connect.requestProblemInfo, *index );
     index++;
 }
 
@@ -2054,7 +2054,7 @@ void test_MQTTV5_DeserializeConnackOnlyResponseInfo( void )
     TEST_ASSERT_EQUAL_INT( MQTTProtocolError, status );
 
     packetInfo.remainingLength = 8;
-    properties.reqResInfo = 1;
+    properties.requestResponseInfo = 1;
     pIndexLocal = &buffer[ 2 ];
     propertyLength = encodeRemainingLength( pIndexLocal, 5 );
     pIndexLocal++;
@@ -2451,7 +2451,7 @@ void test_MQTTV5_GetConnectPacketSize( void )
      * incorrect paramters */
     properties.receiveMax = 65535U;
     properties.maxPacketSize = UINT32_MAX;
-    properties.reqProbInfo = 1;
+    properties.requestProblemInfo = 1;
     status = MQTTV5_GetConnectPacketSize( NULL, NULL, &properties, &remainingLength, &packetSize );
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
 
@@ -2562,7 +2562,7 @@ void test_MQTTV5_GetConnectPacketSize( void )
     TEST_ASSERT_EQUAL( MQTTBadParameter, status );
 
     properties.receiveMax = 24;
-    properties.reqProbInfo = 1;
+    properties.requestProblemInfo = 1;
     status = MQTTV5_GetConnectPacketSize( &connectInfo, NULL, &properties, &remainingLength, &packetSize );
     TEST_ASSERT_EQUAL( MQTTSuccess, status );
     TEST_ASSERT_EQUAL_size_t( 8, properties.propertyLength );
@@ -2579,13 +2579,13 @@ void test_MQTTV5_GetConnectPacketSize( void )
     TEST_ASSERT_EQUAL( MQTTSuccess, status );
     TEST_ASSERT_EQUAL_size_t( 16, properties.propertyLength );
 
-    properties.reqResInfo = 1;
+    properties.requestResponseInfo = 1;
     status = MQTTV5_GetConnectPacketSize( &connectInfo, NULL, &properties, &remainingLength, &packetSize );
 
     TEST_ASSERT_EQUAL( MQTTSuccess, status );
     TEST_ASSERT_EQUAL_size_t( 18, properties.propertyLength );
 
-    properties.reqProbInfo = 0;
+    properties.requestProblemInfo = 0;
     status = MQTTV5_GetConnectPacketSize( &connectInfo, NULL, &properties, &remainingLength, &packetSize );
 
     TEST_ASSERT_EQUAL( MQTTSuccess, status );
@@ -2703,8 +2703,8 @@ void test_MQTTV5_GetConnectPacketSize( void )
     properties.isMaxPacketSize = true;
     properties.maxPacketSize = 32;
     properties.topicAliasMax = 12;
-    properties.reqResInfo = 1;
-    properties.reqProbInfo = 0;
+    properties.requestResponseInfo = 1;
+    properties.requestProblemInfo = 0;
     memset( &userProperty, 0x0, sizeof( userProperty ) );
     userProperty.keyLength = 3;
     userProperty.valueLength = 1;
@@ -2808,7 +2808,7 @@ void test_MQTTV5_GetConnectPacketSize( void )
     memset( &willInfo, 0x0, sizeof( willInfo ) );
     /*5*/
     properties.receiveMax = UINT16_MAX;
-    properties.reqProbInfo = 1;
+    properties.requestProblemInfo = 1;
     MQTTUserProperty_t userPropArr[ 3500 ];
     properties.outgoingUserPropSize = 2078;
     properties.pOutgoingUserProperty = userPropArr;
@@ -2856,7 +2856,7 @@ void test_MQTTV5_SerializeConnect( void )
     properties.receiveMax = 65535U;
     properties.isMaxPacketSize = true;
     properties.maxPacketSize = UINT32_MAX;
-    properties.reqProbInfo = 1;
+    properties.requestProblemInfo = 1;
     MQTTFixedBuffer_t fixedBuffer = { .pBuffer = &buffer[ BUFFER_PADDING_LENGTH ], .size = bufferSize };
 
     /* Verify bad parameter errors. */
@@ -2990,8 +2990,8 @@ void test_MQTTV5_SerializeConnect( void )
     properties.receiveMax = 34;
     properties.maxPacketSize = 32;
     properties.topicAliasMax = 12;
-    properties.reqResInfo = 1;
-    properties.reqProbInfo = 0;
+    properties.requestResponseInfo = 1;
+    properties.requestProblemInfo = 0;
     MQTTUserProperty_t userProperty;
     MQTTAuthInfo_t auth;
     memset( &userProperty, 0x0, sizeof( userProperty ) );
@@ -3088,8 +3088,8 @@ void test_MQTTV5_SerializeConnect_Happy_Paths()
     properties.receiveMax = 34;
     properties.maxPacketSize = 32;
     properties.topicAliasMax = 12;
-    properties.reqResInfo = 1;
-    properties.reqProbInfo = 0;
+    properties.requestResponseInfo = 1;
+    properties.requestProblemInfo = 0;
     willInfo.payloadFormat = 1;
     willInfo.msgExpiryPresent = 1;
     willInfo.msgExpiryInterval = 10;
@@ -3204,7 +3204,7 @@ void test_WillLimit( void )
     connectInfo.passwordLength = UINT16_MAX;
     connectInfo.pUserName = "";
     properties.receiveMax = UINT16_MAX;
-    properties.reqProbInfo = 1;
+    properties.requestProblemInfo = 1;
     willInfo.payloadFormat = 1;
     willInfo.msgExpiryPresent = 1;
     willInfo.msgExpiryInterval = 10;

@@ -72,6 +72,7 @@
  * @brief Bytes required to encode any string length in an MQTT packet header.
  * Length is always encoded in two bytes according to the MQTT specification.
  */
+#define CORE_MQTT_SERIALIZED_LENGTH_FIELD_BYTES          ( 2U )
 
 /**
  * @brief Number of vectors required to encode one topic filter in a subscribe
@@ -558,7 +559,10 @@ static bool matchTopicFilter( const char * pTopicName,
 
 
 #if ( MQTT_VERSION_5_ENABLED )
-
+    /**
+ * @brief Struct used to deserialize the will properties.
+ *
+ **/
     typedef struct  WillPropertiesVector
     {
         uint8_t serializedWillUserKeyLength[ MAX_USER_PROPERTY ][ 2 ];
@@ -572,7 +576,10 @@ static bool matchTopicFilter( const char * pTopicName,
         uint8_t correlationDataId;
     } WillVector_t;
 
-
+ /**
+ * @brief Struct used to deserialize the connect properties.
+ *
+ **/
     typedef struct  ConnectPropertiesVector
     {
         uint8_t serializedUserKeyLength[ MAX_USER_PROPERTY ][ 2 ];
@@ -729,7 +736,7 @@ static bool matchTopicFilter( const char * pTopicName,
             ioVectorLength += vectorsAdded;
         }
 
-        /* Encode the correlation lenght if provided. */
+        /* Encode the correlation length if provided. */
         if( pWillInfo->correlationLength != 0U )
         {
             /* Serialize the correlation data string. */

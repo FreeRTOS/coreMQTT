@@ -474,8 +474,8 @@ void test_MQTT_Connect_happy_path()
     properties.isMaxPacketSize = true;
     properties.maxPacketSize = 13;
     properties.topicAliasMax = 13;
-    properties.reqProbInfo = 0;
-    properties.reqResInfo = 1;
+    properties.requestProblemInfo = 0;
+    properties.requestResponseInfo = 1;
     properties.outgoingUserPropSize = 1;
     properties.pOutgoingUserProperty = &userProperty;
     properties.pOutgoingAuth = &authInfo;
@@ -499,7 +499,7 @@ void test_MQTT_Connect_happy_path()
     willInfo.willDelay = 3;
     willInfo.userPropertySize = 1;
     willInfo.pUserProperty = &userProperty;
-    connectInfo.pUserName = "hdhf";
+    connectInfo.pUserName = "abcd";
     connectInfo.userNameLength = 3;
     connectInfo.passwordLength = 4;
     connectInfo.pPassword = "1234";

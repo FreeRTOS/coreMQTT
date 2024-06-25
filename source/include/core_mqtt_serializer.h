@@ -72,7 +72,6 @@
  * @brief The size of MQTT PUBACK, PUBREC, PUBREL, and PUBCOMP packets, per MQTT spec.
  */
 #define MQTT_PUBLISH_ACK_PACKET_SIZE    ( 4UL )
-#define CORE_MQTT_SERIALIZED_LENGTH_FIELD_BYTES          ( 2U )
 
 /* Structures defined in this file. */
 struct MQTTFixedBuffer;
@@ -110,7 +109,10 @@ typedef enum MQTTStatus
 
 } MQTTStatus_t;
 
-
+/**
+ * @ingroup mqtt_enum_types
+ * @brief Reason Code is a one byte unsigned value that indicates the result of an operation.
+ */
 typedef enum ReasonCode {
     MQTT_REASON_UNSPECIFIED_ERR = 0x80,
     MQTT_REASON_MALFORMED_PACKET = 0x81,
@@ -321,12 +323,12 @@ typedef struct MQTTConnectProperties
      /**
      * @brief  A value of 0 indicates that the Server MUST NOT return Response Information.
      */
-    bool  reqResInfo;
+    bool  requestResponseInfo;
      /**
      * @brief The Client uses this value to indicate whether the Reason String or User Properties
      *  are sent in the case of failures
      */
-    bool  reqProbInfo;
+    bool  requestProblemInfo;
      /**
      * @brief Length of the connect properties.
      */
@@ -488,7 +490,7 @@ typedef struct MQTTPublishInfo
      */
     uint32_t msgExpiryInterval;
      /**
-     * @brief Wheter the message expiry is specified.
+     * @brief Whether the message expiry is specified.
      */
     bool msgExpiryPresent;
      /**
@@ -508,7 +510,7 @@ typedef struct MQTTPublishInfo
      */
     const char *pResponseTopic;
      /**
-     * @brief Length of the correlation lenght.
+     * @brief Length of the correlation data.
      */
     uint16_t correlationLength;
      /**
@@ -1578,7 +1580,7 @@ uint8_t * MQTT_SerializeUnsubscribeHeader( size_t remainingLength,
 
 
 /**
- * @fnuint8_t* MQTT_SerializeConnectProperties(uint8_t* pIndex,const MQTTConnectProperties_t * pConnectProperties);
+ * @fn uint8_t* MQTT_SerializeConnectProperties(uint8_t* pIndex,const MQTTConnectProperties_t * pConnectProperties);
  * @brief Serialize the connect properties of the connect packet header.
  *
  * @param[out] pIndex Pointer to the buffer where the header is to
@@ -1597,7 +1599,7 @@ uint8_t* MQTT_SerializeConnectProperties(uint8_t* pIndex,const MQTTConnectProper
 
 
 /**
- * @fnuint8_t* MQTT_SerializePublishProperties(const MQTTPublishInfo_t * pPublishInfo, uint8_t* pIndex);
+ * @fn uint8_t* MQTT_SerializePublishProperties(const MQTTPublishInfo_t * pPublishInfo, uint8_t* pIndex);
  * @brief Serialize the connect properties of the connect packet header.
  *@param[in] pPublishInfo The publish/will properties information.
  * @param[out] pIndex Pointer to the buffer where the header is to
@@ -1614,9 +1616,68 @@ uint8_t* MQTT_SerializePublishProperties(const MQTTPublishInfo_t * pPublishInfo,
 /** @endcond */
 
 
+/**
+ * @brief Deserialize an MQTT CONNACK packet.
+ *
+ * @param[out] pConnackProperties To store the deserialized connack properties.
+ * @param[in]  pIncomingPacket #MQTTPacketInfo_t containing the buffer.
+ * @param[out]  pSessionPresent Whether a previous session was present.
+ *
+ * @return #MQTTBadParameter, #MQTTBadResponse, #MQTTSuccess, #MQTTMalformedPacket, #MQTTProtocolError, #MQTTServerRefused
+ *
+ * <b>Example</b>
+ * @code{c}
+ *
+ * // TransportRecv_t function for reading from the network.
+ * int32_t socket_recv(
+ *      NetworkContext_t * pNetworkContext,
+ *      void * pBuffer,
+ *      size_t bytesToRecv
+ * );
+ * // Some context to be used with the above transport receive function.
+ * NetworkContext_t networkContext;
+ *
+ * // Other variables used in this example.
+ * MQTTStatus_t status;
+ * MQTTPacketInfo_t incomingPacket;
+ * MQTTConnectProperties_t properties = {0};
+ * uint16_t packetId;
+ *
+ * int32_t bytesRecvd;
+ * // A buffer to hold remaining data of the incoming packet.
+ * uint8_t buffer[ BUFFER_SIZE ];
+ *
+ * // Populate all fields of the incoming packet.
+ * status = MQTT_GetIncomingPacketTypeAndLength(
+ *      socket_recv,
+ *      &networkContext,
+ *      &incomingPacket
+ * );
+ * assert( status == MQTTSuccess );
+ * assert( incomingPacket.remainingLength <= BUFFER_SIZE );
+ * bytesRecvd = socket_recv(
+ *      &networkContext,
+ *      ( void * ) buffer,
+ *      incomingPacket.remainingLength
+ * );
+ * incomingPacket.pRemainingData = buffer;
+ *
+ * // Deserialize the publish information if the incoming packet is a publish.
+ * if( ( incomingPacket.type & 0xF0 ) == MQTT_PACKET_TYPE_CONNACK )
+ * {
+ *      status = MQTT_DeserializeConnack(&properties, &incomingPacket, &session);
+ *      if( status == MQTTSuccess )
+ *      {
+ *          // The deserialized connack information can now be used from `properties`.
+ *      }
+ * }
+ * @endcode
+ */
+/* @[declare_mqttv5_deserializeconnack] */
 MQTTStatus_t MQTTV5_DeserializeConnack( MQTTConnectProperties_t *pConnackProperties,const MQTTPacketInfo_t * pIncomingPacket,
 
                                   bool * pSessionPresent );
+/* @[declare_mqttv5_deserializeconnack] */
 
 /**
  * @brief Get the size and Remaining Length of an MQTT Version 5 CONNECT packet .
