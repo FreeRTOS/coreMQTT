@@ -1580,7 +1580,7 @@ uint8_t * MQTT_SerializeUnsubscribeHeader( size_t remainingLength,
 
 
 /**
- * @fn uint8_t * MQTT_SerializeConnectProperties(uint8_t* pIndex,const MQTTConnectProperties_t * pConnectProperties);
+ * @fn uint8_t * MQTT_SerializeConnectProperties(uint8_t * pIndex,const MQTTConnectProperties_t * pConnectProperties);
  * @brief Serialize the connect properties of the connect packet header.
  *
  * @param[out] pIndex Pointer to the buffer where the header is to
@@ -1594,13 +1594,13 @@ uint8_t * MQTT_SerializeUnsubscribeHeader( size_t remainingLength,
  * @cond DOXYGEN_IGNORE
  * Doxygen should ignore this definition, this function is private.
  */
-uint8_t * MQTT_SerializeConnectProperties( uint8_t* pIndex,
+uint8_t * MQTT_SerializeConnectProperties( uint8_t * pIndex,
                                            const MQTTConnectProperties_t * pConnectProperties);
 /** @endcond */
 
 
 /**
- * @fn uint8_t * MQTT_SerializePublishProperties(const MQTTPublishInfo_t * pPublishInfo, uint8_t* pIndex);
+ * @fn uint8_t * MQTT_SerializePublishProperties(const MQTTPublishInfo_t * pPublishInfo, uint8_t * pIndex);
  * @brief Serialize the will properties of the connect packet.
  * @param[in] pPublishInfo The publish/will properties information.
  * @param[out] pIndex Pointer to the buffer where the header is to
@@ -1614,7 +1614,7 @@ uint8_t * MQTT_SerializeConnectProperties( uint8_t* pIndex,
  * Doxygen should ignore this definition, this function is private.
  */
 uint8_t * MQTT_SerializePublishProperties( const MQTTPublishInfo_t * pPublishInfo,
-                                           uint8_t* pIndex);
+                                           uint8_t * pIndex);
 /** @endcond */
 
 
