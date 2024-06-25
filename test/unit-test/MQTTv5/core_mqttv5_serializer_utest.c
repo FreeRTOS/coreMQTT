@@ -3188,7 +3188,7 @@ void test_MQTTV5_SerializeConnect_Happy_Paths()
 
 void test_WillLimit( void )
 {
-    /*Test will property length more than the max value allowed.*/
+    /* Test will property length more than the max value allowed. */
     MQTTConnectInfo_t connectInfo;
     size_t remainingLength = 0;
     size_t packetSize = 0;
