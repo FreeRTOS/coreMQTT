@@ -426,7 +426,7 @@ typedef struct MQTTConnectProperties
      */
     MQTTAuthInfo_t *pIncomingAuth;
 
-    
+
 } MQTTConnectProperties_t;
 
 /**
@@ -469,7 +469,7 @@ typedef struct MQTTPublishInfo
      * @brief Message payload length.
      */
     size_t payloadLength;
-    
+
 #if (MQTT_VERSION_5_ENABLED)
      /**
      * @brief Length of the properties.
@@ -1615,7 +1615,7 @@ uint8_t* MQTT_SerializePublishProperties(const MQTTPublishInfo_t * pPublishInfo,
 
 
 MQTTStatus_t MQTTV5_DeserializeConnack( MQTTConnectProperties_t *pConnackProperties,const MQTTPacketInfo_t * pIncomingPacket,
-                                  
+
                                   bool * pSessionPresent );
 
 /**
@@ -1654,10 +1654,10 @@ MQTTStatus_t MQTTV5_DeserializeConnack( MQTTConnectProperties_t *pConnackPropert
  *
  * // Initialize the optional will info, the details are out of scope for this example.
  * initializeWillInfo( &willInfo );
- * 
+ *
  * // Initialize the connection properties, the details are out of scope for this example.
  * initializeConnectProperties( &connectProperties );
- * 
+ *
  * // Get the size requirement for the connect packet.
  * status = MQTT_GetConnectPacketSize(
  *      &connectInfo, &willInfo, &remainingLength, &packetSize
@@ -1670,13 +1670,13 @@ MQTTStatus_t MQTTV5_DeserializeConnack( MQTTConnectProperties_t *pConnackPropert
  * }
  * @endcode
  */
-/* @[declare_mqttv5_getconnectpacketsize] */     
+/* @[declare_mqttv5_getconnectpacketsize] */
 MQTTStatus_t MQTTV5_GetConnectPacketSize(const MQTTConnectInfo_t* pConnectInfo,
     MQTTPublishInfo_t* pWillInfo,
     MQTTConnectProperties_t* pConnectProperties,
     size_t* pRemainingLength,
     size_t* pPacketSize);
-/* @[declare_mqttv5_getconnectpacketsize] */     
+/* @[declare_mqttv5_getconnectpacketsize] */
 
 /**
  * @brief Serialize an MQTT CONNECT packet in the given fixed buffer @p pFixedBuffer.

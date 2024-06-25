@@ -246,11 +246,12 @@ typedef struct MQTTContext
     uint16_t keepAliveIntervalSec; /**< @brief Keep Alive interval. */
     uint32_t pingReqSendTimeMs;    /**< @brief Timestamp of the last sent PINGREQ. */
     bool waitingForPingResp;       /**< @brief If the library is currently awaiting a PINGRESP. */
-    #if (MQTT_VERSION_5_ENABLED)
-    /**
-     * @brief Connect and Connack Properties.
-     */
-    MQTTConnectProperties_t *connectProperties;
+    #if ( MQTT_VERSION_5_ENABLED )
+
+        /**
+         * @brief Connect and Connack Properties.
+         */
+        MQTTConnectProperties_t * connectProperties;
     #endif
 } MQTTContext_t;
 
@@ -526,7 +527,7 @@ MQTTStatus_t MQTT_InitStatefulQoS( MQTTContext_t * pContext,
 /* @[declare_mqtt_connect] */
 MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
                            const MQTTConnectInfo_t * pConnectInfo,
-                            MQTTPublishInfo_t * pWillInfo,
+                           MQTTPublishInfo_t * pWillInfo,
                            uint32_t timeoutMs,
                            bool * pSessionPresent );
 /* @[declare_mqtt_connect] */

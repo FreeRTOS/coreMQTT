@@ -8,7 +8,7 @@ SourceDirectory: /home/ubuntu/coreMQTT/test
 BuildDirectory: /home/ubuntu/coreMQTT
 
 # Where to place the cost data store
-CostDataFile: 
+CostDataFile:
 
 # Site is something like machine.domain, i.e. pragmatic.crd
 Site: ip-172-31-80-220
@@ -17,11 +17,11 @@ Site: ip-172-31-80-220
 BuildName: Linux-cc
 
 # Subprojects
-LabelsForSubprojects: 
+LabelsForSubprojects:
 
 # Submission information
 SubmitURL: http://
-SubmitInactivityTimeout: 
+SubmitInactivityTimeout:
 
 # Dashboard start time
 NightlyStartTime: 00:00:00 EDT
@@ -32,53 +32,53 @@ MakeCommand: /home/ubuntu/cmake-3.30.0-rc3-linux-x86_64/bin/cmake --build . --co
 DefaultCTestConfigurationType: Release
 
 # version control
-UpdateVersionOnly: 
+UpdateVersionOnly:
 
 # CVS options
 # Default is "-d -P -A"
-CVSCommand: 
-CVSUpdateOptions: 
+CVSCommand:
+CVSUpdateOptions:
 
 # Subversion options
-SVNCommand: 
-SVNOptions: 
-SVNUpdateOptions: 
+SVNCommand:
+SVNOptions:
+SVNUpdateOptions:
 
 # Git options
-GITCommand: 
-GITInitSubmodules: 
-GITUpdateOptions: 
-GITUpdateCustom: 
+GITCommand:
+GITInitSubmodules:
+GITUpdateOptions:
+GITUpdateCustom:
 
 # Perforce options
-P4Command: 
-P4Client: 
-P4Options: 
-P4UpdateOptions: 
-P4UpdateCustom: 
+P4Command:
+P4Client:
+P4Options:
+P4UpdateOptions:
+P4UpdateCustom:
 
 # Generic update command
-UpdateCommand: 
-UpdateOptions: 
-UpdateType: 
+UpdateCommand:
+UpdateOptions:
+UpdateType:
 
 # Compiler info
-Compiler: 
-CompilerVersion: 
+Compiler:
+CompilerVersion:
 
 # Dynamic analysis (MemCheck)
-PurifyCommand: 
-ValgrindCommand: 
-ValgrindCommandOptions: 
-DrMemoryCommand: 
-DrMemoryCommandOptions: 
-CudaSanitizerCommand: 
-CudaSanitizerCommandOptions: 
-MemoryCheckType: 
-MemoryCheckSanitizerOptions: 
+PurifyCommand:
+ValgrindCommand:
+ValgrindCommandOptions:
+DrMemoryCommand:
+DrMemoryCommandOptions:
+CudaSanitizerCommand:
+CudaSanitizerCommandOptions:
+MemoryCheckType:
+MemoryCheckSanitizerOptions:
 MemoryCheckCommand: MEMORYCHECK_COMMAND-NOTFOUND
-MemoryCheckCommandOptions: 
-MemoryCheckSuppressionFile: 
+MemoryCheckCommandOptions:
+MemoryCheckSuppressionFile:
 
 # Coverage
 CoverageCommand: /usr/bin/gcov
@@ -93,13 +93,13 @@ TimeOut: 1500
 
 # During parallel testing CTest will not start a new test if doing
 # so would cause the system load to exceed this value.
-TestLoad: 
+TestLoad:
 
-TLSVerify: 
-TLSVersion: 
+TLSVerify:
+TLSVersion:
 
-UseLaunchers: 
-CurlOptions: 
+UseLaunchers:
+CurlOptions:
 # warning, if you add new options here that have to do with submit,
 # you have to update cmCTestSubmitCommand.cxx
 

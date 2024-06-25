@@ -13,7 +13,7 @@
  *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
  * FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
@@ -35,8 +35,8 @@
 /* Include paths for public enums, structures, and macros. */
 #include "core_mqtt.h"
 
-// #include "mock_core_mqttv5_serializer.h"
-// #include "mock_core_mqttv5_state.h"
+/* #include "mock_core_mqttv5_serializer.h" */
+/* #include "mock_core_mqttv5_state.h" */
 
 #include "core_mqtt_config_defaults.h"
 #include "mock_core_mqtt_serializer.h"
@@ -236,6 +236,7 @@ int suiteTearDown( int numFailures )
 
 
 /* ========================================================================== */
+
 /**
  * @brief A mocked timer query function that increments on every call. This
  * guarantees that only a single iteration runs in the ProcessLoop for ease
@@ -245,6 +246,7 @@ static uint32_t getTime( void )
 {
     return globalEntryTime++;
 }
+
 /**
  * @brief Mocked failed transport read.
  */
@@ -291,8 +293,10 @@ static uint8_t * MQTT_SerializeConnectFixedHeader_cb( uint8_t * pIndex,
     return pIndex;
 }
 
-static uint8_t * MQTT_SerializeConnectProperties_cb( uint8_t* pIndex, const MQTTConnectProperties_t* pConnectProperties
-                                                      ,int numcallbacks )
+static uint8_t * MQTT_SerializeConnectProperties_cb( uint8_t * pIndex,
+                                                     const MQTTConnectProperties_t * pConnectProperties
+                                                     ,
+                                                     int numcallbacks )
 {
     ( void ) pConnectProperties;
     ( void ) numcallbacks;
@@ -300,8 +304,10 @@ static uint8_t * MQTT_SerializeConnectProperties_cb( uint8_t* pIndex, const MQTT
     return pIndex;
 }
 
-static uint8_t * MQTT_SerializePublishProperties_cb( const MQTTPublishInfo_t* pPublishInfo, uint8_t* pIndex
-                                                      ,int numcallbacks )
+static uint8_t * MQTT_SerializePublishProperties_cb( const MQTTPublishInfo_t * pPublishInfo,
+                                                     uint8_t * pIndex
+                                                     ,
+                                                     int numcallbacks )
 {
     ( void ) pPublishInfo;
     ( void ) numcallbacks;
@@ -439,17 +445,18 @@ void test_MQTT_Connect_happy_path()
     MQTTAuthInfo_t authInfo;
     MQTTAuthInfo_t authInfo2;
     MQTTUserProperty_t userProperty;
-    memset(&properties,0x0,sizeof(properties));
-    memset(&authInfo,0x0,sizeof(authInfo));
-    memset(&authInfo2,0x0,sizeof(authInfo2));
-    memset(&userProperty,0x0,sizeof(userProperty));
+
+    memset( &properties, 0x0, sizeof( properties ) );
+    memset( &authInfo, 0x0, sizeof( authInfo ) );
+    memset( &authInfo2, 0x0, sizeof( authInfo2 ) );
+    memset( &userProperty, 0x0, sizeof( userProperty ) );
     userProperty.pKey = "ab";
     userProperty.pValue = "ab";
     userProperty.keyLength = 2;
     userProperty.valueLength = 2;
-    authInfo.pAuthMethod= "2";
+    authInfo.pAuthMethod = "2";
     authInfo.authMethodLength = 1;
-    authInfo.pAuthData ="ab";
+    authInfo.pAuthData = "ab";
     authInfo.authDataLength = 2;
     setupTransportInterface( &transport );
     setupNetworkBuffer( &networkBuffer );
@@ -461,17 +468,17 @@ void test_MQTT_Connect_happy_path()
     /* With non-NULL Will. */
     mqttContext.connectStatus = MQTTNotConnected;
     mqttContext.keepAliveIntervalSec = 0;
-    mqttContext.connectProperties= &properties;
+    mqttContext.connectProperties = &properties;
     properties.sessionExpiry = 13;
     properties.receiveMax = 12;
     properties.isMaxPacketSize = true;
-    properties.maxPacketSize =13;
+    properties.maxPacketSize = 13;
     properties.topicAliasMax = 13;
-    properties.reqProbInfo= 0;
+    properties.reqProbInfo = 0;
     properties.reqResInfo = 1;
     properties.outgoingUserPropSize = 1;
     properties.pOutgoingUserProperty = &userProperty;
-    properties.pOutgoingAuth= &authInfo;
+    properties.pOutgoingAuth = &authInfo;
     properties.pIncomingAuth = &authInfo2;
 
     willInfo.pTopicName = "test";
@@ -491,11 +498,11 @@ void test_MQTT_Connect_happy_path()
     willInfo.pCorrelationData = "ab";
     willInfo.willDelay = 3;
     willInfo.userPropertySize = 1;
-    willInfo.pUserProperty=&userProperty;
-    connectInfo.pUserName ="hdhf";
-    connectInfo.userNameLength =3;
-    connectInfo.passwordLength =4;
-    connectInfo.pPassword ="1234";
+    willInfo.pUserProperty = &userProperty;
+    connectInfo.pUserName = "hdhf";
+    connectInfo.userNameLength = 3;
+    connectInfo.passwordLength = 4;
+    connectInfo.pPassword = "1234";
     mqttContext.transportInterface.send = transportSendSuccess;
     MQTTV5_GetConnectPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_SerializeConnectFixedHeader_Stub( MQTT_SerializeConnectFixedHeader_cb );
@@ -505,7 +512,7 @@ void test_MQTT_Connect_happy_path()
     status = MQTT_Connect( &mqttContext, &connectInfo, NULL, timeout, &sessionPresent );
     TEST_ASSERT_EQUAL_INT( MQTTRecvFailed, status );
 
-    properties.outgoingUserPropSize =0;
+    properties.outgoingUserPropSize = 0;
     MQTTV5_GetConnectPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_SerializeConnectFixedHeader_Stub( MQTT_SerializeConnectFixedHeader_cb );
     MQTT_SerializeConnectProperties_Stub( MQTT_SerializeConnectProperties_cb );
@@ -554,8 +561,9 @@ void test_MQTT_Connect_receiveConnack( void )
     MQTTStatus_t status;
     TransportInterface_t transport = { 0 };
     MQTTFixedBuffer_t networkBuffer = { 0 };
-    MQTTConnectProperties_t properties ={0};
+    MQTTConnectProperties_t properties = { 0 };
     MQTTPacketInfo_t incomingPacket = { 0 };
+
     setupTransportInterface( &transport );
     setupNetworkBuffer( &networkBuffer );
     transport.recv = transportRecvFailure;
@@ -563,7 +571,7 @@ void test_MQTT_Connect_receiveConnack( void )
     memset( &mqttContext, 0x0, sizeof( mqttContext ) );
     memset( &properties, 0x0, sizeof( properties ) );
     MQTT_Init( &mqttContext, &transport, getTime, eventCallback, &networkBuffer );
-    mqttContext.connectProperties=&properties;
+    mqttContext.connectProperties = &properties;
     /* Everything before receiving the CONNACK should succeed. */
     MQTTV5_SerializeConnect_IgnoreAndReturn( MQTTSuccess );
     MQTTV5_GetConnectPacketSize_IgnoreAndReturn( MQTTSuccess );
@@ -595,12 +603,11 @@ void test_MQTT_Connect_receiveConnack( void )
     MQTT_GetIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
     status = MQTT_Connect( &mqttContext, &connectInfo, NULL, timeout, &sessionPresent );
     TEST_ASSERT_EQUAL_INT( MQTTRecvFailed, status );
-     
+
     mqttContext.transportInterface.recv = transportRecvSuccess;
     MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_GetIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
     MQTTV5_DeserializeConnack_ExpectAnyArgsAndReturn( MQTTBadResponse );
     status = MQTT_Connect( &mqttContext, &connectInfo, NULL, timeout, &sessionPresent );
     TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
-
-    }
+}
