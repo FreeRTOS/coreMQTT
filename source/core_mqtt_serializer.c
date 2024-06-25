@@ -644,7 +644,7 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
  * @param[out] pUsed Whether the property is decoded befire.
  * @param[out]  pIndex Pointer to the current index of the buffer.
  *
- * @return #MQTTSuccess, #MQTTProtocolError and #MQTTMalfomedPacket
+ * @return #MQTTSuccess, #MQTTProtocolError and #MQTTMalformedPacket
  **/
 
     static MQTTStatus_t decodeuint32_t( uint32_t * pProperty,
@@ -660,7 +660,7 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
  * @param[out] pUsed Whether the property is decoded befire.
  * @param[out]  pIndex Pointer to the current index of the buffer.
  *
- * @return #MQTTSuccess, #MQTTProtocolError and #MQTTMalfomedPacket
+ * @return #MQTTSuccess, #MQTTProtocolError and #MQTTMalformedPacket
  **/
 
     static MQTTStatus_t decodeuint16_t( uint16_t * pProperty,
@@ -676,7 +676,7 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
  * @param[out] pUsed Whether the property is decoded befire.
  * @param[out]  pIndex Pointer to the current index of the buffer.
  *
- * @return #MQTTSuccess, #MQTTProtocolError and #MQTTMalfomedPacket
+ * @return #MQTTSuccess, #MQTTProtocolError and #MQTTMalformedPacket
  **/
     static MQTTStatus_t decodeuint8_t( uint8_t * pProperty,
                                        size_t * pPropertyLength,
@@ -692,7 +692,7 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
  * @param[out] pUsed Whether the property is decoded before.
  * @param[out]  pIndex Pointer to the current index of the buffer.
  *
- * @return #MQTTSuccess, #MQTTProtocolError and #MQTTMalfomedPacket
+ * @return #MQTTSuccess, #MQTTProtocolError and #MQTTMalformedPacket
  **/
     static MQTTStatus_t decodeutf_8( const char ** pProperty,
                                      uint16_t * pLength,
@@ -707,7 +707,7 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
  * @param[out] pPropertyLength  Size of the length.
  * @param[out]  pIndex Pointer to the current index of the buffer.
  *
- * @return #MQTTSuccess, #MQTTProtocolError and #MQTTMalfomedPacket
+ * @return #MQTTSuccess, #MQTTProtocolError and #MQTTMalformedPacket
  **/
     static MQTTStatus_t decodeutf_8pair( MQTTUserProperty_t * pUserProperty,
                                          size_t * pPropertyLength,
@@ -720,7 +720,7 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
  * @param[out] length  Length of the property.
  * @param[out]  pIndex Pointer to the current index of the buffer.
  *
- * @return #MQTTSuccess, #MQTTProtocolError and #MQTTMalfomedPacket
+ * @return #MQTTSuccess, #MQTTProtocolError and #MQTTMalformedPacket
  **/
     static MQTTStatus_t deserializeConnackV5( MQTTConnectProperties_t * pConnackProperties,
                                               size_t length,
