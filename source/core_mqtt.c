@@ -606,7 +606,35 @@ static size_t addEncodedStringToVectorWithId(uint8_t serializedLength[CORE_MQTT_
                                       uint16_t length,
                                       TransportOutVector_t *iterator,
                                       size_t *updatedLength, const uint8_t* packetId);
+/**
+ * @brief Serialize the variable length will properties.
+ *
+ * @param[in] pWillInfo Properties to serialize
+ * @param[in] willVector vectors used to encode.
+ * @param[in] pTotalMessageLength The iterator pointing to the first element in the
+ * transport interface IO array.
+ * @param[out] pVectorIterator This parameter will be added to with the number of
+ * bytes added to the vector.
+ * 
+ * @return The number of vectors added.
+ */
 
+static size_t sendWillProperties(const MQTTPublishInfo_t* pWillInfo, WillVector_t * pWillVector, size_t *pTotalMessageLength, TransportOutVector_t ** pVectorIterator);
+
+/**
+ * @brief Serialize the variable length connect properties.
+ *
+ * @param[in] pWillInfo Properties to serialize
+ * @param[in] willVector vectors used to encode.
+ * @param[in] pTotalMessageLength The iterator pointing to the first element in the
+ * transport interface IO array.
+ * @param[out] pVectorIterator This parameter will be added to with the number of
+ * bytes added to the vector.
+ * 
+ * @return The number of vectors added.
+ */
+
+static size_t sendConnectProperties(const MQTTConnectProperties_t* pConnectProperties, PropertiesVector_t * pPropertiesVector, size_t *pTotalMessageLength, TransportOutVector_t ** pVectorIterator);
 
 /*-----------------------------------------------------------*/
 
@@ -649,21 +677,22 @@ static size_t addEncodedStringToVectorWithId(uint8_t serializedLength[CORE_MQTT_
 }
 
 
-static size_t sendWillProperties(const MQTTPublishInfo_t* pWillInfo, WillVector_t * willVector, size_t *totalMessageLength, TransportOutVector_t ** vectorIterator){
+static size_t sendWillProperties(const MQTTPublishInfo_t* pWillInfo, WillVector_t * pWillVector, size_t *pTotalMessageLength, TransportOutVector_t ** pVectorIterator){
      size_t vectorsAdded= 0U;
      size_t ioVectorLength = 0U;
-     TransportOutVector_t * iterator = *vectorIterator;
-     willVector->contentTypeId= MQTT_CONTENT_TYPE_ID;
-     willVector->responseTopicId = MQTT_RESPONSE_TOPIC_ID;
-     willVector->correlationDataId = MQTT_CORRELATION_DATA_ID;
-     if (pWillInfo->contentTypeLength != 0U)
+     TransportOutVector_t * iterator = *pVectorIterator;
+     pWillVector->contentTypeId= MQTT_CONTENT_TYPE_ID;
+     pWillVector->responseTopicId = MQTT_RESPONSE_TOPIC_ID;
+     pWillVector->correlationDataId = MQTT_CORRELATION_DATA_ID;
+            /* Encode the content type if provided.*/
+           if (pWillInfo->contentTypeLength != 0U)
             {
                 /* Serialize the content type string. */
-                vectorsAdded = addEncodedStringToVectorWithId(willVector->serializedContentTypeLength,
+                vectorsAdded = addEncodedStringToVectorWithId(pWillVector->serializedContentTypeLength,
                                                               pWillInfo->pContentType,
                                                               pWillInfo->contentTypeLength,
                                                               iterator,
-                                                              totalMessageLength, &willVector->contentTypeId);
+                                                              pTotalMessageLength, &pWillVector->contentTypeId);
                 /* Update the iterator to point to the next empty slot. */
                 iterator = &iterator[vectorsAdded];
                 ioVectorLength += vectorsAdded;
@@ -672,11 +701,11 @@ static size_t sendWillProperties(const MQTTPublishInfo_t* pWillInfo, WillVector_
             if (pWillInfo->responseTopicLength != 0U)
             {
                 /* Serialize the response topic string. */
-                vectorsAdded = addEncodedStringToVectorWithId(willVector->serializedResponseTopicLength,
+                vectorsAdded = addEncodedStringToVectorWithId(pWillVector->serializedResponseTopicLength,
                                                               pWillInfo->pResponseTopic,
                                                               pWillInfo->responseTopicLength,
                                                               iterator,
-                                                              totalMessageLength,&willVector->responseTopicId);
+                                                              pTotalMessageLength,&pWillVector->responseTopicId);
                 /* Update the iterator to point to the next empty slot. */
                 iterator = &iterator[vectorsAdded];
                 ioVectorLength += vectorsAdded;
@@ -685,11 +714,11 @@ static size_t sendWillProperties(const MQTTPublishInfo_t* pWillInfo, WillVector_
             if (pWillInfo->correlationLength != 0U)
             {
                 /* Serialize the correlation data string. */
-                vectorsAdded = addEncodedStringToVectorWithId(willVector->serailizedCorrelationLength,
+                vectorsAdded = addEncodedStringToVectorWithId(pWillVector->serailizedCorrelationLength,
                                                               pWillInfo->pCorrelationData,
                                                               pWillInfo->correlationLength,
                                                               iterator,
-                                                              totalMessageLength,&willVector->correlationDataId);
+                                                              pTotalMessageLength,&pWillVector->correlationDataId);
                 /* Update the iterator to point to the next empty slot. */
                 iterator = &iterator[vectorsAdded];
                 ioVectorLength += vectorsAdded;
@@ -702,39 +731,39 @@ static size_t sendWillProperties(const MQTTPublishInfo_t* pWillInfo, WillVector_
                     const  MQTTUserProperty_t* userProperty = pWillInfo->pUserProperty;
                     for (; i < size; i++)
                     {
-                        willVector->willUserId[i]=MQTT_USER_PROPERTY_ID;
-                        vectorsAdded = addEncodedStringToVectorWithId(willVector->serializedWillUserKeyLength[i],
+                        pWillVector->willUserId[i]=MQTT_USER_PROPERTY_ID;
+                        vectorsAdded = addEncodedStringToVectorWithId(pWillVector->serializedWillUserKeyLength[i],
                             userProperty[i].pKey,
                             userProperty[i].keyLength,
                             iterator,
-                            totalMessageLength, &willVector->willUserId[i]);
+                            pTotalMessageLength, &pWillVector->willUserId[i]);
                         /* Update the iterator to point to the next empty slot. */ 
                         iterator = &iterator[vectorsAdded];
                         ioVectorLength += vectorsAdded;
 
-                        vectorsAdded = addEncodedStringToVector(willVector->serializedWillUserValueLength[i],
+                        vectorsAdded = addEncodedStringToVector(pWillVector->serializedWillUserValueLength[i],
                             userProperty[i].pValue,
                             userProperty[i].valueLength,
                             iterator,
-                            totalMessageLength);
+                            pTotalMessageLength);
                         /* Update the iterator to point to the next empty slot. */           
                         iterator = &iterator[vectorsAdded];
                         ioVectorLength += vectorsAdded;
 
             }
         }
-        *vectorIterator = iterator;
+        *pVectorIterator = iterator;
             return ioVectorLength;
 }
 
 
-static size_t sendConnectProperties(const MQTTConnectProperties_t* pConnectProperties, PropertiesVector_t * propertiesVector, size_t *totalMessageLength, TransportOutVector_t ** vectorIterator){
+static size_t sendConnectProperties(const MQTTConnectProperties_t* pConnectProperties, PropertiesVector_t * pPropertiesVector, size_t *pTotalMessageLength, TransportOutVector_t ** pVectorIterator){
      size_t vectorsAdded= 0U;
      size_t ioVectorLength = 0U;
-     TransportOutVector_t *iterator = *vectorIterator;
-     propertiesVector->authMethodId = MQTT_AUTH_METHOD_ID;
-     propertiesVector->authDataId = MQTT_AUTH_DATA_ID;
-
+     TransportOutVector_t *iterator = *pVectorIterator;
+     pPropertiesVector->authMethodId = MQTT_AUTH_METHOD_ID;
+     pPropertiesVector->authDataId = MQTT_AUTH_DATA_ID;
+     /*Encode the user properties if provided.*/
      if (pConnectProperties->outgoingUserPropSize != 0U)
         {       
             uint32_t i = 0;
@@ -742,36 +771,37 @@ static size_t sendConnectProperties(const MQTTConnectProperties_t* pConnectPrope
             const MQTTUserProperty_t *userProperty = pConnectProperties->pOutgoingUserProperty;
             for (; i < size; i++)
             {
-                propertiesVector->userId[i]=MQTT_USER_PROPERTY_ID;
+                pPropertiesVector->userId[i]=MQTT_USER_PROPERTY_ID;
                 /* Serialize the user key string. */
-                vectorsAdded = addEncodedStringToVectorWithId(propertiesVector->serializedUserKeyLength[i],
+                vectorsAdded = addEncodedStringToVectorWithId(pPropertiesVector->serializedUserKeyLength[i],
                                                               userProperty[i].pKey,
                                                               userProperty[i].keyLength,
                                                               iterator,
-                                                              totalMessageLength,&(propertiesVector->userId[i]));
+                                                              pTotalMessageLength,&(pPropertiesVector->userId[i]));
                 /* Update the iterator to point to the next empty slot. */
                 iterator = &iterator[vectorsAdded];
                 ioVectorLength += vectorsAdded;
                 /* Serialize the  user value string. */
-                vectorsAdded = addEncodedStringToVector(propertiesVector->serializedUserValueLength[i],
+                vectorsAdded = addEncodedStringToVector(pPropertiesVector->serializedUserValueLength[i],
                                                         userProperty[i].pValue,
                                                         userProperty[i].valueLength,
                                                         iterator,
-                                                        totalMessageLength);
+                                                        pTotalMessageLength);
                 /* Update the iterator to point to the next empty slot. */
                 iterator = &iterator[vectorsAdded];
                 ioVectorLength += vectorsAdded;
             }
         }
-            /*Encodethe authentication method and data if provided*/
+
+            /*Encode the authentication method and data if provided*/
             if (pConnectProperties->pOutgoingAuth != NULL)
             {
                 /* Serialize the authentication method  string. */
-                vectorsAdded = addEncodedStringToVectorWithId(propertiesVector->serializedAuthMethodLength,
+                vectorsAdded = addEncodedStringToVectorWithId(pPropertiesVector->serializedAuthMethodLength,
                                                               pConnectProperties->pOutgoingAuth->pAuthMethod,
                                                               pConnectProperties->pOutgoingAuth->authMethodLength,
                                                               iterator,
-                                                              totalMessageLength, &(propertiesVector->authMethodId));
+                                                              pTotalMessageLength, &(pPropertiesVector->authMethodId));
 
                 /* Update the iterator to point to the next empty slot. */
                 iterator = &iterator[vectorsAdded];
@@ -779,11 +809,11 @@ static size_t sendConnectProperties(const MQTTConnectProperties_t* pConnectPrope
                 if (pConnectProperties->pOutgoingAuth->authDataLength != 0U)
                 {
                     /* Serialize the authentication data  string. */
-                    vectorsAdded = addEncodedStringToVectorWithId(propertiesVector->serializedAuthDataLength,
+                    vectorsAdded = addEncodedStringToVectorWithId(pPropertiesVector->serializedAuthDataLength,
                                                                   pConnectProperties->pOutgoingAuth->pAuthData,
                                                                   pConnectProperties->pOutgoingAuth->authDataLength,
                                                                   iterator,
-                                                                  totalMessageLength, &(propertiesVector->authDataId));
+                                                                  pTotalMessageLength, &(pPropertiesVector->authDataId));
 
                     /* Update the iterator to point to the next empty slot. */
                     iterator = &iterator[vectorsAdded];
@@ -791,7 +821,7 @@ static size_t sendConnectProperties(const MQTTConnectProperties_t* pConnectPrope
                 }
 
         }
-        *vectorIterator = iterator;
+        *pVectorIterator = iterator;
         return ioVectorLength;
 }
 #endif
