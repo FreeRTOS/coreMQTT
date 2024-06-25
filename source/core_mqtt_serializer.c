@@ -104,7 +104,7 @@
     #define MQTT_MAX_PACKET_SIZE          ( 5U )
     #define MQTT_TOPIC_ALIAS_SIZE         ( 3U )
     #define MQTT_REQUEST_RESPONSE_SIZE    ( 2U )
-    #define MQTT_REQUEST_PPOBLEM_SIZE     ( 2U )
+    #define MQTT_REQUEST_PROBLEM_SIZE     ( 2U )
 
 /*CONNECT PROPERTIES*/
     #define MQTT_SESSION_EXPIRY_ID        ( 0x11 )
@@ -615,7 +615,7 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
  *
  * @param[in] pConnectInfo MQTT CONNECT packet parameters.
  * @param[in] pWillInfo Last Will and Testament. Pass NULL if not used.
- * @param[in] pConnectProperties MQTT CONNECT Prroperties parameters.
+ * @param[in] pConnectProperties MQTT CONNECT Properties parameters.
  * @param[in] remainingLength Remaining Length of MQTT CONNECT packet.
  * @param[out] pFixedBuffer Buffer for packet serialization.
  */
@@ -938,7 +938,7 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
 
             if( pConnectProperties->reqProbInfo != true )
             {
-                propertyLength += MQTT_REQUEST_PPOBLEM_SIZE;
+                propertyLength += MQTT_REQUEST_PROBLEM_SIZE;
             }
 
             if( pConnectProperties->pOutgoingAuth != NULL )
@@ -1172,7 +1172,7 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
                                pConnectInfo->pClientIdentifier,
                                pConnectInfo->clientIdentifierLength );
 
-        /* Serialze the will properties,topic name and message into the CONNECT packet if provided. */
+        /* Serialize the will properties,topic name and message into the CONNECT packet if provided. */
         if( pWillInfo != NULL )
         {
             pIndex = MQTT_SerializePublishProperties( pWillInfo, pIndex );
@@ -1320,10 +1320,10 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
                 break;
 
             case ( uint8_t ) MQTT_REASON_IMPL_SPECIFIC_ERR:
-                LogError( ( "Connection refused: Impementation specific error." ) );
+                LogError( ( "Connection refused: Implementation specific error." ) );
                 break;
 
-            case ( uint8_t ) MQTT_REASON_UNSUP_PROTO_VER:
+            case ( uint8_t ) MQTT_REASON_UNSUPPORTED_PROTO_VER:
                 LogError( ( "Connection refused: Unsupported Protocol Version." ) );
                 break;
 

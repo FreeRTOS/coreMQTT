@@ -568,7 +568,7 @@ static bool matchTopicFilter( const char * pTopicName,
         uint8_t contentTypeId;
         uint8_t serializedResponseTopicLength[ 2 ];
         uint8_t responseTopicId;
-        uint8_t serailizedCorrelationLength[ 2 ];
+        uint8_t serializedCorrelationLength[ 2 ];
         uint8_t correlationDataId;
     } WillVector_t;
 
@@ -733,7 +733,7 @@ static bool matchTopicFilter( const char * pTopicName,
         if( pWillInfo->correlationLength != 0U )
         {
             /* Serialize the correlation data string. */
-            vectorsAdded = addEncodedStringToVectorWithId( pWillVector->serailizedCorrelationLength,
+            vectorsAdded = addEncodedStringToVectorWithId( pWillVector->serializedCorrelationLength,
                                                            pWillInfo->pCorrelationData,
                                                            pWillInfo->correlationLength,
                                                            iterator,

@@ -175,7 +175,7 @@ struct NetworkContext
 #define MQTT_MAX_PACKET_SIZE             ( 5U )
 #define MQTT_TOPIC_ALIAS_SIZE            ( 3U )
 #define MQTT_REQUEST_RESPONSE_SIZE       ( 2U )
-#define MQTT_REQUEST_PPOBLEM_SIZE        ( 2U )
+#define MQTT_REQUEST_PROBLEM_SIZE        ( 2U )
 
 #define MQTT_SESSION_EXPIRY_ID           ( 0x11 )
 #define MQTT_RECEIVE_MAX_ID              ( 0x21 )

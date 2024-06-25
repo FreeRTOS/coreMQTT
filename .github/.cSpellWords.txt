@@ -45,3 +45,5 @@ Vect
 VECT
 Werror
 Wunused
+MQTTV
+mqttv
