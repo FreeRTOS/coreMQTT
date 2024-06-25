@@ -559,7 +559,8 @@ static bool matchTopicFilter( const char * pTopicName,
 
 
 #if ( MQTT_VERSION_5_ENABLED )
-    /**
+
+/**
  * @brief Struct used to deserialize the will properties.
  *
  **/
@@ -576,7 +577,7 @@ static bool matchTopicFilter( const char * pTopicName,
         uint8_t correlationDataId;
     } WillVector_t;
 
- /**
+/**
  * @brief Struct used to deserialize the connect properties.
  *
  **/

@@ -74,12 +74,13 @@
  */
 #ifndef MQTT_VERSION_5_ENABLED
     #define MQTT_VERSION_5_ENABLED    ( false )
-    /**
-    * @ingroup mqtt_constants
-    * @brief Maximum number of user properties with default value as 5.
-    */
+
+/**
+ * @ingroup mqtt_constants
+ * @brief Maximum number of user properties with default value as 5.
+ */
     #ifndef MAX_USER_PROPERTY
-        #define MAX_USER_PROPERTY     ( 5U )
+        #define MAX_USER_PROPERTY    ( 5U )
     #endif
 #endif
 

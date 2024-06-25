@@ -627,7 +627,7 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
  * @param[in] pConnectProperties MQTT CONNECT Properties parameters.
  * @param[in] remainingLength Remaining Length of MQTT CONNECT packet.
  * @param[in] pFixedBuffer Buffer for packet serialization.
- * 
+ *
  */
 
     static void serializeConnectPacketV5( const MQTTConnectInfo_t * pConnectInfo,
@@ -643,14 +643,15 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
  * @param[out] pPropertyLength  Size of the length.
  * @param[out] pUsed Whether the property is decoded befire.
  * @param[out]  pIndex Pointer to the current index of the buffer.
- * 
- * @return #MQTTSuccess, #MQTTProtocolError and #MQTTMalfomedPacket 
+ *
+ * @return #MQTTSuccess, #MQTTProtocolError and #MQTTMalfomedPacket
  **/
 
     static MQTTStatus_t decodeuint32_t( uint32_t * pProperty,
                                         size_t * pPropertyLength,
                                         bool * pUsed,
                                         const uint8_t ** pIndex );
+
 /**
  * @brief Validate the length and decode a 2 byte value.
  *
@@ -658,14 +659,15 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
  * @param[out] pPropertyLength  Size of the length.
  * @param[out] pUsed Whether the property is decoded befire.
  * @param[out]  pIndex Pointer to the current index of the buffer.
- * 
- * @return #MQTTSuccess, #MQTTProtocolError and #MQTTMalfomedPacket 
+ *
+ * @return #MQTTSuccess, #MQTTProtocolError and #MQTTMalfomedPacket
  **/
 
     static MQTTStatus_t decodeuint16_t( uint16_t * pProperty,
                                         size_t * pPropertyLength,
                                         bool * pUsed,
                                         const uint8_t ** pIndex );
+
 /**
  * @brief Validate the length and decode a 1 byte value.
  *
@@ -673,13 +675,14 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
  * @param[out] pPropertyLength  Size of the length.
  * @param[out] pUsed Whether the property is decoded befire.
  * @param[out]  pIndex Pointer to the current index of the buffer.
- * 
- * @return #MQTTSuccess, #MQTTProtocolError and #MQTTMalfomedPacket 
+ *
+ * @return #MQTTSuccess, #MQTTProtocolError and #MQTTMalfomedPacket
  **/
     static MQTTStatus_t decodeuint8_t( uint8_t * pProperty,
                                        size_t * pPropertyLength,
                                        bool * pUsed,
                                        const uint8_t ** pIndex );
+
 /**
  * @brief Validate the length and decode a utf 8 string.
  *
@@ -688,38 +691,40 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
  * @param[out] pPropertyLength  Size of the length.
  * @param[out] pUsed Whether the property is decoded before.
  * @param[out]  pIndex Pointer to the current index of the buffer.
- * 
- * @return #MQTTSuccess, #MQTTProtocolError and #MQTTMalfomedPacket 
+ *
+ * @return #MQTTSuccess, #MQTTProtocolError and #MQTTMalfomedPacket
  **/
     static MQTTStatus_t decodeutf_8( const char ** pProperty,
                                      uint16_t * pLength,
                                      size_t * pPropertyLength,
                                      bool * pUsed,
                                      const uint8_t ** pIndex );
+
 /**
  * @brief Validate the length and decode a user property.
  *
  * @param[out] pUserProperty To store the decoded property.
  * @param[out] pPropertyLength  Size of the length.
  * @param[out]  pIndex Pointer to the current index of the buffer.
- * 
- * @return #MQTTSuccess, #MQTTProtocolError and #MQTTMalfomedPacket 
+ *
+ * @return #MQTTSuccess, #MQTTProtocolError and #MQTTMalfomedPacket
  **/
     static MQTTStatus_t decodeutf_8pair( MQTTUserProperty_t * pUserProperty,
                                          size_t * pPropertyLength,
                                          const uint8_t ** pIndex );
+
 /**
  * @brief Validate the length and decode the connack properties.
  *
  * @param[out] pConnackProperties To store the decoded property.
  * @param[out] length  Length of the property.
  * @param[out]  pIndex Pointer to the current index of the buffer.
- * 
- * @return #MQTTSuccess, #MQTTProtocolError and #MQTTMalfomedPacket 
+ *
+ * @return #MQTTSuccess, #MQTTProtocolError and #MQTTMalfomedPacket
  **/
     static MQTTStatus_t deserializeConnackV5( MQTTConnectProperties_t * pConnackProperties,
                                               size_t length,
-                                              const uint8_t * const *pIndex );
+                                              const uint8_t * const * pIndex );
 /*-----------------------------------------------------------*/
 
     MQTTStatus_t MQTTV5_GetConnectPacketSize( const MQTTConnectInfo_t * pConnectInfo,
@@ -863,8 +868,9 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
             pIndexLocal[ 3 ] = UINT32_BYTE0( pPublishInfo->willDelay );
             pIndexLocal = &pIndexLocal[ 4 ];
         }
+
         /*Serialize the payload format if provided.*/
- 
+
         if( pPublishInfo->payloadFormat != 0U )
         {
             *pIndexLocal = MQTT_PAYLOAD_FORMAT_ID;
@@ -934,6 +940,7 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
                                               size_t * pPropertyLength )
     {
         MQTTStatus_t status = MQTTSuccess;
+
         /*Validate the parameters*/
         if( ( pAuthInfo->authMethodLength == 0U ) && ( pAuthInfo->authDataLength != 0U ) )
         {
@@ -1127,7 +1134,7 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
         uint8_t * pIndexLocal = pIndex;
 
         pIndexLocal = encodeRemainingLength( pIndexLocal, pConnectProperties->propertyLength );
-        
+
         /*Serialize session expiry if provided.*/
         if( pConnectProperties->sessionExpiry != 0U )
         {
@@ -1139,6 +1146,7 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
             pIndexLocal[ 3 ] = UINT32_BYTE0( pConnectProperties->sessionExpiry );
             pIndexLocal = &pIndexLocal[ 4 ];
         }
+
         /*Serialize receive max  if provided.*/
 
         if( pConnectProperties->receiveMax != ( uint16_t ) UINT16_MAX )
@@ -1149,6 +1157,7 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
             pIndexLocal[ 1 ] = UINT16_LOW_BYTE( pConnectProperties->receiveMax );
             pIndexLocal = &pIndexLocal[ 2 ];
         }
+
         /*Serialize the max packet size  if provided.*/
 
         if( pConnectProperties->isMaxPacketSize == true )
@@ -1161,6 +1170,7 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
             pIndexLocal[ 3 ] = UINT32_BYTE0( pConnectProperties->maxPacketSize );
             pIndexLocal = &pIndexLocal[ 4 ];
         }
+
         /*Serialize the topic alias if provided.*/
 
         if( pConnectProperties->topicAliasMax != 0U )
@@ -1171,6 +1181,7 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
             pIndexLocal[ 1 ] = UINT16_LOW_BYTE( pConnectProperties->topicAliasMax );
             pIndexLocal = &pIndexLocal[ 2 ];
         }
+
         /*Serialize the request response information if provided.*/
 
         if( pConnectProperties->requestResponseInfo != false )
@@ -1180,6 +1191,7 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
             *pIndexLocal = 1U;
             pIndexLocal++;
         }
+
         /*Serialize request problem information if provided.*/
 
         if( pConnectProperties->requestProblemInfo != true )
@@ -1254,6 +1266,7 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
         if( pWillInfo != NULL )
         {
             pIndex = MQTT_SerializePublishProperties( pWillInfo, pIndex );
+
             /*Serialize the provided will properties which has variable length.*/
             if( pWillInfo->contentTypeLength != 0U )
             {
@@ -1382,7 +1395,8 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
     static MQTTStatus_t logConnackResponseV5( uint8_t responseCode )
     {
         MQTTStatus_t status = MQTTServerRefused;
-       /* Log an error based on the CONNACK response code. */
+
+        /* Log an error based on the CONNACK response code. */
         switch( responseCode )
         {
             case ( uint8_t ) MQTT_REASON_UNSPECIFIED_ERR:
@@ -1616,7 +1630,8 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
     {
         const uint8_t * pVariableHeader = *pIndex;
         MQTTStatus_t status = MQTTSuccess;
-       /*Protocol error to include the same property twice.*/
+
+        /*Protocol error to include the same property twice.*/
         if( *pUsed == true )
         {
             status = MQTTProtocolError;
@@ -1645,7 +1660,8 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
     {
         const uint8_t * pVariableHeader = *pIndex;
         MQTTStatus_t status = MQTTSuccess;
-       /*Protocol error to include the same property twice.*/
+
+        /*Protocol error to include the same property twice.*/
 
         if( *pUsed == true )
         {
@@ -1676,7 +1692,8 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
     {
         const uint8_t * pVariableHeader = *pIndex;
         MQTTStatus_t status = MQTTSuccess;
-       /*Protocol error to include the same property twice.*/
+
+        /*Protocol error to include the same property twice.*/
 
         if( *pUsed == true )
         {
@@ -1713,7 +1730,8 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
     {
         const uint8_t * pVariableHeader = *pIndex;
         MQTTStatus_t status = MQTTSuccess;
-       /*Protocol error to include the same property twice.*/
+
+        /*Protocol error to include the same property twice.*/
 
         if( *pUsed == true )
         {
@@ -1754,6 +1772,7 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
     {
         const uint8_t * pVariableHeader = *pIndex;
         MQTTStatus_t status = MQTTSuccess;
+
         /*Validate the property length and decode the user property property received.*/
         if( *pPropertyLength < sizeof( uint16_t ) )
         {
@@ -1828,12 +1847,13 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
         MQTTUserProperty_t * userProperty = pConnackProperties->pIncomingUserProperty;
 
         pVariableHeader = &pVariableHeader[ remainingLengthEncodedSize( propertyLength ) ];
+
         /*Decode all the properties received, validate and store them in pConnackProperties.*/
         while( ( propertyLength > 0U ) && ( status == MQTTSuccess ) )
         {
             uint8_t packetId = *pVariableHeader;
             pVariableHeader = &pVariableHeader[ 1 ];
-            propertyLength -= sizeof(uint8_t);
+            propertyLength -= sizeof( uint8_t );
 
             switch( packetId )
             {
@@ -1861,10 +1881,12 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
 
                 case MQTT_MAX_PACKET_SIZE_ID:
                     status = decodeuint32_t( &pConnackProperties->serverMaxPacketSize, &propertyLength, &maxPacket, &pVariableHeader );
-                    if ((pConnackProperties->serverMaxPacketSize == 0U))
-                     { 
-                    status = MQTTProtocolError; 
-                     } 
+
+                    if( ( pConnackProperties->serverMaxPacketSize == 0U ) )
+                    {
+                        status = MQTTProtocolError;
+                    }
+
                     break;
 
                 case MQTT_ASSIGNED_CLIENT_ID:
@@ -1902,14 +1924,16 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
                     break;
 
                 case MQTT_RESPONSE_INFO_ID:
-                     if (pConnackProperties->requestResponseInfo == false) 
-                    { 
-                     status = MQTTProtocolError; 
-                     } 
-                    else 
-                    { 
-                    status = decodeutf_8( &pConnackProperties->pResponseInfo, &pConnackProperties->responseInfoLength, &propertyLength, &responseInfo, &pVariableHeader );
-                     } 
+
+                    if( pConnackProperties->requestResponseInfo == false )
+                    {
+                        status = MQTTProtocolError;
+                    }
+                    else
+                    {
+                        status = decodeutf_8( &pConnackProperties->pResponseInfo, &pConnackProperties->responseInfoLength, &propertyLength, &responseInfo, &pVariableHeader );
+                    }
+
                     break;
 
                 case MQTT_SERVER_REF_ID:
@@ -1917,25 +1941,32 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
                     break;
 
                 case MQTT_AUTH_METHOD_ID:
-                     if (pConnackProperties->pOutgoingAuth == NULL) 
-                     {
-                     status = MQTTProtocolError; 
-                    } 
-                    else{ 
-                    status = decodeutf_8( &pConnackProperties->pIncomingAuth->pAuthMethod, &pConnackProperties->pIncomingAuth->authMethodLength, &propertyLength, &authMethod, &pVariableHeader );
-                     } 
+
+                    if( pConnackProperties->pOutgoingAuth == NULL )
+                    {
+                        status = MQTTProtocolError;
+                    }
+                    else
+                    {
+                        status = decodeutf_8( &pConnackProperties->pIncomingAuth->pAuthMethod, &pConnackProperties->pIncomingAuth->authMethodLength, &propertyLength, &authMethod, &pVariableHeader );
+                    }
+
                     break;
 
                 case MQTT_AUTH_DATA_ID:
-                    if ((pConnackProperties->pOutgoingAuth == NULL)) 
-                     { 
-                    status = MQTTProtocolError;
-                     } 
-                    else{
-                    status = decodeutf_8( &pConnackProperties->pIncomingAuth->pAuthData, &pConnackProperties->pIncomingAuth->authDataLength, &propertyLength, &authData, &pVariableHeader );
+
+                    if( ( pConnackProperties->pOutgoingAuth == NULL ) )
+                    {
+                        status = MQTTProtocolError;
                     }
+                    else
+                    {
+                        status = decodeutf_8( &pConnackProperties->pIncomingAuth->pAuthData, &pConnackProperties->pIncomingAuth->authDataLength, &propertyLength, &authData, &pVariableHeader );
+                    }
+
                     break;
-             /*Protocol error to include any other property id.*/
+
+                /*Protocol error to include any other property id.*/
                 default:
                     status = MQTTProtocolError;
                     break;
@@ -1986,7 +2017,7 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
         /*Deserialize the connack properties.*/
         else if( status == MQTTSuccess )
         {
-            status = deserializeConnackV5( pConnackProperties, propertyLength,&pVariableHeader );
+            status = deserializeConnackV5( pConnackProperties, propertyLength, &pVariableHeader );
         }
 
         else
@@ -2606,12 +2637,12 @@ static void logConnackResponse( uint8_t responseCode )
 {
     const char * const pConnackResponses[ 6 ] =
     {
-        "Connection accepted.",                                   /* 0 */
-        "Connection refused: unacceptable protocol version.",     /* 1 */
-        "Connection refused: identifier rejected.",               /* 2 */
-        "Connection refused: server unavailable",                 /* 3 */
-        "Connection refused: bad user name or password.",         /* 4 */
-        "Connection refused: not authorized."                     /* 5 */
+        "Connection accepted.",                               /* 0 */
+        "Connection refused: unacceptable protocol version.", /* 1 */
+        "Connection refused: identifier rejected.",           /* 2 */
+        "Connection refused: server unavailable",             /* 3 */
+        "Connection refused: bad user name or password.",     /* 4 */
+        "Connection refused: not authorized."                 /* 5 */
     };
 
     /* Avoid unused parameter warning when assert and logs are disabled. */
