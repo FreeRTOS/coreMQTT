@@ -630,31 +630,31 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
     static MQTTStatus_t decodeuint32_t( uint32_t * pProperty,
                                         size_t * pPropertyLength,
                                         bool * pUsed,
-                                        uint8_t ** pIndex );
+                                        const uint8_t ** pIndex );
 
     static MQTTStatus_t decodeuint16_t( uint16_t * pProperty,
                                         size_t * pPropertyLength,
                                         bool * pUsed,
-                                        uint8_t ** pIndex );
+                                        const uint8_t ** pIndex );
 
     static MQTTStatus_t decodeuint8_t( uint8_t * pProperty,
                                        size_t * pPropertyLength,
                                        bool * pUsed,
-                                       uint8_t ** pIndex );
+                                       const uint8_t ** pIndex );
 
     static MQTTStatus_t decodeutf_8( const char ** pProperty,
                                      uint16_t * pLength,
                                      size_t * pPropertyLength,
                                      bool * pUsed,
-                                     uint8_t ** pIndex );
+                                     const uint8_t ** pIndex );
 
     static MQTTStatus_t decodeutf_8pair( MQTTUserProperty_t * pUserProperty,
                                          size_t * pPropertyLength,
-                                         uint8_t ** pIndex );
+                                         const uint8_t ** pIndex );
 
     static MQTTStatus_t deserializeConnackV5( MQTTConnectProperties_t * pConnackProperties,
-                                              size_t propertyLength,
-                                              const uint8_t ** pIndex );
+                                              size_t length,
+                                              const uint8_t * const *pIndex );
 /*-----------------------------------------------------------*/
 
     MQTTStatus_t MQTTV5_GetConnectPacketSize( const MQTTConnectInfo_t * pConnectInfo,
@@ -1533,9 +1533,9 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
     static MQTTStatus_t decodeuint32_t( uint32_t * pProperty,
                                         size_t * pPropertyLength,
                                         bool * pUsed,
-                                        uint8_t ** pIndex )
+                                        const uint8_t ** pIndex )
     {
-        uint8_t * pVariableHeader = *pIndex;
+        const uint8_t * pVariableHeader = *pIndex;
         MQTTStatus_t status = MQTTSuccess;
 
         if( *pUsed == true )
@@ -1561,9 +1561,9 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
     static MQTTStatus_t decodeuint16_t( uint16_t * pProperty,
                                         size_t * pPropertyLength,
                                         bool * pUsed,
-                                        uint8_t ** pIndex )
+                                        const uint8_t ** pIndex )
     {
-        uint8_t * pVariableHeader = *pIndex;
+        const uint8_t * pVariableHeader = *pIndex;
         MQTTStatus_t status = MQTTSuccess;
 
         if( *pUsed == true )
@@ -1589,9 +1589,9 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
     static MQTTStatus_t decodeuint8_t( uint8_t * pProperty,
                                        size_t * pPropertyLength,
                                        bool * pUsed,
-                                       uint8_t ** pIndex )
+                                       const uint8_t ** pIndex )
     {
-        uint8_t * pVariableHeader = *pIndex;
+        const uint8_t * pVariableHeader = *pIndex;
         MQTTStatus_t status = MQTTSuccess;
 
         if( *pUsed == true )
@@ -1623,9 +1623,9 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
                                      uint16_t * pLength,
                                      size_t * pPropertyLength,
                                      bool * pUsed,
-                                     uint8_t ** pIndex )
+                                     const uint8_t ** pIndex )
     {
-        uint8_t * pVariableHeader = *pIndex;
+        const uint8_t * pVariableHeader = *pIndex;
         MQTTStatus_t status = MQTTSuccess;
 
         if( *pUsed == true )
@@ -1661,9 +1661,9 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
 
     static MQTTStatus_t decodeutf_8pair( MQTTUserProperty_t * pUserProperty,
                                          size_t * pPropertyLength,
-                                         uint8_t ** pIndex )
+                                         const uint8_t ** pIndex )
     {
-        uint8_t * pVariableHeader = *pIndex;
+        const uint8_t * pVariableHeader = *pIndex;
         MQTTStatus_t status = MQTTSuccess;
 
         if( *pPropertyLength < sizeof( uint16_t ) )
@@ -1715,10 +1715,10 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
 
     static MQTTStatus_t deserializeConnackV5( MQTTConnectProperties_t * pConnackProperties,
                                               size_t length,
-                                              const uint8_t ** pIndex )
+                                              const uint8_t * const * pIndex )
     {
         MQTTStatus_t status = MQTTSuccess;
-        uint8_t * pVariableHeader = *pIndex;
+        const uint8_t * pVariableHeader = *pIndex;
         size_t propertyLength = length;
         bool sessionExpiry = false;
         bool serverReceiveMax = false;
@@ -1772,10 +1772,10 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
 
                 case MQTT_MAX_PACKET_SIZE_ID:
                     status = decodeuint32_t( &pConnackProperties->serverMaxPacketSize, &propertyLength, &maxPacket, &pVariableHeader );
-                    /* if ((pConnackProperties->serverMaxPacketSize == 0U)) */
-                    /* { */
-                    /* status = MQTTProtocolError; */
-                    /* } */
+                    if ((pConnackProperties->serverMaxPacketSize == 0U))
+                     { 
+                    status = MQTTProtocolError; 
+                     } 
                     break;
 
                 case MQTT_ASSIGNED_CLIENT_ID:
@@ -1813,14 +1813,14 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
                     break;
 
                 case MQTT_RESPONSE_INFO_ID:
-                    /* if (pConnackProperties->reqResInfo == false) */
-                    /* { */
-                    /* status = MQTTProtocolError; */
-                    /* } */
-                    /* else */
-                    /* { */
+                     if (pConnackProperties->reqResInfo == false) 
+                    { 
+                     status = MQTTProtocolError; 
+                     } 
+                    else 
+                    { 
                     status = decodeutf_8( &pConnackProperties->pResponseInfo, &pConnackProperties->responseInfoLength, &propertyLength, &responseInfo, &pVariableHeader );
-                    /* } */
+                     } 
                     break;
 
                 case MQTT_SERVER_REF_ID:
@@ -1828,23 +1828,23 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
                     break;
 
                 case MQTT_AUTH_METHOD_ID:
-                    /* if (pConnackProperties->pOutgoingAuth == NULL) */
-                    /* { */
-                    /* status = MQTTProtocolError; */
-                    /* } */
-                    /* else{ */
+                     if (pConnackProperties->pOutgoingAuth == NULL) 
+                     {
+                     status = MQTTProtocolError; 
+                    } 
+                    else{ 
                     status = decodeutf_8( &pConnackProperties->pIncomingAuth->pAuthMethod, &pConnackProperties->pIncomingAuth->authMethodLength, &propertyLength, &authMethod, &pVariableHeader );
-                    /* } */
+                     } 
                     break;
 
                 case MQTT_AUTH_DATA_ID:
-                    /* if ((pConnackProperties->pOutgoingAuth == NULL)) */
-                    /* { */
-                    /* status = MQTTProtocolError; */
-                    /* } */
-                    /* else{ */
+                    if ((pConnackProperties->pOutgoingAuth == NULL)) 
+                     { 
+                    status = MQTTProtocolError;
+                     } 
+                    else{
                     status = decodeutf_8( &pConnackProperties->pIncomingAuth->pAuthData, &pConnackProperties->pIncomingAuth->authDataLength, &propertyLength, &authData, &pVariableHeader );
-                    /* } */
+                    }
                     break;
 
                 default:
@@ -1858,13 +1858,12 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
 
     MQTTStatus_t MQTTV5_DeserializeConnack( MQTTConnectProperties_t * pConnackProperties,
                                             const MQTTPacketInfo_t * pIncomingPacket,
-
                                             bool * pSessionPresent )
     {
         MQTTStatus_t status = MQTTSuccess;
         size_t propertyLength;
         size_t remainingLengthSize;
-        uint8_t * pVariableHeader = NULL;
+        const uint8_t * pVariableHeader = NULL;
 
         /*Validate the arguments*/
         if( pConnackProperties == NULL )
@@ -1898,7 +1897,7 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
 
         else if( status == MQTTSuccess )
         {
-            status = deserializeConnackV5( pConnackProperties, propertyLength, &pVariableHeader );
+            status = deserializeConnackV5( pConnackProperties, propertyLength,&pVariableHeader );
         }
 
         else
