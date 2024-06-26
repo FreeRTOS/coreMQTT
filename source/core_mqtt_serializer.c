@@ -1924,7 +1924,7 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
         const uint8_t * pVariableHeader = *pIndex;
         MQTTStatus_t status = MQTTSuccess;
 
-        /*Validate the property length and decode the user property property received.*/
+        /*Validate the property length and decode the user property received.*/
         if( *pPropertyLength < sizeof( uint16_t ) )
         {
             status = MQTTMalformedPacket;
