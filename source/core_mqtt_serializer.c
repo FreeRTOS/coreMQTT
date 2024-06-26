@@ -824,7 +824,7 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
  * 
  * @return #MQTTSuccess, #MQTTProtocolError and #MQTTMalformedPacket
  **/
-static MQTTStatus_t decodeAuthInfo(MQTTConnectProperties_t * pConnackProperties,
+static MQTTStatus_t decodeAuthInfo(const MQTTConnectProperties_t * pConnackProperties,
                           bool * pAuthMethod,
                           bool * pAuthData,
                           size_t * pPropertyLength,
@@ -1938,7 +1938,7 @@ static MQTTStatus_t decodeAuthInfo(MQTTConnectProperties_t * pConnackProperties,
         return status;
     }
 
-    static MQTTStatus_t decodeAuthInfo(MQTTConnectProperties_t * pConnackProperties,
+    static MQTTStatus_t decodeAuthInfo(const MQTTConnectProperties_t * pConnackProperties,
                           bool * pAuthMethod,
                           bool * pAuthData,
                           size_t * pPropertyLength,
@@ -1949,11 +1949,13 @@ static MQTTStatus_t decodeAuthInfo(MQTTConnectProperties_t * pConnackProperties,
        {
          status = MQTTProtocolError;
        }
-        else if(id== MQTT_AUTH_METHOD_ID)
+        else if(id == (uint8_t)MQTT_AUTH_METHOD_ID)
         {
+            /*Decode the authenticaton method */
             status = decodeutf_8( &pConnackProperties->pIncomingAuth->pAuthMethod, &pConnackProperties->pIncomingAuth->authMethodLength, pPropertyLength, pAuthMethod, pIndex );
         }
         else {
+            /*Decode the authentication data */
             status = decodeutf_8( &pConnackProperties->pIncomingAuth->pAuthData, &pConnackProperties->pIncomingAuth->authDataLength, pPropertyLength, pAuthData, pIndex );
         }
     
@@ -2082,7 +2084,7 @@ static MQTTStatus_t decodeAuthInfo(MQTTConnectProperties_t * pConnackProperties,
             else if((maxPacket == true) && (pConnackProperties->serverMaxPacketSize == 0U)){
                     status = MQTTProtocolError;
             }
-
+            /*Protocol error to send response information if the client has not requested it.*/
             else if((responseInfo == true ) && (pConnackProperties->requestResponseInfo == false)){
                 status = MQTTProtocolError;
             }
