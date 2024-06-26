@@ -99,7 +99,7 @@
 #if ( MQTT_VERSION_5_ENABLED )
 
 /**
- * @brief Veriosn 5 has the value 5.
+ * @brief Version 5 has the value 5.
  */
     #define MQTT_VERSION_5                ( 5U )
 
@@ -220,7 +220,7 @@
     #define MQTT_MAX_QOS_ID              ( 0x24 )
 
 /**
- * @brief Reatian available id.
+ * @brief Retain available id.
  */
     #define MQTT_RETAIN_AVAILABLE_ID     ( 0x25 )
 
