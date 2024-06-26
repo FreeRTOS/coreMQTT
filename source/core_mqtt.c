@@ -91,13 +91,33 @@
 #define CORE_MQTT_UNSUBSCRIBE_PER_TOPIC_VECTOR_LENGTH    ( 2U )
 
 #if ( MQTT_VERSION_5_ENABLED )
-/*Connect and will packet id's*/
+/**
+ * @brief User Property id.
+ */
     #define MQTT_USER_PROPERTY_ID       ( 0x26 )
+    /**
+ * @brief Authentication Method id.
+ */
     #define MQTT_AUTH_METHOD_ID         ( 0x15 )
+       /**
+ * @brief Authentication Data id.
+ */
     #define MQTT_AUTH_DATA_ID           ( 0x16 )
+       /**
+ * @brief Content Type id.
+ */
     #define MQTT_CONTENT_TYPE_ID        ( 0x03 )
+       /**
+ * @brief Response Topic id.
+ */
     #define MQTT_RESPONSE_TOPIC_ID      ( 0x08 )
+       /**
+ * @brief Correlation Data id.
+ */
     #define MQTT_CORRELATION_DATA_ID    ( 0x09 )
+       /**
+ * @brief  Size of the property id.
+ */
     #define CORE_MQTT_ID_SIZE           ( 1U )
 #endif
 
@@ -566,14 +586,50 @@ static bool matchTopicFilter( const char * pTopicName,
  **/
     typedef struct  WillPropertiesVector
     {
+                /**
+ * @brief Used to encode user key length.
+ *
+ **/
         uint8_t serializedWillUserKeyLength[ MAX_USER_PROPERTY ][ 2 ];
+               /**
+ * @brief Used to encode user id.
+ *
+ **/
         uint8_t willUserId[ MAX_USER_PROPERTY ];
+                       /**
+ * @brief Used to encode  user value length.
+ *
+ **/
         uint8_t serializedWillUserValueLength[ MAX_USER_PROPERTY ][ 2 ];
+              /**
+ * @brief Used to encode content type length.
+ *
+ **/
         uint8_t serializedContentTypeLength[ 2 ];
+                      /**
+ * @brief Used to encode content type id.
+ *
+ **/
         uint8_t contentTypeId;
+                      /**
+ * @brief Used to encode response topic length.
+ *
+ **/
         uint8_t serializedResponseTopicLength[ 2 ];
+                      /**
+ * @brief Used to encode response topic id.
+ *
+ **/
         uint8_t responseTopicId;
+                              /**
+ * @brief Used to encode correlation data length.
+ *
+ **/
         uint8_t serializedCorrelationLength[ 2 ];
+                              /**
+ * @brief Used to encode correlation data id.
+ *
+ **/
         uint8_t correlationDataId;
     } WillVector_t;
 
@@ -583,12 +639,40 @@ static bool matchTopicFilter( const char * pTopicName,
  **/
     typedef struct  ConnectPropertiesVector
     {
+        /**
+ * @brief Used to encode user key length.
+ *
+ **/
         uint8_t serializedUserKeyLength[ MAX_USER_PROPERTY ][ 2 ];
+        /**
+ * @brief Used to encode user id.
+ *
+ **/
         uint8_t userId[ MAX_USER_PROPERTY ];
+        /**
+ * @brief Used to encode user value length.
+ *
+ **/
         uint8_t serializedUserValueLength[ MAX_USER_PROPERTY ][ 2 ];
+         /**
+ * @brief Used to encode authentication method length.
+ *
+ **/
         uint8_t serializedAuthMethodLength[ 2 ];
+       /**
+ * @brief Used to authentication method id.
+ *
+ **/
         uint8_t authMethodId;
+        /**
+ * @brief Used to encode authentication data length.
+ *
+ **/
         uint8_t serializedAuthDataLength[ 2 ];
+        /**
+ * @brief Used to authentication data id.
+ *
+ **/
         uint8_t authDataId;
     } PropertiesVector_t;
 
@@ -622,7 +706,7 @@ static bool matchTopicFilter( const char * pTopicName,
  * @brief Serialize the variable length will properties.
  *
  * @param[in] pWillInfo Properties to serialize
- * @param[in] willVector vectors used to encode.
+ * @param[in] pWillVector vectors used to encode.
  * @param[in] pTotalMessageLength The iterator pointing to the first element in the
  * transport interface IO array.
  * @param[out] pVectorIterator This parameter will be added to with the number of
@@ -639,8 +723,8 @@ static bool matchTopicFilter( const char * pTopicName,
 /**
  * @brief Serialize the variable length connect properties.
  *
- * @param[in] pWillInfo Properties to serialize
- * @param[in] willVector vectors used to encode.
+ * @param[in] pConnectProperties Properties to serialize
+ * @param[in] pPropertiesVector vectors used to encode.
  * @param[in] pTotalMessageLength The iterator pointing to the first element in the
  * transport interface IO array.
  * @param[out] pVectorIterator This parameter will be added to with the number of

@@ -97,45 +97,144 @@
 #define MQTT_MAX_REMAINING_LENGTH                   ( 268435455UL )
 
 #if ( MQTT_VERSION_5_ENABLED )
-
+/**
+ * @brief Veriosn 5 has the value 5.
+ */
     #define MQTT_VERSION_5                ( 5U )
+ /**
+ * @brief Per the MQTT 5 spec, the  session expiry is of  5 bytes.
+ */
     #define MQTT_SESSION_EXPIRY_SIZE      ( 5U )
+ /**
+ * @brief Per the MQTT 5 spec, the receive maximum is of 3  bytes.
+ */
     #define MQTT_RECEIVE_MAX_SIZE         ( 3U )
+    /**
+ * @brief Per the MQTT 5 spec, the max packet size is of 5 bytes.
+ */
     #define MQTT_MAX_PACKET_SIZE          ( 5U )
+ /**
+ * @brief Per the MQTT 5 spec, the topic alias  is of 3 bytes.
+ */
     #define MQTT_TOPIC_ALIAS_SIZE         ( 3U )
+   /**
+ * @brief Per the MQTT 5 spec, the request response  is of 2 bytes.
+ */
     #define MQTT_REQUEST_RESPONSE_SIZE    ( 2U )
+    /**
+ * @brief Per the MQTT 5 spec, the request problem  is of 2 bytes.
+ */
     #define MQTT_REQUEST_PROBLEM_SIZE     ( 2U )
 
 /*CONNECT PROPERTIES*/
+/**
+ * @brief Session expiry id.
+ */
     #define MQTT_SESSION_EXPIRY_ID        ( 0x11 )
+    /**
+ * @brief Receive maximum id.
+ */
     #define MQTT_RECEIVE_MAX_ID           ( 0x21 )
+    /**
+ * @brief Maximum packet size  id.
+ */
     #define MQTT_MAX_PACKET_SIZE_ID       ( 0x27 )
+        /**
+ * @brief Topic alias size id.
+ */
     #define MQTT_TOPIC_ALIAS_MAX_ID       ( 0x22 )
+        /**
+ * @brief Request response id.
+ */
     #define MQTT_REQUEST_RESPONSE_ID      ( 0x19 )
+        /**
+ * @brief Request problem id.
+ */
     #define MQTT_REQUEST_PROBLEM_ID       ( 0x17 )
+        /**
+ * @brief User property id.
+ */
     #define MQTT_USER_PROPERTY_ID         ( 0x26 )
+        /**
+ * @brief Authentication method id.
+ */
     #define MQTT_AUTH_METHOD_ID           ( 0x15 )
+        /**
+ * @brief  Authentication data id.
+ */
     #define MQTT_AUTH_DATA_ID             ( 0x16 )
 
 /*WILL PROPERTIES*/
+    /**
+ * @brief Will delay id.
+ */
     #define MQTT_WILL_DELAY_ID            ( 0x18 )
+        /**
+ * @brief Payload format id.
+ */
     #define MQTT_PAYLOAD_FORMAT_ID        ( 0x01 )
+        /**
+ * @brief Message Expiry id.
+ */
     #define MQTT_MSG_EXPIRY_ID            ( 0x02 )
+        /**
+ * @brief Content type id.
+ */
     #define MQTT_CONTENT_TYPE_ID          ( 0x03 )
+        /**
+ * @brief Response topic id.
+ */
     #define MQTT_RESPONSE_TOPIC_ID        ( 0x08 )
+        /**
+ * @brief Correlation data id.
+ */
     #define MQTT_CORRELATION_DATA_ID      ( 0x09 )
 
 /*CONNACK PROPERTIES*/
+    /**
+ * @brief Max qos id.
+ */
     #define MQTT_MAX_QOS_ID               ( 0x24 )
+        /**
+ * @brief Reatian available id.
+ */
     #define MQTT_RETAIN_AVAILABLE_ID      ( 0x25 )
+        /**
+ * @brief Assigned client identifier id.
+ */
     #define MQTT_ASSIGNED_CLIENT_ID       ( 0x12 )
+        /**
+ * @brief Reason string id.
+ */
     #define MQTT_REASON_STRING_ID         ( 0x1F )
+         /**
+ * @brief Wildcard available id.
+ */
     #define MQTT_WILDCARD_ID              ( 0x28 )
+        /**
+ * @brief Subscription available id.
+ */
     #define MQTT_SUB_AVAILABLE_ID         ( 0x29 )
+        /**
+ * @brief Shared subscription id.
+ */
     #define MQTT_SHARED_SUB_ID            ( 0x2A )
+        /**
+ * @brief Server keep alive id.
+ */
     #define MQTT_SERVER_KEEP_ALIVE_ID     ( 0x13 )
+        /**
+ * @brief Response information id.
+ */
+
     #define MQTT_RESPONSE_INFO_ID         ( 0x1A )
+        /**
+ * @brief Server reference  id.
+ */
     #define MQTT_SERVER_REF_ID            ( 0x1C )
+    /**
+ * @brief Size of the property id.
+ */
 
     #define CORE_MQTT_ID_SIZE             ( 1U )
 
@@ -534,9 +633,9 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
  *
  * @param[in] pUserProperty Pointer to an MQTT packet struct representing user properties.
  * @param[in] number Total number of user properties
- * @param[out] size Size of the user properties
+ * @param[out] pSize Size of the user properties
  *
- * @return #MQTTSuccess if user properties are valid and #MQTTBadParametr  if the user properties are not valid
+ * @return #MQTTSuccess if user properties are valid and #MQTTBadParameter  if the user properties are not valid
  */
     static MQTTStatus_t MQTT_GetUserPropertySize( const MQTTUserProperty_t * pUserProperty,
                                                   uint32_t number,
@@ -550,7 +649,7 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
  * @param[in] pAuthInfo Pointer to an MQTT packet struct representing authentication information.
  * @param[out] pPropertyLength Size of the authentication information.
  *
- * @return #MQTTSuccess if user properties are valid and #MQTTBadParametr  if the user properties are not valid
+ * @return #MQTTSuccess if user properties are valid and #MQTTBadParameter  if the user properties are not valid
  */
 
     static MQTTStatus_t MQTT_GetAuthInfoSize( const MQTTAuthInfo_t * pAuthInfo,
@@ -563,7 +662,7 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
  *
  * @param[out] pConnectProperties Pointer to an MQTT packet struct representing connect properties.
  *
- * @return #MQTTSuccess if connect properties are valid and  #MQTTBadParametr  if the connect properties are not valid.
+ * @return #MQTTSuccess if connect properties are valid and  #MQTTBadParameter  if the connect properties are not valid.
  */
 
     static MQTTStatus_t MQTT_GetConnectPropertiesSize( MQTTConnectProperties_t * pConnectProperties );
@@ -575,7 +674,7 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
  *
  * @param[out] pWillProperties Pointer to an MQTT packet struct representing will properties.
  *
- * @return #MQTTSuccess if will properties are valid and  #MQTTBadParametr  if the will properties are not valid.
+ * @return #MQTTSuccess if will properties are valid and  #MQTTBadParameter  if the will properties are not valid.
  */
 
     static MQTTStatus_t MQTT_GetWillPropertiesSize( MQTTPublishInfo_t * pWillProperties );
@@ -588,7 +687,7 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
  * @param[in] pBuffer Pointer to the buffer.
  * @param[out] pLength Decoded variable length
  *
- * @return #MQTTSuccess if variable length and paramters are valid else #MQTTBadParamter.
+ * @return #MQTTSuccess if variable length and paramters are valid else #MQTTBadParameter.
  */
     static MQTTStatus_t decodeVariableLength( const uint8_t * pBuffer,
                                               size_t * pLength );
@@ -599,7 +698,7 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
  * Converts the packet from a stream of bytes to an #MQTTStatus_t and extracts
  * the variable header without connack properties.
  *
- * @param[in] pIncoming Pointer to an MQTT packet struct representing a incoming packet.
+ * @param[in] pIncomingPacket Pointer to an MQTT packet struct representing a incoming packet.
  * @param[out] pSessionPresent Whether a session is present or not.
  *
  *
@@ -712,6 +811,24 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
     static MQTTStatus_t decodeutf_8pair( MQTTUserProperty_t * pUserProperty,
                                          size_t * pPropertyLength,
                                          const uint8_t ** pIndex );
+
+/**
+ * @brief Validate the length and decode authentication information.
+ *
+ * @param[out] pConnackProperties To store the decoded property.
+ * @param[out] pAuthMethod Whether the authentication method is decoded before.
+ * @param[out] pAuthData  Whether the authentication data is decoded before.
+ * @param[out] pPropertyLength  Size of the length.
+ * @param[out]  pIndex Pointer to the current index of the buffer.
+ * @param[in]  id To differentiate between authentication method and  authentication data.
+ * 
+ * @return #MQTTSuccess, #MQTTProtocolError and #MQTTMalformedPacket
+ **/
+static MQTTStatus_t decodeAuthInfo(MQTTConnectProperties_t * pConnackProperties,
+                          bool * pAuthMethod,
+                          bool * pAuthData,
+                          size_t * pPropertyLength,
+                          const uint8_t ** pIndex,const uint8_t id);
 
 /**
  * @brief Validate the length and decode the connack properties.
@@ -1821,6 +1938,29 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
         return status;
     }
 
+    static MQTTStatus_t decodeAuthInfo(MQTTConnectProperties_t * pConnackProperties,
+                          bool * pAuthMethod,
+                          bool * pAuthData,
+                          size_t * pPropertyLength,
+                          const uint8_t ** pIndex,const uint8_t id)
+    {
+       MQTTStatus_t status = MQTTSuccess;
+       if( pConnackProperties->pOutgoingAuth == NULL )
+       {
+         status = MQTTProtocolError;
+       }
+        else if(id== MQTT_AUTH_METHOD_ID)
+        {
+            status = decodeutf_8( &pConnackProperties->pIncomingAuth->pAuthMethod, &pConnackProperties->pIncomingAuth->authMethodLength, pPropertyLength, pAuthMethod, pIndex );
+        }
+        else {
+            status = decodeutf_8( &pConnackProperties->pIncomingAuth->pAuthData, &pConnackProperties->pIncomingAuth->authDataLength, pPropertyLength, pAuthData, pIndex );
+        }
+    
+     return status;
+
+    }
+
     static MQTTStatus_t deserializeConnackV5( MQTTConnectProperties_t * pConnackProperties,
                                               size_t length,
                                               const uint8_t * const * pIndex )
@@ -1863,12 +2003,6 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
 
                 case MQTT_RECEIVE_MAX_ID:
                     status = decodeuint16_t( &pConnackProperties->serverReceiveMax, &propertyLength, &serverReceiveMax, &pVariableHeader );
-
-                    if( pConnackProperties->serverReceiveMax == 0U )
-                    {
-                        status = MQTTProtocolError;
-                    }
-
                     break;
 
                 case MQTT_MAX_QOS_ID:
@@ -1881,12 +2015,6 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
 
                 case MQTT_MAX_PACKET_SIZE_ID:
                     status = decodeuint32_t( &pConnackProperties->serverMaxPacketSize, &propertyLength, &maxPacket, &pVariableHeader );
-
-                    if( ( pConnackProperties->serverMaxPacketSize == 0U ) )
-                    {
-                        status = MQTTProtocolError;
-                    }
-
                     break;
 
                 case MQTT_ASSIGNED_CLIENT_ID:
@@ -1924,16 +2052,7 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
                     break;
 
                 case MQTT_RESPONSE_INFO_ID:
-
-                    if( pConnackProperties->requestResponseInfo == false )
-                    {
-                        status = MQTTProtocolError;
-                    }
-                    else
-                    {
                         status = decodeutf_8( &pConnackProperties->pResponseInfo, &pConnackProperties->responseInfoLength, &propertyLength, &responseInfo, &pVariableHeader );
-                    }
-
                     break;
 
                 case MQTT_SERVER_REF_ID:
@@ -1941,29 +2060,9 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
                     break;
 
                 case MQTT_AUTH_METHOD_ID:
-
-                    if( pConnackProperties->pOutgoingAuth == NULL )
-                    {
-                        status = MQTTProtocolError;
-                    }
-                    else
-                    {
-                        status = decodeutf_8( &pConnackProperties->pIncomingAuth->pAuthMethod, &pConnackProperties->pIncomingAuth->authMethodLength, &propertyLength, &authMethod, &pVariableHeader );
-                    }
-
-                    break;
-
                 case MQTT_AUTH_DATA_ID:
 
-                    if( ( pConnackProperties->pOutgoingAuth == NULL ) )
-                    {
-                        status = MQTTProtocolError;
-                    }
-                    else
-                    {
-                        status = decodeutf_8( &pConnackProperties->pIncomingAuth->pAuthData, &pConnackProperties->pIncomingAuth->authDataLength, &propertyLength, &authData, &pVariableHeader );
-                    }
-
+                    status = decodeAuthInfo(pConnackProperties,&authMethod,&authData,&propertyLength,&pVariableHeader,packetId);
                     break;
 
                 /*Protocol error to include any other property id.*/
@@ -1973,6 +2072,26 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
             }
         }
 
+        if(status == MQTTSuccess){
+            /*Receive max cannot be 0.*/
+            if((serverReceiveMax == true) && (pConnackProperties->serverReceiveMax == 0U) ){
+                    status = MQTTProtocolError;
+            }
+
+            /*Maximum packet size cannot be 0.*/
+            else if((maxPacket == true) && (pConnackProperties->serverMaxPacketSize == 0U)){
+                    status = MQTTProtocolError;
+            }
+
+            else if((responseInfo == true ) && (pConnackProperties->requestResponseInfo == false)){
+                status = MQTTProtocolError;
+            }
+
+            else{
+                /* MISRA Empty body */      
+            }
+
+        }
         return status;
     }
 
