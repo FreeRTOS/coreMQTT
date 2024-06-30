@@ -775,7 +775,7 @@ static bool matchTopicFilter( const char * pTopicName,
         pLocalIterator[ 0 ].iov_base = packetId;
         pLocalIterator[ 0 ].iov_len = CORE_MQTT_ID_SIZE;
         vectorsAdded++;
-        iterator++;
+        pLocalIterator++;
 
         ( *updatedLength ) = ( *updatedLength ) + CORE_MQTT_ID_SIZE;
 
@@ -783,7 +783,7 @@ static bool matchTopicFilter( const char * pTopicName,
         vectorsAdded += addEncodedStringToVector( serializedLength,
                                                   string,
                                                   length,
-                                                  iterator,
+                                                  pLocalIterator,
                                                   updatedLength );
 
         return vectorsAdded;
