@@ -445,15 +445,16 @@ void test_MQTT_Connect_happy_path()
     MQTTAuthInfo_t authInfo;
     MQTTAuthInfo_t authInfo2;
     MQTTUserProperties_t userProperties;
+
     memset( &properties, 0x0, sizeof( properties ) );
     memset( &authInfo, 0x0, sizeof( authInfo ) );
     memset( &authInfo2, 0x0, sizeof( authInfo2 ) );
-    memset( &userProperties, 0x0, sizeof( userProperties) );
-    userProperties.userProperty[0].pKey = "ab";
-    userProperties.userProperty[0].pValue = "ab";
-    userProperties.userProperty[0].keyLength = 2;
-    userProperties.userProperty[0].valueLength = 2;
-    userProperties.count= 1;
+    memset( &userProperties, 0x0, sizeof( userProperties ) );
+    userProperties.userProperty[ 0 ].pKey = "ab";
+    userProperties.userProperty[ 0 ].pValue = "ab";
+    userProperties.userProperty[ 0 ].keyLength = 2;
+    userProperties.userProperty[ 0 ].valueLength = 2;
+    userProperties.count = 1;
     authInfo.pAuthMethod = "2";
     authInfo.authMethodLength = 1;
     authInfo.pAuthData = "ab";

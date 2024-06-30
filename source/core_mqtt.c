@@ -775,16 +775,16 @@ static bool matchTopicFilter( const char * pTopicName,
         pLocalIterator[ 0 ].iov_base = packetId;
         pLocalIterator[ 0 ].iov_len = CORE_MQTT_ID_SIZE;
         vectorsAdded++;
-        iterator ++;
+        iterator++;
 
         ( *updatedLength ) = ( *updatedLength ) + CORE_MQTT_ID_SIZE;
 
-       /* Encode the string. */
-        vectorsAdded+= addEncodedStringToVector(serializedLength,
-                                                string,
-                                                length,
-                                                iterator,
-                                                updatedLength);
+        /* Encode the string. */
+        vectorsAdded += addEncodedStringToVector( serializedLength,
+                                                  string,
+                                                  length,
+                                                  iterator,
+                                                  updatedLength );
 
         return vectorsAdded;
     }
@@ -846,7 +846,7 @@ static bool matchTopicFilter( const char * pTopicName,
         }
 
         /* Encode the user properties if provided. */
-        if( pWillInfo->pUserProperty != NULL)
+        if( pWillInfo->pUserProperty != NULL )
         {
             uint32_t i = 0;
             uint32_t size = pWillInfo->pUserProperty->count;
@@ -893,7 +893,7 @@ static bool matchTopicFilter( const char * pTopicName,
         pPropertiesVector->authDataId = MQTT_AUTH_DATA_ID;
 
         /*Encode the user properties if provided.*/
-        if( pConnectProperties->pOutgoingUserProperty != NULL)
+        if( pConnectProperties->pOutgoingUserProperty != NULL )
         {
             uint32_t i = 0;
             uint32_t size = pConnectProperties->pOutgoingUserProperty->count;

@@ -136,24 +136,24 @@
 /**
  * @brief Utf 8 encoded string has 2 byte length field and 1 byte property id.
  */
-    #define MQTT_UTF8_LENGTH_SIZE          ( 3U )
+    #define MQTT_UTF8_LENGTH_SIZE         ( 3U )
 
 /*Publish Properties*/
 
 /**
  * @brief Per the MQTT 5 spec, the will delay  is of 2 bytes.
  */
-    #define MQTT_WILL_DELAY_SIZE           ( 5U )
+    #define MQTT_WILL_DELAY_SIZE        ( 5U )
 
 /**
  * @brief Per the MQTT 5 spec, the payload format indicator is of 2 bytes.
  */
-    #define MQTT_PAYLOAD_FORMAT_SIZE        ( 2U )
+    #define MQTT_PAYLOAD_FORMAT_SIZE    ( 2U )
 
 /**
  * @brief Per the MQTT 5 spec, the request problem  is of 2 bytes.
  */
-    #define MQTT_MSG_EXPIRY_SIZE            ( 5U )
+    #define MQTT_MSG_EXPIRY_SIZE        ( 5U )
 
 /*CONNECT PROPERTIES*/
 
@@ -951,7 +951,7 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
             LogError( ( "Incoming Auth cannot be NULL" ) );
             status = MQTTBadParameter;
         }
-        else if(pConnectProperties->pIncomingUserProperty == NULL )
+        else if( pConnectProperties->pIncomingUserProperty == NULL )
         {
             LogError( ( "Incoming user property cannot be NULL" ) );
             status = MQTTBadParameter;
@@ -1204,7 +1204,7 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
         }
 
         /*Get the length of the user properties*/
-        if( ( status == MQTTSuccess ) && ( pConnectProperties->pOutgoingUserProperty!= NULL ) )
+        if( ( status == MQTTSuccess ) && ( pConnectProperties->pOutgoingUserProperty != NULL ) )
         {
             status = MQTT_GetUserPropertySize( pConnectProperties->pOutgoingUserProperty->userProperty, pConnectProperties->pOutgoingUserProperty->count, &propertyLength );
         }
@@ -1223,7 +1223,7 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
         return status;
     }
 
-    static MQTTStatus_t MQTT_GetPublishPropertiesSize(MQTTPublishInfo_t * pPublishProperties )
+    static MQTTStatus_t MQTT_GetPublishPropertiesSize( MQTTPublishInfo_t * pPublishProperties )
     {
         size_t propertyLength = 0U;
         MQTTStatus_t status = MQTTSuccess;
@@ -1234,6 +1234,7 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
         {
             propertyLength += MQTT_WILL_DELAY_SIZE;
         }
+
         if( pPublishProperties->payloadFormat != 0U )
         {
             propertyLength += MQTT_PAYLOAD_FORMAT_SIZE;
@@ -1285,7 +1286,7 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
         }
 
         /*Get the length of user properties*/
-        if((status == MQTTSuccess) && (pPublishProperties->pUserProperty != NULL))
+        if( ( status == MQTTSuccess ) && ( pPublishProperties->pUserProperty != NULL ) )
         {
             status = MQTT_GetUserPropertySize( pPublishProperties->pUserProperty->userProperty, pPublishProperties->pUserProperty->count, &propertyLength );
         }
@@ -1403,7 +1404,7 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
         /* Serialize the connect Properties. */
         pIndex = MQTT_SerializeConnectProperties( pIndex, pConnectProperties );
 
-        if( pConnectProperties->pOutgoingUserProperty != NULL)
+        if( pConnectProperties->pOutgoingUserProperty != NULL )
         {
             uint32_t i = 0;
             uint32_t size = pConnectProperties->pOutgoingUserProperty->count;
@@ -1945,18 +1946,21 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
     static MQTTStatus_t decodeutf_8pair( MQTTUserProperties_t * pUserProperties,
                                          uint32_t * count,
                                          size_t * pPropertyLength,
-                                         const uint8_t ** pIndex)
+                                         const uint8_t ** pIndex )
     {
         const uint8_t * pVariableHeader = *pIndex;
         MQTTStatus_t status = MQTTSuccess;
         MQTTUserProperty_t discardUserProperty;
         MQTTUserProperty_t * pUserProperty;
-        if(*count == (uint32_t)MAX_USER_PROPERTY){
+
+        if( *count == ( uint32_t ) MAX_USER_PROPERTY )
+        {
             pUserProperty = &discardUserProperty;
         }
-        else{
+        else
+        {
             pUserProperty = pUserProperties->userProperty;
-            pUserProperty = &pUserProperty[*count];
+            pUserProperty = &pUserProperty[ *count ];
         }
 
         /*Validate the property length and decode the user property received.*/
@@ -1989,7 +1993,7 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
                     pUserProperty->valueLength = UINT16_DECODE( pVariableHeader );
                     *pPropertyLength -= sizeof( uint16_t );
                     pVariableHeader = &pVariableHeader[ sizeof( uint16_t ) ];
-                    
+
                     if( *pPropertyLength < ( size_t ) ( pUserProperty->valueLength ) )
                     {
                         status = MQTTMalformedPacket;
@@ -2005,15 +2009,18 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
         }
 
         *pIndex = pVariableHeader;
-        if((*count == (uint32_t)MAX_USER_PROPERTY) && (status == MQTTSuccess)){
 
+        if( ( *count == ( uint32_t ) MAX_USER_PROPERTY ) && ( status == MQTTSuccess ) )
+        {
             LogDebug( ( "Discarded additional user property with key %s and value %s",
                         discardUserProperty.pKey,
-                        discardUserProperty.pValue));
+                        discardUserProperty.pValue ) );
         }
-        else{
-            *count+=1U;
+        else
+        {
+            *count += 1U;
         }
+
         return status;
     }
 
@@ -2067,6 +2074,7 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
         bool serverRef = false;
         bool authMethod = false;
         bool authData = false;
+
         pVariableHeader = &pVariableHeader[ remainingLengthEncodedSize( propertyLength ) ];
 
         /*Decode all the properties received, validate and store them in pConnackProperties.*/
@@ -2111,7 +2119,7 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
                     break;
 
                 case MQTT_USER_PROPERTY_ID:
-                    status = decodeutf_8pair( pConnackProperties->pIncomingUserProperty,&pConnackProperties->pIncomingUserProperty->count,&propertyLength, &pVariableHeader );
+                    status = decodeutf_8pair( pConnackProperties->pIncomingUserProperty, &pConnackProperties->pIncomingUserProperty->count, &propertyLength, &pVariableHeader );
                     break;
 
                 case MQTT_WILDCARD_ID:
@@ -2189,7 +2197,7 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
         const uint8_t * pVariableHeader = NULL;
 
         /*Validate the arguments*/
-        if( (pConnackProperties == NULL)  || (pConnackProperties -> pIncomingUserProperty == NULL) )
+        if( ( pConnackProperties == NULL ) || ( pConnackProperties->pIncomingUserProperty == NULL ) )
         {
             status = MQTTBadParameter;
         }
