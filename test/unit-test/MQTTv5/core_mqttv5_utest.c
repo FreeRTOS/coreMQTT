@@ -444,16 +444,16 @@ void test_MQTT_Connect_happy_path()
     MQTTConnectProperties_t properties;
     MQTTAuthInfo_t authInfo;
     MQTTAuthInfo_t authInfo2;
-    MQTTUserProperty_t userProperty;
-
+    MQTTUserProperties_t userProperties;
     memset( &properties, 0x0, sizeof( properties ) );
     memset( &authInfo, 0x0, sizeof( authInfo ) );
     memset( &authInfo2, 0x0, sizeof( authInfo2 ) );
-    memset( &userProperty, 0x0, sizeof( userProperty ) );
-    userProperty.pKey = "ab";
-    userProperty.pValue = "ab";
-    userProperty.keyLength = 2;
-    userProperty.valueLength = 2;
+    memset( &userProperties, 0x0, sizeof( userProperties) );
+    userProperties.userProperty[0].pKey = "ab";
+    userProperties.userProperty[0].pValue = "ab";
+    userProperties.userProperty[0].keyLength = 2;
+    userProperties.userProperty[0].valueLength = 2;
+    userProperties.count= 1;
     authInfo.pAuthMethod = "2";
     authInfo.authMethodLength = 1;
     authInfo.pAuthData = "ab";
@@ -476,8 +476,7 @@ void test_MQTT_Connect_happy_path()
     properties.topicAliasMax = 13;
     properties.requestProblemInfo = 0;
     properties.requestResponseInfo = 1;
-    properties.outgoingUserPropSize = 1;
-    properties.pOutgoingUserProperty = &userProperty;
+    properties.pOutgoingUserProperty = &userProperties;
     properties.pOutgoingAuth = &authInfo;
     properties.pIncomingAuth = &authInfo2;
 
@@ -497,8 +496,7 @@ void test_MQTT_Connect_happy_path()
     willInfo.correlationLength = 2;
     willInfo.pCorrelationData = "ab";
     willInfo.willDelay = 3;
-    willInfo.userPropertySize = 1;
-    willInfo.pUserProperty = &userProperty;
+    willInfo.pUserProperty = &userProperties;
     connectInfo.pUserName = "abcd";
     connectInfo.userNameLength = 3;
     connectInfo.passwordLength = 4;
@@ -512,7 +510,7 @@ void test_MQTT_Connect_happy_path()
     status = MQTT_Connect( &mqttContext, &connectInfo, NULL, timeout, &sessionPresent );
     TEST_ASSERT_EQUAL_INT( MQTTRecvFailed, status );
 
-    properties.outgoingUserPropSize = 0;
+    properties.pOutgoingUserProperty = NULL;
     MQTTV5_GetConnectPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_SerializeConnectFixedHeader_Stub( MQTT_SerializeConnectFixedHeader_cb );
     MQTT_SerializeConnectProperties_Stub( MQTT_SerializeConnectProperties_cb );
@@ -533,7 +531,7 @@ void test_MQTT_Connect_happy_path()
     willInfo.contentTypeLength = 0;
     willInfo.responseTopicLength = 0;
     willInfo.correlationLength = 0;
-    willInfo.userPropertySize = 0;
+    willInfo.pUserProperty = NULL;
     MQTTV5_GetConnectPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_SerializeConnectFixedHeader_Stub( MQTT_SerializeConnectFixedHeader_cb );
     MQTT_SerializeConnectProperties_Stub( MQTT_SerializeConnectProperties_cb );

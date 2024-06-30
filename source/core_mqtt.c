@@ -29,11 +29,11 @@
 #include <string.h>
 #include <assert.h>
 
+#include "core_mqtt.h"
 #include "core_mqtt_state.h"
 
 /* Include config defaults header to get default values of configs. */
 #include "core_mqtt_config_defaults.h"
-#include "core_mqtt_serializer.h"
 
 #ifndef MQTT_PRE_SEND_HOOK
 
@@ -768,34 +768,23 @@ static bool matchTopicFilter( const char * pTopicName,
                                                   size_t * updatedLength,
                                                   const uint8_t * packetId )
     {
-        size_t packetLength = 0U;
         TransportOutVector_t * pLocalIterator = iterator;
         size_t vectorsAdded = 0U;
 
-        /* Add the packet Id. */
+        /* Encode the property Id. */
         pLocalIterator[ 0 ].iov_base = packetId;
         pLocalIterator[ 0 ].iov_len = CORE_MQTT_ID_SIZE;
         vectorsAdded++;
-        packetLength = CORE_MQTT_ID_SIZE;
+        iterator ++;
 
-        /* When length is non-zero, the string must be non-NULL. */
-        assert( ( length != 0U ) ? ( string != NULL ) : true );
-        serializedLength[ 0 ] = ( ( uint8_t ) ( ( length ) >> 8 ) );
-        serializedLength[ 1 ] = ( ( uint8_t ) ( ( length ) & 0x00ffU ) );
+        ( *updatedLength ) = ( *updatedLength ) + CORE_MQTT_ID_SIZE;
 
-        /* Add the serialized length of the string. */
-        pLocalIterator[ 1 ].iov_base = serializedLength;
-        pLocalIterator[ 1 ].iov_len = CORE_MQTT_SERIALIZED_LENGTH_FIELD_BYTES;
-        vectorsAdded++;
-        packetLength += CORE_MQTT_SERIALIZED_LENGTH_FIELD_BYTES;
-
-        /* Then add the pointer to the string itself. */
-        pLocalIterator[ 2 ].iov_base = string;
-        pLocalIterator[ 2 ].iov_len = length;
-        vectorsAdded++;
-        packetLength += length;
-
-        ( *updatedLength ) = ( *updatedLength ) + packetLength;
+       /* Encode the string. */
+        vectorsAdded+= addEncodedStringToVector(serializedLength,
+                                                string,
+                                                length,
+                                                iterator,
+                                                updatedLength);
 
         return vectorsAdded;
     }
@@ -857,11 +846,11 @@ static bool matchTopicFilter( const char * pTopicName,
         }
 
         /* Encode the user properties if provided. */
-        if( pWillInfo->userPropertySize != 0U )
+        if( pWillInfo->pUserProperty != NULL)
         {
             uint32_t i = 0;
-            uint32_t size = pWillInfo->userPropertySize;
-            const MQTTUserProperty_t * userProperty = pWillInfo->pUserProperty;
+            uint32_t size = pWillInfo->pUserProperty->count;
+            const MQTTUserProperty_t * userProperty = pWillInfo->pUserProperty->userProperty;
 
             for( ; i < size; i++ )
             {
@@ -904,11 +893,11 @@ static bool matchTopicFilter( const char * pTopicName,
         pPropertiesVector->authDataId = MQTT_AUTH_DATA_ID;
 
         /*Encode the user properties if provided.*/
-        if( pConnectProperties->outgoingUserPropSize != 0U )
+        if( pConnectProperties->pOutgoingUserProperty != NULL)
         {
             uint32_t i = 0;
-            uint32_t size = pConnectProperties->outgoingUserPropSize;
-            const MQTTUserProperty_t * userProperty = pConnectProperties->pOutgoingUserProperty;
+            uint32_t size = pConnectProperties->pOutgoingUserProperty->count;
+            const MQTTUserProperty_t * userProperty = pConnectProperties->pOutgoingUserProperty->userProperty;
 
             for( ; i < size; i++ )
             {
@@ -2671,7 +2660,6 @@ static MQTTStatus_t sendConnectWithoutCopy( MQTTContext_t * pContext,
         LogError( ( "pWillInfo->pTopicName cannot be NULL if Will is present." ) );
         status = MQTTBadParameter;
     }
-
     else
     {
         pIndex = MQTT_SerializeConnectFixedHeader( pIndex,
@@ -2696,9 +2684,8 @@ static MQTTStatus_t sendConnectWithoutCopy( MQTTContext_t * pContext,
         ioVectorLength++;
 
         #if ( MQTT_VERSION_5_ENABLED )
-            /*Encode the user Properties if provided*/
+            /*Encode the connect Properties if provided*/
             ioVectorLength += sendConnectProperties( pContext->connectProperties, &propertiesVector, &totalMessageLength, &iterator );
-            /*Encodethe authentication method and data if provided*/
         #endif
 
         /* Serialize the client ID. */

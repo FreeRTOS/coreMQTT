@@ -82,6 +82,7 @@ struct MQTTPacketInfo;
 
 struct MQTTConnectProperties;
 struct MQTTUserProperty;
+struct MQTTUserProperties;
 struct MQTTAuthInfo;
 /**
  * @ingroup mqtt_enum_types
@@ -296,6 +297,23 @@ typedef struct MQTTUserProperty
 
    /**
  * @ingroup mqtt_struct_types
+ * @brief Struct to hold user property.
+ */
+typedef struct MQTTUserProperties
+{
+    /**
+     * @brief Array to store the user properties.
+     */
+    MQTTUserProperty_t userProperty[MAX_USER_PROPERTY];
+    /**
+     * @brief Number of user property;
+     */
+    uint32_t count;
+
+} MQTTUserProperties_t;
+
+   /**
+ * @ingroup mqtt_struct_types
  * @brief Struct to hold connect and connack properties.
  */
 typedef struct MQTTConnectProperties
@@ -336,12 +354,7 @@ typedef struct MQTTConnectProperties
      /**
      * @brief   Pointer to the outgoing user properties.
      */
-    MQTTUserProperty_t *pOutgoingUserProperty;
-     /**
-     * @brief  Total number of outgoing user properties.
-     */
-    uint32_t outgoingUserPropSize;
-
+    MQTTUserProperties_t *pOutgoingUserProperty;
      /**
      * @brief  Pointer to the incoming authentication information.
      */
@@ -386,11 +399,7 @@ typedef struct MQTTConnectProperties
       /**
      * @brief Pointer to the incoming user properties.
      */
-    MQTTUserProperty_t *pIncomingUserProperty;
-     /**
-     * @brief  Total number of user properties received.
-     */
-    uint32_t incomingUserPropSize;
+    MQTTUserProperties_t *pIncomingUserProperty;
      /**
      * @brief Whether wildcard subscription is available.
      */
@@ -486,7 +495,7 @@ typedef struct MQTTPublishInfo
      **/
       uint8_t payloadFormat;
      /**
-     * @brief e Four Byte Integer representing the Message Expiry Interval.
+     * @brief Four Byte Integer representing the Message Expiry Interval.
      */
     uint32_t msgExpiryInterval;
      /**
@@ -520,11 +529,7 @@ typedef struct MQTTPublishInfo
      /**
      * @brief Pointer to the user properties.
      */
-    MQTTUserProperty_t* pUserProperty;
-     /**
-     * @brief  Number of user properties.
-     */
-    uint32_t userPropertySize;
+    MQTTUserProperties_t* pUserProperty;
 #endif
 
 } MQTTPublishInfo_t;
