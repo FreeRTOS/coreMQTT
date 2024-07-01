@@ -24,10 +24,10 @@ safety through the
 See memory requirements for this library
 [here](./docs/doxygen/include/size_table.md).
 
-**coreMQTT v2.1.0
-[source code](https://github.com/FreeRTOS/coreMQTT/tree/v2.1.0/source) is part
+**coreMQTT v2.3.0
+[source code](https://github.com/FreeRTOS/coreMQTT/tree/v2.3.0/source) is part
 of the
-[FreeRTOS 202210.00 LTS](https://github.com/FreeRTOS/FreeRTOS-LTS/tree/202210.00-LTS)
+[FreeRTOS 202406.00 LTS](https://github.com/FreeRTOS/FreeRTOS-LTS/tree/202406-LTS)
 release.**
 
 ## MQTT Config File
