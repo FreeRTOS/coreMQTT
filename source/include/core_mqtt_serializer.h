@@ -43,6 +43,7 @@
 /* *INDENT-ON */
 
 #include "transport_interface.h"
+#include "core_mqtt_config_defaults.h"
 
 /* MQTT packet types. */
 
@@ -79,6 +80,10 @@ struct MQTTSubscribeInfo;
 struct MQTTPublishInfo;
 struct MQTTPacketInfo;
 
+struct MQTTConnectProperties;
+struct MQTTUserProperty;
+struct MQTTUserProperties;
+struct MQTTAuthInfo;
 /**
  * @ingroup mqtt_enum_types
  * @brief Return codes from MQTT functions.
@@ -96,10 +101,57 @@ typedef enum MQTTStatus
     MQTTIllegalState,     /**< An illegal state in the state record. */
     MQTTStateCollision,   /**< A collision with an existing state record entry. */
     MQTTKeepAliveTimeout, /**< Timeout while waiting for PINGRESP. */
-    MQTTNeedMoreBytes     /**< MQTT_ProcessLoop/MQTT_ReceiveLoop has received
+    MQTTNeedMoreBytes,     /**< MQTT_ProcessLoop/MQTT_ReceiveLoop has received
                           incomplete data; it should be called again (probably after
                           a delay). */
+
+    MQTTMalformedPacket=0x81,
+    MQTTProtocolError=0x82
+
 } MQTTStatus_t;
+
+/**
+ * @ingroup mqtt_enum_types
+ * @brief Reason Code is a one byte unsigned value that indicates the result of an operation.
+ */
+typedef enum ReasonCode {
+    MQTT_REASON_UNSPECIFIED_ERR = 0x80,
+    MQTT_REASON_MALFORMED_PACKET = 0x81,
+    MQTT_REASON_PROTOCOL_ERR = 0x82,
+    MQTT_REASON_IMPL_SPECIFIC_ERR = 0x83,
+    MQTT_REASON_UNSUPPORTED_PROTO_VER = 0x84,
+    MQTT_REASON_CLIENT_ID_NOT_VALID = 0x85,
+    MQTT_REASON_BAD_USER_OR_PASS = 0x86,
+    MQTT_REASON_NOT_AUTHORIZED = 0x87,
+    MQTT_REASON_SERVER_UNAVAILABLE = 0x88,
+    MQTT_REASON_SERVER_BUSY = 0x89,
+    MQTT_REASON_BANNED = 0x8A,
+    MQTT_REASON_SERVER_SHUTTING_DOWN = 0x8B,
+    MQTT_REASON_BAD_AUTH_METHOD = 0x8C,
+    MQTT_REASON_KEEP_ALIVE_TIMEOUT = 0x8D,
+    MQTT_REASON_SESSION_TAKEN_OVER = 0x8E,
+    MQTT_REASON_TOPIC_FILTER_INVALID = 0x8F,
+    MQTT_REASON_TOPIC_NAME_INVALID = 0x90,
+    MQTT_REASON_PACKET_ID_IN_USE = 0x91,
+    MQTT_REASON_PACKET_ID_NOT_FOUND = 0x92,
+    MQTT_REASON_RX_MAX_EXCEEDED = 0x93,
+    MQTT_REASON_TOPIC_ALIAS_INVALID = 0x94,
+    MQTT_REASON_PACKET_TOO_LARGE = 0x95,
+    MQTT_REASON_MSG_RATE_TOO_HIGH = 0x96,
+    MQTT_REASON_QUOTA_EXCEEDED = 0x97,
+    MQTT_REASON_ADMIN_ACTION = 0x98,
+    MQTT_REASON_PAYLOAD_FORMAT_INVALID = 0x99,
+    MQTT_REASON_RETAIN_NOT_SUPPORTED = 0x9A,
+    MQTT_REASON_QOS_NOT_SUPPORTED = 0x9B,
+    MQTT_REASON_USE_ANOTHER_SERVER = 0x9C,
+    MQTT_REASON_SERVER_MOVED = 0x9D,
+    MQTT_REASON_SS_NOT_SUPPORTED = 0x9E,
+    MQTT_REASON_CON_RATE_EXCEED = 0x9F,
+    MQTT_REASON_MAX_CON_TIME = 0xA0,
+    MQTT_REASON_SUB_ID_NOT_SUP = 0xA1,
+    MQTT_REASON_WILDCARD_SUB_NOT_SUP = 0xA2
+}ReasonCode_t;
+
 
 /**
  * @ingroup mqtt_enum_types
@@ -194,6 +246,200 @@ typedef struct MQTTSubscribeInfo
     uint16_t topicFilterLength;
 } MQTTSubscribeInfo_t;
 
+
+   /**
+ * @ingroup mqtt_struct_types
+ * @brief Struct to hold authentication method and authentication data.
+ */
+typedef struct MQTTAuthInfo
+{
+    /**
+     * @brief Authentication method used for authentication.
+     */
+    const char* pAuthMethod;
+    /**
+     * @brief Length of the authentication mathod.
+     */
+    uint16_t authMethodLength;
+    /**
+     * @brief Authentication data used for authentication.
+     */
+    const char* pAuthData;
+     /**
+     * @brief Length of the authentication data.
+     */
+    uint16_t authDataLength;
+} MQTTAuthInfo_t;
+
+   /**
+ * @ingroup mqtt_struct_types
+ * @brief Struct to hold user property.
+ */
+typedef struct MQTTUserProperty
+{
+    /**
+     * @brief key.
+     */
+    const char* pKey;
+    /**
+     * @brief Length of the key.
+     */
+    uint16_t keyLength;
+    /**
+     * @brief value.
+     */
+    const char* pValue;
+    /**
+     * @brief Length of the value.
+     */
+    uint16_t valueLength;
+} MQTTUserProperty_t;
+
+   /**
+ * @ingroup mqtt_struct_types
+ * @brief Struct to hold user property.
+ */
+typedef struct MQTTUserProperties
+{
+    /**
+     * @brief Array to store the user properties.
+     */
+    MQTTUserProperty_t userProperty[MAX_USER_PROPERTY];
+    /**
+     * @brief Number of user property;
+     */
+    uint32_t count;
+
+} MQTTUserProperties_t;
+
+   /**
+ * @ingroup mqtt_struct_types
+ * @brief Struct to hold connect and connack properties.
+ */
+typedef struct MQTTConnectProperties
+{
+     /**
+     * @brief Four Byte Integer representing the Session Expiry Interval in seconds.
+     */
+    uint32_t sessionExpiry;
+     /**
+     * @brief Maximum number of unacknowledged PUBLISH packets client is willing to receive.
+     */
+    uint16_t receiveMax;
+     /**
+     * @brief Whether the maximum packet size is defined.
+     */
+    bool isMaxPacketSize;
+     /**
+     * @brief Four Byte Integer representing the Maximum Packet Size the Client is willing to accept.
+     */
+    uint32_t maxPacketSize;
+     /**
+     * @brief Two Byte Integer representing the Topic Alias Maximum value.
+     */
+    uint16_t topicAliasMax;
+     /**
+     * @brief  A value of 0 indicates that the Server MUST NOT return Response Information.
+     */
+    bool  requestResponseInfo;
+     /**
+     * @brief The Client uses this value to indicate whether the Reason String or User Properties
+     *  are sent in the case of failures
+     */
+    bool  requestProblemInfo;
+     /**
+     * @brief Length of the connect properties.
+     */
+    size_t propertyLength;
+     /**
+     * @brief   Pointer to the outgoing user properties.
+     */
+    MQTTUserProperties_t *pOutgoingUserProperty;
+     /**
+     * @brief  Pointer to the incoming authentication information.
+     */
+    MQTTAuthInfo_t *pOutgoingAuth;
+
+    /**
+     * @brief Maximum number of unacknowledged PUBLISH packets client is willing to receive.
+     */
+    uint16_t serverReceiveMax;
+     /**
+     * @brief  Max qos supported by the server.
+     */
+    uint8_t serverMaxQos;
+     /**
+     * @brief Byte declares whether the Server supports retained messages.
+     */
+    uint8_t retainAvailable;
+     /**
+     * @brief Four Byte Integer representing the Maximum Packet Size the Server is willing to accept.
+     */
+    uint32_t serverMaxPacketSize;
+     /**
+     * @brief Client identifier assigned by the client.
+     */
+    const char* pClientIdentifier;
+     /**
+     * @brief Length of the assigned client identifier.
+     */
+    uint16_t clientIdLength;
+     /**
+     * @brief Two Byte Integer representing the Topic Alias Maximum value.
+     */
+    uint16_t serverTopicAliasMax;
+     /**
+     * @brief Reason String is a human readable string designed for diagnostics.
+     */
+    const char* pReasonString;
+     /**
+     * @brief Length of reason string.
+     */
+    uint16_t reasonStringLength;
+      /**
+     * @brief Pointer to the incoming user properties.
+     */
+    MQTTUserProperties_t *pIncomingUserProperty;
+     /**
+     * @brief Whether wildcard subscription is available.
+     */
+    uint8_t isWildcardAvaiable;
+     /**
+     * @brief Whether the Server supports Subscription Identifiers.
+     */
+    uint8_t subscriptionId;
+     /**
+     * @brief Whether the Server supports Shared Subscription.
+     */
+    uint8_t isSharedAvailable;
+     /**
+     * @brief Keep Alive value given by the server.
+     */
+    uint16_t serverKeepAlive;
+     /**
+     * @brief UTF-8 Encoded String which is used as the basis for creating a Response Topic.
+     */
+    const char* pResponseInfo;
+     /**
+     * @brief Length of the response information.
+     */
+    uint16_t responseInfoLength;
+     /**
+     * @brief UTF-8 Encoded String which can be used by the Client to identify another Server to use
+     */
+    const char* pServerRef;
+     /**
+     * @brief Length of the server reference.
+     */
+    uint16_t serverRefLength;
+     /**
+     * @brief  Pointer to the incoming authentication information.
+     */
+    MQTTAuthInfo_t *pIncomingAuth;
+
+
+} MQTTConnectProperties_t;
+
 /**
  * @ingroup mqtt_struct_types
  * @brief MQTT PUBLISH packet parameters.
@@ -234,6 +480,58 @@ typedef struct MQTTPublishInfo
      * @brief Message payload length.
      */
     size_t payloadLength;
+
+#if (MQTT_VERSION_5_ENABLED)
+     /**
+     * @brief Length of the properties.
+     */
+    size_t propertyLength;
+     /**
+     * @brief  Four Byte Integer representing the Will Delay Interval in seconds.
+     */
+    uint32_t willDelay;
+     /**
+     * @brief Payload Format Indicator.
+     **/
+      uint8_t payloadFormat;
+     /**
+     * @brief Four Byte Integer representing the Message Expiry Interval.
+     */
+    uint32_t msgExpiryInterval;
+     /**
+     * @brief Whether the message expiry is specified.
+     */
+    bool msgExpiryPresent;
+     /**
+     * @brief Length of the content type.
+     */
+    uint16_t contentTypeLength;
+     /**
+     * @brief UTF-8 Encoded String describing the content of the Will Message.
+     */
+    const char *pContentType;
+     /**
+     * @brief Length of the response topic.
+     */
+    uint16_t responseTopicLength;
+     /**
+     * @brief UTF-8 Encoded String which is used as the Topic Name for a response message.
+     */
+    const char *pResponseTopic;
+     /**
+     * @brief Length of the correlation data.
+     */
+    uint16_t correlationLength;
+     /**
+     * @brief To identify which request the Response Message is for.
+     */
+    const void *pCorrelationData;
+     /**
+     * @brief Pointer to the user properties.
+     */
+    MQTTUserProperties_t* pUserProperty;
+#endif
+
 } MQTTPublishInfo_t;
 
 /**
@@ -1284,6 +1582,228 @@ uint8_t * MQTT_SerializeUnsubscribeHeader( size_t remainingLength,
                                            uint8_t * pIndex,
                                            uint16_t packetId );
 /** @endcond */
+
+
+/**
+ * @fn uint8_t * MQTT_SerializeConnectProperties(uint8_t * pIndex,const MQTTConnectProperties_t * pConnectProperties);
+ * @brief Serialize the connect properties of the connect packet header.
+ *
+ * @param[out] pIndex Pointer to the buffer where the header is to
+ * be serialized.
+ * @param[in] pConnectProperties The connect properties information.
+ *
+ * @return A pointer to the end of the encoded string.
+ */
+
+/**
+ * @cond DOXYGEN_IGNORE
+ * Doxygen should ignore this definition, this function is private.
+ */
+uint8_t * MQTT_SerializeConnectProperties( uint8_t * pIndex,
+                                           const MQTTConnectProperties_t * pConnectProperties);
+/** @endcond */
+
+
+/**
+ * @fn uint8_t * MQTT_SerializePublishProperties(const MQTTPublishInfo_t * pPublishInfo, uint8_t * pIndex);
+ * @brief Serialize the will properties of the connect packet.
+ * @param[in] pPublishInfo The publish/will properties information.
+ * @param[out] pIndex Pointer to the buffer where the header is to
+ * be serialized.
+ *
+ * @return A pointer to the end of the encoded string.
+ */
+
+/**
+ * @cond DOXYGEN_IGNORE
+ * Doxygen should ignore this definition, this function is private.
+ */
+uint8_t * MQTT_SerializePublishProperties( const MQTTPublishInfo_t * pPublishInfo,
+                                           uint8_t * pIndex);
+/** @endcond */
+
+
+/**
+ * @brief Deserialize an MQTT CONNACK packet.
+ *
+ * @param[out] pConnackProperties To store the deserialized connack properties.
+ * @param[in]  pIncomingPacket #MQTTPacketInfo_t containing the buffer.
+ * @param[out]  pSessionPresent Whether a previous session was present.
+ *
+ * @return #MQTTBadParameter, #MQTTBadResponse, #MQTTSuccess, #MQTTMalformedPacket, #MQTTProtocolError, #MQTTServerRefused
+ *
+ * <b>Example</b>
+ * @code{c}
+ *
+ * // TransportRecv_t function for reading from the network.
+ * int32_t socket_recv(
+ *      NetworkContext_t * pNetworkContext,
+ *      void * pBuffer,
+ *      size_t bytesToRecv
+ * );
+ * // Some context to be used with the above transport receive function.
+ * NetworkContext_t networkContext;
+ *
+ * // Other variables used in this example.
+ * MQTTStatus_t status;
+ * MQTTPacketInfo_t incomingPacket;
+ * MQTTConnectProperties_t properties = {0};
+ * uint16_t packetId;
+ *
+ * int32_t bytesRecvd;
+ * // A buffer to hold remaining data of the incoming packet.
+ * uint8_t buffer[ BUFFER_SIZE ];
+ *
+ * // Populate all fields of the incoming packet.
+ * status = MQTT_GetIncomingPacketTypeAndLength(
+ *      socket_recv,
+ *      &networkContext,
+ *      &incomingPacket
+ * );
+ * assert( status == MQTTSuccess );
+ * assert( incomingPacket.remainingLength <= BUFFER_SIZE );
+ * bytesRecvd = socket_recv(
+ *      &networkContext,
+ *      ( void * ) buffer,
+ *      incomingPacket.remainingLength
+ * );
+ * incomingPacket.pRemainingData = buffer;
+ *
+ * // Deserialize the publish information if the incoming packet is a publish.
+ * if( ( incomingPacket.type & 0xF0 ) == MQTT_PACKET_TYPE_CONNACK )
+ * {
+ *      status = MQTT_DeserializeConnack(&properties, &incomingPacket, &session);
+ *      if( status == MQTTSuccess )
+ *      {
+ *          // The deserialized connack information can now be used from `properties`.
+ *      }
+ * }
+ * @endcode
+ */
+/* @[declare_mqttv5_deserializeconnack] */
+MQTTStatus_t MQTTV5_DeserializeConnack( MQTTConnectProperties_t *pConnackProperties,
+                                        const MQTTPacketInfo_t * pIncomingPacket,
+                                        bool * pSessionPresent );
+/* @[declare_mqttv5_deserializeconnack] */
+
+/**
+ * @brief Get the size and Remaining Length of an MQTT Version 5 CONNECT packet .
+ *
+ * This function must be called before #MQTT_SerializeConnect in order to get
+ * the size of the MQTT CONNECT packet that is generated from #MQTTConnectInfo_t,
+ * MQTTConnectProperties_t and  optional #MQTTPublishInfo_t. The size of the #MQTTFixedBuffer_t supplied
+ * to #MQTT_SerializeConnect must be at least @p pPacketSize. The provided
+ * @p pConnectInfo, @p pConnectProperties and  @p pWillInfo are valid for serialization with
+ * #MQTT_SerializeConnect only if this function returns #MQTTSuccess. The
+ * remaining length returned in @p pRemainingLength and the packet size returned
+ * in @p pPacketSize are valid only if this function returns #MQTTSuccess.
+ *
+ * @param[in] pConnectInfo MQTT CONNECT packet parameters.
+ * @param[in] pWillInfo Last Will and Testament. Pass NULL if not used.
+ * @param[in] pConnectProperties MQTT CONNECT properties parameters.
+ * @param[out] pRemainingLength The Remaining Length of the MQTT CONNECT packet.
+ * @param[out] pPacketSize The total size of the MQTT CONNECT packet.
+ *
+ * @return #MQTTBadParameter if the packet would exceed the size allowed by the
+ * MQTT spec; #MQTTSuccess otherwise.
+ *
+ * <b>Example</b>
+ * @code{c}
+ *
+ * // Variables used in this example.
+ * MQTTStatus_t status;
+ * MQTTConnectInfo_t connectInfo = { 0 };
+ * MQTTPublishInfo_t willInfo = { 0 };
+ * MQTTConnectProperties_t connectProperties ={0};
+ * size_t remainingLength = 0, packetSize = 0;
+ *
+ * // Initialize the connection info, the details are out of scope for this example.
+ * initializeConnectInfo( &connectInfo );
+ *
+ * // Initialize the optional will info, the details are out of scope for this example.
+ * initializeWillInfo( &willInfo );
+ *
+ * // Initialize the connection properties, the details are out of scope for this example.
+ * initializeConnectProperties( &connectProperties );
+ *
+ * // Get the size requirement for the connect packet.
+ * status = MQTT_GetConnectPacketSize(
+ *      &connectInfo, &willInfo, &remainingLength, &packetSize
+ * );
+ *
+ * if( status == MQTTSuccess )
+ * {
+ *      // The application should allocate or use a static #MQTTFixedBuffer_t
+ *      // of size >= packetSize to serialize the connect request.
+ * }
+ * @endcode
+ */
+/* @[declare_mqttv5_getconnectpacketsize] */
+MQTTStatus_t MQTTV5_GetConnectPacketSize(const MQTTConnectInfo_t* pConnectInfo,
+    MQTTPublishInfo_t* pWillInfo,
+    MQTTConnectProperties_t* pConnectProperties,
+    size_t* pRemainingLength,
+    size_t* pPacketSize);
+/* @[declare_mqttv5_getconnectpacketsize] */
+
+/**
+ * @brief Serialize an MQTT CONNECT packet in the given fixed buffer @p pFixedBuffer.
+ *
+ * #MQTT_GetConnectPacketSize should be called with @p pConnectInfo, @p pConnectProperties and
+ * @p pWillInfo before invoking this function to get the size of the required
+ * #MQTTFixedBuffer_t and @p remainingLength. The @p remainingLength must be
+ * the same as returned by #MQTT_GetConnectPacketSize. The #MQTTFixedBuffer_t
+ * must be at least as large as the size returned by #MQTT_GetConnectPacketSize.
+ *
+ * @param[in] pConnectInfo MQTT CONNECT packet parameters.
+ * @param[in] pWillInfo Last Will and Testament. Pass NULL if not used.
+ * @param[in] pConnectProperties MQTT CONNECT properties parameters.
+ * @param[in] remainingLength Remaining Length provided by #MQTT_GetConnectPacketSize.
+ * @param[out] pFixedBuffer Buffer for packet serialization.
+ *
+ * @return #MQTTNoMemory if pFixedBuffer is too small to hold the MQTT packet;
+ * #MQTTBadParameter if invalid parameters are passed;
+ * #MQTTSuccess otherwise.
+ *
+ * <b>Example</b>
+ * @code{c}
+ *
+ * // Variables used in this example.
+ * MQTTStatus_t status;
+ * MQTTConnectInfo_t connectInfo = { 0 };
+ * MQTTPublishInfo_t willInfo = { 0 };
+ * MQTTConnectProperties_t connectProperties ={0};
+ * MQTTFixedBuffer_t fixedBuffer;
+ * uint8_t buffer[ BUFFER_SIZE ];
+ * size_t remainingLength = 0, packetSize = 0;
+ *
+ * fixedBuffer.pBuffer = buffer;
+ * fixedBuffer.size = BUFFER_SIZE;
+ *
+ * // Assume connectInfo and willInfo are initialized. Get the size requirement for
+ * // the connect packet.
+ * status = MQTT_GetConnectPacketSize(
+ *      &connectInfo, &willInfo,&connectProperties &remainingLength, &packetSize
+ * );
+ * assert( status == MQTTSuccess );
+ * assert( packetSize <= BUFFER_SIZE );
+ *
+ * // Serialize the connect packet into the fixed buffer.
+ * status = MQTT_SerializeConnect( &connectInfo, &willInfo,&connectProperties,remainingLength, &fixedBuffer );
+ *
+ * if( status == MQTTSuccess )
+ * {
+ *      // The connect packet can now be sent to the broker.
+ * }
+ * @endcode
+ */
+/* @[declare_mqttv5_serializeconnect] */
+MQTTStatus_t MQTTV5_SerializeConnect(const MQTTConnectInfo_t* pConnectInfo,
+    const MQTTPublishInfo_t* pWillInfo,
+    const MQTTConnectProperties_t *pConnectProperties,
+    size_t remainingLength,
+    const MQTTFixedBuffer_t* pFixedBuffer);
+/* @[declare_mqttv5_serializeconnect] */
 
 /* *INDENT-OFF* */
 #ifdef __cplusplus

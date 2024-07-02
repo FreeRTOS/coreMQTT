@@ -2878,4 +2878,5 @@ void test_MQTT_SerializeDisconnect_Happy_Path()
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
 }
 
+
 /* ========================================================================== */

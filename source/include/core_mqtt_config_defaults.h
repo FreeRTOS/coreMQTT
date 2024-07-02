@@ -70,6 +70,22 @@
 
 /**
  * @ingroup mqtt_constants
+ * @brief Version of the MQTT protocol with default value as 3.1.1
+ */
+#ifndef MQTT_VERSION_5_ENABLED
+    #define MQTT_VERSION_5_ENABLED    ( false )
+
+/**
+ * @ingroup mqtt_constants
+ * @brief Maximum number of user properties with default value as 5.
+ */
+    #ifndef MAX_USER_PROPERTY
+        #define MAX_USER_PROPERTY    ( 5U )
+    #endif
+#endif
+
+/**
+ * @ingroup mqtt_constants
  * @brief Maximum number of vectors in subscribe and unsubscribe packet.
  */
 #ifndef MQTT_SUB_UNSUB_MAX_VECTORS
