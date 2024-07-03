@@ -587,45 +587,49 @@ static bool matchTopicFilter( const char * pTopicName,
 
 #if ( MQTT_VERSION_5_ENABLED )
 
-#if(MQTT_USER_PROPERTY_ENABLED)
+    #if ( MQTT_USER_PROPERTY_ENABLED )
+
 /**
  * @brief Struct used to deserialize the will properties.
  *
  **/
-    typedef struct  UserPropertiesVector
-    {
-        /**
-         * @brief Used to encode user key length.
-         *
-         **/
-        uint8_t serializedUserKeyLength[ MAX_USER_PROPERTY ][ 2 ];
+        typedef struct  UserPropertiesVector
+        {
+            /**
+             * @brief Used to encode user key length.
+             *
+             **/
+            uint8_t serializedUserKeyLength[ MAX_USER_PROPERTY ][ 2 ];
 
-        /**
-         * @brief Used to encode user id.
-         *
-         **/
-        uint8_t userId[ MAX_USER_PROPERTY ];
+            /**
+             * @brief Used to encode user id.
+             *
+             **/
+            uint8_t userId[ MAX_USER_PROPERTY ];
 
-        /**
-         * @brief Used to encode  user value length.
-         *
-         **/
-        uint8_t serializedUserValueLength[ MAX_USER_PROPERTY ][ 2 ];
-    } UserPropertyVector_t;
-#endif
+            /**
+             * @brief Used to encode  user value length.
+             *
+             **/
+            uint8_t serializedUserValueLength[ MAX_USER_PROPERTY ][ 2 ];
+        } UserPropertyVector_t;
+    #endif /* if ( MQTT_USER_PROPERTY_ENABLED ) */
+
 /**
  * @brief Struct used to deserialize the will properties.
  *
  **/
     typedef struct  WillPropertiesVector
     {
-#if(MQTT_USER_PROPERTY_ENABLED)
-        /**
-         * @brief Used to encode user property.
-         *
-         **/
-        UserPropertyVector_t userProperty;  
-#endif   
+        #if ( MQTT_USER_PROPERTY_ENABLED )
+
+            /**
+             * @brief Used to encode user property.
+             *
+             **/
+            UserPropertyVector_t userProperty;
+        #endif
+
         /**
          * @brief Used to encode content type length.
          *
@@ -669,13 +673,15 @@ static bool matchTopicFilter( const char * pTopicName,
  **/
     typedef struct  ConnectPropertiesVector
     {
-#if(MQTT_USER_PROPERTY_ENABLED)
-        /**
-         * @brief Used to encode user property.
-         *
-         **/
-        UserPropertyVector_t userProperty;  
-#endif
+        #if ( MQTT_USER_PROPERTY_ENABLED )
+
+            /**
+             * @brief Used to encode user property.
+             *
+             **/
+            UserPropertyVector_t userProperty;
+        #endif
+
         /**
          * @brief Used to encode authentication method length.
          *
@@ -817,34 +823,34 @@ static bool matchTopicFilter( const char * pTopicName,
                                       size_t * pTotalMessageLength,
                                       TransportOutVector_t ** pVectorIterator )
     {
-            size_t vectorsAdded = 0U;
-            size_t ioVectorLength = 0U;
-            TransportOutVector_t * iterator = *pVectorIterator;
-            uint32_t i = 0;
-            uint32_t size = pUserProperty->count;
-            const MQTTUserProperty_t * userProperty = pUserProperty->userProperty;
+        size_t vectorsAdded = 0U;
+        size_t ioVectorLength = 0U;
+        TransportOutVector_t * iterator = *pVectorIterator;
+        uint32_t i = 0;
+        uint32_t size = pUserProperty->count;
+        const MQTTUserProperty_t * userProperty = pUserProperty->userProperty;
 
-            for( ; i < size; i++ )
-            {
-                pUserVector->userId[ i ] = MQTT_USER_PROPERTY_ID;
-                vectorsAdded = addEncodedStringToVectorWithId( pUserVector->serializedUserKeyLength[ i ],
-                                                               userProperty[ i ].pKey,
-                                                               userProperty[ i ].keyLength,
-                                                               iterator,
-                                                               pTotalMessageLength, &pUserVector->userId[ i ] );
-                /* Update the iterator to point to the next empty slot. */
-                iterator = &iterator[ vectorsAdded ];
-                ioVectorLength += vectorsAdded;
+        for( ; i < size; i++ )
+        {
+            pUserVector->userId[ i ] = MQTT_USER_PROPERTY_ID;
+            vectorsAdded = addEncodedStringToVectorWithId( pUserVector->serializedUserKeyLength[ i ],
+                                                           userProperty[ i ].pKey,
+                                                           userProperty[ i ].keyLength,
+                                                           iterator,
+                                                           pTotalMessageLength, &pUserVector->userId[ i ] );
+            /* Update the iterator to point to the next empty slot. */
+            iterator = &iterator[ vectorsAdded ];
+            ioVectorLength += vectorsAdded;
 
-                vectorsAdded = addEncodedStringToVector( pUserVector->serializedUserValueLength[ i ],
-                                                         userProperty[ i ].pValue,
-                                                         userProperty[ i ].valueLength,
-                                                         iterator,
-                                                         pTotalMessageLength );
-                /* Update the iterator to point to the next empty slot. */
-                iterator = &iterator[ vectorsAdded ];
-                ioVectorLength += vectorsAdded;
-            }
+            vectorsAdded = addEncodedStringToVector( pUserVector->serializedUserValueLength[ i ],
+                                                     userProperty[ i ].pValue,
+                                                     userProperty[ i ].valueLength,
+                                                     iterator,
+                                                     pTotalMessageLength );
+            /* Update the iterator to point to the next empty slot. */
+            iterator = &iterator[ vectorsAdded ];
+            ioVectorLength += vectorsAdded;
+        }
 
         *pVectorIterator = iterator;
         return ioVectorLength;
@@ -904,13 +910,14 @@ static bool matchTopicFilter( const char * pTopicName,
             iterator = &iterator[ vectorsAdded ];
             ioVectorLength += vectorsAdded;
         }
-#if(MQTT_USER_PROPERTY_ENABLED)
-        /* Encode the user properties if provided. */
-        if( pWillInfo->pUserProperty != NULL )
-        {
-           ioVectorLength += sendUserProperties(pWillInfo->pUserProperty,&pWillVector->userProperty,pTotalMessageLength,&iterator);
-        }
-#endif
+
+        #if ( MQTT_USER_PROPERTY_ENABLED )
+            /* Encode the user properties if provided. */
+            if( pWillInfo->pUserProperty != NULL )
+            {
+                ioVectorLength += sendUserProperties( pWillInfo->pUserProperty, &pWillVector->userProperty, pTotalMessageLength, &iterator );
+            }
+        #endif
 
         *pVectorIterator = iterator;
         return ioVectorLength;
@@ -928,14 +935,15 @@ static bool matchTopicFilter( const char * pTopicName,
 
         pPropertiesVector->authMethodId = MQTT_AUTH_METHOD_ID;
         pPropertiesVector->authDataId = MQTT_AUTH_DATA_ID;
-#if(MQTT_USER_PROPERTY_ENABLED)
-        /* Encode the user properties if provided. */
-        if( pConnectProperties->pOutgoingUserProperty != NULL )
-        {
-           ioVectorLength += sendUserProperties(pConnectProperties->pOutgoingUserProperty,&pPropertiesVector->userProperty,pTotalMessageLength,&iterator);
-        }
-#endif      
-         /*Encode the authentication method and data if provided*/
+        #if ( MQTT_USER_PROPERTY_ENABLED )
+            /* Encode the user properties if provided. */
+            if( pConnectProperties->pOutgoingUserProperty != NULL )
+            {
+                ioVectorLength += sendUserProperties( pConnectProperties->pOutgoingUserProperty, &pPropertiesVector->userProperty, pTotalMessageLength, &iterator );
+            }
+        #endif
+
+        /*Encode the authentication method and data if provided*/
         if( pConnectProperties->pOutgoingAuth != NULL )
         {
             /* Serialize the authentication method  string. */
