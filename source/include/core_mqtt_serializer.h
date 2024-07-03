@@ -454,7 +454,7 @@ typedef struct MQTTAckInfo
     /**
      * @brief Response code;
      */
-    ReasonCode_t reasonCode;
+    uint8_t reasonCode;
     #if(MQTT_USER_PROPERTY_ENABLED)
      /**
      * @brief To store a key value pair.
@@ -1855,8 +1855,8 @@ MQTTStatus_t MQTTV5_SerializePublish( const MQTTPublishInfo_t * pPublishInfo,
                                     const MQTTFixedBuffer_t * pFixedBuffer);
 
 MQTTStatus_t MQTTV5_DeserializeAck( const MQTTPacketInfo_t * pIncomingPacket,
-                                  uint16_t * pPacketId, MQTTAckInfo_t *pAckInfo, uint8_t requestProblem);
-MQTTStatus_t MQTTV5_GetAckPacketSize(MQTTAckInfo_t *pAckInfo, size_t* pRemainingLength,size_t * pPropertyLength, size_t * pPacketSize, uint32_t maxPacketSize);
+                                  uint16_t * pPacketId, MQTTAckInfo_t *pAckInfo, bool requestProblem);
+MQTTStatus_t MQTTV5_GetAckPacketSize(const MQTTAckInfo_t *pAckInfo, size_t* pRemainingLength,size_t * pPropertyLength, size_t * pPacketSize, uint32_t maxPacketSize);
 
 uint8_t * MQTTV5_SerializeAckFixed(uint8_t * pIndex,
                                 uint8_t packetType,

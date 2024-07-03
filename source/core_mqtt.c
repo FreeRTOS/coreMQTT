@@ -798,7 +798,7 @@ static bool matchTopicFilter( const char * pTopicName,
     static MQTTStatus_t sendPublishAcksWithProperty( MQTTContext_t * pContext,
                                      uint16_t packetId,
                                      MQTTPublishState_t publishState,
-                                     MQTTAckInfo_t* pAckInfo);
+                                     const MQTTAckInfo_t* pAckInfo);
 
 /*-----------------------------------------------------------*/
 
@@ -991,7 +991,7 @@ static bool matchTopicFilter( const char * pTopicName,
     static MQTTStatus_t sendPublishAcksWithProperty( MQTTContext_t * pContext,
                                      uint16_t packetId,
                                      MQTTPublishState_t publishState,
-                                     MQTTAckInfo_t* pAckInfo)
+                                     const MQTTAckInfo_t* pAckInfo)
 {
     int32_t bytesSentOrError;
     size_t vectorsAdded = 0U;
@@ -999,7 +999,6 @@ static bool matchTopicFilter( const char * pTopicName,
     size_t totalMessageLength = 0U;
     MQTTStatus_t status = MQTTSuccess;
     MQTTPublishState_t newState = MQTTStateNull;
-    int32_t sendResult = 0;
     uint8_t packetTypeByte = 0U;
     MQTTPubAckType_t packetType;
     uint8_t pubAckHeader[12];
@@ -1009,7 +1008,7 @@ static bool matchTopicFilter( const char * pTopicName,
     TransportOutVector_t pIoVector[4 + MAX_USER_PROPERTY*5];
     uint8_t serializedReasonStringLength[ 2 ];
     uint8_t reasonStringId = MQTT_REASON_STRING_ID;
-    #if(MQTT_USER_PROEPRTY_ENABLED)
+    #if(MQTT_USER_PROPERTY_ENABLED)
     UserPropertyVector_t userVector;
     #endif
     uint8_t * pIndex =pubAckHeader;
@@ -1049,7 +1048,7 @@ static bool matchTopicFilter( const char * pTopicName,
             iterator = &iterator[ vectorsAdded ];
             ioVectorLength += vectorsAdded;
         }
-        #if(MQTT_USER_PROPERY_ENABLED)
+        #if(MQTT_USER_PROPERTY_ENABLED)
         /*Encode the user porperties if provided.*/
         if(pAckInfo->pUserProperty != NULL)
         {
