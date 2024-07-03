@@ -263,6 +263,10 @@ typedef struct MQTTDeserializedInfo
     uint16_t packetIdentifier;          /**< @brief Packet ID of deserialized packet. */
     MQTTPublishInfo_t * pPublishInfo;   /**< @brief Pointer to deserialized publish info. */
     MQTTStatus_t deserializationResult; /**< @brief Return code of deserialization. */
+    #if(MQTT_VERSION_5_ENABLED)
+    MQTTAckInfo_t *pAckInfo;            /**< @brief Pointer to deserialized ack info. */
+    MQTTAckInfo_t *pNextAckInfo;        /**< @brief Pointer to next ack info to send. */
+    #endif
 } MQTTDeserializedInfo_t;
 
 /**
@@ -630,7 +634,7 @@ MQTTStatus_t MQTT_Subscribe( MQTTContext_t * pContext,
  */
 /* @[declare_mqtt_publish] */
 MQTTStatus_t MQTT_Publish( MQTTContext_t * pContext,
-                           const MQTTPublishInfo_t * pPublishInfo,
+                           MQTTPublishInfo_t * pPublishInfo,
                            uint16_t packetId );
 /* @[declare_mqtt_publish] */
 

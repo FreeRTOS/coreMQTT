@@ -115,6 +115,8 @@ typedef enum MQTTStatus
  * @brief Reason Code is a one byte unsigned value that indicates the result of an operation.
  */
 typedef enum ReasonCode {
+    MQTT_REASON_SUCCESS = 0x00,
+    MQTT_REASON_NO_MATCHING_SUBSCRIBERS =0x10,
     MQTT_REASON_UNSPECIFIED_ERR = 0x80,
     MQTT_REASON_MALFORMED_PACKET = 0x81,
     MQTT_REASON_PROTOCOL_ERR = 0x82,
@@ -443,6 +445,33 @@ typedef struct MQTTConnectProperties
 
 } MQTTConnectProperties_t;
 
+ /**
+ * @ingroup mqtt_struct_types
+ * @brief Struct to hold acknowledgment properties.
+ */
+typedef struct MQTTAckInfo
+{
+    /**
+     * @brief Response code;
+     */
+    ReasonCode_t reasonCode;
+    #if(MQTT_USER_PROPERTY_ENABLED)
+     /**
+     * @brief To store a key value pair.
+     */
+    MQTTUserProperties_t* pUserProperty;
+    #endif
+     /**
+     * @brief Reason String is a human readable string designed for diagnostics.
+     */
+    const char* pReasonString;
+     /**
+     * @brief Length of reason string.
+     */
+    uint16_t reasonStringLength;
+} MQTTAckInfo_t;
+
+
 /**
  * @ingroup mqtt_struct_types
  * @brief MQTT PUBLISH packet parameters.
@@ -497,6 +526,10 @@ typedef struct MQTTPublishInfo
      * @brief Payload Format Indicator.
      **/
       uint8_t payloadFormat;
+     /**
+     * @brief Topic alias value.
+     **/
+    uint16_t topicAlias;
      /**
      * @brief Four Byte Integer representing the Message Expiry Interval.
      */
@@ -1809,6 +1842,34 @@ MQTTStatus_t MQTTV5_SerializeConnect(const MQTTConnectInfo_t* pConnectInfo,
     size_t remainingLength,
     const MQTTFixedBuffer_t* pFixedBuffer);
 /* @[declare_mqttv5_serializeconnect] */
+
+MQTTStatus_t MQTTV5_GetPublishPacketSize(MQTTPublishInfo_t * pPublishInfo,
+                                        size_t * pRemainingLength,
+                                        size_t * pPacketSize , 
+                                        uint16_t topicAliasMax, 
+                                        uint32_t maxPacketSize);
+
+MQTTStatus_t MQTTV5_SerializePublish( const MQTTPublishInfo_t * pPublishInfo,
+                                    uint16_t packetId,
+                                    size_t remainingLength,
+                                    const MQTTFixedBuffer_t * pFixedBuffer);
+
+MQTTStatus_t MQTTV5_DeserializeAck( const MQTTPacketInfo_t * pIncomingPacket,
+                                  uint16_t * pPacketId, MQTTAckInfo_t *pAckInfo, uint8_t requestProblem);
+MQTTStatus_t MQTTV5_GetAckPacketSize(MQTTAckInfo_t *pAckInfo, size_t* pRemainingLength,size_t * pPropertyLength, size_t * pPacketSize, uint32_t maxPacketSize);
+
+uint8_t * MQTTV5_SerializeAckFixed(uint8_t * pIndex,
+                                uint8_t packetType,
+                                uint16_t packetId,
+                                size_t remainingLength,
+                                size_t propertyLength);
+
+MQTTStatus_t MQTTV5_SerializePubAckWithProperty( const MQTTAckInfo_t *pAckInfo,
+                                                 size_t remainingLength,
+                                                 size_t propertyLength,
+                                                 const MQTTFixedBuffer_t * pFixedBuffer,
+                                                 uint8_t packetType,
+                                                 uint16_t packetId);
 
 /* *INDENT-OFF* */
 #ifdef __cplusplus
