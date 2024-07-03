@@ -127,7 +127,7 @@
  */
     #define CORE_MQTT_ID_SIZE           ( 1U )
 
-        #if ( MQTT_USER_PROPERTY_ENABLED )
+    #if ( MQTT_USER_PROPERTY_ENABLED )
 
 /**
  * @brief Struct used to deserialize the will properties.
