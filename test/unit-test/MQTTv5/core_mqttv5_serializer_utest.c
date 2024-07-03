@@ -1141,7 +1141,7 @@ void test_MQTTV5_DeserializeConnackOnlyStatus( void )
     status = MQTTV5_DeserializeConnack( &properties, &packetInfo, &sessionPresent );
     TEST_ASSERT_EQUAL( MQTTMalformedPacket, status );
 
-    /*Incoming user property not inititialized*/
+    /*Incoming user property not initialized*/
     properties.pIncomingUserProperty = NULL;
     status = MQTTV5_DeserializeConnack( &properties, &packetInfo, &sessionPresent );
     TEST_ASSERT_EQUAL( MQTTBadParameter, status );
@@ -2885,7 +2885,7 @@ void test_MQTTV5_GetConnectPacketSize( void )
     status = MQTTV5_GetConnectPacketSize( &connectInfo, &willInfo, &properties, &remainingLength, &packetSize );
     TEST_ASSERT_EQUAL( MQTTBadParameter, status );
 
-    /*Incoming user property not inititialized*/
+    /*Incoming user property not initialized*/
     properties.pIncomingUserProperty = NULL;
     status = MQTTV5_GetConnectPacketSize( &connectInfo, NULL, &properties, &remainingLength, &packetSize );
     TEST_ASSERT_EQUAL( MQTTBadParameter, status );

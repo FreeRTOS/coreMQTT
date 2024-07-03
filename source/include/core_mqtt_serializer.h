@@ -271,6 +271,7 @@ typedef struct MQTTAuthInfo
     uint16_t authDataLength;
 } MQTTAuthInfo_t;
 
+#if(MQTT_USER_PROPERTY_ENABLED)
    /**
  * @ingroup mqtt_struct_types
  * @brief Struct to hold user property.
@@ -312,6 +313,7 @@ typedef struct MQTTUserProperties
 
 } MQTTUserProperties_t;
 
+#endif
    /**
  * @ingroup mqtt_struct_types
  * @brief Struct to hold connect and connack properties.
@@ -351,10 +353,6 @@ typedef struct MQTTConnectProperties
      * @brief Length of the connect properties.
      */
     size_t propertyLength;
-     /**
-     * @brief   Pointer to the outgoing user properties.
-     */
-    MQTTUserProperties_t *pOutgoingUserProperty;
      /**
      * @brief  Pointer to the incoming authentication information.
      */
@@ -396,10 +394,6 @@ typedef struct MQTTConnectProperties
      * @brief Length of reason string.
      */
     uint16_t reasonStringLength;
-      /**
-     * @brief Pointer to the incoming user properties.
-     */
-    MQTTUserProperties_t *pIncomingUserProperty;
      /**
      * @brief Whether wildcard subscription is available.
      */
@@ -436,7 +430,16 @@ typedef struct MQTTConnectProperties
      * @brief  Pointer to the incoming authentication information.
      */
     MQTTAuthInfo_t *pIncomingAuth;
-
+    #if(MQTT_USER_PROPERTY_ENABLED)
+     /**
+     * @brief   Pointer to the outgoing user properties.
+     */
+    MQTTUserProperties_t *pOutgoingUserProperty;
+     /**
+     * @brief Pointer to the incoming user properties.
+     */
+    MQTTUserProperties_t *pIncomingUserProperty;
+    #endif
 
 } MQTTConnectProperties_t;
 
@@ -526,10 +529,12 @@ typedef struct MQTTPublishInfo
      * @brief To identify which request the Response Message is for.
      */
     const void *pCorrelationData;
+    #if(MQTT_USER_PROPERTY_ENABLED)
      /**
      * @brief Pointer to the user properties.
      */
     MQTTUserProperties_t* pUserProperty;
+    #endif
 #endif
 
 } MQTTPublishInfo_t;

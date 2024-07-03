@@ -41,8 +41,6 @@
 /* Include transport interface. */
 #include "transport_interface.h"
 
-/* Include transport interface. */
-
 /**
  * @cond DOXYGEN_IGNORE
  * The current version of this library.
@@ -247,7 +245,6 @@ typedef struct MQTTContext
     uint32_t pingReqSendTimeMs;    /**< @brief Timestamp of the last sent PINGREQ. */
     bool waitingForPingResp;       /**< @brief If the library is currently awaiting a PINGRESP. */
     #if ( MQTT_VERSION_5_ENABLED )
-
         /**
          * @brief Connect and Connack Properties.
          */

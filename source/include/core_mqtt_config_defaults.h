@@ -82,6 +82,13 @@
     #ifndef MAX_USER_PROPERTY
         #define MAX_USER_PROPERTY    ( 5U )
     #endif
+    /*Disable the user properties if max user property is set to 0.*/
+    #if(MAX_USER_PROPERTY == 0U)
+        #define MQTT_USER_PROPERTY_ENABLED (false)
+    #else
+        #define MQTT_USER_PROPERTY_ENABLED (true)
+    #endif
+        
 #endif
 
 /**
