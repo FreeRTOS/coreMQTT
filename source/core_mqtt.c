@@ -126,6 +126,128 @@
  * @brief  Size of the property id.
  */
     #define CORE_MQTT_ID_SIZE           ( 1U )
+
+        #if ( MQTT_USER_PROPERTY_ENABLED )
+
+/**
+ * @brief Struct used to deserialize the will properties.
+ *
+ **/
+        typedef struct  UserPropertiesVector
+        {
+            /**
+             * @brief Used to encode user key length.
+             *
+             **/
+            uint8_t serializedUserKeyLength[ MAX_USER_PROPERTY ][ 2 ];
+
+            /**
+             * @brief Used to encode user id.
+             *
+             **/
+            uint8_t userId[ MAX_USER_PROPERTY ];
+
+            /**
+             * @brief Used to encode  user value length.
+             *
+             **/
+            uint8_t serializedUserValueLength[ MAX_USER_PROPERTY ][ 2 ];
+        } UserPropertyVector_t;
+    #endif /* if ( MQTT_USER_PROPERTY_ENABLED ) */
+
+/**
+ * @brief Struct used to deserialize the will properties.
+ *
+ **/
+    typedef struct  WillPropertiesVector
+    {
+        #if ( MQTT_USER_PROPERTY_ENABLED )
+
+            /**
+             * @brief Used to encode user property.
+             *
+             **/
+            UserPropertyVector_t userProperty;
+        #endif
+
+        /**
+         * @brief Used to encode content type length.
+         *
+         **/
+        uint8_t serializedContentTypeLength[ 2 ];
+
+        /**
+         * @brief Used to encode content type id.
+         *
+         **/
+        uint8_t contentTypeId;
+
+        /**
+         * @brief Used to encode response topic length.
+         *
+         **/
+        uint8_t serializedResponseTopicLength[ 2 ];
+
+        /**
+         * @brief Used to encode response topic id.
+         *
+         **/
+        uint8_t responseTopicId;
+
+        /**
+         * @brief Used to encode correlation data length.
+         *
+         **/
+        uint8_t serializedCorrelationLength[ 2 ];
+
+        /**
+         * @brief Used to encode correlation data id.
+         *
+         **/
+        uint8_t correlationDataId;
+    } WillVector_t;
+
+/**
+ * @brief Struct used to deserialize the connect properties.
+ *
+ **/
+    typedef struct  ConnectPropertiesVector
+    {
+        #if ( MQTT_USER_PROPERTY_ENABLED )
+
+            /**
+             * @brief Used to encode user property.
+             *
+             **/
+            UserPropertyVector_t userProperty;
+        #endif
+
+        /**
+         * @brief Used to encode authentication method length.
+         *
+         **/
+        uint8_t serializedAuthMethodLength[ 2 ];
+
+        /**
+         * @brief Used to authentication method id.
+         *
+         **/
+        uint8_t authMethodId;
+
+        /**
+         * @brief Used to encode authentication data length.
+         *
+         **/
+        uint8_t serializedAuthDataLength[ 2 ];
+
+        /**
+         * @brief Used to authentication data id.
+         *
+         **/
+        uint8_t authDataId;
+    } PropertiesVector_t;
+
+
 #endif /* if ( MQTT_VERSION_5_ENABLED ) */
 
 /*-----------------------------------------------------------*/
@@ -587,127 +709,6 @@ static bool matchTopicFilter( const char * pTopicName,
 
 #if ( MQTT_VERSION_5_ENABLED )
 
-    #if ( MQTT_USER_PROPERTY_ENABLED )
-
-/**
- * @brief Struct used to deserialize the will properties.
- *
- **/
-        typedef struct  UserPropertiesVector
-        {
-            /**
-             * @brief Used to encode user key length.
-             *
-             **/
-            uint8_t serializedUserKeyLength[ MAX_USER_PROPERTY ][ 2 ];
-
-            /**
-             * @brief Used to encode user id.
-             *
-             **/
-            uint8_t userId[ MAX_USER_PROPERTY ];
-
-            /**
-             * @brief Used to encode  user value length.
-             *
-             **/
-            uint8_t serializedUserValueLength[ MAX_USER_PROPERTY ][ 2 ];
-        } UserPropertyVector_t;
-    #endif /* if ( MQTT_USER_PROPERTY_ENABLED ) */
-
-/**
- * @brief Struct used to deserialize the will properties.
- *
- **/
-    typedef struct  WillPropertiesVector
-    {
-        #if ( MQTT_USER_PROPERTY_ENABLED )
-
-            /**
-             * @brief Used to encode user property.
-             *
-             **/
-            UserPropertyVector_t userProperty;
-        #endif
-
-        /**
-         * @brief Used to encode content type length.
-         *
-         **/
-        uint8_t serializedContentTypeLength[ 2 ];
-
-        /**
-         * @brief Used to encode content type id.
-         *
-         **/
-        uint8_t contentTypeId;
-
-        /**
-         * @brief Used to encode response topic length.
-         *
-         **/
-        uint8_t serializedResponseTopicLength[ 2 ];
-
-        /**
-         * @brief Used to encode response topic id.
-         *
-         **/
-        uint8_t responseTopicId;
-
-        /**
-         * @brief Used to encode correlation data length.
-         *
-         **/
-        uint8_t serializedCorrelationLength[ 2 ];
-
-        /**
-         * @brief Used to encode correlation data id.
-         *
-         **/
-        uint8_t correlationDataId;
-    } WillVector_t;
-
-/**
- * @brief Struct used to deserialize the connect properties.
- *
- **/
-    typedef struct  ConnectPropertiesVector
-    {
-        #if ( MQTT_USER_PROPERTY_ENABLED )
-
-            /**
-             * @brief Used to encode user property.
-             *
-             **/
-            UserPropertyVector_t userProperty;
-        #endif
-
-        /**
-         * @brief Used to encode authentication method length.
-         *
-         **/
-        uint8_t serializedAuthMethodLength[ 2 ];
-
-        /**
-         * @brief Used to authentication method id.
-         *
-         **/
-        uint8_t authMethodId;
-
-        /**
-         * @brief Used to encode authentication data length.
-         *
-         **/
-        uint8_t serializedAuthDataLength[ 2 ];
-
-        /**
-         * @brief Used to authentication data id.
-         *
-         **/
-        uint8_t authDataId;
-    } PropertiesVector_t;
-
-
 /**
  * @brief Add a string ,its length and its id after serializing it in a manner outlined by
  * the MQTT specification.
@@ -746,7 +747,7 @@ static bool matchTopicFilter( const char * pTopicName,
  * @return The number of vectors added.
  */
 
-    static size_t sendUserProperties( MQTTUserProperties_t * pUserProperty,
+    static size_t sendUserProperties( const MQTTUserProperties_t * pUserProperty,
                                       UserPropertyVector_t * pUserVector,
                                       size_t * pTotalMessageLength,
                                       TransportOutVector_t ** pVectorIterator );
@@ -818,7 +819,7 @@ static bool matchTopicFilter( const char * pTopicName,
         return vectorsAdded;
     }
 
-    static size_t sendUserProperties( MQTTUserProperties_t * pUserProperty,
+    static size_t sendUserProperties( const MQTTUserProperties_t * pUserProperty,
                                       UserPropertyVector_t * pUserVector,
                                       size_t * pTotalMessageLength,
                                       TransportOutVector_t ** pVectorIterator )
