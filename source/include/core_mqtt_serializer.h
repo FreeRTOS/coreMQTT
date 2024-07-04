@@ -1847,12 +1847,9 @@ MQTTStatus_t MQTTV5_GetPublishPacketSize(MQTTPublishInfo_t * pPublishInfo,
                                         size_t * pRemainingLength,
                                         size_t * pPacketSize , 
                                         uint16_t topicAliasMax, 
-                                        uint32_t maxPacketSize);
+                                        uint32_t maxPacketSize,
+                                        uint8_t retainAvailable);
 
-MQTTStatus_t MQTTV5_SerializePublish( const MQTTPublishInfo_t * pPublishInfo,
-                                    uint16_t packetId,
-                                    size_t remainingLength,
-                                    const MQTTFixedBuffer_t * pFixedBuffer);
 
 MQTTStatus_t MQTTV5_DeserializeAck( const MQTTPacketInfo_t * pIncomingPacket,
                                   uint16_t * pPacketId, MQTTAckInfo_t *pAckInfo, bool requestProblem);

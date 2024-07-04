@@ -168,6 +168,16 @@ struct NetworkContext
  */
 #define MQTT_SAMPLE_TOPIC_FILTER_LENGTH3       ( sizeof( MQTT_SAMPLE_TOPIC_FILTER3 ) - 1 )
 
+
+#define   TEST_TOPIC_ALIAS  (2U)
+#define   TEST_MSG_EXPIRY   (100U)
+#define   TEST_CONTENT_TYPE_LENGTH  (2)
+#define   TEST_CONTENT_TYPE ("ab")
+#define   TEST_RESPONSE_TOPIC_LENGTH (10)
+#define   TEST_RESPONSE_TOPIC ("aaaaaaaaaa")
+#define   TEST_CORRELATION_DATA_LENGTH (5)
+#define   TEST_CORRELATION_DATA ("abcde")
+
 /**
  * @brief Return values of mocked calls in MQTT_ProcessLoop(). Used by
  * `expectProcessLoopCalls`
@@ -363,7 +373,18 @@ static int32_t transportSendSuccess( NetworkContext_t * pNetworkContext,
     return bytesToWrite;
 }
 
-
+/**
+ * @brief Mocked failed transport send.
+ */
+static int32_t transportSendFailure( NetworkContext_t * pNetworkContext,
+                                     const void * pBuffer,
+                                     size_t bytesToWrite )
+{
+    ( void ) pNetworkContext;
+    ( void ) pBuffer;
+    ( void ) bytesToWrite;
+    return -1;
+}
 
 /**
  * @brief Mocked successful transport read.
@@ -407,6 +428,20 @@ static void setupNetworkBuffer( MQTTFixedBuffer_t * const pNetworkBuffer )
 {
     pNetworkBuffer->pBuffer = mqttBuffer;
     pNetworkBuffer->size = MQTT_TEST_BUFFER_LENGTH;
+}
+
+static void setupPublishProperties( MQTTPublishInfo_t * pPublishInfo )
+{
+    pPublishInfo->payloadFormat = 1;
+    pPublishInfo->topicAlias = TEST_TOPIC_ALIAS;
+    pPublishInfo->msgExpiryInterval = TEST_MSG_EXPIRY;
+    pPublishInfo->msgExpiryPresent = 1;
+    pPublishInfo->contentTypeLength = TEST_CONTENT_TYPE_LENGTH;
+    pPublishInfo->pContentType = TEST_CONTENT_TYPE;
+    pPublishInfo->responseTopicLength = TEST_RESPONSE_TOPIC_LENGTH;
+    pPublishInfo->pResponseTopic = TEST_RESPONSE_TOPIC;
+    pPublishInfo->correlationLength = TEST_CORRELATION_DATA_LENGTH;
+    pPublishInfo->pCorrelationData = TEST_CORRELATION_DATA;
 }
 
 
@@ -610,3 +645,45 @@ void test_MQTT_Connect_receiveConnack( void )
     status = MQTT_Connect( &mqttContext, &connectInfo, NULL, timeout, &sessionPresent );
     TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
 }
+
+void test_MQTT_Publish2( void )
+{
+    MQTTContext_t mqttContext = { 0 };
+    MQTTPublishInfo_t publishInfo = { 0 };
+    MQTTConnectProperties_t properties = { 0 };
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
+    MQTTStatus_t status;
+
+    const uint16_t PACKET_ID = 1;
+
+    setupTransportInterface( &transport );
+    setupNetworkBuffer( &networkBuffer );
+    transport.send = transportSendFailure;
+
+    memset( &mqttContext, 0x0, sizeof( mqttContext ) );
+    memset( &publishInfo, 0x0, sizeof( publishInfo ) );
+    MQTT_Init( &mqttContext, &transport, getTime, eventCallback, &networkBuffer );
+
+    /*Connect properties not defined*/
+    status = MQTT_Publish( &mqttContext, &publishInfo, PACKET_ID );
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+    mqttContext.connectProperties = &properties;
+  
+    MQTTV5_GetPublishPacketSize_ExpectAnyArgsAndReturn(MQTTSuccess);
+    MQTT_SerializePublishHeaderWithoutTopic_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_SerializePublishProperties_Stub( MQTT_SerializePublishProperties_cb );
+    status = MQTT_Publish( &mqttContext, &publishInfo, PACKET_ID );
+    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
+    
+     /*Send With properties*/
+    setupPublishProperties(&publishInfo);
+    MQTTV5_GetPublishPacketSize_ExpectAnyArgsAndReturn(MQTTSuccess);
+    MQTT_SerializePublishHeaderWithoutTopic_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_SerializePublishProperties_Stub( MQTT_SerializePublishProperties_cb );
+    status = MQTT_Publish( &mqttContext, &publishInfo, PACKET_ID );
+    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
+
+
+}
+

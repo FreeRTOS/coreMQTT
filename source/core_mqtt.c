@@ -1087,9 +1087,9 @@ static bool matchTopicFilter( const char * pTopicName,
         }
         else
         {
-            LogError( ( "Failed to send ACK packet: PacketType=%02x, SentBytes=%ld, "
+            LogError( ( "Failed to send ACK packet: PacketType=%02x, "
                         "PacketSize=%lu.",
-                        ( unsigned int ) packetTypeByte, ( long int ) sendResult,
+                        ( unsigned int ) packetTypeByte,
                           packetSize ) );
             status = MQTTSendFailed;
         }
@@ -2122,9 +2122,7 @@ static MQTTStatus_t handlePublishAcks( MQTTContext_t * pContext,
     MQTTDeserializedInfo_t deserializedInfo;
     #if(MQTT_VERSION_5_ENABLED)
     MQTTAckInfo_t ackInfo;
-    MQTTAckInfo_t nextAckInfo;
-    memset(&ackInfo,0x0,sizeof(ackInfo));
-    memset(&nextAckInfo,0x0,sizeof(nextAckInfo));
+    ( void ) memset(&ackInfo,0x0,sizeof(ackInfo));
     #endif
 
     assert( pContext != NULL );
@@ -2190,7 +2188,6 @@ static MQTTStatus_t handlePublishAcks( MQTTContext_t * pContext,
         deserializedInfo.deserializationResult = status;
         deserializedInfo.pPublishInfo = NULL;
         deserializedInfo.pAckInfo = &ackInfo;
-        deserializedInfo.pNextAckInfo = &nextAckInfo;
         /* Invoke application callback to hand the buffer over to application
         * before sending acks. */
         appCallback( pContext, pIncomingPacket, &deserializedInfo );
@@ -3207,6 +3204,14 @@ static MQTTStatus_t validatePublishParams( const MQTTContext_t * pContext,
                     "to initialize and enable the use of QoS1/QoS2 publishes." ) );
         status = MQTTBadParameter;
     }
+    #if(MQTT_VERSION_5_ENABLED)
+    else if(pContext->connectProperties == NULL){
+        LogError( ( "Argument cannot be NULL: pConnectProperties=%p. ",
+                    ( void * ) pContext->pConnectProperties ) );
+        status = MQTTBadParameter;
+    }
+
+    #endif
     else
     {
         /* MISRA else */
@@ -3541,7 +3546,8 @@ MQTTStatus_t MQTT_Publish( MQTTContext_t * pContext,
                                             &remainingLength,
                                             &packetSize,
                                             pContext->connectProperties->serverTopicAliasMax,
-                                            pContext->connectProperties->serverMaxPacketSize );
+                                            pContext->connectProperties->serverMaxPacketSize,
+                                            pContext->connectProperties->retainAvailable );
 
         #endif
     }

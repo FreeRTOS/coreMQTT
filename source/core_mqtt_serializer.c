@@ -3962,6 +3962,7 @@ MQTTStatus_t MQTT_SerializePublish( const MQTTPublishInfo_t * pPublishInfo,
                     pPublishInfo->pPayload ) );
         status = MQTTBadParameter;
     }
+    #if(!MQTT_VERSION_5_ENABLED)
     else if( ( pPublishInfo->pTopicName == NULL ) || ( pPublishInfo->topicNameLength == 0U ) )
     {
         LogError( ( "Invalid topic name for PUBLISH: pTopicName=%p, "
@@ -3970,6 +3971,7 @@ MQTTStatus_t MQTT_SerializePublish( const MQTTPublishInfo_t * pPublishInfo,
                     ( unsigned short ) pPublishInfo->topicNameLength ) );
         status = MQTTBadParameter;
     }
+    #endif
     else if( ( pPublishInfo->qos != MQTTQoS0 ) && ( packetId == 0U ) )
     {
         LogError( ( "Packet ID is 0 for PUBLISH with QoS=%u.",
@@ -4660,6 +4662,17 @@ MQTTStatus_t MQTT_ProcessIncomingPacketTypeAndLength( const uint8_t * pBuffer,
             pIndexLocal = &pIndexLocal[ 4 ];
         }
 
+        /*Serialze the topic alias if provided*/
+
+        if(pPublishInfo->topicAlias != 0U){
+            *pIndexLocal = MQTT_TOPIC_ALIAS_ID;
+            pIndexLocal++;
+            pIndexLocal[ 0 ] = UINT16_HIGH_BYTE( pPublishInfo->topicAlias );
+            pIndexLocal[ 1 ] = UINT16_LOW_BYTE( pPublishInfo->topicAlias );
+            pIndexLocal = &pIndexLocal[ 2 ];
+        }
+
+
         /*Serialize the payload format if provided.*/
 
         if( pPublishInfo->payloadFormat != 0U )
@@ -4889,7 +4902,8 @@ MQTTStatus_t MQTTV5_GetPublishPacketSize(MQTTPublishInfo_t * pPublishInfo,
                                         size_t * pRemainingLength,
                                         size_t * pPacketSize,
                                         uint16_t topicAliasMax, 
-                                        uint32_t maxPacketSize )
+                                        uint32_t maxPacketSize,
+                                        uint8_t retainAvailable )
 {
     MQTTStatus_t status = MQTTSuccess;
 
@@ -4917,105 +4931,21 @@ MQTTStatus_t MQTTV5_GetPublishPacketSize(MQTTPublishInfo_t * pPublishInfo,
                     ( unsigned short ) pPublishInfo->topicNameLength ) );
         status = MQTTBadParameter;
     }
-    else if(maxPacketSize == 0U){
+    else if(maxPacketSize == 0U)
+    {
          status = MQTTBadParameter;
     }
     else if(pPublishInfo->topicAlias > topicAliasMax){
         LogError(("Invalid topic alias."));
         status = MQTTBadParameter;
     }
+    else if((pPublishInfo->retain == true)  && (retainAvailable == 0U)){
+        LogError(("Retain is not avaialble."));
+        status = MQTTBadParameter;
+    }
     else
     {	  
         status = calculatePublishPacketSizeV5(pPublishInfo, pRemainingLength, pPacketSize,maxPacketSize);
-    }
-
-    return status;
-}
-
-MQTTStatus_t MQTTV5_SerializePublish( const MQTTPublishInfo_t * pPublishInfo,
-                                    uint16_t packetId,
-                                    size_t remainingLength,
-                                    const MQTTFixedBuffer_t * pFixedBuffer)
-{
-    MQTTStatus_t status = MQTTSuccess;
-    size_t packetSize = 0;
-
-    if( ( pFixedBuffer == NULL ) || ( pPublishInfo == NULL ) )
-    {
-        LogError( ( "Argument cannot be NULL: pFixedBuffer=%p, "
-                    "pPublishInfo=%p.",
-                    ( void * ) pFixedBuffer,
-                    ( void * ) pPublishInfo ) );
-        status = MQTTBadParameter;
-    }
-    /* A buffer must be configured for serialization. */
-    else if( pFixedBuffer->pBuffer == NULL )
-    {
-        LogError( ( "Argument cannot be NULL: pFixedBuffer->pBuffer is NULL." ) );
-        status = MQTTBadParameter;
-    }
-
-    /* For serializing a publish, if there exists a payload, then the buffer
-     * cannot be NULL. */
-    else if( ( pPublishInfo->payloadLength > 0U ) && ( pPublishInfo->pPayload == NULL ) )
-    {
-        LogError( ( "A nonzero payload length requires a non-NULL payload: "
-                    "payloadLength=%lu, pPayload=%p.",
-                    ( unsigned long ) pPublishInfo->payloadLength,
-                    pPublishInfo->pPayload ) );
-        status = MQTTBadParameter;
-    }
-    else if(( pPublishInfo->pTopicName == NULL ) && ( pPublishInfo->topicNameLength != 0U ))
-    {
-        LogError( ( "Invalid topic name for PUBLISH: pTopicName=%p, "
-                    "topicNameLength=%hu.",
-                    ( void * ) pPublishInfo->pTopicName,
-                    ( unsigned short ) pPublishInfo->topicNameLength ) );
-        status = MQTTBadParameter;
-    }
-    else if((pPublishInfo->topicAlias == 0U) && ( pPublishInfo->topicNameLength == 0U )){
-         LogError( ( "Invalid topic name for PUBLISH: pTopicName=%p, "
-                    "topicNameLength=%hu.",
-                    ( void * ) pPublishInfo->pTopicName,
-                    ( unsigned short ) pPublishInfo->topicNameLength ) );
-        status = MQTTBadParameter;
-    }
-    else if( ( pPublishInfo->qos != MQTTQoS0 ) && ( packetId == 0U ) )
-    {
-        LogError( ( "Packet ID is 0 for PUBLISH with QoS=%u.",
-                    ( unsigned int ) pPublishInfo->qos ) );
-        status = MQTTBadParameter;
-    }
-    else if( ( pPublishInfo->dup == true ) && ( pPublishInfo->qos == MQTTQoS0 ) )
-    {
-        LogError( ( "Duplicate flag is set for PUBLISH with Qos 0." ) );
-        status = MQTTBadParameter;
-    }
-    else
-    {
-        /* Length of serialized packet = First byte
-         *                                + Length of encoded remaining length
-         *                                + Remaining length. */
-        packetSize = 1U + remainingLengthEncodedSize( remainingLength ) + remainingLength;
-    }
-
-    if( ( status == MQTTSuccess ) && ( packetSize > pFixedBuffer->size ) )
-    {
-        LogError( ( "Buffer size of %lu is not sufficient to hold "
-                    "serialized PUBLISH packet of size of %lu.",
-                    ( unsigned long ) pFixedBuffer->size,
-                    ( unsigned long ) packetSize ) );
-        status = MQTTNoMemory;
-    }
-
-    if( status == MQTTSuccess )
-    {
-        /* Serialize publish with header and payload. */
-        serializePublishCommon( pPublishInfo,
-                                remainingLength,
-                                packetId,
-                                pFixedBuffer,
-                                true );
     }
 
     return status;
@@ -5055,11 +4985,6 @@ MQTTStatus_t MQTTV5_DeserializeAck( const MQTTPacketInfo_t * pIncomingPacket,
         switch( pIncomingPacket->type )
         {
 
-            case MQTT_PACKET_TYPE_SUBACK:
-                status = deserializeSuback( pIncomingPacket, pPacketId );
-                break;
-
-            case MQTT_PACKET_TYPE_UNSUBACK:
             case MQTT_PACKET_TYPE_PUBACK:
             case MQTT_PACKET_TYPE_PUBREC:
                 status = deserializeSimpleAckV5( pIncomingPacket, pPacketId ,pAckInfo,requestProblem);
@@ -5113,7 +5038,7 @@ MQTTStatus_t MQTTV5_GetAckPacketSize(const MQTTAckInfo_t *pAckInfo, size_t* pRem
     }
     #if(MQTT_USER_PROPERTY_ENABLED)
     if((status == MQTTSuccess) && (pAckInfo->pUserProperty!= NULL)){
-        status = MQTT_GetUserPropertySize(pAckInfo->pUserProperty->userProperty,pAckInfo->pUserProperty->count,&length);
+        status = MQTT_GetUserPropertySize(pAckInfo->pUserProperty->userProperty,pAckInfo->pUserProperty->count,&propertyLength);
     }
     #endif
     if(status == MQTTSuccess)
