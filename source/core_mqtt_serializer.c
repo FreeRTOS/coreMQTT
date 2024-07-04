@@ -1325,48 +1325,7 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
         /* Serialize the will properties,topic name and message into the CONNECT packet if provided. */
         if( pWillInfo != NULL )
         {
-            pIndex = MQTT_SerializePublishProperties( pWillInfo, pIndex );
-
-            /*Serialize the provided will properties which has variable length.*/
-            if( pWillInfo->contentTypeLength != 0U )
-            {
-                *pIndex = MQTT_CONTENT_TYPE_ID;
-                pIndex++;
-                pIndex = encodeString( pIndex, pWillInfo->pContentType, pWillInfo->contentTypeLength );
-            }
-
-            if( pWillInfo->responseTopicLength != 0U )
-            {
-                *pIndex = MQTT_RESPONSE_TOPIC_ID;
-                pIndex++;
-                pIndex = encodeString( pIndex, pWillInfo->pResponseTopic, pWillInfo->responseTopicLength );
-            }
-
-            if( pWillInfo->correlationLength != 0U )
-            {
-                *pIndex = MQTT_CORRELATION_DATA_ID;
-                pIndex++;
-                pIndex = encodeString( pIndex, pWillInfo->pCorrelationData, pWillInfo->correlationLength );
-            }
-
-            #if ( MQTT_USER_PROPERTY_ENABLED )
-                if( pWillInfo->pUserProperty != NULL )
-                {
-                    uint32_t i = 0;
-                    uint32_t size = pWillInfo->pUserProperty->count;
-                    const MQTTUserProperty_t * pUserProperty = pWillInfo->pUserProperty->userProperty;
-
-                    for( ; i < size; i++ )
-                    {
-                        *pIndex = MQTT_USER_PROPERTY_ID;
-                        pIndex++;
-                        pIndex = encodeString( pIndex, pUserProperty[ i ].pKey, pUserProperty[ i ].keyLength );
-                        pIndex = encodeString( pIndex, pUserProperty[ i ].pValue, pUserProperty[ i ].valueLength );
-                    }
-                }
-            #endif /* if ( MQTT_USER_PROPERTY_ENABLED ) */
-
-
+            pIndex = serializePublishProperties(pWillInfo,pIndex);
             pIndex = encodeString( pIndex, pWillInfo->pTopicName, pWillInfo->topicNameLength );
             pIndex = encodeString( pIndex, pWillInfo->pPayload, ( uint16_t ) pWillInfo->payloadLength );
         }

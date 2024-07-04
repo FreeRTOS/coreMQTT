@@ -3147,8 +3147,6 @@ void test_WillLimit( void )
     publishInfo.payloadFormat = 1;
     publishInfo.msgExpiryPresent = 1;
     publishInfo.msgExpiryInterval = 10;
-    publishInfo.msgExpiryPresent = 1;
-    publishInfo.msgExpiryInterval = 10;
     publishInfo.contentTypeLength = 2;
     publishInfo.pContentType = "ab";
     publishInfo.responseTopicLength = 2;
@@ -3174,6 +3172,11 @@ void test_WillLimit( void )
     TEST_ASSERT_EQUAL( MQTTBadParameter, status );
 
     status = MQTTV5_GetConnectPacketSize( &connectInfo, &publishInfo, &properties, &remainingLength, &packetSize );
+    TEST_ASSERT_EQUAL( MQTTBadParameter, status );
+
+    publishInfo.topicNameLength = 0U;
+    publishInfo.topicAlias = 1U;
+    status = MQTTV5_GetPublishPacketSize(&publishInfo,&remainingLength,&packetSize,22,MQTT_MAX_REMAINING_LENGTH,1);
     TEST_ASSERT_EQUAL( MQTTBadParameter, status );
 }
 
@@ -3223,7 +3226,7 @@ void test_MQTTV5_GetPublishPacketSize(){
     status = MQTTV5_GetPublishPacketSize(&publishInfo,&remainingLength,&packetSize,topicAliasMax,maxPacketSize,retainAvailable);
     TEST_ASSERT_EQUAL( MQTTBadParameter, status );
 
-    publishInfo.payloadLength = MQTT_MAX_REMAINING_LENGTH - 2;
+    publishInfo.payloadLength = MQTT_MAX_REMAINING_LENGTH - TEST_TOPIC_NAME_LENGTH - 4;
     status = MQTTV5_GetPublishPacketSize(&publishInfo,&remainingLength,&packetSize,topicAliasMax,maxPacketSize,retainAvailable);
     TEST_ASSERT_EQUAL( MQTTBadParameter, status );
 
@@ -3236,7 +3239,6 @@ void test_MQTTV5_GetPublishPacketSize(){
     /* Again with QoS 2. */
     publishInfo.qos = MQTTQoS2;
     status = MQTTV5_GetPublishPacketSize(&publishInfo,&remainingLength,&packetSize,topicAliasMax,maxPacketSize,retainAvailable);
-
     TEST_ASSERT_EQUAL( MQTTSuccess, status );
 
     setupPublishProperties(&publishInfo);
@@ -3268,9 +3270,8 @@ void test_MQTTV5_GetPublishPacketSize(){
 }
 
 void test_MQTT_SerializePublish(){
-    MQTTPublishInfo_t publishInfo;
-    uint16_t topicAliasMax = 10U;
-    uint32_t maxPacketSize = 50U;
+    uint16_t topicAliasMax = 5U;
+    uint32_t maxPacketSize = 200U;
     uint8_t retainAvailable = 1U;
     size_t remainingLength = 98;
     uint8_t buffer[ 200 + 2 * BUFFER_PADDING_LENGTH ];
@@ -3296,7 +3297,8 @@ void test_MQTT_SerializePublish(){
                                     &fixedBuffer );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
     checkBufferOverflow( buffer, sizeof( buffer ) );
-
+    
+    fixedBuffer.pBuffer = &buffer[ BUFFER_PADDING_LENGTH ];
     setupPublishProperties(&publishInfo);
  /* Calculate exact packet size and remaining length. */
     status = MQTTV5_GetPublishPacketSize( &publishInfo, &remainingLength, &packetSize,topicAliasMax,maxPacketSize,retainAvailable);
@@ -3311,4 +3313,5 @@ void test_MQTT_SerializePublish(){
                                     &fixedBuffer );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
     checkBufferOverflow( buffer, sizeof( buffer ) );
+
 }
