@@ -95,13 +95,13 @@ struct NetworkContext
 
 #define   TEST_TOPIC_ALIAS  (2U)
 #define   TEST_MSG_EXPIRY   (100U)
-#define   TEST_CONTENT_TYPE_LENGTH  (2)
-#define   TEST_CONTENT_TYPE ("ab")
-#define   TEST_RESPONSE_TOPIC_LENGTH (10)
-#define   TEST_RESPONSE_TOPIC ("aaaaaaaaaa")
-#define   TEST_CORRELATION_DATA_LENGTH (5)
-#define   TEST_CORRELATION_DATA ("abcde")
 
+
+#define MQTT_TEST_UTF8_STRING ("test")
+#define MQTT_TEST_UTF8_STRING_LENGTH (sizeof(MQTT_TEST_UTF8_STRING) -1)
+#define MQTT_TEST_UINT8 (1U)
+#define MQTT_TEST_UINT16 (32U)
+#define MQTT_TEST_UINT32 (300U)
 
 /* MQTT CONNECT flags. */
 #define MQTT_CONNECT_FLAG_CLEAN                     ( 1 ) /**< @brief Clean session. */
@@ -170,9 +170,9 @@ struct NetworkContext
                    ( ( uint16_t ) ptr[ 1 ] ) )
 
 #define UINT32_DECODE( ptr )                             \
-    ( uint32_t ) ( ( ( ( uint32_t ) ptr[ 0 ] ) << 8 ) |  \
+    ( uint32_t ) ( ( ( ( uint32_t ) ptr[ 0 ] ) << 24 ) |  \
                    ( ( ( uint32_t ) ptr[ 1 ] ) << 16 ) | \
-                   ( ( ( uint32_t ) ptr[ 2 ] ) << 24 ) | \
+                   ( ( ( uint32_t ) ptr[ 2 ] ) << 8 ) | \
                    ( ( uint32_t ) ptr[ 3 ] ) )
 
 #define UINT32_BYTE3( x )    ( ( uint8_t ) ( ( x ) >> 24 ) )
@@ -358,12 +358,12 @@ static void setupPublishProperties( MQTTPublishInfo_t * pPublishInfo )
     pPublishInfo->topicAlias = TEST_TOPIC_ALIAS;
     pPublishInfo->msgExpiryInterval = TEST_MSG_EXPIRY;
     pPublishInfo->msgExpiryPresent = 1;
-    pPublishInfo->contentTypeLength = TEST_CONTENT_TYPE_LENGTH;
-    pPublishInfo->pContentType = TEST_CONTENT_TYPE;
-    pPublishInfo->responseTopicLength = TEST_RESPONSE_TOPIC_LENGTH;
-    pPublishInfo->pResponseTopic = TEST_RESPONSE_TOPIC;
-    pPublishInfo->correlationLength = TEST_CORRELATION_DATA_LENGTH;
-    pPublishInfo->pCorrelationData = TEST_CORRELATION_DATA;
+    pPublishInfo->contentTypeLength = MQTT_TEST_UTF8_STRING_LENGTH;
+    pPublishInfo->pContentType = MQTT_TEST_UTF8_STRING;
+    pPublishInfo->responseTopicLength = MQTT_TEST_UTF8_STRING_LENGTH;
+    pPublishInfo->pResponseTopic = MQTT_TEST_UTF8_STRING;
+    pPublishInfo->correlationLength = MQTT_TEST_UTF8_STRING_LENGTH;
+    pPublishInfo->pCorrelationData = MQTT_TEST_UTF8_STRING;
 }
 
 /**
@@ -503,13 +503,58 @@ static uint8_t * initializeDeserialize(MQTTPacketInfo_t *packetInfo,uint8_t *pIn
     return pIndexLocal;
 }
 
-static uint8_t * serializeuint_32(uint8_t *pIndexLocal, uint32_t value)
+static uint8_t * serializeuint_32(uint8_t *pIndex, uint8_t propertyId)
 {
-    pIndexLocal[ 0 ] = UINT32_BYTE3( value );
-    pIndexLocal[ 1 ] = UINT32_BYTE2( value );
-    pIndexLocal[ 2 ] = UINT32_BYTE1( value );
-    pIndexLocal[ 3 ] = UINT32_BYTE0( value );
-    pIndexLocal = &pIndexLocal[ 4 ];
+    uint8_t *pIndexLocal = pIndex;
+    *pIndexLocal = propertyId;
+    pIndexLocal++;
+    pIndexLocal[ 0 ] = UINT32_BYTE3( MQTT_TEST_UINT32 );
+    pIndexLocal[ 1 ] = UINT32_BYTE2( MQTT_TEST_UINT32 );
+    pIndexLocal[ 2 ] = UINT32_BYTE1( MQTT_TEST_UINT32 );
+    pIndexLocal[ 3 ] = UINT32_BYTE0( MQTT_TEST_UINT32 );
+    pIndexLocal = &pIndexLocal[ 4 ]; 
+    return pIndexLocal;
+}
+
+
+static uint8_t * serializeuint_16(uint8_t *pIndex,uint8_t propertyId)
+{
+    uint8_t *pIndexLocal = pIndex;
+    *pIndexLocal = propertyId;
+    pIndexLocal++;
+    pIndexLocal[ 0 ] = UINT16_HIGH_BYTE( MQTT_TEST_UINT16 );
+    pIndexLocal[ 1 ] = UINT16_LOW_BYTE( MQTT_TEST_UINT16 );
+    pIndexLocal = &pIndexLocal[ 2 ];
+    return pIndexLocal;
+}
+
+static uint8_t * serializeuint_8(uint8_t *pIndex,uint8_t propertyId)
+{   
+    uint8_t *pIndexLocal = pIndex;
+    *pIndexLocal = propertyId;
+    pIndexLocal++;
+    pIndexLocal[ 0 ] = MQTT_TEST_UINT8;
+    pIndexLocal++;
+    return pIndexLocal;
+}
+static uint8_t * serializeutf_8(uint8_t *pIndex, uint8_t propertyId)
+{
+    uint8_t *pIndexLocal = pIndex;
+    *pIndexLocal = propertyId;
+    pIndexLocal++;
+    size_t dummy = encodeString( pIndexLocal, MQTT_TEST_UTF8_STRING, MQTT_TEST_UTF8_STRING_LENGTH );
+    pIndexLocal = &pIndexLocal[ dummy ];
+    return pIndexLocal;
+}
+
+static uint8_t * serializeutf_8pair(uint8_t *pIndex){
+    uint8_t* pIndexLocal = pIndex;
+    *pIndexLocal = MQTT_USER_PROPERTY_ID;
+    pIndexLocal++;
+    size_t dummy = encodeString( pIndexLocal,MQTT_TEST_UTF8_STRING,MQTT_TEST_UTF8_STRING_LENGTH);
+    pIndexLocal = &pIndexLocal[ dummy ];
+    dummy = encodeString( pIndexLocal, MQTT_TEST_UTF8_STRING, MQTT_TEST_UTF8_STRING_LENGTH );
+    pIndexLocal = &pIndexLocal[ dummy ];
     return pIndexLocal;
 }
 static MQTTStatus_t MQTT_GetUserPropertySize( const MQTTUserProperty_t * pUserProperty,
@@ -941,47 +986,47 @@ void test_MQTT_GetPublishPropertiesSize( void )
     TEST_ASSERT_EQUAL( MQTTSuccess, status );
     TEST_ASSERT_EQUAL_size_t( 12, publishInfo.propertyLength );
 
-    publishInfo.contentTypeLength = 2;
+    publishInfo.contentTypeLength = MQTT_TEST_UTF8_STRING_LENGTH;
     status = MQTT_GetPublishPropertiesSize( &publishInfo );
     TEST_ASSERT_EQUAL( MQTTBadParameter, status );
 
-    publishInfo.pContentType = "ab";
+    publishInfo.pContentType = MQTT_TEST_UTF8_STRING;
     status = MQTT_GetPublishPropertiesSize( &publishInfo );
     TEST_ASSERT_EQUAL( MQTTSuccess, status );
-    TEST_ASSERT_EQUAL_size_t( 17, publishInfo.propertyLength );
+    TEST_ASSERT_EQUAL_size_t( 19, publishInfo.propertyLength );
 
-    publishInfo.responseTopicLength = 2;
+    publishInfo.responseTopicLength = MQTT_TEST_UTF8_STRING_LENGTH;
     status = MQTT_GetPublishPropertiesSize( &publishInfo );
     TEST_ASSERT_EQUAL( MQTTBadParameter, status );
 
-    publishInfo.pResponseTopic = "ab";
+    publishInfo.pResponseTopic = MQTT_TEST_UTF8_STRING;
     status = MQTT_GetPublishPropertiesSize( &publishInfo );
     TEST_ASSERT_EQUAL( MQTTSuccess, status );
-    TEST_ASSERT_EQUAL_size_t( 22, publishInfo.propertyLength );
+    TEST_ASSERT_EQUAL_size_t( 26, publishInfo.propertyLength );
 
-    publishInfo.correlationLength = 2;
+    publishInfo.correlationLength = MQTT_TEST_UTF8_STRING_LENGTH;
     status = MQTT_GetPublishPropertiesSize( &publishInfo );
     TEST_ASSERT_EQUAL( MQTTBadParameter, status );
 
-    publishInfo.pCorrelationData = "ab";
+    publishInfo.pCorrelationData = MQTT_TEST_UTF8_STRING;
     status = MQTT_GetPublishPropertiesSize( &publishInfo );
     TEST_ASSERT_EQUAL( MQTTSuccess, status );
-    TEST_ASSERT_EQUAL_size_t( 27, publishInfo.propertyLength );
+    TEST_ASSERT_EQUAL_size_t( 33, publishInfo.propertyLength );
 
     MQTTUserProperties_t userProperties;
-    userProperties.userProperty[ 0 ].pKey = "2";
-    userProperties.userProperty[ 0 ].keyLength = 1;
-    userProperties.userProperty[ 0 ].valueLength = 3;
-    userProperties.userProperty[ 0 ].pValue = "abc";
-    userProperties.userProperty[ 1 ].pKey = "2";
-    userProperties.userProperty[ 1 ].keyLength = 1;
-    userProperties.userProperty[ 1 ].valueLength = 2;
-    userProperties.userProperty[ 1 ].pValue = "ab";
+    userProperties.userProperty[ 0 ].pKey = MQTT_TEST_UTF8_STRING;
+    userProperties.userProperty[ 0 ].keyLength = MQTT_TEST_UTF8_STRING_LENGTH;
+    userProperties.userProperty[ 0 ].valueLength = MQTT_TEST_UTF8_STRING_LENGTH;
+    userProperties.userProperty[ 0 ].pValue =  MQTT_TEST_UTF8_STRING;
+    userProperties.userProperty[ 1 ].pKey = MQTT_TEST_UTF8_STRING;
+    userProperties.userProperty[ 1 ].keyLength = MQTT_TEST_UTF8_STRING_LENGTH;
+    userProperties.userProperty[ 1 ].valueLength = MQTT_TEST_UTF8_STRING_LENGTH;
+    userProperties.userProperty[ 1 ].pValue = MQTT_TEST_UTF8_STRING;
     publishInfo.pUserProperty = &userProperties;
     userProperties.count = 2;
     status = MQTT_GetPublishPropertiesSize( &publishInfo );
     TEST_ASSERT_EQUAL( MQTTSuccess, status );
-    TEST_ASSERT_EQUAL_size_t( 44, publishInfo.propertyLength );
+    TEST_ASSERT_EQUAL_size_t( 59, publishInfo.propertyLength );
 }
 
 void test_MQTT_SerializeConnectProperties( void )
@@ -1045,7 +1090,7 @@ void test_MQTTV5_DeserializeConnackOnlyStatus( void )
 {
     
     uint8_t buffer[ 50 ];
-    uint8_t * index = buffer;
+    uint8_t * pIndex = buffer;
     MQTTUserProperties_t incomingProperty;
     properties.pIncomingUserProperty = &incomingProperty;
     status = MQTTV5_DeserializeConnack( NULL, NULL, NULL );
@@ -1065,7 +1110,7 @@ void test_MQTTV5_DeserializeConnackOnlyStatus( void )
     status = MQTTV5_DeserializeConnack( &properties, &packetInfo, &sessionPresent );
     TEST_ASSERT_EQUAL( MQTTBadParameter, status );
 
-    packetInfo.pRemainingData = index;
+    packetInfo.pRemainingData = pIndex;
     packetInfo.type = MQTT_PACKET_TYPE_CONNECT;
     status = MQTTV5_DeserializeConnack( &properties, &packetInfo, &sessionPresent );
     TEST_ASSERT_EQUAL( MQTTBadParameter, status );
@@ -1084,7 +1129,7 @@ void test_MQTTV5_DeserializeConnackOnlyStatus( void )
     TEST_ASSERT_EQUAL( MQTTBadResponse, status );
 
     /* 5 + 1 + 2 = 8 */
-    size_t propertyLength = encodeRemainingLength( index, 5 );
+    size_t propertyLength = encodeRemainingLength( pIndex, 5 );
     packetInfo.remainingLength = propertyLength + 7;
     /*Not a valid reason code*/
     buffer[ 0 ] = 0x00;
@@ -1209,41 +1254,57 @@ void test_MQTTV5_DeserializeConnackOnlyStatus( void )
     status = MQTTV5_DeserializeConnack( &properties, &packetInfo, &sessionPresent );
     TEST_ASSERT_EQUAL( MQTTMalformedPacket, status );
 
+    /*Invalid property length*/
+    properties.isMaxPacketSize = 200;
+    packetInfo.remainingLength = 20;
+    pIndex = &buffer[ 2 ];
+    propertyLength = encodeRemainingLength( pIndex, 20971556356235 );
+    LogDebug( ( "Encoded size for length is %lu bytes.",
+                ( unsigned long ) propertyLength ) );
+    status = MQTTV5_DeserializeConnack( &properties, &packetInfo, &sessionPresent );
+    TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
+
+    /*Invalid property length*/
+    pIndex = &buffer[ 2 ];
+    *pIndex = 0x81;
+     pIndex++;
+    *pIndex = 0x00;
+    status = MQTTV5_DeserializeConnack( &properties, &packetInfo, &sessionPresent );
+    TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
+
     /*Incoming user property not initialized*/
     properties.pIncomingUserProperty = NULL;
     status = MQTTV5_DeserializeConnack( &properties, &packetInfo, &sessionPresent );
     TEST_ASSERT_EQUAL( MQTTBadParameter, status );
+
+    
 }
 
-void test_MQTTV5_DeserializeConnackOnlySessionExpiry( void )
+void test_MQTTV5_DeserializeConnackOnlyuint_32( void )
 {
     uint8_t buffer[200] = {0};
     bool session = false;
     uint8_t * pIndexLocal = initializeDeserialize(&packetInfo,buffer);
-    size_t propertyLength = encodeRemainingLength( pIndexLocal, 5 );
-    packetInfo.remainingLength = propertyLength + 7;
+    size_t propertyLength = encodeRemainingLength( pIndexLocal, 10 );
+    packetInfo.remainingLength = propertyLength + 12;
     properties.isMaxPacketSize = true;
     properties.maxPacketSize = 150;
     properties.pIncomingUserProperty = &userProperties;
     pIndexLocal++;
-    *pIndexLocal = MQTT_SESSION_EXPIRY_ID;
-    pIndexLocal++;
-    pIndexLocal = serializeuint_32(pIndexLocal, 12);
+    pIndexLocal = serializeuint_32(pIndexLocal, MQTT_SESSION_EXPIRY_ID);
+    pIndexLocal = serializeuint_32(pIndexLocal, MQTT_MAX_PACKET_SIZE_ID);
     status = MQTTV5_DeserializeConnack( &properties, &packetInfo, &session );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
-    TEST_ASSERT_EQUAL_INT( 12, properties.sessionExpiry );
+    TEST_ASSERT_EQUAL_INT( MQTT_TEST_UINT32, properties.sessionExpiry );
+    TEST_ASSERT_EQUAL_INT( MQTT_TEST_UINT32, properties.serverMaxPacketSize );
 
     /*Protocol error to include the same property twice*/
     packetInfo.remainingLength = 13;
     pIndexLocal = &buffer[ 2 ];
     propertyLength = encodeRemainingLength( pIndexLocal, 10 );
     pIndexLocal++;
-    *pIndexLocal = MQTT_SESSION_EXPIRY_ID;
-    pIndexLocal++;
-    pIndexLocal = serializeuint_32(pIndexLocal, 12);
-    *pIndexLocal = MQTT_SESSION_EXPIRY_ID;
-    pIndexLocal++;
-    pIndexLocal = serializeuint_32(pIndexLocal, 12);
+    pIndexLocal = serializeuint_32(pIndexLocal, MQTT_SESSION_EXPIRY_ID);
+    pIndexLocal = serializeuint_32(pIndexLocal, MQTT_SESSION_EXPIRY_ID);
     status = MQTTV5_DeserializeConnack( &properties, &packetInfo, &session );
     TEST_ASSERT_EQUAL_INT( MQTTProtocolError, status );
 
@@ -1254,7 +1315,7 @@ void test_MQTTV5_DeserializeConnackOnlySessionExpiry( void )
     pIndexLocal++;
     *pIndexLocal = MQTT_SESSION_EXPIRY_ID;
     pIndexLocal++;
-    pIndexLocal = serializeuint_32(pIndexLocal, 12);
+    pIndexLocal = serializeuint_32(pIndexLocal, MQTT_SESSION_EXPIRY_ID);
     status = MQTTV5_DeserializeConnack( &properties, &packetInfo, &session );
     TEST_ASSERT_EQUAL_INT( MQTTMalformedPacket, status );
 
@@ -1263,33 +1324,30 @@ void test_MQTTV5_DeserializeConnackOnlySessionExpiry( void )
     pIndexLocal = &buffer[ 2 ];
     propertyLength = encodeRemainingLength( pIndexLocal, 5 );
     pIndexLocal++;
-    *pIndexLocal = 0x00;
-    pIndexLocal++;
-    pIndexLocal = serializeuint_32(pIndexLocal, 12);
+    pIndexLocal = serializeuint_32(pIndexLocal, 0x00);
     status = MQTTV5_DeserializeConnack( &properties, &packetInfo, &session );
     TEST_ASSERT_EQUAL_INT( MQTTProtocolError, status );
 
-    packetInfo.remainingLength = 8;
+    /* Max packet size cannot have  a value 0*/
     pIndexLocal = &buffer[ 2 ];
-    propertyLength = encodeRemainingLength( pIndexLocal, 20971556356235 );
-    LogDebug( ( "Encoded size for length is %lu bytes.",
-                ( unsigned long ) propertyLength ) );
-    status = MQTTV5_DeserializeConnack( &properties, &packetInfo, &session );
-    TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
-
-
-
-    packetInfo.remainingLength = 8;
-    pIndexLocal = &buffer[ 2 ];
-    *pIndexLocal = 0x81;
+    propertyLength = encodeRemainingLength( pIndexLocal, 5 );
+    packetInfo.remainingLength = propertyLength + 7;
     pIndexLocal++;
-    *pIndexLocal = 0x00;
-
+    *pIndexLocal = MQTT_MAX_PACKET_SIZE_ID;
+    pIndexLocal++;
+    pIndexLocal[ 0 ] = UINT32_BYTE3( 0 );
+    pIndexLocal[ 1 ] = UINT32_BYTE2( 0 );
+    pIndexLocal[ 2 ] = UINT32_BYTE1( 0 );
+    pIndexLocal[ 3 ] = UINT32_BYTE0( 0 );
+    pIndexLocal = &pIndexLocal[ 4 ];
     status = MQTTV5_DeserializeConnack( &properties, &packetInfo, &session );
-    TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
+    TEST_ASSERT_EQUAL_INT( MQTTProtocolError, status );
+
+
+
 }
 
-void test_MQTTV5_DeserializeConnackOnlyReceiveMax( void )
+void test_MQTTV5_DeserializeConnackOnlyuint_16( void )
 {
     
     uint8_t buffer[ 200 ] = { 0 };
@@ -1301,17 +1359,17 @@ void test_MQTTV5_DeserializeConnackOnlyReceiveMax( void )
     packetInfo.type = MQTT_PACKET_TYPE_CONNACK;
     pIndexLocal = &buffer[ 2 ];
     properties.pIncomingUserProperty = &userProperties;
-    size_t propertyLength = encodeRemainingLength( pIndexLocal, 3 );
-    packetInfo.remainingLength = propertyLength + 5;
+    size_t propertyLength = encodeRemainingLength( pIndexLocal, 9 );
+    packetInfo.remainingLength = propertyLength + 11;
     pIndexLocal++;
-    *pIndexLocal = MQTT_RECEIVE_MAX_ID;
-    pIndexLocal++;
-    pIndexLocal[ 0 ] = UINT16_HIGH_BYTE( 13 );
-    pIndexLocal[ 1 ] = UINT16_LOW_BYTE( 13 );
-    pIndexLocal = &pIndexLocal[ 2 ];
+    pIndexLocal = serializeuint_16(pIndexLocal,MQTT_RECEIVE_MAX_ID);
+    pIndexLocal = serializeuint_16(pIndexLocal,MQTT_TOPIC_ALIAS_MAX_ID);
+    pIndexLocal = serializeuint_16(pIndexLocal,MQTT_SERVER_KEEP_ALIVE_ID);
     status = MQTTV5_DeserializeConnack( &properties, &packetInfo, &session );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
-    TEST_ASSERT_EQUAL_INT( 13, properties.serverReceiveMax );
+    TEST_ASSERT_EQUAL_INT( MQTT_TEST_UINT16, properties.serverReceiveMax );
+    TEST_ASSERT_EQUAL_INT( MQTT_TEST_UINT16, properties.serverTopicAliasMax );
+    TEST_ASSERT_EQUAL_INT( MQTT_TEST_UINT16, properties.serverKeepAlive);
 
     /*Receive Max cannot have a value 0*/
     pIndexLocal = &buffer[ 2 ];
@@ -1321,7 +1379,7 @@ void test_MQTTV5_DeserializeConnackOnlyReceiveMax( void )
     *pIndexLocal = MQTT_RECEIVE_MAX_ID;
     pIndexLocal++;
     pIndexLocal[ 0 ] = UINT16_HIGH_BYTE( 0 );
-    pIndexLocal[ 1 ] = UINT16_LOW_BYTE( 0 );
+    pIndexLocal[ 1 ] = UINT16_LOW_BYTE( 0);
     pIndexLocal = &pIndexLocal[ 2 ];
     status = MQTTV5_DeserializeConnack( &properties, &packetInfo, &session );
     TEST_ASSERT_EQUAL_INT( MQTTProtocolError, status );
@@ -1331,16 +1389,8 @@ void test_MQTTV5_DeserializeConnackOnlyReceiveMax( void )
     propertyLength = encodeRemainingLength( pIndexLocal, 6 );
     packetInfo.remainingLength = propertyLength + 8;
     pIndexLocal++;
-    *pIndexLocal = MQTT_RECEIVE_MAX_ID;
-    pIndexLocal++;
-    pIndexLocal[ 0 ] = UINT16_HIGH_BYTE( 13 );
-    pIndexLocal[ 1 ] = UINT16_LOW_BYTE( 13 );
-    pIndexLocal = &pIndexLocal[ 2 ];
-    *pIndexLocal = MQTT_RECEIVE_MAX_ID;
-    pIndexLocal++;
-    pIndexLocal[ 0 ] = UINT16_HIGH_BYTE( 13 );
-    pIndexLocal[ 1 ] = UINT16_LOW_BYTE( 13 );
-    pIndexLocal = &pIndexLocal[ 2 ];
+    pIndexLocal = serializeuint_16(pIndexLocal,MQTT_RECEIVE_MAX_ID);
+    pIndexLocal = serializeuint_16(pIndexLocal,MQTT_RECEIVE_MAX_ID);
     status = MQTTV5_DeserializeConnack( &properties, &packetInfo, &session );
     TEST_ASSERT_EQUAL_INT( MQTTProtocolError, status );
 
@@ -1349,16 +1399,12 @@ void test_MQTTV5_DeserializeConnackOnlyReceiveMax( void )
     pIndexLocal = &buffer[ 2 ];
     propertyLength = encodeRemainingLength( pIndexLocal, 2 );
     pIndexLocal++;
-    *pIndexLocal = MQTT_RECEIVE_MAX_ID;
-    pIndexLocal++;
-    pIndexLocal[ 0 ] = UINT16_HIGH_BYTE( 13 );
-    pIndexLocal[ 1 ] = UINT16_LOW_BYTE( 13 );
-    pIndexLocal = &pIndexLocal[ 2 ];
+    pIndexLocal = serializeuint_16(pIndexLocal,MQTT_RECEIVE_MAX_ID);
     status = MQTTV5_DeserializeConnack( &properties, &packetInfo, &session );
     TEST_ASSERT_EQUAL_INT( MQTTMalformedPacket, status );
 }
 
-void test_MQTTV5_DeserializeConnackOnlyMaxQos( void )
+void test_MQTTV5_DeserializeConnackOnlyuint_8( void )
 {
     uint8_t buffer[ 200 ] = { 0 };
     uint8_t * pIndexLocal = buffer;
@@ -1367,18 +1413,24 @@ void test_MQTTV5_DeserializeConnackOnlyMaxQos( void )
     bool session = false;
     packetInfo.pRemainingData = buffer;
     packetInfo.type = MQTT_PACKET_TYPE_CONNACK;
-    packetInfo.remainingLength = 5;
+    packetInfo.remainingLength = 13;
     pIndexLocal = &buffer[ 2 ];
     properties.pIncomingUserProperty = &userProperties;
-    size_t propertyLength = encodeRemainingLength( pIndexLocal, 2 );
+    size_t propertyLength = encodeRemainingLength( pIndexLocal, 10 );
     pIndexLocal++;
-    *pIndexLocal = MQTT_MAX_QOS_ID;
-    pIndexLocal++;
-    pIndexLocal[ 0 ] = 0;
-    pIndexLocal++;
+    pIndexLocal = serializeuint_8(pIndexLocal,MQTT_MAX_QOS_ID);
+    pIndexLocal = serializeuint_8(pIndexLocal,MQTT_RETAIN_AVAILABLE_ID);
+    pIndexLocal = serializeuint_8(pIndexLocal,MQTT_WILDCARD_ID);
+    pIndexLocal = serializeuint_8(pIndexLocal,MQTT_SHARED_SUB_ID);
+    pIndexLocal = serializeuint_8(pIndexLocal,MQTT_SUB_AVAILABLE_ID);
+
     status = MQTTV5_DeserializeConnack( &properties, &packetInfo, &session );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
-    TEST_ASSERT_EQUAL_INT( 0, properties.serverMaxQos );
+    TEST_ASSERT_EQUAL_INT( MQTT_TEST_UINT8, properties.serverMaxQos );
+    TEST_ASSERT_EQUAL_INT( MQTT_TEST_UINT8, properties.retainAvailable );
+    TEST_ASSERT_EQUAL_INT( MQTT_TEST_UINT8, properties.isWildcardAvaiable );
+    TEST_ASSERT_EQUAL_INT( MQTT_TEST_UINT8, properties.isSharedAvailable );
+    TEST_ASSERT_EQUAL_INT( MQTT_TEST_UINT8, properties.subscriptionId );
 
     /*Protocol error to have a value other than 0 or 1*/
     packetInfo.remainingLength = 5;
@@ -1397,14 +1449,8 @@ void test_MQTTV5_DeserializeConnackOnlyMaxQos( void )
     propertyLength = encodeRemainingLength( pIndexLocal, 4 );
     packetInfo.remainingLength = propertyLength + 6;
     pIndexLocal++;
-    *pIndexLocal = MQTT_MAX_QOS_ID;
-    pIndexLocal++;
-    pIndexLocal[ 0 ] = 0;
-    pIndexLocal++;
-    *pIndexLocal = MQTT_MAX_QOS_ID;
-    pIndexLocal++;
-    pIndexLocal[ 0 ] = 0;
-    pIndexLocal++;
+    pIndexLocal = serializeuint_8(pIndexLocal,MQTT_MAX_QOS_ID);
+    pIndexLocal = serializeuint_8(pIndexLocal,MQTT_MAX_QOS_ID);
     status = MQTTV5_DeserializeConnack( &properties, &packetInfo, &session );
     TEST_ASSERT_EQUAL_INT( MQTTProtocolError, status );
 
@@ -1419,145 +1465,12 @@ void test_MQTTV5_DeserializeConnackOnlyMaxQos( void )
     pIndexLocal++;
     status = MQTTV5_DeserializeConnack( &properties, &packetInfo, &session );
     TEST_ASSERT_EQUAL_INT( MQTTMalformedPacket, status );
-}
-void test_MQTTV5_DeserializeConnackOnlyMaxPacketSize( void )
-{
-    
-    uint8_t buffer[ 200 ] = { 0 };
-    uint8_t * pIndexLocal = buffer;
-    buffer[ 0 ] = 0x01;
-    buffer[ 1 ] = 0x00;
-    bool session = false;
-    packetInfo.pRemainingData = buffer;
-    packetInfo.type = MQTT_PACKET_TYPE_CONNACK;
-    packetInfo.remainingLength = 8;
-    pIndexLocal = &buffer[ 2 ];
-    properties.pIncomingUserProperty = &userProperties;
-    size_t propertyLength = encodeRemainingLength( pIndexLocal, 5 );
-    pIndexLocal++;
-    *pIndexLocal = MQTT_MAX_PACKET_SIZE_ID;
-    pIndexLocal++;
-    pIndexLocal = serializeuint_32(pIndexLocal, 120);
-    status = MQTTV5_DeserializeConnack( &properties, &packetInfo, &session );
-    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
-    TEST_ASSERT_EQUAL_INT( 120, properties.serverMaxPacketSize );
 
-    /*Protocol error to have  a value 0*/
-    pIndexLocal = &buffer[ 2 ];
-    propertyLength = encodeRemainingLength( pIndexLocal, 5 );
-    packetInfo.remainingLength = propertyLength + 7;
-    pIndexLocal++;
-    *pIndexLocal = MQTT_MAX_PACKET_SIZE_ID;
-    pIndexLocal++;
-    pIndexLocal = serializeuint_32(pIndexLocal,0);
-    status = MQTTV5_DeserializeConnack( &properties, &packetInfo, &session );
-    TEST_ASSERT_EQUAL_INT( MQTTProtocolError, status );
 
-    /*Protocol error to include the same property twice*/
-    packetInfo.remainingLength = 13;
-    pIndexLocal = &buffer[ 2 ];
-    propertyLength = encodeRemainingLength( pIndexLocal, 10 );
-    pIndexLocal++;
-    *pIndexLocal = MQTT_MAX_PACKET_SIZE_ID;
-    pIndexLocal++;
-    pIndexLocal = serializeuint_32(pIndexLocal, 120);
-    pIndexLocal = &pIndexLocal[ 4 ];
-    *pIndexLocal = MQTT_MAX_PACKET_SIZE_ID;
-    pIndexLocal++;
-    pIndexLocal = serializeuint_32(pIndexLocal,120);
-
-    status = MQTTV5_DeserializeConnack( &properties, &packetInfo, &session );
-    TEST_ASSERT_EQUAL_INT( MQTTProtocolError, status );
-
-    /*Invalid property length*/
-    packetInfo.remainingLength = 7;
-    pIndexLocal = &buffer[ 2 ];
-    propertyLength = encodeRemainingLength( pIndexLocal, 4 );
-    pIndexLocal++;
-    *pIndexLocal = MQTT_MAX_PACKET_SIZE_ID;
-    pIndexLocal++;
-    pIndexLocal = serializeuint_32(pIndexLocal, 120);
-    pIndexLocal = &pIndexLocal[ 4 ];
-    status = MQTTV5_DeserializeConnack( &properties, &packetInfo, &session );
-    TEST_ASSERT_EQUAL_INT( MQTTMalformedPacket, status );
 }
 
-void test_MQTTV5_DeserializeConnackOnlyRetainAvailable( void )
-{
-    
-    uint8_t buffer[ 200 ] = { 0 };
-    uint8_t * pIndexLocal = buffer;
-    buffer[ 0 ] = 0x01;
-    buffer[ 1 ] = 0x00;
-    bool session = false;
-    packetInfo.pRemainingData = buffer;
-    packetInfo.type = MQTT_PACKET_TYPE_CONNACK;
-    packetInfo.remainingLength = 5;
-    pIndexLocal = &buffer[ 2 ];
-    properties.pIncomingUserProperty = &userProperties;
-    size_t propertyLength = encodeRemainingLength( pIndexLocal, 2 );
-    pIndexLocal++;
-    *pIndexLocal = MQTT_RETAIN_AVAILABLE_ID;
-    pIndexLocal++;
-    pIndexLocal[ 0 ] = 0;
-    pIndexLocal++;
-    status = MQTTV5_DeserializeConnack( &properties, &packetInfo, &session );
-    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
-    TEST_ASSERT_EQUAL_INT( 0, properties.retainAvailable );
 
-    /*Protocol error to have a value other than 0 or 1*/
-    packetInfo.remainingLength = 5;
-    pIndexLocal = &buffer[ 2 ];
-    propertyLength = encodeRemainingLength( pIndexLocal, 2 );
-    pIndexLocal++;
-    *pIndexLocal = MQTT_RETAIN_AVAILABLE_ID;
-    pIndexLocal++;
-    pIndexLocal[ 0 ] = 3;
-    pIndexLocal++;
-    status = MQTTV5_DeserializeConnack( &properties, &packetInfo, &session );
-    TEST_ASSERT_EQUAL_INT( MQTTProtocolError, status );
-
-    /*Protocol error to include the same property twice*/
-    packetInfo.remainingLength = 7;
-    pIndexLocal = &buffer[ 2 ];
-    propertyLength = encodeRemainingLength( pIndexLocal, 4 );
-    pIndexLocal++;
-    *pIndexLocal = MQTT_RETAIN_AVAILABLE_ID;
-    pIndexLocal++;
-    pIndexLocal[ 0 ] = 0;
-    pIndexLocal++;
-    *pIndexLocal = MQTT_RETAIN_AVAILABLE_ID;
-    pIndexLocal++;
-    pIndexLocal[ 0 ] = 0;
-    pIndexLocal++;
-    status = MQTTV5_DeserializeConnack( &properties, &packetInfo, &session );
-    TEST_ASSERT_EQUAL_INT( MQTTProtocolError, status );
-
-    /*Invalid property length*/
-    pIndexLocal = &buffer[ 2 ];
-    propertyLength = encodeRemainingLength( pIndexLocal, 1 );
-    packetInfo.remainingLength = propertyLength + 3;
-    pIndexLocal++;
-    *pIndexLocal = MQTT_RETAIN_AVAILABLE_ID;
-    pIndexLocal++;
-    pIndexLocal[ 0 ] = 0;
-    pIndexLocal++;
-    status = MQTTV5_DeserializeConnack( &properties, &packetInfo, &session );
-    TEST_ASSERT_EQUAL_INT( MQTTMalformedPacket, status );
-}
-void test_MQTT_GetUserPropertySize( void )
-{
-    MQTTUserProperty_t userProperty;
-    size_t l = 12;
-    size_t * length = &l;
-
-    memset( &userProperty, 0x0, sizeof( userProperty ) );
-    
-    userProperty.keyLength = 0;
-    status = MQTT_GetUserPropertySize( &userProperty, 1, length );
-    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
-}
-void test_MQTTV5_DeserializeConnackOnlyClientId( void )
+void test_MQTTV5_DeserializeConnackOnlyutf_8( void )
 {
     
     uint8_t buffer[ 200 ] = { 0 };
@@ -1568,472 +1481,26 @@ void test_MQTTV5_DeserializeConnackOnlyClientId( void )
     bool session = false;
     packetInfo.pRemainingData = buffer;
     packetInfo.type = MQTT_PACKET_TYPE_CONNACK;
-    packetInfo.remainingLength = 8;
     pIndexLocal = &buffer[ 2 ];
     properties.pIncomingUserProperty = &userProperties;
-    size_t propertyLength = encodeRemainingLength( pIndexLocal, 5 );
-    pIndexLocal++;
-    *pIndexLocal = MQTT_ASSIGNED_CLIENT_ID;
-    pIndexLocal++;
-    char * string = "ab";
-    size_t dummy = encodeString( pIndexLocal, string, 2 );
-    pIndexLocal = &pIndexLocal[ dummy ];
-    status = MQTTV5_DeserializeConnack( &properties, &packetInfo, &session );
-    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
-    TEST_ASSERT_EQUAL( pIndexLocal, properties.pClientIdentifier + 2 );
-
-    /*Protocol error to include the same property twice*/
-    packetInfo.remainingLength = 13;
-    pIndexLocal = &buffer[ 2 ];
-    propertyLength = encodeRemainingLength( pIndexLocal, 10 );
-    pIndexLocal++;
-    *pIndexLocal = MQTT_ASSIGNED_CLIENT_ID;
-    pIndexLocal++;
-    dummy = encodeString( pIndexLocal, string, 2 );
-    pIndexLocal = &pIndexLocal[ dummy ];
-    *pIndexLocal = MQTT_ASSIGNED_CLIENT_ID;
-    pIndexLocal++;
-    dummy = encodeString( pIndexLocal, string, 2 );
-    pIndexLocal++;
-    pIndexLocal = &pIndexLocal[ dummy ];
-    status = MQTTV5_DeserializeConnack( &properties, &packetInfo, &session );
-    TEST_ASSERT_EQUAL_INT( MQTTProtocolError, status );
-
-    /*Invalid property length*/
-    packetInfo.remainingLength = 7;
-    pIndexLocal = &buffer[ 2 ];
-    propertyLength = encodeRemainingLength( pIndexLocal, 4 );
-    pIndexLocal++;
-    *pIndexLocal = MQTT_ASSIGNED_CLIENT_ID;
-    pIndexLocal++;
-    dummy = encodeString( pIndexLocal, string, 2 );
-    pIndexLocal++;
-    pIndexLocal = &pIndexLocal[ dummy ];
-    status = MQTTV5_DeserializeConnack( &properties, &packetInfo, &session );
-    TEST_ASSERT_EQUAL_INT( MQTTMalformedPacket, status );
-
-    /*Invalid property length*/
-    pIndexLocal = &buffer[ 2 ];
-    propertyLength = encodeRemainingLength( pIndexLocal, 2 );
-    packetInfo.remainingLength = propertyLength + 4;
-    pIndexLocal++;
-    *pIndexLocal = MQTT_ASSIGNED_CLIENT_ID;
-    pIndexLocal++;
-    dummy = encodeString( pIndexLocal, string, 2 );
-    pIndexLocal = &pIndexLocal[ dummy ];
-    status = MQTTV5_DeserializeConnack( &properties, &packetInfo, &session );
-    TEST_ASSERT_EQUAL_INT( MQTTMalformedPacket, status );
-}
-void test_MQTTV5_DeserializeConnackOnlyTopicAlias( void )
-{
-    uint8_t buffer[ 200 ] = { 0 };
-    uint8_t * pIndexLocal = buffer;
-    buffer[ 0 ] = 0x01;
-    buffer[ 1 ] = 0x00;
-    bool session = false;
-    packetInfo.pRemainingData = buffer;
-    packetInfo.type = MQTT_PACKET_TYPE_CONNACK;
-    packetInfo.remainingLength = 6;
-    pIndexLocal = &buffer[ 2 ];
-    properties.pIncomingUserProperty = &userProperties;
-    size_t propertyLength = encodeRemainingLength( pIndexLocal, 3 );
-    pIndexLocal++;
-    *pIndexLocal = MQTT_TOPIC_ALIAS_MAX_ID;
-    pIndexLocal++;
-    pIndexLocal[ 0 ] = UINT16_HIGH_BYTE( 13 );
-    pIndexLocal[ 1 ] = UINT16_LOW_BYTE( 13 );
-    pIndexLocal = &pIndexLocal[ 2 ];
-    status = MQTTV5_DeserializeConnack( &properties, &packetInfo, &session );
-    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
-    TEST_ASSERT_EQUAL_INT( 13, properties.serverTopicAliasMax );
-
-    /*Protocol error to include the same property twice*/
-    packetInfo.remainingLength = 9;
-    pIndexLocal = &buffer[ 2 ];
-    propertyLength = encodeRemainingLength( pIndexLocal, 6 );
-    pIndexLocal++;
-    *pIndexLocal = MQTT_TOPIC_ALIAS_MAX_ID;
-    pIndexLocal++;
-    pIndexLocal[ 0 ] = UINT16_HIGH_BYTE( 13 );
-    pIndexLocal[ 1 ] = UINT16_LOW_BYTE( 13 );
-    pIndexLocal = &pIndexLocal[ 2 ];
-    *pIndexLocal = MQTT_TOPIC_ALIAS_MAX_ID;
-    pIndexLocal++;
-    pIndexLocal[ 0 ] = UINT16_HIGH_BYTE( 13 );
-    pIndexLocal[ 1 ] = UINT16_LOW_BYTE( 13 );
-    pIndexLocal = &pIndexLocal[ 2 ];
-    status = MQTTV5_DeserializeConnack( &properties, &packetInfo, &session );
-    TEST_ASSERT_EQUAL_INT( MQTTProtocolError, status );
-
-    /*Invalid property length*/
-    pIndexLocal = &buffer[ 2 ];
-    propertyLength = encodeRemainingLength( pIndexLocal, 2 );
-    packetInfo.remainingLength = propertyLength + 4;
-    pIndexLocal++;
-    *pIndexLocal = MQTT_TOPIC_ALIAS_MAX_ID;
-    pIndexLocal++;
-    pIndexLocal[ 0 ] = UINT16_HIGH_BYTE( 13 );
-    pIndexLocal[ 1 ] = UINT16_LOW_BYTE( 13 );
-    pIndexLocal = &pIndexLocal[ 2 ];
-    status = MQTTV5_DeserializeConnack( &properties, &packetInfo, &session );
-    TEST_ASSERT_EQUAL_INT( MQTTMalformedPacket, status );
-}
-
-void test_MQTTV5_DeserializeConnackOnlyWildCard( void )
-{
-    uint8_t buffer[ 200 ] = { 0 };
-    uint8_t * pIndexLocal = buffer;
-    buffer[ 0 ] = 0x01;
-    buffer[ 1 ] = 0x00;
-    bool session = false;
-    packetInfo.pRemainingData = buffer;
-    packetInfo.type = MQTT_PACKET_TYPE_CONNACK;
-    packetInfo.remainingLength = 5;
-    pIndexLocal = &buffer[ 2 ];
-    properties.pIncomingUserProperty = &userProperties;
-    size_t propertyLength = encodeRemainingLength( pIndexLocal, 2 );
-    pIndexLocal++;
-    *pIndexLocal = MQTT_WILDCARD_ID;
-    pIndexLocal++;
-    pIndexLocal[ 0 ] = 0;
-    pIndexLocal++;
-    status = MQTTV5_DeserializeConnack( &properties, &packetInfo, &session );
-    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
-    TEST_ASSERT_EQUAL_INT( 0, properties.isWildcardAvaiable );
-
-    /*Value more than 1 is not allowed*/
-    pIndexLocal = &buffer[ 2 ];
-    propertyLength = encodeRemainingLength( pIndexLocal, 2 );
-    pIndexLocal++;
-    *pIndexLocal = MQTT_WILDCARD_ID;
-    pIndexLocal++;
-    pIndexLocal[ 0 ] = 3;
-    pIndexLocal++;
-    status = MQTTV5_DeserializeConnack( &properties, &packetInfo, &session );
-    TEST_ASSERT_EQUAL_INT( MQTTProtocolError, status );
-
-    /*Protocol error to include the same property twice*/
-    packetInfo.remainingLength = 7;
-    pIndexLocal = &buffer[ 2 ];
-    propertyLength = encodeRemainingLength( pIndexLocal, 4 );
-    pIndexLocal++;
-    *pIndexLocal = MQTT_WILDCARD_ID;
-    pIndexLocal++;
-    pIndexLocal[ 0 ] = 0;
-    pIndexLocal++;
-    *pIndexLocal = MQTT_WILDCARD_ID;
-    pIndexLocal++;
-    pIndexLocal[ 0 ] = 0;
-    pIndexLocal++;
-    status = MQTTV5_DeserializeConnack( &properties, &packetInfo, &session );
-    TEST_ASSERT_EQUAL_INT( MQTTProtocolError, status );
-
-    /*Invalid property length*/
-    pIndexLocal = &buffer[ 2 ];
-    propertyLength = encodeRemainingLength( pIndexLocal, 1 );
-    packetInfo.remainingLength = propertyLength + 3;
-    pIndexLocal++;
-    *pIndexLocal = MQTT_WILDCARD_ID;
-    pIndexLocal++;
-    pIndexLocal[ 0 ] = 0;
-    pIndexLocal++;
-    status = MQTTV5_DeserializeConnack( &properties, &packetInfo, &session );
-    TEST_ASSERT_EQUAL_INT( MQTTMalformedPacket, status );
-}
-
-void test_MQTTV5_DeserializeConnackOnlyReasonString( void )
-{
-    uint8_t buffer[ 200 ] = { 0 };
-    uint8_t * pIndexLocal = buffer;
-    buffer[ 0 ] = 0x01;
-    buffer[ 1 ] = 0x00;
-    bool session = false;
-    packetInfo.pRemainingData = buffer;
-    packetInfo.type = MQTT_PACKET_TYPE_CONNACK;
-    packetInfo.remainingLength = 8;
-    pIndexLocal = &buffer[ 2 ];
-    properties.pIncomingUserProperty = &userProperties;
-    size_t propertyLength = encodeRemainingLength( pIndexLocal, 5 );
-    pIndexLocal++;
-    *pIndexLocal = MQTT_REASON_STRING_ID;
-    pIndexLocal++;
-    char * string = "ab";
-    size_t dummy = encodeString( pIndexLocal, string, 2 );
-    pIndexLocal = &pIndexLocal[ dummy ];
-    status = MQTTV5_DeserializeConnack( &properties, &packetInfo, &session );
-    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
-    TEST_ASSERT_EQUAL_INT( pIndexLocal, properties.pReasonString + 2 );
-
-    /*Protocol error to include the same property twice*/
-    packetInfo.remainingLength = 13;
-    pIndexLocal = &buffer[ 2 ];
-    propertyLength = encodeRemainingLength( pIndexLocal, 10 );
-    pIndexLocal++;
-    *pIndexLocal = MQTT_REASON_STRING_ID;
-    pIndexLocal++;
-    dummy = encodeString( pIndexLocal, string, 2 );
-    pIndexLocal = &pIndexLocal[ dummy ];
-    *pIndexLocal = MQTT_REASON_STRING_ID;
-    pIndexLocal++;
-    dummy = encodeString( pIndexLocal, string, 2 );
-    pIndexLocal = &pIndexLocal[ dummy ];
-    status = MQTTV5_DeserializeConnack( &properties, &packetInfo, &session );
-    TEST_ASSERT_EQUAL_INT( MQTTProtocolError, status );
-
-    /*Invalid property length*/
-    packetInfo.remainingLength = 7;
-    pIndexLocal = &buffer[ 2 ];
-    propertyLength = encodeRemainingLength( pIndexLocal, 4 );
-    pIndexLocal++;
-    *pIndexLocal = MQTT_REASON_STRING_ID;
-    pIndexLocal++;
-    dummy = encodeString( pIndexLocal, string, 2 );
-    pIndexLocal = &pIndexLocal[ dummy ];
-    status = MQTTV5_DeserializeConnack( &properties, &packetInfo, &session );
-    TEST_ASSERT_EQUAL_INT( MQTTMalformedPacket, status );
-
-    /*Invalid property length*/
-    pIndexLocal = &buffer[ 2 ];
-    propertyLength = encodeRemainingLength( pIndexLocal, 2 );
-    packetInfo.remainingLength = propertyLength + 4;
-    pIndexLocal++;
-    *pIndexLocal = MQTT_REASON_STRING_ID;
-    pIndexLocal++;
-    dummy = encodeString( pIndexLocal, string, 2 );
-    pIndexLocal = &pIndexLocal[ dummy ];
-    status = MQTTV5_DeserializeConnack( &properties, &packetInfo, &session );
-    TEST_ASSERT_EQUAL_INT( MQTTMalformedPacket, status );
-}
-
-void test_MQTTV5_DeserializeConnackOnlySUbId( void )
-{
-    uint8_t buffer[ 200 ] = { 0 };
-    uint8_t * pIndexLocal = buffer;
-    buffer[ 0 ] = 0x01;
-    buffer[ 1 ] = 0x00;
-
-    bool session = false;
-    packetInfo.pRemainingData = buffer;
-    packetInfo.type = MQTT_PACKET_TYPE_CONNACK;
-    packetInfo.remainingLength = 5;
-    pIndexLocal = &buffer[ 2 ];
-    properties.pIncomingUserProperty = &userProperties;
-    size_t propertyLength = encodeRemainingLength( pIndexLocal, 2 );
-    pIndexLocal++;
-    *pIndexLocal = MQTT_SUB_AVAILABLE_ID;
-    pIndexLocal++;
-    pIndexLocal[ 0 ] = 0;
-    pIndexLocal++;
-    status = MQTTV5_DeserializeConnack( &properties, &packetInfo, &session );
-    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
-    TEST_ASSERT_EQUAL_INT( 0, properties.subscriptionId );
-
-    /*Value more than 1 is not allowed*/
-    pIndexLocal = &buffer[ 2 ];
-    propertyLength = encodeRemainingLength( pIndexLocal, 2 );
-    pIndexLocal++;
-    *pIndexLocal = MQTT_SUB_AVAILABLE_ID;
-    pIndexLocal++;
-    pIndexLocal[ 0 ] = 3;
-    pIndexLocal++;
-    status = MQTTV5_DeserializeConnack( &properties, &packetInfo, &session );
-    TEST_ASSERT_EQUAL_INT( MQTTProtocolError, status );
-
-    /*Protocol error to include the same property twice*/
-    packetInfo.remainingLength = 7;
-    pIndexLocal = &buffer[ 2 ];
-    propertyLength = encodeRemainingLength( pIndexLocal, 4 );
-    pIndexLocal++;
-    *pIndexLocal = MQTT_SUB_AVAILABLE_ID;
-    pIndexLocal++;
-    pIndexLocal[ 0 ] = 0;
-    pIndexLocal++;
-    *pIndexLocal = MQTT_SUB_AVAILABLE_ID;
-    pIndexLocal++;
-    pIndexLocal[ 0 ] = 0;
-    pIndexLocal++;
-    status = MQTTV5_DeserializeConnack( &properties, &packetInfo, &session );
-    TEST_ASSERT_EQUAL_INT( MQTTProtocolError, status );
-
-    /*Invalid property length*/
-    pIndexLocal = &buffer[ 2 ];
-    propertyLength = encodeRemainingLength( pIndexLocal, 1 );
-    packetInfo.remainingLength = propertyLength + 3;
-    pIndexLocal++;
-    *pIndexLocal = MQTT_SUB_AVAILABLE_ID;
-    pIndexLocal++;
-    pIndexLocal[ 0 ] = 0;
-    pIndexLocal++;
-    status = MQTTV5_DeserializeConnack( &properties, &packetInfo, &session );
-    TEST_ASSERT_EQUAL_INT( MQTTMalformedPacket, status );
-}
-
-void test_MQTTV5_DeserializeConnackOnlySharedSub( void )
-{
-    uint8_t buffer[ 200 ] = { 0 };
-    uint8_t * pIndexLocal = buffer;
-    buffer[ 0 ] = 0x01;
-    buffer[ 1 ] = 0x00;
-
-    bool session = false;
-    packetInfo.pRemainingData = buffer;
-    packetInfo.type = MQTT_PACKET_TYPE_CONNACK;
-    packetInfo.remainingLength = 5;
-    pIndexLocal = &buffer[ 2 ];
-    properties.pIncomingUserProperty = &userProperties;
-    size_t propertyLength = encodeRemainingLength( pIndexLocal, 2 );
-    pIndexLocal++;
-    *pIndexLocal = MQTT_SHARED_SUB_ID;
-    pIndexLocal++;
-    pIndexLocal[ 0 ] = 0;
-    pIndexLocal++;
-    status = MQTTV5_DeserializeConnack( &properties, &packetInfo, &session );
-    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
-    TEST_ASSERT_EQUAL_INT( 0, properties.isSharedAvailable );
-
-    /*Value more than 1 is not allowed*/
-    pIndexLocal = &buffer[ 2 ];
-    propertyLength = encodeRemainingLength( pIndexLocal, 2 );
-    pIndexLocal++;
-    *pIndexLocal = MQTT_SHARED_SUB_ID;
-    pIndexLocal++;
-    pIndexLocal[ 0 ] = 3;
-    pIndexLocal++;
-    status = MQTTV5_DeserializeConnack( &properties, &packetInfo, &session );
-    TEST_ASSERT_EQUAL_INT( MQTTProtocolError, status );
-
-    /*Protocol error to include the same property twice*/
-    packetInfo.remainingLength = 7;
-    pIndexLocal = &buffer[ 2 ];
-    propertyLength = encodeRemainingLength( pIndexLocal, 4 );
-    pIndexLocal++;
-    *pIndexLocal = MQTT_SHARED_SUB_ID;
-    pIndexLocal++;
-    pIndexLocal[ 0 ] = 0;
-    pIndexLocal++;
-    *pIndexLocal = MQTT_SHARED_SUB_ID;
-    pIndexLocal++;
-    pIndexLocal[ 0 ] = 0;
-    pIndexLocal++;
-    status = MQTTV5_DeserializeConnack( &properties, &packetInfo, &session );
-    TEST_ASSERT_EQUAL_INT( MQTTProtocolError, status );
-
-    /*Invalid property length*/
-    pIndexLocal = &buffer[ 2 ];
-    propertyLength = encodeRemainingLength( pIndexLocal, 1 );
-    packetInfo.remainingLength = propertyLength + 3;
-    pIndexLocal++;
-    *pIndexLocal = MQTT_SHARED_SUB_ID;
-    pIndexLocal++;
-    pIndexLocal[ 0 ] = 0;
-    pIndexLocal++;
-    status = MQTTV5_DeserializeConnack( &properties, &packetInfo, &session );
-    TEST_ASSERT_EQUAL_INT( MQTTMalformedPacket, status );
-}
-void test_MQTTV5_DeserializeConnackOnlyKeepAlive( void )
-{
-    uint8_t buffer[ 200 ] = { 0 };
-    uint8_t * pIndexLocal = buffer;
-    buffer[ 0 ] = 0x01;
-    buffer[ 1 ] = 0x00;
-
-    bool session = false;
-    packetInfo.pRemainingData = buffer;
-    packetInfo.type = MQTT_PACKET_TYPE_CONNACK;
-    packetInfo.remainingLength = 6;
-    pIndexLocal = &buffer[ 2 ];
-    properties.pIncomingUserProperty = &userProperties;
-    size_t propertyLength = encodeRemainingLength( pIndexLocal, 3 );
-    pIndexLocal++;
-    *pIndexLocal = MQTT_SERVER_KEEP_ALIVE_ID;
-    pIndexLocal++;
-    pIndexLocal[ 0 ] = UINT16_HIGH_BYTE( 13 );
-    pIndexLocal[ 1 ] = UINT16_LOW_BYTE( 13 );
-    pIndexLocal = &pIndexLocal[ 2 ];
-    status = MQTTV5_DeserializeConnack( &properties, &packetInfo, &session );
-    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
-    TEST_ASSERT_EQUAL_INT( 13, properties.serverKeepAlive );
-
-    /*Protocol error to include the same property twice*/
-    packetInfo.remainingLength = 9;
-    pIndexLocal = &buffer[ 2 ];
-    propertyLength = encodeRemainingLength( pIndexLocal, 6 );
-    pIndexLocal++;
-    *pIndexLocal = MQTT_SERVER_KEEP_ALIVE_ID;
-    pIndexLocal++;
-    pIndexLocal[ 0 ] = UINT16_HIGH_BYTE( 13 );
-    pIndexLocal[ 1 ] = UINT16_LOW_BYTE( 13 );
-    pIndexLocal = &pIndexLocal[ 2 ];
-    *pIndexLocal = MQTT_SERVER_KEEP_ALIVE_ID;
-    pIndexLocal++;
-    pIndexLocal[ 0 ] = UINT16_HIGH_BYTE( 13 );
-    pIndexLocal[ 1 ] = UINT16_LOW_BYTE( 13 );
-    pIndexLocal = &pIndexLocal[ 2 ];
-    status = MQTTV5_DeserializeConnack( &properties, &packetInfo, &session );
-    TEST_ASSERT_EQUAL_INT( MQTTProtocolError, status );
-
-    /*Invalid property length*/
-    pIndexLocal = &buffer[ 2 ];
-    propertyLength = encodeRemainingLength( pIndexLocal, 2 );
-    packetInfo.remainingLength = propertyLength + 4;
-    pIndexLocal++;
-    *pIndexLocal = MQTT_SERVER_KEEP_ALIVE_ID;
-    pIndexLocal++;
-    pIndexLocal[ 0 ] = UINT16_HIGH_BYTE( 13 );
-    pIndexLocal[ 1 ] = UINT16_LOW_BYTE( 13 );
-    pIndexLocal = &pIndexLocal[ 2 ];
-    status = MQTTV5_DeserializeConnack( &properties, &packetInfo, &session );
-    TEST_ASSERT_EQUAL_INT( MQTTMalformedPacket, status );
-}
-
-void test_MQTTV5_DeserializeConnackOnlyResponseInfo( void )
-{
-    uint8_t buffer[ 200 ] = { 0 };
-    uint8_t * pIndexLocal = buffer;
-    buffer[ 0 ] = 0x01;
-    buffer[ 1 ] = 0x00;
-
-    bool session = false;
-    packetInfo.pRemainingData = buffer;
-    packetInfo.type = MQTT_PACKET_TYPE_CONNACK;
-    packetInfo.remainingLength = 8;
-    pIndexLocal = &buffer[ 2 ];
-    properties.pIncomingUserProperty = &userProperties;
-    size_t propertyLength = encodeRemainingLength( pIndexLocal, 5 );
-    pIndexLocal++;
-    *pIndexLocal = MQTT_RESPONSE_INFO_ID;
-    pIndexLocal++;
-    char * string = "ab";
-    size_t dummy = encodeString( pIndexLocal, string, 2 );
-    pIndexLocal = &pIndexLocal[ dummy ];
-    status = MQTTV5_DeserializeConnack( &properties, &packetInfo, &session );
-    TEST_ASSERT_EQUAL_INT( MQTTProtocolError, status );
-
-    packetInfo.remainingLength = 8;
     properties.requestResponseInfo = 1;
-    pIndexLocal = &buffer[ 2 ];
-    propertyLength = encodeRemainingLength( pIndexLocal, 5 );
+    size_t propertyLength = encodeRemainingLength( pIndexLocal, 28 );
+    packetInfo.remainingLength = propertyLength + 28 + 2;
     pIndexLocal++;
-    *pIndexLocal = MQTT_RESPONSE_INFO_ID;
-    pIndexLocal++;
-    dummy = encodeString( pIndexLocal, string, 2 );
-    pIndexLocal = &pIndexLocal[ dummy ];
+    pIndexLocal = serializeutf_8(pIndexLocal,MQTT_ASSIGNED_CLIENT_ID);
+    pIndexLocal = serializeutf_8(pIndexLocal,MQTT_REASON_STRING_ID);
+    pIndexLocal = serializeutf_8(pIndexLocal,MQTT_RESPONSE_INFO_ID);
+    pIndexLocal = serializeutf_8(pIndexLocal,MQTT_SERVER_REF_ID);
     status = MQTTV5_DeserializeConnack( &properties, &packetInfo, &session );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
 
     /*Protocol error to include the same property twice*/
-    packetInfo.remainingLength = 13;
+    packetInfo.remainingLength = 17;
     pIndexLocal = &buffer[ 2 ];
-    propertyLength = encodeRemainingLength( pIndexLocal, 10 );
+    propertyLength = encodeRemainingLength( pIndexLocal, 14 );
     pIndexLocal++;
-    *pIndexLocal = MQTT_RESPONSE_INFO_ID;
-    pIndexLocal++;
-    dummy = encodeString( pIndexLocal, string, 2 );
-    pIndexLocal = &pIndexLocal[ dummy ];
-    *pIndexLocal = MQTT_RESPONSE_INFO_ID;
-    pIndexLocal++;
-    dummy = encodeString( pIndexLocal, string, 2 );
-    pIndexLocal = &pIndexLocal[ dummy ];
+    pIndexLocal = serializeutf_8(pIndexLocal,MQTT_ASSIGNED_CLIENT_ID);
+    pIndexLocal = serializeutf_8(pIndexLocal,MQTT_ASSIGNED_CLIENT_ID);
     status = MQTTV5_DeserializeConnack( &properties, &packetInfo, &session );
     TEST_ASSERT_EQUAL_INT( MQTTProtocolError, status );
 
@@ -2042,10 +1509,7 @@ void test_MQTTV5_DeserializeConnackOnlyResponseInfo( void )
     pIndexLocal = &buffer[ 2 ];
     propertyLength = encodeRemainingLength( pIndexLocal, 4 );
     pIndexLocal++;
-    *pIndexLocal = MQTT_RESPONSE_INFO_ID;
-    pIndexLocal++;
-    dummy = encodeString( pIndexLocal, string, 2 );
-    pIndexLocal = &pIndexLocal[ dummy ];
+    pIndexLocal = serializeutf_8(pIndexLocal,MQTT_ASSIGNED_CLIENT_ID);
     status = MQTTV5_DeserializeConnack( &properties, &packetInfo, &session );
     TEST_ASSERT_EQUAL_INT( MQTTMalformedPacket, status );
 
@@ -2054,18 +1518,26 @@ void test_MQTTV5_DeserializeConnackOnlyResponseInfo( void )
     propertyLength = encodeRemainingLength( pIndexLocal, 2 );
     packetInfo.remainingLength = propertyLength + 4;
     pIndexLocal++;
-    *pIndexLocal = MQTT_RESPONSE_INFO_ID;
-    pIndexLocal++;
-    dummy = encodeString( pIndexLocal, string, 2 );
-    pIndexLocal = &pIndexLocal[ dummy ];
+    serializeutf_8(pIndexLocal,MQTT_ASSIGNED_CLIENT_ID);
     status = MQTTV5_DeserializeConnack( &properties, &packetInfo, &session );
     TEST_ASSERT_EQUAL_INT( MQTTMalformedPacket, status );
+
+    /*Protocol error to include response information if is is set to false by client*/
+    properties.requestResponseInfo = 0;
+    packetInfo.remainingLength = 10;
+    pIndexLocal = &buffer[ 2 ];
+    propertyLength = encodeRemainingLength( pIndexLocal, 7);
+    pIndexLocal++;
+    pIndexLocal = serializeutf_8(pIndexLocal,MQTT_RESPONSE_INFO_ID);
+    status = MQTTV5_DeserializeConnack( &properties, &packetInfo, &session );
+    TEST_ASSERT_EQUAL_INT( MQTTProtocolError, status );
 }
+
 
 void test_MQTTV5_DeserializeConnackOnlyUserProperty( void )
 {
     properties.pIncomingUserProperty = &userProperties;
-    uint8_t buffer[ 60000 ] = { 0 };
+    uint8_t buffer[ 70000 ] = { 0 };
     uint8_t * pIndexLocal = buffer;
     buffer[ 0 ] = 0x01;
     buffer[ 1 ] = 0x00;
@@ -2073,35 +1545,23 @@ void test_MQTTV5_DeserializeConnackOnlyUserProperty( void )
     bool session = false;
     packetInfo.pRemainingData = buffer;
     packetInfo.type = MQTT_PACKET_TYPE_CONNACK;
-    packetInfo.remainingLength = 13;
+    packetInfo.remainingLength = 16;
     pIndexLocal = &buffer[ 2 ];
-    size_t propertyLength = encodeRemainingLength( pIndexLocal, 10 );
+    size_t propertyLength = encodeRemainingLength( pIndexLocal, 13 );
     pIndexLocal++;
-    *pIndexLocal = MQTT_USER_PROPERTY_ID;
-    pIndexLocal++;
-    char * string = "ab";
-    char * string2 = "abc";
-    size_t dummy = encodeString( pIndexLocal, string, 2 );
-    pIndexLocal = &pIndexLocal[ dummy ];
-    size_t dummy2 = encodeString( pIndexLocal, string2, 3 );
-    pIndexLocal = &pIndexLocal[ dummy2 ];
+    pIndexLocal = serializeutf_8pair(pIndexLocal);
     status = MQTTV5_DeserializeConnack( &properties, &packetInfo, &session );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
     TEST_ASSERT_EQUAL( 1, properties.pIncomingUserProperty->count );
-    TEST_ASSERT_EQUAL( 3, ( properties.pIncomingUserProperty->userProperty[ 0 ].valueLength ) );
-    TEST_ASSERT_EQUAL( 2, ( properties.pIncomingUserProperty->userProperty[ 0 ].keyLength ) );
+    TEST_ASSERT_EQUAL( MQTT_TEST_UTF8_STRING_LENGTH, ( properties.pIncomingUserProperty->userProperty[ 0 ].valueLength ) );
+    TEST_ASSERT_EQUAL( MQTT_TEST_UTF8_STRING_LENGTH, ( properties.pIncomingUserProperty->userProperty[ 0 ].keyLength ) );
 
     /*Invalid property length*/
     packetInfo.remainingLength = 5;
     pIndexLocal = &buffer[ 2 ];
     propertyLength = encodeRemainingLength( pIndexLocal, 2 );
     pIndexLocal++;
-    *pIndexLocal = MQTT_USER_PROPERTY_ID;
-    pIndexLocal++;
-    dummy = encodeString( pIndexLocal, string, 2 );
-    pIndexLocal = &pIndexLocal[ dummy ];
-    dummy2 = encodeString( pIndexLocal, string2, 3 );
-    pIndexLocal = &pIndexLocal[ dummy2 ];
+    pIndexLocal = serializeutf_8pair(pIndexLocal);
     status = MQTTV5_DeserializeConnack( &properties, &packetInfo, &session );
     TEST_ASSERT_EQUAL_INT( MQTTMalformedPacket, status );
 
@@ -2110,149 +1570,60 @@ void test_MQTTV5_DeserializeConnackOnlyUserProperty( void )
     pIndexLocal = &buffer[ 2 ];
     propertyLength = encodeRemainingLength( pIndexLocal, 3 );
     pIndexLocal++;
-    *pIndexLocal = MQTT_USER_PROPERTY_ID;
-    pIndexLocal++;
-    dummy = encodeString( pIndexLocal, string, 2 );
-    pIndexLocal = &pIndexLocal[ dummy ];
-    dummy2 = encodeString( pIndexLocal, string2, 3 );
-    pIndexLocal = &pIndexLocal[ dummy2 ];
+    pIndexLocal = serializeutf_8pair(pIndexLocal);
     status = MQTTV5_DeserializeConnack( &properties, &packetInfo, &session );
     TEST_ASSERT_EQUAL_INT( MQTTMalformedPacket, status );
 
     /*Invalid property length*/
     pIndexLocal = &buffer[ 2 ];
-    propertyLength = encodeRemainingLength( pIndexLocal, 9 );
-    packetInfo.remainingLength = propertyLength + 11;
+    propertyLength = encodeRemainingLength( pIndexLocal, 8 );
+    packetInfo.remainingLength = propertyLength + 10;
     pIndexLocal++;
-    *pIndexLocal = MQTT_USER_PROPERTY_ID;
-    pIndexLocal++;
-    dummy = encodeString( pIndexLocal, string, 2 );
-    pIndexLocal = &pIndexLocal[ dummy ];
-    dummy2 = encodeString( pIndexLocal, string2, 3 );
-    pIndexLocal = &pIndexLocal[ dummy2 ];
+    pIndexLocal = serializeutf_8pair(pIndexLocal);
     status = MQTTV5_DeserializeConnack( &properties, &packetInfo, &session );
     TEST_ASSERT_EQUAL_INT( MQTTMalformedPacket, status );
 
     /*Invalid property length*/
-    packetInfo.remainingLength = 9;
+    packetInfo.remainingLength = 15;
     pIndexLocal = &buffer[ 2 ];
-    propertyLength = encodeRemainingLength( pIndexLocal, 6 );
+    propertyLength = encodeRemainingLength( pIndexLocal, 12 );
     pIndexLocal++;
-    *pIndexLocal = MQTT_USER_PROPERTY_ID;
-    pIndexLocal++;
-    dummy = encodeString( pIndexLocal, string, 2 );
-    pIndexLocal = &pIndexLocal[ dummy ];
-    dummy2 = encodeString( pIndexLocal, string2, 3 );
-    pIndexLocal = &pIndexLocal[ dummy2 ];
+    pIndexLocal = serializeutf_8pair(pIndexLocal);
     status = MQTTV5_DeserializeConnack( &properties, &packetInfo, &session );
     TEST_ASSERT_EQUAL_INT( MQTTMalformedPacket, status );
 
     /*Discard user property*/
-    packetInfo.remainingLength = 50015;
+    packetInfo.remainingLength = 65018;
     pIndexLocal = &buffer[ 2 ];
-    propertyLength = encodeRemainingLength( pIndexLocal, 50010 );
+    propertyLength = encodeRemainingLength( pIndexLocal, 65013 );
     pIndexLocal += 3;
     uint32_t i = 0U;
 
     for( ; i < 5001; i++ )
     {
-        *pIndexLocal = MQTT_USER_PROPERTY_ID;
-        pIndexLocal++;
-        size_t dummy = encodeString( pIndexLocal, string, 2 );
-        pIndexLocal = &pIndexLocal[ dummy ];
-        size_t dummy2 = encodeString( pIndexLocal, string2, 3 );
-        pIndexLocal = &pIndexLocal[ dummy2 ];
+    pIndexLocal = serializeutf_8pair(pIndexLocal);
     }
 
     status = MQTTV5_DeserializeConnack( &properties, &packetInfo, &session );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
 
-    packetInfo.remainingLength = 50014;
+    packetInfo.remainingLength = 65017;
     pIndexLocal = &buffer[ 2 ];
-    propertyLength = encodeRemainingLength( pIndexLocal, 50009 );
+    propertyLength = encodeRemainingLength( pIndexLocal, 65012 );
     pIndexLocal += 3;
 
     for( ; i < 5001; i++ )
     {
-        *pIndexLocal = MQTT_USER_PROPERTY_ID;
-        pIndexLocal++;
-        size_t dummy = encodeString( pIndexLocal, string, 2 );
-        pIndexLocal = &pIndexLocal[ dummy ];
-        size_t dummy2 = encodeString( pIndexLocal, string2, 3 );
-        pIndexLocal = &pIndexLocal[ dummy2 ];
+    pIndexLocal = serializeutf_8pair(pIndexLocal);
     }
 
     status = MQTTV5_DeserializeConnack( &properties, &packetInfo, &session );
     TEST_ASSERT_EQUAL_INT( MQTTMalformedPacket, status );
 }
 
-void test_MQTTV5_DeserializeConnackOnlyServerRef( void )
-{
-    uint8_t buffer[ 200 ] = { 0 };
-    uint8_t * pIndexLocal = buffer;
-    buffer[ 0 ] = 0x01;
-    buffer[ 1 ] = 0x00;
 
-    bool session = false;
-    packetInfo.pRemainingData = buffer;
-    packetInfo.type = MQTT_PACKET_TYPE_CONNACK;
-    packetInfo.remainingLength = 8;
-    pIndexLocal = &buffer[ 2 ];
-    properties.pIncomingUserProperty = &userProperties;
-    size_t propertyLength = encodeRemainingLength( pIndexLocal, 5 );
-    pIndexLocal++;
-    *pIndexLocal = MQTT_SERVER_REF_ID;
-    pIndexLocal++;
-    char * string = "ab";
-    size_t dummy = encodeString( pIndexLocal, string, 2 );
-    pIndexLocal = &pIndexLocal[ dummy ];
-    status = MQTTV5_DeserializeConnack( &properties, &packetInfo, &session );
-    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
-    TEST_ASSERT_EQUAL( 2, properties.serverRefLength );
-    TEST_ASSERT_EQUAL( pIndexLocal, properties.pServerRef + 2 );
 
-    /*Protocol error to include the same property twice*/
-    pIndexLocal = &buffer[ 2 ];
-    propertyLength = encodeRemainingLength( pIndexLocal, 10 );
-    packetInfo.remainingLength = propertyLength + 12;
-    pIndexLocal++;
-    *pIndexLocal = MQTT_SERVER_REF_ID;
-    pIndexLocal++;
-    dummy = encodeString( pIndexLocal, string, 2 );
-    pIndexLocal = &pIndexLocal[ dummy ];
-    *pIndexLocal = MQTT_SERVER_REF_ID;
-    pIndexLocal++;
-    dummy = encodeString( pIndexLocal, string, 2 );
-    pIndexLocal = &pIndexLocal[ dummy ];
-    status = MQTTV5_DeserializeConnack( &properties, &packetInfo, &session );
-    TEST_ASSERT_EQUAL_INT( MQTTProtocolError, status );
-
-    /*Invalid property length*/
-    packetInfo.remainingLength = 7;
-    pIndexLocal = &buffer[ 2 ];
-    propertyLength = encodeRemainingLength( pIndexLocal, 4 );
-    pIndexLocal++;
-    *pIndexLocal = MQTT_SERVER_REF_ID;
-    pIndexLocal++;
-    dummy = encodeString( pIndexLocal, string, 2 );
-    pIndexLocal = &pIndexLocal[ dummy ];
-    status = MQTTV5_DeserializeConnack( &properties, &packetInfo, &session );
-    TEST_ASSERT_EQUAL_INT( MQTTMalformedPacket, status );
-
-    /*Invalid property length*/
-    packetInfo.remainingLength = 5;
-    pIndexLocal = &buffer[ 2 ];
-    propertyLength = encodeRemainingLength( pIndexLocal, 2 );
-    pIndexLocal++;
-    *pIndexLocal = MQTT_SERVER_REF_ID;
-    pIndexLocal++;
-    dummy = encodeString( pIndexLocal, string, 2 );
-    pIndexLocal = &pIndexLocal[ dummy ];
-    status = MQTTV5_DeserializeConnack( &properties, &packetInfo, &session );
-    TEST_ASSERT_EQUAL_INT( MQTTMalformedPacket, status );
-}
-
-void test_MQTTV5_DeserializeConnackOnlyAuthMethod( void )
+void test_MQTTV5_DeserializeConnackOnlyAuthInfo( void )
 {
     MQTTAuthInfo_t auth;
     MQTTAuthInfo_t auth1;
@@ -2266,143 +1637,27 @@ void test_MQTTV5_DeserializeConnackOnlyAuthMethod( void )
     bool session = false;
     packetInfo.pRemainingData = buffer;
     packetInfo.type = MQTT_PACKET_TYPE_CONNACK;
-    packetInfo.remainingLength = 8;
+    packetInfo.remainingLength = 17;
     pIndexLocal = &buffer[ 2 ];
     properties.pIncomingUserProperty = &userProperties;
-    size_t propertyLength = encodeRemainingLength( pIndexLocal, 5 );
+    size_t propertyLength = encodeRemainingLength( pIndexLocal, 14 );
     pIndexLocal++;
-    *pIndexLocal = MQTT_AUTH_METHOD_ID;
-    pIndexLocal++;
-    char * string = "ab";
-    size_t dummy = encodeString( pIndexLocal, string, 2 );
-    pIndexLocal = &pIndexLocal[ dummy ];
+    pIndexLocal = serializeutf_8(pIndexLocal,MQTT_AUTH_METHOD_ID);
+    pIndexLocal = serializeutf_8(pIndexLocal,MQTT_AUTH_DATA_ID);
     status = MQTTV5_DeserializeConnack( &properties, &packetInfo, &session );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
-    TEST_ASSERT_EQUAL( 2, properties.pIncomingAuth->authMethodLength );
+    TEST_ASSERT_EQUAL( MQTT_TEST_UTF8_STRING_LENGTH, properties.pIncomingAuth->authMethodLength );
+    TEST_ASSERT_EQUAL( MQTT_TEST_UTF8_STRING_LENGTH, properties.pIncomingAuth->authDataLength );
+    
 
     /*Outgoing auth is null*/
     properties.pOutgoingAuth = NULL;
     status = MQTTV5_DeserializeConnack( &properties, &packetInfo, &session );
     TEST_ASSERT_EQUAL_INT( MQTTProtocolError, status );
 
-    /*Protocol error to include auth method more than once*/
-    properties.pOutgoingAuth = &auth;
-    packetInfo.remainingLength = 13;
-    pIndexLocal = &buffer[ 2 ];
-    propertyLength = encodeRemainingLength( pIndexLocal, 10 );
-    pIndexLocal++;
-    *pIndexLocal = MQTT_AUTH_METHOD_ID;
-    pIndexLocal++;
-    dummy = encodeString( pIndexLocal, string, 2 );
-    pIndexLocal = &pIndexLocal[ dummy ];
-    *pIndexLocal = MQTT_AUTH_METHOD_ID;
-    pIndexLocal++;
-    dummy = encodeString( pIndexLocal, string, 2 );
-    pIndexLocal = &pIndexLocal[ dummy ];
-    status = MQTTV5_DeserializeConnack( &properties, &packetInfo, &session );
-    TEST_ASSERT_EQUAL_INT( MQTTProtocolError, status );
 
-    /*Invalid property length*/
-    packetInfo.remainingLength = 5;
-    pIndexLocal = &buffer[ 2 ];
-    propertyLength = encodeRemainingLength( pIndexLocal, 2 );
-    pIndexLocal++;
-    *pIndexLocal = MQTT_AUTH_METHOD_ID;
-    pIndexLocal++;
-    dummy = encodeString( pIndexLocal, string, 2 );
-    pIndexLocal = &pIndexLocal[ dummy ];
-    status = MQTTV5_DeserializeConnack( &properties, &packetInfo, &session );
-    TEST_ASSERT_EQUAL_INT( MQTTMalformedPacket, status );
-
-    /*Invalid property length*/
-    pIndexLocal = &buffer[ 2 ];
-    propertyLength = encodeRemainingLength( pIndexLocal, 4 );
-    packetInfo.remainingLength = propertyLength + 6;
-    pIndexLocal++;
-    *pIndexLocal = MQTT_AUTH_METHOD_ID;
-    pIndexLocal++;
-    dummy = encodeString( pIndexLocal, string, 2 );
-    pIndexLocal = &pIndexLocal[ dummy ];
-    status = MQTTV5_DeserializeConnack( &properties, &packetInfo, &session );
-    TEST_ASSERT_EQUAL_INT( MQTTMalformedPacket, status );
 }
 
-void test_MQTTV5_DeserializeConnackOnlyAuthData( void )
-{
-    MQTTAuthInfo_t auth;
-    MQTTAuthInfo_t auth1;
-    properties.pIncomingAuth = &auth;
-    properties.pOutgoingAuth = &auth1;
-    uint8_t buffer[ 200 ] = { 0 };
-    uint8_t * pIndexLocal = buffer;
-    buffer[ 0 ] = 0x01;
-    buffer[ 1 ] = 0x00;
-
-    bool session = false;
-    packetInfo.pRemainingData = buffer;
-    packetInfo.type = MQTT_PACKET_TYPE_CONNACK;
-    packetInfo.remainingLength = 8;
-    pIndexLocal = &buffer[ 2 ];
-    properties.pIncomingUserProperty = &userProperties;
-    size_t propertyLength = encodeRemainingLength( pIndexLocal, 5 );
-    pIndexLocal++;
-    *pIndexLocal = MQTT_AUTH_DATA_ID;
-    pIndexLocal++;
-    char * string = "ab";
-    size_t dummy = encodeString( pIndexLocal, string, 2 );
-    pIndexLocal = &pIndexLocal[ dummy ];
-    status = MQTTV5_DeserializeConnack( &properties, &packetInfo, &session );
-    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
-    TEST_ASSERT_EQUAL( 2, properties.pIncomingAuth->authDataLength );
-
-    /*Outgoing auth is null*/
-    properties.pOutgoingAuth = NULL;
-    status = MQTTV5_DeserializeConnack( &properties, &packetInfo, &session );
-    TEST_ASSERT_EQUAL_INT( MQTTProtocolError, status );
-
-    /*Protocol error to include auth method more than once*/
-    properties.pOutgoingAuth = &auth1;
-    packetInfo.remainingLength = 13;
-    pIndexLocal = &buffer[ 2 ];
-    propertyLength = encodeRemainingLength( pIndexLocal, 10 );
-    pIndexLocal++;
-    *pIndexLocal = MQTT_AUTH_DATA_ID;
-    pIndexLocal++;
-    dummy = encodeString( pIndexLocal, string, 2 );
-    pIndexLocal = &pIndexLocal[ dummy ];
-    *pIndexLocal = MQTT_AUTH_DATA_ID;
-    pIndexLocal++;
-    dummy = encodeString( pIndexLocal, string, 2 );
-    pIndexLocal = &pIndexLocal[ dummy ];
-    status = MQTTV5_DeserializeConnack( &properties, &packetInfo, &session );
-    TEST_ASSERT_EQUAL_INT( MQTTProtocolError, status );
-
-    /*Invalid property length*/
-    packetInfo.remainingLength = 5;
-    pIndexLocal = &buffer[ 2 ];
-    propertyLength = encodeRemainingLength( pIndexLocal, 2 );
-    pIndexLocal++;
-    *pIndexLocal = MQTT_AUTH_DATA_ID;
-    pIndexLocal++;
-    string = "ab";
-    dummy = encodeString( pIndexLocal, string, 2 );
-    pIndexLocal = &pIndexLocal[ dummy ];
-    status = MQTTV5_DeserializeConnack( &properties, &packetInfo, &session );
-    TEST_ASSERT_EQUAL_INT( MQTTMalformedPacket, status );
-
-    /*Invalid property length*/
-    packetInfo.remainingLength = 7;
-    pIndexLocal = &buffer[ 2 ];
-    propertyLength = encodeRemainingLength( pIndexLocal, 4 );
-    packetInfo.remainingLength = propertyLength + 6;
-    pIndexLocal++;
-    *pIndexLocal = MQTT_AUTH_DATA_ID;
-    pIndexLocal++;
-    dummy = encodeString( pIndexLocal, string, 2 );
-    pIndexLocal = &pIndexLocal[ dummy ];
-    status = MQTTV5_DeserializeConnack( &properties, &packetInfo, &session );
-    TEST_ASSERT_EQUAL_INT( MQTTMalformedPacket, status );
-}
 
 void test_MQTTV5_GetConnectPacketSize( void )
 {
@@ -2696,7 +1951,7 @@ void test_MQTTV5_GetConnectPacketSize( void )
     status = MQTTV5_GetConnectPacketSize( &connectInfo, &publishInfo, &properties, &remainingLength, &packetSize );
     TEST_ASSERT_EQUAL( MQTTBadParameter, status );
 
-    publishInfo.pContentType = "ab";
+    publishInfo.pContentType = MQTT_TEST_UTF8_STRING;
     status = MQTTV5_GetConnectPacketSize( &connectInfo, &publishInfo, &properties, &remainingLength, &packetSize );
     TEST_ASSERT_EQUAL( MQTTSuccess, status );
     TEST_ASSERT_EQUAL_size_t( 17, publishInfo.propertyLength );
@@ -2705,7 +1960,7 @@ void test_MQTTV5_GetConnectPacketSize( void )
     status = MQTTV5_GetConnectPacketSize( &connectInfo, &publishInfo, &properties, &remainingLength, &packetSize );
     TEST_ASSERT_EQUAL( MQTTBadParameter, status );
 
-    publishInfo.pResponseTopic = "ab";
+    publishInfo.pResponseTopic = MQTT_TEST_UTF8_STRING;
     status = MQTTV5_GetConnectPacketSize( &connectInfo, &publishInfo, &properties, &remainingLength, &packetSize );
     TEST_ASSERT_EQUAL( MQTTSuccess, status );
     TEST_ASSERT_EQUAL_size_t( 22, publishInfo.propertyLength );
@@ -2714,7 +1969,7 @@ void test_MQTTV5_GetConnectPacketSize( void )
     status = MQTTV5_GetConnectPacketSize( &connectInfo, &publishInfo, &properties, &remainingLength, &packetSize );
     TEST_ASSERT_EQUAL( MQTTBadParameter, status );
 
-    publishInfo.pCorrelationData = "ab";
+    publishInfo.pCorrelationData = MQTT_TEST_UTF8_STRING;
     status = MQTTV5_GetConnectPacketSize( &connectInfo, &publishInfo, &properties, &remainingLength, &packetSize );
     TEST_ASSERT_EQUAL( MQTTSuccess, status );
     TEST_ASSERT_EQUAL_size_t( 27, publishInfo.propertyLength );
@@ -2727,7 +1982,7 @@ void test_MQTTV5_GetConnectPacketSize( void )
     userProperties1.userProperty[ 1 ].pKey = "2";
     userProperties1.userProperty[ 1 ].keyLength = 1;
     userProperties1.userProperty[ 1 ].valueLength = 2;
-    userProperties1.userProperty[ 1 ].pValue = "ab";
+    userProperties1.userProperty[ 1 ].pValue = MQTT_TEST_UTF8_STRING;
     userProperties1.count = 2;
     publishInfo.pUserProperty = &userProperties1;
     status = MQTT_GetPublishPropertiesSize( &publishInfo );
@@ -2740,11 +1995,11 @@ void test_MQTTV5_GetConnectPacketSize( void )
     publishInfo.msgExpiryPresent = 1;
     publishInfo.msgExpiryInterval = 10;
     publishInfo.contentTypeLength = 2;
-    publishInfo.pContentType = "ab";
+    publishInfo.pContentType = MQTT_TEST_UTF8_STRING;
     publishInfo.responseTopicLength = 2;
-    publishInfo.pResponseTopic = "ab";
+    publishInfo.pResponseTopic = MQTT_TEST_UTF8_STRING;
     publishInfo.correlationLength = 2;
-    publishInfo.pCorrelationData = "ab";
+    publishInfo.pCorrelationData = MQTT_TEST_UTF8_STRING;
     publishInfo.willDelay = 3;
     /* 34 + 12 + 29 */
     status = MQTTV5_GetConnectPacketSize( &connectInfo, &publishInfo, &properties, &remainingLength, &packetSize );
@@ -2942,7 +2197,7 @@ void test_MQTTV5_SerializeConnect( void )
     properties.requestProblemInfo = 0;
     MQTTAuthInfo_t auth;
     memset( &auth, 0x0, sizeof( auth ) );
-    auth.pAuthMethod = "ab";
+    auth.pAuthMethod = MQTT_TEST_UTF8_STRING;
     auth.authMethodLength = 2;
     auth.pAuthData = "abc";
     auth.authDataLength = 3;
@@ -2993,12 +2248,12 @@ void test_MQTTV5_SerializeConnect( void )
     publishInfo.msgExpiryInterval = 10;
     publishInfo.msgExpiryPresent = 1;
     publishInfo.msgExpiryInterval = 10;
-    publishInfo.contentTypeLength = 2;
-    publishInfo.pContentType = "ab";
-    publishInfo.responseTopicLength = 2;
-    publishInfo.pResponseTopic = "ab";
-    publishInfo.correlationLength = 2;
-    publishInfo.pCorrelationData = "ab";
+    publishInfo.contentTypeLength = MQTT_TEST_UTF8_STRING_LENGTH;
+    publishInfo.pContentType = MQTT_TEST_UTF8_STRING;
+    publishInfo.responseTopicLength = MQTT_TEST_UTF8_STRING_LENGTH;
+    publishInfo.pResponseTopic = MQTT_TEST_UTF8_STRING;
+    publishInfo.correlationLength = MQTT_TEST_UTF8_STRING_LENGTH;
+    publishInfo.pCorrelationData = MQTT_TEST_UTF8_STRING;
     publishInfo.willDelay = 3;
     publishInfo.pUserProperty = &userProperties;
     /* 27 */
@@ -3037,12 +2292,12 @@ void test_MQTTV5_SerializeConnect_Happy_Paths()
     publishInfo.msgExpiryInterval = 10;
     publishInfo.msgExpiryPresent = 1;
     publishInfo.msgExpiryInterval = 10;
-    publishInfo.contentTypeLength = 2;
-    publishInfo.pContentType = "ab";
-    publishInfo.responseTopicLength = 2;
-    publishInfo.pResponseTopic = "ab";
-    publishInfo.correlationLength = 2;
-    publishInfo.pCorrelationData = "ab";
+    publishInfo.contentTypeLength = MQTT_TEST_UTF8_STRING_LENGTH;
+    publishInfo.pContentType = MQTT_TEST_UTF8_STRING;
+    publishInfo.responseTopicLength = MQTT_TEST_UTF8_STRING_LENGTH;
+    publishInfo.pResponseTopic = MQTT_TEST_UTF8_STRING;
+    publishInfo.correlationLength = MQTT_TEST_UTF8_STRING_LENGTH;
+    publishInfo.pCorrelationData = MQTT_TEST_UTF8_STRING;
     publishInfo.willDelay = 3;
     /* Fill structs to pass into methods to be tested. */
     setupNetworkBuffer( &networkBuffer );
@@ -3147,12 +2402,12 @@ void test_WillLimit( void )
     publishInfo.payloadFormat = 1;
     publishInfo.msgExpiryPresent = 1;
     publishInfo.msgExpiryInterval = 10;
-    publishInfo.contentTypeLength = 2;
-    publishInfo.pContentType = "ab";
-    publishInfo.responseTopicLength = 2;
-    publishInfo.pResponseTopic = "ab";
-    publishInfo.correlationLength = 2;
-    publishInfo.pCorrelationData = "ab";
+    publishInfo.contentTypeLength = MQTT_TEST_UTF8_STRING_LENGTH;
+    publishInfo.pContentType = MQTT_TEST_UTF8_STRING;
+    publishInfo.responseTopicLength = MQTT_TEST_UTF8_STRING_LENGTH ;
+    publishInfo.pResponseTopic = MQTT_TEST_UTF8_STRING;
+    publishInfo.correlationLength = MQTT_TEST_UTF8_STRING_LENGTH;
+    publishInfo.pCorrelationData = MQTT_TEST_UTF8_STRING;
     publishInfo.willDelay = 3;
     uint16_t i = 0;
     char str[ 65535 ];
@@ -3176,8 +2431,49 @@ void test_WillLimit( void )
 
     publishInfo.topicNameLength = 0U;
     publishInfo.topicAlias = 1U;
-    status = MQTTV5_GetPublishPacketSize(&publishInfo,&remainingLength,&packetSize,22,MQTT_MAX_REMAINING_LENGTH,1);
+    status = MQTTV5_GetPublishPacketSize(&publishInfo,&remainingLength,&packetSize,MQTT_MAX_REMAINING_LENGTH);
     TEST_ASSERT_EQUAL( MQTTBadParameter, status );
+}
+
+void test_MQTTV5_ValidatePublishParams()
+{
+    uint16_t topicAliasMax = 10U;
+    uint8_t maxQos = 0U;
+    uint8_t retain= 0U;
+    /*Publish info cannot be null*/
+    status = MQTTV5_ValidatePublishParams(NULL,topicAliasMax,retain,maxQos);
+    TEST_ASSERT_EQUAL( MQTTBadParameter, status );
+
+    /*Topic alias greater than the allowed value. */
+    publishInfo.topicAlias = 12U;
+    status = MQTTV5_ValidatePublishParams(&publishInfo,topicAliasMax,retain,maxQos);
+    TEST_ASSERT_EQUAL( MQTTBadParameter, status );
+
+    /*Retain is not allowed. */
+    publishInfo.topicAlias = 2U;
+    publishInfo.retain = true;
+    status = MQTTV5_ValidatePublishParams(&publishInfo,topicAliasMax,retain,maxQos);
+    TEST_ASSERT_EQUAL( MQTTBadParameter, status );
+
+    /*Qos invalid*/
+    publishInfo.retain = false;
+    publishInfo.qos = 1;
+    status = MQTTV5_ValidatePublishParams(&publishInfo,topicAliasMax,retain,maxQos);
+    TEST_ASSERT_EQUAL( MQTTBadParameter, status );
+
+    /*Valid parameters should return success*/
+    publishInfo.qos = 1;
+    maxQos = 1;
+    publishInfo.retain= true;
+    retain = 1;
+    status = MQTTV5_ValidatePublishParams(&publishInfo,topicAliasMax,retain,maxQos);
+    TEST_ASSERT_EQUAL( MQTTSuccess, status );
+
+    /*Valid parameters should return success*/
+    publishInfo.qos = 0;
+    status = MQTTV5_ValidatePublishParams(&publishInfo,topicAliasMax,retain,maxQos);
+    TEST_ASSERT_EQUAL( MQTTSuccess, status );
+
 }
 
 void test_MQTTV5_GetPublishPacketSize(){
@@ -3188,82 +2484,70 @@ void test_MQTTV5_GetPublishPacketSize(){
     uint8_t retainAvailable = 0U;
     setupPublishInfo(&publishInfo);
     /*Test with invalid paramters*/
-    status = MQTTV5_GetPublishPacketSize(NULL,&remainingLength,&packetSize,topicAliasMax,maxPacketSize,retainAvailable);
+    status = MQTTV5_GetPublishPacketSize(NULL,&remainingLength,&packetSize,maxPacketSize);
     TEST_ASSERT_EQUAL( MQTTBadParameter, status );
 
-    status = MQTTV5_GetPublishPacketSize(&publishInfo,NULL,&packetSize,topicAliasMax,maxPacketSize,retainAvailable);
+    status = MQTTV5_GetPublishPacketSize(&publishInfo,NULL,&packetSize,maxPacketSize);
     TEST_ASSERT_EQUAL( MQTTBadParameter, status );
 
-    status = MQTTV5_GetPublishPacketSize(&publishInfo,&remainingLength,NULL,topicAliasMax,maxPacketSize,retainAvailable);
+    status = MQTTV5_GetPublishPacketSize(&publishInfo,&remainingLength,NULL,maxPacketSize);
     TEST_ASSERT_EQUAL( MQTTBadParameter, status );
 
-    status = MQTTV5_GetPublishPacketSize(&publishInfo,&remainingLength,&packetSize,topicAliasMax,maxPacketSize,retainAvailable);
+    status = MQTTV5_GetPublishPacketSize(&publishInfo,&remainingLength,&packetSize,maxPacketSize);
     TEST_ASSERT_EQUAL( MQTTBadParameter, status );
 
     /*Topic name invalid*/
     publishInfo.pTopicName = NULL;
-    status = MQTTV5_GetPublishPacketSize(&publishInfo,&remainingLength,&packetSize,topicAliasMax,maxPacketSize,retainAvailable);
+    status = MQTTV5_GetPublishPacketSize(&publishInfo,&remainingLength,&packetSize,maxPacketSize);
     TEST_ASSERT_EQUAL( MQTTBadParameter, status );
 
     publishInfo.pTopicName = TEST_TOPIC_NAME;
     
     /*Topic alias is not allowed and topic name is not provided.*/
     publishInfo.topicNameLength = 0;
-    status = MQTTV5_GetPublishPacketSize(&publishInfo,&remainingLength,&packetSize,topicAliasMax,maxPacketSize,retainAvailable);
+    status = MQTTV5_GetPublishPacketSize(&publishInfo,&remainingLength,&packetSize,maxPacketSize);
     TEST_ASSERT_EQUAL( MQTTBadParameter, status );
 
     maxPacketSize = 100;
     publishInfo.topicNameLength = TEST_TOPIC_NAME_LENGTH;
-     /*Retain is not allowed*/
     topicAliasMax = 40U;
-    publishInfo.retain= true;
-    status = MQTTV5_GetPublishPacketSize(&publishInfo,&remainingLength,&packetSize,topicAliasMax,maxPacketSize,retainAvailable);
-    TEST_ASSERT_EQUAL( MQTTBadParameter, status );
-
-    publishInfo.retain= false;
     /*Packet size too large*/
     publishInfo.payloadLength = MQTT_MAX_REMAINING_LENGTH;
-    status = MQTTV5_GetPublishPacketSize(&publishInfo,&remainingLength,&packetSize,topicAliasMax,maxPacketSize,retainAvailable);
+    status = MQTTV5_GetPublishPacketSize(&publishInfo,&remainingLength,&packetSize,maxPacketSize);
     TEST_ASSERT_EQUAL( MQTTBadParameter, status );
 
     publishInfo.payloadLength = MQTT_MAX_REMAINING_LENGTH - TEST_TOPIC_NAME_LENGTH - 4;
-    status = MQTTV5_GetPublishPacketSize(&publishInfo,&remainingLength,&packetSize,topicAliasMax,maxPacketSize,retainAvailable);
+    status = MQTTV5_GetPublishPacketSize(&publishInfo,&remainingLength,&packetSize,maxPacketSize);
     TEST_ASSERT_EQUAL( MQTTBadParameter, status );
 
     /* Good case succeeds. */
     publishInfo.pPayload = "";
     publishInfo.payloadLength = 0;
-    status = MQTTV5_GetPublishPacketSize(&publishInfo,&remainingLength,&packetSize,topicAliasMax,maxPacketSize,retainAvailable);
+    status = MQTTV5_GetPublishPacketSize(&publishInfo,&remainingLength,&packetSize,maxPacketSize);
     TEST_ASSERT_EQUAL( MQTTSuccess, status );
 
     /* Again with QoS 2. */
     publishInfo.qos = MQTTQoS2;
-    status = MQTTV5_GetPublishPacketSize(&publishInfo,&remainingLength,&packetSize,topicAliasMax,maxPacketSize,retainAvailable);
+    status = MQTTV5_GetPublishPacketSize(&publishInfo,&remainingLength,&packetSize,maxPacketSize);
     TEST_ASSERT_EQUAL( MQTTSuccess, status );
 
     setupPublishProperties(&publishInfo);
-    /*Invalid topic alias*/
-    /*Topic alias is greater than topicAliasMax*/
-    topicAliasMax = 1U;
-    status = MQTTV5_GetPublishPacketSize(&publishInfo,&remainingLength,&packetSize,topicAliasMax,maxPacketSize,retainAvailable);
-    TEST_ASSERT_EQUAL( MQTTBadParameter, status );
-
     topicAliasMax = 50U;
     retainAvailable = 1U;
     publishInfo.retain= true;
     /*Valid properties*/
-    status = MQTTV5_GetPublishPacketSize(&publishInfo,&remainingLength,&packetSize,topicAliasMax,maxPacketSize,retainAvailable);
+    status = MQTTV5_GetPublishPacketSize(&publishInfo,&remainingLength,&packetSize,maxPacketSize);
     TEST_ASSERT_EQUAL( MQTTSuccess, status );
    
     /* No topic name*/
     publishInfo.topicNameLength = 0U;
     publishInfo.pTopicName = NULL;
-    status = MQTTV5_GetPublishPacketSize(&publishInfo,&remainingLength,&packetSize,topicAliasMax,maxPacketSize,retainAvailable);
+    status = MQTTV5_GetPublishPacketSize(&publishInfo,&remainingLength,&packetSize,maxPacketSize);
     TEST_ASSERT_EQUAL( MQTTSuccess, status );
 
     /*Packet size is more than the server allowed max packet size*/
     maxPacketSize = 4;
-    status = MQTTV5_GetPublishPacketSize(&publishInfo,&remainingLength,&packetSize,topicAliasMax,maxPacketSize,retainAvailable);
+    status = MQTTV5_GetPublishPacketSize(&publishInfo,&remainingLength,&packetSize,maxPacketSize);
     TEST_ASSERT_EQUAL( MQTTBadParameter, status );
 
     
@@ -3285,7 +2569,7 @@ void test_MQTT_SerializePublish(){
     setupPublishInfo(&publishInfo);
     fixedBuffer.size = bufferSize;
     /* Calculate exact packet size and remaining length. */
-    status = MQTTV5_GetPublishPacketSize( &publishInfo, &remainingLength, &packetSize,topicAliasMax,maxPacketSize,retainAvailable);
+    status = MQTTV5_GetPublishPacketSize( &publishInfo, &remainingLength, &packetSize,maxPacketSize);
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
     /* Make sure buffer has enough space */
     TEST_ASSERT_GREATER_OR_EQUAL( packetSize, bufferSize );
@@ -3300,8 +2584,8 @@ void test_MQTT_SerializePublish(){
     
     fixedBuffer.pBuffer = &buffer[ BUFFER_PADDING_LENGTH ];
     setupPublishProperties(&publishInfo);
- /* Calculate exact packet size and remaining length. */
-    status = MQTTV5_GetPublishPacketSize( &publishInfo, &remainingLength, &packetSize,topicAliasMax,maxPacketSize,retainAvailable);
+    /* Calculate exact packet size and remaining length. */
+    status = MQTTV5_GetPublishPacketSize( &publishInfo, &remainingLength, &packetSize,maxPacketSize);
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
     /* Make sure buffer has enough space */
     TEST_ASSERT_GREATER_OR_EQUAL( packetSize, bufferSize );
@@ -3314,4 +2598,312 @@ void test_MQTT_SerializePublish(){
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
     checkBufferOverflow( buffer, sizeof( buffer ) );
 
+}
+
+void test_MQTTV5_DeserializeAck_puback( void )
+{
+    MQTTPacketInfo_t mqttPacketInfo;
+    MQTTAckInfo_t ackInfo;
+    uint16_t packetIdentifier;
+    bool requestProblem;
+    MQTTStatus_t status = MQTTSuccess;
+    uint8_t buffer[ 100 ] = { 0 };
+    uint8_t* pIndex = buffer;
+    size_t dummy = 0U;
+    /* Verify parameters */
+    memset( &mqttPacketInfo, 0x00, sizeof( mqttPacketInfo ) );
+    memset( &ackInfo, 0x00, sizeof( ackInfo ) );
+    ackInfo.pUserProperty =&userProperties;
+    mqttPacketInfo.type = MQTT_PACKET_TYPE_PUBACK;
+    status = MQTTV5_DeserializeAck( NULL, &packetIdentifier, &ackInfo, requestProblem );
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+    status = MQTTV5_DeserializeAck( &mqttPacketInfo, NULL, &ackInfo, requestProblem );
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+    /* ackInfo not set. */
+    status = MQTTV5_DeserializeAck( &mqttPacketInfo, &packetIdentifier, NULL, requestProblem );
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+    
+
+    mqttPacketInfo.pRemainingData = buffer;
+    /* Packet identifier 0 is not valid (per spec). */
+    buffer[ 0 ] = 0;
+    buffer[ 1 ] = 0;
+    mqttPacketInfo.remainingLength = MQTT_PACKET_SIMPLE_ACK_REMAINING_LENGTH;
+    status = MQTTV5_DeserializeAck( &mqttPacketInfo, &packetIdentifier, &ackInfo, requestProblem );
+    TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
+
+    
+    /*Remaining length connot be less than 2*/
+    mqttPacketInfo.remainingLength = 1;
+    status = MQTTV5_DeserializeAck( &mqttPacketInfo, &packetIdentifier, &ackInfo, requestProblem );
+    TEST_ASSERT_EQUAL_INT( MQTTMalformedPacket, status );
+
+
+    /* Process a valid PUBACK. */
+    mqttPacketInfo.remainingLength = 2;
+    buffer[ 1 ] = 1;
+    status = MQTTV5_DeserializeAck( &mqttPacketInfo, &packetIdentifier, &ackInfo, requestProblem );
+    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
+    TEST_ASSERT_EQUAL_INT( 1, packetIdentifier );
+    
+
+    mqttPacketInfo.remainingLength = 3;
+    buffer[2] = 0x00;
+    status = MQTTV5_DeserializeAck( &mqttPacketInfo, &packetIdentifier, &ackInfo, requestProblem );
+    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
+    TEST_ASSERT_EQUAL_INT( 1, packetIdentifier );
+ 
+    /*Property length should be zero when request problem is set to false*/
+    mqttPacketInfo.remainingLength = 24;
+    status = MQTTV5_DeserializeAck( &mqttPacketInfo, &packetIdentifier, &ackInfo, requestProblem );
+    TEST_ASSERT_EQUAL_INT( MQTTProtocolError, status );
+    
+    requestProblem = true;
+    pIndex = &buffer[3];
+    dummy= encodeRemainingLength(pIndex,20);
+    pIndex++;
+    pIndex = serializeutf_8(pIndex, MQTT_REASON_STRING_ID);
+    pIndex = serializeutf_8pair(pIndex);
+    status = MQTTV5_DeserializeAck( &mqttPacketInfo, &packetIdentifier, &ackInfo, requestProblem );
+    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
+
+   /*Invalid property id*/
+    mqttPacketInfo.remainingLength = 11;
+    pIndex= &buffer[3];
+    dummy= encodeRemainingLength(pIndex,7);
+    pIndex++;
+    pIndex = serializeutf_8(pIndex, MQTT_CORRELATION_DATA_ID);
+    status = MQTTV5_DeserializeAck( &mqttPacketInfo, &packetIdentifier, &ackInfo, requestProblem );
+    TEST_ASSERT_EQUAL_INT( MQTTProtocolError, status );
+
+    /*Invalid remaining length*/
+    pIndex= &buffer[3];
+    dummy= encodeRemainingLength(pIndex,12);
+    pIndex++;
+    pIndex = serializeutf_8(pIndex, MQTT_REASON_STRING_ID);
+    status = MQTTV5_DeserializeAck( &mqttPacketInfo, &packetIdentifier, &ackInfo, requestProblem );
+    TEST_ASSERT_EQUAL_INT( MQTTMalformedPacket, status );
+
+
+    /*Invalid property length*/
+    pIndex = &buffer[3];
+    dummy = encodeRemainingLength( pIndex, 20971556356235 );
+    status = MQTTV5_DeserializeAck( &mqttPacketInfo, &packetIdentifier, &ackInfo, requestProblem );
+    TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
+
+}
+
+void test_MQTTV5_DeserializeAck_LogPuback()
+{
+    MQTTPacketInfo_t mqttPacketInfo;
+    MQTTAckInfo_t ackInfo;
+    uint16_t packetIdentifier;
+    bool requestProblem;
+    MQTTStatus_t status = MQTTSuccess;
+    uint8_t buffer[ 4 ] = { 0 };
+    memset( &mqttPacketInfo, 0x00, sizeof( mqttPacketInfo ) );
+    memset( &ackInfo, 0x00, sizeof( ackInfo ) );
+    mqttPacketInfo.pRemainingData = buffer;
+    mqttPacketInfo.type = MQTT_PACKET_TYPE_PUBACK;
+    mqttPacketInfo.remainingLength = 4;
+    /*Validate all the correct reason codes.*/
+    buffer[1] = 1;
+    buffer[2] = MQTT_REASON_SUCCESS;
+    status = MQTTV5_DeserializeAck( &mqttPacketInfo, &packetIdentifier, &ackInfo, requestProblem );
+    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
+
+    buffer[2] = MQTT_REASON_NO_MATCHING_SUBSCRIBERS;
+    status = MQTTV5_DeserializeAck( &mqttPacketInfo, &packetIdentifier, &ackInfo, requestProblem );
+    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
+
+    buffer[2] = MQTT_REASON_UNSPECIFIED_ERR;
+    status = MQTTV5_DeserializeAck( &mqttPacketInfo, &packetIdentifier, &ackInfo, requestProblem );
+    TEST_ASSERT_EQUAL_INT( MQTTServerRefused, status );
+
+    buffer[2] = MQTT_REASON_IMPL_SPECIFIC_ERR;
+    status = MQTTV5_DeserializeAck( &mqttPacketInfo, &packetIdentifier, &ackInfo, requestProblem );
+    TEST_ASSERT_EQUAL_INT( MQTTServerRefused, status );
+
+    buffer[2] = MQTT_REASON_NOT_AUTHORIZED;
+    status = MQTTV5_DeserializeAck( &mqttPacketInfo, &packetIdentifier, &ackInfo, requestProblem );
+    TEST_ASSERT_EQUAL_INT( MQTTServerRefused, status );
+
+    buffer[2] = MQTT_REASON_TOPIC_NAME_INVALID;
+    status = MQTTV5_DeserializeAck( &mqttPacketInfo, &packetIdentifier, &ackInfo, requestProblem );
+    TEST_ASSERT_EQUAL_INT( MQTTServerRefused, status );
+
+    buffer[2] = MQTT_REASON_PACKET_ID_IN_USE;
+    status = MQTTV5_DeserializeAck( &mqttPacketInfo, &packetIdentifier, &ackInfo, requestProblem );
+    TEST_ASSERT_EQUAL_INT( MQTTServerRefused, status );
+
+    buffer[2] = MQTT_REASON_QUOTA_EXCEEDED;
+    status = MQTTV5_DeserializeAck( &mqttPacketInfo, &packetIdentifier, &ackInfo, requestProblem );
+    TEST_ASSERT_EQUAL_INT( MQTTServerRefused, status );
+
+    buffer[2] = MQTT_REASON_PAYLOAD_FORMAT_INVALID;
+    status = MQTTV5_DeserializeAck( &mqttPacketInfo, &packetIdentifier, &ackInfo, requestProblem );
+    TEST_ASSERT_EQUAL_INT( MQTTServerRefused, status );
+
+    /*Invlaid reason code.*/
+    buffer[2]= MQTT_REASON_BANNED;
+    status = MQTTV5_DeserializeAck( &mqttPacketInfo, &packetIdentifier, &ackInfo, requestProblem );
+    TEST_ASSERT_EQUAL_INT( MQTTProtocolError, status );
+
+}
+
+void test_MQTTV5_DeserializeAck_Pubrel()
+{
+    MQTTPacketInfo_t mqttPacketInfo;
+    MQTTAckInfo_t ackInfo;
+    uint16_t packetIdentifier;
+    bool requestProblem;
+    MQTTStatus_t status = MQTTSuccess;
+    uint8_t buffer[ 4 ] = { 0 };
+    memset( &mqttPacketInfo, 0x00, sizeof( mqttPacketInfo ) );
+    memset( &ackInfo, 0x00, sizeof( ackInfo ) );
+    mqttPacketInfo.pRemainingData = buffer;
+    mqttPacketInfo.type = MQTT_PACKET_TYPE_PUBREL;
+    mqttPacketInfo.remainingLength = 4;
+    /*Validate all the correct reason codes.*/
+    buffer[1] = 1;
+    buffer[2] = MQTT_REASON_SUCCESS;
+    status = MQTTV5_DeserializeAck( &mqttPacketInfo, &packetIdentifier, &ackInfo, requestProblem );
+    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
+
+    buffer[2] = MQTT_REASON_PACKET_ID_NOT_FOUND;
+    status = MQTTV5_DeserializeAck( &mqttPacketInfo, &packetIdentifier, &ackInfo, requestProblem );
+    TEST_ASSERT_EQUAL_INT( MQTTServerRefused, status );
+
+    /*Invalid reason code.*/
+    buffer[2]= MQTT_REASON_BANNED;
+    status = MQTTV5_DeserializeAck( &mqttPacketInfo, &packetIdentifier, &ackInfo, requestProblem );
+    TEST_ASSERT_EQUAL_INT( MQTTProtocolError, status );
+
+        /*Invalid packet id*/
+    buffer[1] = 0;
+    status = MQTTV5_DeserializeAck( &mqttPacketInfo, &packetIdentifier, &ackInfo, requestProblem );
+    TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
+
+    /*Invalid packet type. */
+    mqttPacketInfo.type = MQTT_PACKET_TYPE_CONNACK;
+    status = MQTTV5_DeserializeAck( &mqttPacketInfo, &packetIdentifier, &ackInfo, requestProblem );
+    TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
+
+
+
+}
+
+
+void test_MQTTV5_GetAckPacketSize()
+{
+ MQTTStatus_t status ;
+ MQTTAckInfo_t ackInfo;
+ size_t remainingLength;
+ size_t  propertyLength;
+ size_t  packetSize;
+ uint32_t maxPacketSize = 0U;
+ memset(&ackInfo,0x0, sizeof(ackInfo));
+
+ /*Invalid parameters*/
+status = MQTTV5_GetAckPacketSize(NULL,&remainingLength,&propertyLength,&packetSize,maxPacketSize);
+TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+
+status = MQTTV5_GetAckPacketSize(&ackInfo,NULL,&propertyLength,&packetSize,maxPacketSize);
+TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+
+status = MQTTV5_GetAckPacketSize(&ackInfo,&remainingLength,NULL,&packetSize,maxPacketSize);
+TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+
+status = MQTTV5_GetAckPacketSize(&ackInfo,&remainingLength,&propertyLength,NULL,maxPacketSize);
+TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+
+/*Max packet size cannot be 0*/
+status = MQTTV5_GetAckPacketSize(&ackInfo,&remainingLength,&propertyLength,NULL,maxPacketSize);
+TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+
+/*Valid parameters*/
+maxPacketSize = UINT32_MAX;
+status = MQTTV5_GetAckPacketSize(&ackInfo,&remainingLength,&propertyLength,&packetSize,maxPacketSize);
+TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
+
+/*With properties*/
+ackInfo.pReasonString = MQTT_TEST_UTF8_STRING;
+ackInfo.reasonStringLength = MQTT_TEST_UTF8_STRING_LENGTH;
+ackInfo.pUserProperty = &userProperties;
+userProperties.count = 0;
+status = MQTTV5_GetAckPacketSize(&ackInfo,&remainingLength,&propertyLength,&packetSize,maxPacketSize);
+TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
+
+/*Packet size greater than max allowed.*/
+maxPacketSize = 2;
+status = MQTTV5_GetAckPacketSize(&ackInfo,&remainingLength,&propertyLength,&packetSize,maxPacketSize);
+TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+
+}
+
+void test_MQTTV5_SerializePubAckWithProperty()
+{
+    MQTTStatus_t status ;
+    MQTTAckInfo_t ackInfo;
+    size_t remainingLength;
+    size_t  propertyLength;
+    size_t  packetSize;
+    uint8_t packetType;
+    uint16_t packetId;
+    uint32_t maxPacketSize = 1000U;
+    uint8_t buffer[ 440 + 2 * BUFFER_PADDING_LENGTH ];
+    size_t bufferSize = sizeof( buffer ) - 2 * BUFFER_PADDING_LENGTH;
+    MQTTFixedBuffer_t fixedBuffer = { .pBuffer = &buffer[ BUFFER_PADDING_LENGTH ], .size = bufferSize };
+    /*Invalid parameters*/
+    status = MQTTV5_SerializePubAckWithProperty(NULL,remainingLength,propertyLength,&fixedBuffer,packetType,packetId);
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+
+    status = MQTTV5_SerializePubAckWithProperty(&ackInfo,remainingLength,propertyLength,NULL,packetType,packetId);
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+
+    fixedBuffer.pBuffer = NULL;
+    status = MQTTV5_SerializePubAckWithProperty(&ackInfo,remainingLength,propertyLength,&fixedBuffer,packetType,packetId);
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+
+    /*Buffer size not sufficient*/
+    // status = MQTTV5_GetAckPacketSize(&ackInfo,&remainingLength,&propertyLength,&packetSize,maxPacketSize);
+    fixedBuffer.size = 5; 
+    fixedBuffer.pBuffer= &buffer[BUFFER_PADDING_LENGTH];
+    status = MQTTV5_SerializePubAckWithProperty(&ackInfo,remainingLength,propertyLength,&fixedBuffer,packetType,packetId);
+    TEST_ASSERT_EQUAL_INT( MQTTNoMemory, status );
+
+    /*With correct parameters*/
+    memset(&ackInfo,0x0, sizeof(ackInfo));
+    status = MQTTV5_GetAckPacketSize(&ackInfo,&remainingLength,&propertyLength,&packetSize,maxPacketSize);
+    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
+    /* Make sure buffer has enough space */
+    TEST_ASSERT_GREATER_OR_EQUAL( packetSize, bufferSize );
+    /* Make sure test succeeds. */
+    padAndResetBuffer( buffer, sizeof( buffer ) );
+    fixedBuffer.size = bufferSize;
+    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
+    status = MQTTV5_SerializePubAckWithProperty(&ackInfo,remainingLength,propertyLength,&fixedBuffer,packetType,packetId);
+    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
+    checkBufferOverflow( buffer, sizeof( buffer ) );
+
+    /*With properties*/
+    ackInfo.reasonStringLength = MQTT_TEST_UTF8_STRING_LENGTH;
+    ackInfo.pReasonString = MQTT_TEST_UTF8_STRING;
+    ackInfo.pUserProperty = &userProperties;
+    userProperties.count = 1;
+    userProperties.userProperty->keyLength = 1; 
+    userProperties.userProperty->valueLength = 1;
+    userProperties.userProperty->pKey = "a";
+    userProperties.userProperty->pValue = "a";
+    status = MQTTV5_GetAckPacketSize(&ackInfo,&remainingLength,&propertyLength,&packetSize,maxPacketSize);
+    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
+    /* Make sure buffer has enough space */
+    TEST_ASSERT_GREATER_OR_EQUAL( packetSize, bufferSize );
+    /* Make sure test succeeds. */
+    padAndResetBuffer( buffer, sizeof( buffer ) );
+    fixedBuffer.size = bufferSize;
+    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
+    status = MQTTV5_SerializePubAckWithProperty(&ackInfo,remainingLength,propertyLength,&fixedBuffer,packetType,packetId);
+    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
+    checkBufferOverflow( buffer, sizeof( buffer ) );
 }

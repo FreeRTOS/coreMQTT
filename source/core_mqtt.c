@@ -3207,7 +3207,7 @@ static MQTTStatus_t validatePublishParams( const MQTTContext_t * pContext,
     #if(MQTT_VERSION_5_ENABLED)
     else if(pContext->connectProperties == NULL){
         LogError( ( "Argument cannot be NULL: pConnectProperties=%p. ",
-                    ( void * ) pContext->pConnectProperties ) );
+                    ( void * ) pContext->connectProperties ) );
         status = MQTTBadParameter;
     }
 
@@ -3542,13 +3542,17 @@ MQTTStatus_t MQTT_Publish( MQTTContext_t * pContext,
                                             &remainingLength,
                                             &packetSize );	       
         #else
+        status = MQTTV5_ValidatePublishParams(pPublishInfo,
+                                              pContext->connectProperties->serverTopicAliasMax,
+                                              pContext->connectProperties->retainAvailable,
+                                              pContext->connectProperties->serverMaxQos );
+        if(status == MQTTSuccess)
+        {
         status = MQTTV5_GetPublishPacketSize( pPublishInfo,
                                             &remainingLength,
                                             &packetSize,
-                                            pContext->connectProperties->serverTopicAliasMax,
-                                            pContext->connectProperties->serverMaxPacketSize,
-                                            pContext->connectProperties->retainAvailable );
-
+                                            pContext->connectProperties->serverMaxPacketSize);
+        }
         #endif
     }
 

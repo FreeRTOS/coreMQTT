@@ -1843,12 +1843,13 @@ MQTTStatus_t MQTTV5_SerializeConnect(const MQTTConnectInfo_t* pConnectInfo,
     const MQTTFixedBuffer_t* pFixedBuffer);
 /* @[declare_mqttv5_serializeconnect] */
 
+
+MQTTStatus_t MQTTV5_ValidatePublishParams(MQTTPublishInfo_t* pPublishInfo, uint16_t topicAliasMax, uint8_t retainAvailable, uint8_t maxQos);
+
 MQTTStatus_t MQTTV5_GetPublishPacketSize(MQTTPublishInfo_t * pPublishInfo,
                                         size_t * pRemainingLength,
                                         size_t * pPacketSize , 
-                                        uint16_t topicAliasMax, 
-                                        uint32_t maxPacketSize,
-                                        uint8_t retainAvailable);
+                                        uint32_t maxPacketSize);
 
 
 MQTTStatus_t MQTTV5_DeserializeAck( const MQTTPacketInfo_t * pIncomingPacket,

@@ -213,7 +213,8 @@ static uint8_t mqttBuffer[ MQTT_TEST_BUFFER_LENGTH ] = { 0 };
  */
 static bool isEventCallbackInvoked = false;
 static bool receiveOnce = false;
-
+static uint8_t currentPacketType = MQTT_PACKET_TYPE_INVALID;
+static MQTTStatus_t modifyIncomingPacketStatus = MQTTSuccess;
 
 
 /* ============================   UNITY FIXTURES ============================ */
@@ -287,7 +288,224 @@ static void eventCallback( MQTTContext_t * pContext,
 
     /* Update the global state to indicate that event callback is invoked. */
     isEventCallbackInvoked = true;
+    pDeserializedInfo->pNextAckInfo = NULL;
 }
+
+/**
+ * @brief Mocked MQTT event callback.
+ *
+ * @param[in] pContext MQTT context pointer.
+ * @param[in] pPacketInfo Packet Info pointer for the incoming packet.
+ * @param[in] pDeserializedInfo Deserialized information from the incoming packet.
+ */
+static void eventCallback1( MQTTContext_t * pContext,
+                           MQTTPacketInfo_t * pPacketInfo,
+                           MQTTDeserializedInfo_t * pDeserializedInfo )
+{
+    ( void ) pContext;
+    ( void ) pPacketInfo;
+    ( void ) pDeserializedInfo;
+    MQTTAckInfo_t ackInfo;
+    memset(&ackInfo, 0x0, sizeof(ackInfo));
+    /* Update the global state to indicate that event callback is invoked. */
+    isEventCallbackInvoked = true;
+    pDeserializedInfo->pNextAckInfo = &ackInfo;
+    ackInfo.reasonStringLength = 2;
+    ackInfo.pReasonString = "ab";
+}
+
+/**
+ * @brief Zero out a #ProcessLoopReturns_t.
+ *
+ * @param[in] pExpectParams Pointer to struct to reset.
+ */
+static void resetProcessLoopParams( ProcessLoopReturns_t * pExpectParams )
+{
+    pExpectParams->deserializeStatus = MQTTSuccess;
+    pExpectParams->stateAfterDeserialize = MQTTStateNull;
+    pExpectParams->updateStateStatus = MQTTSuccess;
+    pExpectParams->serializeStatus = MQTTSuccess;
+    pExpectParams->stateAfterSerialize = MQTTStateNull;
+    pExpectParams->processLoopStatus = MQTTSuccess;
+    pExpectParams->incomingPublish = false;
+    pExpectParams->pPubInfo = NULL;
+    pExpectParams->timeoutMs = MQTT_NO_TIMEOUT_MS;
+}
+
+/**
+ * @brief This helper function is used to expect any calls from the process loop
+ * to mocked functions belonging to an external header file. Its parameters
+ * are used to provide return values for these mocked functions.
+ */
+static void expectProcessLoopCalls( MQTTContext_t * const pContext,
+                                    ProcessLoopReturns_t * pExpectParams )
+{
+    MQTTStatus_t mqttStatus = MQTTSuccess;
+    MQTTPacketInfo_t incomingPacket = { 0 };
+    size_t pingreqSize = MQTT_PACKET_PINGREQ_SIZE;
+    bool expectMoreCalls = true;
+    /* Copy values passed in the parameter struct. */
+    MQTTStatus_t deserializeStatus = pExpectParams->deserializeStatus;
+    MQTTPublishState_t stateAfterDeserialize = pExpectParams->stateAfterDeserialize;
+    MQTTStatus_t updateStateStatus = pExpectParams->updateStateStatus;
+    MQTTStatus_t serializeStatus = pExpectParams->serializeStatus;
+    MQTTPublishState_t stateAfterSerialize = pExpectParams->stateAfterSerialize;
+    MQTTStatus_t processLoopStatus = pExpectParams->processLoopStatus;
+    bool incomingPublish = pExpectParams->incomingPublish;
+    MQTTPublishInfo_t * pPubInfo = pExpectParams->pPubInfo;
+    uint32_t packetTxTimeoutMs = 0U;
+
+    /* Modify incoming packet depending on type to be tested. */
+    incomingPacket.type = currentPacketType;
+    incomingPacket.remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
+    incomingPacket.headerLength = MQTT_SAMPLE_REMAINING_LENGTH;
+
+    MQTT_ProcessIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_ProcessIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
+
+    /* More calls are expected only with the following packet types. */
+    if( ( currentPacketType != MQTT_PACKET_TYPE_PUBLISH ) &&
+        ( currentPacketType != MQTT_PACKET_TYPE_PUBACK ) &&
+        ( currentPacketType != MQTT_PACKET_TYPE_PUBREC ) &&
+        ( currentPacketType != MQTT_PACKET_TYPE_PUBREL ) &&
+        ( currentPacketType != MQTT_PACKET_TYPE_PUBCOMP ) &&
+        ( currentPacketType != MQTT_PACKET_TYPE_PINGRESP ) &&
+        ( currentPacketType != MQTT_PACKET_TYPE_SUBACK ) &&
+        ( currentPacketType != MQTT_PACKET_TYPE_UNSUBACK ) )
+    {
+        expectMoreCalls = false;
+    }
+
+    /* When no data is available, the process loop tries to send a PINGREQ. */
+    if( modifyIncomingPacketStatus == MQTTNoDataAvailable )
+    {
+        packetTxTimeoutMs = 1000U * ( uint32_t ) pContext->keepAliveIntervalSec;
+
+        if( PACKET_TX_TIMEOUT_MS < packetTxTimeoutMs )
+        {
+            packetTxTimeoutMs = PACKET_TX_TIMEOUT_MS;
+        }
+
+        if( pContext->waitingForPingResp == false )
+        {
+            if( ( ( packetTxTimeoutMs != 0U ) &&
+                  ( ( globalEntryTime - pContext->lastPacketTxTime ) >= packetTxTimeoutMs ) ) ||
+                ( ( PACKET_RX_TIMEOUT_MS != 0U ) &&
+                  ( ( globalEntryTime - pContext->lastPacketRxTime ) >= PACKET_RX_TIMEOUT_MS ) ) )
+            {
+                MQTT_GetPingreqPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
+                /* Replace pointer parameter being passed to the method. */
+                MQTT_GetPingreqPacketSize_ReturnThruPtr_pPacketSize( &pingreqSize );
+                MQTT_SerializePingreq_ExpectAnyArgsAndReturn( serializeStatus );
+            }
+        }
+
+        expectMoreCalls = false;
+    }
+
+    /* Deserialize based on the packet type (PUB or ACK) being received. */
+    if( expectMoreCalls )
+    {
+        if( incomingPublish )
+        {
+            MQTT_DeserializePublish_ExpectAnyArgsAndReturn( deserializeStatus );
+
+            if( pPubInfo != NULL )
+            {
+                MQTT_DeserializePublish_ReturnThruPtr_pPublishInfo( pPubInfo );
+            }
+        }
+        else
+        {
+            MQTTV5_DeserializeAck_ExpectAnyArgsAndReturn( deserializeStatus );
+        }
+
+        if( ( deserializeStatus != MQTTSuccess ) ||
+            ( currentPacketType == MQTT_PACKET_TYPE_PINGRESP ) ||
+            ( currentPacketType == MQTT_PACKET_TYPE_SUBACK ) ||
+            ( currentPacketType == MQTT_PACKET_TYPE_UNSUBACK ) )
+        {
+            expectMoreCalls = false;
+        }
+    }
+
+    /* Update state based on the packet type (PUB or ACK) being received. */
+    if( expectMoreCalls )
+    {
+        if( incomingPublish )
+        {
+            MQTT_UpdateStatePublish_ExpectAnyArgsAndReturn( updateStateStatus );
+            MQTT_UpdateStatePublish_ReturnThruPtr_pNewState( &stateAfterDeserialize );
+        }
+        else
+        {
+            MQTT_UpdateStateAck_ExpectAnyArgsAndReturn( updateStateStatus );
+            MQTT_UpdateStateAck_ReturnThruPtr_pNewState( &stateAfterDeserialize );
+        }
+
+        if( stateAfterDeserialize == MQTTPublishDone )
+        {
+            expectMoreCalls = false;
+        }
+        else
+        {
+            switch( updateStateStatus )
+            {
+                case MQTTSuccess:
+                    expectMoreCalls = true;
+                    break;
+
+                case MQTTStateCollision:
+                    /* Execution will continue regardless of the dup flag. */
+                    expectMoreCalls = true;
+                    MQTT_CalculateStatePublish_ExpectAnyArgsAndReturn( stateAfterDeserialize );
+                    break;
+
+                default:
+                    expectMoreCalls = false;
+            }
+        }
+    }
+
+    /* Serialize the packet to be sent in response to the received packet. */
+    if( expectMoreCalls )
+    {
+        MQTT_SerializeAck_ExpectAnyArgsAndReturn( serializeStatus );
+
+        if( serializeStatus != MQTTSuccess )
+        {
+            expectMoreCalls = false;
+        }
+    }
+
+    /* Update the state based on the sent packet. */
+    if( expectMoreCalls )
+    {
+        MQTT_UpdateStateAck_ExpectAnyArgsAndReturn( ( stateAfterSerialize == MQTTStateNull ) ?
+                                                    MQTTIllegalState : MQTTSuccess );
+        MQTT_UpdateStateAck_ReturnThruPtr_pNewState( &stateAfterSerialize );
+    }
+
+    /* Expect the above calls when running MQTT_ProcessLoop. */
+
+    mqttStatus = MQTT_ProcessLoop( pContext );
+    TEST_ASSERT_EQUAL( processLoopStatus, mqttStatus );
+
+    /* Any final assertions to end the test. */
+    if( mqttStatus == MQTTSuccess )
+    {
+        if( currentPacketType == MQTT_PACKET_TYPE_PUBLISH )
+        {
+            TEST_ASSERT_TRUE( pContext->controlPacketSent );
+        }
+
+        if( currentPacketType == MQTT_PACKET_TYPE_PINGRESP )
+        {
+            TEST_ASSERT_FALSE( pContext->waitingForPingResp );
+        }
+    }
+}
+
 
 static uint8_t * MQTT_SerializeConnectFixedHeader_cb( uint8_t * pIndex,
                                                       const MQTTConnectInfo_t * pConnectInfo,
@@ -646,7 +864,7 @@ void test_MQTT_Connect_receiveConnack( void )
     TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
 }
 
-void test_MQTT_Publish2( void )
+void test_MQTT_Publish( void )
 {
     MQTTContext_t mqttContext = { 0 };
     MQTTPublishInfo_t publishInfo = { 0 };
@@ -669,7 +887,8 @@ void test_MQTT_Publish2( void )
     status = MQTT_Publish( &mqttContext, &publishInfo, PACKET_ID );
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
     mqttContext.connectProperties = &properties;
-  
+    
+    MQTTV5_ValidatePublishParams_ExpectAnyArgsAndReturn(MQTTSuccess);
     MQTTV5_GetPublishPacketSize_ExpectAnyArgsAndReturn(MQTTSuccess);
     MQTT_SerializePublishHeaderWithoutTopic_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_SerializePublishProperties_Stub( MQTT_SerializePublishProperties_cb );
@@ -678,6 +897,7 @@ void test_MQTT_Publish2( void )
     
      /*Send With properties*/
     setupPublishProperties(&publishInfo);
+    MQTTV5_ValidatePublishParams_ExpectAnyArgsAndReturn(MQTTSuccess);
     MQTTV5_GetPublishPacketSize_ExpectAnyArgsAndReturn(MQTTSuccess);
     MQTT_SerializePublishHeaderWithoutTopic_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_SerializePublishProperties_Stub( MQTT_SerializePublishProperties_cb );
@@ -686,4 +906,59 @@ void test_MQTT_Publish2( void )
 
 
 }
+
+void test_MQTT_ProcessLoop_handleIncomingAck_Happy_Paths( void )
+{
+    MQTTStatus_t mqttStatus;
+    MQTTContext_t context = { 0 };
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
+    ProcessLoopReturns_t expectParams = { 0 };
+    MQTTConnectProperties_t properties;
+    setupTransportInterface( &transport );
+    setupNetworkBuffer( &networkBuffer );
+
+    mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+    properties.requestProblemInfo = 1;
+    context.connectProperties = &properties;
+    modifyIncomingPacketStatus = MQTTSuccess;
+
+    /* Mock the receiving of a PUBACK packet type and expect the appropriate
+     * calls made from the process loop. */
+    currentPacketType = MQTT_PACKET_TYPE_PUBACK;
+    /* Set expected return values in the loop. */
+    resetProcessLoopParams( &expectParams );
+    expectParams.stateAfterDeserialize = MQTTPublishDone;
+    expectParams.stateAfterSerialize = MQTTPublishDone;
+    expectProcessLoopCalls( &context, &expectParams );
+
+}
+
+// void test_MQTT_ProcessLoop_handleIncomingAck_Happy_Paths( void )
+// {
+//     MQTTStatus_t status;
+//     MQTTContext_t context = { 0 };
+//     TransportInterface_t transport = { 0 };
+//     MQTTFixedBuffer_t networkBuffer = { 0 };
+//     ProcessLoopReturns_t expectParams = { 0 };
+//     MQTTConnectProperties_t properties;
+//     setupTransportInterface( &transport );
+//     setupNetworkBuffer( &networkBuffer );
+//     setupTransportInterface( &transport );
+//     setupNetworkBuffer( &networkBuffer );
+//     transport.recv = transportRecvFailure;
+
+//     status = MQTT_Init( &context, &transport, getTime, eventCallback1, &networkBuffer );
+//     TEST_ASSERT_EQUAL( MQTTSuccess, status );
+//     properties.requestProblemInfo = 1;
+//     context.connectProperties = &properties;
+//     modifyIncomingPacketStatus = MQTTSuccess;
+
+//     MQTT_ProcessIncomingPacketTypeAndLength_IgnoreAndReturn(MQTTSuccess);
+//     MQTTV5_DeserializeAck_IgnoreAndReturn(MQTTSuccess);
+//     status = MQTT_ProcessLoop(&context);
+//     TEST_ASSERT_EQUAL( MQTTSuccess, status );
+    
+// }
 
