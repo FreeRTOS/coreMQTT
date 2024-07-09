@@ -1048,7 +1048,7 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
 
             if( ( *count == ( uint32_t ) MAX_USER_PROPERTY ) && ( status == MQTTSuccess ) )
             {
-                LogDebug( ( "Discarded additional user property with key %s and value %s",
+                LogDebug( ( "Discarded additional user property with key %s and value %s. ",
                             discardUserProperty.pKey,
                             discardUserProperty.pValue ) );
             }
@@ -2176,6 +2176,10 @@ static MQTTStatus_t deserializeSimpleAckV5( const MQTTPacketInfo_t * pAck,
         if(requestProblem == false)
         {
             status = MQTTProtocolError;
+        }
+        else if(pAckInfo->pUserProperty == NULL)
+        {
+            status = MQTTBadParameter;
         }
         else
         {
@@ -5032,24 +5036,18 @@ MQTTStatus_t MQTTV5_GetAckPacketSize(const MQTTAckInfo_t *pAckInfo, size_t* pRem
     if(status == MQTTSuccess)
     {
         /*Validate the length.*/
-        if((propertyLength)<MQTT_MAX_REMAINING_LENGTH){
+        if((propertyLength + 4U)<MQTT_MAX_REMAINING_LENGTH){
             /*We have successfully calculated the property length.*/
             *pPropertyLength = propertyLength;
             length += remainingLengthEncodedSize(propertyLength) + propertyLength;
+            *pRemainingLength = length;
         }
         else
         {
             status = MQTTBadParameter;
         }
     }
-    if(status == MQTTSuccess){
-        if(length < MQTT_MAX_REMAINING_LENGTH){
-           *pRemainingLength = length;
-        }
-        else{
-            status = MQTTBadParameter;
-        }
-    }
+
     if(status == MQTTSuccess){
         packetSize = length + 1U + remainingLengthEncodedSize(length);
         if(packetSize > maxPacketSize)

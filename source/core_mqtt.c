@@ -1094,6 +1094,9 @@ static bool matchTopicFilter( const char * pTopicName,
             status = MQTTSendFailed;
         }
      }
+     else{
+        status = MQTTBadParameter;
+     }
     return status;
 }
 
