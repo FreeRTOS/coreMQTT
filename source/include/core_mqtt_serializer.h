@@ -455,6 +455,10 @@ typedef struct MQTTAckInfo
      * @brief Response code;
      */
     uint8_t reasonCode;
+    /**
+     * @brief Property Lenght.
+     */
+    size_t propertyLength;
     #if(MQTT_USER_PROPERTY_ENABLED)
      /**
      * @brief To store a key value pair.
@@ -1854,7 +1858,7 @@ MQTTStatus_t MQTTV5_GetPublishPacketSize(MQTTPublishInfo_t * pPublishInfo,
 
 MQTTStatus_t MQTTV5_DeserializeAck( const MQTTPacketInfo_t * pIncomingPacket,
                                   uint16_t * pPacketId, MQTTAckInfo_t *pAckInfo, bool requestProblem);
-MQTTStatus_t MQTTV5_GetAckPacketSize(const MQTTAckInfo_t *pAckInfo, size_t* pRemainingLength,size_t * pPropertyLength, size_t * pPacketSize, uint32_t maxPacketSize);
+MQTTStatus_t MQTTV5_GetAckPacketSize( MQTTAckInfo_t *pAckInfo, size_t* pRemainingLength,size_t * pPacketSize, uint32_t maxPacketSize);
 
 uint8_t * MQTTV5_SerializeAckFixed(uint8_t * pIndex,
                                 uint8_t packetType,
@@ -1864,11 +1868,16 @@ uint8_t * MQTTV5_SerializeAckFixed(uint8_t * pIndex,
 
 MQTTStatus_t MQTTV5_SerializePubAckWithProperty( const MQTTAckInfo_t *pAckInfo,
                                                  size_t remainingLength,
-                                                 size_t propertyLength,
                                                  const MQTTFixedBuffer_t * pFixedBuffer,
                                                  uint8_t packetType,
                                                  uint16_t packetId);
 
+MQTTStatus_t MQTTV5_GetDisconnectPacketSize( MQTTAckInfo_t* pAckInfo, size_t * pRemainingLength, size_t * pPacketSize,uint32_t maxPacketSize, uint32_t sessionExpiry,uint32_t prevSessionExpiry );
+
+uint8_t * MQTTV5_SerializeDisconnectFixed(uint8_t * pIndex,
+                                        const MQTTAckInfo_t * pAckInfo,
+                                        size_t remainingLength,
+                                        uint32_t sessionExpiry);
 /* *INDENT-OFF* */
 #ifdef __cplusplus
     }

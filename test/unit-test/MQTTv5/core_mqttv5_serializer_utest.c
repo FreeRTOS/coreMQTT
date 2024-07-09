@@ -2387,13 +2387,12 @@ void test_MQTTV5_SerializeConnect_Happy_Paths()
 }
 
 
-void test_WillLimit( void )
+void test_RemaininglengthLimit( void )
 {
     /* Test will property length more than the max value allowed. */
     size_t remainingLength = 0;
     size_t packetSize = 0;
     uint32_t maxPacketSize;
-    size_t propertyLength;
     MQTTStatus_t status = MQTTSuccess;
     MQTTUserProperties_t incomingProperty;
     MQTTAckInfo_t ackInfo;
@@ -2443,9 +2442,12 @@ void test_WillLimit( void )
     memset(&ackInfo,0x0, sizeof(ackInfo));
     ackInfo.pUserProperty = &userProperties;
     maxPacketSize = UINT32_MAX;
-    status = MQTTV5_GetAckPacketSize(&ackInfo,&remainingLength,&propertyLength,&packetSize,maxPacketSize);
+    status = MQTTV5_GetAckPacketSize(&ackInfo,&remainingLength,&packetSize,maxPacketSize);
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
 
+    status = MQTTV5_GetDisconnectPacketSize(&ackInfo,&remainingLength,&packetSize,maxPacketSize,0,10);
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+    
 }
 
 void test_MQTTV5_ValidatePublishParams()
@@ -2809,31 +2811,28 @@ void test_MQTTV5_GetAckPacketSize()
  MQTTAckInfo_t ackInfo;
  MQTTUserProperties_t userProperties;
  size_t remainingLength;
- size_t  propertyLength;
  size_t  packetSize;
  uint32_t maxPacketSize = 0U;
  memset(&ackInfo,0x0, sizeof(ackInfo));
  memset(&userProperties,0x0, sizeof(userProperties));
  /*Invalid parameters*/
-status = MQTTV5_GetAckPacketSize(NULL,&remainingLength,&propertyLength,&packetSize,maxPacketSize);
+status = MQTTV5_GetAckPacketSize(NULL,&remainingLength,&packetSize,maxPacketSize);
 TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
 
-status = MQTTV5_GetAckPacketSize(&ackInfo,NULL,&propertyLength,&packetSize,maxPacketSize);
+status = MQTTV5_GetAckPacketSize(&ackInfo,NULL,&packetSize,maxPacketSize);
 TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
 
-status = MQTTV5_GetAckPacketSize(&ackInfo,&remainingLength,NULL,&packetSize,maxPacketSize);
-TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
 
-status = MQTTV5_GetAckPacketSize(&ackInfo,&remainingLength,&propertyLength,NULL,maxPacketSize);
+status = MQTTV5_GetAckPacketSize(&ackInfo,&remainingLength,NULL,maxPacketSize);
 TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
 
 /*Max packet size cannot be 0*/
-status = MQTTV5_GetAckPacketSize(&ackInfo,&remainingLength,&propertyLength,NULL,maxPacketSize);
+status = MQTTV5_GetAckPacketSize(&ackInfo,&remainingLength,NULL,maxPacketSize);
 TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
 
 /*Valid parameters*/
 maxPacketSize = UINT32_MAX;
-status = MQTTV5_GetAckPacketSize(&ackInfo,&remainingLength,&propertyLength,&packetSize,maxPacketSize);
+status = MQTTV5_GetAckPacketSize(&ackInfo,&remainingLength,&packetSize,maxPacketSize);
 TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
 
 /*With properties*/
@@ -2841,24 +2840,24 @@ ackInfo.pReasonString = MQTT_TEST_UTF8_STRING;
 ackInfo.reasonStringLength = MQTT_TEST_UTF8_STRING_LENGTH;
 ackInfo.pUserProperty = &userProperties;
 userProperties.count = 0;
-status = MQTTV5_GetAckPacketSize(&ackInfo,&remainingLength,&propertyLength,&packetSize,maxPacketSize);
+status = MQTTV5_GetAckPacketSize(&ackInfo,&remainingLength,&packetSize,maxPacketSize);
 TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
 
 /*Packet size greater than max allowed.*/
 maxPacketSize = 2;
-status = MQTTV5_GetAckPacketSize(&ackInfo,&remainingLength,&propertyLength,&packetSize,maxPacketSize);
+status = MQTTV5_GetAckPacketSize(&ackInfo,&remainingLength,&packetSize,maxPacketSize);
 TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
 
 /*Max packet size cannot be 0*/
 maxPacketSize = 0;
-status = MQTTV5_GetAckPacketSize(&ackInfo,&remainingLength,&propertyLength,&packetSize,maxPacketSize);
+status = MQTTV5_GetAckPacketSize(&ackInfo,&remainingLength,&packetSize,maxPacketSize);
 TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
 
 
 /*Reason string is null but length is not 0*/
 ackInfo.pReasonString = NULL;
 maxPacketSize = 30;
-status = MQTTV5_GetAckPacketSize(&ackInfo,&remainingLength,&propertyLength,&packetSize,maxPacketSize);
+status = MQTTV5_GetAckPacketSize(&ackInfo,&remainingLength,&packetSize,maxPacketSize);
 TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
 
 }
@@ -2868,7 +2867,6 @@ void test_MQTTV5_SerializePubAckWithProperty()
     MQTTStatus_t status ;
     MQTTAckInfo_t ackInfo;
     size_t remainingLength = 0U;
-    size_t  propertyLength = 0U;
     size_t  packetSize;
     uint8_t packetType= MQTT_PACKET_TYPE_PUBREL;
     uint16_t packetId = 1U;
@@ -2877,33 +2875,33 @@ void test_MQTTV5_SerializePubAckWithProperty()
     size_t bufferSize = sizeof( buffer ) - 2 * BUFFER_PADDING_LENGTH;
     MQTTFixedBuffer_t fixedBuffer = { .pBuffer = &buffer[ BUFFER_PADDING_LENGTH ], .size = bufferSize };
     /*Invalid parameters*/
-    status = MQTTV5_SerializePubAckWithProperty(NULL,remainingLength,propertyLength,&fixedBuffer,packetType,packetId);
+    status = MQTTV5_SerializePubAckWithProperty(NULL,remainingLength,&fixedBuffer,packetType,packetId);
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
 
-    status = MQTTV5_SerializePubAckWithProperty(&ackInfo,remainingLength,propertyLength,NULL,packetType,packetId);
+    status = MQTTV5_SerializePubAckWithProperty(&ackInfo,remainingLength,NULL,packetType,packetId);
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
 
     fixedBuffer.pBuffer = NULL;
-    status = MQTTV5_SerializePubAckWithProperty(&ackInfo,remainingLength,propertyLength,&fixedBuffer,packetType,packetId);
+    status = MQTTV5_SerializePubAckWithProperty(&ackInfo,remainingLength,&fixedBuffer,packetType,packetId);
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
 
     /*Buffer size not sufficient*/
-    status = MQTTV5_GetAckPacketSize(&ackInfo,&remainingLength,&propertyLength,&packetSize,maxPacketSize);
+    status = MQTTV5_GetAckPacketSize(&ackInfo,&remainingLength,&packetSize,maxPacketSize);
     fixedBuffer.size = 5; 
     fixedBuffer.pBuffer= &buffer[BUFFER_PADDING_LENGTH];
-    status = MQTTV5_SerializePubAckWithProperty(&ackInfo,remainingLength,propertyLength,&fixedBuffer,packetType,packetId);
+    status = MQTTV5_SerializePubAckWithProperty(&ackInfo,remainingLength,&fixedBuffer,packetType,packetId);
     TEST_ASSERT_EQUAL_INT( MQTTNoMemory, status );
 
     /*With correct parameters*/
     memset(&ackInfo,0x0, sizeof(ackInfo));
-    status = MQTTV5_GetAckPacketSize(&ackInfo,&remainingLength,&propertyLength,&packetSize,maxPacketSize);
+    status = MQTTV5_GetAckPacketSize(&ackInfo,&remainingLength,&packetSize,maxPacketSize);
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
     /* Make sure buffer has enough space */
     TEST_ASSERT_GREATER_OR_EQUAL( packetSize, bufferSize );
     /* Make sure test succeeds. */
     fixedBuffer.size = 200;
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
-    status = MQTTV5_SerializePubAckWithProperty(&ackInfo,remainingLength,propertyLength,&fixedBuffer,packetType,packetId);
+    status = MQTTV5_SerializePubAckWithProperty(&ackInfo,remainingLength,&fixedBuffer,packetType,packetId);
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
 
     /*With properties*/
@@ -2915,11 +2913,126 @@ void test_MQTTV5_SerializePubAckWithProperty()
     userProperties.userProperty->valueLength = 1;
     userProperties.userProperty->pKey = "a";
     userProperties.userProperty->pValue = "a";
-    status = MQTTV5_GetAckPacketSize(&ackInfo,&remainingLength,&propertyLength,&packetSize,maxPacketSize);
+    status = MQTTV5_GetAckPacketSize(&ackInfo,&remainingLength,&packetSize,maxPacketSize);
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
     /* Make sure buffer has enough space */
     fixedBuffer.size = 400;
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
-    status = MQTTV5_SerializePubAckWithProperty(&ackInfo,remainingLength,propertyLength,&fixedBuffer,packetType,packetId);
+    status = MQTTV5_SerializePubAckWithProperty(&ackInfo,remainingLength,&fixedBuffer,packetType,packetId);
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
+}
+
+void test_MQTTV5_GetDisconnectPacketSize()
+{
+    MQTTAckInfo_t ackInfo;
+     size_t  remainingLength;
+     size_t  packetSize;
+     uint32_t maxPacketSize = 0U;
+     uint32_t sessionExpiry = 0U;
+     uint32_t prevSessionExpiry = 0U;
+     MQTTStatus_t status;
+     memset(&ackInfo,0x0,sizeof(ackInfo));
+
+     /*Invalid arguments*/
+    status = MQTTV5_GetDisconnectPacketSize(NULL,&remainingLength,&packetSize,maxPacketSize,sessionExpiry,prevSessionExpiry);
+    TEST_ASSERT_EQUAL_INT(MQTTBadParameter,status);
+
+    status = MQTTV5_GetDisconnectPacketSize(&ackInfo,NULL,&packetSize,maxPacketSize,sessionExpiry,prevSessionExpiry);
+    TEST_ASSERT_EQUAL_INT(MQTTBadParameter,status);
+      
+    status = MQTTV5_GetDisconnectPacketSize(&ackInfo,&remainingLength,NULL,maxPacketSize,sessionExpiry,prevSessionExpiry);
+    TEST_ASSERT_EQUAL_INT(MQTTBadParameter,status);
+
+     /*Max packet size cannot be 0.*/    
+     status = MQTTV5_GetDisconnectPacketSize(&ackInfo,&remainingLength,&packetSize,maxPacketSize,sessionExpiry,prevSessionExpiry);
+     TEST_ASSERT_EQUAL_INT(MQTTBadParameter,status);
+
+     /*Session expiry has to be set once*/
+     maxPacketSize = 6U;
+     status = MQTTV5_GetDisconnectPacketSize(&ackInfo,&remainingLength,&packetSize,maxPacketSize,sessionExpiry,prevSessionExpiry);
+     TEST_ASSERT_EQUAL_INT(MQTTBadParameter,status);
+
+     sessionExpiry = 10;
+     /*Reason string not initialized.*/
+     ackInfo.reasonStringLength = MQTT_TEST_UTF8_STRING_LENGTH;
+     status = MQTTV5_GetDisconnectPacketSize(&ackInfo,&remainingLength,&packetSize,maxPacketSize,sessionExpiry,prevSessionExpiry);
+     TEST_ASSERT_EQUAL_INT(MQTTBadParameter,status);
+  
+    ackInfo.pReasonString = MQTT_TEST_UTF8_STRING;
+    /*Packet size greater than allowed.*/
+    prevSessionExpiry = 10;
+    status = MQTTV5_GetDisconnectPacketSize(&ackInfo,&remainingLength,&packetSize,maxPacketSize,sessionExpiry,prevSessionExpiry);
+    TEST_ASSERT_EQUAL_INT(MQTTBadParameter,status);
+    
+   /*Valid parameters*/
+     maxPacketSize = 60U;
+    status = MQTTV5_GetDisconnectPacketSize(&ackInfo,&remainingLength,&packetSize,maxPacketSize,sessionExpiry,prevSessionExpiry);
+    TEST_ASSERT_EQUAL_INT(MQTTSuccess,status);
+
+}
+
+void test_MQTTV5_SerializeDisconnectWithProperty()
+{
+     MQTTAckInfo_t ackInfo;
+     size_t  remainingLength;
+     uint32_t maxPacketSize = 200U;
+     uint32_t sessionExpiry = 0U;
+     MQTTStatus_t status = MQTTSuccess; 
+     uint8_t buffer[ 200 + 2 * BUFFER_PADDING_LENGTH ];
+     size_t bufferSize = sizeof( buffer ) - 2 * BUFFER_PADDING_LENGTH;
+     size_t packetSize = bufferSize;
+     MQTTFixedBuffer_t fixedBuffer = { 0 };
+     memset(&ackInfo,0x0,sizeof(ackInfo));
+    fixedBuffer.size = bufferSize;
+
+    /*Invalid Parameters*/
+    status = MQTTV5_SerializeDisconnectWithProperty(NULL,remainingLength,&fixedBuffer,sessionExpiry);
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+
+    status = MQTTV5_SerializeDisconnectWithProperty(&ackInfo,remainingLength,NULL,sessionExpiry);
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+
+    status = MQTTV5_SerializeDisconnectWithProperty(&ackInfo,remainingLength,&fixedBuffer,sessionExpiry);
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+    
+    fixedBuffer.pBuffer = &buffer[ BUFFER_PADDING_LENGTH ];
+    fixedBuffer.size = 2 ;
+    remainingLength = 20;
+    /*Buffer size not enough.*/
+    status = MQTTV5_SerializeDisconnectWithProperty(&ackInfo,remainingLength,&fixedBuffer,sessionExpiry);
+    TEST_ASSERT_EQUAL_INT( MQTTNoMemory, status );
+
+    fixedBuffer.size= bufferSize;
+    /* Calculate exact packet size and remaining length. */
+    status = MQTTV5_GetDisconnectPacketSize( &ackInfo, &remainingLength, &packetSize,maxPacketSize,sessionExpiry,10);
+    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
+    /* Make sure buffer has enough space */
+    TEST_ASSERT_GREATER_OR_EQUAL( packetSize, bufferSize );
+
+    padAndResetBuffer( buffer, sizeof( buffer ) );
+    status = MQTTV5_SerializeDisconnectWithProperty(&ackInfo,remainingLength,&fixedBuffer,sessionExpiry);
+    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
+    checkBufferOverflow( buffer, sizeof( buffer ) );
+    
+    ackInfo.pReasonString =MQTT_TEST_UTF8_STRING;
+    ackInfo.reasonStringLength = MQTT_TEST_UTF8_STRING_LENGTH;
+    ackInfo.pUserProperty = &userProperties;
+    userProperties.count = 1;
+    userProperties.userProperty[0].pKey = MQTT_TEST_UTF8_STRING;
+    userProperties.userProperty[0].pValue = MQTT_TEST_UTF8_STRING;
+    userProperties.userProperty[0].keyLength = MQTT_TEST_UTF8_STRING_LENGTH;
+    userProperties.userProperty[0].valueLength = MQTT_TEST_UTF8_STRING_LENGTH;
+
+    sessionExpiry = 10;
+    fixedBuffer.pBuffer = &buffer[ BUFFER_PADDING_LENGTH ];
+    /* Calculate exact packet size and remaining length. */
+    status = MQTTV5_GetDisconnectPacketSize( &ackInfo, &remainingLength, &packetSize,maxPacketSize,sessionExpiry,10);
+    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
+    /* Make sure buffer has enough space */
+    TEST_ASSERT_GREATER_OR_EQUAL( packetSize, bufferSize );
+
+    padAndResetBuffer( buffer, sizeof( buffer ) );
+    status = MQTTV5_SerializeDisconnectWithProperty(&ackInfo,remainingLength,&fixedBuffer,sessionExpiry);
+    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
+    checkBufferOverflow( buffer, sizeof( buffer ) );
 }
