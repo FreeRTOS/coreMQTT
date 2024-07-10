@@ -15,11 +15,9 @@ on:
         required: false
 
 env:
-  repository_name: coreMQTT
   source_folder_list: "source test"
-  mqtt_version_macro_file: source/include/core_mqtt.h
-  repository_compressed_name: coreMQTT-${{ github.event.inputs.version_number }}
-  repository_zip_name: coreMQTT-${{ github.event.inputs.version_number }}.zip
+  repository_compressed_name: ${{ github.repository }}-${{ github.event.inputs.version_number }}
+  repository_zip_name: ${{ github.repository }}-${{ github.event.inputs.version_number }}.zip
 
 jobs:
   clean-existing-tag-and-release:
@@ -72,12 +70,12 @@ jobs:
       - name: create a new branch that references commit id
         run: git checkout -b ${{ github.event.inputs.version_number }} ${{ github.event.inputs.commit_id }}
 
-      - name: Update version number in source file
+      - name: Update version number in source files
         run: |
             echo "${{ env.source_folder_list }}" | \
             xargs -n 1 sh -c \
             'find $1 -type f \( -name "*.c" -o -name "*.h" \) \
-            -exec sed -i -b -E "0,/^ \* ${{ env.repository_name }}/s/^ \* ${{ env.repository_name }}.*/ \* ${{ env.repository_name }} ${{ github.event.inputs.version_number }}/g" {} +'
+            -exec sed -i -b -E "0,/^ \* ${{ github.repository }}/s/^ \* ${{ github.repository }}.*/ \* ${{ github.repository }} ${{ github.event.inputs.version_number }}/g" {} +'
             git add .
             git commit -m '[AUTO][RELEASE]: Update version number in source files'
             git push -u origin ${{ github.event.inputs.version_number }}
@@ -93,13 +91,13 @@ jobs:
         run: |
           sed -i -b 's/PROJECT_NUMBER *=.*/PROJECT_NUMBER         = ${{ github.event.inputs.version_number }}/g' ./docs/doxygen/config.doxyfile
           git add .
-          git commit -m '[AUTO][RELEASE]: Update version number in manifest.yml'
+          git commit -m '[AUTO][RELEASE]: Update version number in doxygen'
           git push -u origin ${{ github.event.inputs.version_number }}
 
       - name : Update MQTT version number macro
-        if: ${{ env.mqtt_version_macro_file }}
+        if: ${{ env.repository_name == "coreMQTT" }}
         run: |
-          sed -i -b 's/^\#define MQTT_LIBRARY_VERSION .*/\#define MQTT_LIBRARY_VERSION    "${{ github.event.inputs.version_number }}"/g' ${{ env.mqtt_version_macro_file }}
+          sed -i -b 's/^\#define MQTT_LIBRARY_VERSION .*/\#define MQTT_LIBRARY_VERSION    "${{ github.event.inputs.version_number }}"/g' source/include/core_mqtt.h
           git add .
           git commit -m '[AUTO][RELEASE]: Update version number macro in ${{ env.mqtt_version_macro_file }}'
           git push -u origin ${{ github.event.inputs.version_number }}
@@ -118,7 +116,7 @@ jobs:
 
       - name: Tag Commit and Push to remote
         run: |
-          git tag ${{ github.event.inputs.version_number }} -a -m "${{ env.repository_name }} Library ${{ github.event.inputs.version_number }}"
+          git tag ${{ github.event.inputs.version_number }} -a -m "${{ github.repository }} Library ${{ github.event.inputs.version_number }}"
           git push origin --tags
 
       - name: Verify tag on remote
@@ -141,17 +139,17 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event.inputs.commit_id }}
-          path: ${{ env.repository_name }}
+          path: ${{ github.repository }}
           submodules: recursive
 
       - name: Checkout disabled submodules
         run: |
-          cd ${{ env.repository_name }}
+          cd ${{ github.repository }}
           git submodule update --init --checkout --recursive
 
       - name: Create ZIP
         run: |
-          zip -r ${{ env.repository_zip_name }} ${{ env.repository_name }} -x "*.git*"
+          zip -r ${{ env.repository_zip_name }} ${{ github.repository }} -x "*.git*"
           ls ./
 
       - name: Validate created ZIP
@@ -161,12 +159,12 @@ jobs:
           cd zip-check
           unzip ${{ env.repository_zip_name }} -d ${{ env.repository_compressed_name }}
           ls ${{ env.repository_compressed_name }}
-          diff -r -x "*.git*" ${{ env.repository_compressed_name }}/${{ env.repository_name }}/ ../${{ env.repository_name }}/
+          diff -r -x "*.git*" ${{ env.repository_compressed_name }}/${{ github.repository }}/ ../${{ github.repository }}/
           cd ../
 
       - name: Build
         run: |
-          cd zip-check/${{ env.repository_compressed_name }}/${{ env.repository_name }}
+          cd zip-check/${{ env.repository_compressed_name }}/${{ github.repository }}
           sudo apt-get install -y lcov
           cmake -S test -B build/ \
           -G "Unix Makefiles" \
@@ -177,7 +175,7 @@ jobs:
 
       - name: Test
         run: |
-          cd zip-check/${{ env.repository_compressed_name }}/${{ env.repository_name }}/build/
+          cd zip-check/${{ env.repository_compressed_name }}/${{ github.repository }}/build/
           ctest -E system --output-on-failure
           cd ..
 
@@ -215,7 +213,7 @@ jobs:
         with:
           tag_name: ${{ github.event.inputs.version_number }}
           release_name: ${{ github.event.inputs.version_number }}
-          body: Release ${{ github.event.inputs.version_number }} of the ${{ env.repository_name }} Library.
+          body: Release ${{ github.event.inputs.version_number }} of the ${{ github.repository }} Library.
           draft: false
           prerelease: false
 
