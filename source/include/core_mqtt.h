@@ -44,8 +44,11 @@
 /**
  * @cond DOXYGEN_IGNORE
  * The current version of this library.
+ * 
+ * If MQTT_LIBRARY_VERSION ends with + it represents the version in development
+ * after the numbered release.
  */
-#define MQTT_LIBRARY_VERSION    "v2.1.0"
+#define MQTT_LIBRARY_VERSION    "v2.3.0+"
 /** @endcond */
 
 /**
