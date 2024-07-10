@@ -15,9 +15,11 @@ on:
         required: false
 
 env:
+  repository_name: "coreMQTT"
+  repository_compressed_name: coreMQTT-${{ github.event.inputs.version_number }}
+  repository_zip_name: coreMQTT-${{ github.event.inputs.version_number }}.zip
+  # Source folder list for version number updates
   source_folder_list: "source test"
-  repository_compressed_name: ${{ github.repository }}-${{ github.event.inputs.version_number }}
-  repository_zip_name: ${{ github.repository }}-${{ github.event.inputs.version_number }}.zip
 
 jobs:
   clean-existing-tag-and-release:
@@ -75,7 +77,7 @@ jobs:
             echo "${{ env.source_folder_list }}" | \
             xargs -n 1 sh -c \
             'find $1 -type f \( -name "*.c" -o -name "*.h" \) \
-            -exec sed -i -b -E "0,/^ \* ${{ github.repository }}/s/^ \* ${{ github.repository }}.*/ \* ${{ github.repository }} ${{ github.event.inputs.version_number }}/g" {} +'
+            -exec sed -i -b -E "0,/^ \* ${{ env.repository_name }}/s/^ \* ${{ env.repository_name }}.*/ \* ${{ env.repository_name }} ${{ github.event.inputs.version_number }}/g" {} +'
             git add .
             git commit -m '[AUTO][RELEASE]: Update version number in source files'
             git push -u origin ${{ github.event.inputs.version_number }}
@@ -95,7 +97,7 @@ jobs:
           git push -u origin ${{ github.event.inputs.version_number }}
 
       - name : Update MQTT version number macro
-        if: ${{ github.repository == 'coreMQTT' }}
+        if: ${{ env.repository_name == 'coreMQTT' }}
         run: |
           sed -i -b 's/^\#define MQTT_LIBRARY_VERSION .*/\#define MQTT_LIBRARY_VERSION    "${{ github.event.inputs.version_number }}"/g' source/include/core_mqtt.h
           git add .
@@ -116,7 +118,7 @@ jobs:
 
       - name: Tag Commit and Push to remote
         run: |
-          git tag ${{ github.event.inputs.version_number }} -a -m "${{ github.repository }} Library ${{ github.event.inputs.version_number }}"
+          git tag ${{ github.event.inputs.version_number }} -a -m "${{ env.repository_name }} Library ${{ github.event.inputs.version_number }}"
           git push origin --tags
 
       - name: Verify tag on remote
@@ -139,17 +141,17 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event.inputs.commit_id }}
-          path: ${{ github.repository }}
+          path: ${{ env.repository_name }}
           submodules: recursive
 
       - name: Checkout disabled submodules
         run: |
-          cd ${{ github.repository }}
+          cd ${{ env.repository_name }}
           git submodule update --init --checkout --recursive
 
       - name: Create ZIP
         run: |
-          zip -r ${{ env.repository_zip_name }} ${{ github.repository }} -x "*.git*"
+          zip -r ${{ env.repository_zip_name }} ${{ env.repository_name }} -x "*.git*"
           ls ./
 
       - name: Validate created ZIP
@@ -159,12 +161,12 @@ jobs:
           cd zip-check
           unzip ${{ env.repository_zip_name }} -d ${{ env.repository_compressed_name }}
           ls ${{ env.repository_compressed_name }}
-          diff -r -x "*.git*" ${{ env.repository_compressed_name }}/${{ github.repository }}/ ../${{ github.repository }}/
+          diff -r -x "*.git*" ${{ env.repository_compressed_name }}/${{ env.repository_name }}/ ../${{ env.repository_name }}/
           cd ../
 
       - name: Build
         run: |
-          cd zip-check/${{ env.repository_compressed_name }}/${{ github.repository }}
+          cd zip-check/${{ env.repository_compressed_name }}/${{ env.repository_name }}
           sudo apt-get install -y lcov
           cmake -S test -B build/ \
           -G "Unix Makefiles" \
@@ -175,7 +177,7 @@ jobs:
 
       - name: Test
         run: |
-          cd zip-check/${{ env.repository_compressed_name }}/${{ github.repository }}/build/
+          cd zip-check/${{ env.repository_compressed_name }}/${{ env.repository_name }}/build/
           ctest -E system --output-on-failure
           cd ..
 
@@ -213,7 +215,7 @@ jobs:
         with:
           tag_name: ${{ github.event.inputs.version_number }}
           release_name: ${{ github.event.inputs.version_number }}
-          body: Release ${{ github.event.inputs.version_number }} of the ${{ github.repository }} Library.
+          body: Release ${{ github.event.inputs.version_number }} of the ${{ env.repository_name }} Library.
           draft: false
           prerelease: false
 
