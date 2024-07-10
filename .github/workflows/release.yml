@@ -95,7 +95,7 @@ jobs:
           git push -u origin ${{ github.event.inputs.version_number }}
 
       - name : Update MQTT version number macro
-        if: ${{ github.repository == "coreMQTT" }}
+        if: ${{ github.repository == 'coreMQTT' }}
         run: |
           sed -i -b 's/^\#define MQTT_LIBRARY_VERSION .*/\#define MQTT_LIBRARY_VERSION    "${{ github.event.inputs.version_number }}"/g' source/include/core_mqtt.h
           git add .
