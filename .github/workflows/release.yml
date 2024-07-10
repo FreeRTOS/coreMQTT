@@ -77,7 +77,7 @@ jobs:
             echo "${{ env.source_folder_list }}" | \
             xargs -n 1 sh -c \
             'find $1 -type f \( -name "*.c" -o -name "*.h" \) \
-            -exec sed -i -b -E "0,/^\* ${{ env.repository_name }}/s/\* ${{ env.repository_name }}.*/\* ${{ env.repository_name }} ${{ github.event.inputs.version_number }}/g" {} +'
+            -exec sed -i -b -E "0,/^ \* ${{ env.repository_name }}/s/^ \* ${{ env.repository_name }}.*/ \* ${{ env.repository_name }} ${{ github.event.inputs.version_number }}/g" {} +'
             git add .
             git commit -m '[AUTO][RELEASE]: Update version number in source files'
             git push -u origin ${{ github.event.inputs.version_number }}
