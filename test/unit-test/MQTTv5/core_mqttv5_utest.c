@@ -367,6 +367,20 @@ static uint8_t * MQTTV5_SerializeAckFixed_cb( uint8_t * pIndex,
     return pIndex;
 }
 
+static uint8_t * MQTTV5_SerializeDisconnectFixed_cb(uint8_t * pIndex,
+                                        const MQTTAckInfo_t * pAckInfo,
+                                        size_t remainingLength,
+                                        uint32_t sessionExpiry,
+                                        int numcallbacks)
+{
+    ( void ) pIndex;
+    ( void ) pAckInfo;
+    ( void ) remainingLength;
+    ( void ) sessionExpiry;
+    ( void ) numcallbacks;
+
+    return pIndex;
+}
 /**
  * @brief This helper function is used to expect any calls from the process loop
  * to mocked functions belonging to an external header file. Its parameters
@@ -1179,4 +1193,66 @@ void test_MQTT_ProcessLoop_handleIncomingAck_Happy_Paths7( void )
     status = MQTT_ProcessLoop(&context);
     TEST_ASSERT_EQUAL_INT(MQTTSendFailed,status);
     
+}
+
+void test_MQTTV5_Disconnect()
+{
+    uint32_t sessionExpiry = 0U;
+    MQTTStatus_t status;
+    MQTTConnectProperties_t properties = { 0 };
+    MQTTAckInfo_t ackInfo ={ 0 };
+    MQTTContext_t context = { 0 };
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
+    uint16_t packetId = 1;
+    MQTTPacketInfo_t incomingPacket = { 0 };
+    MQTTUserProperties_t userProperties ={ 0 };
+    setupTransportInterface( &transport );
+    setupNetworkBuffer( &networkBuffer );
+    status = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
+    TEST_ASSERT_EQUAL_INT(MQTTSuccess,status);
+
+    /*Invalid parameters*/
+    status = MQTTV5_Disconnect(NULL, &ackInfo, sessionExpiry);
+    TEST_ASSERT_EQUAL_INT(MQTTBadParameter,status);    
+
+    status = MQTTV5_Disconnect(&context, NULL, sessionExpiry);
+    TEST_ASSERT_EQUAL_INT(MQTTBadParameter,status);    
+
+    /*Connect properties not initialized*/
+    status = MQTTV5_Disconnect(&context, &ackInfo, sessionExpiry);
+    TEST_ASSERT_EQUAL_INT(MQTTBadParameter,status);   
+
+    /*Bad Parameters*/ 
+    context.connectProperties = &properties;
+    MQTTV5_GetDisconnectPacketSize_ExpectAnyArgsAndReturn(MQTTBadParameter);
+    status = MQTTV5_Disconnect(&context, &ackInfo, sessionExpiry);
+    TEST_ASSERT_EQUAL_INT(MQTTBadParameter,status);  
+
+    /*Valid parametrs*/
+    properties.maxPacketSize = 100U;
+    properties.sessionExpiry = 10U;
+    MQTTV5_GetDisconnectPacketSize_ExpectAnyArgsAndReturn(MQTTSuccess);
+    MQTTV5_SerializeDisconnectFixed_Stub(MQTTV5_SerializeDisconnectFixed_cb );
+    status = MQTTV5_Disconnect(&context, &ackInfo, sessionExpiry);
+    TEST_ASSERT_EQUAL_INT(MQTTSuccess,status);   
+
+    /*With reason string and user property*/
+    ackInfo.pUserProperty = &userProperties;
+    ackInfo.pReasonString = "test";
+    ackInfo.reasonStringLength = 4;
+    MQTTV5_GetDisconnectPacketSize_ExpectAnyArgsAndReturn(MQTTSuccess);
+    MQTTV5_SerializeDisconnectFixed_Stub(MQTTV5_SerializeDisconnectFixed_cb );
+    status = MQTTV5_Disconnect(&context, &ackInfo, sessionExpiry);
+    TEST_ASSERT_EQUAL_INT(MQTTSuccess,status);   
+
+    /*Send failed*/
+    context.transportInterface.send = transportSendFailure;
+    context.transportInterface.writev = NULL;
+    MQTTV5_GetDisconnectPacketSize_ExpectAnyArgsAndReturn(MQTTSuccess);
+    MQTTV5_SerializeDisconnectFixed_Stub(MQTTV5_SerializeDisconnectFixed_cb );
+    status = MQTTV5_Disconnect(&context, &ackInfo, sessionExpiry);
+    TEST_ASSERT_EQUAL_INT(MQTTSendFailed,status);  
+    
+
 }

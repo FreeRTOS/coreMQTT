@@ -1060,7 +1060,7 @@ static bool matchTopicFilter( const char * pTopicName,
             ioVectorLength += vectorsAdded;
         }
         #if(MQTT_USER_PROPERTY_ENABLED)
-        /*Encode the user porperties if provided.*/
+        /*Encode the user properties if provided.*/
         if(pAckInfo->pUserProperty != NULL)
         {
            ioVectorLength += sendUserProperties( pAckInfo->pUserProperty, &userVector, &totalMessageLength, &iterator);
@@ -1158,7 +1158,7 @@ static MQTTStatus_t sendDisconnectWithoutCopy( MQTTContext_t * pContext,
             ioVectorLength += vectorsAdded;
         }
         #if(MQTT_USER_PROPERTY_ENABLED)
-        /*Encode the user porperties if provided.*/
+        /*Encode the user properties if provided.*/
         if(pAckInfo->pUserProperty != NULL)
         {
            ioVectorLength += sendUserProperties( pAckInfo->pUserProperty, &userVector, &totalMessageLength, &iterator);
