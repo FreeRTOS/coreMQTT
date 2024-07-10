@@ -95,11 +95,11 @@ jobs:
           git push -u origin ${{ github.event.inputs.version_number }}
 
       - name : Update MQTT version number macro
-        if: ${{ env.repository_name == "coreMQTT" }}
+        if: ${{ github.repository == "coreMQTT" }}
         run: |
           sed -i -b 's/^\#define MQTT_LIBRARY_VERSION .*/\#define MQTT_LIBRARY_VERSION    "${{ github.event.inputs.version_number }}"/g' source/include/core_mqtt.h
           git add .
-          git commit -m '[AUTO][RELEASE]: Update version number macro in ${{ env.mqtt_version_macro_file }}'
+          git commit -m '[AUTO][RELEASE]: Update version number macro in source/include/core_mqtt.h'
           git push -u origin ${{ github.event.inputs.version_number }}
 
       - name: Generate SBOM
