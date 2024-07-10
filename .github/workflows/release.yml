@@ -84,7 +84,7 @@ jobs:
 
       - name : Update version number in manifest.yml
         run: |
-          sed -i -b '0,/^versoin/s/^version.*/version: "${{ github.event.inputs.version_number }}"/g' ./manifest.yml
+          sed -i -b '0,/^version/s/^version.*/version: "${{ github.event.inputs.version_number }}"/g' ./manifest.yml
           git add .
           git commit -m '[AUTO][RELEASE]: Update version number in manifest.yml'
           git push -u origin ${{ github.event.inputs.version_number }}
