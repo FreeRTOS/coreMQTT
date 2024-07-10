@@ -331,10 +331,6 @@ typedef struct MQTTConnectProperties
      */
     uint16_t receiveMax;
      /**
-     * @brief Whether the maximum packet size is defined.
-     */
-    bool isMaxPacketSize;
-     /**
      * @brief Four Byte Integer representing the Maximum Packet Size the Client is willing to accept.
      */
     uint32_t maxPacketSize;
@@ -1857,7 +1853,7 @@ MQTTStatus_t MQTTV5_GetPublishPacketSize(MQTTPublishInfo_t * pPublishInfo,
 
 
 MQTTStatus_t MQTTV5_DeserializeAck( const MQTTPacketInfo_t * pIncomingPacket,
-                                  uint16_t * pPacketId, MQTTAckInfo_t *pAckInfo, bool requestProblem);
+                                  uint16_t * pPacketId, MQTTAckInfo_t *pAckInfo, bool requestProblem,uint32_t maxPacketSize);
 MQTTStatus_t MQTTV5_GetAckPacketSize( MQTTAckInfo_t *pAckInfo, size_t* pRemainingLength,size_t * pPacketSize, uint32_t maxPacketSize);
 
 uint8_t * MQTTV5_SerializeAckFixed(uint8_t * pIndex,
@@ -1878,6 +1874,16 @@ uint8_t * MQTTV5_SerializeDisconnectFixed(uint8_t * pIndex,
                                         const MQTTAckInfo_t * pAckInfo,
                                         size_t remainingLength,
                                         uint32_t sessionExpiry);
+ MQTTStatus_t MQTTV5_DeserializeDisconnect( const MQTTPacketInfo_t * pPacket,
+                                            MQTTAckInfo_t *pDisconnectInfo,
+                                            const char ** pServerRef,
+                                            uint16_t * pServerRefLength,
+                                            uint32_t maxPacketSize );
+MQTTStatus_t MQTTV5_SerializeDisconnectWithProperty( const MQTTAckInfo_t *pAckInfo,
+                                                     size_t remainingLength,
+                                                     const MQTTFixedBuffer_t * pFixedBuffer,
+                                                     uint32_t sessionExpiry);
+                                        
 /* *INDENT-OFF* */
 #ifdef __cplusplus
     }

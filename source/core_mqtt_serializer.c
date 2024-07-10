@@ -95,6 +95,10 @@
 #define MQTT_MAX_REMAINING_LENGTH                   ( 268435455UL )
 
 #if ( MQTT_VERSION_5_ENABLED )
+/**
+ * @brief Per the MQTT spec, the max packet size  can be of  max remaining length + 5 bytes
+ */
+    #define MQTT_MAX_PACKET_SIZE          (268435460UL)
 
 /**
  * @brief Version 5 has the value 5.
@@ -114,7 +118,7 @@
 /**
  * @brief Per the MQTT 5 spec, the max packet size is of 5 bytes.
  */
-    #define MQTT_MAX_PACKET_SIZE          ( 5U )
+    #define MQTT_MAX_PACKET_PROPERTY_SIZE          ( 5U )
 
 /**
  * @brief Per the MQTT 5 spec, the topic alias  is of 3 bytes.
@@ -1210,7 +1214,7 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
         MQTTStatus_t status = MQTTSuccess;
 
         /*Validate the arguments*/
-        if( ( pConnectProperties->maxPacketSize == 0U ) && ( pConnectProperties->isMaxPacketSize == true ) )
+        if( pConnectProperties->maxPacketSize == 0U  )
         {
             status = MQTTBadParameter;
         }
@@ -1231,9 +1235,9 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
                 propertyLength += MQTT_RECEIVE_MAX_SIZE;
             }
 
-            if( pConnectProperties->isMaxPacketSize != false )
+            if( pConnectProperties->maxPacketSize != MQTT_MAX_PACKET_SIZE )
             {
-                propertyLength += MQTT_MAX_PACKET_SIZE;
+                propertyLength += MQTT_MAX_PACKET_PROPERTY_SIZE;
             }
 
             if( pConnectProperties->topicAliasMax != 0U )
@@ -2245,7 +2249,7 @@ static MQTTStatus_t decodeAckProperties(MQTTAckInfo_t * pAckInfo,const uint8_t *
 
 }
 
-static MQTTStatus_t deserializeSimpleAckV5( const MQTTPacketInfo_t * pAck,
+static MQTTStatus_t  deserializeSimpleAckV5( const MQTTPacketInfo_t * pAck,
                                             uint16_t * pPacketIdentifier,
                                             MQTTAckInfo_t *pAckInfo,
                                             bool requestProblem )
@@ -2850,6 +2854,13 @@ static bool incomingPacketValid( uint8_t packetType )
             }
 
             break;
+        case MQTT_PACKET_TYPE_DISCONNECT:
+        #if(MQTT_VERSION_5_ENABLED)
+                status = true;
+        #else
+                status = false;
+        #endif
+             break;
 
         /* Any other packet type is invalid. */
         default:
@@ -4802,7 +4813,7 @@ MQTTStatus_t MQTT_ProcessIncomingPacketTypeAndLength( const uint8_t * pBuffer,
 
         /*Serialize the max packet size  if provided.*/
 
-        if( pConnectProperties->isMaxPacketSize == true )
+        if( pConnectProperties->maxPacketSize != MQTT_MAX_PACKET_SIZE )
         {
             *pIndexLocal = MQTT_MAX_PACKET_SIZE_ID;
             pIndexLocal++;
@@ -4946,24 +4957,22 @@ MQTTStatus_t MQTT_ProcessIncomingPacketTypeAndLength( const uint8_t * pBuffer,
         }
 
         /*Validate the packet size if max packet size is set*/
-        if( ( status == MQTTSuccess ) && ( pConnackProperties->isMaxPacketSize == true ) && ( ( pIncomingPacket->remainingLength + remainingLengthSize + 1U ) > ( pConnackProperties->maxPacketSize ) ) )
+        if(status == MQTTSuccess)
+        {
+        if((pIncomingPacket->remainingLength + remainingLengthSize + 1U ) > ( pConnackProperties->maxPacketSize ))
         {
             status = MQTTProtocolError;
         }
         /*Validate the remaining length*/
-        else if( ( status == MQTTSuccess ) && ( ( pIncomingPacket->remainingLength ) != ( 2U + propertyLength + remainingLengthEncodedSize( propertyLength ) ) ) )
+        else if ( (pIncomingPacket->remainingLength ) != ( 2U + propertyLength + remainingLengthEncodedSize( propertyLength ) )) 
         {
             status = MQTTMalformedPacket;
         }
         /*Deserialize the connack properties.*/
-        else if( status == MQTTSuccess )
+        else 
         {
             status = deserializeConnackV5( pConnackProperties, propertyLength, &pVariableHeader );
         }
-
-        else
-        {
-            /* MISRA Empty body */
         }
 
         return status;
@@ -5047,7 +5056,7 @@ MQTTStatus_t MQTTV5_GetPublishPacketSize(MQTTPublishInfo_t * pPublishInfo,
 }
 
 MQTTStatus_t MQTTV5_DeserializeAck( const MQTTPacketInfo_t * pIncomingPacket,
-                                  uint16_t * pPacketId, MQTTAckInfo_t *pAckInfo, bool requestProblem)
+                                  uint16_t * pPacketId, MQTTAckInfo_t *pAckInfo, bool requestProblem, uint32_t maxPacketSize)
 {
     MQTTStatus_t status = MQTTSuccess;
 
@@ -5072,6 +5081,15 @@ MQTTStatus_t MQTTV5_DeserializeAck( const MQTTPacketInfo_t * pIncomingPacket,
     {
         LogError( ( "Remaining data of incoming packet is NULL." ) );
         status = MQTTBadParameter;
+    }
+    /*Max packet size cannot be 0.*/
+    else if(maxPacketSize == 0U)
+    {
+        status = MQTTBadParameter;
+    }
+    else if ( ( pIncomingPacket->remainingLength + remainingLengthEncodedSize(pIncomingPacket->remainingLength) + 1U ) > maxPacketSize )  
+    {
+            status = MQTTProtocolError;
     }
     else
     {
@@ -5435,5 +5453,137 @@ MQTTStatus_t MQTTV5_SerializeDisconnectWithProperty( const MQTTAckInfo_t *pAckIn
         return status;
 }
 
+static MQTTStatus_t validateDisconnectResponseV5(uint8_t reasonCode){
+    MQTTStatus_t status;
+    switch(reasonCode){
+   case (uint8_t)MQTT_REASON_SUCCESS:
+    /*Disconnect the will message*/
+   case (uint8_t)MQTT_REASON_UNSPECIFIED_ERR:
+   case (uint8_t)MQTT_REASON_MALFORMED_PACKET:
+   case (uint8_t)MQTT_REASON_PROTOCOL_ERR:
+   case (uint8_t)MQTT_REASON_IMPL_SPECIFIC_ERR:
+   case (uint8_t)MQTT_REASON_NOT_AUTHORIZED:
+   case (uint8_t)MQTT_REASON_SERVER_BUSY:
+   case (uint8_t)MQTT_REASON_SERVER_SHUTTING_DOWN:
+   case (uint8_t)MQTT_REASON_KEEP_ALIVE_TIMEOUT:
+   case (uint8_t)MQTT_REASON_SESSION_TAKEN_OVER:
+   case (uint8_t)MQTT_REASON_TOPIC_FILTER_INVALID:
+   case (uint8_t)MQTT_REASON_TOPIC_NAME_INVALID :
+   case (uint8_t)MQTT_REASON_RX_MAX_EXCEEDED:
+   case (uint8_t)MQTT_REASON_TOPIC_ALIAS_INVALID:
+   case (uint8_t)MQTT_REASON_PACKET_TOO_LARGE:
+   case (uint8_t)MQTT_REASON_MSG_RATE_TOO_HIGH:
+   case (uint8_t)MQTT_REASON_QUOTA_EXCEEDED:
+   case (uint8_t)MQTT_REASON_ADMIN_ACTION:
+   case (uint8_t)MQTT_REASON_PAYLOAD_FORMAT_INVALID:
+   case (uint8_t)MQTT_REASON_RETAIN_NOT_SUPPORTED:
+   case (uint8_t)MQTT_REASON_QOS_NOT_SUPPORTED:
+   case (uint8_t)MQTT_REASON_USE_ANOTHER_SERVER:
+   case (uint8_t)MQTT_REASON_SERVER_MOVED:
+    case (uint8_t)MQTT_REASON_MAX_CON_TIME:
+    case (uint8_t)MQTT_REASON_SS_NOT_SUPPORTED:
+    case (uint8_t)MQTT_REASON_WILDCARD_SUB_NOT_SUP:
+        status = MQTTSuccess;
+        break;
+    default:
+        status = MQTTProtocolError;
+         break;
+    }
+    return status;
+}
+
+ MQTTStatus_t MQTTV5_DeserializeDisconnect( const MQTTPacketInfo_t * pPacket,
+                                            MQTTAckInfo_t *pDisconnectInfo,
+                                            const char ** pServerRef,
+                                            uint16_t * pServerRefLength,
+                                            uint32_t maxPacketSize )
+{
+    MQTTStatus_t status = MQTTSuccess;
+    const uint8_t * pIndex;
+    size_t propertyLength = 0U;
+    if((pPacket == NULL) || (pPacket->pRemainingData == NULL))
+    {
+        status = MQTTBadParameter;
+    }
+    else if ((pDisconnectInfo == NULL) || (pServerRef == NULL) || (pServerRefLength == NULL))
+    {
+        status = MQTTBadParameter;
+    }
+    else if(maxPacketSize == 0)
+    {
+       status = MQTTBadParameter;
+    }
+    else if(pPacket->remainingLength == 0U)
+    {
+        status = MQTTMalformedPacket;
+    }
+    else if ( ( pPacket->remainingLength + remainingLengthEncodedSize(pPacket->remainingLength) + 1U ) > maxPacketSize )  
+    {
+            status = MQTTProtocolError;
+    }
+    #if(MQTT_USER_PROPERTY_ENABLED)
+    else if(pDisconnectInfo->pUserProperty == NULL)
+    {
+        status = MQTTBadParameter;
+    }
+    #endif
+    else 
+    {
+        /* Extract the reason code */
+        pIndex= pPacket->pRemainingData;
+        pDisconnectInfo->reasonCode = *pIndex;
+        pIndex ++;
+        status = validateDisconnectResponseV5(pDisconnectInfo->reasonCode);
+    }
+    if(status == MQTTSuccess)
+    {
+        if((pPacket->remainingLength > 1U))
+        {
+        status = decodeVariableLength(pIndex,&propertyLength);       
+        if(status == MQTTSuccess)
+        {
+            pIndex= &pIndex[remainingLengthEncodedSize(propertyLength)];
+            /*Validate the remaining length.*/
+            if(pPacket->remainingLength !=  (propertyLength + remainingLengthEncodedSize(propertyLength) + 1U)){
+                status = MQTTMalformedPacket;
+            }
+        }
+        }
+
+    }
+
+    if(status == MQTTSuccess)
+    {
+            while((propertyLength>0U) && (status == MQTTSuccess))
+            {
+                /*Decode the poperty id.*/
+                uint8_t packetId = *pIndex;
+                bool reasonString = false;
+                bool serverRef = false;
+                pIndex = &pIndex[1];
+                propertyLength -= sizeof( uint8_t );
+                switch(packetId){
+                    case MQTT_REASON_STRING_ID:
+                        status = decodeutf_8( &pDisconnectInfo->pReasonString, &pDisconnectInfo->reasonStringLength, &propertyLength, &reasonString, &pIndex );
+                        break;  
+                    case MQTT_USER_PROPERTY_ID:
+                    #if(MQTT_USER_PROPERTY_ENABLED)
+                        status = decodeutf_8pair( pDisconnectInfo->pUserProperty, &pDisconnectInfo->pUserProperty->count, &propertyLength, &pIndex);
+                    #else
+                        status = decodeAndDiscard( &propertyLength, &pIndex);
+                    #endif    
+                        break; 
+                    case MQTT_SERVER_REF_ID:
+                    status = decodeutf_8( pServerRef, pServerRefLength, &propertyLength, &serverRef, &pIndex );
+                    break;
+                    default:
+                         status = MQTTProtocolError;
+                         break;
+                }
+            }
+    }
+    return status;
+
+}
 #endif /* if ( MQTT_VERSION_5_ENABLED ) */
 /*-----------------------------------------------------------*/

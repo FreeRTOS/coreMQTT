@@ -774,8 +774,7 @@ void test_MQTT_Connect_happy_path()
     mqttContext.connectProperties = &properties;
     properties.sessionExpiry = 13;
     properties.receiveMax = 12;
-    properties.isMaxPacketSize = true;
-    properties.maxPacketSize = 13;
+    properties.maxPacketSize = 1000;
     properties.topicAliasMax = 13;
     properties.requestProblemInfo = 0;
     properties.requestResponseInfo = 1;
@@ -937,6 +936,7 @@ void test_MQTT_Publish( void )
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
     mqttContext.connectProperties = &properties;
     
+    properties.maxPacketSize = 10000;
     MQTTV5_ValidatePublishParams_ExpectAnyArgsAndReturn(MQTTSuccess);
     MQTTV5_GetPublishPacketSize_ExpectAnyArgsAndReturn(MQTTSuccess);
     MQTT_SerializePublishHeaderWithoutTopic_ExpectAnyArgsAndReturn( MQTTSuccess );
@@ -1036,11 +1036,11 @@ void test_MQTT_ProcessLoop_handleIncomingAck_Happy_Paths3( void )
     setupTransportInterface( &transport );
     setupNetworkBuffer( &networkBuffer );
     /* Modify incoming packet depending on type to be tested. */
+    status = MQTT_Init( &context, &transport, getTime, eventCallback1, &networkBuffer );
+    TEST_ASSERT_EQUAL( MQTTSuccess, status );
     incomingPacket.type = MQTT_PACKET_TYPE_PUBREC;
     incomingPacket.remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
     incomingPacket.headerLength = MQTT_SAMPLE_REMAINING_LENGTH;
-    status = MQTT_Init( &context, &transport, getTime, eventCallback1, &networkBuffer );
-    TEST_ASSERT_EQUAL( MQTTSuccess, status );
     properties.requestProblemInfo = 1;
     context.connectProperties = &properties;
     modifyIncomingPacketStatus = MQTTSuccess;
@@ -1204,8 +1204,6 @@ void test_MQTTV5_Disconnect()
     MQTTContext_t context = { 0 };
     TransportInterface_t transport = { 0 };
     MQTTFixedBuffer_t networkBuffer = { 0 };
-    uint16_t packetId = 1;
-    MQTTPacketInfo_t incomingPacket = { 0 };
     MQTTUserProperties_t userProperties ={ 0 };
     setupTransportInterface( &transport );
     setupNetworkBuffer( &networkBuffer );
@@ -1229,7 +1227,7 @@ void test_MQTTV5_Disconnect()
     status = MQTTV5_Disconnect(&context, &ackInfo, sessionExpiry);
     TEST_ASSERT_EQUAL_INT(MQTTBadParameter,status);  
 
-    /*Valid parametrs*/
+    /*Valid parameters*/
     properties.maxPacketSize = 100U;
     properties.sessionExpiry = 10U;
     MQTTV5_GetDisconnectPacketSize_ExpectAnyArgsAndReturn(MQTTSuccess);
@@ -1255,4 +1253,40 @@ void test_MQTTV5_Disconnect()
     TEST_ASSERT_EQUAL_INT(MQTTSendFailed,status);  
     
 
+}
+
+void test_MQTT_ProcessLoop_handleIncomingDisconnect( void )
+{
+    MQTTStatus_t status;
+    MQTTContext_t context = { 0 };
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
+    MQTTConnectProperties_t properties;
+    MQTTAckInfo_t disconnectInfo;
+    MQTTPacketInfo_t incomingPacket = { 0 };
+    memset(&disconnectInfo, 0x0, sizeof(disconnectInfo));
+    setupTransportInterface( &transport );
+    setupNetworkBuffer( &networkBuffer );
+    /* Modify incoming packet depending on type to be tested. */
+    status = MQTT_Init( &context, &transport, getTime, eventCallback1, &networkBuffer );
+    TEST_ASSERT_EQUAL( MQTTSuccess, status );
+    context.pDisconnectInfo = &disconnectInfo;
+    context.connectProperties = &properties;
+    incomingPacket.type = MQTT_PACKET_TYPE_DISCONNECT;
+    incomingPacket.remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
+    incomingPacket.headerLength = MQTT_SAMPLE_REMAINING_LENGTH;
+    MQTT_ProcessIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_ProcessIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
+    MQTTV5_DeserializeDisconnect_IgnoreAndReturn(MQTTSuccess);
+    status = MQTT_ProcessLoop(&context);
+    TEST_ASSERT_EQUAL_INT(MQTTSuccess,status);
+
+    MQTT_ProcessIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_ProcessIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
+    MQTTV5_DeserializeDisconnect_IgnoreAndReturn(MQTTProtocolError);
+    status = MQTT_ProcessLoop(&context);
+    TEST_ASSERT_EQUAL_INT(MQTTProtocolError,status);
+
+    
+    
 }

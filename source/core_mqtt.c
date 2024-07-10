@@ -2215,7 +2215,7 @@ static MQTTStatus_t handlePublishAcks( MQTTContext_t * pContext,
     #if(!MQTT_VERSION_5_ENABLED)
     status = MQTT_DeserializeAck( pIncomingPacket, &packetIdentifier, NULL );
     #else
-    status = MQTTV5_DeserializeAck(pIncomingPacket,&packetIdentifier,&ackInfo,pContext->connectProperties->requestProblemInfo);
+    status = MQTTV5_DeserializeAck(pIncomingPacket,&packetIdentifier,&ackInfo,pContext->connectProperties->requestProblemInfo, pContext->connectProperties->maxPacketSize);
     #endif
     LogInfo( ( "Ack packet deserialized with result: %s.",
                MQTT_Status_strerror( status ) ) );
@@ -2482,11 +2482,33 @@ static MQTTStatus_t receiveSingleIteration( MQTTContext_t * pContext,
         {
             status = handleIncomingPublish( pContext, &incomingPacket );
         }
+        #if(MQTT_VERSION_5_ENABLED)
+        else if(( incomingPacket.type  == MQTT_PACKET_TYPE_DISCONNECT))
+        {
+              assert(pContext->connectProperties != NULL);
+              assert(pContext->pDisconnectInfo != NULL);
+              status =  MQTTV5_DeserializeDisconnect( &incomingPacket,
+                                            pContext->pDisconnectInfo,
+                                            &pContext->connectProperties->pServerRef,
+                                            &pContext->connectProperties->serverRefLength,
+                                            pContext->connectProperties->maxPacketSize );
+             if( status == MQTTSuccess )
+             {
+                 LogInfo( ( "Disconnected from the broker." ) );
+                 pContext->connectStatus = MQTTNotConnected;
+
+                 /* Reset the index and clean the buffer on a successful disconnect. */
+                 pContext->index = 0;
+                ( void ) memset( pContext->networkBuffer.pBuffer, 0, pContext->networkBuffer.size );
+             }
+        }
+        #endif
         else
         {
             status = handleIncomingAck( pContext, &incomingPacket, manageKeepAlive );
         }
-
+        if(incomingPacket.type != MQTT_PACKET_TYPE_DISCONNECT)
+        {
         /* Update the index to reflect the remaining bytes in the buffer.  */
         pContext->index -= totalMQTTPacketLength;
 
@@ -2499,8 +2521,8 @@ static MQTTStatus_t receiveSingleIteration( MQTTContext_t * pContext,
         {
             pContext->lastPacketRxTime = pContext->getTime();
         }
+        }
     }
-
     if( status == MQTTNoDataAvailable )
     {
         /* No data available is not an error. Reset to MQTTSuccess so the

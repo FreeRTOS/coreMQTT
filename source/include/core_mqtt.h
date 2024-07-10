@@ -250,6 +250,10 @@ typedef struct MQTTContext
          * @brief Connect and Connack Properties.
          */
         MQTTConnectProperties_t * connectProperties;
+        /**
+         * @brief To store disconnect information.
+         */
+        MQTTAckInfo_t * pDisconnectInfo;
     #endif
 } MQTTContext_t;
 
@@ -1025,6 +1029,8 @@ MQTTStatus_t MQTT_GetSubAckStatusCodes( const MQTTPacketInfo_t * pSubackPacket,
 /* @[declare_mqtt_status_strerror] */
 const char * MQTT_Status_strerror( MQTTStatus_t status );
 /* @[declare_mqtt_status_strerror] */
+
+MQTTStatus_t MQTTV5_Disconnect( MQTTContext_t * pContext , MQTTAckInfo_t *pAckInfo, uint32_t sessionExpiry);
 
 /* *INDENT-OFF* */
 #ifdef __cplusplus
