@@ -31,7 +31,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">coreMQTT<span id="projectnumber">&#160;v2.3.0</span>
+   <div id="projectname">coreMQTT<span id="projectnumber">&#160;v2.3.0+</span>
    </div>
    <div id="projectbrief">MQTT 3.1.1 Client Library</div>
   </td>
@@ -108,7 +108,7 @@ $(document).ready(function(){initNavTree('mqtt_connect_function.html',''); initR
 <div class="ttc" id="acore__mqtt_8h_html_aed1e4dc123a8ba79ac569cb17c69bfa0"><div class="ttname"><a href="core__mqtt_8h.html#aed1e4dc123a8ba79ac569cb17c69bfa0">MQTT_Connect</a></div><div class="ttdeci">MQTTStatus_t MQTT_Connect(MQTTContext_t *pContext, const MQTTConnectInfo_t *pConnectInfo, const MQTTPublishInfo_t *pWillInfo, uint32_t timeoutMs, bool *pSessionPresent)</div><div class="ttdoc">Establish an MQTT session.</div><div class="ttdef"><b>Definition:</b> core_mqtt.c:2679</div></div>
 <div class="ttc" id="agroup__mqtt__enum__types_html_gaba7ec045874a1c3432f99173367f735c"><div class="ttname"><a href="group__mqtt__enum__types.html#gaba7ec045874a1c3432f99173367f735c">MQTTStatus_t</a></div><div class="ttdeci">MQTTStatus_t</div><div class="ttdoc">Return codes from MQTT functions.</div><div class="ttdef"><b>Definition:</b> core_mqtt_serializer.h:87</div></div>
 <div class="ttc" id="astruct_m_q_t_t_connect_info__t_html"><div class="ttname"><a href="struct_m_q_t_t_connect_info__t.html">MQTTConnectInfo_t</a></div><div class="ttdoc">MQTT CONNECT packet parameters.</div><div class="ttdef"><b>Definition:</b> core_mqtt_serializer.h:133</div></div>
-<div class="ttc" id="astruct_m_q_t_t_context__t_html"><div class="ttname"><a href="struct_m_q_t_t_context__t.html">MQTTContext_t</a></div><div class="ttdoc">A struct representing an MQTT connection.</div><div class="ttdef"><b>Definition:</b> core_mqtt.h:170</div></div>
+<div class="ttc" id="astruct_m_q_t_t_context__t_html"><div class="ttname"><a href="struct_m_q_t_t_context__t.html">MQTTContext_t</a></div><div class="ttdoc">A struct representing an MQTT connection.</div><div class="ttdef"><b>Definition:</b> core_mqtt.h:173</div></div>
 <div class="ttc" id="astruct_m_q_t_t_publish_info__t_html"><div class="ttname"><a href="struct_m_q_t_t_publish_info__t.html">MQTTPublishInfo_t</a></div><div class="ttdoc">MQTT PUBLISH packet parameters.</div><div class="ttdef"><b>Definition:</b> core_mqtt_serializer.h:202</div></div>
 </div><!-- fragment --><p>Establish an MQTT session.  </p>
 <p>This function will send MQTT CONNECT packet and receive a CONNACK packet. The send and receive from the network is done through the transport interface.</p>

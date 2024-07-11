@@ -31,7 +31,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">coreMQTT<span id="projectnumber">&#160;v2.3.0</span>
+   <div id="projectname">coreMQTT<span id="projectnumber">&#160;v2.3.0+</span>
    </div>
    <div id="projectbrief">MQTT 3.1.1 Client Library</div>
   </td>
@@ -101,7 +101,7 @@ $(document).ready(function(){initNavTree('core__mqtt__state_8h_source.html','');
 </div><!--header-->
 <div class="contents">
 <a href="core__mqtt__state_8h.html">Go to the documentation of this file.</a><div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="comment">/*</span></div>
-<div class="line"><a id="l00002" name="l00002"></a><span class="lineno">    2</span><span class="comment"> * coreMQTT v2.3.0</span></div>
+<div class="line"><a id="l00002" name="l00002"></a><span class="lineno">    2</span><span class="comment"> * coreMQTT &lt;DEVELOPMENT BRANCH&gt;</span></div>
 <div class="line"><a id="l00003" name="l00003"></a><span class="lineno">    3</span><span class="comment"> * Copyright (C) 2022 Amazon.com, Inc. or its affiliates.  All Rights Reserved.</span></div>
 <div class="line"><a id="l00004" name="l00004"></a><span class="lineno">    4</span><span class="comment"> *</span></div>
 <div class="line"><a id="l00005" name="l00005"></a><span class="lineno">    5</span><span class="comment"> * SPDX-License-Identifier: MIT</span></div>
@@ -191,11 +191,11 @@ $(document).ready(function(){initNavTree('core__mqtt__state_8h_source.html','');
 <div class="ttc" id="acore__mqtt__state_8c_html_aef2c13cffbbd5c71183282e69ac9d799"><div class="ttname"><a href="core__mqtt__state_8c.html#aef2c13cffbbd5c71183282e69ac9d799">MQTT_RemoveStateRecord</a></div><div class="ttdeci">MQTTStatus_t MQTT_RemoveStateRecord(const MQTTContext_t *pMqttContext, uint16_t packetId)</div><div class="ttdoc">Remove the state record for a PUBLISH packet.</div><div class="ttdef"><b>Definition:</b> core_mqtt_state.c:957</div></div>
 <div class="ttc" id="acore__mqtt__state_8h_html_a44b3cf50dc477a9f97413a9238a961f6"><div class="ttname"><a href="core__mqtt__state_8h.html#a44b3cf50dc477a9f97413a9238a961f6">MQTT_PublishToResend</a></div><div class="ttdeci">uint16_t MQTT_PublishToResend(const MQTTContext_t *pMqttContext, MQTTStateCursor_t *pCursor)</div><div class="ttdoc">Get the packet ID of next pending publish to be resent.</div><div class="ttdef"><b>Definition:</b> core_mqtt_state.c:1123</div></div>
 <div class="ttc" id="agroup__mqtt__basic__types_html_ga2ca7d486d83fe555953a8c7876ee0d6e"><div class="ttname"><a href="group__mqtt__basic__types.html#ga2ca7d486d83fe555953a8c7876ee0d6e">MQTTStateCursor_t</a></div><div class="ttdeci">size_t MQTTStateCursor_t</div><div class="ttdoc">Cursor for iterating through state records.</div><div class="ttdef"><b>Definition:</b> core_mqtt_state.h:51</div></div>
-<div class="ttc" id="agroup__mqtt__enum__types_html_ga0480de7552eedd739a26a23fa8e6fd94"><div class="ttname"><a href="group__mqtt__enum__types.html#ga0480de7552eedd739a26a23fa8e6fd94">MQTTPublishState_t</a></div><div class="ttdeci">MQTTPublishState_t</div><div class="ttdoc">The state of QoS 1 or QoS 2 MQTT publishes, used in the state engine.</div><div class="ttdef"><b>Definition:</b> core_mqtt.h:116</div></div>
-<div class="ttc" id="agroup__mqtt__enum__types_html_ga8c1bee959b3ed5fab2a2688dd72bf237"><div class="ttname"><a href="group__mqtt__enum__types.html#ga8c1bee959b3ed5fab2a2688dd72bf237">MQTTPubAckType_t</a></div><div class="ttdeci">MQTTPubAckType_t</div><div class="ttdoc">Packet types used in acknowledging QoS 1 or QoS 2 publishes.</div><div class="ttdef"><b>Definition:</b> core_mqtt.h:135</div></div>
+<div class="ttc" id="agroup__mqtt__enum__types_html_ga0480de7552eedd739a26a23fa8e6fd94"><div class="ttname"><a href="group__mqtt__enum__types.html#ga0480de7552eedd739a26a23fa8e6fd94">MQTTPublishState_t</a></div><div class="ttdeci">MQTTPublishState_t</div><div class="ttdoc">The state of QoS 1 or QoS 2 MQTT publishes, used in the state engine.</div><div class="ttdef"><b>Definition:</b> core_mqtt.h:119</div></div>
+<div class="ttc" id="agroup__mqtt__enum__types_html_ga8c1bee959b3ed5fab2a2688dd72bf237"><div class="ttname"><a href="group__mqtt__enum__types.html#ga8c1bee959b3ed5fab2a2688dd72bf237">MQTTPubAckType_t</a></div><div class="ttdeci">MQTTPubAckType_t</div><div class="ttdoc">Packet types used in acknowledging QoS 1 or QoS 2 publishes.</div><div class="ttdef"><b>Definition:</b> core_mqtt.h:138</div></div>
 <div class="ttc" id="agroup__mqtt__enum__types_html_gaba7ec045874a1c3432f99173367f735c"><div class="ttname"><a href="group__mqtt__enum__types.html#gaba7ec045874a1c3432f99173367f735c">MQTTStatus_t</a></div><div class="ttdeci">MQTTStatus_t</div><div class="ttdoc">Return codes from MQTT functions.</div><div class="ttdef"><b>Definition:</b> core_mqtt_serializer.h:87</div></div>
 <div class="ttc" id="agroup__mqtt__enum__types_html_gae308a5928d7f537379c29a894228093a"><div class="ttname"><a href="group__mqtt__enum__types.html#gae308a5928d7f537379c29a894228093a">MQTTQoS_t</a></div><div class="ttdeci">MQTTQoS_t</div><div class="ttdoc">MQTT Quality of Service values.</div><div class="ttdef"><b>Definition:</b> core_mqtt_serializer.h:109</div></div>
-<div class="ttc" id="astruct_m_q_t_t_context__t_html"><div class="ttname"><a href="struct_m_q_t_t_context__t.html">MQTTContext_t</a></div><div class="ttdoc">A struct representing an MQTT connection.</div><div class="ttdef"><b>Definition:</b> core_mqtt.h:170</div></div>
+<div class="ttc" id="astruct_m_q_t_t_context__t_html"><div class="ttname"><a href="struct_m_q_t_t_context__t.html">MQTTContext_t</a></div><div class="ttdoc">A struct representing an MQTT connection.</div><div class="ttdef"><b>Definition:</b> core_mqtt.h:173</div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
