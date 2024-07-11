@@ -164,6 +164,40 @@ jobs:
           diff -r -x "*.git*" ${{ env.repository_compressed_name }}/${{ env.repository_name }}/ ../${{ env.repository_name }}/
           cd ../
 
+      - name: Check version number in source files
+        run: |
+          echo "${{ env.source_folder_list }}" | \
+          xargs -I{} find {} -type f \( -name "*.c" -o -name "*.h" \) | \
+          xargs -I{} sh -c \
+          'grep -x " \* ${{ env.repository_compressed_name }} ${{ github.event.inputs.version_number }}" {} && \
+          echo {} : match ${{ env.repository_compressed_name }} ${{ github.event.inputs.version_number }} || \
+          { echo "{} : ${{ env.repository_compressed_name }} ${{ github.event.inputs.version_number }} not found"; exit 255; }'
+
+      - name: Check version number in doxygen
+        run: |
+          # find "PROJECT_NUMBER = <version_number>" and compare the <version_number> with input version number
+          DOXYGEN_VERSION_NUMBER=$(grep -x "[ ]*PROJECT_NUMBER[ ]*=[ ]*v2.3.0" docs/doxygen/config.doxyfile | awk -F= '{gsub(" ","",$2); print $2 }');
+          [[ $DOXYGEN_VERSION_NUMBER == "\"${{ github.event.inputs.version_number }}\"" ]] \
+          && echo "config.doxyfile : match ${{ github.event.inputs.version_number }}" \
+          || { echo "config.doxyfile : $MANIFEST_VESION_NUMBER doesn't match ${{ github.event.inputs.version_number }}"; exit 255; }
+
+      - name: Check version number in manifest.yml
+        run: |
+          # find the first occurence of "version: <version_number>" and comare the <version_number> with input version number
+          MANIFEST_VESION_NUMBER=$( grep -m 1 -E "^version:.*" manifest.yml | awk -F: '{gsub(" ","",$2); print $2 }' ); \
+          [[ $MANIFEST_VESION_NUMBER == "\"${{ github.event.inputs.version_number }}\"" ]] \
+          && echo "manifest.yml : match ${{ github.event.inputs.version_number }}" \
+          || { echo "manifest.yml : $MANIFEST_VESION_NUMBER doesn't match ${{ github.event.inputs.version_number }}"; exit 255; }
+
+      - name: Check MQTT version number macro in header file
+        if: ${{ env.repository_name == 'coreMQTT' }}
+        run: |
+          # find "#define MQTT_LIBRARY_VERSION <version_number>" in core_mqtt.h and compare the <version_number> with input version number
+          MACRO_VERSION_NUMBER=$(grep -x "^\#define[ ]*MQTT_LIBRARY_VERSION[ ]*\"${{ github.event.inputs.version_number }}\"" source/include/core_mqtt.h | awk '{ print $3 }'); \
+          [[ $MACRO_VERSION_NUMBER == "\"${{ github.event.inputs.version_number }}\"" ]] \
+          && echo "core_mqtt.h : match ${{ github.event.inputs.version_number }}" \
+          || { echo "core_mqtt.h : $MACRO_VERSION_NUMBER doesn't match ${{ github.event.inputs.version_number }}"; exit 255; }
+
       - name: Build
         run: |
           cd zip-check/${{ env.repository_compressed_name }}/${{ env.repository_name }}
