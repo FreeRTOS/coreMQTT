@@ -190,7 +190,7 @@ jobs:
           cd zip-check/${{ env.repository_compressed_name }}/${{ env.repository_name }}
 
           # find the first occurence of "version: <version_number>" and comare the <version_number> with input version number
-          MANIFEST_VESION_NUMBER=$( grep -m 1 -E "^version:[ ]*\".*\"[ ]*" manifest.yml | awk -F: '{gsub(" ","",$2);{gsub("\"","",$2); print $2 }' ); \
+          MANIFEST_VESION_NUMBER=$( grep -m 1 -E "^version:[ ]*\".*\"[ ]*" manifest.yml | awk -F: '{ gsub(" ","",$2); gsub("\"","",$2); print $2 }' ); \
           [[ $MANIFEST_VESION_NUMBER == "${{ github.event.inputs.version_number }}" ]] \
           && echo "manifest.yml : match ${{ github.event.inputs.version_number }}" \
           || { echo "manifest.yml : $MANIFEST_VESION_NUMBER doesn't match ${{ github.event.inputs.version_number }}"; exit 255; }
