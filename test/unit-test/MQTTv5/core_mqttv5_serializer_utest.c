@@ -2474,7 +2474,7 @@ void test_RemaininglengthLimit( void )
     status = MQTTV5_GetAckPacketSize(&ackInfo,&remainingLength,&packetSize,maxPacketSize);
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
 
-    status = MQTTV5_GetDisconnectPacketSize(&ackInfo,&remainingLength,&packetSize,maxPacketSize,0,10);
+    status = MQTTV5_GetDisconnectPacketSize(&ackInfo,&remainingLength,&packetSize,maxPacketSize,0,0);
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
     
 }
@@ -2991,12 +2991,13 @@ void test_MQTTV5_GetDisconnectPacketSize()
      status = MQTTV5_GetDisconnectPacketSize(&ackInfo,&remainingLength,&packetSize,maxPacketSize,sessionExpiry,prevSessionExpiry);
      TEST_ASSERT_EQUAL_INT(MQTTBadParameter,status);
 
-     /*Session expiry has to be set once*/
+     /*Session expiry cannot overwrite zero.*/
+     sessionExpiry = 10U;
      maxPacketSize = 6U;
      status = MQTTV5_GetDisconnectPacketSize(&ackInfo,&remainingLength,&packetSize,maxPacketSize,sessionExpiry,prevSessionExpiry);
      TEST_ASSERT_EQUAL_INT(MQTTBadParameter,status);
 
-     sessionExpiry = 10;
+     prevSessionExpiry = 5;
      /*Invalid reason code*/
       ackInfo.reasonCode = 2;
      status = MQTTV5_GetDisconnectPacketSize(&ackInfo,&remainingLength,&packetSize,maxPacketSize,sessionExpiry,prevSessionExpiry);
@@ -3192,7 +3193,6 @@ void test_MQTTV5_SerializeDisconnectWithProperty()
 
 void test_MQTT_GetIncomingPacketTypeAndLength( void )
 {
-    MQTTStatus_t status = MQTTSuccess;
     MQTTPacketInfo_t mqttPacket;
     NetworkContext_t networkContext;
     uint8_t buffer[ 10 ];
@@ -3208,4 +3208,13 @@ void test_MQTT_GetIncomingPacketTypeAndLength( void )
     status = MQTT_GetIncomingPacketTypeAndLength( mockReceive, &networkContext, &mqttPacket );
     TEST_ASSERT_EQUAL( MQTTSuccess, status );
 
+}
+
+void test_MQTTV5_InitConnect()
+{
+
+    status = MQTTV5_InitConnect(NULL);
+    TEST_ASSERT_EQUAL_INT(MQTTBadParameter,status);
+    status = MQTTV5_InitConnect(&properties);
+    TEST_ASSERT_EQUAL_INT(MQTTSuccess,status);
 }

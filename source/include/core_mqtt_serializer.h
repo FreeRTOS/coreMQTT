@@ -1621,6 +1621,7 @@ uint8_t * MQTT_SerializeUnsubscribeHeader( size_t remainingLength,
                                            uint16_t packetId );
 /** @endcond */
 
+MQTTStatus_t MQTTV5_InitConnect(MQTTConnectProperties_t *pConnectProperties);
 
 /**
  * @fn uint8_t * MQTT_SerializeConnectProperties(uint8_t * pIndex,const MQTTConnectProperties_t * pConnectProperties);
@@ -1844,7 +1845,7 @@ MQTTStatus_t MQTTV5_SerializeConnect(const MQTTConnectInfo_t* pConnectInfo,
 /* @[declare_mqttv5_serializeconnect] */
 
 
-MQTTStatus_t MQTTV5_ValidatePublishParams(MQTTPublishInfo_t* pPublishInfo, uint16_t topicAliasMax, uint8_t retainAvailable, uint8_t maxQos);
+MQTTStatus_t MQTTV5_ValidatePublishParams(const MQTTPublishInfo_t* pPublishInfo, uint16_t topicAliasMax, uint8_t retainAvailable, uint8_t maxQos);
 
 MQTTStatus_t MQTTV5_GetPublishPacketSize(MQTTPublishInfo_t * pPublishInfo,
                                         size_t * pRemainingLength,

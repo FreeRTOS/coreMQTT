@@ -2192,7 +2192,7 @@ static MQTTStatus_t logSimpleAckResponseV5(uint8_t reasonCode,uint16_t packetIde
         status = MQTTSuccess;
         break;
     case (uint8_t)MQTT_REASON_PACKET_ID_NOT_FOUND:
-        LogError( ( "Publish refused with packet id %hu: Connection rate exceeded.",
+        LogError( ( "Publish refused with packet id %hu: Packet identifier invalid.",
                              ( unsigned short ) packetIdentifier) );    
         status = MQTTServerRefused;
         break;
@@ -4634,6 +4634,30 @@ MQTTStatus_t MQTT_ProcessIncomingPacketTypeAndLength( const uint8_t * pBuffer,
 }
 
 #if ( MQTT_VERSION_5_ENABLED )
+  
+    MQTTStatus_t MQTTV5_InitConnect(MQTTConnectProperties_t *pConnectProperties)
+    {
+        MQTTStatus_t status = MQTTSuccess;
+        if(pConnectProperties == NULL)
+        {
+            status = MQTTBadParameter;
+        }
+        else
+        {
+            pConnectProperties->receiveMax = UINT16_MAX;
+            pConnectProperties->maxPacketSize = MQTT_MAX_PACKET_SIZE;
+            pConnectProperties->requestProblemInfo = true;
+            pConnectProperties->serverReceiveMax = UINT16_MAX;
+            pConnectProperties->serverMaxQos = 1U;
+            pConnectProperties->serverMaxPacketSize = MQTT_MAX_PACKET_SIZE;
+            pConnectProperties->isWildcardAvaiable = 1U;
+            pConnectProperties->subscriptionId = 1U;
+            pConnectProperties->isSharedAvailable = 1U;
+
+        }
+        
+        return status;
+    }
 
     MQTTStatus_t MQTTV5_GetConnectPacketSize( const MQTTConnectInfo_t * pConnectInfo,
                                               MQTTPublishInfo_t * pWillInfo,
@@ -5018,7 +5042,7 @@ MQTTStatus_t MQTT_ProcessIncomingPacketTypeAndLength( const uint8_t * pBuffer,
         return status;
     }
 
-MQTTStatus_t MQTTV5_ValidatePublishParams(MQTTPublishInfo_t* pPublishInfo, uint16_t topicAliasMax, uint8_t retainAvailable, uint8_t maxQos)
+MQTTStatus_t MQTTV5_ValidatePublishParams(const MQTTPublishInfo_t* pPublishInfo, uint16_t topicAliasMax, uint8_t retainAvailable, uint8_t maxQos)
 {
     MQTTStatus_t status;
     if(pPublishInfo == NULL)
@@ -5038,7 +5062,7 @@ MQTTStatus_t MQTTV5_ValidatePublishParams(MQTTPublishInfo_t* pPublishInfo, uint1
         LogError(("Retain is not avaialble."));
         status = MQTTBadParameter;
     }
-    else if((pPublishInfo->qos != 0) && (maxQos== 0U))
+    else if((pPublishInfo->qos != MQTTQoS0) && (maxQos== 0U))
     {
         LogError(("Qos value = %hu is not allowed by the server ",
         ( unsigned short ) pPublishInfo->topicNameLength ));
@@ -5317,12 +5341,12 @@ MQTTStatus_t MQTTV5_GetDisconnectPacketSize( MQTTAckInfo_t* pAckInfo, size_t * p
         LogError( ( "Max packet size cannot be zero." ) );
         status = MQTTBadParameter;
     }
-    /*Session expiry has to be set by the client at least once.*/
-    else if((prevSessionExpiry == 0U) && (sessionExpiry == 0U)){
+    /*Cannot overWrite a session expiry of 0.*/
+    else if((prevSessionExpiry == 0U) && (sessionExpiry != 0U)){
         LogError( ( "If the Session Expiry in the CONNECT packet was zero, then it is a Protocol Error to set a non-zero Session Expiry Interval in the DISCONNECT packet." ) );
         status = MQTTBadParameter;
     }
-    else if(validateDisconnectResponseV5(pAckInfo->reasonCode))
+    else if(validateDisconnectResponseV5(pAckInfo->reasonCode) != MQTTSuccess)
     {
         LogError( ( "Invalid reason code." ) );
         status = MQTTBadParameter;
@@ -5520,7 +5544,7 @@ MQTTStatus_t MQTTV5_SerializeDisconnectWithProperty( const MQTTAckInfo_t *pAckIn
     {
         status = MQTTBadParameter;
     }
-    else if(maxPacketSize == 0)
+    else if(maxPacketSize == 0U)
     {
        status = MQTTBadParameter;
     }

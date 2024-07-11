@@ -1115,7 +1115,7 @@ static bool matchTopicFilter( const char * pTopicName,
 }
 
 static MQTTStatus_t sendDisconnectWithoutCopy( MQTTContext_t * pContext,
-                                     MQTTAckInfo_t* pAckInfo,
+                                     const MQTTAckInfo_t* pAckInfo,
                                      size_t remainingLength,
                                      uint32_t sessionExpiry)
 {
@@ -1133,7 +1133,6 @@ static MQTTStatus_t sendDisconnectWithoutCopy( MQTTContext_t * pContext,
          * Session Expiry           + 5 = 15
          */
     uint8_t fixedHeader[15];
-    size_t packetSize = 0U;
     /* The maximum vectors required to encode and send a disconnect packet. The
      * breakdown is shown below.
      * Fixed header      0 + 1 = 1
@@ -1187,8 +1186,7 @@ static MQTTStatus_t sendDisconnectWithoutCopy( MQTTContext_t * pContext,
             if( bytesSentOrError != ( int32_t ) totalMessageLength )
             {
                 status = MQTTSendFailed;
-                LogError( ( "Failed to send Connect packet: of PacketSize=%lu.",
-                packetSize ) );
+                LogError( ( "Failed to send disconnect packet." ) );
             }
     
     return status;
