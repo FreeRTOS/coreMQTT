@@ -2348,6 +2348,46 @@ static uint8_t * serializePublishProperties(const MQTTPublishInfo_t *pPublishInf
                     return pIndexLocal;
 }
 
+static MQTTStatus_t validateDisconnectResponseV5(uint8_t reasonCode){
+    MQTTStatus_t status;
+    /*Validate the reason code.*/
+    switch(reasonCode){
+   case (uint8_t)MQTT_REASON_SUCCESS:
+    /*Disconnect the will message*/
+   case (uint8_t)MQTT_REASON_UNSPECIFIED_ERR:
+   case (uint8_t)MQTT_REASON_MALFORMED_PACKET:
+   case (uint8_t)MQTT_REASON_PROTOCOL_ERR:
+   case (uint8_t)MQTT_REASON_IMPL_SPECIFIC_ERR:
+   case (uint8_t)MQTT_REASON_NOT_AUTHORIZED:
+   case (uint8_t)MQTT_REASON_SERVER_BUSY:
+   case (uint8_t)MQTT_REASON_SERVER_SHUTTING_DOWN:
+   case (uint8_t)MQTT_REASON_KEEP_ALIVE_TIMEOUT:
+   case (uint8_t)MQTT_REASON_SESSION_TAKEN_OVER:
+   case (uint8_t)MQTT_REASON_TOPIC_FILTER_INVALID:
+   case (uint8_t)MQTT_REASON_TOPIC_NAME_INVALID :
+   case (uint8_t)MQTT_REASON_RX_MAX_EXCEEDED:
+   case (uint8_t)MQTT_REASON_TOPIC_ALIAS_INVALID:
+   case (uint8_t)MQTT_REASON_PACKET_TOO_LARGE:
+   case (uint8_t)MQTT_REASON_MSG_RATE_TOO_HIGH:
+   case (uint8_t)MQTT_REASON_QUOTA_EXCEEDED:
+   case (uint8_t)MQTT_REASON_ADMIN_ACTION:
+   case (uint8_t)MQTT_REASON_PAYLOAD_FORMAT_INVALID:
+   case (uint8_t)MQTT_REASON_RETAIN_NOT_SUPPORTED:
+   case (uint8_t)MQTT_REASON_QOS_NOT_SUPPORTED:
+   case (uint8_t)MQTT_REASON_USE_ANOTHER_SERVER:
+   case (uint8_t)MQTT_REASON_SERVER_MOVED:
+    case (uint8_t)MQTT_REASON_MAX_CON_TIME:
+    case (uint8_t)MQTT_REASON_SS_NOT_SUPPORTED:
+    case (uint8_t)MQTT_REASON_WILDCARD_SUB_NOT_SUP:
+        status = MQTTSuccess;
+        break;
+    default:
+        status = MQTTProtocolError;
+         break;
+    }
+    return status;
+}
+
 #endif /* if ( MQTT_VERSION_5_ENABLED ) */
 /*-----------------------------------------------------------*/
 
@@ -5204,7 +5244,7 @@ uint8_t * MQTTV5_SerializeAckFixed(uint8_t * pIndex,
     pIndexLocal[0] = UINT16_HIGH_BYTE(packetId);
     pIndexLocal[1] = UINT16_LOW_BYTE( packetId );
     pIndexLocal = &pIndexLocal[2];
-    /*We are only sending the ack back if the reason is success.*/
+    /*We are only sending the ack back if the reason code is success.*/
     *pIndexLocal = (uint8_t)MQTT_REASON_SUCCESS;
     pIndexLocal ++;
     /*Encode the property length.*/
@@ -5262,6 +5302,7 @@ MQTTStatus_t MQTTV5_GetDisconnectPacketSize( MQTTAckInfo_t* pAckInfo, size_t * p
     size_t length = 0U;
     size_t packetSize = 0U;
     size_t propertyLength = 0U;
+    /*Validate the arguments.*/
     if( (pAckInfo== NULL) || (pRemainingLength == NULL) || (pPacketSize == NULL))
     {
         LogError( ( "Argument cannot be NULL: pAckInfo=%p, "
@@ -5276,19 +5317,26 @@ MQTTStatus_t MQTTV5_GetDisconnectPacketSize( MQTTAckInfo_t* pAckInfo, size_t * p
         LogError( ( "Max packet size cannot be zero." ) );
         status = MQTTBadParameter;
     }
+    /*Session expiry has to be set by the client at least once.*/
     else if((prevSessionExpiry == 0U) && (sessionExpiry == 0U)){
         LogError( ( "If the Session Expiry in the CONNECT packet was zero, then it is a Protocol Error to set a non-zero Session Expiry Interval in the DISCONNECT packet." ) );
+        status = MQTTBadParameter;
+    }
+    else if(validateDisconnectResponseV5(pAckInfo->reasonCode))
+    {
+        LogError( ( "Invalid reason code." ) );
         status = MQTTBadParameter;
     }
     else
     {   
         /*Reason code.*/
         length+= 1U;
+        /*Add session expiry if provided.*/
         if(sessionExpiry != 0U)
         {
             propertyLength += MQTT_SESSION_EXPIRY_SIZE;
         }
-        
+        /*Validate the reason string if provided.*/
         if(pAckInfo->reasonStringLength != 0U){
             if(pAckInfo->pReasonString == NULL){
                 status = MQTTBadParameter;
@@ -5321,6 +5369,7 @@ MQTTStatus_t MQTTV5_GetDisconnectPacketSize( MQTTAckInfo_t* pAckInfo, size_t * p
     }
 
     if(status == MQTTSuccess){
+    /*Packet size should be less than max allowed by the server.*/
         packetSize = length + 1U + remainingLengthEncodedSize(length);
         if(packetSize > maxPacketSize)
         {
@@ -5453,45 +5502,6 @@ MQTTStatus_t MQTTV5_SerializeDisconnectWithProperty( const MQTTAckInfo_t *pAckIn
         return status;
 }
 
-static MQTTStatus_t validateDisconnectResponseV5(uint8_t reasonCode){
-    MQTTStatus_t status;
-    switch(reasonCode){
-   case (uint8_t)MQTT_REASON_SUCCESS:
-    /*Disconnect the will message*/
-   case (uint8_t)MQTT_REASON_UNSPECIFIED_ERR:
-   case (uint8_t)MQTT_REASON_MALFORMED_PACKET:
-   case (uint8_t)MQTT_REASON_PROTOCOL_ERR:
-   case (uint8_t)MQTT_REASON_IMPL_SPECIFIC_ERR:
-   case (uint8_t)MQTT_REASON_NOT_AUTHORIZED:
-   case (uint8_t)MQTT_REASON_SERVER_BUSY:
-   case (uint8_t)MQTT_REASON_SERVER_SHUTTING_DOWN:
-   case (uint8_t)MQTT_REASON_KEEP_ALIVE_TIMEOUT:
-   case (uint8_t)MQTT_REASON_SESSION_TAKEN_OVER:
-   case (uint8_t)MQTT_REASON_TOPIC_FILTER_INVALID:
-   case (uint8_t)MQTT_REASON_TOPIC_NAME_INVALID :
-   case (uint8_t)MQTT_REASON_RX_MAX_EXCEEDED:
-   case (uint8_t)MQTT_REASON_TOPIC_ALIAS_INVALID:
-   case (uint8_t)MQTT_REASON_PACKET_TOO_LARGE:
-   case (uint8_t)MQTT_REASON_MSG_RATE_TOO_HIGH:
-   case (uint8_t)MQTT_REASON_QUOTA_EXCEEDED:
-   case (uint8_t)MQTT_REASON_ADMIN_ACTION:
-   case (uint8_t)MQTT_REASON_PAYLOAD_FORMAT_INVALID:
-   case (uint8_t)MQTT_REASON_RETAIN_NOT_SUPPORTED:
-   case (uint8_t)MQTT_REASON_QOS_NOT_SUPPORTED:
-   case (uint8_t)MQTT_REASON_USE_ANOTHER_SERVER:
-   case (uint8_t)MQTT_REASON_SERVER_MOVED:
-    case (uint8_t)MQTT_REASON_MAX_CON_TIME:
-    case (uint8_t)MQTT_REASON_SS_NOT_SUPPORTED:
-    case (uint8_t)MQTT_REASON_WILDCARD_SUB_NOT_SUP:
-        status = MQTTSuccess;
-        break;
-    default:
-        status = MQTTProtocolError;
-         break;
-    }
-    return status;
-}
-
  MQTTStatus_t MQTTV5_DeserializeDisconnect( const MQTTPacketInfo_t * pPacket,
                                             MQTTAckInfo_t *pDisconnectInfo,
                                             const char ** pServerRef,
@@ -5501,6 +5511,7 @@ static MQTTStatus_t validateDisconnectResponseV5(uint8_t reasonCode){
     MQTTStatus_t status = MQTTSuccess;
     const uint8_t * pIndex;
     size_t propertyLength = 0U;
+    /*Validate the arguments*/
     if((pPacket == NULL) || (pPacket->pRemainingData == NULL))
     {
         status = MQTTBadParameter;
@@ -5517,6 +5528,7 @@ static MQTTStatus_t validateDisconnectResponseV5(uint8_t reasonCode){
     {
         status = MQTTMalformedPacket;
     }
+    /*Packet size should not be more than the max allowed by the client.*/
     else if ( ( pPacket->remainingLength + remainingLengthEncodedSize(pPacket->remainingLength) + 1U ) > maxPacketSize )  
     {
             status = MQTTProtocolError;
@@ -5533,12 +5545,14 @@ static MQTTStatus_t validateDisconnectResponseV5(uint8_t reasonCode){
         pIndex= pPacket->pRemainingData;
         pDisconnectInfo->reasonCode = *pIndex;
         pIndex ++;
+        /*Validate the reason code.*/
         status = validateDisconnectResponseV5(pDisconnectInfo->reasonCode);
     }
     if(status == MQTTSuccess)
     {
         if((pPacket->remainingLength > 1U))
         {
+            /*Extract the property length.*/
         status = decodeVariableLength(pIndex,&propertyLength);       
         if(status == MQTTSuccess)
         {
@@ -5557,12 +5571,13 @@ static MQTTStatus_t validateDisconnectResponseV5(uint8_t reasonCode){
             while((propertyLength>0U) && (status == MQTTSuccess))
             {
                 /*Decode the poperty id.*/
-                uint8_t packetId = *pIndex;
+                uint8_t propertyId = *pIndex;
                 bool reasonString = false;
                 bool serverRef = false;
                 pIndex = &pIndex[1];
                 propertyLength -= sizeof( uint8_t );
-                switch(packetId){
+                /*Validate the property id and decode accordingly.*/
+                switch(propertyId){
                     case MQTT_REASON_STRING_ID:
                         status = decodeutf_8( &pDisconnectInfo->pReasonString, &pDisconnectInfo->reasonStringLength, &propertyLength, &reasonString, &pIndex );
                         break;  

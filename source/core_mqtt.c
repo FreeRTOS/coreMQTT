@@ -1013,9 +1013,16 @@ static bool matchTopicFilter( const char * pTopicName,
     MQTTPublishState_t newState = MQTTStateNull;
     uint8_t packetTypeByte = 0U;
     MQTTPubAckType_t packetType;
+     /* Maximum number of bytes required by the fixed size properties and header.
+         * MQTT Control Byte      0 + 1 = 1
+         * Remaining length (max)   + 4 = 5
+         * Packet Identifier        + 2 = 7
+         * Reason Code              + 1 = 8
+         * Property length (max)    + 4 = 12 */
     uint8_t pubAckHeader[12];
     size_t remainingLength = 0U;
     size_t packetSize = 0U;
+    /*  The maximum vectors required to encode and send a publish ack. */
     TransportOutVector_t pIoVector[4 + MAX_USER_PROPERTY*5];
     uint8_t serializedReasonStringLength[ 2 ];
     uint8_t reasonStringId = MQTT_REASON_STRING_ID;
@@ -1047,9 +1054,9 @@ static bool matchTopicFilter( const char * pTopicName,
         totalMessageLength += iterator->iov_len;
         iterator++;
         ioVectorLength++;
+            /* Encode the reason string if provided. */
         if(pAckInfo ->reasonStringLength != 0U)
         {
-            /* Serialize the reason string. */
             vectorsAdded = addEncodedStringToVectorWithId( serializedReasonStringLength,
                                                            pAckInfo ->pReasonString,
                                                            pAckInfo ->reasonStringLength,
@@ -1071,6 +1078,10 @@ static bool matchTopicFilter( const char * pTopicName,
 
             if( bytesSentOrError != ( int32_t ) totalMessageLength )
             {
+                LogError( ( "Failed to send ACK packet: PacketType=%02x, "
+                        "PacketSize=%lu.",
+                        ( unsigned int ) packetTypeByte,
+                          packetSize ) );
                 status = MQTTSendFailed;
             }
       
@@ -1096,14 +1107,6 @@ static bool matchTopicFilter( const char * pTopicName,
                 }
 
         }
-        else
-        {
-            LogError( ( "Failed to send ACK packet: PacketType=%02x, "
-                        "PacketSize=%lu.",
-                        ( unsigned int ) packetTypeByte,
-                          packetSize ) );
-            status = MQTTSendFailed;
-        }
      }
      else{
         status = MQTTBadParameter;
@@ -1121,8 +1124,22 @@ static MQTTStatus_t sendDisconnectWithoutCopy( MQTTContext_t * pContext,
     size_t ioVectorLength = 0U;
     size_t totalMessageLength = 0U;
     MQTTStatus_t status = MQTTSuccess;
-    uint8_t fixedHeader[14];
+    /* Maximum number of bytes required by the fixed size part of the CONNECT
+         * packet header according to the MQTT specification.
+         * MQTT Control Byte      0 + 1 = 1
+         * Remaining length (max)   + 4 = 5
+         * Reason Code              + 1 = 6
+         * Property length (max)    + 4 = 10
+         * Session Expiry           + 5 = 15
+         */
+    uint8_t fixedHeader[15];
     size_t packetSize = 0U;
+    /* The maximum vectors required to encode and send a disconnect packet. The
+     * breakdown is shown below.
+     * Fixed header      0 + 1 = 1
+     * Reason String       + 3 = 4
+     * User Property       + MAX_USER_PROPERTY*5* 
+     * */
     TransportOutVector_t pIoVector[4 + MAX_USER_PROPERTY*5];
     uint8_t serializedReasonStringLength[ 2 ];
     uint8_t reasonStringId = MQTT_REASON_STRING_ID;
@@ -1145,9 +1162,9 @@ static MQTTStatus_t sendDisconnectWithoutCopy( MQTTContext_t * pContext,
         totalMessageLength += iterator->iov_len;
         iterator++;
         ioVectorLength++;
+            /* Encode the reason string if provided. */
         if(pAckInfo ->reasonStringLength != 0U)
         {
-            /* Serialize the reason string. */
             vectorsAdded = addEncodedStringToVectorWithId( serializedReasonStringLength,
                                                            pAckInfo ->pReasonString,
                                                            pAckInfo ->reasonStringLength,
@@ -2797,8 +2814,12 @@ static MQTTStatus_t sendPublishWithoutCopy( MQTTContext_t * pContext,
      * the MQTT specification. */
     uint8_t serializedPacketID[ 2U ];
 
-    /* Maximum number of vectors required to encode and send a publish
-     * packet. The breakdown is shown below.*/
+        /* Maximum number of vectors required to encode and send a publish
+     * packet. The breakdown is shown below.
+     * Fixed header (including topic string length)      0 + 1 = 1
+     * Topic string                                        + 1 = 2
+     * Packet ID (only when QoS > QoS0)                    + 1 = 3
+     * Payload                                             + 1 = 4  */
     #if(!MQTT_VERSION_5_ENABLED)
     TransportOutVector_t pIoVector[ 4U ];
     #else
@@ -2810,6 +2831,11 @@ static MQTTStatus_t sendPublishWithoutCopy( MQTTContext_t * pContext,
      * User property                                         5
      */
     TransportOutVector_t pIoVector[5* MAX_USER_PROPERTY + 14];
+    /* Maximum number of bytes required by the fixed size publish properties.
+         * Property length               0 + 4 = 4
+         * Payload Format Indicator        + 2 = 6
+         * Message Expiry                  + 5 = 11
+         * Topic Alias                     + 3 = 14 */
     uint8_t serializedProperty[14U];
     uint8_t * pIndex;
     PublishVector_t publishVector;
@@ -2936,7 +2962,12 @@ static MQTTStatus_t sendConnectWithoutCopy( MQTTContext_t * pContext,
          */
 
         uint8_t connectPacketHeader[ 39U ];
-        uint8_t fixedSizeProperties[ 20U ];
+            /* Maximum number of bytes required by the fixed size will properties.
+         * Property length               0 + 4 = 4
+         * Will delay                      + 5 = 9
+         * Payload Format Indicator        + 2 = 11
+         * Message Expiry                  + 5 = 16 */
+        uint8_t fixedSizeProperties[ 16U ];
         PublishVector_t willVector;
         PropertiesVector_t propertiesVector;
     #endif
@@ -3312,7 +3343,6 @@ static MQTTStatus_t validatePublishParams( const MQTTContext_t * pContext,
                     ( void * ) pContext->connectProperties ) );
         status = MQTTBadParameter;
     }
-
     #endif
     else
     {

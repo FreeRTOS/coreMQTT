@@ -2997,7 +2997,13 @@ void test_MQTTV5_GetDisconnectPacketSize()
      TEST_ASSERT_EQUAL_INT(MQTTBadParameter,status);
 
      sessionExpiry = 10;
+     /*Invalid reason code*/
+      ackInfo.reasonCode = 2;
+     status = MQTTV5_GetDisconnectPacketSize(&ackInfo,&remainingLength,&packetSize,maxPacketSize,sessionExpiry,prevSessionExpiry);
+     TEST_ASSERT_EQUAL_INT(MQTTBadParameter,status);
+
      /*Reason string not initialized.*/
+     ackInfo.reasonCode = 0;
      ackInfo.reasonStringLength = MQTT_TEST_UTF8_STRING_LENGTH;
      status = MQTTV5_GetDisconnectPacketSize(&ackInfo,&remainingLength,&packetSize,maxPacketSize,sessionExpiry,prevSessionExpiry);
      TEST_ASSERT_EQUAL_INT(MQTTBadParameter,status);
@@ -3008,6 +3014,7 @@ void test_MQTTV5_GetDisconnectPacketSize()
     status = MQTTV5_GetDisconnectPacketSize(&ackInfo,&remainingLength,&packetSize,maxPacketSize,sessionExpiry,prevSessionExpiry);
     TEST_ASSERT_EQUAL_INT(MQTTBadParameter,status);
     
+
    /*Valid parameters*/
      maxPacketSize = 60U;
     status = MQTTV5_GetDisconnectPacketSize(&ackInfo,&remainingLength,&packetSize,maxPacketSize,sessionExpiry,prevSessionExpiry);

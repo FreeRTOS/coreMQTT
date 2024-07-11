@@ -1018,10 +1018,10 @@ void test_MQTT_ProcessLoop_handleIncomingAck_Happy_Paths2( void )
     MQTT_UpdateStateAck_ReturnThruPtr_pNewState( &stateAfterDeserialize );
     MQTTV5_GetAckPacketSize_ExpectAnyArgsAndReturn(MQTTSuccess);
     MQTTV5_SerializeAckFixed_Stub(MQTTV5_SerializeAckFixed_cb);
-    MQTT_UpdateStateAck_ExpectAnyArgsAndReturn( MQTTSuccess);
+    MQTT_UpdateStateAck_ExpectAnyArgsAndReturn( MQTTBadResponse);
     MQTT_UpdateStateAck_ReturnThruPtr_pNewState( &stateAfterSerialize );
     status = MQTT_ProcessLoop(&context);
-    TEST_ASSERT_EQUAL_INT(MQTTSuccess,status);
+    TEST_ASSERT_EQUAL_INT(MQTTBadResponse,status);
     
 }
 
