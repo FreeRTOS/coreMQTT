@@ -171,9 +171,9 @@ jobs:
           echo "${{ env.source_folder_list }}" | \
           xargs -n 1 sh -c 'find $1 -type f \( -name "*.c" -o -name "*.h" \)' | \
           xargs -I{} sh -c \
-          'grep -x " \* ${{ env.repository_compressed_name }} ${{ github.event.inputs.version_number }}" {} && \
-          echo {} : match ${{ env.repository_compressed_name }} ${{ github.event.inputs.version_number }} || \
-          { echo "{} : ${{ env.repository_compressed_name }} ${{ github.event.inputs.version_number }} not found"; exit 255; }'
+          'grep -x " \* ${{ env.repository_name }} ${{ github.event.inputs.version_number }}" {} && \
+          echo {} : match ${{ env.repository_name }} ${{ github.event.inputs.version_number }} || \
+          { echo "{} : ${{ env.repository_name }} ${{ github.event.inputs.version_number }} not found"; exit 255; }'
 
       - name: Check version number in doxygen
         run: |
