@@ -170,7 +170,7 @@ jobs:
 
           echo "${{ env.source_folder_list }}" | \
           xargs -n 1 sh -c 'find $1 -type f \( -name "*.c" -o -name "*.h" \)' | \
-          xargs -I[] grep -l -x " * ${{ env.repository_name }}.*" {} | \
+          xargs -I{} grep -l -x " \* ${{ env.repository_name }}.*" {} | \
           xargs -I{} sh -c \
           'grep -x " \* ${{ env.repository_name }} ${{ github.event.inputs.version_number }}" {} && \
           echo {} : match ${{ env.repository_name }} ${{ github.event.inputs.version_number }} || \
