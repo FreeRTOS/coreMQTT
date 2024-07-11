@@ -166,6 +166,8 @@ jobs:
 
       - name: Check version number in source files
         run: |
+          cd zip-check/${{ env.repository_compressed_name }}/${{ env.repository_name }}
+
           echo "${{ env.source_folder_list }}" | \
           xargs -I{} find {} -type f \( -name "*.c" -o -name "*.h" \) | \
           xargs -I{} sh -c \
@@ -175,6 +177,8 @@ jobs:
 
       - name: Check version number in doxygen
         run: |
+          cd zip-check/${{ env.repository_compressed_name }}/${{ env.repository_name }}
+
           # find "PROJECT_NUMBER = <version_number>" and compare the <version_number> with input version number
           DOXYGEN_VERSION_NUMBER=$(grep -x "[ ]*PROJECT_NUMBER[ ]*=[ ]*v2.3.0" docs/doxygen/config.doxyfile | awk -F= '{gsub(" ","",$2); print $2 }');
           [[ $DOXYGEN_VERSION_NUMBER == "\"${{ github.event.inputs.version_number }}\"" ]] \
@@ -183,6 +187,8 @@ jobs:
 
       - name: Check version number in manifest.yml
         run: |
+          cd zip-check/${{ env.repository_compressed_name }}/${{ env.repository_name }}
+
           # find the first occurence of "version: <version_number>" and comare the <version_number> with input version number
           MANIFEST_VESION_NUMBER=$( grep -m 1 -E "^version:.*" manifest.yml | awk -F: '{gsub(" ","",$2); print $2 }' ); \
           [[ $MANIFEST_VESION_NUMBER == "\"${{ github.event.inputs.version_number }}\"" ]] \
@@ -192,6 +198,8 @@ jobs:
       - name: Check MQTT version number macro in header file
         if: ${{ env.repository_name == 'coreMQTT' }}
         run: |
+          cd zip-check/${{ env.repository_compressed_name }}/${{ env.repository_name }}
+
           # find "#define MQTT_LIBRARY_VERSION <version_number>" in core_mqtt.h and compare the <version_number> with input version number
           MACRO_VERSION_NUMBER=$(grep -x "^\#define[ ]*MQTT_LIBRARY_VERSION[ ]*\"${{ github.event.inputs.version_number }}\"" source/include/core_mqtt.h | awk '{ print $3 }'); \
           [[ $MACRO_VERSION_NUMBER == "\"${{ github.event.inputs.version_number }}\"" ]] \
