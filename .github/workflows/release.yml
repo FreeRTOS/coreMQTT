@@ -180,18 +180,18 @@ jobs:
           cd zip-check/${{ env.repository_compressed_name }}/${{ env.repository_name }}
 
           # find "PROJECT_NUMBER = <version_number>" and compare the <version_number> with input version number
-          DOXYGEN_VERSION_NUMBER=$(grep -x "[ ]*PROJECT_NUMBER[ ]*=[ ]*v2.3.0" docs/doxygen/config.doxyfile | awk -F= '{gsub(" ","",$2); print $2 }');
+          DOXYGEN_VERSION_NUMBER=$(grep -x "[ ]*PROJECT_NUMBER[ ]*=[ ]*${{ github.event.inputs.version_number }}" docs/doxygen/config.doxyfile | awk -F= '{gsub(" ","",$2); print $2 }');
           [[ $DOXYGEN_VERSION_NUMBER == "\"${{ github.event.inputs.version_number }}\"" ]] \
           && echo "config.doxyfile : match ${{ github.event.inputs.version_number }}" \
-          || { echo "config.doxyfile : $MANIFEST_VESION_NUMBER doesn't match ${{ github.event.inputs.version_number }}"; exit 255; }
+          || { echo "config.doxyfile : $DOXYGEN_VERSION_NUMBER doesn't match ${{ github.event.inputs.version_number }}"; exit 255; }
 
       - name: Check version number in manifest.yml
         run: |
           cd zip-check/${{ env.repository_compressed_name }}/${{ env.repository_name }}
 
           # find the first occurence of "version: <version_number>" and comare the <version_number> with input version number
-          MANIFEST_VESION_NUMBER=$( grep -m 1 -E "^version:.*" manifest.yml | awk -F: '{gsub(" ","",$2); print $2 }' ); \
-          [[ $MANIFEST_VESION_NUMBER == "\"${{ github.event.inputs.version_number }}\"" ]] \
+          MANIFEST_VESION_NUMBER=$( grep -m 1 -E "^version:.*" manifest.yml | awk -F: '{gsub(" ","",$2);{gsub("\"","",$2); print $2 }' ); \
+          [[ $MANIFEST_VESION_NUMBER == "${{ github.event.inputs.version_number }}" ]] \
           && echo "manifest.yml : match ${{ github.event.inputs.version_number }}" \
           || { echo "manifest.yml : $MANIFEST_VESION_NUMBER doesn't match ${{ github.event.inputs.version_number }}"; exit 255; }
 
@@ -201,8 +201,8 @@ jobs:
           cd zip-check/${{ env.repository_compressed_name }}/${{ env.repository_name }}
 
           # find "#define MQTT_LIBRARY_VERSION <version_number>" in core_mqtt.h and compare the <version_number> with input version number
-          MACRO_VERSION_NUMBER=$(grep -x "^\#define[ ]*MQTT_LIBRARY_VERSION[ ]*\"${{ github.event.inputs.version_number }}\"" source/include/core_mqtt.h | awk '{ print $3 }'); \
-          [[ $MACRO_VERSION_NUMBER == "\"${{ github.event.inputs.version_number }}\"" ]] \
+          MACRO_VERSION_NUMBER=$(grep -x "^\#define[ ]*MQTT_LIBRARY_VERSION[ ]*\"${{ github.event.inputs.version_number }}\"" source/include/core_mqtt.h | awk '{gsub("\"","",$3); print $3 }'); \
+          [[ $MACRO_VERSION_NUMBER == "${{ github.event.inputs.version_number }}" ]] \
           && echo "core_mqtt.h : match ${{ github.event.inputs.version_number }}" \
           || { echo "core_mqtt.h : $MACRO_VERSION_NUMBER doesn't match ${{ github.event.inputs.version_number }}"; exit 255; }
 
