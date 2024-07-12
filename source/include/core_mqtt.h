@@ -48,7 +48,7 @@
  * If MQTT_LIBRARY_VERSION ends with + it represents the version in development
  * after the numbered release.
  */
-#define MQTT_LIBRARY_VERSION    "v2.3.1+"
+#define MQTT_LIBRARY_VERSION    "v2.3.1"
 /** @endcond */
 
 /**
