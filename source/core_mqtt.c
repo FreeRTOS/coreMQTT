@@ -739,7 +739,7 @@ static bool matchTopicFilter( const char * pTopicName,
                                                   TransportOutVector_t * iterator,
                                                   size_t * updatedLength,
                                                   const uint8_t * packetId );
-
+#if(MQTT_USER_PROPERTY_ENABLED)
 /**
  * @brief Serialize the user properties.
  *
@@ -758,7 +758,7 @@ static bool matchTopicFilter( const char * pTopicName,
                                       size_t * pTotalMessageLength,
                                       TransportOutVector_t ** pVectorIterator );
 
-
+#endif
 /**
  * @brief Serialize the variable length publish properties.
  *
@@ -841,7 +841,7 @@ static bool matchTopicFilter( const char * pTopicName,
 
         return vectorsAdded;
     }
-
+#if(MQTT_USER_PROPERTY_ENABLED)
     static size_t sendUserProperties( const MQTTUserProperties_t * pUserProperty,
                                       UserPropertyVector_t * pUserVector,
                                       size_t * pTotalMessageLength,
@@ -879,7 +879,7 @@ static bool matchTopicFilter( const char * pTopicName,
         *pVectorIterator = iterator;
         return ioVectorLength;
     }
-
+#endif
     static size_t sendPublishProperties( const MQTTPublishInfo_t * pPublishInfo,
                                       PublishVector_t * pPublishVector,
                                       size_t * pTotalMessageLength,
@@ -1034,7 +1034,7 @@ static bool matchTopicFilter( const char * pTopicName,
     assert( pContext != NULL );
     assert( pAckInfo != NULL );
     packetTypeByte = getAckTypeToSend( publishState );
-    status = MQTTV5_GetAckPacketSize(pAckInfo, &remainingLength, &packetSize,pContext->connectProperties->serverMaxPacketSize);
+    status = MQTTV5_GetAckPacketSize(pAckInfo, &remainingLength, &packetSize,pContext->pConnectProperties->serverMaxPacketSize);
 
     if( (packetTypeByte != 0U) && (status == MQTTSuccess) )
     {
@@ -1114,7 +1114,7 @@ static bool matchTopicFilter( const char * pTopicName,
     return status;
 }
 
-static MQTTStatus_t sendDisconnectWithoutCopy( MQTTContext_t * pContext,
+static MQTTStatus_t sendDisconnectWithoutCopyV5( MQTTContext_t * pContext,
                                      const MQTTAckInfo_t* pAckInfo,
                                      size_t remainingLength,
                                      uint32_t sessionExpiry)
@@ -2217,7 +2217,9 @@ static MQTTStatus_t handlePublishAcks( MQTTContext_t * pContext,
     MQTTDeserializedInfo_t deserializedInfo;
     #if(MQTT_VERSION_5_ENABLED)
     MQTTAckInfo_t ackInfo;
+    MQTTAckInfo_t nextAckInfo;
     ( void ) memset(&ackInfo,0x0,sizeof(ackInfo));
+    ( void ) memset(&nextAckInfo,0x0,sizeof(nextAckInfo));
     #endif
 
     assert( pContext != NULL );
@@ -2230,7 +2232,7 @@ static MQTTStatus_t handlePublishAcks( MQTTContext_t * pContext,
     #if(!MQTT_VERSION_5_ENABLED)
     status = MQTT_DeserializeAck( pIncomingPacket, &packetIdentifier, NULL );
     #else
-    status = MQTTV5_DeserializeAck(pIncomingPacket,&packetIdentifier,&ackInfo,pContext->connectProperties->requestProblemInfo, pContext->connectProperties->maxPacketSize);
+    status = MQTTV5_DeserializeAck(pIncomingPacket,&packetIdentifier,&ackInfo,pContext->pConnectProperties->requestProblemInfo, pContext->pConnectProperties->maxPacketSize);
     #endif
     LogInfo( ( "Ack packet deserialized with result: %s.",
                MQTT_Status_strerror( status ) ) );
@@ -2283,6 +2285,7 @@ static MQTTStatus_t handlePublishAcks( MQTTContext_t * pContext,
         deserializedInfo.deserializationResult = status;
         deserializedInfo.pPublishInfo = NULL;
         deserializedInfo.pAckInfo = &ackInfo;
+        deserializedInfo.pNextAckInfo = &nextAckInfo;
         /* Invoke application callback to hand the buffer over to application
         * before sending acks. */
         appCallback( pContext, pIncomingPacket, &deserializedInfo );
@@ -2500,13 +2503,13 @@ static MQTTStatus_t receiveSingleIteration( MQTTContext_t * pContext,
         #if(MQTT_VERSION_5_ENABLED)
         else if(( incomingPacket.type  == MQTT_PACKET_TYPE_DISCONNECT))
         {
-              assert(pContext->connectProperties != NULL);
+              assert(pContext->pConnectProperties != NULL);
               assert(pContext->pDisconnectInfo != NULL);
               status =  MQTTV5_DeserializeDisconnect( &incomingPacket,
                                             pContext->pDisconnectInfo,
-                                            &pContext->connectProperties->pServerRef,
-                                            &pContext->connectProperties->serverRefLength,
-                                            pContext->connectProperties->maxPacketSize );
+                                            &pContext->pConnectProperties->pServerRef,
+                                            &pContext->pConnectProperties->serverRefLength,
+                                            pContext->pConnectProperties->maxPacketSize );
              if( status == MQTTSuccess )
              {
                  LogInfo( ( "Disconnected from the broker." ) );
@@ -3009,7 +3012,7 @@ static MQTTStatus_t sendConnectWithoutCopy( MQTTContext_t * pContext,
                                                    remainingLength );
 
         #if ( MQTT_VERSION_5_ENABLED )
-            pIndex = MQTT_SerializeConnectProperties( pIndex, pContext->connectProperties );
+            pIndex = MQTT_SerializeConnectProperties( pIndex, pContext->pConnectProperties );
         #endif
         assert( ( ( size_t ) ( pIndex - connectPacketHeader ) ) <= sizeof( connectPacketHeader ) );
 
@@ -3026,7 +3029,7 @@ static MQTTStatus_t sendConnectWithoutCopy( MQTTContext_t * pContext,
 
         #if ( MQTT_VERSION_5_ENABLED )
             /*Encode the connect Properties if provided*/
-            ioVectorLength += sendConnectProperties( pContext->connectProperties, &propertiesVector, &totalMessageLength, &iterator );
+            ioVectorLength += sendConnectProperties( pContext->pConnectProperties, &propertiesVector, &totalMessageLength, &iterator );
         #endif
 
         /* Serialize the client ID. */
@@ -3219,7 +3222,7 @@ static MQTTStatus_t receiveConnack( const MQTTContext_t * pContext,
         #if ( MQTT_VERSION_5_ENABLED == 0 )
             status = MQTT_DeserializeAck( pIncomingPacket, NULL, pSessionPresent );
         #else
-            status = MQTTV5_DeserializeConnack( pContext->connectProperties, pIncomingPacket, pSessionPresent );
+            status = MQTTV5_DeserializeConnack( pContext->pConnectProperties, pIncomingPacket, pSessionPresent );
         #endif
     }
 
@@ -3336,9 +3339,9 @@ static MQTTStatus_t validatePublishParams( const MQTTContext_t * pContext,
         status = MQTTBadParameter;
     }
     #if(MQTT_VERSION_5_ENABLED)
-    else if(pContext->connectProperties == NULL){
+    else if(pContext->pConnectProperties == NULL){
         LogError( ( "Argument cannot be NULL: pConnectProperties=%p. ",
-                    ( void * ) pContext->connectProperties ) );
+                    ( void * ) pContext->pConnectProperties ) );
         status = MQTTBadParameter;
     }
     #endif
@@ -3528,7 +3531,7 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
             /* Get MQTT connect packet size and remaining length. */
             status = MQTTV5_GetConnectPacketSize( pConnectInfo,
                                                   pWillInfo,
-                                                  pContext->connectProperties,
+                                                  pContext->pConnectProperties,
                                                   &remainingLength,
                                                   &packetSize );
             LogDebug( ( "CONNECT packet size is %lu and remaining length is %lu.",
@@ -3673,15 +3676,15 @@ MQTTStatus_t MQTT_Publish( MQTTContext_t * pContext,
                                             &packetSize );	       
         #else
         status = MQTTV5_ValidatePublishParams(pPublishInfo,
-                                              pContext->connectProperties->serverTopicAliasMax,
-                                              pContext->connectProperties->retainAvailable,
-                                              pContext->connectProperties->serverMaxQos );
+                                              pContext->pConnectProperties->serverTopicAliasMax,
+                                              pContext->pConnectProperties->retainAvailable,
+                                              pContext->pConnectProperties->serverMaxQos );
         if(status == MQTTSuccess)
         {
         status = MQTTV5_GetPublishPacketSize( pPublishInfo,
                                             &remainingLength,
                                             &packetSize,
-                                            pContext->connectProperties->serverMaxPacketSize);
+                                            pContext->pConnectProperties->serverMaxPacketSize);
         }
         #endif
     }
@@ -4239,23 +4242,23 @@ const char * MQTT_Status_strerror( MQTTStatus_t status )
 }
 
 #if(MQTT_VERSION_5_ENABLED)
-MQTTStatus_t MQTTV5_Disconnect( MQTTContext_t * pContext , MQTTAckInfo_t *pAckInfo, uint32_t sessionExpiry)
+MQTTStatus_t MQTTV5_Disconnect( MQTTContext_t * pContext , MQTTAckInfo_t *pDisconnectInfo, uint32_t sessionExpiry)
 {
     size_t packetSize = 0U;
     size_t remainingLength = 0U;
     MQTTStatus_t status = MQTTSuccess;
 
     /* Validate arguments. */
-    if((pContext == NULL) || (pAckInfo == NULL) || (pContext->connectProperties == NULL))
+    if((pContext == NULL) || (pDisconnectInfo == NULL) || (pContext->pConnectProperties == NULL))
     {
-        LogError( ( "pContext, pAckInfo and connect properties cannot be NULL." ) );
+        LogError( ( "pContext, pDisconnectInfo and connect properties cannot be NULL." ) );
         status = MQTTBadParameter;
     }
 
     if( status == MQTTSuccess )
     {
         /* Get MQTT DISCONNECT packet size. */
-        status = MQTTV5_GetDisconnectPacketSize( pAckInfo,&remainingLength,&packetSize,pContext->connectProperties->serverMaxPacketSize,sessionExpiry,pContext->connectProperties->sessionExpiry );
+        status = MQTTV5_GetDisconnectPacketSize( pDisconnectInfo,&remainingLength,&packetSize,pContext->pConnectProperties->serverMaxPacketSize,sessionExpiry,pContext->pConnectProperties->sessionExpiry );
         LogDebug( ( "MQTT DISCONNECT packet size is %lu.",
                     ( unsigned long ) packetSize ) );
     }
@@ -4265,7 +4268,7 @@ MQTTStatus_t MQTTV5_Disconnect( MQTTContext_t * pContext , MQTTAckInfo_t *pAckIn
         /* Take the mutex because the below call should not be interrupted. */
         MQTT_PRE_SEND_HOOK( pContext );
 
-        status = sendDisconnectWithoutCopy(pContext,pAckInfo,remainingLength,sessionExpiry);
+        status = sendDisconnectWithoutCopyV5(pContext,pDisconnectInfo,remainingLength,sessionExpiry);
 
         /* Give the mutex away. */
         MQTT_POST_SEND_HOOK( pContext );

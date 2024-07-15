@@ -84,7 +84,6 @@
     #endif
     /*Disable the user properties if max user property is set to 0.*/
     #if ( MAX_USER_PROPERTY == 0U )
-
 /**
  * @ingroup mqtt_constants
  * @brief Enable and disable user properties.

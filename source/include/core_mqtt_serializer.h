@@ -112,51 +112,6 @@ typedef enum MQTTStatus
 
 /**
  * @ingroup mqtt_enum_types
- * @brief Reason Code is a one byte unsigned value that indicates the result of an operation.
- */
-typedef enum ReasonCode {
-    MQTT_REASON_SUCCESS = 0x00,
-    MQTT_REASON_NO_MATCHING_SUBSCRIBERS =0x10,
-    MQTT_REASON_UNSPECIFIED_ERR = 0x80,
-    MQTT_REASON_MALFORMED_PACKET = 0x81,
-    MQTT_REASON_PROTOCOL_ERR = 0x82,
-    MQTT_REASON_IMPL_SPECIFIC_ERR = 0x83,
-    MQTT_REASON_UNSUPPORTED_PROTO_VER = 0x84,
-    MQTT_REASON_CLIENT_ID_NOT_VALID = 0x85,
-    MQTT_REASON_BAD_USER_OR_PASS = 0x86,
-    MQTT_REASON_NOT_AUTHORIZED = 0x87,
-    MQTT_REASON_SERVER_UNAVAILABLE = 0x88,
-    MQTT_REASON_SERVER_BUSY = 0x89,
-    MQTT_REASON_BANNED = 0x8A,
-    MQTT_REASON_SERVER_SHUTTING_DOWN = 0x8B,
-    MQTT_REASON_BAD_AUTH_METHOD = 0x8C,
-    MQTT_REASON_KEEP_ALIVE_TIMEOUT = 0x8D,
-    MQTT_REASON_SESSION_TAKEN_OVER = 0x8E,
-    MQTT_REASON_TOPIC_FILTER_INVALID = 0x8F,
-    MQTT_REASON_TOPIC_NAME_INVALID = 0x90,
-    MQTT_REASON_PACKET_ID_IN_USE = 0x91,
-    MQTT_REASON_PACKET_ID_NOT_FOUND = 0x92,
-    MQTT_REASON_RX_MAX_EXCEEDED = 0x93,
-    MQTT_REASON_TOPIC_ALIAS_INVALID = 0x94,
-    MQTT_REASON_PACKET_TOO_LARGE = 0x95,
-    MQTT_REASON_MSG_RATE_TOO_HIGH = 0x96,
-    MQTT_REASON_QUOTA_EXCEEDED = 0x97,
-    MQTT_REASON_ADMIN_ACTION = 0x98,
-    MQTT_REASON_PAYLOAD_FORMAT_INVALID = 0x99,
-    MQTT_REASON_RETAIN_NOT_SUPPORTED = 0x9A,
-    MQTT_REASON_QOS_NOT_SUPPORTED = 0x9B,
-    MQTT_REASON_USE_ANOTHER_SERVER = 0x9C,
-    MQTT_REASON_SERVER_MOVED = 0x9D,
-    MQTT_REASON_SS_NOT_SUPPORTED = 0x9E,
-    MQTT_REASON_CON_RATE_EXCEED = 0x9F,
-    MQTT_REASON_MAX_CON_TIME = 0xA0,
-    MQTT_REASON_SUB_ID_NOT_SUP = 0xA1,
-    MQTT_REASON_WILDCARD_SUB_NOT_SUP = 0xA2
-}ReasonCode_t;
-
-
-/**
- * @ingroup mqtt_enum_types
  * @brief MQTT Quality of Service values.
  */
 typedef enum MQTTQoS
@@ -452,7 +407,7 @@ typedef struct MQTTAckInfo
      */
     uint8_t reasonCode;
     /**
-     * @brief Property Lenght.
+     * @brief Property Length.
      */
     size_t propertyLength;
     #if(MQTT_USER_PROPERTY_ENABLED)
@@ -1621,8 +1576,6 @@ uint8_t * MQTT_SerializeUnsubscribeHeader( size_t remainingLength,
                                            uint16_t packetId );
 /** @endcond */
 
-MQTTStatus_t MQTTV5_InitConnect(MQTTConnectProperties_t *pConnectProperties);
-
 /**
  * @fn uint8_t * MQTT_SerializeConnectProperties(uint8_t * pIndex,const MQTTConnectProperties_t * pConnectProperties);
  * @brief Serialize the connect properties of the connect packet header.
@@ -1725,9 +1678,16 @@ MQTTStatus_t MQTTV5_DeserializeConnack( MQTTConnectProperties_t *pConnackPropert
                                         bool * pSessionPresent );
 /* @[declare_mqttv5_deserializeconnack] */
 
+
+/* @[declare_mqttv5_deserializeconnack] */
+MQTTStatus_t MQTTV5_InitConnect(MQTTConnectProperties_t *pConnectProperties);
+/* @[declare_mqttv5_initconnect] */
+
 /**
  * @brief Get the size and Remaining Length of an MQTT Version 5 CONNECT packet .
  *
+ * #MQTTV5_InitConnect can be called with @p pConnectProperties and before invoking this function
+ *  to set the values to their default values.
  * This function must be called before #MQTT_SerializeConnect in order to get
  * the size of the MQTT CONNECT packet that is generated from #MQTTConnectInfo_t,
  * MQTTConnectProperties_t and  optional #MQTTPublishInfo_t. The size of the #MQTTFixedBuffer_t supplied
@@ -1788,7 +1748,7 @@ MQTTStatus_t MQTTV5_GetConnectPacketSize(const MQTTConnectInfo_t* pConnectInfo,
 /**
  * @brief Serialize an MQTT CONNECT packet in the given fixed buffer @p pFixedBuffer.
  *
- * #MQTT_GetConnectPacketSize should be called with @p pConnectInfo, @p pConnectProperties and
+ * #MQTTV5_GetConnectPacketSize should be called with @p pConnectInfo, @p pConnectProperties and
  * @p pWillInfo before invoking this function to get the size of the required
  * #MQTTFixedBuffer_t and @p remainingLength. The @p remainingLength must be
  * the same as returned by #MQTT_GetConnectPacketSize. The #MQTTFixedBuffer_t

@@ -98,6 +98,8 @@ if( UNITTEST )
     # Include build configuration for unit tests.
     add_subdirectory( unit-test/MQTT)
     add_subdirectory( unit-test/MQTTv5)
+    add_subdirectory( unit-test/WithoutUP)
+
 
 
     #  ==================================== Coverage Analysis configuration ========================================

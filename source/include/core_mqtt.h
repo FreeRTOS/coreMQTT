@@ -249,7 +249,7 @@ typedef struct MQTTContext
         /**
          * @brief Connect and Connack Properties.
          */
-        MQTTConnectProperties_t * connectProperties;
+        MQTTConnectProperties_t * pConnectProperties;
         /**
          * @brief To store disconnect information.
          */
@@ -1030,7 +1030,21 @@ MQTTStatus_t MQTT_GetSubAckStatusCodes( const MQTTPacketInfo_t * pSubackPacket,
 const char * MQTT_Status_strerror( MQTTStatus_t status );
 /* @[declare_mqtt_status_strerror] */
 
-MQTTStatus_t MQTTV5_Disconnect( MQTTContext_t * pContext , MQTTAckInfo_t *pAckInfo, uint32_t sessionExpiry);
+/**
+ * @brief Disconnect an MQTT session.
+ *
+ * @param[in] pContext Initialized and connected MQTT context.
+ * @param[in] pDisconnectInfo Reason code and properties to encode
+ * @param[in] pContext
+ * @return #MQTTNoMemory if the #MQTTContext_t.networkBuffer is too small to
+ * hold the MQTT packet;
+ * #MQTTBadParameter if invalid parameters are passed;
+ * #MQTTSendFailed if transport send failed;
+ * #MQTTSuccess otherwise.
+ */
+/* @[declare_mqttv5_disconnect] */
+MQTTStatus_t MQTTV5_Disconnect( MQTTContext_t * pContext , MQTTAckInfo_t *pDisconnectInfo, uint32_t sessionExpiry);
+/* @[declare_mqtt_disconnect] */
 
 /* *INDENT-OFF* */
 #ifdef __cplusplus

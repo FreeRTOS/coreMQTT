@@ -221,6 +221,45 @@ struct NetworkContext
 #define MQTT_RESPONSE_INFO_ID            ( 0x1A )
 #define MQTT_SERVER_REF_ID               ( 0x1C )
 
+#define MQTT_REASON_SUCCESS                     (0x00)
+#define MQTT_REASON_SEND_WILL                   (0x04)
+#define MQTT_REASON_NO_MATCHING_SUBSCRIBERS     (0x10)
+#define MQTT_REASON_UNSPECIFIED_ERR             (0x80)
+#define MQTT_REASON_MALFORMED_PACKET            (0x81)
+#define MQTT_REASON_PROTOCOL_ERR                (0x82)
+#define MQTT_REASON_IMPL_SPECIFIC_ERR           (0x83)
+#define MQTT_REASON_UNSUPPORTED_PROTO_VER       (0x84)
+#define MQTT_REASON_CLIENT_ID_NOT_VALID         (0x85)
+#define MQTT_REASON_BAD_USER_OR_PASS            (0x86)
+#define MQTT_REASON_NOT_AUTHORIZED              (0x87)
+#define MQTT_REASON_SERVER_UNAVAILABLE          (0x88)
+#define MQTT_REASON_SERVER_BUSY                 (0x89)
+#define MQTT_REASON_BANNED                      (0x8A)
+#define MQTT_REASON_SERVER_SHUTTING_DOWN        (0x8B)
+#define MQTT_REASON_BAD_AUTH_METHOD             (0x8C)
+#define MQTT_REASON_KEEP_ALIVE_TIMEOUT          (0x8D)
+#define MQTT_REASON_SESSION_TAKEN_OVER          (0x8E)
+#define MQTT_REASON_TOPIC_FILTER_INVALID        (0x8F)
+#define MQTT_REASON_TOPIC_NAME_INVALID          (0x90)
+#define MQTT_REASON_PACKET_ID_IN_USE            (0x91)
+#define MQTT_REASON_PACKET_ID_NOT_FOUND         (0x92)
+#define MQTT_REASON_RX_MAX_EXCEEDED             (0x93)
+#define MQTT_REASON_TOPIC_ALIAS_INVALID         (0x94)
+#define MQTT_REASON_PACKET_TOO_LARGE            (0x95)
+#define MQTT_REASON_MSG_RATE_TOO_HIGH           (0x96)
+#define MQTT_REASON_QUOTA_EXCEEDED              (0x97)
+#define MQTT_REASON_ADMIN_ACTION                (0x98)
+#define MQTT_REASON_PAYLOAD_FORMAT_INVALID      (0x99)
+#define MQTT_REASON_RETAIN_NOT_SUPPORTED        (0x9A)
+#define MQTT_REASON_QOS_NOT_SUPPORTED           (0x9B)
+#define MQTT_REASON_USE_ANOTHER_SERVER          (0x9C)
+#define MQTT_REASON_SERVER_MOVED                (0x9D)
+#define MQTT_REASON_SS_NOT_SUPPORTED            (0x9E)
+#define MQTT_REASON_CON_RATE_EXCEED             (0x9F)
+#define MQTT_REASON_MAX_CON_TIME                (0xA0)
+#define MQTT_REASON_SUB_ID_NOT_SUP              (0xA1)
+#define MQTT_REASON_WILDCARD_SUB_NOT_SUP        (0xA2)
+
 #define CORE_MQTT_ID_SIZE                ( 1U )
 #define MQTT_REMAINING_LENGTH_INVALID    ( ( size_t ) 268435456 )
 
@@ -2834,6 +2873,11 @@ void test_MQTTV5_DeserializeAck_Pubrel()
     status = MQTTV5_DeserializeAck( &mqttPacketInfo, &packetIdentifier, &ackInfo, requestProblem, maxPacketSize );
     TEST_ASSERT_EQUAL_INT( MQTTProtocolError, status );
 
+    /*Invalid reason code.*/
+    buffer[2]= MQTT_REASON_SEND_WILL;
+    status = MQTTV5_DeserializeAck( &mqttPacketInfo, &packetIdentifier, &ackInfo, requestProblem, maxPacketSize );
+    TEST_ASSERT_EQUAL_INT( MQTTProtocolError, status );
+
     /*Invalid packet id*/
     buffer[1] = 0;
     status = MQTTV5_DeserializeAck( &mqttPacketInfo, &packetIdentifier, &ackInfo, requestProblem, maxPacketSize );
@@ -3015,11 +3059,22 @@ void test_MQTTV5_GetDisconnectPacketSize()
     status = MQTTV5_GetDisconnectPacketSize(&ackInfo,&remainingLength,&packetSize,maxPacketSize,sessionExpiry,prevSessionExpiry);
     TEST_ASSERT_EQUAL_INT(MQTTBadParameter,status);
     
+    /*Invalid Reason code*/
+    maxPacketSize = 60U;
+    ackInfo.reasonCode = MQTT_REASON_SERVER_BUSY;
+    status = MQTTV5_GetDisconnectPacketSize(&ackInfo,&remainingLength,&packetSize,maxPacketSize,sessionExpiry,prevSessionExpiry);
+    TEST_ASSERT_EQUAL_INT(MQTTBadParameter,status);
 
    /*Valid parameters*/
-     maxPacketSize = 60U;
+    ackInfo.reasonCode = MQTT_REASON_SEND_WILL;
     status = MQTTV5_GetDisconnectPacketSize(&ackInfo,&remainingLength,&packetSize,maxPacketSize,sessionExpiry,prevSessionExpiry);
     TEST_ASSERT_EQUAL_INT(MQTTSuccess,status);
+
+    /*Valid parameters*/
+    ackInfo.reasonCode = MQTT_REASON_PACKET_TOO_LARGE;
+    status = MQTTV5_GetDisconnectPacketSize(&ackInfo,&remainingLength,&packetSize,maxPacketSize,sessionExpiry,prevSessionExpiry);
+    TEST_ASSERT_EQUAL_INT(MQTTSuccess,status);
+
 
 }
 
@@ -3141,12 +3196,12 @@ void test_MQTTV5_SerializeDisconnectWithProperty()
 
     /*Invalid reason code.*/
     disconnectInfo.pUserProperty= &userProperties;
-    buffer[0] = 1;
+    buffer[0] = MQTT_REASON_SEND_WILL;
     status = MQTTV5_DeserializeDisconnect(&packetInfo,&disconnectInfo,&pServerRef,&serverRefLength,maxPacketSize);
     TEST_ASSERT_EQUAL_INT(MQTTProtocolError,status);
 
     packetInfo.remainingLength = 1;
-    buffer[0] = 0;
+    buffer[0] = MQTT_REASON_NOT_AUTHORIZED;
     status = MQTTV5_DeserializeDisconnect(&packetInfo,&disconnectInfo,&pServerRef,&serverRefLength,maxPacketSize);
     TEST_ASSERT_EQUAL_INT(MQTTSuccess,status);
 
