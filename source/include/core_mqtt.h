@@ -250,6 +250,7 @@ typedef struct MQTTContext
          * @brief Connect and Connack Properties.
          */
         MQTTConnectProperties_t * pConnectProperties;
+
         /**
          * @brief To store disconnect information.
          */
@@ -267,9 +268,9 @@ typedef struct MQTTDeserializedInfo
     uint16_t packetIdentifier;          /**< @brief Packet ID of deserialized packet. */
     MQTTPublishInfo_t * pPublishInfo;   /**< @brief Pointer to deserialized publish info. */
     MQTTStatus_t deserializationResult; /**< @brief Return code of deserialization. */
-    #if(MQTT_VERSION_5_ENABLED)
-    MQTTAckInfo_t *pAckInfo;            /**< @brief Pointer to deserialized ack info. */
-    MQTTAckInfo_t *pNextAckInfo;        /**< @brief Pointer to next ack info to send. */
+    #if ( MQTT_VERSION_5_ENABLED )
+        MQTTAckInfo_t * pAckInfo;       /**< @brief Pointer to deserialized ack info. */
+        MQTTAckInfo_t * pNextAckInfo;   /**< @brief Pointer to next ack info to send. */
     #endif
 } MQTTDeserializedInfo_t;
 
@@ -1043,7 +1044,9 @@ const char * MQTT_Status_strerror( MQTTStatus_t status );
  * #MQTTSuccess otherwise.
  */
 /* @[declare_mqttv5_disconnect] */
-MQTTStatus_t MQTTV5_Disconnect( MQTTContext_t * pContext , MQTTAckInfo_t *pDisconnectInfo, uint32_t sessionExpiry);
+MQTTStatus_t MQTTV5_Disconnect( MQTTContext_t * pContext,
+                                MQTTAckInfo_t * pDisconnectInfo,
+                                uint32_t sessionExpiry );
 /* @[declare_mqtt_disconnect] */
 
 /* *INDENT-OFF* */

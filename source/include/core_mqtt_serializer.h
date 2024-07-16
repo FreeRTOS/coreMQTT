@@ -1809,7 +1809,7 @@ MQTTStatus_t MQTTV5_ValidatePublishParams(const MQTTPublishInfo_t* pPublishInfo,
 
 MQTTStatus_t MQTTV5_GetPublishPacketSize(MQTTPublishInfo_t * pPublishInfo,
                                         size_t * pRemainingLength,
-                                        size_t * pPacketSize , 
+                                        size_t * pPacketSize ,
                                         uint32_t maxPacketSize);
 
 
@@ -1844,7 +1844,7 @@ MQTTStatus_t MQTTV5_SerializeDisconnectWithProperty( const MQTTAckInfo_t *pAckIn
                                                      size_t remainingLength,
                                                      const MQTTFixedBuffer_t * pFixedBuffer,
                                                      uint32_t sessionExpiry);
-                                        
+
 /* *INDENT-OFF* */
 #ifdef __cplusplus
     }

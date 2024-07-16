@@ -41,8 +41,8 @@ struct NetworkContext
 };
 
 
-#define MQTT_TEST_UTF8_STRING ("test")
-#define MQTT_TEST_UTF8_STRING_LENGTH (sizeof(MQTT_TEST_UTF8_STRING) -1)
+#define MQTT_TEST_UTF8_STRING           ( "test" )
+#define MQTT_TEST_UTF8_STRING_LENGTH    ( sizeof( MQTT_TEST_UTF8_STRING ) - 1 )
 
 /**
  * @brief Set a bit in an 8-bit unsigned integer.
@@ -86,10 +86,9 @@ MQTTStatus_t status;
 /* Called before each test method. */
 void setUp( void )
 {
-    memset(&properties, 0x0, sizeof(properties));
-    memset(&connectInfo, 0x0, sizeof(connectInfo));
-    memset(&packetInfo, 0x0, sizeof(packetInfo));
-   
+    memset( &properties, 0x0, sizeof( properties ) );
+    memset( &connectInfo, 0x0, sizeof( connectInfo ) );
+    memset( &packetInfo, 0x0, sizeof( packetInfo ) );
 }
 
 /* Called after each test method. */
@@ -188,9 +187,11 @@ static size_t encodeString( uint8_t * pDestination,
     return ( size_t ) ( pBuffer - pDestination );
 }
 
-static uint8_t * serializeutf_8(uint8_t *pIndex, uint8_t propertyId)
+static uint8_t * serializeutf_8( uint8_t * pIndex,
+                                 uint8_t propertyId )
 {
-    uint8_t *pIndexLocal = pIndex;
+    uint8_t * pIndexLocal = pIndex;
+
     *pIndexLocal = propertyId;
     pIndexLocal++;
     size_t dummy = encodeString( pIndexLocal, MQTT_TEST_UTF8_STRING, MQTT_TEST_UTF8_STRING_LENGTH );
@@ -198,11 +199,13 @@ static uint8_t * serializeutf_8(uint8_t *pIndex, uint8_t propertyId)
     return pIndexLocal;
 }
 
-static uint8_t * serializeutf_8pair(uint8_t *pIndex){
-    uint8_t* pIndexLocal = pIndex;
+static uint8_t * serializeutf_8pair( uint8_t * pIndex )
+{
+    uint8_t * pIndexLocal = pIndex;
+
     *pIndexLocal = MQTT_USER_PROPERTY_ID;
     pIndexLocal++;
-    size_t dummy = encodeString( pIndexLocal,MQTT_TEST_UTF8_STRING,MQTT_TEST_UTF8_STRING_LENGTH);
+    size_t dummy = encodeString( pIndexLocal, MQTT_TEST_UTF8_STRING, MQTT_TEST_UTF8_STRING_LENGTH );
     pIndexLocal = &pIndexLocal[ dummy ];
     dummy = encodeString( pIndexLocal, MQTT_TEST_UTF8_STRING, MQTT_TEST_UTF8_STRING_LENGTH );
     pIndexLocal = &pIndexLocal[ dummy ];
@@ -211,8 +214,9 @@ static uint8_t * serializeutf_8pair(uint8_t *pIndex){
 
 void test_MQTTV5_DeserializeConnackOnlyUserProperty( void )
 {
-    uint8_t buffer[100] = { 0 };
+    uint8_t buffer[ 100 ] = { 0 };
     uint8_t * pIndexLocal = buffer;
+
     buffer[ 0 ] = 0x01;
     buffer[ 1 ] = 0x00;
 
@@ -224,7 +228,7 @@ void test_MQTTV5_DeserializeConnackOnlyUserProperty( void )
     pIndexLocal = &buffer[ 2 ];
     size_t propertyLength = encodeRemainingLength( pIndexLocal, 13 );
     pIndexLocal++;
-    pIndexLocal = serializeutf_8pair(pIndexLocal);
+    pIndexLocal = serializeutf_8pair( pIndexLocal );
     status = MQTTV5_DeserializeConnack( &properties, &packetInfo, &session );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
 
@@ -233,7 +237,7 @@ void test_MQTTV5_DeserializeConnackOnlyUserProperty( void )
     pIndexLocal = &buffer[ 2 ];
     propertyLength = encodeRemainingLength( pIndexLocal, 2 );
     pIndexLocal++;
-    pIndexLocal = serializeutf_8pair(pIndexLocal);
+    pIndexLocal = serializeutf_8pair( pIndexLocal );
     status = MQTTV5_DeserializeConnack( &properties, &packetInfo, &session );
     TEST_ASSERT_EQUAL_INT( MQTTMalformedPacket, status );
 
@@ -242,7 +246,7 @@ void test_MQTTV5_DeserializeConnackOnlyUserProperty( void )
     pIndexLocal = &buffer[ 2 ];
     propertyLength = encodeRemainingLength( pIndexLocal, 3 );
     pIndexLocal++;
-    pIndexLocal = serializeutf_8pair(pIndexLocal);
+    pIndexLocal = serializeutf_8pair( pIndexLocal );
     status = MQTTV5_DeserializeConnack( &properties, &packetInfo, &session );
     TEST_ASSERT_EQUAL_INT( MQTTMalformedPacket, status );
 
@@ -251,7 +255,7 @@ void test_MQTTV5_DeserializeConnackOnlyUserProperty( void )
     propertyLength = encodeRemainingLength( pIndexLocal, 8 );
     packetInfo.remainingLength = propertyLength + 10;
     pIndexLocal++;
-    pIndexLocal = serializeutf_8pair(pIndexLocal);
+    pIndexLocal = serializeutf_8pair( pIndexLocal );
     status = MQTTV5_DeserializeConnack( &properties, &packetInfo, &session );
     TEST_ASSERT_EQUAL_INT( MQTTMalformedPacket, status );
 
@@ -260,10 +264,9 @@ void test_MQTTV5_DeserializeConnackOnlyUserProperty( void )
     pIndexLocal = &buffer[ 2 ];
     propertyLength = encodeRemainingLength( pIndexLocal, 12 );
     pIndexLocal++;
-    pIndexLocal = serializeutf_8pair(pIndexLocal);
+    pIndexLocal = serializeutf_8pair( pIndexLocal );
     status = MQTTV5_DeserializeConnack( &properties, &packetInfo, &session );
     TEST_ASSERT_EQUAL_INT( MQTTMalformedPacket, status );
-
 }
 void test_MQTTV5_DeserializeAck( void )
 {
@@ -273,46 +276,47 @@ void test_MQTTV5_DeserializeAck( void )
     bool requestProblem = true;
     MQTTStatus_t status = MQTTSuccess;
     uint8_t buffer[ 100 ] = { 0 };
-    uint8_t* pIndex = buffer;
+    uint8_t * pIndex = buffer;
     size_t dummy;
+
     /* Verify parameters */
     memset( &ackInfo, 0x00, sizeof( ackInfo ) );
     packetInfo.pRemainingData = buffer;
     buffer[ 0 ] = 0;
     buffer[ 1 ] = 1;
-    buffer[2] = 0x00;
-    pIndex = &buffer[3];
+    buffer[ 2 ] = 0x00;
+    pIndex = &buffer[ 3 ];
     packetInfo.type = MQTT_PACKET_TYPE_PUBACK;
-    dummy= encodeRemainingLength(pIndex,20);
+    dummy = encodeRemainingLength( pIndex, 20 );
     packetInfo.remainingLength = dummy + 23;
     pIndex++;
-    pIndex = serializeutf_8(pIndex, MQTT_REASON_STRING_ID);
-    pIndex = serializeutf_8pair(pIndex);
+    pIndex = serializeutf_8( pIndex, MQTT_REASON_STRING_ID );
+    pIndex = serializeutf_8pair( pIndex );
     status = MQTTV5_DeserializeAck( &packetInfo, &packetIdentifier, &ackInfo, requestProblem, maxPacketSize );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
-    }
+}
 
 
-  void test_MQTTV5_DeserializeDisconnect()
-  {
+void test_MQTTV5_DeserializeDisconnect()
+{
     MQTTAckInfo_t disconnectInfo;
     const char * pServerRef;
-    uint16_t  serverRefLength;
+    uint16_t serverRefLength;
     int32_t maxPacketSize = 100U;
     uint8_t buffer[ 100 ] = { 0 };
-    uint8_t* pIndex = buffer;
+    uint8_t * pIndex = buffer;
     size_t dummy;
-    memset(&disconnectInfo, 0x0, sizeof(disconnectInfo));
+
+    memset( &disconnectInfo, 0x0, sizeof( disconnectInfo ) );
     /*With properties*/
-    pIndex = &buffer[1];
+    pIndex = &buffer[ 1 ];
     packetInfo.pRemainingData = buffer;
-    dummy= encodeRemainingLength(pIndex,27);
+    dummy = encodeRemainingLength( pIndex, 27 );
     packetInfo.remainingLength = 28 + dummy;
     pIndex++;
-    pIndex = serializeutf_8(pIndex, MQTT_REASON_STRING_ID);
-    pIndex = serializeutf_8pair(pIndex);
-    pIndex= serializeutf_8(pIndex, MQTT_SERVER_REF_ID);
-    status = MQTTV5_DeserializeDisconnect(&packetInfo,&disconnectInfo,&pServerRef,&serverRefLength,maxPacketSize);
+    pIndex = serializeutf_8( pIndex, MQTT_REASON_STRING_ID );
+    pIndex = serializeutf_8pair( pIndex );
+    pIndex = serializeutf_8( pIndex, MQTT_SERVER_REF_ID );
+    status = MQTTV5_DeserializeDisconnect( &packetInfo, &disconnectInfo, &pServerRef, &serverRefLength, maxPacketSize );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
-
-  }
+}
