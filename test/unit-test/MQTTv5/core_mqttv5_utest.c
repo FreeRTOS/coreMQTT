@@ -803,7 +803,7 @@ void test_MQTT_ProcessLoop_handleIncomingAck_Happy_Paths( void )
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
 }
 
-void test_MQTT_ProcessLoop_handleIncomingAck_Happy_Paths2( void )
+void test_MQTT_ProcessLoop_handleIncomingAck_Error_Paths1( void )
 {
     MQTTStatus_t status;
     MQTTPublishState_t stateAfterDeserialize;
@@ -816,7 +816,6 @@ void test_MQTT_ProcessLoop_handleIncomingAck_Happy_Paths2( void )
 
     setupTransportInterface( &transport );
     setupNetworkBuffer( &networkBuffer );
-    /* Modify incoming packet depending on type to be tested. */
     incomingPacket.type = MQTT_PACKET_TYPE_PUBREC;
     incomingPacket.remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
     incomingPacket.headerLength = MQTT_SAMPLE_REMAINING_LENGTH;
@@ -840,7 +839,7 @@ void test_MQTT_ProcessLoop_handleIncomingAck_Happy_Paths2( void )
     TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
 }
 
-void test_MQTT_ProcessLoop_handleIncomingAck_Happy_Paths3( void )
+void test_MQTT_ProcessLoop_handleIncomingAck_Error_Paths2( void )
 {
     MQTTStatus_t status;
     MQTTContext_t context = { 0 };
@@ -851,7 +850,6 @@ void test_MQTT_ProcessLoop_handleIncomingAck_Happy_Paths3( void )
 
     setupTransportInterface( &transport );
     setupNetworkBuffer( &networkBuffer );
-    /* Modify incoming packet depending on type to be tested. */
     status = MQTT_Init( &context, &transport, getTime, eventCallback1, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTSuccess, status );
     incomingPacket.type = MQTT_PACKET_TYPE_PUBREC;
@@ -868,7 +866,7 @@ void test_MQTT_ProcessLoop_handleIncomingAck_Happy_Paths3( void )
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
 }
 
-void test_MQTT_ProcessLoop_handleIncomingAck_Happy_Paths4( void )
+void test_MQTT_ProcessLoop_handleIncomingAck_Error_Paths3( void )
 {
     MQTTStatus_t status;
     MQTTPublishState_t stateAfterDeserialize;
@@ -881,7 +879,6 @@ void test_MQTT_ProcessLoop_handleIncomingAck_Happy_Paths4( void )
 
     setupTransportInterface( &transport );
     setupNetworkBuffer( &networkBuffer );
-    /* Modify incoming packet depending on type to be tested. */
     incomingPacket.type = MQTT_PACKET_TYPE_PUBREC;
     incomingPacket.remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
     incomingPacket.headerLength = MQTT_SAMPLE_REMAINING_LENGTH;
@@ -902,7 +899,7 @@ void test_MQTT_ProcessLoop_handleIncomingAck_Happy_Paths4( void )
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
 }
 
-void test_MQTT_ProcessLoop_handleIncomingAck_Happy_Paths5( void )
+void test_MQTT_ProcessLoop_handleIncomingAck_Happy_Paths2( void )
 {
     MQTTStatus_t status;
     MQTTPublishState_t stateAfterDeserialize;
@@ -916,7 +913,6 @@ void test_MQTT_ProcessLoop_handleIncomingAck_Happy_Paths5( void )
 
     setupTransportInterface( &transport );
     setupNetworkBuffer( &networkBuffer );
-    /* Modify incoming packet depending on type to be tested. */
     incomingPacket.type = MQTT_PACKET_TYPE_PUBREC;
     incomingPacket.remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
     incomingPacket.headerLength = MQTT_SAMPLE_REMAINING_LENGTH;
@@ -941,7 +937,7 @@ void test_MQTT_ProcessLoop_handleIncomingAck_Happy_Paths5( void )
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
 }
 
-void test_MQTT_ProcessLoop_handleIncomingAck_Happy_Paths6( void )
+void test_MQTT_ProcessLoop_handleIncomingAck_Error_Paths4( void )
 {
     MQTTStatus_t status;
     MQTTPublishState_t stateAfterDeserialize;
@@ -953,7 +949,6 @@ void test_MQTT_ProcessLoop_handleIncomingAck_Happy_Paths6( void )
 
     setupTransportInterface( &transport );
     setupNetworkBuffer( &networkBuffer );
-    /* Modify incoming packet depending on type to be tested. */
     incomingPacket.type = MQTT_PACKET_TYPE_PUBREC;
     incomingPacket.remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
     incomingPacket.headerLength = MQTT_SAMPLE_REMAINING_LENGTH;
@@ -973,7 +968,7 @@ void test_MQTT_ProcessLoop_handleIncomingAck_Happy_Paths6( void )
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
 }
 
-void test_MQTT_ProcessLoop_handleIncomingAck_Happy_Paths7( void )
+void test_MQTT_ProcessLoop_handleIncomingAck_Error_Paths5( void )
 {
     MQTTStatus_t status;
     MQTTPublishState_t stateAfterDeserialize;
@@ -986,7 +981,6 @@ void test_MQTT_ProcessLoop_handleIncomingAck_Happy_Paths7( void )
 
     setupTransportInterface( &transport );
     setupNetworkBuffer( &networkBuffer );
-    /* Modify incoming packet depending on type to be tested. */
     incomingPacket.type = MQTT_PACKET_TYPE_PUBREC;
     incomingPacket.remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
     incomingPacket.headerLength = MQTT_SAMPLE_REMAINING_LENGTH;
