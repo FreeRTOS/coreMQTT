@@ -908,7 +908,7 @@ static void verifySerializedConnectPacket( const MQTTConnectInfo_t * const pConn
                        *pIndex );
     pIndex++;
     /* Verify the connect properties into the CONNECT packet. */
-    pIndex = MQTT_SerializeConnectProperties( pIndex, pConnectProperties );
+    pIndex = MQTTV5_SerializeConnectProperties( pIndex, pConnectProperties );
 
     if( pConnectProperties->pOutgoingUserProperty != NULL )
     {
@@ -1100,7 +1100,7 @@ void test_MQTT_GetPublishPropertiesSize( void )
     TEST_ASSERT_EQUAL_size_t( 59, publishInfo.propertyLength );
 }
 
-void test_MQTT_SerializeConnectProperties( void )
+void test_MQTTV5_SerializeConnectProperties( void )
 {
     uint8_t properties[ 24U ];
     uint8_t * pIndex = properties;
@@ -1117,7 +1117,7 @@ void test_MQTT_SerializeConnectProperties( void )
     connect.requestResponseInfo = 1;
     connect.requestProblemInfo = 0;
     connect.propertyLength = 20;
-    pIndex = MQTT_SerializeConnectProperties( pIndex, &connect );
+    pIndex = MQTTV5_SerializeConnectProperties( pIndex, &connect );
     TEST_ASSERT_EQUAL_INT( 21, ( pIndex - properties ) );
     status = decodeVariableLength( properties, &propertyLength );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );

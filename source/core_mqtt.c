@@ -3012,7 +3012,7 @@ static MQTTStatus_t sendConnectWithoutCopy( MQTTContext_t * pContext,
                                                    remainingLength );
 
         #if ( MQTT_VERSION_5_ENABLED )
-            pIndex = MQTT_SerializeConnectProperties( pIndex, pContext->pConnectProperties );
+            pIndex = MQTTV5_SerializeConnectProperties( pIndex, pContext->pConnectProperties );
         #endif
         assert( ( ( size_t ) ( pIndex - connectPacketHeader ) ) <= sizeof( connectPacketHeader ) );
 

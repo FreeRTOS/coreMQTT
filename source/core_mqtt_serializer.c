@@ -1470,7 +1470,7 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
                                                    remainingLength );
 
         /* Serialize the connect Properties. */
-        pIndex = MQTT_SerializeConnectProperties( pIndex, pConnectProperties );
+        pIndex = MQTTV5_SerializeConnectProperties( pIndex, pConnectProperties );
         #if ( MQTT_USER_PROPERTY_ENABLED )
             if( pConnectProperties->pOutgoingUserProperty != NULL )
             {
@@ -2215,7 +2215,7 @@ static MQTTStatus_t calculatePublishPacketSizeV5( MQTTPublishInfo_t * pPublishIn
         assert( ( ( size_t ) ( pIndex - pFixedBuffer->pBuffer ) ) <= pFixedBuffer->size );
     }
 
-
+ /* coverity[misra_c_2012_rule_2_7_violation] */
 static MQTTStatus_t logAckResponseV5(uint8_t reasonCode,uint16_t packetIdentifier){
     MQTTStatus_t status = MQTTServerRefused;
     switch(reasonCode){
@@ -2262,6 +2262,7 @@ static MQTTStatus_t logAckResponseV5(uint8_t reasonCode,uint16_t packetIdentifie
     return status;
 }
 
+/* coverity[misra_c_2012_rule_2_7_violation] */
 static MQTTStatus_t logSimpleAckResponseV5(uint8_t reasonCode,uint16_t packetIdentifier){
     MQTTStatus_t status = MQTTServerRefused;
     switch(reasonCode){
@@ -2409,7 +2410,7 @@ static uint8_t * serializePublishProperties(const MQTTPublishInfo_t *pPublishInf
                         pIndexLocal++;
                         pIndexLocal = encodeString( pIndexLocal, pPublishInfo->pCorrelationData, pPublishInfo->correlationLength );
                     }
-                   #if(MQTT_USER_PROEPRTY_ENABLED)
+                   #if(MQTT_USER_PROPERTY_ENABLED)
                     if( pPublishInfo->pUserProperty != NULL )
                     {
                         uint32_t i = 0;
@@ -4943,7 +4944,7 @@ MQTTStatus_t MQTT_ProcessIncomingPacketTypeAndLength( const uint8_t * pBuffer,
         return pIndexLocal;
     }
 
-    uint8_t * MQTT_SerializeConnectProperties( uint8_t * pIndex,
+    uint8_t * MQTTV5_SerializeConnectProperties( uint8_t * pIndex,
                                                const MQTTConnectProperties_t * pConnectProperties )
     {
         uint8_t * pIndexLocal = pIndex;

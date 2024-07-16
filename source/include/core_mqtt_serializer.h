@@ -1577,7 +1577,7 @@ uint8_t * MQTT_SerializeUnsubscribeHeader( size_t remainingLength,
 /** @endcond */
 
 /**
- * @fn uint8_t * MQTT_SerializeConnectProperties(uint8_t * pIndex,const MQTTConnectProperties_t * pConnectProperties);
+ * @fn uint8_t * MQTTV5_SerializeConnectProperties(uint8_t * pIndex,const MQTTConnectProperties_t * pConnectProperties);
  * @brief Serialize the connect properties of the connect packet header.
  *
  * @param[out] pIndex Pointer to the buffer where the header is to
@@ -1591,7 +1591,7 @@ uint8_t * MQTT_SerializeUnsubscribeHeader( size_t remainingLength,
  * @cond DOXYGEN_IGNORE
  * Doxygen should ignore this definition, this function is private.
  */
-uint8_t * MQTT_SerializeConnectProperties( uint8_t * pIndex,
+uint8_t * MQTTV5_SerializeConnectProperties( uint8_t * pIndex,
                                            const MQTTConnectProperties_t * pConnectProperties);
 /** @endcond */
 
