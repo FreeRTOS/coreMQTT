@@ -1141,7 +1141,7 @@ static bool matchTopicFilter( const char * pTopicName,
     }
 
     static MQTTStatus_t sendDisconnectWithoutCopyV5( MQTTContext_t * pContext,
-                                                     const MQTTAckInfo_t * pAckInfo,
+                                                     const MQTTAckInfo_t * pDisconnectInfo,
                                                      size_t remainingLength,
                                                      uint32_t sessionExpiry )
     {
@@ -1177,10 +1177,10 @@ static bool matchTopicFilter( const char * pTopicName,
         uint8_t * pIndex = fixedHeader;
         TransportOutVector_t * iterator = pIoVector;
         assert( pContext != NULL );
-        assert( pAckInfo != NULL );
+        assert( pDisconnectInfo != NULL );
 
         /* Only for fixed size fields. */
-        pIndex = MQTTV5_SerializeDisconnectFixed( pIndex, pAckInfo, remainingLength, sessionExpiry );
+        pIndex = MQTTV5_SerializeDisconnectFixed( pIndex, pDisconnectInfo, remainingLength, sessionExpiry );
         iterator->iov_base = fixedHeader;
         /* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-182 */
         /* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-108 */
@@ -1192,11 +1192,11 @@ static bool matchTopicFilter( const char * pTopicName,
         ioVectorLength++;
 
         /* Encode the reason string if provided. */
-        if( pAckInfo->reasonStringLength != 0U )
+        if( pDisconnectInfo->reasonStringLength != 0U )
         {
             vectorsAdded = addEncodedStringToVectorWithId( serializedReasonStringLength,
-                                                           pAckInfo->pReasonString,
-                                                           pAckInfo->reasonStringLength,
+                                                           pDisconnectInfo->pReasonString,
+                                                           pDisconnectInfo->reasonStringLength,
                                                            iterator,
                                                            &totalMessageLength, &reasonStringId );
             /* Update the iterator to point to the next empty slot. */
@@ -1206,9 +1206,9 @@ static bool matchTopicFilter( const char * pTopicName,
 
         #if ( MQTT_USER_PROPERTY_ENABLED )
             /*Encode the user properties if provided.*/
-            if( pAckInfo->pUserProperty != NULL )
+            if( pDisconnectInfo->pUserProperty != NULL )
             {
-                ioVectorLength += sendUserProperties( pAckInfo->pUserProperty, &userVector, &totalMessageLength, &iterator );
+                ioVectorLength += sendUserProperties( pDisconnectInfo->pUserProperty, &userVector, &totalMessageLength, &iterator );
             }
         #endif
 

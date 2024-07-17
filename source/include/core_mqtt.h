@@ -1047,7 +1047,7 @@ const char * MQTT_Status_strerror( MQTTStatus_t status );
 MQTTStatus_t MQTTV5_Disconnect( MQTTContext_t * pContext,
                                 MQTTAckInfo_t * pDisconnectInfo,
                                 uint32_t sessionExpiry );
-/* @[declare_mqtt_disconnect] */
+/* @[declare_mqttv5_disconnect] */
 
 /* *INDENT-OFF* */
 #ifdef __cplusplus
