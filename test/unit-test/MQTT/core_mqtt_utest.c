@@ -1116,7 +1116,6 @@ void test_MQTT_Init_Happy_Path( void )
     TEST_ASSERT_EQUAL_MEMORY( &networkBuffer, &context.networkBuffer, sizeof( networkBuffer ) );
 }
 
-
 /**
  * @brief Test that any NULL parameter causes MQTT_Init to return MQTTBadParameter.
  */
@@ -1176,8 +1175,6 @@ static uint8_t * MQTT_SerializeConnectFixedHeader_cb( uint8_t * pIndex,
 /**
  * @brief Test MQTT_Connect, except for receiving the CONNACK.
  */
-
-
 void test_MQTT_Connect_sendConnect_writev_error( void )
 {
     MQTTContext_t mqttContext = { 0 };

@@ -307,44 +307,197 @@
  */
     #define MQTT_PUBLISH_ACK_PACKET_SIZE_WITH_REASON    ( 3UL )
 
-
+/**
+ * @brief The Connection is accepted.
+ */
     #define MQTT_REASON_SUCCESS                         ( 0x00 )
+/**
+ * @brief The Client wishes to disconnect but requires 
+that the Server also publishes its Will Message.
+ */
     #define MQTT_REASON_SEND_WILL                       ( 0x04 )
+/**
+ * @brief The message is accepted but there are no 
+subscribers.
+ */
     #define MQTT_REASON_NO_MATCHING_SUBSCRIBERS         ( 0x10 )
+/**
+ * @brief The Server does not wish to reveal the reason for the 
+failure, or none of the other Reason Codes apply.
+ */
     #define MQTT_REASON_UNSPECIFIED_ERR                 ( 0x80 )
+/**
+ * @brief Data within the CONNECT packet could not be 
+correctly parsed.
+ */
     #define MQTT_REASON_MALFORMED_PACKET                ( 0x81 )
+    /**
+ * @brief Data in the CONNECT packet does not conform to this 
+specification.
+ */
     #define MQTT_REASON_PROTOCOL_ERR                    ( 0x82 )
+    /**
+ * @brief The CONNECT is valid but is not accepted by this 
+Server.
+ */
     #define MQTT_REASON_IMPL_SPECIFIC_ERR               ( 0x83 )
+    /**
+ * @brief The Server does not support the version of the MQTT 
+protocol requested by the Client.
+ */
     #define MQTT_REASON_UNSUPPORTED_PROTO_VER           ( 0x84 )
+    /**
+ * @brief The Client Identifier is a valid string but is not allowed 
+by the Server.
+ */
     #define MQTT_REASON_CLIENT_ID_NOT_VALID             ( 0x85 )
+    /**
+ * @brief The Server does not accept the User Name or 
+Password specified by the Client.
+ */
     #define MQTT_REASON_BAD_USER_OR_PASS                ( 0x86 )
+    /**
+ * @brief The Client is not authorized to connect.
+ */
     #define MQTT_REASON_NOT_AUTHORIZED                  ( 0x87 )
+    /**
+ * @brief The MQTT Server is not available.
+ */
     #define MQTT_REASON_SERVER_UNAVAILABLE              ( 0x88 )
+    /**
+ * @brief The Server is busy, try again later.
+ */
     #define MQTT_REASON_SERVER_BUSY                     ( 0x89 )
+    /**
+ * @brief This Client has been banned by administrative action.
+ */
     #define MQTT_REASON_BANNED                          ( 0x8A )
+    /**
+ * @brief The Server is shutting down.
+ */
     #define MQTT_REASON_SERVER_SHUTTING_DOWN            ( 0x8B )
+    /**
+ * @brief The authentication method is not supported or does not 
+match the authentication method currently in use.
+ */
     #define MQTT_REASON_BAD_AUTH_METHOD                 ( 0x8C )
+        /**
+ * @brief The Connection is closed because no packet 
+has been received for 1.5 times the Keepalive 
+time.
+ */
     #define MQTT_REASON_KEEP_ALIVE_TIMEOUT              ( 0x8D )
+        /**
+ * @brief Another Connection using the same ClientID
+has connected causing this Connection to be 
+closed.
+ */
     #define MQTT_REASON_SESSION_TAKEN_OVER              ( 0x8E )
+        /**
+ * @brief The Topic Filter is correctly formed, but is not 
+accepted by this Server.
+ */
     #define MQTT_REASON_TOPIC_FILTER_INVALID            ( 0x8F )
+        /**
+ * @ingroup mqtt_constants
+ * @brief The Topic Name is not malformed, but is not 
+accepted by this Server.
+ */
     #define MQTT_REASON_TOPIC_NAME_INVALID              ( 0x90 )
+    /**
+ * @brief The Packet Identifier is already in use. 
+ */
     #define MQTT_REASON_PACKET_ID_IN_USE                ( 0x91 )
+    /**
+ * @ingroup mqtt_constants
+ * @brief The Packet Identifier is not known.
+ */
     #define MQTT_REASON_PACKET_ID_NOT_FOUND             ( 0x92 )
+    /**
+ * @brief The Client or Server has received more than 
+Receive Maximum publication for which it has 
+not sent PUBACK or PUBCOMP.
+ */
     #define MQTT_REASON_RX_MAX_EXCEEDED                 ( 0x93 )
+    /**
+ * @brief The Connection is accepted.
+ */
     #define MQTT_REASON_TOPIC_ALIAS_INVALID             ( 0x94 )
+    /**
+ * @brief The packet exceeded the maximum 
+permissible size.
+ */
     #define MQTT_REASON_PACKET_TOO_LARGE                ( 0x95 )
+    /**
+ * @ingroup mqtt_constants
+ * @brief The Connection is accepted.
+ */
     #define MQTT_REASON_MSG_RATE_TOO_HIGH               ( 0x96 )
+    /**
+ * @brief An implementation or administrative imposed limit has 
+been exceeded.
+ */
     #define MQTT_REASON_QUOTA_EXCEEDED                  ( 0x97 )
+    /**
+ * @brief The Connection is closed due to an 
+administrative action.
+ */
     #define MQTT_REASON_ADMIN_ACTION                    ( 0x98 )
+    /**
+ * @ingroup mqtt_constants
+ * @brief The Payload does not match the specified Payload 
+Format Indicator.
+ */
     #define MQTT_REASON_PAYLOAD_FORMAT_INVALID          ( 0x99 )
+    /**
+ * @ingroup mqtt_constants
+ * @brief The Server does not support retained messages, and 
+Will Retain was set to 1.
+ */
     #define MQTT_REASON_RETAIN_NOT_SUPPORTED            ( 0x9A )
+    /**
+ * @ingroup mqtt_constants
+ * @brief The Server does not support the QoS.
+ */
     #define MQTT_REASON_QOS_NOT_SUPPORTED               ( 0x9B )
+    /**
+ * @ingroup mqtt_constants
+ * @brief The Client should temporarily use another server.
+ */
     #define MQTT_REASON_USE_ANOTHER_SERVER              ( 0x9C )
+    /**
+ * @ingroup mqtt_constants
+ * @brief The Client should permanently use another server.
+ */
     #define MQTT_REASON_SERVER_MOVED                    ( 0x9D )
+    /**
+ * @ingroup mqtt_constants
+ * @brief  The Server does not support Shared 
+Subscriptions.
+ */
     #define MQTT_REASON_SS_NOT_SUPPORTED                ( 0x9E )
+    /**
+ * @ingroup mqtt_constants
+ * @brief The connection rate limit has been exceeded.
+ */
     #define MQTT_REASON_CON_RATE_EXCEED                 ( 0x9F )
+    /**
+ * @ingroup mqtt_constants
+ * @brief The maximum connection time authorized for 
+this connection has been exceeded.
+ */
     #define MQTT_REASON_MAX_CON_TIME                    ( 0xA0 )
+    /**
+ * @ingroup mqtt_constants
+ * @brief The Server does not support Subscription 
+Identifiers; the subscription is not accepted.
+ */
     #define MQTT_REASON_SUB_ID_NOT_SUP                  ( 0xA1 )
+    /**
+ * @ingroup mqtt_constants
+ * @brief The Server does not support Wildcard 
+Subscriptions; the subscription is not accepted.
+ */
     #define MQTT_REASON_WILDCARD_SUB_NOT_SUP            ( 0xA2 )
 
 #endif /* if ( MQTT_VERSION_5_ENABLED ) */
@@ -3692,7 +3845,6 @@ uint8_t * MQTT_SerializeConnectFixedHeader( uint8_t * pIndex,
 
     /* The string "MQTT" is placed at the beginning of the CONNECT packet's variable
      * header. This string is 4 bytes long. */
-
     pIndexLocal = encodeString( pIndexLocal, "MQTT", 4 );
 
     /* The MQTT protocol version is the second field of the variable header. */

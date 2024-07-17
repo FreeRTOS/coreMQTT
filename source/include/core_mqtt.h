@@ -1036,7 +1036,7 @@ const char * MQTT_Status_strerror( MQTTStatus_t status );
  *
  * @param[in] pContext Initialized and connected MQTT context.
  * @param[in] pDisconnectInfo Reason code and properties to encode
- * @param[in] pContext
+ * @param[in] sessionExpiry Session expiry interval.
  * @return #MQTTNoMemory if the #MQTTContext_t.networkBuffer is too small to
  * hold the MQTT packet;
  * #MQTTBadParameter if invalid parameters are passed;
