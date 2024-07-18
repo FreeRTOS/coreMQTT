@@ -819,7 +819,7 @@ static bool matchTopicFilter( const char * pTopicName,
  *
  * @param[in] pContext MQTT Connection context.
  * @param[in] pAckInfo Reason code and properties.
- * @param[in] remainingLength Remaining lenght of the packet.
+ * @param[in] remainingLength Remaining length of the packet.
  * @param[in] sessionExpiry Session expiry interval.
  *
  *

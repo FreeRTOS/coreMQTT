@@ -2444,7 +2444,7 @@ void test_MQTTV5_SerializeConnect_Happy_Paths()
     verifySerializedConnectPacket( &connectInfo, &publishInfo, &properties,
                                    remainingLength, &networkBuffer );
 
-    /* Repeat with NULL ppublishInfo. */
+    /* Repeat with NULL publishInfo. */
     mqttStatus = MQTTV5_GetConnectPacketSize( &connectInfo,
                                               NULL,
                                               &properties,
@@ -2753,7 +2753,7 @@ void test_MQTTV5_DeserializeAck_puback( void )
     TEST_ASSERT_EQUAL_INT( MQTTProtocolError, status );
 
     requestProblem = true;
-    /*User properties not initilaized.*/
+    /*User properties not initialized.*/
     status = MQTTV5_DeserializeAck( &mqttPacketInfo, &packetIdentifier, &ackInfo, requestProblem, maxPacketSize );
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
 

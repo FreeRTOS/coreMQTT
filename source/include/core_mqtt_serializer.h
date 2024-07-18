@@ -1855,7 +1855,7 @@ MQTTStatus_t MQTTV5_SerializeConnect(const MQTTConnectInfo_t* pConnectInfo,
  * //Set the publish info parameters.
  *
  * //Validate the publish packet
- * status = MQTTV5_ValidatePublishParams(&ublishInfo,topicAliasMax,retainAvailable,maxQos);
+ * status = MQTTV5_ValidatePublishParams(&publishInfo,topicAliasMax,retainAvailable,maxQos);
  *
  * if( status == MQTTSuccess )
  * {
@@ -2007,9 +2007,9 @@ MQTTStatus_t MQTTV5_DeserializeAck( const MQTTPacketInfo_t * pIncomingPacket,
  * }
  * @endcode
  */
-/* @[declare_mqttv5_getdackpacketsize] */
+/* @[declare_mqttv5_getackpacketsize] */
 MQTTStatus_t MQTTV5_GetAckPacketSize( MQTTAckInfo_t *pAckInfo, size_t* pRemainingLength,size_t * pPacketSize, uint32_t maxPacketSize);
-/* @[declare_mqttv5_getdackpacketsize] */
+/* @[declare_mqttv5_getackpacketsize] */
 
 /**
  * @fn uint8_t * MQTTV5_SerializeAckFixed(uint8_t * pIndex,
@@ -2272,7 +2272,7 @@ uint8_t * MQTTV5_SerializeDisconnectFixed(uint8_t * pIndex,
  *
  * // Serialize the disconnect into the fixed buffer.
  * MQTTV5_SerializeDisconnectWithProperty( &disconnectInfo,
-                                           remainingLenght,
+                                           remainingLength,
                                            &fixedBuffer,
                                            sessionExpiry);
  *

@@ -1178,7 +1178,7 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
  * @param[in] pFixedBuffer Buffer for packet serialization.
  *
  */
-    static void seriailizePubAckPacketV5( const MQTTAckInfo_t * pAckInfo,
+    static void serializePubAckPacketV5( const MQTTAckInfo_t * pAckInfo,
                                           uint8_t packetType,
                                           uint16_t packetId,
                                           size_t remainingLength,
@@ -1213,7 +1213,7 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
  *
  * @param[out] pAckInfo To store the decoded property.
  * @param[out] pIndex Pointer to the current index of the buffer.
- * @param[out] remainingLength Reamining length of the incoming packet.
+ * @param[out] remainingLength Remaining length of the incoming packet.
  *
  *
  * @return #MQTTSuccess, #MQTTProtocolError and #MQTTMalformedPacket
@@ -1260,7 +1260,7 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
  * @param[in] sessionExpiry Session Expiry Interval.
  *
  */
-    static void seriailizeDisconnectPacketV5( const MQTTAckInfo_t * pDisconnectInfo,
+    static void serializeDisconnectPacketV5( const MQTTAckInfo_t * pDisconnectInfo,
                                               const MQTTFixedBuffer_t * pFixedBuffer,
                                               size_t remainingLength,
                                               uint32_t sessionExpiry );
@@ -2392,7 +2392,7 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
         return status;
     }
 
-    static void seriailizePubAckPacketV5( const MQTTAckInfo_t * pAckInfo,
+    static void serializePubAckPacketV5( const MQTTAckInfo_t * pAckInfo,
                                           uint8_t packetType,
                                           uint16_t packetId,
                                           size_t remainingLength,
@@ -2556,7 +2556,7 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
         {
             while( ( propertyLength > 0U ) && ( status == MQTTSuccess ) )
             {
-                /*Decode the poperty id.*/
+                /*Decode the property id.*/
                 uint8_t packetId = *pLocalIndex;
                 bool reasonString = false;
                 pLocalIndex = &pLocalIndex[ 1 ];
@@ -5186,7 +5186,7 @@ MQTTStatus_t MQTT_ProcessIncomingPacketTypeAndLength( const uint8_t * pBuffer,
             pIndexLocal = &pIndexLocal[ 4 ];
         }
 
-        /*Serialze the topic alias if provided*/
+        /*Serialize the topic alias if provided*/
 
         if( pPublishInfo->topicAlias != 0U )
         {
@@ -5441,7 +5441,7 @@ MQTTStatus_t MQTT_ProcessIncomingPacketTypeAndLength( const uint8_t * pBuffer,
         }
         else if( ( pPublishInfo->retain == true ) && ( retainAvailable == 0U ) )
         {
-            LogError( ( "Retain is not avaialble." ) );
+            LogError( ( "Retain is not available." ) );
             status = MQTTBadParameter;
         }
         else if( ( pPublishInfo->qos != MQTTQoS0 ) && ( maxQos == 0U ) )
@@ -5721,7 +5721,7 @@ MQTTStatus_t MQTT_ProcessIncomingPacketTypeAndLength( const uint8_t * pBuffer,
             }
             else
             {
-                seriailizePubAckPacketV5( pAckInfo, packetType, packetId, remainingLength, pFixedBuffer );
+                serializePubAckPacketV5( pAckInfo, packetType, packetId, remainingLength, pFixedBuffer );
             }
         }
 
@@ -5868,7 +5868,7 @@ MQTTStatus_t MQTT_ProcessIncomingPacketTypeAndLength( const uint8_t * pBuffer,
         return pIndexLocal;
     }
 
-    static void seriailizeDisconnectPacketV5( const MQTTAckInfo_t * pDisconnectInfo,
+    static void serializeDisconnectPacketV5( const MQTTAckInfo_t * pDisconnectInfo,
                                               const MQTTFixedBuffer_t * pFixedBuffer,
                                               size_t remainingLength,
                                               uint32_t sessionExpiry )
@@ -5954,7 +5954,7 @@ MQTTStatus_t MQTT_ProcessIncomingPacketTypeAndLength( const uint8_t * pBuffer,
             }
             else
             {
-                seriailizeDisconnectPacketV5( pDisconnectInfo, pFixedBuffer, remainingLength, sessionExpiry );
+                serializeDisconnectPacketV5( pDisconnectInfo, pFixedBuffer, remainingLength, sessionExpiry );
             }
         }
 
@@ -6034,7 +6034,7 @@ MQTTStatus_t MQTT_ProcessIncomingPacketTypeAndLength( const uint8_t * pBuffer,
         {
             while( ( propertyLength > 0U ) && ( status == MQTTSuccess ) )
             {
-                /*Decode the poperty id.*/
+                /*Decode the property id.*/
                 uint8_t propertyId = *pIndex;
                 bool reasonString = false;
                 bool serverRef = false;
