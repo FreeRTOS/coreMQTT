@@ -165,6 +165,7 @@ typedef struct MQTTPubAckInfo
     MQTTPublishState_t publishState; /**< @brief The current state of the publish process. */
 } MQTTPubAckInfo_t;
 
+
 /**
  * @ingroup mqtt_struct_types
  * @brief A struct representing an MQTT connection.
@@ -246,6 +247,18 @@ typedef struct MQTTContext
     uint16_t keepAliveIntervalSec; /**< @brief Keep Alive interval. */
     uint32_t pingReqSendTimeMs;    /**< @brief Timestamp of the last sent PINGREQ. */
     bool waitingForPingResp;       /**< @brief If the library is currently awaiting a PINGRESP. */
+    #if ( MQTT_VERSION_5_ENABLED )
+
+        /**
+         * @brief Connect and Connack Properties.
+         */
+        MQTTConnectProperties_t * pConnectProperties;
+
+        /**
+         * @brief To store disconnect information.
+         */
+        MQTTAckInfo_t * pDisconnectInfo;
+    #endif
 } MQTTContext_t;
 
 /**
@@ -258,6 +271,10 @@ typedef struct MQTTDeserializedInfo
     uint16_t packetIdentifier;          /**< @brief Packet ID of deserialized packet. */
     MQTTPublishInfo_t * pPublishInfo;   /**< @brief Pointer to deserialized publish info. */
     MQTTStatus_t deserializationResult; /**< @brief Return code of deserialization. */
+    #if ( MQTT_VERSION_5_ENABLED )
+        MQTTAckInfo_t * pAckInfo;       /**< @brief Pointer to deserialized ack info. */
+        MQTTAckInfo_t * pNextAckInfo;   /**< @brief Pointer to next ack info to send. */
+    #endif
 } MQTTDeserializedInfo_t;
 
 /**
@@ -520,7 +537,7 @@ MQTTStatus_t MQTT_InitStatefulQoS( MQTTContext_t * pContext,
 /* @[declare_mqtt_connect] */
 MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
                            const MQTTConnectInfo_t * pConnectInfo,
-                           const MQTTPublishInfo_t * pWillInfo,
+                           MQTTPublishInfo_t * pWillInfo,
                            uint32_t timeoutMs,
                            bool * pSessionPresent );
 /* @[declare_mqtt_connect] */
@@ -625,7 +642,7 @@ MQTTStatus_t MQTT_Subscribe( MQTTContext_t * pContext,
  */
 /* @[declare_mqtt_publish] */
 MQTTStatus_t MQTT_Publish( MQTTContext_t * pContext,
-                           const MQTTPublishInfo_t * pPublishInfo,
+                           MQTTPublishInfo_t * pPublishInfo,
                            uint16_t packetId );
 /* @[declare_mqtt_publish] */
 
@@ -1016,6 +1033,24 @@ MQTTStatus_t MQTT_GetSubAckStatusCodes( const MQTTPacketInfo_t * pSubackPacket,
 /* @[declare_mqtt_status_strerror] */
 const char * MQTT_Status_strerror( MQTTStatus_t status );
 /* @[declare_mqtt_status_strerror] */
+
+/**
+ * @brief Disconnect an MQTT session.
+ *
+ * @param[in] pContext Initialized and connected MQTT context.
+ * @param[in] pDisconnectInfo Reason code and properties to encode
+ * @param[in] sessionExpiry Session expiry interval.
+ * @return #MQTTNoMemory if the #MQTTContext_t.networkBuffer is too small to
+ * hold the MQTT packet;
+ * #MQTTBadParameter if invalid parameters are passed;
+ * #MQTTSendFailed if transport send failed;
+ * #MQTTSuccess otherwise.
+ */
+/* @[declare_mqttv5_disconnect] */
+MQTTStatus_t MQTTV5_Disconnect( MQTTContext_t * pContext,
+                                MQTTAckInfo_t * pDisconnectInfo,
+                                uint32_t sessionExpiry );
+/* @[declare_mqttv5_disconnect] */
 
 /* *INDENT-OFF* */
 #ifdef __cplusplus
