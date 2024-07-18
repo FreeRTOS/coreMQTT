@@ -409,7 +409,6 @@ accepted by this Server.
  */
     #define MQTT_REASON_PACKET_ID_IN_USE                ( 0x91 )
     /**
- * @ingroup mqtt_constants
  * @brief The Packet Identifier is not known.
  */
     #define MQTT_REASON_PACKET_ID_NOT_FOUND             ( 0x92 )
@@ -429,7 +428,6 @@ permissible size.
  */
     #define MQTT_REASON_PACKET_TOO_LARGE                ( 0x95 )
     /**
- * @ingroup mqtt_constants
  * @brief The Connection is accepted.
  */
     #define MQTT_REASON_MSG_RATE_TOO_HIGH               ( 0x96 )
@@ -444,57 +442,47 @@ administrative action.
  */
     #define MQTT_REASON_ADMIN_ACTION                    ( 0x98 )
     /**
- * @ingroup mqtt_constants
  * @brief The Payload does not match the specified Payload 
 Format Indicator.
  */
     #define MQTT_REASON_PAYLOAD_FORMAT_INVALID          ( 0x99 )
     /**
- * @ingroup mqtt_constants
  * @brief The Server does not support retained messages, and 
 Will Retain was set to 1.
  */
     #define MQTT_REASON_RETAIN_NOT_SUPPORTED            ( 0x9A )
     /**
- * @ingroup mqtt_constants
  * @brief The Server does not support the QoS.
  */
     #define MQTT_REASON_QOS_NOT_SUPPORTED               ( 0x9B )
     /**
- * @ingroup mqtt_constants
  * @brief The Client should temporarily use another server.
  */
     #define MQTT_REASON_USE_ANOTHER_SERVER              ( 0x9C )
     /**
- * @ingroup mqtt_constants
  * @brief The Client should permanently use another server.
  */
     #define MQTT_REASON_SERVER_MOVED                    ( 0x9D )
     /**
- * @ingroup mqtt_constants
  * @brief  The Server does not support Shared 
 Subscriptions.
  */
     #define MQTT_REASON_SS_NOT_SUPPORTED                ( 0x9E )
     /**
- * @ingroup mqtt_constants
  * @brief The connection rate limit has been exceeded.
  */
     #define MQTT_REASON_CON_RATE_EXCEED                 ( 0x9F )
     /**
- * @ingroup mqtt_constants
  * @brief The maximum connection time authorized for 
 this connection has been exceeded.
  */
     #define MQTT_REASON_MAX_CON_TIME                    ( 0xA0 )
     /**
- * @ingroup mqtt_constants
  * @brief The Server does not support Subscription 
 Identifiers; the subscription is not accepted.
  */
     #define MQTT_REASON_SUB_ID_NOT_SUP                  ( 0xA1 )
     /**
- * @ingroup mqtt_constants
  * @brief The Server does not support Wildcard 
 Subscriptions; the subscription is not accepted.
  */

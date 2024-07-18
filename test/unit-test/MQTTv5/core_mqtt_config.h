@@ -1,5 +1,5 @@
 /*
- * coreMQTT v2.3.0
+ * coreMQTT <DEVELOPMENT BRANCH>
  * Copyright (C) 2020 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * SPDX-License-Identifier: MIT

@@ -105,8 +105,8 @@ typedef enum MQTTStatus
                           incomplete data; it should be called again (probably after
                           a delay). */
 
-    MQTTMalformedPacket=0x81,
-    MQTTProtocolError=0x82
+    MQTTMalformedPacket=0x81,/**A malformed packet was received from the server. */
+    MQTTProtocolError=0x82 /**A packet with protocol error was received from the server. */
 
 } MQTTStatus_t;
 
@@ -1712,7 +1712,7 @@ MQTTStatus_t MQTTV5_InitConnect(MQTTConnectProperties_t *pConnectProperties);
 /**
  * @brief Get the size and Remaining Length of an MQTT Version 5 CONNECT packet .
  *
- * This function must be called before #MQTT_SerializeConnect in order to get
+ * This function must be called before #MQTTV5_SerializeConnect in order to get
  * the size of the MQTT CONNECT packet that is generated from #MQTTConnectInfo_t,
  * MQTTConnectProperties_t and  optional #MQTTPublishInfo_t. The size of the #MQTTFixedBuffer_t supplied
  * to #MQTT_SerializeConnect must be at least @p pPacketSize. The provided
@@ -1750,8 +1750,8 @@ MQTTStatus_t MQTTV5_InitConnect(MQTTConnectProperties_t *pConnectProperties);
  * initializeConnectProperties( &connectProperties );
  *
  * // Get the size requirement for the connect packet.
- * status = MQTT_GetConnectPacketSize(
- *      &connectInfo, &willInfo, &remainingLength, &packetSize
+ * status = MQTTV5_GetConnectPacketSize(
+ *      &connectInfo, &willInfo, &connectProperties, &remainingLength, &packetSize
  * );
  *
  * if( status == MQTTSuccess )
@@ -1775,13 +1775,13 @@ MQTTStatus_t MQTTV5_GetConnectPacketSize(const MQTTConnectInfo_t* pConnectInfo,
  * #MQTTV5_GetConnectPacketSize should be called with @p pConnectInfo, @p pConnectProperties and
  * @p pWillInfo before invoking this function to get the size of the required
  * #MQTTFixedBuffer_t and @p remainingLength. The @p remainingLength must be
- * the same as returned by #MQTT_GetConnectPacketSize. The #MQTTFixedBuffer_t
- * must be at least as large as the size returned by #MQTT_GetConnectPacketSize.
+ * the same as returned by #MQTTV5_GetConnectPacketSize. The #MQTTFixedBuffer_t
+ * must be at least as large as the size returned by #MQTTV5_GetConnectPacketSize.
  *
  * @param[in] pConnectInfo MQTT CONNECT packet parameters.
  * @param[in] pWillInfo Last Will and Testament. Pass NULL if not used.
  * @param[in] pConnectProperties MQTT CONNECT properties parameters.
- * @param[in] remainingLength Remaining Length provided by #MQTT_GetConnectPacketSize.
+ * @param[in] remainingLength Remaining Length provided by #MQTTV5_GetConnectPacketSize.
  * @param[out] pFixedBuffer Buffer for packet serialization.
  *
  * @return #MQTTNoMemory if pFixedBuffer is too small to hold the MQTT packet;
@@ -1812,7 +1812,7 @@ MQTTStatus_t MQTTV5_GetConnectPacketSize(const MQTTConnectInfo_t* pConnectInfo,
  * assert( packetSize <= BUFFER_SIZE );
  *
  * // Serialize the connect packet into the fixed buffer.
- * status = MQTT_SerializeConnect( &connectInfo, &willInfo,&connectProperties,remainingLength, &fixedBuffer );
+ * status = MQTTV5_SerializeConnect( &connectInfo, &willInfo,&connectProperties,remainingLength, &fixedBuffer );
  *
  * if( status == MQTTSuccess )
  * {
