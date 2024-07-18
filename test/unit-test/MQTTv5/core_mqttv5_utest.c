@@ -813,6 +813,7 @@ void test_MQTT_ProcessLoop_handleIncomingAck_Error_Paths1( void )
     MQTTFixedBuffer_t networkBuffer = { 0 };
     MQTTConnectProperties_t properties;
     MQTTPacketInfo_t incomingPacket = { 0 };
+
     /*Update state returns bad response.*/
     setupTransportInterface( &transport );
     setupNetworkBuffer( &networkBuffer );
@@ -847,6 +848,7 @@ void test_MQTT_ProcessLoop_handleIncomingAck_Error_Paths2( void )
     MQTTFixedBuffer_t networkBuffer = { 0 };
     MQTTConnectProperties_t properties;
     MQTTPacketInfo_t incomingPacket = { 0 };
+
     /*Update state returns bad response.*/
     setupTransportInterface( &transport );
     setupNetworkBuffer( &networkBuffer );
@@ -876,6 +878,7 @@ void test_MQTT_ProcessLoop_handleIncomingAck_Error_Paths3( void )
     MQTTConnectProperties_t properties;
     uint16_t packetId = 2;
     MQTTPacketInfo_t incomingPacket = { 0 };
+
     /*Invalid packet parameters.*/
     setupTransportInterface( &transport );
     setupNetworkBuffer( &networkBuffer );
@@ -910,6 +913,7 @@ void test_MQTT_ProcessLoop_handleIncomingAck_Happy_Paths2( void )
     MQTTConnectProperties_t properties;
     uint16_t packetId = 1;
     MQTTPacketInfo_t incomingPacket = { 0 };
+
     /*Using event call back to set reason string and user properties,*/
     setupTransportInterface( &transport );
     setupNetworkBuffer( &networkBuffer );
@@ -946,6 +950,7 @@ void test_MQTT_ProcessLoop_handleIncomingAck_Error_Paths4( void )
     MQTTFixedBuffer_t networkBuffer = { 0 };
     MQTTConnectProperties_t properties;
     MQTTPacketInfo_t incomingPacket = { 0 };
+
     /*Invalid packet parameters.*/
     setupTransportInterface( &transport );
     setupNetworkBuffer( &networkBuffer );
@@ -978,6 +983,7 @@ void test_MQTT_ProcessLoop_handleIncomingAck_Error_Paths5( void )
     MQTTConnectProperties_t properties;
     MQTTPacketInfo_t incomingPacket = { 0 };
     uint16_t packetId = 1;
+
     /*Unable to send the packet using transport interface.*/
     setupTransportInterface( &transport );
     setupNetworkBuffer( &networkBuffer );

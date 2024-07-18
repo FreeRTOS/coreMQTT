@@ -1693,7 +1693,7 @@ MQTTStatus_t MQTTV5_DeserializeConnack( MQTTConnectProperties_t *pConnackPropert
  * @code{c}
  *
  * MQTTConnectProperties_t connectProperties;
- * 
+ *
  * // Clear context.
  * memset( ( void * ) &connectProperties, 0x00, sizeof( MQTTConnectProperties_t ) );
  *
@@ -1853,7 +1853,7 @@ MQTTStatus_t MQTTV5_SerializeConnect(const MQTTConnectInfo_t* pConnectInfo,
  * uint8_t maxQos;
  *
  * //Set the publish info parameters.
- * 
+ *
  * //Validate the publish packet
  * status = MQTTV5_ValidatePublishParams(&ublishInfo,topicAliasMax,retainAvailable,maxQos);
  *
@@ -1885,7 +1885,7 @@ MQTTStatus_t MQTTV5_ValidatePublishParams(const MQTTPublishInfo_t* pPublishInfo,
  * @param[out] pRemainingLength The Remaining Length of the MQTT PUBLISH packet.
  * @param[out] pPacketSize The total size of the MQTT PUBLISH packet.
  * @param[in] maxPacketSize Maximum packet size allowed by the server.
- * 
+ *
  * @return #MQTTBadParameter if the packet would exceed the size allowed by the
  * MQTT spec or if invalid parameters are passed; #MQTTSuccess otherwise.
  *
@@ -1908,7 +1908,7 @@ MQTTStatus_t MQTTV5_ValidatePublishParams(const MQTTPublishInfo_t* pPublishInfo,
  * publishInfo.payloadLength = strlen( "Hello World!" );
  *
  * //Set the publish properties.
- * 
+ *
  * status = MQTTV5_ValidatePublishParams(&publishInfo,topicAliasMax,retainAvailable,maxQos);
 
  * // Get the size requirement for the publish packet.
@@ -1983,7 +1983,7 @@ MQTTStatus_t MQTTV5_DeserializeAck( const MQTTPacketInfo_t * pIncomingPacket,
  * @param[out] pRemainingLength The Remaining Length of the MQTT DISCONNECT packet.
  * @param[out] pPacketSize The size of the MQTT DISCONNECT packet.
  * @param[in] maxPacketSize Maximum packet size allowed by the server.
- * 
+ *
  * @return #MQTTSuccess, or #MQTTBadParameter if parameters are invalid
  *
  * <b>Example</b>
@@ -1995,7 +1995,7 @@ MQTTStatus_t MQTTV5_DeserializeAck( const MQTTPacketInfo_t * pIncomingPacket,
  * size_t remainingLength =0;
  * size_t packetSize = 0;
  * uint32_t maxPacketSize;
- * 
+ *
  * //Set the parameters.
  * // Get the size requirement for the disconnect packet.
  * status = MQTTV5_GetAckPacketSize(&disconnectInfo,&remainingLength,&packetSize,maxPacketSize);
@@ -2025,7 +2025,7 @@ MQTTStatus_t MQTTV5_GetAckPacketSize( MQTTAckInfo_t *pAckInfo, size_t* pRemainin
  * @param[in] packetId Packed identifier of the ack packet.
  * @param[in] remainingLength Remaining length of the ack packet.
  * @param[in] propertyLength Property length of the ack packet.
- * 
+ *
  *
  * @return A pointer to the end of the encoded string.
  */
@@ -2046,10 +2046,10 @@ uint8_t * MQTTV5_SerializeAckFixed(uint8_t * pIndex,
  *
  * The input #MQTTFixedBuffer_t.size must be at least as large as the size
  * returned by #MQTTV5_GetAckPacketSize.
- * 
+ *
  * @note If reason code is success and property length is zero then #MQTT_SerializeAck can also be used.
- * 
- * @param[in]  pAckInfo Struct containing information about the publish ack. 
+ *
+ * @param[in]  pAckInfo Struct containing information about the publish ack.
  * @param[in]  remainingLength The remaining length of the packet to be
  * serialized.
  * @param[out] pFixedBuffer Buffer for packet serialization.
@@ -2098,7 +2098,7 @@ uint8_t * MQTTV5_SerializeAckFixed(uint8_t * pIndex,
  * {
  *      // The ack packet can now be sent to the broker.
  * }
- * 
+ *
  * @endcode
  */
 /* @[declare_mqttv5_serializepubackwithproperty] */
@@ -2119,7 +2119,7 @@ MQTTStatus_t MQTTV5_SerializePubAckWithProperty( const MQTTAckInfo_t *pAckInfo,
  * @param[in] maxPacketSize Maximum packet size allowed by the server.
  * @param[in] sessionExpiry Session expiry interval in the disconnect packet.
  * @param[in] prevSessionExpiry Session expiry interval set in the connect packet.
- * 
+ *
  * @return #MQTTSuccess, or #MQTTBadParameter if parameters are invalid
  *
  * <b>Example</b>
@@ -2133,7 +2133,7 @@ MQTTStatus_t MQTTV5_SerializePubAckWithProperty( const MQTTAckInfo_t *pAckInfo,
  * uint32_t maxPacketSize;
  * uint32_t sessionExpiry;
  * uint32_t prevSessionExpiry
- * 
+ *
  * //Set the parameters.
  * // Get the size requirement for the disconnect packet.
  * status = MQTTV5_GetDisconnectPacketSize(&disconnectInfo,&remainingLength,&packetSize,maxPacketSize, sessionExpiry,prevSessionExpiry );
@@ -2181,7 +2181,7 @@ uint8_t * MQTTV5_SerializeDisconnectFixed(uint8_t * pIndex,
  * @brief Deserialize an MQTT Disconnect packet.
  *
  * @param[in] pPacket #MQTTPacketInfo_t containing the buffer.
- * @param[out] pDisconnectInfo Struct containing information about the disconnect. 
+ * @param[out] pDisconnectInfo Struct containing information about the disconnect.
  * @param[out] pServerRef The server reference obtained from the buffer.
  * @param[out] pServerRefLength The server reference length obtained from the buffer.
  * @param[in] maxPacketSize MAximum packet size allowed by the client.
@@ -2231,8 +2231,8 @@ uint8_t * MQTTV5_SerializeDisconnectFixed(uint8_t * pIndex,
  *
  * The input #MQTTFixedBuffer_t.size must be at least as large as the size
  * returned by #MQTTV5_GetDisconnectPacketSize.
- * 
- * @param[in]  pDisconnectInfo Struct containing information about the disconnect. 
+ *
+ * @param[in]  pDisconnectInfo Struct containing information about the disconnect.
  * @param[in]  remainingLength The remaining length of the packet to be
  * serialized.
  * @param[out] pFixedBuffer Buffer for packet serialization.
@@ -2262,7 +2262,7 @@ uint8_t * MQTTV5_SerializeDisconnectFixed(uint8_t * pIndex,
  * uint32_t maxPacketSize;
  * uint32_t sessionExpiry;
  * uint32_t prevSessionExpiry
- * 
+ *
  * //set the parameters.
  * // Get the size requirement for the disconnect packet.
  * status = MQTTV5_GetDisconnectPacketSize(&disconnectInfo,&remainingLength,&packetSize,maxPacketSize, sessionExpiry,prevSessionExpiry );

@@ -813,23 +813,24 @@ static bool matchTopicFilter( const char * pTopicName,
                                                      uint16_t packetId,
                                                      MQTTPublishState_t publishState,
                                                      MQTTAckInfo_t * pAckInfo );
-                                                     /**
+
+/**
  * @brief Send acks for received QoS 1/2 publishes with properties.
  *
  * @param[in] pContext MQTT Connection context.
  * @param[in] pAckInfo Reason code and properties.
  * @param[in] remainingLength Remaining lenght of the packet.
  * @param[in] sessionExpiry Session expiry interval.
- * 
+ *
  *
  *
  * @return #MQTTSuccess, #MQTTBadParameter, #MQTTIllegalState or #MQTTSendFailed.
  */
-                        
+
     static MQTTStatus_t sendDisconnectWithoutCopyV5( MQTTContext_t * pContext,
                                                      const MQTTAckInfo_t * pAckInfo,
                                                      size_t remainingLength,
-                                                     uint32_t sessionExpiry );                        
+                                                     uint32_t sessionExpiry );
 
 /*-----------------------------------------------------------*/
 
@@ -887,7 +888,7 @@ static bool matchTopicFilter( const char * pTopicName,
                 iterator = &iterator[ vectorsAdded ];
                 ioVectorLength += vectorsAdded;
 
-                 /*Encode the value*/
+                /*Encode the value*/
                 vectorsAdded = addEncodedStringToVector( pUserVector->serializedUserValueLength[ i ],
                                                          userProperty[ i ].pValue,
                                                          userProperty[ i ].valueLength,
@@ -2312,7 +2313,7 @@ static MQTTStatus_t handlePublishAcks( MQTTContext_t * pContext,
                                       packetIdentifier,
                                       publishRecordState );
         }
-    #else  /* if ( !MQTT_VERSION_5_ENABLED ) */
+    #else /* if ( !MQTT_VERSION_5_ENABLED ) */
         if( status == MQTTSuccess )
         {
             deserializedInfo.packetIdentifier = packetIdentifier;
