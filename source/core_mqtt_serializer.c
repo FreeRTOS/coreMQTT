@@ -1179,10 +1179,10 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
  *
  */
     static void serializePubAckPacketV5( const MQTTAckInfo_t * pAckInfo,
-                                          uint8_t packetType,
-                                          uint16_t packetId,
-                                          size_t remainingLength,
-                                          const MQTTFixedBuffer_t * pFixedBuffer );
+                                         uint8_t packetType,
+                                         uint16_t packetId,
+                                         size_t remainingLength,
+                                         const MQTTFixedBuffer_t * pFixedBuffer );
 
 /**
  * @brief Prints the appropriate message for the PUBREL, PUBACK response code if logs
@@ -1261,9 +1261,9 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
  *
  */
     static void serializeDisconnectPacketV5( const MQTTAckInfo_t * pDisconnectInfo,
-                                              const MQTTFixedBuffer_t * pFixedBuffer,
-                                              size_t remainingLength,
-                                              uint32_t sessionExpiry );
+                                             const MQTTFixedBuffer_t * pFixedBuffer,
+                                             size_t remainingLength,
+                                             uint32_t sessionExpiry );
 
 /**
  * @brief Prints and validates the appropriate message for the Disconnect response code if logs
@@ -2393,10 +2393,10 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
     }
 
     static void serializePubAckPacketV5( const MQTTAckInfo_t * pAckInfo,
-                                          uint8_t packetType,
-                                          uint16_t packetId,
-                                          size_t remainingLength,
-                                          const MQTTFixedBuffer_t * pFixedBuffer )
+                                         uint8_t packetType,
+                                         uint16_t packetId,
+                                         size_t remainingLength,
+                                         const MQTTFixedBuffer_t * pFixedBuffer )
     {
         uint8_t * pIndex = NULL;
 
@@ -5869,9 +5869,9 @@ MQTTStatus_t MQTT_ProcessIncomingPacketTypeAndLength( const uint8_t * pBuffer,
     }
 
     static void serializeDisconnectPacketV5( const MQTTAckInfo_t * pDisconnectInfo,
-                                              const MQTTFixedBuffer_t * pFixedBuffer,
-                                              size_t remainingLength,
-                                              uint32_t sessionExpiry )
+                                             const MQTTFixedBuffer_t * pFixedBuffer,
+                                             size_t remainingLength,
+                                             uint32_t sessionExpiry )
     {
         uint8_t * pIndex = NULL;
 
