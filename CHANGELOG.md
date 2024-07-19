@@ -1,5 +1,11 @@
 # Changelog for coreMQTT Client Library
 
+## v2.3.1 (July 2024)
+
+### Changes
+
+- [#297](https://github.com/FreeRTOS/coreMQTT/pull/297) Update release action for version number update and verification.
+
 ## v2.3.0 (June 2024)
 
 ### Changes
