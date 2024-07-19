@@ -5968,7 +5968,7 @@ MQTTStatus_t MQTT_ProcessIncomingPacketTypeAndLength( const uint8_t * pBuffer,
                                                uint32_t maxPacketSize )
     {
         MQTTStatus_t status = MQTTSuccess;
-        const uint8_t * pIndex;
+        const uint8_t * pIndex = NULL;
         size_t propertyLength = 0U;
 
         /*Validate the arguments*/

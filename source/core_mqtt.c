@@ -818,7 +818,7 @@ static bool matchTopicFilter( const char * pTopicName,
  * @brief Send acks for received QoS 1/2 publishes with properties.
  *
  * @param[in] pContext MQTT Connection context.
- * @param[in] pAckInfo Reason code and properties.
+ * @param[in] pDisconnectInfo Reason code and properties.
  * @param[in] remainingLength Remaining length of the packet.
  * @param[in] sessionExpiry Session expiry interval.
  *
@@ -828,7 +828,7 @@ static bool matchTopicFilter( const char * pTopicName,
  */
 
     static MQTTStatus_t sendDisconnectWithoutCopyV5( MQTTContext_t * pContext,
-                                                     const MQTTAckInfo_t * pAckInfo,
+                                                     const MQTTAckInfo_t * pDisconnectInfo,
                                                      size_t remainingLength,
                                                      uint32_t sessionExpiry );
 
