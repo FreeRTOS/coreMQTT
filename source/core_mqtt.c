@@ -1840,7 +1840,7 @@ static MQTTStatus_t validateSubscribeUnsubscribeParams( const MQTTContext_t * pC
         {
             for( iterator = 0; iterator < subscriptionCount; iterator++ )
             {
-                if( pSubscriptionList->qos > MQTTQoS0 )
+                if( pSubscriptionList[ iterator ].qos > MQTTQoS0 )
                 {
                     LogError( ( "The incoming publish record list is not "
                                 "initialised for QoS1/QoS2 records. Please call "
