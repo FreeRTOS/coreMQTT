@@ -35,24 +35,17 @@ A port must implement functions corresponding to the following functions pointer
  - [Transport Receive](@ref TransportRecv_t): A function to receive bytes from a network.
  @code
  int32_t (* TransportRecv_t )(
-     NetworkContext_t * pNetworkContext, void * pBuffer, size_t bytesToRecv
+     void * pNetworkContext, void * pBuffer, size_t bytesToRecv
  );
  @endcode
  - [Transport Send](@ref TransportSend_t): A function to send bytes over a network.
  @code
  int32_t (* TransportSend_t )(
-     NetworkContext_t * pNetworkContext, const void * pBuffer, size_t bytesToSend
+     void * pNetworkContext, const void * pBuffer, size_t bytesToSend
  );
  @endcode
 
-The above two functions take in a pointer to a @ref NetworkContext_t, the typename of a
-`struct NetworkContext`. The NetworkContext struct must also be defined by the port, and
-ought to contain any information necessary to send and receive data with the @ref TransportSend_t
-and @ref TransportRecv_t implementations, respectively:
-@code
-struct NetworkContext {
-    // Fields necessary for the transport implementations, e.g. a TCP socket descriptor.
-};
+The above two functions take in a void pointer to an implementation-defined context.
 @endcode
 
 @section mqtt_porting_time Time Function

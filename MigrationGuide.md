@@ -143,9 +143,9 @@ void eventCallback(
      MQTTDeserializedInfo_t * pDeserializedInfo
 );
 // Network send.
-int32_t networkSend( NetworkContext_t * pContext, const void * pBuffer, size_t bytes );
+int32_t networkSend( void * pContext, const void * pBuffer, size_t bytes );
 // Network receive.
-int32_t networkRecv( NetworkContext_t * pContext, void * pBuffer, size_t bytes );
+int32_t networkRecv( void * pContext, void * pBuffer, size_t bytes );
 
 MQTTContext_t mqttContext;
 TransportInterface_t transport;
@@ -183,9 +183,9 @@ void eventCallback(
      MQTTDeserializedInfo_t * pDeserializedInfo
 );
 // Network send.
-int32_t networkSend( NetworkContext_t * pContext, const void * pBuffer, size_t bytes );
+int32_t networkSend( void * pContext, const void * pBuffer, size_t bytes );
 // Network receive.
-int32_t networkRecv( NetworkContext_t * pContext, void * pBuffer, size_t bytes );
+int32_t networkRecv( void * pContext, void * pBuffer, size_t bytes );
 
 MQTTContext_t mqttContext;
 TransportInterface_t transport;
