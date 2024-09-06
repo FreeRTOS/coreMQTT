@@ -415,6 +415,24 @@ MQTTStatus_t MQTT_InitStatefulQoS( MQTTContext_t * pContext,
 /* @[declare_mqtt_initstatefulqos] */
 
 /**
+ * @brief Checks the MQTT connection status with the broker.
+ *
+ * @param[in] pContext Initialized MQTT context.
+ *
+ * @return #MQTTBadParameter if invalid parameters are passed;
+ * #MQTTAlreadyConnected if the MQTT connection is established with the broker.
+ * #MQTTDisconnected otherwise
+ *
+ * <b>Example</b>
+ * @code{c}
+ *
+ * @endcode
+ */
+/* @[declare_mqtt_checkconnectstatus] */
+MQTTStatus_t MQTT_CheckConnectStatus(MQTTContext_t * pContext);
+/* @[declare_mqtt_checkconnectstatus] */
+
+/**
  * @brief Establish an MQTT session.
  *
  * This function will send MQTT CONNECT packet and receive a CONNACK packet. The
