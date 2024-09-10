@@ -820,20 +820,24 @@ static size_t getRemainingLength( TransportRecv_t recvFunc,
                 multiplier *= 128U;
                 bytesDecoded++;
             }
+            else if( bytesReceived < 0)
+            {
+                remainingLength = -1;
+            }
             else
             {
                 remainingLength = MQTT_REMAINING_LENGTH_INVALID;
             }
         }
 
-        if( remainingLength == MQTT_REMAINING_LENGTH_INVALID )
+        if( remainingLength == MQTT_REMAINING_LENGTH_INVALID || remainingLength < 0)
         {
             break;
         }
     } while( ( encodedByte & 0x80U ) != 0U );
 
     /* Check that the decoded remaining length conforms to the MQTT specification. */
-    if( remainingLength != MQTT_REMAINING_LENGTH_INVALID )
+    if( (remainingLength != MQTT_REMAINING_LENGTH_INVALID) && (remainingLength >=0) )
     {
         expectedSize = remainingLengthEncodedSize( remainingLength );
 
@@ -2590,6 +2594,16 @@ MQTTStatus_t MQTT_GetIncomingPacketTypeAndLength( TransportRecv_t readFunc,
             {
                 LogError( ( "Incoming packet remaining length invalid." ) );
                 status = MQTTBadResponse;
+            } 
+            else if( pIncomingPacket->remainingLength < 0)
+            {
+                /* MQTT Connection status cannot be updated here hence bubble up
+                 * MQTTStatusDisconnectPending status to the calling API that can update it. */
+                status = MQTTStatusDisconnectPending;
+            }
+            else 
+            {
+                /* Empty else MISRA 15.7 */
             }
         }
         else
@@ -2602,6 +2616,12 @@ MQTTStatus_t MQTT_GetIncomingPacketTypeAndLength( TransportRecv_t readFunc,
     else if( ( status != MQTTBadParameter ) && ( bytesReceived == 0 ) )
     {
         status = MQTTNoDataAvailable;
+    }
+    else if( ( status != MQTTBadParameter ) && ( bytesReceived < 0 ) )
+    {
+        /* MQTT Connection status cannot be updated here hence bubble up
+        * MQTTStatusDisconnectPending status to the calling API that can update it. */
+        status = MQTTStatusDisconnectPending;
     }
 
     /* If the input packet was valid, then any other number of bytes received is

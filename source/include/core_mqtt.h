@@ -107,8 +107,9 @@ typedef void (* MQTTEventCallback_t )( struct MQTTContext * pContext,
  */
 typedef enum MQTTConnectionStatus
 {
-    MQTTNotConnected, /**< @brief MQTT Connection is inactive. */
-    MQTTConnected     /**< @brief MQTT Connection is active. */
+    MQTTNotConnected,       /**< @brief MQTT Connection is inactive. */
+    MQTTConnected,           /**< @brief MQTT Connection is active. */
+    MQTTDisconnectPending   /**< @brief MQTT Connection needs to be disconnected as a transport error has occured. */
 } MQTTConnectionStatus_t;
 
 /**
@@ -420,8 +421,9 @@ MQTTStatus_t MQTT_InitStatefulQoS( MQTTContext_t * pContext,
  * @param[in] pContext Initialized MQTT context.
  *
  * @return #MQTTBadParameter if invalid parameters are passed;
- * #MQTTAlreadyConnected if the MQTT connection is established with the broker.
- * #MQTTDisconnected otherwise
+ * #MQTTStatusConnected if the MQTT connection is established with the broker.
+ * #MQTTSatusNotConnected if the MQTT connection is broker.
+ * #MQTTSatusDisconnectPending if Transport Interface has failed and MQTT connection needs to be closed.
  *
  * <b>Example</b>
  * @code{c}
