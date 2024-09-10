@@ -138,7 +138,7 @@ function(create_mock_list mock_name
                 POSITION_INDEPENDENT_CODE ON
             )
     endif()
-   
+
     target_compile_definitions(${mock_name} PUBLIC
             ${mock_define_list}
         )
@@ -160,7 +160,7 @@ function(create_real_library target
             COMPILE_FLAGS "-Wextra -Wpedantic \
                     -fprofile-arcs -ftest-coverage -fprofile-generate \
                     -Wno-unused-but-set-variable"
-                LINK_FLAGS "-fprofile-arcs -ftest-coverage \
+            LINK_FLAGS "-fprofile-arcs -ftest-coverage \
                     -fprofile-generate "
             ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/lib
         )
