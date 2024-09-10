@@ -176,9 +176,18 @@ or the following:
 1. Go to the root directory of this repository. (Make sure that the **CMock**
    submodule is cloned as described [above](#checkout-cmock-submodule))
 
-1. Run the _cmake_ command: `cmake -S test -B build`
+1. Run the _cmake_ command: 
+```
+cmake -S test -B build/ \
+          -G "Unix Makefiles" \
+          -DCMAKE_BUILD_TYPE=Debug \
+          -DBUILD_CLONE_SUBMODULES=ON \
+          -DUNITTEST=1 \
+          -DCMAKE_C_FLAGS='--coverage -Wall -Wextra -Wsign-compare -Werror -DNDEBUG -DLIBRARY_LOG_LEVEL=LOG_DEBUG' \
+```
+Note: For Mac users, additionally add the `-DCMAKE_C_STANDARD=99` flag to the above command
 
-1. Run this command to build the library and unit tests: `make -C build all`
+4. Run this command to build the library and unit tests: `make -C build all`
 
 1. The generated test executables will be present in `build/bin/tests` folder.
 
