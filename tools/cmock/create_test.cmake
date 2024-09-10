@@ -156,7 +156,7 @@ function(create_real_library target
     target_include_directories(${target} PUBLIC
             ${real_include_list}
         )
-        set_target_properties(${target} PROPERTIES
+    set_target_properties(${target} PROPERTIES
             COMPILE_FLAGS "-Wextra -Wpedantic \
                     -fprofile-arcs -ftest-coverage -fprofile-generate \
                     -Wno-unused-but-set-variable"
