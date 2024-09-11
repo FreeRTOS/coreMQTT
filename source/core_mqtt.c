@@ -438,7 +438,7 @@ static MQTTStatus_t receiveConnack( MQTTContext_t * pContext,
  * @return #MQTTSendFailed if transport send during resend failed;
  * #MQTTSuccess otherwise.
  */
-static MQTTStatus_t handleUncleanSessionResumption( MQTTContext_t * pContext)
+static MQTTStatus_t handleUncleanSessionResumption( MQTTContext_t * pContext);
 
 /**
  * @brief Send the publish packet without copying the topic string and payload in
@@ -2877,6 +2877,11 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
     else if( status == MQTTStatusConnected || status ==  MQTTStatusDisconnectPending)
     {
         LogInfo( ( "MQTT Connection is either already established or a disconnect is pending, return status = %s.",
+                    MQTT_Status_strerror( status ) ) );
+    }
+    else if ( status == MQTTBadParameter )
+    {
+        LogError( ( "MQTT connection failed with status = %s.",
                     MQTT_Status_strerror( status ) ) );
     }
     else
