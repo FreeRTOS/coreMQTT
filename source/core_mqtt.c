@@ -2833,22 +2833,22 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
         pContext->index = 0;
         ( void ) memset( pContext->networkBuffer.pBuffer, 0, pContext->networkBuffer.size );
 
-        if( *pSessionPresent != true )
+        if( *pSessionPresent != true && pContext->outgoingPublishRecordMaxCount > 0U )
         {
             /* Clear any existing records if a new session is established. */
-            if( pContext->outgoingPublishRecordMaxCount > 0U )
-            {
-                ( void ) memset( pContext->outgoingPublishRecords,
-                                 0x00,
-                                 pContext->outgoingPublishRecordMaxCount * sizeof( *pContext->outgoingPublishRecords ) );
-            }
-
-            if( pContext->incomingPublishRecordMaxCount > 0U )
-            {
-                ( void ) memset( pContext->incomingPublishRecords,
-                                 0x00,
-                                 pContext->incomingPublishRecordMaxCount * sizeof( *pContext->incomingPublishRecords ) );
-            }
+            ( void ) memset( pContext->outgoingPublishRecords,
+                              0x00,
+                              pContext->outgoingPublishRecordMaxCount * sizeof( *pContext->outgoingPublishRecords ) );
+        }
+        else if( *pSessionPresent != true && pContext->incomingPublishRecordMaxCount > 0U )
+        {
+            ( void ) memset( pContext->incomingPublishRecords,
+                              0x00,
+                              pContext->incomingPublishRecordMaxCount * sizeof( *pContext->incomingPublishRecords ) );
+        }
+        else
+        {
+            /* MISRA Empty body */
         }
 
         pContext->connectStatus = MQTTConnected;
@@ -2879,7 +2879,7 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
         LogInfo( ( "MQTT Connection is either already established or a disconnect is pending, return status = %s.",
                    MQTT_Status_strerror( status ) ) );
     }
-    else if( status == MQTTBadParameter )
+    else if( pContext == NULL )
     {
         LogError( ( "MQTT connection failed with status = %s.",
                     MQTT_Status_strerror( status ) ) );

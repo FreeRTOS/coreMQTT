@@ -1891,7 +1891,7 @@ void test_MQTT_Connect_resendPendingAcks( void )
     MQTT_SerializeAck_ExpectAnyArgsAndReturn( MQTTBadParameter );
     MQTT_PubrelToResend_ExpectAnyArgsAndReturn( MQTT_PACKET_TYPE_INVALID );
     status = MQTT_Connect( &mqttContext, &connectInfo, NULL, timeout, &sessionPresentResult );
-    TEST_ASSERT_EQUAL_INT( MQTTSendFailed, status );
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
     TEST_ASSERT_EQUAL_INT( MQTTNotConnected, mqttContext.connectStatus );
     TEST_ASSERT_TRUE( sessionPresentResult );
 
@@ -1935,7 +1935,7 @@ void test_MQTT_Connect_resendPendingAcks( void )
     /* Query for any remaining packets pending to ack. */
     MQTT_PubrelToResend_ExpectAnyArgsAndReturn( packetIdentifier + 2 );
     status = MQTT_Connect( &mqttContext, &connectInfo, NULL, timeout, &sessionPresent );
-    TEST_ASSERT_EQUAL_INT( MQTTSendFailed, status );
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
     TEST_ASSERT_EQUAL_INT( MQTTNotConnected, mqttContext.connectStatus );
 
     /* Test 5. Two packets found in ack pending state. Sent PUBREL successfully
@@ -2430,6 +2430,7 @@ void test_MQTT_Publish_DuplicatePublish( void )
 
     mqttContext.outgoingPublishRecordMaxCount = 10;
     mqttContext.outgoingPublishRecords = outgoingPublishRecord;
+    mqttContext.connectStatus=MQTTConnected;
 
     publishInfo.qos = MQTTQoS1;
     publishInfo.dup = true;
@@ -2471,6 +2472,7 @@ void test_MQTT_Publish_DuplicatePublish_UpdateFailed( void )
 
     mqttContext.outgoingPublishRecordMaxCount = 10;
     mqttContext.outgoingPublishRecords = outgoingPublishRecord;
+    mqttContext.connectStatus=MQTTConnected;
 
     publishInfo.qos = MQTTQoS1;
     publishInfo.dup = true;
@@ -2514,6 +2516,7 @@ void test_MQTT_Publish_WriteVSendsPartialBytes( void )
 
     mqttContext.outgoingPublishRecordMaxCount = 10;
     mqttContext.outgoingPublishRecords = outgoingPublishRecord;
+    mqttContext.connectStatus=MQTTConnected;
 
     publishInfo.qos = MQTTQoS1;
     publishInfo.dup = false;
@@ -2548,6 +2551,7 @@ void test_MQTT_Publish7( void )
 
     MQTT_GetPublishPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_SerializePublishHeaderWithoutTopic_ExpectAnyArgsAndReturn( MQTTSuccess );
+    mqttContext.connectStatus=MQTTConnected;
 
     /* We need sendPacket to be called with at least 1 byte to send, so that
      * it can return failure. This argument is the output of serializing the
@@ -2576,6 +2580,8 @@ void test_MQTT_Publish8( void )
     memset( &mqttContext, 0x0, sizeof( mqttContext ) );
     memset( &publishInfo, 0x0, sizeof( publishInfo ) );
     MQTT_Init( &mqttContext, &transport, getTime, eventCallback, &networkBuffer );
+
+    mqttContext.connectStatus=MQTTConnected;
 
     /* We want to test the first call to sendPacket within sendPublish succeeding,
      * and the second one failing. */
@@ -2607,6 +2613,8 @@ void test_MQTT_Publish9( void )
     memset( &publishInfo, 0x0, sizeof( publishInfo ) );
     MQTT_Init( &mqttContext, &transport, getTime, eventCallback, &networkBuffer );
 
+    mqttContext.connectStatus=MQTTConnected;
+
     MQTT_GetPublishPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_SerializePublishHeaderWithoutTopic_ExpectAnyArgsAndReturn( MQTTSuccess );
     mqttContext.transportInterface.send = transportSendSuccess;
@@ -2632,6 +2640,8 @@ void test_MQTT_Publish10( void )
     memset( &mqttContext, 0x0, sizeof( mqttContext ) );
     memset( &publishInfo, 0x0, sizeof( publishInfo ) );
     MQTT_Init( &mqttContext, &transport, getTime, eventCallback, &networkBuffer );
+
+    mqttContext.connectStatus=MQTTConnected;
 
     /* Test that sending a publish without a payload succeeds. */
     publishInfo.pPayload = NULL;
@@ -2661,6 +2671,8 @@ void test_MQTT_Publish11( void )
     memset( &mqttContext, 0x0, sizeof( mqttContext ) );
     memset( &publishInfo, 0x0, sizeof( publishInfo ) );
     MQTT_Init( &mqttContext, &transport, getTime, eventCallback, &networkBuffer );
+
+    mqttContext.connectStatus=MQTTConnected;
 
     /* Restore the test payload and length. */
     publishInfo.pPayload = "Test";
@@ -2711,6 +2723,8 @@ void test_MQTT_Publish12( void )
 
     mqttContext.outgoingPublishRecords->qos = MQTTQoS2;
 
+    mqttContext.connectStatus=MQTTConnected;
+
     expectedState = MQTTPublishSend;
 
     MQTT_GetPublishPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
@@ -2747,6 +2761,8 @@ void test_MQTT_Publish13( void )
     memset( &publishInfo, 0x0, sizeof( publishInfo ) );
     MQTT_Init( &mqttContext, &transport, getTime, eventCallback, &networkBuffer );
 
+    mqttContext.connectStatus=MQTTConnected;
+
     MQTT_InitStatefulQoS( &mqttContext,
                           &outgoingRecords, 4,
                           &incomingRecords, 4 );
@@ -2782,6 +2798,8 @@ void test_MQTT_Publish14( void )
     memset( &publishInfo, 0x0, sizeof( publishInfo ) );
     MQTT_Init( &mqttContext, &transport, getTime, eventCallback, &networkBuffer );
 
+    mqttContext.connectStatus=MQTTConnected;
+
     /* Duplicate publish. dup flag is marked by application. */
     publishInfo.dup = true;
 
@@ -2811,6 +2829,8 @@ void test_MQTT_Publish15( void )
     memset( &mqttContext, 0x0, sizeof( mqttContext ) );
     memset( &publishInfo, 0x0, sizeof( publishInfo ) );
     MQTT_Init( &mqttContext, &transport, getTime, eventCallback, &networkBuffer );
+
+    mqttContext.connectStatus=MQTTConnected;
 
     /* Duplicate publish. dup flag is marked by application.
      * State record is not present. */
@@ -2846,6 +2866,8 @@ void test_MQTT_Publish_Send_Timeout( void )
 
     /* Initialize the MQTT context. */
     MQTT_Init( &mqttContext, &transport, getTime, eventCallback, &networkBuffer );
+
+    mqttContext.connectStatus=MQTTConnected;
 
     /* Setup for making sure that the test results in calling sendPacket function
      * where calls to transport send function are made (repeatedly to send packet
@@ -3223,6 +3245,8 @@ void test_MQTT_ProcessLoop_HandleKeepAlive1( void )
 
     mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
 
+    context.connectStatus=MQTTConnected;
+
     /* Verify MQTTSuccess is returned. */
     MQTT_GetPingreqPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_GetPingreqPacketSize_ReturnThruPtr_pPacketSize( &pingreqSize );
@@ -3363,6 +3387,8 @@ void test_MQTT_ProcessLoop_handleIncomingPublish_Happy_Path1( void )
     mqttStatus = MQTT_InitStatefulQoS( &context, NULL, 0, pIncomingCallback, 10 );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
 
+    context.connectStatus=MQTTConnected;
+
     modifyIncomingPacketStatus = MQTTSuccess;
 
     /* Assume QoS = 1 so that a PUBACK will be sent after receiving PUBLISH.
@@ -3399,6 +3425,8 @@ void test_MQTT_ProcessLoop_handleIncomingPublish_Happy_Path2( void )
 
     mqttStatus = MQTT_InitStatefulQoS( &context, NULL, 0, pIncomingPublish, 10 );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+
+    context.connectStatus=MQTTConnected;
 
     modifyIncomingPacketStatus = MQTTSuccess;
 
@@ -3443,6 +3471,8 @@ void test_MQTT_ProcessLoop_handleIncomingPublish_Happy_Path3( void )
     MQTT_InitStatefulQoS( &context,
                           &outgoingRecords, 4,
                           &incomingRecords, 4 );
+
+    context.connectStatus=MQTTConnected;
 
     modifyIncomingPacketStatus = MQTTSuccess;
 
@@ -3490,6 +3520,8 @@ void test_MQTT_ProcessLoop_handleIncomingPublish_Happy_Path4( void )
     mqttStatus = MQTT_InitStatefulQoS( &context, NULL, 0, pIncomingPublish, 10 );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
 
+    context.connectStatus=MQTTConnected;
+
     modifyIncomingPacketStatus = MQTTSuccess;
 
     /* Duplicate QoS2 publish received.
@@ -3531,6 +3563,8 @@ void test_MQTT_ProcessLoop_handleIncomingPublish_Happy_Path5( void )
     mqttStatus = MQTT_InitStatefulQoS( &context, NULL, 0, pIncomingPublish, 10 );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
 
+    context.connectStatus=MQTTConnected;
+
     modifyIncomingPacketStatus = MQTTSuccess;
 
     /* A publish is received when already a state record exists, but dup
@@ -3568,6 +3602,8 @@ void test_MQTT_ProcessLoop_handleIncomingPublish_Happy_Path6( void )
 
     mqttStatus = MQTT_InitStatefulQoS( &context, NULL, 0, pIncomingPublish, 10 );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+
+    context.connectStatus=MQTTConnected;
 
     modifyIncomingPacketStatus = MQTTSuccess;
 
@@ -3712,6 +3748,8 @@ void test_MQTT_ProcessLoop_handleIncomingAck_Happy_Paths( void )
     mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
 
+    context.connectStatus=MQTTConnected;
+
     modifyIncomingPacketStatus = MQTTSuccess;
 
     /* Mock the receiving of a PUBACK packet type and expect the appropriate
@@ -3810,6 +3848,8 @@ void test_MQTT_ProcessLoop_handleIncomingAck_Error_Paths( void )
     mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
 
+    context.connectStatus=MQTTConnected;
+
     modifyIncomingPacketStatus = MQTTSuccess;
 
     /* Verify that MQTTBadResponse is propagated when deserialization fails upon
@@ -3829,7 +3869,7 @@ void test_MQTT_ProcessLoop_handleIncomingAck_Error_Paths( void )
     expectParams.stateAfterDeserialize = MQTTPubRelSend;
     expectParams.serializeStatus = MQTTNoMemory;
     expectParams.stateAfterSerialize = MQTTStateNull;
-    expectParams.processLoopStatus = MQTTSendFailed;
+    expectParams.processLoopStatus = MQTTNoMemory;
     expectProcessLoopCalls( &context, &expectParams );
 
     /* Verify that MQTTBadResponse is propagated when deserialization fails upon
@@ -3898,6 +3938,8 @@ void test_MQTT_ProcessLoop_handleKeepAlive_Happy_Paths1( void )
     /* Coverage for the branch path where keep alive interval is 0. */
     mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+
+    context.connectStatus=MQTTConnected;
 
     context.waitingForPingResp = false;
     context.keepAliveIntervalSec = 0;
@@ -4184,6 +4226,8 @@ void test_MQTT_ProcessLoop_handleKeepAlive_Error_Paths3( void )
     mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
 
+    context.connectStatus=MQTTConnected;
+
     globalEntryTime = PACKET_RX_TIMEOUT_MS + 1;
     context.keepAliveIntervalSec = 0;
     context.lastPacketTxTime = 0;
@@ -4224,6 +4268,8 @@ void test_MQTT_ProcessLoop_handleKeepAlive_Error_Paths4( void )
     /* Coverage for the branch path where PINGRESP timeout interval has expired. */
     mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+
+    context.connectStatus=MQTTConnected;
 
     globalEntryTime = PACKET_RX_TIMEOUT_MS + 1;
     context.keepAliveIntervalSec = ( PACKET_TX_TIMEOUT_MS / 1000 ) + 1U;
@@ -4369,6 +4415,8 @@ void test_MQTT_ProcessLoop_Timer_Overflow( void )
 
     mqttStatus = MQTT_InitStatefulQoS( &context, NULL, 0, incomingPublishRecords, 10 );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+
+    context.connectStatus=MQTTConnected;
 
     MQTT_ProcessIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_ProcessIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
@@ -4573,6 +4621,8 @@ void test_MQTT_Subscribe_happy_path( void )
                                        &incomingRecords, 4 );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
 
+    context.connectStatus=MQTTConnected;
+
     /* Verify MQTTSuccess is returned with the following mocks. */
     MQTT_GetSubscribePacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_GetSubscribePacketSize_ReturnThruPtr_pPacketSize( &packetSize );
@@ -4613,6 +4663,8 @@ void test_MQTT_Subscribe_happy_path1( void )
                                        &outgoingRecords, 4,
                                        &incomingRecords, 4 );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+
+    context.connectStatus=MQTTConnected;
 
     /* Verify MQTTSuccess is returned with the following mocks. */
     MQTT_GetSubscribePacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
@@ -4655,6 +4707,8 @@ void test_MQTT_Subscribe_happy_path2( void )
                                        &outgoingRecords, 4,
                                        &incomingRecords, 4 );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+
+    context.connectStatus=MQTTConnected;
 
     /* Verify MQTTSuccess is returned with the following mocks. */
     MQTT_GetSubscribePacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
@@ -4713,6 +4767,8 @@ void test_MQTT_Subscribe_MultipleSubscriptions( void )
                                        &incomingRecords, 4 );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
 
+    context.connectStatus=MQTTConnected;
+
     /* Verify MQTTSuccess is returned with the following mocks. */
     MQTT_GetSubscribePacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_GetSubscribePacketSize_ReturnThruPtr_pPacketSize( &packetSize );
@@ -4750,6 +4806,9 @@ void test_MQTT_Subscribe_error_paths1( void )
     /* Initialize context. */
     mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+
+    context.connectStatus=MQTTConnected;
+
     /* Verify MQTTSendFailed is propagated when transport interface returns an error. */
     MQTT_GetSubscribePacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_GetSubscribePacketSize_ReturnThruPtr_pPacketSize( &packetSize );
@@ -4786,6 +4845,8 @@ void test_MQTT_Subscribe_error_paths2( void )
     /* Initialize context. */
     mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+
+    context.connectStatus=MQTTConnected;
 
     MQTT_GetSubscribePacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_GetSubscribePacketSize_ReturnThruPtr_pPacketSize( &packetSize );
@@ -4829,6 +4890,8 @@ void test_MQTT_Subscribe_error_paths_timerOverflowCheck( void )
     mqttStatus = MQTT_Init( &context, &transport, getTimeMock, eventCallback, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
 
+    context.connectStatus=MQTTConnected;
+
     MQTT_GetSubscribePacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_GetSubscribePacketSize_ReturnThruPtr_pPacketSize( &packetSize );
     MQTT_GetSubscribePacketSize_ReturnThruPtr_pRemainingLength( &remainingLength );
@@ -4871,6 +4934,8 @@ void test_MQTT_Subscribe_error_paths_timerOverflowCheck1( void )
     /* Initialize context. */
     mqttStatus = MQTT_Init( &context, &transport, getTimeMockBigTimeStep, eventCallback, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+
+    context.connectStatus=MQTTConnected;
 
     MQTT_GetSubscribePacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_GetSubscribePacketSize_ReturnThruPtr_pPacketSize( &packetSize );
@@ -4946,6 +5011,9 @@ void test_MQTT_Unsubscribe_happy_path( void )
     /* Initialize context. */
     mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+
+    context.connectStatus=MQTTConnected;
+
     /* Verify MQTTSuccess is returned with the following mocks. */
     MQTT_SerializeUnsubscribeHeader_Stub( MQTT_SerializeUnsubscribeHeader_cb );
     MQTT_GetUnsubscribePacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
@@ -4985,6 +5053,8 @@ void test_MQTT_Unsubscribe_happy_path1( void )
                                        &outgoingRecords, 4,
                                        &incomingRecords, 4 );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+
+    context.connectStatus=MQTTConnected;
 
     /* Verify MQTTSuccess is returned with the following mocks. */
     MQTT_GetUnsubscribePacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
@@ -5028,6 +5098,8 @@ void test_MQTT_unsubscribe_happy_path2( void )
                                        &outgoingRecords, 4,
                                        &incomingRecords, 4 );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+
+    context.connectStatus=MQTTConnected;
 
     /* Verify MQTTSuccess is returned with the following mocks. */
     MQTT_GetUnsubscribePacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
@@ -5086,6 +5158,8 @@ void test_MQTT_Unsubscribe_MultipleSubscriptions( void )
                                        &incomingRecords, 4 );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
 
+    context.connectStatus=MQTTConnected;
+
     /* Verify MQTTSuccess is returned with the following mocks. */
     MQTT_GetUnsubscribePacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_GetUnsubscribePacketSize_ReturnThruPtr_pPacketSize( &packetSize );
@@ -5125,6 +5199,9 @@ void test_MQTT_Unsubscribe_error_path1( void )
     /* Initialize context. */
     mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+
+    context.connectStatus=MQTTConnected;
+
     MQTT_SerializeUnsubscribeHeader_Stub( MQTT_SerializeUnsubscribeHeader_cb );
     /* Verify MQTTSendFailed is propagated when transport interface returns an error. */
     MQTT_GetUnsubscribePacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
@@ -5164,6 +5241,8 @@ void test_MQTT_Unsubscribe_error_path2( void )
     /* Initialize context. */
     mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+
+    context.connectStatus=MQTTConnected;
 
     MQTT_SerializeUnsubscribeHeader_Stub( MQTT_SerializeUnsubscribeHeader_cb );
     transport.send = transportSendNoBytes; /* Use the mock function that returns zero bytes sent. */
@@ -5208,6 +5287,9 @@ void test_MQTT_Ping_happy_path( void )
     /* Initialize context. */
     mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+
+    context.connectStatus=MQTTConnected;
+
     /* Verify MQTTSuccess is returned. */
     MQTT_GetPingreqPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_GetPingreqPacketSize_ReturnThruPtr_pPacketSize( &pingreqSize );
@@ -5243,6 +5325,9 @@ void test_MQTT_Ping_error_path( void )
     /* Initialize context. */
     mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+
+    context.connectStatus=MQTTConnected;
+
     /* Verify MQTTSendFailed is propagated when transport interface returns an error. */
     MQTT_GetPingreqPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_GetPingreqPacketSize_ReturnThruPtr_pPacketSize( &pingreqSize );
@@ -5257,6 +5342,9 @@ void test_MQTT_Ping_error_path( void )
     /* Initialize context. */
     mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+
+    context.connectStatus=MQTTConnected;
+
     MQTT_GetPingreqPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_GetPingreqPacketSize_ReturnThruPtr_pPacketSize( &pingreqSize );
     MQTT_SerializePingreq_ExpectAnyArgsAndReturn( MQTTSuccess );
@@ -5268,6 +5356,9 @@ void test_MQTT_Ping_error_path( void )
     /* Initialize context. */
     mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+
+    context.connectStatus=MQTTConnected;
+    
     /* Verify MQTTBadParameter is propagated when getting PINGREQ packet size fails. */
     MQTT_GetPingreqPacketSize_ExpectAnyArgsAndReturn( MQTTBadParameter );
     MQTT_GetPingreqPacketSize_ReturnThruPtr_pPacketSize( &pingreqSize );
@@ -5855,7 +5946,19 @@ void test_MQTT_Status_strerror( void )
     str = MQTT_Status_strerror( status );
     TEST_ASSERT_EQUAL_STRING( "MQTTNeedMoreBytes", str );
 
-    status = MQTTNeedMoreBytes + 1;
+    status = MQTTStatusConnected;
+    str = MQTT_Status_strerror( status );
+    TEST_ASSERT_EQUAL_STRING( "MQTTStatusConnected", str );
+
+    status = MQTTStatusNotConnected;
+    str = MQTT_Status_strerror( status );
+    TEST_ASSERT_EQUAL_STRING( "MQTTStatusNotConnected", str );
+
+    status = MQTTStatusDisconnectPending;
+    str = MQTT_Status_strerror( status );
+    TEST_ASSERT_EQUAL_STRING( "MQTTStatusDisconnectPending", str );
+
+    status = MQTTStatusDisconnectPending + 1;
     str = MQTT_Status_strerror( status );
     TEST_ASSERT_EQUAL_STRING( "Invalid MQTT Status code", str );
 }

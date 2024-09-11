@@ -1904,7 +1904,7 @@ void test_MQTT_GetIncomingPacketTypeAndLength( void )
     memset( buffer, 0x00, 10 );
     bufPtr = buffer;
     status = MQTT_GetIncomingPacketTypeAndLength( mockReceiveFailure, &networkContext, &mqttPacket );
-    TEST_ASSERT_EQUAL( MQTTRecvFailed, status );
+    TEST_ASSERT_EQUAL( MQTTStatusDisconnectPending, status );
 
     /* Test if no data is available. */
     bufPtr = buffer;
@@ -1921,7 +1921,7 @@ void test_MQTT_GetIncomingPacketTypeAndLength( void )
     bufPtr = buffer;
     buffer[ 0 ] = MQTT_PACKET_TYPE_PUBREL;
     status = MQTT_GetIncomingPacketTypeAndLength( mockReceiveSucceedThenFail, &networkContext, &mqttPacket );
-    TEST_ASSERT_EQUAL( MQTTBadResponse, status );
+    TEST_ASSERT_EQUAL( MQTTStatusDisconnectPending, status );
 }
 
 /* ========================================================================== */
