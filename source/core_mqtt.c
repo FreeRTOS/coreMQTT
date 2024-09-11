@@ -438,7 +438,7 @@ static MQTTStatus_t receiveConnack( MQTTContext_t * pContext,
  * @return #MQTTSendFailed if transport send during resend failed;
  * #MQTTSuccess otherwise.
  */
-static MQTTStatus_t handleUncleanSessionResumption( MQTTContext_t * pContext);
+static MQTTStatus_t handleUncleanSessionResumption( MQTTContext_t * pContext );
 
 /**
  * @brief Send the publish packet without copying the topic string and payload in
@@ -820,7 +820,7 @@ static int32_t sendMessageVector( MQTTContext_t * pContext,
             bytesSentOrError = sendResult;
             LogError( ( "sendMessageVector: Unable to send packet: Network Error." ) );
 
-            if(pContext->connectStatus == MQTTConnected)
+            if( pContext->connectStatus == MQTTConnected )
             {
                 pContext->connectStatus = MQTTDisconnectPending;
             }
@@ -904,7 +904,7 @@ static int32_t sendBuffer( MQTTContext_t * pContext,
             bytesSentOrError = sendResult;
             LogError( ( "sendBuffer: Unable to send packet: Network Error." ) );
 
-            if(pContext->connectStatus == MQTTConnected)
+            if( pContext->connectStatus == MQTTConnected )
             {
                 pContext->connectStatus = MQTTDisconnectPending;
             }
@@ -1007,11 +1007,11 @@ static int32_t recvExact( MQTTContext_t * pContext,
 
             MQTT_PRE_STATE_UPDATE_HOOK( pContext );
 
-            if(pContext->connectStatus == MQTTConnected)
+            if( pContext->connectStatus == MQTTConnected )
             {
                 pContext->connectStatus = MQTTDisconnectPending;
             }
-            
+
             MQTT_POST_STATE_UPDATE_HOOK( pContext );
         }
         else if( bytesRecvd > 0 )
@@ -1307,16 +1307,16 @@ static MQTTStatus_t sendPublishAcks( MQTTContext_t * pContext,
                                     packetId );
 
         if( status == MQTTSuccess )
-        {    
+        {
             MQTT_PRE_STATE_UPDATE_HOOK( pContext );
 
             stateUpdateHookExecuted = true;
 
-            connectStatus=pContext->connectStatus;
+            connectStatus = pContext->connectStatus;
 
-            if( connectStatus != MQTTConnected)
+            if( connectStatus != MQTTConnected )
             {
-                status = (connectStatus==MQTTNotConnected) ? MQTTStatusNotConnected: MQTTStatusDisconnectPending;
+                status = ( connectStatus == MQTTNotConnected ) ? MQTTStatusNotConnected : MQTTStatusDisconnectPending;
             }
         }
 
@@ -1728,7 +1728,7 @@ static MQTTStatus_t receiveSingleIteration( MQTTContext_t * pContext,
 
         MQTT_PRE_STATE_UPDATE_HOOK( pContext );
 
-        if(pContext->connectStatus == MQTTConnected)
+        if( pContext->connectStatus == MQTTConnected )
         {
             pContext->connectStatus = MQTTDisconnectPending;
         }
@@ -2388,19 +2388,19 @@ static MQTTStatus_t receiveConnack( MQTTContext_t * pContext,
 
         if( status == MQTTStatusDisconnectPending )
         {
-            /* Convert this status to MQTTRecvFailed as MQTTStatusDisconnectPending is 
-             * reserved for cases where we need to let the user know about the MQTT 
+            /* Convert this status to MQTTRecvFailed as MQTTStatusDisconnectPending is
+             * reserved for cases where we need to let the user know about the MQTT
              * connection status.
              */
             status = MQTTRecvFailed;
 
             MQTT_PRE_STATE_UPDATE_HOOK( pContext );
 
-            if(pContext->connectStatus == MQTTConnected)
+            if( pContext->connectStatus == MQTTConnected )
             {
                 pContext->connectStatus = MQTTDisconnectPending;
             }
-            
+
             MQTT_POST_STATE_UPDATE_HOOK( pContext );
         }
 
@@ -2497,7 +2497,7 @@ static MQTTStatus_t receiveConnack( MQTTContext_t * pContext,
 
 /*-----------------------------------------------------------*/
 
-static MQTTStatus_t handleUncleanSessionResumption( MQTTContext_t * pContext)
+static MQTTStatus_t handleUncleanSessionResumption( MQTTContext_t * pContext )
 {
     MQTTStatus_t status = MQTTSuccess;
     MQTTStateCursor_t cursor = MQTT_STATE_CURSOR_INITIALIZER;
@@ -2511,7 +2511,7 @@ static MQTTStatus_t handleUncleanSessionResumption( MQTTContext_t * pContext)
 
     /* Resend all the PUBREL acks after session is reestablished. */
     while( ( packetId != MQTT_PACKET_ID_INVALID ) &&
-            ( status == MQTTSuccess ) )
+           ( status == MQTTSuccess ) )
     {
         status = sendPublishAcks( pContext, packetId, state );
 
@@ -2715,7 +2715,7 @@ MQTTStatus_t MQTT_CancelCallback( const MQTTContext_t * pContext,
 
 /*-----------------------------------------------------------*/
 
-MQTTStatus_t MQTT_CheckConnectStatus(MQTTContext_t * pContext)
+MQTTStatus_t MQTT_CheckConnectStatus( MQTTContext_t * pContext )
 {
     MQTTConnectionStatus_t connectStatus;
     MQTTStatus_t status = MQTTSuccess;
@@ -2733,22 +2733,22 @@ MQTTStatus_t MQTT_CheckConnectStatus(MQTTContext_t * pContext)
 
         connectStatus = pContext->connectStatus == MQTTConnected;
 
-        switch (connectStatus)
+        switch( connectStatus )
         {
-        case MQTTConnected:
-            status = MQTTStatusConnected;
-            break;
+            case MQTTConnected:
+                status = MQTTStatusConnected;
+                break;
 
-        case MQTTNotConnected:
-            status = MQTTStatusNotConnected;
-            break;
+            case MQTTNotConnected:
+                status = MQTTStatusNotConnected;
+                break;
 
-        case MQTTDisconnectPending:
-            status = MQTTStatusDisconnectPending;
-            break;
-        
-        default:
-            break;
+            case MQTTDisconnectPending:
+                status = MQTTStatusDisconnectPending;
+                break;
+
+            default:
+                break;
         }
 
         MQTT_POST_STATE_UPDATE_HOOK( pContext );
@@ -2798,14 +2798,14 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
     if( status == MQTTSuccess )
     {
         MQTT_PRE_STATE_UPDATE_HOOK( pContext );
-        
+
         stateUpdateHookExecuted = true;
 
-        connectStatus=pContext->connectStatus;
+        connectStatus = pContext->connectStatus;
 
-        if( connectStatus != MQTTNotConnected)
+        if( connectStatus != MQTTNotConnected )
         {
-            status = (connectStatus==MQTTConnected) ? MQTTStatusConnected: MQTTStatusDisconnectPending;
+            status = ( connectStatus == MQTTConnected ) ? MQTTStatusConnected : MQTTStatusDisconnectPending;
         }
     }
 
@@ -2839,15 +2839,15 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
             if( pContext->outgoingPublishRecordMaxCount > 0U )
             {
                 ( void ) memset( pContext->outgoingPublishRecords,
-                                0x00,
-                                pContext->outgoingPublishRecordMaxCount * sizeof( *pContext->outgoingPublishRecords ) );
+                                 0x00,
+                                 pContext->outgoingPublishRecordMaxCount * sizeof( *pContext->outgoingPublishRecords ) );
             }
 
             if( pContext->incomingPublishRecordMaxCount > 0U )
             {
                 ( void ) memset( pContext->incomingPublishRecords,
-                                0x00,
-                                pContext->incomingPublishRecordMaxCount * sizeof( *pContext->incomingPublishRecords ) );
+                                 0x00,
+                                 pContext->incomingPublishRecordMaxCount * sizeof( *pContext->incomingPublishRecords ) );
             }
         }
 
@@ -2864,22 +2864,22 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
         MQTT_POST_STATE_UPDATE_HOOK( pContext );
     }
 
-    if( status == MQTTSuccess && *pSessionPresent == true  )
+    if( ( status == MQTTSuccess ) && ( *pSessionPresent == true ) )
     {
         /* Resend PUBRELs when reestablishing a session */
-        status = handleUncleanSessionResumption( pContext);
+        status = handleUncleanSessionResumption( pContext );
     }
 
     if( status == MQTTSuccess )
     {
         LogInfo( ( "MQTT connection established with the broker." ) );
     }
-    else if( status == MQTTStatusConnected || status ==  MQTTStatusDisconnectPending)
+    else if( ( status == MQTTStatusConnected ) || ( status == MQTTStatusDisconnectPending ) )
     {
         LogInfo( ( "MQTT Connection is either already established or a disconnect is pending, return status = %s.",
-                    MQTT_Status_strerror( status ) ) );
+                   MQTT_Status_strerror( status ) ) );
     }
-    else if ( status == MQTTBadParameter )
+    else if( status == MQTTBadParameter )
     {
         LogError( ( "MQTT connection failed with status = %s.",
                     MQTT_Status_strerror( status ) ) );
@@ -2891,7 +2891,7 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
 
         MQTT_PRE_STATE_UPDATE_HOOK( pContext );
 
-        if( pContext->connectStatus == MQTTConnected)
+        if( pContext->connectStatus == MQTTConnected )
         {
             pContext->connectStatus = MQTTNotConnected;
         }
@@ -2937,11 +2937,11 @@ MQTTStatus_t MQTT_Subscribe( MQTTContext_t * pContext,
 
         stateUpdateHookExecuted = true;
 
-        connectStatus=pContext->connectStatus;
+        connectStatus = pContext->connectStatus;
 
-        if( connectStatus != MQTTConnected)
+        if( connectStatus != MQTTConnected )
         {
-            status = (connectStatus==MQTTNotConnected) ? MQTTStatusNotConnected: MQTTStatusDisconnectPending;
+            status = ( connectStatus == MQTTNotConnected ) ? MQTTStatusNotConnected : MQTTStatusDisconnectPending;
         }
     }
 
@@ -3009,7 +3009,7 @@ MQTTStatus_t MQTT_Publish( MQTTContext_t * pContext,
                                                           &headerSize );
     }
 
-    if(status == MQTTSuccess )
+    if( status == MQTTSuccess )
     {
         /* Take the mutex as multiple send calls are required for sending this
          * packet. */
@@ -3017,11 +3017,11 @@ MQTTStatus_t MQTT_Publish( MQTTContext_t * pContext,
 
         stateUpdateHookExecuted = true;
 
-        connectStatus=pContext->connectStatus;
+        connectStatus = pContext->connectStatus;
 
-        if( connectStatus != MQTTConnected)
+        if( connectStatus != MQTTConnected )
         {
-            status = (connectStatus==MQTTNotConnected) ? MQTTStatusNotConnected: MQTTStatusDisconnectPending;
+            status = ( connectStatus == MQTTNotConnected ) ? MQTTStatusNotConnected : MQTTStatusDisconnectPending;
         }
     }
 
@@ -3077,7 +3077,7 @@ MQTTStatus_t MQTT_Publish( MQTTContext_t * pContext,
      * after sending the publish packet, before the receive
      * loop receives ack for this and would want to update its state
      */
-    if( stateUpdateHookExecuted == true ) 
+    if( stateUpdateHookExecuted == true )
     {
         /* Regardless of the status, if the mutex was taken due to the
          * packet being of QoS > QoS0, then it should be relinquished. */
@@ -3147,11 +3147,11 @@ MQTTStatus_t MQTT_Ping( MQTTContext_t * pContext )
 
         stateUpdateHookExecuted = true;
 
-        connectStatus=pContext->connectStatus;
+        connectStatus = pContext->connectStatus;
 
-        if( connectStatus != MQTTConnected)
+        if( connectStatus != MQTTConnected )
         {
-            status = (connectStatus==MQTTNotConnected) ? MQTTStatusNotConnected: MQTTStatusDisconnectPending;
+            status = ( connectStatus == MQTTNotConnected ) ? MQTTStatusNotConnected : MQTTStatusDisconnectPending;
         }
     }
 
@@ -3225,11 +3225,11 @@ MQTTStatus_t MQTT_Unsubscribe( MQTTContext_t * pContext,
 
         stateUpdateHookExecuted = true;
 
-        connectStatus=pContext->connectStatus;
+        connectStatus = pContext->connectStatus;
 
-        if( connectStatus != MQTTConnected)
+        if( connectStatus != MQTTConnected )
         {
-            status = (connectStatus==MQTTNotConnected) ? MQTTStatusNotConnected: MQTTStatusDisconnectPending;
+            status = ( connectStatus == MQTTNotConnected ) ? MQTTStatusNotConnected : MQTTStatusDisconnectPending;
         }
     }
 
@@ -3294,9 +3294,9 @@ MQTTStatus_t MQTT_Disconnect( MQTTContext_t * pContext )
 
         stateUpdateHookExecuted = true;
 
-        connectStatus=pContext->connectStatus;
+        connectStatus = pContext->connectStatus;
 
-        if( connectStatus == MQTTNotConnected)
+        if( connectStatus == MQTTNotConnected )
         {
             status = MQTTStatusNotConnected;
         }
@@ -3606,7 +3606,7 @@ const char * MQTT_Status_strerror( MQTTStatus_t status )
         case MQTTNeedMoreBytes:
             str = "MQTTNeedMoreBytes";
             break;
-        
+
         case MQTTStatusConnected:
             str = "MQTTStatusConnected";
             break;

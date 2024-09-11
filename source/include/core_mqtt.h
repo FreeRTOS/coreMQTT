@@ -107,9 +107,9 @@ typedef void (* MQTTEventCallback_t )( struct MQTTContext * pContext,
  */
 typedef enum MQTTConnectionStatus
 {
-    MQTTNotConnected,       /**< @brief MQTT Connection is inactive. */
-    MQTTConnected,           /**< @brief MQTT Connection is active. */
-    MQTTDisconnectPending   /**< @brief MQTT Connection needs to be disconnected as a transport error has occurred. */
+    MQTTNotConnected,     /**< @brief MQTT Connection is inactive. */
+    MQTTConnected,        /**< @brief MQTT Connection is active. */
+    MQTTDisconnectPending /**< @brief MQTT Connection needs to be disconnected as a transport error has occurred. */
 } MQTTConnectionStatus_t;
 
 /**
@@ -431,7 +431,7 @@ MQTTStatus_t MQTT_InitStatefulQoS( MQTTContext_t * pContext,
  * @endcode
  */
 /* @[declare_mqtt_checkconnectstatus] */
-MQTTStatus_t MQTT_CheckConnectStatus(MQTTContext_t * pContext);
+MQTTStatus_t MQTT_CheckConnectStatus( MQTTContext_t * pContext );
 /* @[declare_mqtt_checkconnectstatus] */
 
 /**
