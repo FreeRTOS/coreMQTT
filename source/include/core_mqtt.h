@@ -109,7 +109,7 @@ typedef enum MQTTConnectionStatus
 {
     MQTTNotConnected,       /**< @brief MQTT Connection is inactive. */
     MQTTConnected,           /**< @brief MQTT Connection is active. */
-    MQTTDisconnectPending   /**< @brief MQTT Connection needs to be disconnected as a transport error has occured. */
+    MQTTDisconnectPending   /**< @brief MQTT Connection needs to be disconnected as a transport error has occurred. */
 } MQTTConnectionStatus_t;
 
 /**
@@ -422,8 +422,8 @@ MQTTStatus_t MQTT_InitStatefulQoS( MQTTContext_t * pContext,
  *
  * @return #MQTTBadParameter if invalid parameters are passed;
  * #MQTTStatusConnected if the MQTT connection is established with the broker.
- * #MQTTSatusNotConnected if the MQTT connection is broker.
- * #MQTTSatusDisconnectPending if Transport Interface has failed and MQTT connection needs to be closed.
+ * #MQTTStatusNotConnected if the MQTT connection is broker.
+ * #MQTTStatusDisconnectPending if Transport Interface has failed and MQTT connection needs to be closed.
  *
  * <b>Example</b>
  * @code{c}

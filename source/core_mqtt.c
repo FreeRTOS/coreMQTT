@@ -3311,7 +3311,7 @@ MQTTStatus_t MQTT_Disconnect( MQTTContext_t * pContext )
         pContext->index = 0;
         ( void ) memset( pContext->networkBuffer.pBuffer, 0, pContext->networkBuffer.size );
 
-        LogError( ( "MQTT Connection Disconnected Successfuly" ) );
+        LogError( ( "MQTT Connection Disconnected Successfully" ) );
 
         /* Here we do not use vectors as the disconnect packet has fixed fields
          * which do not reside in user provided buffers. Thus, it can be sent
