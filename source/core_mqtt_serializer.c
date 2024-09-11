@@ -136,6 +136,13 @@
 #define MQTT_REMAINING_LENGTH_INVALID             ( ( size_t ) 268435456 )
 
 /**
+ * @brief A value that represents transport layer error while retreiving the remaining length.
+ *
+ * This value is greater than what is allowed by the MQTT specification.
+ */
+#define MQTT_REMAINING_LENGTH_TRANSPORT_ERROR             ( ( size_t ) 268435457 )
+
+/**
  * @brief The minimum remaining length for a QoS 0 PUBLISH.
  *
  * Includes two bytes for topic name length and one byte for topic name.
@@ -822,7 +829,7 @@ static size_t getRemainingLength( TransportRecv_t recvFunc,
             }
             else if( bytesReceived < 0)
             {
-                remainingLength = -1;
+                remainingLength = MQTT_REMAINING_LENGTH_TRANSPORT_ERROR;
             }
             else
             {
@@ -830,14 +837,14 @@ static size_t getRemainingLength( TransportRecv_t recvFunc,
             }
         }
 
-        if( remainingLength == MQTT_REMAINING_LENGTH_INVALID || remainingLength < 0)
+        if( remainingLength == MQTT_REMAINING_LENGTH_INVALID || remainingLength == MQTT_REMAINING_LENGTH_TRANSPORT_ERROR)
         {
             break;
         }
     } while( ( encodedByte & 0x80U ) != 0U );
 
     /* Check that the decoded remaining length conforms to the MQTT specification. */
-    if( (remainingLength != MQTT_REMAINING_LENGTH_INVALID) && (remainingLength >=0) )
+    if( (remainingLength != MQTT_REMAINING_LENGTH_INVALID) && (remainingLength != MQTT_REMAINING_LENGTH_TRANSPORT_ERROR) )
     {
         expectedSize = remainingLengthEncodedSize( remainingLength );
 
@@ -2595,7 +2602,7 @@ MQTTStatus_t MQTT_GetIncomingPacketTypeAndLength( TransportRecv_t readFunc,
                 LogError( ( "Incoming packet remaining length invalid." ) );
                 status = MQTTBadResponse;
             } 
-            else if( pIncomingPacket->remainingLength < 0)
+            else if( pIncomingPacket->remainingLength == MQTT_REMAINING_LENGTH_TRANSPORT_ERROR)
             {
                 /* MQTT Connection status cannot be updated here hence bubble up
                  * MQTTStatusDisconnectPending status to the calling API that can update it. */
