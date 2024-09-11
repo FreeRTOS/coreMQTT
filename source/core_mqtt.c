@@ -2833,18 +2833,18 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
         pContext->index = 0;
         ( void ) memset( pContext->networkBuffer.pBuffer, 0, pContext->networkBuffer.size );
 
-        if( *pSessionPresent != true && pContext->outgoingPublishRecordMaxCount > 0U )
+        if( ( *pSessionPresent != true ) && ( pContext->outgoingPublishRecordMaxCount > 0U ) )
         {
             /* Clear any existing records if a new session is established. */
             ( void ) memset( pContext->outgoingPublishRecords,
-                              0x00,
-                              pContext->outgoingPublishRecordMaxCount * sizeof( *pContext->outgoingPublishRecords ) );
+                             0x00,
+                             pContext->outgoingPublishRecordMaxCount * sizeof( *pContext->outgoingPublishRecords ) );
         }
-        else if( *pSessionPresent != true && pContext->incomingPublishRecordMaxCount > 0U )
+        else if( ( *pSessionPresent != true ) && ( pContext->incomingPublishRecordMaxCount > 0U ) )
         {
             ( void ) memset( pContext->incomingPublishRecords,
-                              0x00,
-                              pContext->incomingPublishRecordMaxCount * sizeof( *pContext->incomingPublishRecords ) );
+                             0x00,
+                             pContext->incomingPublishRecordMaxCount * sizeof( *pContext->incomingPublishRecords ) );
         }
         else
         {
