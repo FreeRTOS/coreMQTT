@@ -11,11 +11,14 @@ coverity
 Coverity
 CSDK
 ctest
+DCMAKE
 DCMOCK
 decihours
 Decihours
 DECIHOURS
+DLIBRARY
 DNDEBUG
+DUNITTEST
 DUNITY
 getpacketid
 isystem
@@ -44,4 +47,6 @@ vect
 Vect
 VECT
 Werror
+Wextra
+Wsign
 Wunused
