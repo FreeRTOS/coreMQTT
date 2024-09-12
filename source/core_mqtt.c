@@ -2715,6 +2715,8 @@ MQTTStatus_t MQTT_CheckConnectStatus( MQTTContext_t * pContext )
 
         connectStatus = pContext->connectStatus;
 
+        MQTT_POST_STATE_UPDATE_HOOK( pContext );
+
         switch( connectStatus )
         {
             case MQTTConnected:
@@ -2729,8 +2731,6 @@ MQTTStatus_t MQTT_CheckConnectStatus( MQTTContext_t * pContext )
                 status = MQTTStatusNotConnected;
                 break;
         }
-
-        MQTT_POST_STATE_UPDATE_HOOK( pContext );
     }
 
     return status;
@@ -2819,8 +2819,8 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
                              0x00,
                              pContext->outgoingPublishRecordMaxCount * sizeof( *pContext->outgoingPublishRecords ) );
         }
-        
-        if( *pSessionPresent != true && pContext->incomingPublishRecordMaxCount > 0U )
+
+        if( ( *pSessionPresent != true ) && ( pContext->incomingPublishRecordMaxCount > 0U ) )
         {
             ( void ) memset( pContext->incomingPublishRecords,
                              0x00,
