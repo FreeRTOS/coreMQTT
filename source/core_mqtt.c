@@ -2386,24 +2386,6 @@ static MQTTStatus_t receiveConnack( MQTTContext_t * pContext,
                                                       pContext->transportInterface.pNetworkContext,
                                                       pIncomingPacket );
 
-        if( status == MQTTStatusDisconnectPending )
-        {
-            /* Convert this status to MQTTRecvFailed as MQTTStatusDisconnectPending is
-             * reserved for cases where we need to let the user know about the MQTT
-             * connection status.
-             */
-            status = MQTTRecvFailed;
-
-            MQTT_PRE_STATE_UPDATE_HOOK( pContext );
-
-            if( pContext->connectStatus == MQTTConnected )
-            {
-                pContext->connectStatus = MQTTDisconnectPending;
-            }
-
-            MQTT_POST_STATE_UPDATE_HOOK( pContext );
-        }
-
         /* The loop times out based on 2 conditions.
          * 1. If timeoutMs is greater than 0:
          *    Loop times out based on the timeout calculated by getTime()
@@ -2731,7 +2713,7 @@ MQTTStatus_t MQTT_CheckConnectStatus( MQTTContext_t * pContext )
     {
         MQTT_PRE_STATE_UPDATE_HOOK( pContext );
 
-        connectStatus = pContext->connectStatus == MQTTConnected;
+        connectStatus = pContext->connectStatus;
 
         switch( connectStatus )
         {
@@ -2739,15 +2721,12 @@ MQTTStatus_t MQTT_CheckConnectStatus( MQTTContext_t * pContext )
                 status = MQTTStatusConnected;
                 break;
 
-            case MQTTNotConnected:
-                status = MQTTStatusNotConnected;
-                break;
-
             case MQTTDisconnectPending:
                 status = MQTTStatusDisconnectPending;
                 break;
 
             default:
+                status = MQTTStatusNotConnected;
                 break;
         }
 
@@ -2840,15 +2819,12 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
                              0x00,
                              pContext->outgoingPublishRecordMaxCount * sizeof( *pContext->outgoingPublishRecords ) );
         }
-        else if( ( *pSessionPresent != true ) && ( pContext->incomingPublishRecordMaxCount > 0U ) )
+        
+        if( *pSessionPresent != true && pContext->incomingPublishRecordMaxCount > 0U )
         {
             ( void ) memset( pContext->incomingPublishRecords,
                              0x00,
                              pContext->incomingPublishRecordMaxCount * sizeof( *pContext->incomingPublishRecords ) );
-        }
-        else
-        {
-            /* MISRA Empty body */
         }
 
         pContext->connectStatus = MQTTConnected;

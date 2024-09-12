@@ -136,13 +136,6 @@
 #define MQTT_REMAINING_LENGTH_INVALID             ( ( size_t ) 268435456 )
 
 /**
- * @brief A value that represents transport layer error while retreiving the remaining length.
- *
- * This value is greater than what is allowed by the MQTT specification.
- */
-#define MQTT_REMAINING_LENGTH_TRANSPORT_ERROR     ( ( size_t ) 268435457 )
-
-/**
  * @brief The minimum remaining length for a QoS 0 PUBLISH.
  *
  * Includes two bytes for topic name length and one byte for topic name.
@@ -827,24 +820,20 @@ static size_t getRemainingLength( TransportRecv_t recvFunc,
                 multiplier *= 128U;
                 bytesDecoded++;
             }
-            else if( bytesReceived < 0 )
-            {
-                remainingLength = MQTT_REMAINING_LENGTH_TRANSPORT_ERROR;
-            }
             else
             {
                 remainingLength = MQTT_REMAINING_LENGTH_INVALID;
             }
         }
 
-        if( ( remainingLength == MQTT_REMAINING_LENGTH_INVALID ) || ( remainingLength == MQTT_REMAINING_LENGTH_TRANSPORT_ERROR ) )
+        if( remainingLength == MQTT_REMAINING_LENGTH_INVALID )
         {
             break;
         }
     } while( ( encodedByte & 0x80U ) != 0U );
 
     /* Check that the decoded remaining length conforms to the MQTT specification. */
-    if( ( remainingLength != MQTT_REMAINING_LENGTH_INVALID ) && ( remainingLength != MQTT_REMAINING_LENGTH_TRANSPORT_ERROR ) )
+    if( remainingLength != MQTT_REMAINING_LENGTH_INVALID )
     {
         expectedSize = remainingLengthEncodedSize( remainingLength );
 
@@ -2602,16 +2591,6 @@ MQTTStatus_t MQTT_GetIncomingPacketTypeAndLength( TransportRecv_t readFunc,
                 LogError( ( "Incoming packet remaining length invalid." ) );
                 status = MQTTBadResponse;
             }
-            else if( pIncomingPacket->remainingLength == MQTT_REMAINING_LENGTH_TRANSPORT_ERROR )
-            {
-                /* MQTT Connection status cannot be updated here hence bubble up
-                 * MQTTStatusDisconnectPending status to the calling API that can update it. */
-                status = MQTTStatusDisconnectPending;
-            }
-            else
-            {
-                /* Empty else MISRA 15.7 */
-            }
         }
         else
         {
@@ -2623,12 +2602,6 @@ MQTTStatus_t MQTT_GetIncomingPacketTypeAndLength( TransportRecv_t readFunc,
     else if( ( status != MQTTBadParameter ) && ( bytesReceived == 0 ) )
     {
         status = MQTTNoDataAvailable;
-    }
-    else if( ( status != MQTTBadParameter ) && ( bytesReceived < 0 ) )
-    {
-        /* MQTT Connection status cannot be updated here hence bubble up
-         * MQTTStatusDisconnectPending status to the calling API that can update it. */
-        status = MQTTStatusDisconnectPending;
     }
 
     /* If the input packet was valid, then any other number of bytes received is
