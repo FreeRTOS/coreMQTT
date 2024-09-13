@@ -2815,24 +2815,10 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
 
         if( status == MQTTSuccess )
         {
-<<<<<<< HEAD
-            /* Clear any existing records if a new session is established. */
-            ( void ) memset( pContext->outgoingPublishRecords,
-                             0x00,
-                             pContext->outgoingPublishRecordMaxCount * sizeof( *pContext->outgoingPublishRecords ) );
-        }
-
-        if( ( *pSessionPresent != true ) && ( pContext->incomingPublishRecordMaxCount > 0U ) )
-        {
-            ( void ) memset( pContext->incomingPublishRecords,
-                             0x00,
-                             pContext->incomingPublishRecordMaxCount * sizeof( *pContext->incomingPublishRecords ) );
-=======
             status = sendConnectWithoutCopy( pContext,
                                              pConnectInfo,
                                              pWillInfo,
                                              remainingLength );
->>>>>>> 62d8f5a (Implement critical section without mutexTaken flag)
         }
 
         /* Read CONNACK from transport layer. */
