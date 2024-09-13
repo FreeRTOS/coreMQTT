@@ -444,8 +444,6 @@ static MQTTStatus_t handleUncleanSessionResumption( MQTTContext_t * pContext );
  * @brief Clears existing state records for a clean session.
  *
  * @param[in] pContext Initialized MQTT context.
- *
- * @return void.
  */
 static void handleCleanSession( MQTTContext_t * pContext );
 
