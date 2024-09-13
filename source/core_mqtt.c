@@ -441,6 +441,15 @@ static MQTTStatus_t receiveConnack( MQTTContext_t * pContext,
 static MQTTStatus_t handleUncleanSessionResumption( MQTTContext_t * pContext );
 
 /**
+ * @brief Clears existing state records for a clean session.
+ *
+ * @param[in] pContext Initialized MQTT context.
+ *
+ * @return void.
+ */
+static void handleCleanSession( MQTTContext_t * pContext );
+
+/**
  * @brief Send the publish packet without copying the topic string and payload in
  * the buffer.
  *
@@ -1288,7 +1297,6 @@ static MQTTStatus_t sendPublishAcks( MQTTContext_t * pContext,
     MQTTPubAckType_t packetType;
     MQTTFixedBuffer_t localBuffer;
     MQTTConnectionStatus_t connectStatus;
-    bool stateUpdateHookExecuted = false;
     uint8_t pubAckPacket[ MQTT_PUBLISH_ACK_PACKET_SIZE ];
 
     localBuffer.pBuffer = pubAckPacket;
@@ -1310,33 +1318,28 @@ static MQTTStatus_t sendPublishAcks( MQTTContext_t * pContext,
         {
             MQTT_PRE_STATE_UPDATE_HOOK( pContext );
 
-            stateUpdateHookExecuted = true;
-
             connectStatus = pContext->connectStatus;
 
             if( connectStatus != MQTTConnected )
             {
                 status = ( connectStatus == MQTTNotConnected ) ? MQTTStatusNotConnected : MQTTStatusDisconnectPending;
             }
-        }
+        
 
-        if( status == MQTTSuccess )
-        {
-            /* Here, we are not using the vector approach for efficiency. There is just one buffer
-             * to be sent which can be achieved with a normal send call. */
-            sendResult = sendBuffer( pContext,
-                                     localBuffer.pBuffer,
-                                     MQTT_PUBLISH_ACK_PACKET_SIZE );
-
-            if( sendResult < ( int32_t ) MQTT_PUBLISH_ACK_PACKET_SIZE )
+            if( status == MQTTSuccess )
             {
-                status = MQTTSendFailed;
-            }
-        }
+                /* Here, we are not using the vector approach for efficiency. There is just one buffer
+                 * to be sent which can be achieved with a normal send call. */
+                sendResult = sendBuffer( pContext,
+                                         localBuffer.pBuffer,
+                                         MQTT_PUBLISH_ACK_PACKET_SIZE );
 
-        if( stateUpdateHookExecuted == true )
-        {
-            /* Regardless of the status, if the mutex was taken, then it should be relinquished. */
+                if( sendResult < ( int32_t ) MQTT_PUBLISH_ACK_PACKET_SIZE )
+                {
+                    status = MQTTSendFailed;
+                }
+            }
+
             MQTT_POST_STATE_UPDATE_HOOK( pContext );
         }
 
@@ -2503,6 +2506,32 @@ static MQTTStatus_t handleUncleanSessionResumption( MQTTContext_t * pContext )
     return status;
 }
 
+static void handleCleanSession( MQTTContext_t * pContext )
+{
+    assert( pContext != NULL );
+
+    /* Reset the index and clear the buffer when a new session is established. */
+    pContext->index = 0;
+    ( void ) memset( pContext->networkBuffer.pBuffer, 0, pContext->networkBuffer.size );
+
+    if( pContext->outgoingPublishRecordMaxCount > 0U )
+    {
+        /* Clear any existing records if a new session is established. */
+        ( void ) memset( pContext->outgoingPublishRecords,
+                         0x00,
+                         pContext->outgoingPublishRecordMaxCount * sizeof( *pContext->outgoingPublishRecords ) );
+    }
+    
+    if( pContext->incomingPublishRecordMaxCount > 0U )
+    {
+        ( void ) memset( pContext->incomingPublishRecords,
+                         0x00,
+                         pContext->incomingPublishRecordMaxCount * sizeof( *pContext->incomingPublishRecords ) );
+    }
+
+    return;
+}
+
 static MQTTStatus_t validatePublishParams( const MQTTContext_t * pContext,
                                            const MQTTPublishInfo_t * pPublishInfo,
                                            uint16_t packetId )
@@ -2748,7 +2777,6 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
     MQTTStatus_t status = MQTTSuccess;
     MQTTPacketInfo_t incomingPacket = { 0 };
     MQTTConnectionStatus_t connectStatus;
-    bool stateUpdateHookExecuted = false;
 
     incomingPacket.type = ( uint8_t ) 0;
 
@@ -2778,42 +2806,16 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
     {
         MQTT_PRE_STATE_UPDATE_HOOK( pContext );
 
-        stateUpdateHookExecuted = true;
-
         connectStatus = pContext->connectStatus;
 
         if( connectStatus != MQTTNotConnected )
         {
             status = ( connectStatus == MQTTConnected ) ? MQTTStatusConnected : MQTTStatusDisconnectPending;
         }
-    }
 
-    if( status == MQTTSuccess )
-    {
-        status = sendConnectWithoutCopy( pContext,
-                                         pConnectInfo,
-                                         pWillInfo,
-                                         remainingLength );
-    }
-
-    /* Read CONNACK from transport layer. */
-    if( status == MQTTSuccess )
-    {
-        status = receiveConnack( pContext,
-                                 timeoutMs,
-                                 pConnectInfo->cleanSession,
-                                 &incomingPacket,
-                                 pSessionPresent );
-    }
-
-    if( status == MQTTSuccess )
-    {
-        /* Reset the index and clear the buffer when a new session is established. */
-        pContext->index = 0;
-        ( void ) memset( pContext->networkBuffer.pBuffer, 0, pContext->networkBuffer.size );
-
-        if( ( *pSessionPresent != true ) && ( pContext->outgoingPublishRecordMaxCount > 0U ) )
+        if( status == MQTTSuccess )
         {
+<<<<<<< HEAD
             /* Clear any existing records if a new session is established. */
             ( void ) memset( pContext->outgoingPublishRecords,
                              0x00,
@@ -2825,18 +2827,38 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
             ( void ) memset( pContext->incomingPublishRecords,
                              0x00,
                              pContext->incomingPublishRecordMaxCount * sizeof( *pContext->incomingPublishRecords ) );
+=======
+            status = sendConnectWithoutCopy( pContext,
+                                             pConnectInfo,
+                                             pWillInfo,
+                                             remainingLength );
+>>>>>>> 62d8f5a (Implement critical section without mutexTaken flag)
         }
 
-        pContext->connectStatus = MQTTConnected;
-        /* Initialize keep-alive fields after a successful connection. */
-        pContext->keepAliveIntervalSec = pConnectInfo->keepAliveSeconds;
-        pContext->waitingForPingResp = false;
-        pContext->pingReqSendTimeMs = 0U;
-    }
+        /* Read CONNACK from transport layer. */
+        if( status == MQTTSuccess )
+        {
+            status = receiveConnack( pContext,
+                                     timeoutMs,
+                                     pConnectInfo->cleanSession,
+                                     &incomingPacket,
+                                     pSessionPresent );
+        }
 
-    if( stateUpdateHookExecuted == true )
-    {
-        /* Regardless of the status, if the mutex was taken, then it should be relinquished. */
+        if( (status == MQTTSuccess) && ( *pSessionPresent != true ) )
+        {
+            handleCleanSession( pContext );
+        }
+
+        if( status == MQTTSuccess )
+        {
+            pContext->connectStatus = MQTTConnected;
+            /* Initialize keep-alive fields after a successful connection. */
+            pContext->keepAliveIntervalSec = pConnectInfo->keepAliveSeconds;
+            pContext->waitingForPingResp = false;
+            pContext->pingReqSendTimeMs = 0U;
+        }
+
         MQTT_POST_STATE_UPDATE_HOOK( pContext );
     }
 
@@ -2885,7 +2907,6 @@ MQTTStatus_t MQTT_Subscribe( MQTTContext_t * pContext,
                              size_t subscriptionCount,
                              uint16_t packetId )
 {
-    bool stateUpdateHookExecuted = false;
     MQTTConnectionStatus_t connectStatus;
     size_t remainingLength = 0UL, packetSize = 0UL;
 
@@ -2911,29 +2932,24 @@ MQTTStatus_t MQTT_Subscribe( MQTTContext_t * pContext,
     {
         MQTT_PRE_STATE_UPDATE_HOOK( pContext );
 
-        stateUpdateHookExecuted = true;
-
         connectStatus = pContext->connectStatus;
 
         if( connectStatus != MQTTConnected )
         {
             status = ( connectStatus == MQTTNotConnected ) ? MQTTStatusNotConnected : MQTTStatusDisconnectPending;
         }
-    }
+    
 
-    if( status == MQTTSuccess )
-    {
-        /* Send MQTT SUBSCRIBE packet. */
-        status = sendSubscribeWithoutCopy( pContext,
-                                           pSubscriptionList,
-                                           subscriptionCount,
-                                           packetId,
-                                           remainingLength );
-    }
+        if( status == MQTTSuccess )
+        {
+            /* Send MQTT SUBSCRIBE packet. */
+            status = sendSubscribeWithoutCopy( pContext,
+                                               pSubscriptionList,
+                                               subscriptionCount,
+                                               packetId,
+                                               remainingLength );
+        }
 
-    if( stateUpdateHookExecuted == true )
-    {
-        /* Regardless of the status, if the mutex was taken then it should be relinquished. */
         MQTT_POST_STATE_UPDATE_HOOK( pContext );
     }
 
@@ -2951,7 +2967,6 @@ MQTTStatus_t MQTT_Publish( MQTTContext_t * pContext,
     size_t packetSize = 0UL;
     MQTTPublishState_t publishStatus = MQTTStateNull;
     MQTTConnectionStatus_t connectStatus;
-    bool stateUpdateHookExecuted = false;
 
     /* Maximum number of bytes required by the 'fixed' part of the PUBLISH
      * packet header according to the MQTT specifications.
@@ -2991,72 +3006,65 @@ MQTTStatus_t MQTT_Publish( MQTTContext_t * pContext,
          * packet. */
         MQTT_PRE_STATE_UPDATE_HOOK( pContext );
 
-        stateUpdateHookExecuted = true;
-
         connectStatus = pContext->connectStatus;
 
         if( connectStatus != MQTTConnected )
         {
             status = ( connectStatus == MQTTNotConnected ) ? MQTTStatusNotConnected : MQTTStatusDisconnectPending;
         }
-    }
 
-    if( ( status == MQTTSuccess ) && ( pPublishInfo->qos > MQTTQoS0 ) )
-    {
-        /* Set the flag so that the corresponding hook can be called later. */
-
-        status = MQTT_ReserveState( pContext,
-                                    packetId,
-                                    pPublishInfo->qos );
-
-        /* State already exists for a duplicate packet.
-         * If a state doesn't exist, it will be handled as a new publish in
-         * state engine. */
-        if( ( status == MQTTStateCollision ) && ( pPublishInfo->dup == true ) )
+        if( ( status == MQTTSuccess ) && ( pPublishInfo->qos > MQTTQoS0 ) )
         {
-            status = MQTTSuccess;
+            /* Set the flag so that the corresponding hook can be called later. */
+
+            status = MQTT_ReserveState( pContext,
+                                        packetId,
+                                        pPublishInfo->qos );
+
+            /* State already exists for a duplicate packet.
+             * If a state doesn't exist, it will be handled as a new publish in
+             * state engine. */
+            if( ( status == MQTTStateCollision ) && ( pPublishInfo->dup == true ) )
+            {
+                status = MQTTSuccess;
+            }
         }
-    }
 
-    if( status == MQTTSuccess )
-    {
-        status = sendPublishWithoutCopy( pContext,
-                                         pPublishInfo,
-                                         mqttHeader,
-                                         headerSize,
-                                         packetId );
-    }
-
-    if( ( status == MQTTSuccess ) &&
-        ( pPublishInfo->qos > MQTTQoS0 ) )
-    {
-        /* Update state machine after PUBLISH is sent.
-         * Only to be done for QoS1 or QoS2. */
-        status = MQTT_UpdateStatePublish( pContext,
-                                          packetId,
-                                          MQTT_SEND,
-                                          pPublishInfo->qos,
-                                          &publishStatus );
-
-        if( status != MQTTSuccess )
+        if( status == MQTTSuccess )
         {
-            LogError( ( "Update state for publish failed with status %s."
-                        " However PUBLISH packet was sent to the broker."
-                        " Any further handling of ACKs for the packet Id"
-                        " will fail.",
-                        MQTT_Status_strerror( status ) ) );
+            status = sendPublishWithoutCopy( pContext,
+                                             pPublishInfo,
+                                             mqttHeader,
+                                             headerSize,
+                                             packetId );
         }
-    }
 
-    /* mutex should be released and not before updating the state
-     * because we need to make sure that the state is updated
-     * after sending the publish packet, before the receive
-     * loop receives ack for this and would want to update its state
-     */
-    if( stateUpdateHookExecuted == true )
-    {
-        /* Regardless of the status, if the mutex was taken due to the
-         * packet being of QoS > QoS0, then it should be relinquished. */
+        if( ( status == MQTTSuccess ) &&
+            ( pPublishInfo->qos > MQTTQoS0 ) )
+        {
+            /* Update state machine after PUBLISH is sent.
+             * Only to be done for QoS1 or QoS2. */
+            status = MQTT_UpdateStatePublish( pContext,
+                                              packetId,
+                                              MQTT_SEND,
+                                              pPublishInfo->qos,
+                                              &publishStatus );
+
+            if( status != MQTTSuccess )
+            {
+                LogError( ( "Update state for publish failed with status %s."
+                            " However PUBLISH packet was sent to the broker."
+                            " Any further handling of ACKs for the packet Id"
+                            " will fail.",
+                            MQTT_Status_strerror( status ) ) );
+            }
+        }
+
+        /* mutex should be released and not before updating the state
+         * because we need to make sure that the state is updated
+         * after sending the publish packet, before the receive
+         * loop receives ack for this and would want to update its state
+         */
         MQTT_POST_STATE_UPDATE_HOOK( pContext );
     }
 
@@ -3080,7 +3088,6 @@ MQTTStatus_t MQTT_Ping( MQTTContext_t * pContext )
     uint8_t pingreqPacket[ 2U ];
     MQTTFixedBuffer_t localBuffer;
     MQTTConnectionStatus_t connectStatus;
-    bool stateUpdateHookExecuted = false;
 
     localBuffer.pBuffer = pingreqPacket;
     localBuffer.size = sizeof( pingreqPacket );
@@ -3121,44 +3128,38 @@ MQTTStatus_t MQTT_Ping( MQTTContext_t * pContext )
 
         MQTT_PRE_STATE_UPDATE_HOOK( pContext );
 
-        stateUpdateHookExecuted = true;
-
         connectStatus = pContext->connectStatus;
 
         if( connectStatus != MQTTConnected )
         {
             status = ( connectStatus == MQTTNotConnected ) ? MQTTStatusNotConnected : MQTTStatusDisconnectPending;
         }
-    }
 
-    if( status == MQTTSuccess )
-    {
-        /* Send the serialized PINGREQ packet to transport layer.
-         * Here, we do not use the vectored IO approach for efficiency as the
-         * Ping packet does not have numerous fields which need to be copied
-         * from the user provided buffers. Thus it can be sent directly. */
-        sendResult = sendBuffer( pContext,
-                                 localBuffer.pBuffer,
-                                 packetSize );
-
-        /* It is an error to not send the entire PINGREQ packet. */
-        if( sendResult < ( int32_t ) packetSize )
+        if( status == MQTTSuccess )
         {
-            LogError( ( "Transport send failed for PINGREQ packet." ) );
-            status = MQTTSendFailed;
-        }
-        else
-        {
-            pContext->pingReqSendTimeMs = pContext->lastPacketTxTime;
-            pContext->waitingForPingResp = true;
-            LogDebug( ( "Sent %ld bytes of PINGREQ packet.",
-                        ( long int ) sendResult ) );
-        }
-    }
+            /* Send the serialized PINGREQ packet to transport layer.
+             * Here, we do not use the vectored IO approach for efficiency as the
+             * Ping packet does not have numerous fields which need to be copied
+             * from the user provided buffers. Thus it can be sent directly. */
+            sendResult = sendBuffer( pContext,
+                                     localBuffer.pBuffer,
+                                     packetSize );
 
-    if( stateUpdateHookExecuted == true )
-    {
-        /* Regardless of the status, if the mutex was taken, then it should be relinquished. */
+            /* It is an error to not send the entire PINGREQ packet. */
+            if( sendResult < ( int32_t ) packetSize )
+            {
+                LogError( ( "Transport send failed for PINGREQ packet." ) );
+                status = MQTTSendFailed;
+            }
+            else
+            {
+                pContext->pingReqSendTimeMs = pContext->lastPacketTxTime;
+                pContext->waitingForPingResp = true;
+                LogDebug( ( "Sent %ld bytes of PINGREQ packet.",
+                            ( long int ) sendResult ) );
+            }
+        }
+
         MQTT_POST_STATE_UPDATE_HOOK( pContext );
     }
 
@@ -3172,7 +3173,6 @@ MQTTStatus_t MQTT_Unsubscribe( MQTTContext_t * pContext,
                                size_t subscriptionCount,
                                uint16_t packetId )
 {
-    bool stateUpdateHookExecuted = false;
     MQTTConnectionStatus_t connectStatus;
     size_t remainingLength = 0UL, packetSize = 0UL;
 
@@ -3199,28 +3199,22 @@ MQTTStatus_t MQTT_Unsubscribe( MQTTContext_t * pContext,
         /* Take the mutex because the below call should not be interrupted. */
         MQTT_PRE_STATE_UPDATE_HOOK( pContext );
 
-        stateUpdateHookExecuted = true;
-
         connectStatus = pContext->connectStatus;
 
         if( connectStatus != MQTTConnected )
         {
             status = ( connectStatus == MQTTNotConnected ) ? MQTTStatusNotConnected : MQTTStatusDisconnectPending;
         }
-    }
 
-    if( status == MQTTSuccess )
-    {
-        status = sendUnsubscribeWithoutCopy( pContext,
-                                             pSubscriptionList,
-                                             subscriptionCount,
-                                             packetId,
-                                             remainingLength );
-    }
+        if( status == MQTTSuccess )
+        {
+            status = sendUnsubscribeWithoutCopy( pContext,
+                                                 pSubscriptionList,
+                                                 subscriptionCount,
+                                                 packetId,
+                                                 remainingLength );
+        }
 
-    if( stateUpdateHookExecuted == true )
-    {
-        /* Regardless of the status, if the mutex was taken, then it should be relinquished. */
         MQTT_POST_STATE_UPDATE_HOOK( pContext );
     }
 
@@ -3237,7 +3231,6 @@ MQTTStatus_t MQTT_Disconnect( MQTTContext_t * pContext )
     MQTTFixedBuffer_t localBuffer;
     uint8_t disconnectPacket[ 2U ];
     MQTTConnectionStatus_t connectStatus;
-    bool stateUpdateHookExecuted = false;
 
     localBuffer.pBuffer = disconnectPacket;
     localBuffer.size = 2U;
@@ -3268,49 +3261,43 @@ MQTTStatus_t MQTT_Disconnect( MQTTContext_t * pContext )
         /* Take the mutex because the below call should not be interrupted. */
         MQTT_PRE_STATE_UPDATE_HOOK( pContext );
 
-        stateUpdateHookExecuted = true;
-
         connectStatus = pContext->connectStatus;
 
         if( connectStatus == MQTTNotConnected )
         {
             status = MQTTStatusNotConnected;
         }
-    }
 
-    if( status == MQTTSuccess )
-    {
-        LogInfo( ( "Disconnected from the broker." ) );
-        pContext->connectStatus = MQTTNotConnected;
-
-        /* Reset the index and clean the buffer on a successful disconnect. */
-        pContext->index = 0;
-        ( void ) memset( pContext->networkBuffer.pBuffer, 0, pContext->networkBuffer.size );
-
-        LogError( ( "MQTT Connection Disconnected Successfully" ) );
-
-        /* Here we do not use vectors as the disconnect packet has fixed fields
-         * which do not reside in user provided buffers. Thus, it can be sent
-         * using a simple send call. */
-        sendResult = sendBuffer( pContext,
-                                 localBuffer.pBuffer,
-                                 packetSize );
-
-        if( sendResult < ( int32_t ) packetSize )
+        if( status == MQTTSuccess )
         {
-            LogError( ( "Transport send failed for DISCONNECT packet." ) );
-            status = MQTTSendFailed;
-        }
-        else
-        {
-            LogDebug( ( "Sent %ld bytes of DISCONNECT packet.",
-                        ( long int ) sendResult ) );
-        }
-    }
+            LogInfo( ( "Disconnected from the broker." ) );
+            pContext->connectStatus = MQTTNotConnected;
 
-    if( stateUpdateHookExecuted == true )
-    {
-        /* Regardless of the status, if the mutex was taken, then it should be relinquished. */
+            /* Reset the index and clean the buffer on a successful disconnect. */
+            pContext->index = 0;
+            ( void ) memset( pContext->networkBuffer.pBuffer, 0, pContext->networkBuffer.size );
+
+            LogError( ( "MQTT Connection Disconnected Successfully" ) );
+
+            /* Here we do not use vectors as the disconnect packet has fixed fields
+             * which do not reside in user provided buffers. Thus, it can be sent
+             * using a simple send call. */
+            sendResult = sendBuffer( pContext,
+                                     localBuffer.pBuffer,
+                                     packetSize );
+
+            if( sendResult < ( int32_t ) packetSize )
+            {
+                LogError( ( "Transport send failed for DISCONNECT packet." ) );
+                status = MQTTSendFailed;
+            }
+            else
+            {
+                LogDebug( ( "Sent %ld bytes of DISCONNECT packet.",
+                            ( long int ) sendResult ) );
+            }
+        }
+
         MQTT_POST_STATE_UPDATE_HOOK( pContext );
     }
 
