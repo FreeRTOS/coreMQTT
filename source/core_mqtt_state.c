@@ -393,6 +393,7 @@ static bool validateTransitionAck( MQTTPublishState_t currentState,
             break;
 
         default:
+
             /* 1. MQTTPublishDone - state should transition to invalid since it
              *    will be removed from the record.
              * 2. MQTTPublishSend - If an ack was sent/received we shouldn't
