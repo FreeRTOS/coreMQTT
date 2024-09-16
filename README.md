@@ -180,7 +180,7 @@ or the following:
     ```
     cmake -S test -B build/ \
               -G "Unix Makefiles" \
-              -DCMAKE_BUILD_TYPE=Debug \
+              -DCMAKE_BUILD_TYPE=RelWithDebInfo  \
               -DBUILD_CLONE_SUBMODULES=ON \
               -DUNITTEST=1 \
               -DCMAKE_C_FLAGS='--coverage -Wall -Wextra -Wsign-compare -Werror -DNDEBUG -DLIBRARY_LOG_LEVEL=LOG_DEBUG'

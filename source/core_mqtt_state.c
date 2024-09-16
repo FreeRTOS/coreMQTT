@@ -264,7 +264,6 @@ static bool validateTransitionPublish( MQTTPublishState_t currentState,
                     isValid = newState == MQTTPubRecPending;
                     break;
 
-                case MQTTQoS0:
                 default:
                     /* QoS 0 is checked before calling this function. */
                     break;
@@ -290,13 +289,6 @@ static bool validateTransitionPublish( MQTTPublishState_t currentState,
 
             break;
 
-        case MQTTPubAckSend:
-        case MQTTPubCompPending:
-        case MQTTPubCompSend:
-        case MQTTPubRecSend:
-        case MQTTPubRelPending:
-        case MQTTPubRelSend:
-        case MQTTPublishDone:
         default:
             /* For a PUBLISH, we should not start from any other state. */
             break;
@@ -400,14 +392,15 @@ static bool validateTransitionAck( MQTTPublishState_t currentState,
                       ( newState == MQTTPubCompPending );
             break;
 
-        case MQTTPublishDone:
-        /* Done state should transition to invalid since it will be removed from the record. */
-        case MQTTPublishSend:
-        /* If an ack was sent/received we shouldn't have been in this state. */
-        case MQTTStateNull:
-        /* If an ack was sent/received the record should exist. */
         default:
-            /* Invalid. */
+            /* 1. MQTTPublishDone - state should transition to invalid since it
+             *    will be removed from the record.
+             * 2. MQTTPublishSend - If an ack was sent/received we shouldn't
+             *    have been in this state.
+             * 3. MQTTStateNull - If an ack was sent/received the record should
+             *    exist.
+             * 4. Any other state is invalid.
+             */
             break;
     }
 
