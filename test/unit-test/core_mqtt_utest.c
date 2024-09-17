@@ -2014,7 +2014,7 @@ void test_MQTT_Connect_happy_path2()
     MQTTContext_t mqttContext = { 0 };
     MQTTConnectInfo_t connectInfo = { 0 };
     uint32_t timeout = 2;
-    bool sessionPresent;
+    bool sessionPresent = false;
     MQTTStatus_t status;
     TransportInterface_t transport = { 0 };
     MQTTFixedBuffer_t networkBuffer = { 0 };
@@ -2051,7 +2051,7 @@ void test_MQTT_Connect_happy_path3()
     MQTTConnectInfo_t connectInfo = { 0 };
     MQTTPublishInfo_t willInfo = { 0 };
     uint32_t timeout = 2;
-    bool sessionPresent;
+    bool sessionPresent = false;
     MQTTStatus_t status;
     TransportInterface_t transport = { 0 };
     MQTTFixedBuffer_t networkBuffer = { 0 };
@@ -2126,7 +2126,6 @@ void test_MQTT_Connect_happy_path4()
     mqttContext.outgoingPublishRecords[ 0 ].qos = MQTTQoS2;
     mqttContext.outgoingPublishRecords[ 0 ].publishState = MQTTPublishSend;
     mqttContext.incomingPublishRecords[ MQTT_STATE_ARRAY_MAX_COUNT - 1 ].packetId = 1;
-    mqttContext.networkBuffer.size = 5000;
 
     incomingPacket.type = MQTT_PACKET_TYPE_CONNACK;
     incomingPacket.remainingLength = 2;
@@ -4358,7 +4357,6 @@ void test_MQTT_ProcessLoop_Timer_Overflow( void )
     setupTransportInterface( &transport );
     setupNetworkBuffer( &networkBuffer );
 
-    networkBuffer.size = 1000;
     incomingPacket.type = MQTT_PACKET_TYPE_PUBLISH;
     incomingPacket.remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
 

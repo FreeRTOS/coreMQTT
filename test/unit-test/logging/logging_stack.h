@@ -61,15 +61,9 @@
     #error "Please define LIBRARY_LOG_NAME for the library."
 #endif
 
-/**
- * @brief Macro to extract only the file name from file path to use for metadata in
- * log messages.
- */
-#define FILENAME               ( strrchr( __FILE__, '/' ) ? strrchr( __FILE__, '/' ) + 1 : __FILE__ )
-
 /* Metadata information to prepend to every log message. */
 #define LOG_METADATA_FORMAT    "[%s] [%s:%d] "                      /**< @brief Format of metadata prefix in log messages as `[<Logging-Level>] [<Library-Name>] [<File-Name>:<Line-Number>]` */
-#define LOG_METADATA_ARGS      LIBRARY_LOG_NAME, FILENAME, __LINE__ /**< @brief Arguments into the metadata logging prefix format. */
+#define LOG_METADATA_ARGS      LIBRARY_LOG_NAME, __FILE__, __LINE__ /**< @brief Arguments into the metadata logging prefix format. */
 
 #if !defined( DISABLE_LOGGING )
 
