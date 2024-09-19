@@ -1314,7 +1314,6 @@ static MQTTStatus_t sendPublishAcks( MQTTContext_t * pContext,
             {
                 status = ( connectStatus == MQTTNotConnected ) ? MQTTStatusNotConnected : MQTTStatusDisconnectPending;
             }
-        
 
             if( status == MQTTSuccess )
             {
@@ -2511,15 +2510,13 @@ static void handleCleanSession( MQTTContext_t * pContext )
                          0x00,
                          pContext->outgoingPublishRecordMaxCount * sizeof( *pContext->outgoingPublishRecords ) );
     }
-    
+
     if( pContext->incomingPublishRecordMaxCount > 0U )
     {
         ( void ) memset( pContext->incomingPublishRecords,
                          0x00,
                          pContext->incomingPublishRecordMaxCount * sizeof( *pContext->incomingPublishRecords ) );
     }
-
-    return;
 }
 
 static MQTTStatus_t validatePublishParams( const MQTTContext_t * pContext,
@@ -2821,7 +2818,7 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
                                      pSessionPresent );
         }
 
-        if( (status == MQTTSuccess) && ( *pSessionPresent != true ) )
+        if( ( status == MQTTSuccess ) && ( *pSessionPresent != true ) )
         {
             handleCleanSession( pContext );
         }
@@ -2914,7 +2911,6 @@ MQTTStatus_t MQTT_Subscribe( MQTTContext_t * pContext,
         {
             status = ( connectStatus == MQTTNotConnected ) ? MQTTStatusNotConnected : MQTTStatusDisconnectPending;
         }
-    
 
         if( status == MQTTSuccess )
         {
