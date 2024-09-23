@@ -102,6 +102,11 @@
 #define UINT8_SET_BIT( x, position )      ( ( x ) = ( uint8_t ) ( ( x ) | ( 0x01U << ( position ) ) ) )
 
 /**
+ * @brief Set a bit in an 8-bit unsigned integer.
+ */
+#define UINT8_CLEAR_BIT( x, position )      ( ( x ) = ( uint8_t ) ( ( x ) & ( ~ ( 0x01U << ( position ) ) ) ) )
+
+/**
  * @brief Macro for checking if a bit is set in a 1-byte unsigned int.
  *
  * @param[in] x The unsigned int to check.
@@ -2617,6 +2622,32 @@ MQTTStatus_t MQTT_GetIncomingPacketTypeAndLength( TransportRecv_t readFunc,
     {
         /* Empty else MISRA 15.7 */
     }
+
+    return status;
+}
+
+/*-----------------------------------------------------------*/
+
+MQTTStatus_t MQTT_UpdateDuplicatePublishFlag( uint8_t * pHeader , bool set)
+{
+    MQTTStatus_t status = MQTTSuccess;
+
+    if(pHeader == NULL)
+    {
+        status = MQTTBadParameter;
+    } 
+    else if( ( ( *pHeader ) & MQTT_PACKET_TYPE_PUBLISH ) == 0 )
+    {
+        status = MQTTBadParameter;
+    } 
+    else if( set )
+    {
+        UINT8_SET_BIT( *pHeader, MQTT_PUBLISH_FLAG_DUP );
+    } 
+    else
+    {
+        UINT8_CLEAR_BIT( *pHeader, MQTT_PUBLISH_FLAG_DUP );
+    } 
 
     return status;
 }

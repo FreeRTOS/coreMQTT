@@ -444,8 +444,11 @@ static MQTTStatus_t handleUncleanSessionResumption( MQTTContext_t * pContext );
  * @brief Clears existing state records for a clean session.
  *
  * @param[in] pContext Initialized MQTT context.
+ * 
+ * @return #MQTTPublishClearAllFailed if clearing all the copied publishes fails;
+ * #MQTTSuccess otherwise.
  */
-static void handleCleanSession( MQTTContext_t * pContext );
+static MQTTStatus_t handleCleanSession( MQTTContext_t * pContext );
 
 /**
  * @brief Send the publish packet without copying the topic string and payload in
@@ -463,7 +466,7 @@ static void handleCleanSession( MQTTContext_t * pContext );
  */
 static MQTTStatus_t sendPublishWithoutCopy( MQTTContext_t * pContext,
                                             const MQTTPublishInfo_t * pPublishInfo,
-                                            const uint8_t * pMqttHeader,
+                                            uint8_t * pMqttHeader,
                                             size_t headerSize,
                                             uint16_t packetId );
 
@@ -1570,6 +1573,16 @@ static MQTTStatus_t handlePublishAcks( MQTTContext_t * pContext,
     status = MQTT_DeserializeAck( pIncomingPacket, &packetIdentifier, NULL );
     LogInfo( ( "Ack packet deserialized with result: %s.",
                MQTT_Status_strerror( status ) ) );
+    
+    if( ( ackType ==  MQTTPuback ) || ( ackType ==  MQTTPubrec ) )
+    {
+        if( ( status == MQTTSuccess ) &&
+            ( pContext->clearFunction != NULL ) &&
+            ( pContext->clearFunction( pContext, packetIdentifier) != true ) )
+        {
+            status = MQTTPublishClearFailed;
+        }
+    }
 
     if( status == MQTTSuccess )
     {
@@ -2133,13 +2146,14 @@ static MQTTStatus_t sendUnsubscribeWithoutCopy( MQTTContext_t * pContext,
 
 static MQTTStatus_t sendPublishWithoutCopy( MQTTContext_t * pContext,
                                             const MQTTPublishInfo_t * pPublishInfo,
-                                            const uint8_t * pMqttHeader,
+                                            uint8_t * pMqttHeader,
                                             size_t headerSize,
                                             uint16_t packetId )
 {
     MQTTStatus_t status = MQTTSuccess;
     size_t ioVectorLength;
     size_t totalMessageLength;
+    bool dupFlagChanged = false;
 
     /* Bytes required to encode the packet ID in an MQTT header according to
      * the MQTT specification. */
@@ -2190,7 +2204,30 @@ static MQTTStatus_t sendPublishWithoutCopy( MQTTContext_t * pContext,
         totalMessageLength += pPublishInfo->payloadLength;
     }
 
-    if( sendMessageVector( pContext, pIoVector, ioVectorLength ) != ( int32_t ) totalMessageLength )
+    /* store a copy of the publish with duplicate flag set for retransmission purposes */
+    if( pPublishInfo->dup != true )
+    {
+        MQTT_UpdateDuplicatePublishFlag( pMqttHeader, true );
+
+        dupFlagChanged = true;
+    }
+
+    if( ( pPublishInfo->qos > MQTTQoS0 ) &&
+        ( pContext->storeFunction != NULL ) &&
+        ( pContext->storeFunction(pContext, packetId, pIoVector, ioVectorLength) != true ) )
+    {
+        status = MQTTPublishStoreFailed;
+    }
+
+    if( dupFlagChanged )
+    {
+        MQTT_UpdateDuplicatePublishFlag( pMqttHeader, false );
+
+        dupFlagChanged = false;
+    }
+
+    if( ( status == MQTTSuccess ) && 
+        ( sendMessageVector( pContext, pIoVector, ioVectorLength ) != ( int32_t ) totalMessageLength ) )
     {
         status = MQTTSendFailed;
     }
@@ -2477,6 +2514,9 @@ static MQTTStatus_t handleUncleanSessionResumption( MQTTContext_t * pContext )
     MQTTStateCursor_t cursor = MQTT_STATE_CURSOR_INITIALIZER;
     uint16_t packetId = MQTT_PACKET_ID_INVALID;
     MQTTPublishState_t state = MQTTStateNull;
+    TransportOutVector_t  *pIoVec, *pIoVectIterator;
+    size_t ioVecCount;
+    size_t totalMessageLength;
 
     assert( pContext != NULL );
 
@@ -2492,11 +2532,51 @@ static MQTTStatus_t handleUncleanSessionResumption( MQTTContext_t * pContext )
         packetId = MQTT_PubrelToResend( pContext, &cursor, &state );
     }
 
+    if( ( status == MQTTSuccess ) &&
+        ( pContext->retrieveFunction != NULL ))
+    {
+        cursor = MQTT_STATE_CURSOR_INITIALIZER;
+
+        packetId = MQTT_PublishToResend( pContext, &cursor );
+
+        if( pContext->retrieveFunction(pContext, packetId, &pIoVec, &ioVecCount ) != true)
+        {
+            status = MQTTPublishRetrieveFailed;
+        }
+
+        /* Resend all the PUBLISH for which PUBCK/PUBREC is not received 
+         * after session is reestablished. */
+        while( ( packetId != MQTT_PACKET_ID_INVALID ) &&
+            ( status == MQTTSuccess ) )
+        {
+            totalMessageLength = 0;
+
+            for( pIoVectIterator = pIoVec; pIoVectIterator <= &( pIoVec[ ioVecCount - 1U ] ); pIoVectIterator++ )
+            {
+                totalMessageLength += pIoVectIterator->iov_len;
+            }
+
+            if( sendMessageVector( pContext, pIoVec, ioVecCount ) != ( int32_t ) totalMessageLength )
+            {
+                status = MQTTSendFailed;
+            }
+
+            packetId = MQTT_PublishToResend( pContext, &cursor );
+
+            if( pContext->retrieveFunction( pContext, packetId, &pIoVec, &ioVecCount ) != true )
+            {
+                status = MQTTPublishRetrieveFailed;
+            }
+        }
+    }
+
     return status;
 }
 
-static void handleCleanSession( MQTTContext_t * pContext )
+static MQTTStatus_t handleCleanSession( MQTTContext_t * pContext )
 {
+    MQTTStatus_t status = MQTTSuccess;
+
     assert( pContext != NULL );
 
     /* Reset the index and clear the buffer when a new session is established. */
@@ -2517,6 +2597,14 @@ static void handleCleanSession( MQTTContext_t * pContext )
                          0x00,
                          pContext->incomingPublishRecordMaxCount * sizeof( *pContext->incomingPublishRecords ) );
     }
+
+    if( ( pContext->clearAllFunction != NULL ) &&
+        ( pContext->clearAllFunction( pContext ) != true ) )
+    {
+        status = MQTTPublishClearAllFailed;
+    }
+
+    return status;
 }
 
 static MQTTStatus_t validatePublishParams( const MQTTContext_t * pContext,
@@ -2674,6 +2762,53 @@ MQTTStatus_t MQTT_InitStatefulQoS( MQTTContext_t * pContext,
         pContext->incomingPublishRecords = pIncomingPublishRecords;
         pContext->outgoingPublishRecordMaxCount = outgoingPublishCount;
         pContext->outgoingPublishRecords = pOutgoingPublishRecords;
+    }
+
+    return status;
+}
+
+/*-----------------------------------------------------------*/
+
+MQTTStatus_t MQTT_InitRetransmits( MQTTContext_t * pContext,
+                                   MQTTRetransmitStorePacket storeFunction,
+                                   MQTTRetransmitRetrievePacket retrieveFunction,
+                                   MQTTRetransmitClearPacket clearFunction,
+                                   MQTTRetransmitClearAllPackets clearAllFunction  )
+{
+    MQTTStatus_t status = MQTTSuccess;
+
+    if( pContext == NULL )
+    {
+        LogError( ( "Argument cannot be NULL: pContext=%p\n",
+                    ( void * ) pContext ) );
+        status = MQTTBadParameter;
+    }
+    else if( storeFunction == NULL )
+    {
+        LogError( ( "Invalid parameter: storeFunction is NULL" ) );
+        status = MQTTBadParameter;
+    }
+    else if( retrieveFunction == NULL )
+    {
+        LogError( ( "Invalid parameter: retrieveFunction is NULL" ) );
+        status = MQTTBadParameter;
+    }
+    else if( clearFunction == NULL )
+    {
+        LogError( ( "Invalid parameter: clearFunction is NULL" ) );
+        status = MQTTBadParameter;
+    }
+    else if( clearAllFunction == NULL )
+    {
+        LogError( ( "Invalid parameter: clearAllFunction is NULL" ) );
+        status = MQTTBadParameter;
+    }
+    else
+    {
+        pContext->storeFunction = storeFunction;
+        pContext->retrieveFunction = retrieveFunction;
+        pContext->clearFunction = clearFunction;
+        pContext->clearAllFunction = clearAllFunction;
     }
 
     return status;

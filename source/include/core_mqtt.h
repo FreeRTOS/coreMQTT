@@ -102,6 +102,68 @@ typedef void (* MQTTEventCallback_t )( struct MQTTContext * pContext,
                                        struct MQTTDeserializedInfo * pDeserializedInfo );
 
 /**
+ * @brief User defined API used to store outgoing publishes. Used to track any publish 
+ * retransmit on an unclean session connection.
+ *
+ * @param[in] pContext Initialised MQTT Context.
+ * @param[in] packetId Outgoing publish packet identifier.
+ * @param[in] pIoVec Pointer to the outgoing publish packet in form of array of Tansport Vectors.
+ * @param[in] ioVecCount Number of transport vectors in the pIoVec array.
+ *
+ * @return True if the copy is successful else false.
+ */
+/* @[define_mqtt_retransmitstorepacket] */
+typedef bool ( * MQTTRetransmitStorePacket)( struct MQTTContext * pContext,
+                                            uint16_t packetId,
+                                            TransportOutVector_t * pIoVec,
+                                            size_t ioVecCount );
+/* @[define_mqtt_retransmitstorepacket] */
+
+/**
+ * @brief User defined API used to retreive a copied publish for resend operation. Used to 
+ * track any publish retransmit on an unclean session connection.
+ *
+ * @param[in] pContext Initialised MQTT Context.
+ * @param[in] packetId Copied publish packet identifier.
+ * @param[in] pIoVec Output parameter to store the pointer to the copied publish packet form of array of Tansport Vectors.
+ * @param[in] ioVecCount Output parameter to store the number of transport vectors in the pIoVec array.
+ *
+ * @return True if the retreive is successful else false.
+ */
+/* @[define_mqtt_retransmitretrievepacket] */
+typedef bool ( * MQTTRetransmitRetrievePacket)( struct MQTTContext * pContext,
+                                            uint16_t packetId,
+                                            TransportOutVector_t ** pIoVec,
+                                            size_t * ioVecCount );
+/* @[define_mqtt_retransmitretrievepacket] */
+
+/**
+ * @brief User defined API used to clear a particular copied publish packet. Used to 
+ * track any publish retransmit on an unclean session connection.
+ *
+ * @param[in] pContext Initialised MQTT Context.
+ * @param[in] packetId Copied publish packet identifier.
+ *
+ * @return True if the clear is successful else false.
+ */
+/* @[define_mqtt_retransmitclearpacket] */
+typedef bool (*MQTTRetransmitClearPacket)( struct MQTTContext * pContext,
+                                         uint16_t packetId );
+/* @[define_mqtt_retransmitclearpacket] */
+
+/**
+ * @brief User defined API used to clear all copied publish packets. Used to 
+ * when connecting with a clean session.
+ *
+ * @param[in] pContext Initialised MQTT Context.
+ *
+ * @return True if the clear all is successful else false.
+ */
+/* @[define_mqtt_retransmitclearallpackets] */
+typedef bool (*MQTTRetransmitClearAllPackets)( struct MQTTContext * pContext );
+/* @[define_mqtt_retransmitclearallpackets] */
+
+/**
  * @ingroup mqtt_enum_types
  * @brief Values indicating if an MQTT connection exists.
  */
@@ -247,6 +309,26 @@ typedef struct MQTTContext
     uint16_t keepAliveIntervalSec; /**< @brief Keep Alive interval. */
     uint32_t pingReqSendTimeMs;    /**< @brief Timestamp of the last sent PINGREQ. */
     bool waitingForPingResp;       /**< @brief If the library is currently awaiting a PINGRESP. */
+
+    /**
+     * @brief User defined API used to store outgoing publishes.
+     */
+    MQTTRetransmitStorePacket storeFunction;
+
+    /**
+     * @brief User defined API used to retreive a copied publish for resend operation.
+     */
+    MQTTRetransmitRetrievePacket retrieveFunction;
+
+    /**
+     * @brief User defined API used to clear a particular copied publish packet.
+     */
+    MQTTRetransmitClearPacket clearFunction;   
+
+    /**
+     * @brief User defined API used to clear all copied publish packets.
+     */
+    MQTTRetransmitClearAllPackets clearAllFunction;
 } MQTTContext_t;
 
 /**
@@ -414,6 +496,31 @@ MQTTStatus_t MQTT_InitStatefulQoS( MQTTContext_t * pContext,
                                    MQTTPubAckInfo_t * pIncomingPublishRecords,
                                    size_t incomingPublishCount );
 /* @[declare_mqtt_initstatefulqos] */
+
+/**
+ * @brief Initialize an MQTT context for publish retransmits for QoS > 0.
+ *
+ * This function must be called on an #MQTTContext_t after MQTT_InitstatefulQoS and before any other function.
+ *
+ * @param[in] pContext The context to initialize.
+ * @param[in] storeFunction User defined API used to store outgoing publishes.
+ * @param[in] retrieveFunction User defined API used to retreive a copied publish for resend operation.
+ * @param[in] clearFunction User defined API used to clear a particular copied publish packet.
+ * @param[in] clearAllFunction User defined API used to clear a particular copied publish packet.
+ *
+ * @return #MQTTBadParameter if invalid parameters are passed;
+ * #MQTTSuccess otherwise.
+ * 
+ * @endcode
+ */
+
+/* @[declare_mqtt_initretransmits] */
+MQTTStatus_t MQTT_InitRetransmits( MQTTContext_t * pContext,
+                                   MQTTRetransmitStorePacket storeFunction,
+                                   MQTTRetransmitRetrievePacket retrieveFunction,
+                                   MQTTRetransmitClearPacket clearFunction,
+                                   MQTTRetransmitClearAllPackets clearAllFunction );
+/* @[declare_mqtt_initretransmits] */
 
 /**
  * @brief Checks the MQTT connection status with the broker.
