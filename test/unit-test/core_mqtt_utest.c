@@ -2004,7 +2004,7 @@ void test_MQTT_Connect_resendPendingAcks( void )
     MQTT_PubrelToResend_ExpectAnyArgsAndReturn( MQTT_PACKET_TYPE_INVALID );
     status = MQTT_Connect( &mqttContext, &connectInfo, NULL, timeout, &sessionPresentResult );
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
-    TEST_ASSERT_EQUAL_INT( MQTTNotConnected, mqttContext.connectStatus );
+    TEST_ASSERT_EQUAL_INT( MQTTDisconnectPending, mqttContext.connectStatus );
     TEST_ASSERT_TRUE( sessionPresentResult );
 
     /* Test 3. One packet found in ack pending state, but Transport Send failed. */
@@ -2068,10 +2068,11 @@ void test_MQTT_Connect_resendPendingAcks( void )
     MQTT_PubrelToResend_ExpectAnyArgsAndReturn( packetIdentifier + 2 );
     status = MQTT_Connect( &mqttContext, &connectInfo, NULL, timeout, &sessionPresent );
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
-    TEST_ASSERT_EQUAL_INT( MQTTNotConnected, mqttContext.connectStatus );
+    TEST_ASSERT_EQUAL_INT( MQTTDisconnectPending, mqttContext.connectStatus );
 
     /* Test 6. Two packets found in ack pending state. Sent PUBREL successfully
      * for first and failed for second. */
+    mqttContext.connectStatus = MQTTNotConnected;
     MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_GetIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
     MQTT_DeserializeAck_ExpectAnyArgsAndReturn( MQTTSuccess );
