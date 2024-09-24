@@ -2555,11 +2555,15 @@ static MQTTStatus_t handleUncleanSessionResumption( MQTTContext_t * pContext )
             {
                 totalMessageLength += pIoVectIterator->iov_len;
             }
+            
+            MQTT_PRE_STATE_UPDATE_HOOK(pContext);
 
             if( sendMessageVector( pContext, pIoVec, ioVecCount ) != ( int32_t ) totalMessageLength )
             {
                 status = MQTTSendFailed;
             }
+
+            MQTT_POST_STATE_UPDATE_HOOK(pContext);
 
             packetId = MQTT_PublishToResend( pContext, &cursor );
 
@@ -2955,7 +2959,7 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
 
         if( ( status == MQTTSuccess ) && ( *pSessionPresent != true ) )
         {
-            handleCleanSession( pContext );
+            status = handleCleanSession( pContext );
         }
 
         if( status == MQTTSuccess )
@@ -2972,7 +2976,7 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
 
     if( ( status == MQTTSuccess ) && ( *pSessionPresent == true ) )
     {
-        /* Resend PUBRELs when reestablishing a session */
+        /* Resend PUBRELs and PUBLISHES when reestablishing a session */
         status = handleUncleanSessionResumption( pContext );
     }
 
@@ -3687,6 +3691,22 @@ const char * MQTT_Status_strerror( MQTTStatus_t status )
 
         case MQTTStatusDisconnectPending:
             str = "MQTTStatusDisconnectPending";
+            break;
+        
+        case MQTTPublishStoreFailed:
+            str = "MQTTPublishStoreFailed";
+            break;
+        
+        case MQTTPublishRetrieveFailed:
+            str = "MQTTPublishRetrieveFailed";
+            break;
+        
+        case MQTTPublishClearFailed:
+            str = "MQTTPublishClearFailed";
+            break;
+        
+        case MQTTPublishClearAllFailed:
+            str = "MQTTPublishClearAllFailed";
             break;
 
         default:
