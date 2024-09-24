@@ -2865,10 +2865,10 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
         if( pContext->connectStatus == MQTTConnected )
         {
             /* This will only be executed if after the connack is received
-             * the retransmits fail for some reason on an unclean session 
+             * the retransmits fail for some reason on an unclean session
              * connection. In this case we need to retry the re-transmits
-             * which can only be done using the connect API and that can only 
-             * be done once we are disconnected, hence we ask the user to 
+             * which can only be done using the connect API and that can only
+             * be done once we are disconnected, hence we ask the user to
              * call disconnect here */
             pContext->connectStatus = MQTTDisconnectPending;
         }
