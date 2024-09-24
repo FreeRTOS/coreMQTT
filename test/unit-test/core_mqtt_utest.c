@@ -2678,6 +2678,8 @@ void test_MQTT_Publish_WriteVSendsPartialBytes( void )
     MQTT_SerializePublishHeaderWithoutTopic_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_SerializePublishHeaderWithoutTopic_ReturnThruPtr_headerSize( &headerLen );
     MQTT_ReserveState_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_UpdateDuplicatePublishFlag_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_UpdateDuplicatePublishFlag_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_UpdateStatePublish_ExpectAnyArgsAndReturn( MQTTSuccess );
 
     mqttContext.outgoingPublishRecordMaxCount = 10;
@@ -2717,6 +2719,8 @@ void test_MQTT_Publish7( void )
 
     MQTT_GetPublishPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_SerializePublishHeaderWithoutTopic_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_UpdateDuplicatePublishFlag_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_UpdateDuplicatePublishFlag_ExpectAnyArgsAndReturn( MQTTSuccess );
     mqttContext.connectStatus = MQTTConnected;
 
     /* We need sendPacket to be called with at least 1 byte to send, so that
@@ -2754,6 +2758,10 @@ void test_MQTT_Publish8( void )
     mqttContext.transportInterface.send = transportSendSucceedThenFail;
     MQTT_GetPublishPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_SerializePublishHeaderWithoutTopic_ExpectAnyArgsAndReturn( MQTTSuccess );
+
+    MQTT_UpdateDuplicatePublishFlag_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_UpdateDuplicatePublishFlag_ExpectAnyArgsAndReturn( MQTTSuccess );
+
     publishInfo.pPayload = "Test";
     publishInfo.payloadLength = 4;
     status = MQTT_Publish( &mqttContext, &publishInfo, 0 );
@@ -2783,6 +2791,10 @@ void test_MQTT_Publish9( void )
 
     MQTT_GetPublishPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_SerializePublishHeaderWithoutTopic_ExpectAnyArgsAndReturn( MQTTSuccess );
+
+    MQTT_UpdateDuplicatePublishFlag_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_UpdateDuplicatePublishFlag_ExpectAnyArgsAndReturn( MQTTSuccess );
+
     mqttContext.transportInterface.send = transportSendSuccess;
     status = MQTT_Publish( &mqttContext, &publishInfo, 0 );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
@@ -2814,6 +2826,10 @@ void test_MQTT_Publish10( void )
     publishInfo.payloadLength = 0;
     MQTT_GetPublishPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_SerializePublishHeaderWithoutTopic_ExpectAnyArgsAndReturn( MQTTSuccess );
+
+    MQTT_UpdateDuplicatePublishFlag_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_UpdateDuplicatePublishFlag_ExpectAnyArgsAndReturn( MQTTSuccess );
+
     status = MQTT_Publish( &mqttContext, &publishInfo, 0 );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
 }
@@ -2896,6 +2912,8 @@ void test_MQTT_Publish12( void )
     MQTT_GetPublishPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_SerializePublishHeaderWithoutTopic_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_ReserveState_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_UpdateDuplicatePublishFlag_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_UpdateDuplicatePublishFlag_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_UpdateStatePublish_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_UpdateStatePublish_ReturnThruPtr_pNewState( &expectedState );
 
@@ -3043,6 +3061,8 @@ void test_MQTT_Publish_Send_Timeout( void )
     publishInfo.payloadLength = 4;
     MQTT_GetPublishPacketSize_IgnoreAndReturn( MQTTSuccess );
     MQTT_SerializePublishHeaderWithoutTopic_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_UpdateDuplicatePublishFlag_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_UpdateDuplicatePublishFlag_ExpectAnyArgsAndReturn( MQTTSuccess );
 
     /* Call the API function under test and expect that it detects a timeout in sending
      * MQTT packet over the network. */
@@ -6418,7 +6438,23 @@ void test_MQTT_Status_strerror( void )
     str = MQTT_Status_strerror( status );
     TEST_ASSERT_EQUAL_STRING( "MQTTStatusDisconnectPending", str );
 
-    status = MQTTStatusDisconnectPending + 1;
+    status = MQTTPublishStoreFailed;
+    str = MQTT_Status_strerror( status );
+    TEST_ASSERT_EQUAL_STRING( "MQTTPublishStoreFailed", str );
+
+    status = MQTTPublishRetrieveFailed;
+    str = MQTT_Status_strerror( status );
+    TEST_ASSERT_EQUAL_STRING( "MQTTPublishRetrieveFailed", str );
+
+    status = MQTTPublishClearFailed;
+    str = MQTT_Status_strerror( status );
+    TEST_ASSERT_EQUAL_STRING( "MQTTPublishClearFailed", str );
+
+    status = MQTTPublishClearAllFailed;
+    str = MQTT_Status_strerror( status );
+    TEST_ASSERT_EQUAL_STRING( "MQTTPublishClearAllFailed", str );
+
+    status = MQTTPublishClearAllFailed + 1;
     str = MQTT_Status_strerror( status );
     TEST_ASSERT_EQUAL_STRING( "Invalid MQTT Status code", str );
 }
