@@ -2878,4 +2878,44 @@ void test_MQTT_SerializeDisconnect_Happy_Path()
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
 }
 
+/* ==================  Testing MQTT_UpdateDuplicatePublishFlag ===================== */
+
+/**
+ * @brief Call MQTT_UpdateDuplicatePublishFlag using a NULL pHeader and a header that does
+ * not come from a publish packet, in order to receive MQTTBadParameter errors.
+ */
+void test_MQTT_UpdateDuplicatePublishFlag_Invalid_Params()
+{
+    MQTTStatus_t mqttStatus = MQTTSuccess;
+    uint8_t pHeader = MQTT_PACKET_TYPE_SUBSCRIBE;
+
+    /* Test NULL pHeader. */
+    mqttStatus = MQTT_UpdateDuplicatePublishFlag( NULL, true );
+    TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
+
+    /* Test a non-publish header. */
+    mqttStatus = MQTT_UpdateDuplicatePublishFlag( &pHeader, true );
+    TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
+}
+
+/**
+ * @brief This method calls MQTT_UpdateDuplicatePublishFlag successfully in order to
+ * get full coverage on the method.
+ */
+void test_MQTT_UpdateDuplicatePublishFlag_Happy_Path()
+{
+    MQTTStatus_t mqttStatus = MQTTSuccess;
+    uint8_t pHeader = MQTT_PACKET_TYPE_PUBLISH;
+
+    /* Test to set the flag. */
+    mqttStatus = MQTT_UpdateDuplicatePublishFlag( &pHeader, true );
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+    TEST_ASSERT_NOT_EQUAL_INT( (pHeader) & ( 0x01U << ( 3 ) ), 0 );
+
+    /* Test to clear the flag. */
+    mqttStatus = MQTT_UpdateDuplicatePublishFlag( &pHeader, false );
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+    TEST_ASSERT_EQUAL_INT( (pHeader) & ( 0x01U << ( 3 ) ), 0 );
+}
+
 /* ========================================================================== */

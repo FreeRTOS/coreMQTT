@@ -2539,7 +2539,8 @@ static MQTTStatus_t handleUncleanSessionResumption( MQTTContext_t * pContext )
 
         packetId = MQTT_PublishToResend( pContext, &cursor );
 
-        if( pContext->retrieveFunction(pContext, packetId, &pIoVec, &ioVecCount ) != true)
+        if( ( packetId != MQTT_PACKET_ID_INVALID ) &&
+            ( pContext->retrieveFunction(pContext, packetId, &pIoVec, &ioVecCount ) != true ) )
         {
             status = MQTTPublishRetrieveFailed;
         }
