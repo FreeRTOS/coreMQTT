@@ -116,15 +116,15 @@
       <type>static int32_t</type>
       <name>recvExact</name>
       <anchorfile>core__mqtt_8c.html</anchorfile>
-      <anchor>a509d9dd1ede2bc000035d8f9926a473c</anchor>
-      <arglist>(const MQTTContext_t *pContext, size_t bytesToRecv)</arglist>
+      <anchor>abe9fbe1e681fa7b248489ab4a22be49c</anchor>
+      <arglist>(MQTTContext_t *pContext, size_t bytesToRecv)</arglist>
     </member>
     <member kind="function" static="yes">
       <type>static MQTTStatus_t</type>
       <name>discardPacket</name>
       <anchorfile>core__mqtt_8c.html</anchorfile>
-      <anchor>abb02f1853a4805205636f2c11a435216</anchor>
-      <arglist>(const MQTTContext_t *pContext, size_t remainingLength, uint32_t timeoutMs)</arglist>
+      <anchor>adf873e92a73ab6d02ffc42d4d5ac7c0a</anchor>
+      <arglist>(MQTTContext_t *pContext, size_t remainingLength, uint32_t timeoutMs)</arglist>
     </member>
     <member kind="function" static="yes">
       <type>static MQTTStatus_t</type>
@@ -137,8 +137,8 @@
       <type>static MQTTStatus_t</type>
       <name>receivePacket</name>
       <anchorfile>core__mqtt_8c.html</anchorfile>
-      <anchor>aa674664c166b58a5b6630961d8760d3a</anchor>
-      <arglist>(const MQTTContext_t *pContext, MQTTPacketInfo_t incomingPacket, uint32_t remainingTimeMs)</arglist>
+      <anchor>abc8174463d6ccb1cbebba1fc08896f41</anchor>
+      <arglist>(MQTTContext_t *pContext, MQTTPacketInfo_t incomingPacket, uint32_t remainingTimeMs)</arglist>
     </member>
     <member kind="function" static="yes">
       <type>static uint8_t</type>
@@ -200,15 +200,22 @@
       <type>static MQTTStatus_t</type>
       <name>receiveConnack</name>
       <anchorfile>core__mqtt_8c.html</anchorfile>
-      <anchor>aa3c5d4f6154122cedcce9508ea7d1dce</anchor>
-      <arglist>(const MQTTContext_t *pContext, uint32_t timeoutMs, bool cleanSession, MQTTPacketInfo_t *pIncomingPacket, bool *pSessionPresent)</arglist>
+      <anchor>a977ee0cfe6c2f856ec904a7ae68e2ef6</anchor>
+      <arglist>(MQTTContext_t *pContext, uint32_t timeoutMs, bool cleanSession, MQTTPacketInfo_t *pIncomingPacket, bool *pSessionPresent)</arglist>
     </member>
     <member kind="function" static="yes">
       <type>static MQTTStatus_t</type>
-      <name>handleSessionResumption</name>
+      <name>handleUncleanSessionResumption</name>
       <anchorfile>core__mqtt_8c.html</anchorfile>
-      <anchor>aae9ba11e41bc1dfef340208bc49c836c</anchor>
-      <arglist>(MQTTContext_t *pContext, bool sessionPresent)</arglist>
+      <anchor>ac9e041563743306d9c9c1cfa01551818</anchor>
+      <arglist>(MQTTContext_t *pContext)</arglist>
+    </member>
+    <member kind="function" static="yes">
+      <type>static void</type>
+      <name>handleCleanSession</name>
+      <anchorfile>core__mqtt_8c.html</anchorfile>
+      <anchor>aaba646b7d3723b69e8ce62389ba43270</anchor>
+      <arglist>(MQTTContext_t *pContext)</arglist>
     </member>
     <member kind="function" static="yes">
       <type>static MQTTStatus_t</type>
@@ -265,6 +272,13 @@
       <anchorfile>core__mqtt_8c.html</anchorfile>
       <anchor>a31b74c34cd295b98ed5f5b4c15ed4a8b</anchor>
       <arglist>(const MQTTContext_t *pContext, uint16_t packetId)</arglist>
+    </member>
+    <member kind="function">
+      <type>MQTTStatus_t</type>
+      <name>MQTT_CheckConnectStatus</name>
+      <anchorfile>core__mqtt_8c.html</anchorfile>
+      <anchor>ad138a95422d22d61538f6ff69db9a784</anchor>
+      <arglist>(MQTTContext_t *pContext)</arglist>
     </member>
     <member kind="function">
       <type>MQTTStatus_t</type>
@@ -1091,6 +1105,12 @@
       <anchor>gga9f84d003695205cf10a7bd0bafb3dbf6a82c8f64d976734e5632e5257bc429ef5</anchor>
       <arglist></arglist>
     </member>
+    <member kind="enumvalue">
+      <name>MQTTDisconnectPending</name>
+      <anchorfile>group__mqtt__enum__types.html</anchorfile>
+      <anchor>gga9f84d003695205cf10a7bd0bafb3dbf6a3c7e17f463f44d8f7ce50475b129ac24</anchor>
+      <arglist></arglist>
+    </member>
     <member kind="enumeration">
       <type></type>
       <name>MQTTPublishState_t</name>
@@ -1239,6 +1259,13 @@
       <anchorfile>core__mqtt_8h.html</anchorfile>
       <anchor>afe4c020749e3b9ca044e0e9ad96025c5</anchor>
       <arglist>(MQTTContext_t *pContext, MQTTPubAckInfo_t *pOutgoingPublishRecords, size_t outgoingPublishCount, MQTTPubAckInfo_t *pIncomingPublishRecords, size_t incomingPublishCount)</arglist>
+    </member>
+    <member kind="function">
+      <type>MQTTStatus_t</type>
+      <name>MQTT_CheckConnectStatus</name>
+      <anchorfile>core__mqtt_8h.html</anchorfile>
+      <anchor>ad138a95422d22d61538f6ff69db9a784</anchor>
+      <arglist>(MQTTContext_t *pContext)</arglist>
     </member>
     <member kind="function">
       <type>MQTTStatus_t</type>
@@ -1613,6 +1640,24 @@
       <name>MQTTNeedMoreBytes</name>
       <anchorfile>group__mqtt__enum__types.html</anchorfile>
       <anchor>ggaba7ec045874a1c3432f99173367f735caa97df53014d919df5ecd54398f89f9b9</anchor>
+      <arglist></arglist>
+    </member>
+    <member kind="enumvalue">
+      <name>MQTTStatusConnected</name>
+      <anchorfile>group__mqtt__enum__types.html</anchorfile>
+      <anchor>ggaba7ec045874a1c3432f99173367f735caa13a678a441c9ef6b88d6d8be8a64090</anchor>
+      <arglist></arglist>
+    </member>
+    <member kind="enumvalue">
+      <name>MQTTStatusNotConnected</name>
+      <anchorfile>group__mqtt__enum__types.html</anchorfile>
+      <anchor>ggaba7ec045874a1c3432f99173367f735ca074273b04f70b93c1f20702096cac273</anchor>
+      <arglist></arglist>
+    </member>
+    <member kind="enumvalue">
+      <name>MQTTStatusDisconnectPending</name>
+      <anchorfile>group__mqtt__enum__types.html</anchorfile>
+      <anchor>ggaba7ec045874a1c3432f99173367f735ca230baa3eaabf50e6b319f792a82bb863</anchor>
       <arglist></arglist>
     </member>
     <member kind="enumeration">
@@ -2270,6 +2315,12 @@
       <anchor>gga9f84d003695205cf10a7bd0bafb3dbf6a82c8f64d976734e5632e5257bc429ef5</anchor>
       <arglist></arglist>
     </member>
+    <member kind="enumvalue">
+      <name>MQTTDisconnectPending</name>
+      <anchorfile>group__mqtt__enum__types.html</anchorfile>
+      <anchor>gga9f84d003695205cf10a7bd0bafb3dbf6a3c7e17f463f44d8f7ce50475b129ac24</anchor>
+      <arglist></arglist>
+    </member>
     <member kind="enumeration">
       <type></type>
       <name>MQTTPublishState_t</name>
@@ -2482,6 +2533,24 @@
       <name>MQTTNeedMoreBytes</name>
       <anchorfile>group__mqtt__enum__types.html</anchorfile>
       <anchor>ggaba7ec045874a1c3432f99173367f735caa97df53014d919df5ecd54398f89f9b9</anchor>
+      <arglist></arglist>
+    </member>
+    <member kind="enumvalue">
+      <name>MQTTStatusConnected</name>
+      <anchorfile>group__mqtt__enum__types.html</anchorfile>
+      <anchor>ggaba7ec045874a1c3432f99173367f735caa13a678a441c9ef6b88d6d8be8a64090</anchor>
+      <arglist></arglist>
+    </member>
+    <member kind="enumvalue">
+      <name>MQTTStatusNotConnected</name>
+      <anchorfile>group__mqtt__enum__types.html</anchorfile>
+      <anchor>ggaba7ec045874a1c3432f99173367f735ca074273b04f70b93c1f20702096cac273</anchor>
+      <arglist></arglist>
+    </member>
+    <member kind="enumvalue">
+      <name>MQTTStatusDisconnectPending</name>
+      <anchorfile>group__mqtt__enum__types.html</anchorfile>
+      <anchor>ggaba7ec045874a1c3432f99173367f735ca230baa3eaabf50e6b319f792a82bb863</anchor>
       <arglist></arglist>
     </member>
     <member kind="enumeration">
