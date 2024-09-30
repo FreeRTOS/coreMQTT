@@ -1606,7 +1606,7 @@ static MQTTStatus_t handlePublishAcks( MQTTContext_t * pContext,
             ( pContext->clearFunction != NULL ) &&
             ( pContext->clearFunction( pContext, packetIdentifier ) != true ) )
         {
-            LogWarn( ( "Clear callback function failed\n" ) );
+            LogWarn( ( "Failed to clear copied publish on receiving an ack.\n" ) );
         }
     }
 
@@ -2204,7 +2204,10 @@ static MQTTStatus_t sendPublishWithoutCopy( MQTTContext_t * pContext,
         totalMessageLength += pPublishInfo->payloadLength;
     }
 
-    /* store a copy of the publish with duplicate flag set for retransmission purposes */
+    /* if not already set, set the dup flag before storing a copy of the publish 
+     * this is because on retrieving back this copy we will get it in the form of an 
+     * array of TransportOutVector_t that holds the data in a const pointer which cannot be 
+     * changed after retrieving.*/
     if( pPublishInfo->dup != true )
     {
         MQTT_UpdateDuplicatePublishFlag( pMqttHeader, true );
@@ -2212,6 +2215,7 @@ static MQTTStatus_t sendPublishWithoutCopy( MQTTContext_t * pContext,
         dupFlagChanged = true;
     }
 
+    /* store a copy of the publish for retransmission purposes */
     if( ( pPublishInfo->qos > MQTTQoS0 ) &&
         ( pContext->storeFunction != NULL ) &&
         ( pContext->storeFunction( pContext, packetId, pIoVector, ioVectorLength ) != true ) )
@@ -2219,6 +2223,7 @@ static MQTTStatus_t sendPublishWithoutCopy( MQTTContext_t * pContext,
         status = MQTTPublishStoreFailed;
     }
 
+    /* change the value of the dup flag to its original, if it was changed */
     if( dupFlagChanged )
     {
         MQTT_UpdateDuplicatePublishFlag( pMqttHeader, false );
@@ -2545,7 +2550,7 @@ static MQTTStatus_t handleUncleanSessionResumption( MQTTContext_t * pContext )
             status = MQTTPublishRetrieveFailed;
         }
 
-        /* Resend all the PUBLISH for which PUBCK/PUBREC is not received
+        /* Resend all the PUBLISH for which PUBACK/PUBREC is not received 
          * after session is reestablished. */
         while( ( packetId != MQTT_PACKET_ID_INVALID ) &&
                ( status == MQTTSuccess ) )
@@ -2775,10 +2780,10 @@ MQTTStatus_t MQTT_InitStatefulQoS( MQTTContext_t * pContext,
 /*-----------------------------------------------------------*/
 
 MQTTStatus_t MQTT_InitRetransmits( MQTTContext_t * pContext,
-                                   MQTTRetransmitStorePacket storeFunction,
-                                   MQTTRetransmitRetrievePacket retrieveFunction,
-                                   MQTTRetransmitClearPacket clearFunction,
-                                   MQTTRetransmitClearAllPackets clearAllFunction )
+                                   MQTTStorePacketForRetransmit storeFunction,
+                                   MQTTRetrievePacketForRetransmit retrieveFunction,
+                                   MQTTClearPacketForRetransmit clearFunction,
+                                   MQTTClearAllPacketsForRetransmit clearAllFunction )
 {
     MQTTStatus_t status = MQTTSuccess;
 

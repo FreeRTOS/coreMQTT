@@ -102,7 +102,7 @@
 #define UINT8_SET_BIT( x, position )      ( ( x ) = ( uint8_t ) ( ( x ) | ( 0x01U << ( position ) ) ) )
 
 /**
- * @brief Set a bit in an 8-bit unsigned integer.
+ * @brief Clear a bit in an 8-bit unsigned integer.
  */
 #define UINT8_CLEAR_BIT( x, position )    ( ( x ) = ( uint8_t ) ( ( x ) & ( ~( 0x01U << ( position ) ) ) ) )
 
