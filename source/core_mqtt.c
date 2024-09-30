@@ -1573,16 +1573,6 @@ static MQTTStatus_t handlePublishAcks( MQTTContext_t * pContext,
     status = MQTT_DeserializeAck( pIncomingPacket, &packetIdentifier, NULL );
     LogInfo( ( "Ack packet deserialized with result: %s.",
                MQTT_Status_strerror( status ) ) );
-    
-    if( ( ackType ==  MQTTPuback ) || ( ackType ==  MQTTPubrec ) )
-    {
-        if( ( status == MQTTSuccess ) &&
-            ( pContext->clearFunction != NULL ) &&
-            ( pContext->clearFunction( pContext, packetIdentifier) != true ) )
-        {
-            status = MQTTPublishClearFailed;
-        }
-    }
 
     if( status == MQTTSuccess )
     {
@@ -1607,6 +1597,16 @@ static MQTTStatus_t handlePublishAcks( MQTTContext_t * pContext,
                         " failed with error %s.",
                         ( unsigned short ) packetIdentifier,
                         MQTT_Status_strerror( status ) ) );
+        }
+    }
+
+    if( ( ackType ==  MQTTPuback ) || ( ackType ==  MQTTPubrec ) )
+    {
+        if( ( status == MQTTSuccess ) &&
+            ( pContext->clearFunction != NULL ) &&
+            ( pContext->clearFunction( pContext, packetIdentifier) != true ) )
+        {
+            LogWarn( ( "Clear callback function failed\n" ) );
         }
     }
 
@@ -3706,10 +3706,6 @@ const char * MQTT_Status_strerror( MQTTStatus_t status )
         
         case MQTTPublishRetrieveFailed:
             str = "MQTTPublishRetrieveFailed";
-            break;
-        
-        case MQTTPublishClearFailed:
-            str = "MQTTPublishClearFailed";
             break;
         
         case MQTTPublishClearAllFailed:

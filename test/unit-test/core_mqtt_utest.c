@@ -1235,14 +1235,6 @@ static void expectProcessLoopCalls( MQTTContext_t * const pContext,
         }
     }
 
-    if(expectMoreCalls)
-    {
-        if(pContext->clearFunction == publishClearCallbackFailed)
-        {
-            expectMoreCalls = false;
-        }
-    }
-
     /* Update state based on the packet type (PUB or ACK) being received. */
     if( expectMoreCalls )
     {
@@ -4744,8 +4736,8 @@ void test_MQTT_ProcessLoop_handleIncomingAck_Clear_Publish_Copies( void )
     currentPacketType = MQTT_PACKET_TYPE_PUBACK;
     /* Set expected return values in the loop. */
     resetProcessLoopParams( &expectParams );
-    expectParams.stateAfterDeserialize = MQTTPubAckPending;
-    expectParams.processLoopStatus = MQTTPublishClearFailed;
+    expectParams.stateAfterDeserialize = MQTTPublishDone;
+    expectParams.stateAfterSerialize = MQTTPublishDone;
     expectProcessLoopCalls( &context, &expectParams );
 
     /* Mock the receiving of a PUBREC packet type and expect the appropriate
@@ -4753,8 +4745,8 @@ void test_MQTT_ProcessLoop_handleIncomingAck_Clear_Publish_Copies( void )
     currentPacketType = MQTT_PACKET_TYPE_PUBREC;
     /* Set expected return values in the loop. */
     resetProcessLoopParams( &expectParams );
-    expectParams.stateAfterDeserialize = MQTTPubRecPending;
-    expectParams.processLoopStatus = MQTTPublishClearFailed;
+    expectParams.stateAfterDeserialize = MQTTPubRelSend;
+    expectParams.stateAfterSerialize = MQTTPubCompPending;
     expectProcessLoopCalls( &context, &expectParams );
 
 }
@@ -7094,10 +7086,6 @@ void test_MQTT_Status_strerror( void )
     status = MQTTPublishRetrieveFailed;
     str = MQTT_Status_strerror( status );
     TEST_ASSERT_EQUAL_STRING( "MQTTPublishRetrieveFailed", str );
-
-    status = MQTTPublishClearFailed;
-    str = MQTT_Status_strerror( status );
-    TEST_ASSERT_EQUAL_STRING( "MQTTPublishClearFailed", str );
 
     status = MQTTPublishClearAllFailed;
     str = MQTT_Status_strerror( status );

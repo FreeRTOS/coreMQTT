@@ -106,7 +106,6 @@ typedef enum MQTTStatus
                                     has failed */
     MQTTPublishRetrieveFailed,      /**< User provided API to retrieve the copy of a publish while reconnecting 
                                     with an unclean session has failed */
-    MQTTPublishClearFailed,         /**< User provided API to clear the copy of a publish on receiving a PUBACK has failed */
     MQTTPublishClearAllFailed       /**< User provided API to clear all the copies of publishes while connecting with a clean 
                                     session has failed */
 } MQTTStatus_t;
