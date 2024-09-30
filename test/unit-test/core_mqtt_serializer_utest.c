@@ -2910,12 +2910,12 @@ void test_MQTT_UpdateDuplicatePublishFlag_Happy_Path()
     /* Test to set the flag. */
     mqttStatus = MQTT_UpdateDuplicatePublishFlag( &pHeader, true );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
-    TEST_ASSERT_NOT_EQUAL_INT( (pHeader) & ( 0x01U << ( 3 ) ), 0 );
+    TEST_ASSERT_NOT_EQUAL_INT( ( pHeader ) & ( 0x01U << ( 3 ) ), 0 );
 
     /* Test to clear the flag. */
     mqttStatus = MQTT_UpdateDuplicatePublishFlag( &pHeader, false );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
-    TEST_ASSERT_EQUAL_INT( (pHeader) & ( 0x01U << ( 3 ) ), 0 );
+    TEST_ASSERT_EQUAL_INT( ( pHeader ) & ( 0x01U << ( 3 ) ), 0 );
 }
 
 /* ========================================================================== */
