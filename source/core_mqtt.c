@@ -2204,9 +2204,9 @@ static MQTTStatus_t sendPublishWithoutCopy( MQTTContext_t * pContext,
         totalMessageLength += pPublishInfo->payloadLength;
     }
 
-    /* if not already set, set the dup flag before storing a copy of the publish 
-     * this is because on retrieving back this copy we will get it in the form of an 
-     * array of TransportOutVector_t that holds the data in a const pointer which cannot be 
+    /* if not already set, set the dup flag before storing a copy of the publish
+     * this is because on retrieving back this copy we will get it in the form of an
+     * array of TransportOutVector_t that holds the data in a const pointer which cannot be
      * changed after retrieving.*/
     if( pPublishInfo->dup != true )
     {
@@ -2550,7 +2550,7 @@ static MQTTStatus_t handleUncleanSessionResumption( MQTTContext_t * pContext )
             status = MQTTPublishRetrieveFailed;
         }
 
-        /* Resend all the PUBLISH for which PUBACK/PUBREC is not received 
+        /* Resend all the PUBLISH for which PUBACK/PUBREC is not received
          * after session is reestablished. */
         while( ( packetId != MQTT_PACKET_ID_INVALID ) &&
                ( status == MQTTSuccess ) )

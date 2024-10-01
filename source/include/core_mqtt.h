@@ -102,7 +102,7 @@ typedef void (* MQTTEventCallback_t )( struct MQTTContext * pContext,
                                        struct MQTTDeserializedInfo * pDeserializedInfo );
 
 /**
- * @brief User defined callback used to store outgoing publishes. Used to track any publish 
+ * @brief User defined callback used to store outgoing publishes. Used to track any publish
  * retransmit on an unclean session connection.
  *
  * @param[in] pContext Initialised MQTT Context.
@@ -114,13 +114,13 @@ typedef void (* MQTTEventCallback_t )( struct MQTTContext * pContext,
  */
 /* @[define_mqtt_retransmitstorepacket] */
 typedef bool ( * MQTTStorePacketForRetransmit)( struct MQTTContext * pContext,
-                                            uint16_t packetId,
-                                            TransportOutVector_t * pIoVec,
-                                            size_t ioVecCount );
+                                                uint16_t packetId,
+                                                TransportOutVector_t * pIoVec,
+                                                size_t ioVecCount );
 /* @[define_mqtt_retransmitstorepacket] */
 
 /**
- * @brief User defined callback used to retreive a copied publish for resend operation. Used to 
+ * @brief User defined callback used to retreive a copied publish for resend operation. Used to
  * track any publish retransmit on an unclean session connection.
  *
  * @param[in] pContext Initialised MQTT Context.
@@ -132,13 +132,13 @@ typedef bool ( * MQTTStorePacketForRetransmit)( struct MQTTContext * pContext,
  */
 /* @[define_mqtt_retransmitretrievepacket] */
 typedef bool ( * MQTTRetrievePacketForRetransmit)( struct MQTTContext * pContext,
-                                            uint16_t packetId,
-                                            TransportOutVector_t ** pIoVec,
-                                            size_t * ioVecCount );
+                                                   uint16_t packetId,
+                                                   TransportOutVector_t ** pIoVec,
+                                                   size_t * ioVecCount );
 /* @[define_mqtt_retransmitretrievepacket] */
 
 /**
- * @brief User defined callback used to clear a particular copied publish packet. Used to 
+ * @brief User defined callback used to clear a particular copied publish packet. Used to
  * track any publish retransmit on an unclean session connection.
  *
  * @param[in] pContext Initialised MQTT Context.
@@ -147,12 +147,12 @@ typedef bool ( * MQTTRetrievePacketForRetransmit)( struct MQTTContext * pContext
  * @return True if the clear is successful else false.
  */
 /* @[define_mqtt_retransmitclearpacket] */
-typedef bool (*MQTTClearPacketForRetransmit)( struct MQTTContext * pContext,
-                                         uint16_t packetId );
+typedef bool (* MQTTClearPacketForRetransmit)( struct MQTTContext * pContext,
+                                               uint16_t packetId );
 /* @[define_mqtt_retransmitclearpacket] */
 
 /**
- * @brief User defined callback used to clear all copied publish packets. Used to 
+ * @brief User defined callback used to clear all copied publish packets. Used to
  * when connecting with a clean session.
  *
  * @param[in] pContext Initialised MQTT Context.
@@ -160,7 +160,7 @@ typedef bool (*MQTTClearPacketForRetransmit)( struct MQTTContext * pContext,
  * @return True if the clear all is successful else false.
  */
 /* @[define_mqtt_retransmitclearallpackets] */
-typedef bool (*MQTTClearAllPacketsForRetransmit)( struct MQTTContext * pContext );
+typedef bool (* MQTTClearAllPacketsForRetransmit)( struct MQTTContext * pContext );
 /* @[define_mqtt_retransmitclearallpackets] */
 
 /**
@@ -323,7 +323,7 @@ typedef struct MQTTContext
     /**
      * @brief User defined API used to clear a particular copied publish packet.
      */
-    MQTTClearPacketForRetransmit clearFunction;   
+    MQTTClearPacketForRetransmit clearFunction;
 
     /**
      * @brief User defined API used to clear all copied publish packets.
@@ -510,7 +510,7 @@ MQTTStatus_t MQTT_InitStatefulQoS( MQTTContext_t * pContext,
  *
  * @return #MQTTBadParameter if invalid parameters are passed;
  * #MQTTSuccess otherwise.
- * 
+ *
  * <b>Example</b>
  * @code{c}
  *
@@ -571,12 +571,12 @@ MQTTStatus_t MQTT_InitStatefulQoS( MQTTContext_t * pContext,
  *
  *      // Now QoS1 and/or QoS2 publishes can be sent with this context.
  * }
- * 
+ *
  * if( status == MQTTSuccess )
  * {
- *      status = MQTT_InitRetransmits( &mqttContext, publishStoreCallback, 
- *                                                   publishRetrieveCallback, 
- *                                                   publishClearCallback, 
+ *      status = MQTT_InitRetransmits( &mqttContext, publishStoreCallback,
+ *                                                   publishRetrieveCallback,
+ *                                                   publishClearCallback,
  *                                                   publishClearAllCallback );
  *
  *      // Now unacked Publishes can be resent on an unclean session resumption.
