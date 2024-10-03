@@ -648,6 +648,9 @@ MQTTStatus_t MQTT_CheckConnectStatus( MQTTContext_t * pContext );
  * #MQTTRecvFailed if transport receive failed for CONNACK;
  * #MQTTNoDataAvailable if no data available to receive in transport until
  * the @p timeoutMs for CONNACK;
+ * #MQTTStatusConnected if the connection is already established
+ * #MQTTStatusDisconnectPending if the user is expected to call MQTT_Disconnect 
+ * before calling any other API
  * #MQTTSuccess otherwise.
  *
  * @note This API may spend more time than provided in the timeoutMS parameters in
@@ -736,6 +739,9 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
  * hold the MQTT packet;
  * #MQTTBadParameter if invalid parameters are passed;
  * #MQTTSendFailed if transport write failed;
+ * #MQTTStatusNotConnected if the connection is not established yet
+ * #MQTTStatusDisconnectPending if the user is expected to call MQTT_Disconnect 
+ * before calling any other API
  * #MQTTSuccess otherwise.
  *
  * <b>Example</b>
@@ -789,6 +795,9 @@ MQTTStatus_t MQTT_Subscribe( MQTTContext_t * pContext,
  * @return #MQTTNoMemory if pBuffer is too small to hold the MQTT packet;
  * #MQTTBadParameter if invalid parameters are passed;
  * #MQTTSendFailed if transport write failed;
+ * #MQTTStatusNotConnected if the connection is not established yet
+ * #MQTTStatusDisconnectPending if the user is expected to call MQTT_Disconnect 
+ * before calling any other API
  * #MQTTSuccess otherwise.
  *
  * <b>Example</b>
@@ -856,6 +865,9 @@ MQTTStatus_t MQTT_CancelCallback( const MQTTContext_t * pContext,
  * @return #MQTTNoMemory if pBuffer is too small to hold the MQTT packet;
  * #MQTTBadParameter if invalid parameters are passed;
  * #MQTTSendFailed if transport write failed;
+ * #MQTTStatusNotConnected if the connection is not established yet
+ * #MQTTStatusDisconnectPending if the user is expected to call MQTT_Disconnect 
+ * before calling any other API
  * #MQTTSuccess otherwise.
  */
 /* @[declare_mqtt_ping] */
@@ -875,6 +887,9 @@ MQTTStatus_t MQTT_Ping( MQTTContext_t * pContext );
  * hold the MQTT packet;
  * #MQTTBadParameter if invalid parameters are passed;
  * #MQTTSendFailed if transport write failed;
+ * #MQTTStatusNotConnected if the connection is not established yet
+ * #MQTTStatusDisconnectPending if the user is expected to call MQTT_Disconnect 
+ * before calling any other API
  * #MQTTSuccess otherwise.
  *
  * <b>Example</b>
@@ -926,6 +941,7 @@ MQTTStatus_t MQTT_Unsubscribe( MQTTContext_t * pContext,
  * hold the MQTT packet;
  * #MQTTBadParameter if invalid parameters are passed;
  * #MQTTSendFailed if transport send failed;
+ * #MQTTStatusNotConnected if the connection is already disconnected
  * #MQTTSuccess otherwise.
  */
 /* @[declare_mqtt_disconnect] */
@@ -960,6 +976,10 @@ MQTTStatus_t MQTT_Disconnect( MQTTContext_t * pContext );
  * invalid transition for the internal state machine;
  * #MQTTNeedMoreBytes if MQTT_ProcessLoop has received
  * incomplete data; it should be called again (probably after a delay);
+ * #MQTTStatusNotConnected if the connection is not established yet and a PING
+ * or an ACK is being sent.
+ * #MQTTStatusDisconnectPending if the user is expected to call MQTT_Disconnect 
+ * before calling any other API
  * #MQTTSuccess on success.
  *
  * <b>Example</b>
