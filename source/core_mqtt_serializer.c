@@ -2641,7 +2641,7 @@ MQTTStatus_t MQTT_UpdateDuplicatePublishFlag( uint8_t * pHeader,
     {
         status = MQTTBadParameter;
     }
-    else if( set )
+    else if( set == true )
     {
         UINT8_SET_BIT( *pHeader, MQTT_PUBLISH_FLAG_DUP );
     }

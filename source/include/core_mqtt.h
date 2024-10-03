@@ -125,8 +125,8 @@ typedef bool ( * MQTTStorePacketForRetransmit)( struct MQTTContext * pContext,
  *
  * @param[in] pContext Initialised MQTT Context.
  * @param[in] packetId Copied publish packet identifier.
- * @param[in] pIoVec Output parameter to store the pointer to the copied publish packet form of array of Tansport Vectors.
- * @param[in] ioVecCount Output parameter to store the number of transport vectors in the pIoVec array.
+ * @param[out] pIoVec Output parameter to store the pointer to the copied publish packet form of array of Tansport Vectors.
+ * @param[out] ioVecCount Output parameter to store the number of transport vectors in the pIoVec array.
  *
  * @return True if the retreive is successful else false.
  */

@@ -2204,10 +2204,10 @@ static MQTTStatus_t sendPublishWithoutCopy( MQTTContext_t * pContext,
         totalMessageLength += pPublishInfo->payloadLength;
     }
 
-    /* if not already set, set the dup flag before storing a copy of the publish
+    /* If not already set, set the dup flag before storing a copy of the publish
      * this is because on retrieving back this copy we will get it in the form of an
      * array of TransportOutVector_t that holds the data in a const pointer which cannot be
-     * changed after retrieving.*/
+     * changed after retrieving. */
     if( pPublishInfo->dup != true )
     {
         MQTT_UpdateDuplicatePublishFlag( pMqttHeader, true );
