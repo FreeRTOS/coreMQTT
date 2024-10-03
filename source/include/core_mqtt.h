@@ -651,6 +651,10 @@ MQTTStatus_t MQTT_CheckConnectStatus( MQTTContext_t * pContext );
  * #MQTTStatusConnected if the connection is already established
  * #MQTTStatusDisconnectPending if the user is expected to call MQTT_Disconnect 
  * before calling any other API
+ * MQTTPublishClearAllFailed if on a clean session connection, clearing all the
+ * previously copied publishes fails
+ * MQTTPublishRetrieveFailed if on an unclean session connection, the copied
+ * publishes are not retrieved successfuly for retransmission
  * #MQTTSuccess otherwise.
  *
  * @note This API may spend more time than provided in the timeoutMS parameters in
@@ -798,6 +802,8 @@ MQTTStatus_t MQTT_Subscribe( MQTTContext_t * pContext,
  * #MQTTStatusNotConnected if the connection is not established yet
  * #MQTTStatusDisconnectPending if the user is expected to call MQTT_Disconnect 
  * before calling any other API
+ * #MQTTPublishStoreFailed if the user provided callback to copy and store the
+ * outgoing publish packet fails
  * #MQTTSuccess otherwise.
  *
  * <b>Example</b>
