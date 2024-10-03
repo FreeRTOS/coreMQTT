@@ -102,6 +102,68 @@ typedef void (* MQTTEventCallback_t )( struct MQTTContext * pContext,
                                        struct MQTTDeserializedInfo * pDeserializedInfo );
 
 /**
+ * @brief User defined callback used to store outgoing publishes. Used to track any publish
+ * retransmit on an unclean session connection.
+ *
+ * @param[in] pContext Initialised MQTT Context.
+ * @param[in] packetId Outgoing publish packet identifier.
+ * @param[in] pIoVec Pointer to the outgoing publish packet in form of array of Tansport Vectors.
+ * @param[in] ioVecCount Number of transport vectors in the pIoVec array.
+ *
+ * @return True if the copy is successful else false.
+ */
+/* @[define_mqtt_retransmitstorepacket] */
+typedef bool ( * MQTTStorePacketForRetransmit)( struct MQTTContext * pContext,
+                                                uint16_t packetId,
+                                                TransportOutVector_t * pIoVec,
+                                                size_t ioVecCount );
+/* @[define_mqtt_retransmitstorepacket] */
+
+/**
+ * @brief User defined callback used to retreive a copied publish for resend operation. Used to
+ * track any publish retransmit on an unclean session connection.
+ *
+ * @param[in] pContext Initialised MQTT Context.
+ * @param[in] packetId Copied publish packet identifier.
+ * @param[out] pIoVec Output parameter to store the pointer to the copied publish packet form of array of Tansport Vectors.
+ * @param[out] ioVecCount Output parameter to store the number of transport vectors in the pIoVec array.
+ *
+ * @return True if the retreive is successful else false.
+ */
+/* @[define_mqtt_retransmitretrievepacket] */
+typedef bool ( * MQTTRetrievePacketForRetransmit)( struct MQTTContext * pContext,
+                                                   uint16_t packetId,
+                                                   TransportOutVector_t ** pIoVec,
+                                                   size_t * ioVecCount );
+/* @[define_mqtt_retransmitretrievepacket] */
+
+/**
+ * @brief User defined callback used to clear a particular copied publish packet. Used to
+ * track any publish retransmit on an unclean session connection.
+ *
+ * @param[in] pContext Initialised MQTT Context.
+ * @param[in] packetId Copied publish packet identifier.
+ *
+ * @return True if the clear is successful else false.
+ */
+/* @[define_mqtt_retransmitclearpacket] */
+typedef bool (* MQTTClearPacketForRetransmit)( struct MQTTContext * pContext,
+                                               uint16_t packetId );
+/* @[define_mqtt_retransmitclearpacket] */
+
+/**
+ * @brief User defined callback used to clear all copied publish packets. Used to
+ * when connecting with a clean session.
+ *
+ * @param[in] pContext Initialised MQTT Context.
+ *
+ * @return True if the clear all is successful else false.
+ */
+/* @[define_mqtt_retransmitclearallpackets] */
+typedef bool (* MQTTClearAllPacketsForRetransmit)( struct MQTTContext * pContext );
+/* @[define_mqtt_retransmitclearallpackets] */
+
+/**
  * @ingroup mqtt_enum_types
  * @brief Values indicating if an MQTT connection exists.
  */
@@ -247,6 +309,26 @@ typedef struct MQTTContext
     uint16_t keepAliveIntervalSec; /**< @brief Keep Alive interval. */
     uint32_t pingReqSendTimeMs;    /**< @brief Timestamp of the last sent PINGREQ. */
     bool waitingForPingResp;       /**< @brief If the library is currently awaiting a PINGRESP. */
+
+    /**
+     * @brief User defined API used to store outgoing publishes.
+     */
+    MQTTStorePacketForRetransmit storeFunction;
+
+    /**
+     * @brief User defined API used to retreive a copied publish for resend operation.
+     */
+    MQTTRetrievePacketForRetransmit retrieveFunction;
+
+    /**
+     * @brief User defined API used to clear a particular copied publish packet.
+     */
+    MQTTClearPacketForRetransmit clearFunction;
+
+    /**
+     * @brief User defined API used to clear all copied publish packets.
+     */
+    MQTTClearAllPacketsForRetransmit clearAllFunction;
 } MQTTContext_t;
 
 /**
@@ -416,6 +498,101 @@ MQTTStatus_t MQTT_InitStatefulQoS( MQTTContext_t * pContext,
 /* @[declare_mqtt_initstatefulqos] */
 
 /**
+ * @brief Initialize an MQTT context for publish retransmits for QoS > 0.
+ *
+ * This function must be called on an #MQTTContext_t after MQTT_InitstatefulQoS and before any other function.
+ *
+ * @param[in] pContext The context to initialize.
+ * @param[in] storeFunction User defined API used to store outgoing publishes.
+ * @param[in] retrieveFunction User defined API used to retreive a copied publish for resend operation.
+ * @param[in] clearFunction User defined API used to clear a particular copied publish packet.
+ * @param[in] clearAllFunction User defined API used to clear a particular copied publish packet.
+ *
+ * @return #MQTTBadParameter if invalid parameters are passed;
+ * #MQTTSuccess otherwise.
+ *
+ * <b>Example</b>
+ * @code{c}
+ *
+ * // Function for obtaining a timestamp.
+ * uint32_t getTimeStampMs();
+ * // Callback function for receiving packets.
+ * void eventCallback(
+ *      MQTTContext_t * pContext,
+ *      MQTTPacketInfo_t * pPacketInfo,
+ *      MQTTDeserializedInfo_t * pDeserializedInfo
+ * );
+ * // Network send.
+ * int32_t networkSend( NetworkContext_t * pContext, const void * pBuffer, size_t bytes );
+ * // Network receive.
+ * int32_t networkRecv( NetworkContext_t * pContext, void * pBuffer, size_t bytes );
+ * // User defined callback used to store outgoing publishes
+ * bool publishStoreCallback(struct MQTTContext* pContext,
+ *                           uint16_t packetId,
+ *                           TransportOutVector_t* pIoVec,
+ *                           size_t ioVecCount);
+ * // User defined callback used to retreive a copied publish for resend operation
+ * bool publishRetrieveCallback(struct MQTTContext* pContext,
+ *                              uint16_t packetId,
+ *                              TransportOutVector_t** pIoVec,
+ *                              size_t* ioVecCount);
+ * // User defined callback used to clear a particular copied publish packet
+ * bool publishClearCallback(struct MQTTContext* pContext,
+ *                           uint16_t packetId);
+ * // User defined callback used to clear all copied publish packets
+ * bool publishClearAllCallback(struct MQTTContext* pContext);
+ *
+ * MQTTContext_t mqttContext;
+ * TransportInterface_t transport;
+ * MQTTFixedBuffer_t fixedBuffer;
+ * uint8_t buffer[ 1024 ];
+ * const size_t outgoingPublishCount = 30;
+ * MQTTPubAckInfo_t outgoingPublishes[ outgoingPublishCount ];
+ *
+ * // Clear context.
+ * memset( ( void * ) &mqttContext, 0x00, sizeof( MQTTContext_t ) );
+ *
+ * // Set transport interface members.
+ * transport.pNetworkContext = &someTransportContext;
+ * transport.send = networkSend;
+ * transport.recv = networkRecv;
+ *
+ * // Set buffer members.
+ * fixedBuffer.pBuffer = buffer;
+ * fixedBuffer.size = 1024;
+ *
+ * status = MQTT_Init( &mqttContext, &transport, getTimeStampMs, eventCallback, &fixedBuffer );
+ *
+ * if( status == MQTTSuccess )
+ * {
+ *      // We do not expect any incoming publishes in this example, therefore the incoming
+ *      // publish pointer is NULL and the count is zero.
+ *      status = MQTT_InitStatefulQoS( &mqttContext, outgoingPublishes, outgoingPublishCount, NULL, 0 );
+ *
+ *      // Now QoS1 and/or QoS2 publishes can be sent with this context.
+ * }
+ *
+ * if( status == MQTTSuccess )
+ * {
+ *      status = MQTT_InitRetransmits( &mqttContext, publishStoreCallback,
+ *                                                   publishRetrieveCallback,
+ *                                                   publishClearCallback,
+ *                                                   publishClearAllCallback );
+ *
+ *      // Now unacked Publishes can be resent on an unclean session resumption.
+ * }
+ * @endcode
+ */
+
+/* @[declare_mqtt_initretransmits] */
+MQTTStatus_t MQTT_InitRetransmits( MQTTContext_t * pContext,
+                                   MQTTStorePacketForRetransmit storeFunction,
+                                   MQTTRetrievePacketForRetransmit retrieveFunction,
+                                   MQTTClearPacketForRetransmit clearFunction,
+                                   MQTTClearAllPacketsForRetransmit clearAllFunction );
+/* @[declare_mqtt_initretransmits] */
+
+/**
  * @brief Checks the MQTT connection status with the broker.
  *
  * @param[in] pContext Initialized MQTT context.
@@ -471,6 +648,13 @@ MQTTStatus_t MQTT_CheckConnectStatus( MQTTContext_t * pContext );
  * #MQTTRecvFailed if transport receive failed for CONNACK;
  * #MQTTNoDataAvailable if no data available to receive in transport until
  * the @p timeoutMs for CONNACK;
+ * #MQTTStatusConnected if the connection is already established
+ * #MQTTStatusDisconnectPending if the user is expected to call MQTT_Disconnect 
+ * before calling any other API
+ * MQTTPublishClearAllFailed if on a clean session connection, clearing all the
+ * previously copied publishes fails
+ * MQTTPublishRetrieveFailed if on an unclean session connection, the copied
+ * publishes are not retrieved successfuly for retransmission
  * #MQTTSuccess otherwise.
  *
  * @note This API may spend more time than provided in the timeoutMS parameters in
@@ -559,6 +743,9 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
  * hold the MQTT packet;
  * #MQTTBadParameter if invalid parameters are passed;
  * #MQTTSendFailed if transport write failed;
+ * #MQTTStatusNotConnected if the connection is not established yet
+ * #MQTTStatusDisconnectPending if the user is expected to call MQTT_Disconnect 
+ * before calling any other API
  * #MQTTSuccess otherwise.
  *
  * <b>Example</b>
@@ -612,6 +799,11 @@ MQTTStatus_t MQTT_Subscribe( MQTTContext_t * pContext,
  * @return #MQTTNoMemory if pBuffer is too small to hold the MQTT packet;
  * #MQTTBadParameter if invalid parameters are passed;
  * #MQTTSendFailed if transport write failed;
+ * #MQTTStatusNotConnected if the connection is not established yet
+ * #MQTTStatusDisconnectPending if the user is expected to call MQTT_Disconnect 
+ * before calling any other API
+ * #MQTTPublishStoreFailed if the user provided callback to copy and store the
+ * outgoing publish packet fails
  * #MQTTSuccess otherwise.
  *
  * <b>Example</b>
@@ -679,6 +871,9 @@ MQTTStatus_t MQTT_CancelCallback( const MQTTContext_t * pContext,
  * @return #MQTTNoMemory if pBuffer is too small to hold the MQTT packet;
  * #MQTTBadParameter if invalid parameters are passed;
  * #MQTTSendFailed if transport write failed;
+ * #MQTTStatusNotConnected if the connection is not established yet
+ * #MQTTStatusDisconnectPending if the user is expected to call MQTT_Disconnect 
+ * before calling any other API
  * #MQTTSuccess otherwise.
  */
 /* @[declare_mqtt_ping] */
@@ -698,6 +893,9 @@ MQTTStatus_t MQTT_Ping( MQTTContext_t * pContext );
  * hold the MQTT packet;
  * #MQTTBadParameter if invalid parameters are passed;
  * #MQTTSendFailed if transport write failed;
+ * #MQTTStatusNotConnected if the connection is not established yet
+ * #MQTTStatusDisconnectPending if the user is expected to call MQTT_Disconnect 
+ * before calling any other API
  * #MQTTSuccess otherwise.
  *
  * <b>Example</b>
@@ -749,6 +947,7 @@ MQTTStatus_t MQTT_Unsubscribe( MQTTContext_t * pContext,
  * hold the MQTT packet;
  * #MQTTBadParameter if invalid parameters are passed;
  * #MQTTSendFailed if transport send failed;
+ * #MQTTStatusNotConnected if the connection is already disconnected
  * #MQTTSuccess otherwise.
  */
 /* @[declare_mqtt_disconnect] */
@@ -783,6 +982,10 @@ MQTTStatus_t MQTT_Disconnect( MQTTContext_t * pContext );
  * invalid transition for the internal state machine;
  * #MQTTNeedMoreBytes if MQTT_ProcessLoop has received
  * incomplete data; it should be called again (probably after a delay);
+ * #MQTTStatusNotConnected if the connection is not established yet and a PING
+ * or an ACK is being sent.
+ * #MQTTStatusDisconnectPending if the user is expected to call MQTT_Disconnect 
+ * before calling any other API
  * #MQTTSuccess on success.
  *
  * <b>Example</b>
