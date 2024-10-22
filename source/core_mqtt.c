@@ -92,7 +92,7 @@
 
 struct MQTTVec
 {
-    TransportOutVector_t pVector;
+    TransportOutVector_t pVector;  /**< Pointer to transport vector. USER SHOULD NOT ACCESS THIS DIRECTLY - IT IS AN INTERNAL DETAIL AND CAN CHANGE. */
 };
 
 /*-----------------------------------------------------------*/
