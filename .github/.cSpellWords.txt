@@ -20,9 +20,11 @@ DLIBRARY
 DNDEBUG
 DUNITTEST
 DUNITY
+getbytesinmqttvec
 getpacketid
 isystem
 lcov
+LDNT
 misra
 Misra
 MISRA
@@ -34,7 +36,10 @@ NONDET
 pylint
 pytest
 pyyaml
+serializemqttvec
 sinclude
+SHOU
+SHOULDNT
 UNACKED
 unpadded
 Unpadded
