@@ -65,6 +65,12 @@ struct MQTTContext;
 struct MQTTDeserializedInfo;
 
 /**
+ * @ingroup mqtt_struct_types
+ * @brief An opaque structure provided by the library to the #MQTTStorePacketForRetransmit function when using #MQTTStorePacketForRetransmit.
+ */
+typedef struct MQTTVec MQTTVec_t;
+
+/**
  * @ingroup mqtt_callback_types
  * @brief Application provided function to query the time elapsed since a given
  * epoch in milliseconds.
@@ -107,16 +113,18 @@ typedef void (* MQTTEventCallback_t )( struct MQTTContext * pContext,
  *
  * @param[in] pContext Initialised MQTT Context.
  * @param[in] packetId Outgoing publish packet identifier.
- * @param[in] pIoVec Pointer to the outgoing publish packet in form of array of Tansport Vectors.
- * @param[in] ioVecCount Number of transport vectors in the pIoVec array.
+ * @param[in] pMqttVec Pointer to the opaque mqtt vector structure. Users should use MQTT_SerializeMQTTVec
+ *                and MQTT_GetBytesInMQTTVec functions to get the memory required and to serialize the
+ *                MQTTVec_t in the provided memory respectively.
+ * @param[in] mqttVecCount Number of transport vectors in the pIoVec array.
  *
  * @return True if the copy is successful else false.
  */
 /* @[define_mqtt_retransmitstorepacket] */
 typedef bool ( * MQTTStorePacketForRetransmit)( struct MQTTContext * pContext,
                                                 uint16_t packetId,
-                                                TransportOutVector_t * pIoVec,
-                                                size_t ioVecCount );
+                                                MQTTVec_t * pMqttVec,
+                                                size_t mqttVecCount );
 /* @[define_mqtt_retransmitstorepacket] */
 
 /**
@@ -125,16 +133,19 @@ typedef bool ( * MQTTStorePacketForRetransmit)( struct MQTTContext * pContext,
  *
  * @param[in] pContext Initialised MQTT Context.
  * @param[in] packetId Copied publish packet identifier.
- * @param[out] pIoVec Output parameter to store the pointer to the copied publish packet form of array of Tansport Vectors.
- * @param[out] ioVecCount Output parameter to store the number of transport vectors in the pIoVec array.
+ * @param[out] pSerializedMqttVec Output parameter to store the pointer to the serialized MQTTVec_t
+ *                  using MQTT_SerializeMQTTVec.
+ * @param[out] pSerializedMqttVecLen Output parameter to return the number of bytes used to store the
+ *                  MQTTVec_t. This value should be the same as the one received from MQTT_GetBytesInMQTTVec
+ *                  when storing the packet.
  *
  * @return True if the retreive is successful else false.
  */
 /* @[define_mqtt_retransmitretrievepacket] */
 typedef bool ( * MQTTRetrievePacketForRetransmit)( struct MQTTContext * pContext,
                                                    uint16_t packetId,
-                                                   TransportOutVector_t ** pIoVec,
-                                                   size_t * ioVecCount );
+                                                   uint8_t ** pSerializedMqttVec,
+                                                   size_t * pSerializedMqttVecLen );
 /* @[define_mqtt_retransmitretrievepacket] */
 
 /**
@@ -147,21 +158,9 @@ typedef bool ( * MQTTRetrievePacketForRetransmit)( struct MQTTContext * pContext
  * @return True if the clear is successful else false.
  */
 /* @[define_mqtt_retransmitclearpacket] */
-typedef bool (* MQTTClearPacketForRetransmit)( struct MQTTContext * pContext,
+typedef void (* MQTTClearPacketForRetransmit)( struct MQTTContext * pContext,
                                                uint16_t packetId );
 /* @[define_mqtt_retransmitclearpacket] */
-
-/**
- * @brief User defined callback used to clear all copied publish packets. Used to
- * when connecting with a clean session.
- *
- * @param[in] pContext Initialised MQTT Context.
- *
- * @return True if the clear all is successful else false.
- */
-/* @[define_mqtt_retransmitclearallpackets] */
-typedef bool (* MQTTClearAllPacketsForRetransmit)( struct MQTTContext * pContext );
-/* @[define_mqtt_retransmitclearallpackets] */
 
 /**
  * @ingroup mqtt_enum_types
@@ -324,11 +323,6 @@ typedef struct MQTTContext
      * @brief User defined API used to clear a particular copied publish packet.
      */
     MQTTClearPacketForRetransmit clearFunction;
-
-    /**
-     * @brief User defined API used to clear all copied publish packets.
-     */
-    MQTTClearAllPacketsForRetransmit clearAllFunction;
 } MQTTContext_t;
 
 /**
@@ -342,12 +336,6 @@ typedef struct MQTTDeserializedInfo
     MQTTPublishInfo_t * pPublishInfo;   /**< @brief Pointer to deserialized publish info. */
     MQTTStatus_t deserializationResult; /**< @brief Return code of deserialization. */
 } MQTTDeserializedInfo_t;
-
-/**
- * @ingroup mqtt_struct_types
- * @brief An opaque structure provided by the library to the #MQTTStorePacketForRetransmit function when using #MQTTStorePacketForRetransmit.
- */
-typedef struct MQTTVec MQTTVec_t;
 
 /**
  * @brief Initialize an MQTT context.
@@ -512,7 +500,6 @@ MQTTStatus_t MQTT_InitStatefulQoS( MQTTContext_t * pContext,
  * @param[in] storeFunction User defined API used to store outgoing publishes.
  * @param[in] retrieveFunction User defined API used to retreive a copied publish for resend operation.
  * @param[in] clearFunction User defined API used to clear a particular copied publish packet.
- * @param[in] clearAllFunction User defined API used to clear a particular copied publish packet.
  *
  * @return #MQTTBadParameter if invalid parameters are passed;
  * #MQTTSuccess otherwise.
@@ -535,7 +522,7 @@ MQTTStatus_t MQTT_InitStatefulQoS( MQTTContext_t * pContext,
  * // User defined callback used to store outgoing publishes
  * bool publishStoreCallback(struct MQTTContext* pContext,
  *                           uint16_t packetId,
- *                           TransportOutVector_t* pIoVec,
+ *                           MQTTVec_t* pIoVec,
  *                           size_t ioVecCount);
  * // User defined callback used to retreive a copied publish for resend operation
  * bool publishRetrieveCallback(struct MQTTContext* pContext,
@@ -594,8 +581,7 @@ MQTTStatus_t MQTT_InitStatefulQoS( MQTTContext_t * pContext,
 MQTTStatus_t MQTT_InitRetransmits( MQTTContext_t * pContext,
                                    MQTTStorePacketForRetransmit storeFunction,
                                    MQTTRetrievePacketForRetransmit retrieveFunction,
-                                   MQTTClearPacketForRetransmit clearFunction,
-                                   MQTTClearAllPacketsForRetransmit clearAllFunction );
+                                   MQTTClearPacketForRetransmit clearFunction );
 /* @[declare_mqtt_initretransmits] */
 
 /**
@@ -657,10 +643,8 @@ MQTTStatus_t MQTT_CheckConnectStatus( MQTTContext_t * pContext );
  * #MQTTStatusConnected if the connection is already established
  * #MQTTStatusDisconnectPending if the user is expected to call MQTT_Disconnect
  * before calling any other API
- * MQTTPublishClearAllFailed if on a clean session connection, clearing all the
- * previously copied publishes fails
  * MQTTPublishRetrieveFailed if on an unclean session connection, the copied
- * publishes are not retrieved successfuly for retransmission
+ * publishes are not retrieved successfully for retransmission
  * #MQTTSuccess otherwise.
  *
  * @note This API may spend more time than provided in the timeoutMS parameters in
@@ -1247,12 +1231,12 @@ const char * MQTT_Status_strerror( MQTTStatus_t status );
 /* @[declare_mqtt_status_strerror] */
 
 /**
- * @brief Get the bytes in an array of #MQTTVec_t which can store the whole array as a an MQTT packet when calling MQTT_SerializeMQTTVec( void * pAllocatedMem, MQTTVec_t *pVec, size_t len ) function.
+ * @brief Get the bytes in an array of #MQTTVec which can store the whole array as a an MQTT packet when calling MQTT_SerializeMQTTVec( void * pAllocatedMem, MQTTVec_t *pVec, size_t len ) function.
  *
- * @param[in] pVec The #MQTTVec_t array.
- * @param[in] len The length of the #MQTTVec_t array.
+ * @param[in] pVec The #MQTTVec array.
+ * @param[in] len The length of the #MQTTVec array.
  *
- * @return The bytes in the provided MQTTVec_t array which can then be used to set aside memory to be used with MQTT_SerializeMQTTVec( void * pAllocatedMem, MQTTVec_t *pVec, size_t len ) function.
+ * @return The bytes in the provided #MQTTVec array which can then be used to set aside memory to be used with MQTT_SerializeMQTTVec( void * pAllocatedMem, MQTTVec_t *pVec, size_t len ) function.
  */
 /* @[declare_mqtt_getbytesinmqttvec] */
 size_t MQTT_GetBytesInMQTTVec( MQTTVec_t * pVec,
@@ -1260,11 +1244,11 @@ size_t MQTT_GetBytesInMQTTVec( MQTTVec_t * pVec,
 /* @[declare_mqtt_getbytesinmqttvec] */
 
 /**
- * @brief Serialize the bytes in an array of #MQTTVec_t in the provided \p pAllocatedMem
+ * @brief Serialize the bytes in an array of #MQTTVec in the provided \p pAllocatedMem
  *
- * @param[in] pAllocatedMem Memory in which to serialize the data in the #MQTTVec_t array. It must be of size provided by MQTT_GetBytesInMQTTVec( MQTTVec_t *pVec, size_t len ).
- * @param[in] pVec The #MQTTVec_t array.
- * @param[in] len The length of the #MQTTVec_t array.
+ * @param[in] pAllocatedMem Memory in which to serialize the data in the #MQTTVec array. It must be of size provided by MQTT_GetBytesInMQTTVec( MQTTVec_t *pVec, size_t len ).
+ * @param[in] pVec The #MQTTVec array.
+ * @param[in] len The length of the #MQTTVec array.
  */
 /* @[declare_mqtt_serializemqttvec] */
 void MQTT_SerializeMQTTVec( uint8_t * pAllocatedMem,

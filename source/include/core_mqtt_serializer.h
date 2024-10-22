@@ -99,15 +99,13 @@ typedef enum MQTTStatus
     MQTTNeedMoreBytes,              /**< MQTT_ProcessLoop/MQTT_ReceiveLoop has received
                                     incomplete data; it should be called again (probably after
                                     a delay). */
-    MQTTStatusConnected,            /**< MQTT connection is established with the broker */
-    MQTTStatusNotConnected,         /**< MQTT connection is not established with the broker */
-    MQTTStatusDisconnectPending,    /**< Transport Interface has failed and MQTT connection needs to be closed */
+    MQTTStatusConnected,            /**< MQTT connection is established with the broker. */
+    MQTTStatusNotConnected,         /**< MQTT connection is not established with the broker. */
+    MQTTStatusDisconnectPending,    /**< Transport Interface has failed and MQTT connection needs to be closed. */
     MQTTPublishStoreFailed,         /**< User provided API to store a copy of outgoing publish for retransmission  purposes,
-                                    has failed */
-    MQTTPublishRetrieveFailed,      /**< User provided API to retrieve the copy of a publish while reconnecting
-                                    with an unclean session has failed */
-    MQTTPublishClearAllFailed       /**< User provided API to clear all the copies of publishes while connecting with a clean
-                                    session has failed */
+                                    has failed. */
+    MQTTPublishRetrieveFailed       /**< User provided API to retrieve the copy of a publish while reconnecting
+                                    with an unclean session has failed. */
 } MQTTStatus_t;
 
 /**
