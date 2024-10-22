@@ -344,6 +344,12 @@ typedef struct MQTTDeserializedInfo
 } MQTTDeserializedInfo_t;
 
 /**
+ * @ingroup mqtt_struct_types
+ * @brief An opaque structure provided by the library to the #MQTTStorePacketForRetransmit function when using #MQTTStorePacketForRetransmit.
+ */
+typedef struct MQTTVec MQTTVec_t;
+
+/**
  * @brief Initialize an MQTT context.
  *
  * This function must be called on an #MQTTContext_t before any other function.
@@ -1239,6 +1245,29 @@ MQTTStatus_t MQTT_GetSubAckStatusCodes( const MQTTPacketInfo_t * pSubackPacket,
 /* @[declare_mqtt_status_strerror] */
 const char * MQTT_Status_strerror( MQTTStatus_t status );
 /* @[declare_mqtt_status_strerror] */
+
+/**
+ * @brief Get the bytes in an array of #MQTTVec_t which can store the whole array as a an MQTT packet when calling MQTT_SerializeMQTTVec( void * pAllocatedMem, MQTTVec_t *pVec, size_t len ) function.
+ *
+ * @param[in] pVec The #MQTTVec_t array.
+ * @param[in] len The length of the #MQTTVec_t array.
+ *
+ * @return The bytes in the provided MQTTVec_t array which can then be used to set aside memory to be used with MQTT_SerializeMQTTVec( void * pAllocatedMem, MQTTVec_t *pVec, size_t len ) function.
+ */
+/* @[declare_mqtt_getbytesinmqttvec] */
+size_t MQTT_GetBytesInMQTTVec( MQTTVec_t *pVec, size_t len );
+/* @[declare_mqtt_getbytesinmqttvec] */
+
+/**
+ * @brief Serialize the bytes in an array of #MQTTVec_t in the provided \p pAllocatedMem
+ *
+ * @param[in] pAllocatedMem Memory in which to serialize the data in the #MQTTVec_t array. It must be of size provided by MQTT_GetBytesInMQTTVec( MQTTVec_t *pVec, size_t len ).
+ * @param[in] pVec The #MQTTVec_t array.
+ * @param[in] len The length of the #MQTTVec_t array.
+ */
+/* @[declare_mqtt_serializemqttvec] */
+void MQTT_SerializeMQTTVec( uint8_t * pAllocatedMem, MQTTVec_t *pVec, size_t len );
+/* @[declare_mqtt_serializemqttvec] */
 
 /* *INDENT-OFF* */
 #ifdef __cplusplus
