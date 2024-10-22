@@ -90,6 +90,11 @@
  */
 #define CORE_MQTT_UNSUBSCRIBE_PER_TOPIC_VECTOR_LENGTH    ( 2U )
 
+struct MQTTVec
+{
+    TransportOutVector_t pVector;  /**< Pointer to transport vector. USER SHOULD NOT ACCESS THIS DIRECTLY - IT IS AN INTERNAL DETAIL AND CAN CHANGE. */
+};
+
 /*-----------------------------------------------------------*/
 
 /**
@@ -3723,6 +3728,40 @@ const char * MQTT_Status_strerror( MQTTStatus_t status )
     }
 
     return str;
+}
+
+/*-----------------------------------------------------------*/
+
+size_t MQTT_GetBytesInMQTTVec( MQTTVec_t * pVec,
+                               size_t len )
+{
+    size_t memoryRequired = 0;
+    size_t i;
+    TransportOutVector_t * pTransportVec = ( TransportOutVector_t * ) pVec;
+
+    for( i = 0; i < len; i++ )
+    {
+        memoryRequired += pTransportVec[ i ].iov_len;
+    }
+
+    return memoryRequired;
+}
+
+/*-----------------------------------------------------------*/
+
+void MQTT_SerializeMQTTVec( uint8_t * pAllocatedMem,
+                            MQTTVec_t * pVec,
+                            size_t len )
+{
+    TransportOutVector_t * pTransportVec = ( TransportOutVector_t * ) pVec;
+    size_t index = 0;
+    size_t i = 0;
+
+    for( i = 0; i < len; i++ )
+    {
+        memcpy( &pAllocatedMem[ index ], pTransportVec[ i ].iov_base, pTransportVec[ i ].iov_len );
+        index += pTransportVec[ i ].iov_len;
+    }
 }
 
 /*-----------------------------------------------------------*/
