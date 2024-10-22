@@ -655,7 +655,7 @@ MQTTStatus_t MQTT_CheckConnectStatus( MQTTContext_t * pContext );
  * #MQTTNoDataAvailable if no data available to receive in transport until
  * the @p timeoutMs for CONNACK;
  * #MQTTStatusConnected if the connection is already established
- * #MQTTStatusDisconnectPending if the user is expected to call MQTT_Disconnect 
+ * #MQTTStatusDisconnectPending if the user is expected to call MQTT_Disconnect
  * before calling any other API
  * MQTTPublishClearAllFailed if on a clean session connection, clearing all the
  * previously copied publishes fails
@@ -750,7 +750,7 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
  * #MQTTBadParameter if invalid parameters are passed;
  * #MQTTSendFailed if transport write failed;
  * #MQTTStatusNotConnected if the connection is not established yet
- * #MQTTStatusDisconnectPending if the user is expected to call MQTT_Disconnect 
+ * #MQTTStatusDisconnectPending if the user is expected to call MQTT_Disconnect
  * before calling any other API
  * #MQTTSuccess otherwise.
  *
@@ -806,7 +806,7 @@ MQTTStatus_t MQTT_Subscribe( MQTTContext_t * pContext,
  * #MQTTBadParameter if invalid parameters are passed;
  * #MQTTSendFailed if transport write failed;
  * #MQTTStatusNotConnected if the connection is not established yet
- * #MQTTStatusDisconnectPending if the user is expected to call MQTT_Disconnect 
+ * #MQTTStatusDisconnectPending if the user is expected to call MQTT_Disconnect
  * before calling any other API
  * #MQTTPublishStoreFailed if the user provided callback to copy and store the
  * outgoing publish packet fails
@@ -878,7 +878,7 @@ MQTTStatus_t MQTT_CancelCallback( const MQTTContext_t * pContext,
  * #MQTTBadParameter if invalid parameters are passed;
  * #MQTTSendFailed if transport write failed;
  * #MQTTStatusNotConnected if the connection is not established yet
- * #MQTTStatusDisconnectPending if the user is expected to call MQTT_Disconnect 
+ * #MQTTStatusDisconnectPending if the user is expected to call MQTT_Disconnect
  * before calling any other API
  * #MQTTSuccess otherwise.
  */
@@ -900,7 +900,7 @@ MQTTStatus_t MQTT_Ping( MQTTContext_t * pContext );
  * #MQTTBadParameter if invalid parameters are passed;
  * #MQTTSendFailed if transport write failed;
  * #MQTTStatusNotConnected if the connection is not established yet
- * #MQTTStatusDisconnectPending if the user is expected to call MQTT_Disconnect 
+ * #MQTTStatusDisconnectPending if the user is expected to call MQTT_Disconnect
  * before calling any other API
  * #MQTTSuccess otherwise.
  *
@@ -990,7 +990,7 @@ MQTTStatus_t MQTT_Disconnect( MQTTContext_t * pContext );
  * incomplete data; it should be called again (probably after a delay);
  * #MQTTStatusNotConnected if the connection is not established yet and a PING
  * or an ACK is being sent.
- * #MQTTStatusDisconnectPending if the user is expected to call MQTT_Disconnect 
+ * #MQTTStatusDisconnectPending if the user is expected to call MQTT_Disconnect
  * before calling any other API
  * #MQTTSuccess on success.
  *
@@ -1255,7 +1255,8 @@ const char * MQTT_Status_strerror( MQTTStatus_t status );
  * @return The bytes in the provided MQTTVec_t array which can then be used to set aside memory to be used with MQTT_SerializeMQTTVec( void * pAllocatedMem, MQTTVec_t *pVec, size_t len ) function.
  */
 /* @[declare_mqtt_getbytesinmqttvec] */
-size_t MQTT_GetBytesInMQTTVec( MQTTVec_t *pVec, size_t len );
+size_t MQTT_GetBytesInMQTTVec( MQTTVec_t * pVec,
+                               size_t len );
 /* @[declare_mqtt_getbytesinmqttvec] */
 
 /**
@@ -1266,7 +1267,9 @@ size_t MQTT_GetBytesInMQTTVec( MQTTVec_t *pVec, size_t len );
  * @param[in] len The length of the #MQTTVec_t array.
  */
 /* @[declare_mqtt_serializemqttvec] */
-void MQTT_SerializeMQTTVec( uint8_t * pAllocatedMem, MQTTVec_t *pVec, size_t len );
+void MQTT_SerializeMQTTVec( uint8_t * pAllocatedMem,
+                            MQTTVec_t * pVec,
+                            size_t len );
 /* @[declare_mqtt_serializemqttvec] */
 
 /* *INDENT-OFF* */
