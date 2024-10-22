@@ -1037,7 +1037,7 @@ MQTTStatus_t MQTT_SerializePingreq( const MQTTFixedBuffer_t * pFixedBuffer );
  *
  * // TransportRecv_t function for reading from the network.
  * int32_t socket_recv(
- *      NetworkContext_t * pNetworkContext,
+ *      void * pNetworkContext,
  *      void * pBuffer,
  *      size_t bytesToRecv
  * );
@@ -1153,7 +1153,7 @@ MQTTStatus_t MQTT_DeserializeAck( const MQTTPacketInfo_t * pIncomingPacket,
  *
  * // TransportRecv_t function for reading from the network.
  * int32_t socket_recv(
- *      NetworkContext_t * pNetworkContext,
+ *      void * pNetworkContext,
  *      void * pBuffer,
  *      size_t bytesToRecv
  * );
@@ -1192,7 +1192,7 @@ MQTTStatus_t MQTT_DeserializeAck( const MQTTPacketInfo_t * pIncomingPacket,
  */
 /* @[declare_mqtt_getincomingpackettypeandlength] */
 MQTTStatus_t MQTT_GetIncomingPacketTypeAndLength( TransportRecv_t readFunc,
-                                                  NetworkContext_t * pNetworkContext,
+                                                  void * pNetworkContext,
                                                   MQTTPacketInfo_t * pIncomingPacket );
 /* @[declare_mqtt_getincomingpackettypeandlength] */
 
