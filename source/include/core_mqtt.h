@@ -65,6 +65,12 @@ struct MQTTContext;
 struct MQTTDeserializedInfo;
 
 /**
+ * @ingroup mqtt_struct_types
+ * @brief An opaque structure provided by the library to the #MQTTStorePacketForRetransmit function when using #MQTTStorePacketForRetransmit.
+ */
+typedef struct MQTTVec MQTTVec_t;
+
+/**
  * @ingroup mqtt_callback_types
  * @brief Application provided function to query the time elapsed since a given
  * epoch in milliseconds.
@@ -107,16 +113,18 @@ typedef void (* MQTTEventCallback_t )( struct MQTTContext * pContext,
  *
  * @param[in] pContext Initialised MQTT Context.
  * @param[in] packetId Outgoing publish packet identifier.
- * @param[in] pIoVec Pointer to the outgoing publish packet in form of array of Tansport Vectors.
- * @param[in] ioVecCount Number of transport vectors in the pIoVec array.
+ * @param[in] pMqttVec Pointer to the opaque mqtt vector structure. Users should use MQTT_SerializeMQTTVec
+ *                and MQTT_GetBytesInMQTTVec functions to get the memory required and to serialize the
+ *                MQTTVec_t in the provided memory respectively.
+ * @param[in] mqttVecCount Number of transport vectors in the pIoVec array.
  *
  * @return True if the copy is successful else false.
  */
 /* @[define_mqtt_retransmitstorepacket] */
 typedef bool ( * MQTTStorePacketForRetransmit)( struct MQTTContext * pContext,
                                                 uint16_t packetId,
-                                                TransportOutVector_t * pIoVec,
-                                                size_t ioVecCount );
+                                                MQTTVec_t * pMqttVec,
+                                                size_t mqttVecCount );
 /* @[define_mqtt_retransmitstorepacket] */
 
 /**
@@ -125,16 +133,19 @@ typedef bool ( * MQTTStorePacketForRetransmit)( struct MQTTContext * pContext,
  *
  * @param[in] pContext Initialised MQTT Context.
  * @param[in] packetId Copied publish packet identifier.
- * @param[out] pIoVec Output parameter to store the pointer to the copied publish packet form of array of Tansport Vectors.
- * @param[out] ioVecCount Output parameter to store the number of transport vectors in the pIoVec array.
+ * @param[out] pSerializedMqttVec Output parameter to store the pointer to the serialized MQTTVec_t
+ *                  using MQTT_SerializeMQTTVec.
+ * @param[out] pSerializedMqttVecLen Output parameter to return the number of bytes used to store the
+ *                  MQTTVec_t. This value should be the same as the one received from MQTT_GetBytesInMQTTVec
+ *                  when storing the packet.
  *
  * @return True if the retreive is successful else false.
  */
 /* @[define_mqtt_retransmitretrievepacket] */
 typedef bool ( * MQTTRetrievePacketForRetransmit)( struct MQTTContext * pContext,
                                                    uint16_t packetId,
-                                                   TransportOutVector_t ** pIoVec,
-                                                   size_t * ioVecCount );
+                                                   uint8_t ** pSerializedMqttVec,
+                                                   size_t * pSerializedMqttVecLen );
 /* @[define_mqtt_retransmitretrievepacket] */
 
 /**
@@ -344,12 +355,6 @@ typedef struct MQTTDeserializedInfo
 } MQTTDeserializedInfo_t;
 
 /**
- * @ingroup mqtt_struct_types
- * @brief An opaque structure provided by the library to the #MQTTStorePacketForRetransmit function when using #MQTTStorePacketForRetransmit.
- */
-typedef struct MQTTVec MQTTVec_t;
-
-/**
  * @brief Initialize an MQTT context.
  *
  * This function must be called on an #MQTTContext_t before any other function.
@@ -535,7 +540,7 @@ MQTTStatus_t MQTT_InitStatefulQoS( MQTTContext_t * pContext,
  * // User defined callback used to store outgoing publishes
  * bool publishStoreCallback(struct MQTTContext* pContext,
  *                           uint16_t packetId,
- *                           TransportOutVector_t* pIoVec,
+ *                           MQTTVec_t* pIoVec,
  *                           size_t ioVecCount);
  * // User defined callback used to retreive a copied publish for resend operation
  * bool publishRetrieveCallback(struct MQTTContext* pContext,

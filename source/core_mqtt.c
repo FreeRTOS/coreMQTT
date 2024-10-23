@@ -34,6 +34,7 @@
 
 /* Include config defaults header to get default values of configs. */
 #include "core_mqtt_config_defaults.h"
+#include "include/core_mqtt.h"
 
 #ifndef MQTT_PRE_SEND_HOOK
 
@@ -2222,10 +2223,14 @@ static MQTTStatus_t sendPublishWithoutCopy( MQTTContext_t * pContext,
 
     /* store a copy of the publish for retransmission purposes */
     if( ( pPublishInfo->qos > MQTTQoS0 ) &&
-        ( pContext->storeFunction != NULL ) &&
-        ( pContext->storeFunction( pContext, packetId, pIoVector, ioVectorLength ) != true ) )
+        ( pContext->storeFunction != NULL ) )
     {
-        status = MQTTPublishStoreFailed;
+        MQTTVec_t * pMqttVec = ( MQTTVec_t * ) pIoVector;
+
+        if( pContext->storeFunction( pContext, packetId, pMqttVec, ioVectorLength ) != true )
+        {
+            status = MQTTPublishStoreFailed;
+        }
     }
 
     /* change the value of the dup flag to its original, if it was changed */
@@ -2524,9 +2529,8 @@ static MQTTStatus_t handleUncleanSessionResumption( MQTTContext_t * pContext )
     MQTTStateCursor_t cursor = MQTT_STATE_CURSOR_INITIALIZER;
     uint16_t packetId = MQTT_PACKET_ID_INVALID;
     MQTTPublishState_t state = MQTTStateNull;
-    TransportOutVector_t * pIoVec, * pIoVectIterator;
-    size_t ioVecCount;
     size_t totalMessageLength;
+    uint8_t * pMqttPacket;
 
     assert( pContext != NULL );
 
@@ -2547,42 +2551,31 @@ static MQTTStatus_t handleUncleanSessionResumption( MQTTContext_t * pContext )
     {
         cursor = MQTT_STATE_CURSOR_INITIALIZER;
 
-        packetId = MQTT_PublishToResend( pContext, &cursor );
-
-        if( ( packetId != MQTT_PACKET_ID_INVALID ) &&
-            ( pContext->retrieveFunction( pContext, packetId, &pIoVec, &ioVecCount ) != true ) )
-        {
-            status = MQTTPublishRetrieveFailed;
-        }
-
         /* Resend all the PUBLISH for which PUBACK/PUBREC is not received
          * after session is reestablished. */
-        while( ( packetId != MQTT_PACKET_ID_INVALID ) &&
-               ( status == MQTTSuccess ) )
+        do
         {
-            totalMessageLength = 0;
-
-            for( pIoVectIterator = pIoVec; pIoVectIterator <= &( pIoVec[ ioVecCount - 1U ] ); pIoVectIterator++ )
-            {
-                totalMessageLength += pIoVectIterator->iov_len;
-            }
-
-            MQTT_PRE_STATE_UPDATE_HOOK( pContext );
-
-            if( sendMessageVector( pContext, pIoVec, ioVecCount ) != ( int32_t ) totalMessageLength )
-            {
-                status = MQTTSendFailed;
-            }
-
-            MQTT_POST_STATE_UPDATE_HOOK( pContext );
-
             packetId = MQTT_PublishToResend( pContext, &cursor );
 
-            if( pContext->retrieveFunction( pContext, packetId, &pIoVec, &ioVecCount ) != true )
+            if( packetId != MQTT_PACKET_ID_INVALID )
             {
-                status = MQTTPublishRetrieveFailed;
+                if( pContext->retrieveFunction( pContext, packetId, &pMqttPacket, &totalMessageLength ) != true )
+                {
+                    status = MQTTPublishRetrieveFailed;
+                    break;
+                }
+
+                MQTT_PRE_STATE_UPDATE_HOOK( pContext );
+
+                if( sendBuffer( pContext, pMqttPacket, totalMessageLength ) != ( int32_t ) totalMessageLength )
+                {
+                    status = MQTTSendFailed;
+                }
+
+                MQTT_POST_STATE_UPDATE_HOOK( pContext );
             }
-        }
+        } while( ( packetId != MQTT_PACKET_ID_INVALID ) &&
+                 ( status == MQTTSuccess ) );
     }
 
     return status;
