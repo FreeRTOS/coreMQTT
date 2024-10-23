@@ -7236,22 +7236,18 @@ void test_MQTT_SerializeMQTTVec( void )
 {
     TransportOutVector_t pTransportArray[ 10 ] =
     {
-        { .iov_base = "T",           .iov_len = 1  },
-        { .iov_base = "hi",          .iov_len = 2  },
-        { .iov_base = "s i",         .iov_len = 3  },
-        { .iov_base = "s a ",        .iov_len = 4  },
-        { .iov_base = "coreM",       .iov_len = 5  },
-        { .iov_base = "QTT un",      .iov_len = 6  },
-        { .iov_base = "it test",     .iov_len = 7  },
-        { .iov_base = " string.",    .iov_len = 8  },
-        { .iov_base = "USER SHOU",   .iov_len = 9  },
-        { .iov_base = "LDNT USE IT", .iov_len = 10 },
+        { .iov_base = "This ",           .iov_len = strlen("This ")  },
+        { .iov_base = "is ",          .iov_len = strlen("is ")  },
+        { .iov_base = "a ",         .iov_len = strlen("a ") },
+        { .iov_base = "coreMQTT ",        .iov_len = strlen("coreMQTT ") },
+        { .iov_base = "unit-test ",       .iov_len = strlen("unit-test ")  },
+        { .iov_base = "string.",      .iov_len = strlen("string.") }
     };
 
-    uint8_t array[ 60 ] = { 0 };
+    uint8_t array[ 50 ] = { 0 };
 
-    MQTT_SerializeMQTTVec( array, ( MQTTVec_t * ) pTransportArray, 10 );
+    MQTT_SerializeMQTTVec( array, ( MQTTVec_t * ) pTransportArray, 6 );
 
-    TEST_ASSERT_EQUAL_MEMORY( "This is a coreMQTT unit test string.USER SHOULDNT USE IT", array, 55 );
-    TEST_ASSERT_EQUAL_MEMORY( "\0\0\0\0\0", &array[ 55 ], 5 );
+    TEST_ASSERT_EQUAL_MEMORY( "This is a coreMQTT unit-test string.", array, strlen("This is a coreMQTT unit-test string.") );
+    TEST_ASSERT_EQUAL_MEMORY( "\0\0\0\0\0\0\0\0\0\0\0\0\0", &array[ 37 ], 13 );
 }

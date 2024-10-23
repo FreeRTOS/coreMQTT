@@ -24,7 +24,6 @@ getbytesinmqttvec
 getpacketid
 isystem
 lcov
-LDNT
 misra
 Misra
 MISRA
@@ -38,8 +37,6 @@ pytest
 pyyaml
 serializemqttvec
 sinclude
-SHOU
-SHOULDNT
 UNACKED
 unpadded
 Unpadded
