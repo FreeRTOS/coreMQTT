@@ -116,15 +116,13 @@ typedef void (* MQTTEventCallback_t )( struct MQTTContext * pContext,
  * @param[in] pMqttVec Pointer to the opaque mqtt vector structure. Users should use MQTT_SerializeMQTTVec
  *                and MQTT_GetBytesInMQTTVec functions to get the memory required and to serialize the
  *                MQTTVec_t in the provided memory respectively.
- * @param[in] mqttVecCount Number of transport vectors in the pIoVec array.
  *
  * @return True if the copy is successful else false.
  */
 /* @[define_mqtt_retransmitstorepacket] */
 typedef bool ( * MQTTStorePacketForRetransmit)( struct MQTTContext * pContext,
                                                 uint16_t packetId,
-                                                MQTTVec_t * pMqttVec,
-                                                size_t mqttVecCount );
+                                                MQTTVec_t * pMqttVec );
 /* @[define_mqtt_retransmitstorepacket] */
 
 /**
@@ -522,8 +520,7 @@ MQTTStatus_t MQTT_InitStatefulQoS( MQTTContext_t * pContext,
  * // User defined callback used to store outgoing publishes
  * bool publishStoreCallback(struct MQTTContext* pContext,
  *                           uint16_t packetId,
- *                           MQTTVec_t* pIoVec,
- *                           size_t ioVecCount);
+ *                           MQTTVec_t* pIoVec);
  * // User defined callback used to retreive a copied publish for resend operation
  * bool publishRetrieveCallback(struct MQTTContext* pContext,
  *                              uint16_t packetId,
@@ -1231,29 +1228,25 @@ const char * MQTT_Status_strerror( MQTTStatus_t status );
 /* @[declare_mqtt_status_strerror] */
 
 /**
- * @brief Get the bytes in an array of #MQTTVec which can store the whole array as a an MQTT packet when calling MQTT_SerializeMQTTVec( void * pAllocatedMem, MQTTVec_t *pVec, size_t len ) function.
+ * @brief Get the bytes in a #MQTTVec pointer which can store the whole array as a an MQTT packet when calling MQTT_SerializeMQTTVec( void * pAllocatedMem, MQTTVec_t *pVec ) function.
  *
- * @param[in] pVec The #MQTTVec array.
- * @param[in] len The length of the #MQTTVec array.
+ * @param[in] pVec The #MQTTVec pointer.
  *
- * @return The bytes in the provided #MQTTVec array which can then be used to set aside memory to be used with MQTT_SerializeMQTTVec( void * pAllocatedMem, MQTTVec_t *pVec, size_t len ) function.
+ * @return The bytes in the provided #MQTTVec array which can then be used to set aside memory to be used with MQTT_SerializeMQTTVec( void * pAllocatedMem, MQTTVec_t *pVec ) function.
  */
 /* @[declare_mqtt_getbytesinmqttvec] */
-size_t MQTT_GetBytesInMQTTVec( MQTTVec_t * pVec,
-                               size_t len );
+size_t MQTT_GetBytesInMQTTVec( MQTTVec_t * pVec );
 /* @[declare_mqtt_getbytesinmqttvec] */
 
 /**
  * @brief Serialize the bytes in an array of #MQTTVec in the provided \p pAllocatedMem
  *
- * @param[in] pAllocatedMem Memory in which to serialize the data in the #MQTTVec array. It must be of size provided by MQTT_GetBytesInMQTTVec( MQTTVec_t *pVec, size_t len ).
- * @param[in] pVec The #MQTTVec array.
- * @param[in] len The length of the #MQTTVec array.
+ * @param[in] pAllocatedMem Memory in which to serialize the data in the #MQTTVec array. It must be of size provided by MQTT_GetBytesInMQTTVec( MQTTVec_t *pVec ).
+ * @param[in] pVec The #MQTTVec pointer.
  */
 /* @[declare_mqtt_serializemqttvec] */
 void MQTT_SerializeMQTTVec( uint8_t * pAllocatedMem,
-                            MQTTVec_t * pVec,
-                            size_t len );
+                            MQTTVec_t * pVec );
 /* @[declare_mqtt_serializemqttvec] */
 
 /* *INDENT-OFF* */

@@ -92,7 +92,8 @@
 
 struct MQTTVec
 {
-    TransportOutVector_t pVector; /**< Pointer to transport vector. USER SHOULD NOT ACCESS THIS DIRECTLY - IT IS AN INTERNAL DETAIL AND CAN CHANGE. */
+    TransportOutVector_t * pVector; /**< Pointer to transport vector. USER SHOULD NOT ACCESS THIS DIRECTLY - IT IS AN INTERNAL DETAIL AND CAN CHANGE. */
+    size_t vectorLen;               /**< Length of the transport vector. USER SHOULD NOT ACCESS THIS DIRECTLY - IT IS AN INTERNAL DETAIL AND CAN CHANGE. */
 };
 
 /*-----------------------------------------------------------*/
@@ -2222,9 +2223,12 @@ static MQTTStatus_t sendPublishWithoutCopy( MQTTContext_t * pContext,
     if( ( pPublishInfo->qos > MQTTQoS0 ) &&
         ( pContext->storeFunction != NULL ) )
     {
-        MQTTVec_t * pMqttVec = ( MQTTVec_t * ) pIoVector;
+        MQTTVec_t mqttVec;
 
-        if( pContext->storeFunction( pContext, packetId, pMqttVec, ioVectorLength ) != true )
+        mqttVec.pVector = pIoVector;
+        mqttVec.vectorLen = ioVectorLength;
+
+        if( pContext->storeFunction( pContext, packetId, &mqttVec ) != true )
         {
             status = MQTTPublishStoreFailed;
         }
@@ -3725,14 +3729,14 @@ const char * MQTT_Status_strerror( MQTTStatus_t status )
 
 /*-----------------------------------------------------------*/
 
-size_t MQTT_GetBytesInMQTTVec( MQTTVec_t * pVec,
-                               size_t len )
+size_t MQTT_GetBytesInMQTTVec( MQTTVec_t * pVec )
 {
     size_t memoryRequired = 0;
     size_t i;
-    TransportOutVector_t * pTransportVec = ( TransportOutVector_t * ) pVec;
+    TransportOutVector_t * pTransportVec = pVec->pVector;
+    size_t vecLen = pVec->vectorLen;
 
-    for( i = 0; i < len; i++ )
+    for( i = 0; i < vecLen; i++ )
     {
         memoryRequired += pTransportVec[ i ].iov_len;
     }
@@ -3743,14 +3747,14 @@ size_t MQTT_GetBytesInMQTTVec( MQTTVec_t * pVec,
 /*-----------------------------------------------------------*/
 
 void MQTT_SerializeMQTTVec( uint8_t * pAllocatedMem,
-                            MQTTVec_t * pVec,
-                            size_t len )
+                            MQTTVec_t * pVec )
 {
-    TransportOutVector_t * pTransportVec = ( TransportOutVector_t * ) pVec;
+    TransportOutVector_t * pTransportVec = pVec->pVector;
+    const size_t vecLen = pVec->vectorLen;
     size_t index = 0;
     size_t i = 0;
 
-    for( i = 0; i < len; i++ )
+    for( i = 0; i < vecLen; i++ )
     {
         memcpy( &pAllocatedMem[ index ], pTransportVec[ i ].iov_base, pTransportVec[ i ].iov_len );
         index += pTransportVec[ i ].iov_len;

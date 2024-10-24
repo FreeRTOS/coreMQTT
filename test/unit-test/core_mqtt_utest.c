@@ -185,6 +185,15 @@ typedef struct ProcessLoopReturns
 } ProcessLoopReturns_t;
 
 /**
+ * @brief An opaque structure provided by the library to the #MQTTStorePacketForRetransmit function when using #MQTTStorePacketForRetransmit.
+ */
+struct MQTTVec
+{
+    TransportOutVector_t * pVector; /**< Pointer to transport vector. USER SHOULD NOT ACCESS THIS DIRECTLY - IT IS AN INTERNAL DETAIL AND CAN CHANGE. */
+    size_t vectorLen;               /**< Length of the transport vector. USER SHOULD NOT ACCESS THIS DIRECTLY - IT IS AN INTERNAL DETAIL AND CAN CHANGE. */
+};
+
+/**
  * @brief The packet type to be received by the process loop.
  * IMPORTANT: Make sure this is set before calling expectProcessLoopCalls(...).
  */
@@ -418,13 +427,11 @@ static int32_t transportWritevSuccess( NetworkContext_t * pNetworkContext,
  */
 bool publishStoreCallbackSuccess( struct MQTTContext * pContext,
                                   uint16_t packetId,
-                                  MQTTVec_t * pMqttVec,
-                                  size_t mqttVecLen )
+                                  MQTTVec_t * pMqttVec )
 {
     ( void ) pContext;
     ( void ) packetId;
     ( void ) pMqttVec;
-    ( void ) mqttVecLen;
 
     return true;
 }
@@ -441,13 +448,11 @@ bool publishStoreCallbackSuccess( struct MQTTContext * pContext,
  */
 bool publishStoreCallbackFailed( struct MQTTContext * pContext,
                                  uint16_t packetId,
-                                 MQTTVec_t * pMqttVec,
-                                 size_t mqttVecLen )
+                                 MQTTVec_t * pMqttVec )
 {
     ( void ) pContext;
     ( void ) packetId;
     ( void ) pMqttVec;
-    ( void ) mqttVecLen;
 
     return false;
 }
@@ -7349,7 +7354,12 @@ void test_MQTT_GetBytesInMQTTVec( void )
         { .iov_base = NULL, .iov_len = 10 },
     };
 
-    size_t ret = MQTT_GetBytesInMQTTVec( ( MQTTVec_t * ) pTransportArray, 10 );
+    MQTTVec_t mqttVec;
+
+    mqttVec.pVector = pTransportArray;
+    mqttVec.vectorLen = 10;
+
+    size_t ret = MQTT_GetBytesInMQTTVec( &mqttVec );
 
     TEST_ASSERT_EQUAL( 55, ret );
 }
@@ -7357,7 +7367,7 @@ void test_MQTT_GetBytesInMQTTVec( void )
 
 void test_MQTT_SerializeMQTTVec( void )
 {
-    TransportOutVector_t pTransportArray[ 10 ] =
+    TransportOutVector_t pTransportArray[ 6 ] =
     {
         { .iov_base = "This ",      .iov_len = strlen( "This " )      },
         { .iov_base = "is ",        .iov_len = strlen( "is " )        },
@@ -7368,8 +7378,12 @@ void test_MQTT_SerializeMQTTVec( void )
     };
 
     uint8_t array[ 50 ] = { 0 };
+    MQTTVec_t mqttVec;
 
-    MQTT_SerializeMQTTVec( array, ( MQTTVec_t * ) pTransportArray, 6 );
+    mqttVec.pVector = pTransportArray;
+    mqttVec.vectorLen = 6;
+
+    MQTT_SerializeMQTTVec( array, &mqttVec );
 
     TEST_ASSERT_EQUAL_MEMORY( "This is a coreMQTT unit-test string.", array, strlen( "This is a coreMQTT unit-test string." ) );
     TEST_ASSERT_EQUAL_MEMORY( "\0\0\0\0\0\0\0\0\0\0\0\0\0", &array[ 37 ], 13 );

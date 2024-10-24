@@ -2637,7 +2637,7 @@ MQTTStatus_t MQTT_UpdateDuplicatePublishFlag( uint8_t * pHeader,
     {
         status = MQTTBadParameter;
     }
-    else if( ( ( *pHeader ) & MQTT_PACKET_TYPE_PUBLISH ) == 0 )
+    else if( ( ( *pHeader ) & 0xF0 ) != MQTT_PACKET_TYPE_PUBLISH )
     {
         status = MQTTBadParameter;
     }
