@@ -451,8 +451,7 @@ static MQTTStatus_t handleUncleanSessionResumption( MQTTContext_t * pContext );
  *
  * @param[in] pContext Initialized MQTT context.
  *
- * @return #MQTTPublishClearAllFailed if clearing all the copied publishes fails;
- * #MQTTSuccess otherwise.
+ * @return #MQTTSuccess always otherwise.
  */
 static MQTTStatus_t handleCleanSession( MQTTContext_t * pContext );
 
@@ -1609,10 +1608,9 @@ static MQTTStatus_t handlePublishAcks( MQTTContext_t * pContext,
     if( ( ackType == MQTTPuback ) || ( ackType == MQTTPubrec ) )
     {
         if( ( status == MQTTSuccess ) &&
-            ( pContext->clearFunction != NULL ) &&
-            ( pContext->clearFunction( pContext, packetIdentifier ) != true ) )
+            ( pContext->clearFunction != NULL ) )
         {
-            LogWarn( ( "Failed to clear copied publish on receiving an ack.\n" ) );
+            pContext->clearFunction( pContext, packetIdentifier );
         }
     }
 
@@ -2584,6 +2582,8 @@ static MQTTStatus_t handleUncleanSessionResumption( MQTTContext_t * pContext )
 static MQTTStatus_t handleCleanSession( MQTTContext_t * pContext )
 {
     MQTTStatus_t status = MQTTSuccess;
+    MQTTStateCursor_t cursor = MQTT_STATE_CURSOR_INITIALIZER;
+    uint16_t packetId = MQTT_PACKET_ID_INVALID;
 
     assert( pContext != NULL );
 
@@ -2606,10 +2606,22 @@ static MQTTStatus_t handleCleanSession( MQTTContext_t * pContext )
                          pContext->incomingPublishRecordMaxCount * sizeof( *pContext->incomingPublishRecords ) );
     }
 
-    if( ( pContext->clearAllFunction != NULL ) &&
-        ( pContext->clearAllFunction( pContext ) != true ) )
+    if( pContext->clearFunction != NULL ) 
     {
-        status = MQTTPublishClearAllFailed;
+        cursor = MQTT_STATE_CURSOR_INITIALIZER;
+
+        /* Resend all the PUBLISH for which PUBACK/PUBREC is not received
+         * after session is reestablished. */
+        do
+        {
+            packetId = MQTT_PublishToResend( pContext, &cursor );
+
+            if( packetId != MQTT_PACKET_ID_INVALID )
+            {
+                pContext->clearFunction( pContext, packetId );
+            }
+        } while( ( packetId != MQTT_PACKET_ID_INVALID ) &&
+                 ( status == MQTTSuccess ) );
     }
 
     return status;
@@ -2780,8 +2792,7 @@ MQTTStatus_t MQTT_InitStatefulQoS( MQTTContext_t * pContext,
 MQTTStatus_t MQTT_InitRetransmits( MQTTContext_t * pContext,
                                    MQTTStorePacketForRetransmit storeFunction,
                                    MQTTRetrievePacketForRetransmit retrieveFunction,
-                                   MQTTClearPacketForRetransmit clearFunction,
-                                   MQTTClearAllPacketsForRetransmit clearAllFunction )
+                                   MQTTClearPacketForRetransmit clearFunction )
 {
     MQTTStatus_t status = MQTTSuccess;
 
@@ -2806,17 +2817,11 @@ MQTTStatus_t MQTT_InitRetransmits( MQTTContext_t * pContext,
         LogError( ( "Invalid parameter: clearFunction is NULL" ) );
         status = MQTTBadParameter;
     }
-    else if( clearAllFunction == NULL )
-    {
-        LogError( ( "Invalid parameter: clearAllFunction is NULL" ) );
-        status = MQTTBadParameter;
-    }
     else
     {
         pContext->storeFunction = storeFunction;
         pContext->retrieveFunction = retrieveFunction;
         pContext->clearFunction = clearFunction;
-        pContext->clearAllFunction = clearAllFunction;
     }
 
     return status;
@@ -3709,10 +3714,6 @@ const char * MQTT_Status_strerror( MQTTStatus_t status )
 
         case MQTTPublishRetrieveFailed:
             str = "MQTTPublishRetrieveFailed";
-            break;
-
-        case MQTTPublishClearAllFailed:
-            str = "MQTTPublishClearAllFailed";
             break;
 
         default:

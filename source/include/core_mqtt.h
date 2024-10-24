@@ -158,21 +158,9 @@ typedef bool ( * MQTTRetrievePacketForRetransmit)( struct MQTTContext * pContext
  * @return True if the clear is successful else false.
  */
 /* @[define_mqtt_retransmitclearpacket] */
-typedef bool (* MQTTClearPacketForRetransmit)( struct MQTTContext * pContext,
+typedef void (* MQTTClearPacketForRetransmit)( struct MQTTContext * pContext,
                                                uint16_t packetId );
 /* @[define_mqtt_retransmitclearpacket] */
-
-/**
- * @brief User defined callback used to clear all copied publish packets. Used to
- * when connecting with a clean session.
- *
- * @param[in] pContext Initialised MQTT Context.
- *
- * @return True if the clear all is successful else false.
- */
-/* @[define_mqtt_retransmitclearallpackets] */
-typedef bool (* MQTTClearAllPacketsForRetransmit)( struct MQTTContext * pContext );
-/* @[define_mqtt_retransmitclearallpackets] */
 
 /**
  * @ingroup mqtt_enum_types
@@ -335,11 +323,6 @@ typedef struct MQTTContext
      * @brief User defined API used to clear a particular copied publish packet.
      */
     MQTTClearPacketForRetransmit clearFunction;
-
-    /**
-     * @brief User defined API used to clear all copied publish packets.
-     */
-    MQTTClearAllPacketsForRetransmit clearAllFunction;
 } MQTTContext_t;
 
 /**
@@ -517,7 +500,6 @@ MQTTStatus_t MQTT_InitStatefulQoS( MQTTContext_t * pContext,
  * @param[in] storeFunction User defined API used to store outgoing publishes.
  * @param[in] retrieveFunction User defined API used to retreive a copied publish for resend operation.
  * @param[in] clearFunction User defined API used to clear a particular copied publish packet.
- * @param[in] clearAllFunction User defined API used to clear a particular copied publish packet.
  *
  * @return #MQTTBadParameter if invalid parameters are passed;
  * #MQTTSuccess otherwise.
@@ -599,8 +581,7 @@ MQTTStatus_t MQTT_InitStatefulQoS( MQTTContext_t * pContext,
 MQTTStatus_t MQTT_InitRetransmits( MQTTContext_t * pContext,
                                    MQTTStorePacketForRetransmit storeFunction,
                                    MQTTRetrievePacketForRetransmit retrieveFunction,
-                                   MQTTClearPacketForRetransmit clearFunction,
-                                   MQTTClearAllPacketsForRetransmit clearAllFunction );
+                                   MQTTClearPacketForRetransmit clearFunction );
 /* @[declare_mqtt_initretransmits] */
 
 /**
@@ -662,8 +643,6 @@ MQTTStatus_t MQTT_CheckConnectStatus( MQTTContext_t * pContext );
  * #MQTTStatusConnected if the connection is already established
  * #MQTTStatusDisconnectPending if the user is expected to call MQTT_Disconnect
  * before calling any other API
- * MQTTPublishClearAllFailed if on a clean session connection, clearing all the
- * previously copied publishes fails
  * MQTTPublishRetrieveFailed if on an unclean session connection, the copied
  * publishes are not retrieved successfully for retransmission
  * #MQTTSuccess otherwise.

@@ -500,11 +500,13 @@ bool publishRetrieveCallbackSuccessThenFail( struct MQTTContext * pContext,
     *pPacket = publishCopyBuffer;
     *pPacketSize = publishCopyBufferSize;
 
-    if( count++ )
+    if( count != 0 )
     {
         count = 0;
         ret = false;
     }
+
+    count++;
 
     return ret;
 }
@@ -533,66 +535,20 @@ bool publishRetrieveCallbackFailed( struct MQTTContext * pContext,
 }
 
 /**
- * @brief Mocked successful publish clear function.
+ * @brief Mocked publish clear function.
  *
  * @param[in] pContext initialised mqtt context.
  * @param[in] packetId packet id
  *
  * @return true if clear is successful else false
  */
-bool publishClearCallbackSuccess( struct MQTTContext * pContext,
+void publishClearCallback( struct MQTTContext * pContext,
                                   uint16_t packetId )
 {
     ( void ) pContext;
     ( void ) packetId;
-
-    return true;
 }
 
-/**
- * @brief Mocked failed publish clear function.
- *
- * @param[in] pContext initialised mqtt context.
- * @param[in] packetId packet id
- *
- * @return true if clear is successful else false
- */
-bool publishClearCallbackFailed( struct MQTTContext * pContext,
-                                 uint16_t packetId )
-{
-    ( void ) pContext;
-    ( void ) packetId;
-
-    return false;
-}
-
-/**
- * @brief Mocked successful publish clear all function.
- *
- * @param[in] pContext initialised mqtt context.
- *
- * @return true if clear all is successful else false
- */
-bool publishClearAllCallbackSuccess( struct MQTTContext * pContext )
-{
-    ( void ) pContext;
-
-    return true;
-}
-
-/**
- * @brief Mocked failed publish clear all function.
- *
- * @param[in] pContext initialised mqtt context.
- *
- * @return true if clear all is successful else false
- */
-bool publishClearAllCallbackFailed( struct MQTTContext * pContext )
-{
-    ( void ) pContext;
-
-    return false;
-}
 
 static void verifyEncodedTopicString( TransportOutVector_t * pIoVectorIterator,
                                       char * pTopicFilter,
@@ -1441,31 +1397,21 @@ void test_MQTT_InitRetransmits_Invalid_Params( void )
     /* Check that MQTTBadParameter is returned if any NULL parameters are passed. */
     mqttStatus = MQTT_InitRetransmits( NULL, publishStoreCallbackSuccess,
                                        publishRetrieveCallbackSuccess,
-                                       publishClearCallbackSuccess,
-                                       publishClearAllCallbackSuccess );
+                                       publishClearCallback );
     TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
 
     mqttStatus = MQTT_InitRetransmits( &context, NULL,
                                        publishRetrieveCallbackSuccess,
-                                       publishClearCallbackSuccess,
-                                       publishClearAllCallbackSuccess );
+                                       publishClearCallback );
     TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
 
     mqttStatus = MQTT_InitRetransmits( &context, publishStoreCallbackSuccess,
                                        NULL,
-                                       publishClearCallbackSuccess,
-                                       publishClearAllCallbackSuccess );
+                                       publishClearCallback );
     TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
 
     mqttStatus = MQTT_InitRetransmits( &context, publishStoreCallbackSuccess,
                                        publishRetrieveCallbackSuccess,
-                                       NULL,
-                                       publishClearAllCallbackSuccess );
-    TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
-
-    mqttStatus = MQTT_InitRetransmits( &context, publishStoreCallbackSuccess,
-                                       publishRetrieveCallbackSuccess,
-                                       publishClearCallbackSuccess,
                                        NULL );
     TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
 }
@@ -2379,6 +2325,122 @@ void test_MQTT_Connect_resendUnAckedPublishes( void )
     TransportInterface_t transport = { 0 };
     MQTTFixedBuffer_t networkBuffer = { 0 };
     MQTTPacketInfo_t incomingPacket = { 0 };
+    MQTTPubAckInfo_t incomingRecords = { 0 };
+    MQTTPubAckInfo_t outgoingRecords = { 0 };
+    uint8_t * localPublishCopyBuffer = ( uint8_t * ) "Hello world!";
+
+    publishCopyBuffer = localPublishCopyBuffer;
+    publishCopyBufferSize = sizeof( "Hello world!" );
+
+    setupTransportInterface( &transport );
+    setupNetworkBuffer( &networkBuffer );
+
+    memset( &mqttContext, 0x0, sizeof( mqttContext ) );
+    memset( &connectInfo, 0x00, sizeof( connectInfo ) );
+    MQTT_Init( &mqttContext, &transport, getTime, eventCallback, &networkBuffer );
+
+    MQTT_InitStatefulQoS( &mqttContext,
+                          &outgoingRecords, 4,
+                          &incomingRecords, 4 );
+
+    MQTT_InitRetransmits( &mqttContext, publishStoreCallbackSuccess,
+                          publishRetrieveCallbackSuccess,
+                          publishClearCallback );
+
+    MQTT_SerializeConnect_IgnoreAndReturn( MQTTSuccess );
+    MQTT_GetConnectPacketSize_IgnoreAndReturn( MQTTSuccess );
+    connectInfo.keepAliveSeconds = MQTT_SAMPLE_KEEPALIVE_INTERVAL_S;
+
+    /* Test 1. Connecting with a clean session. Clear all callback successfully executes */
+    /* successful receive CONNACK packet. */
+    incomingPacket.type = MQTT_PACKET_TYPE_CONNACK;
+    incomingPacket.remainingLength = 2;
+    MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_GetIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
+    /* Return with a session present flag. */
+    sessionPresent = false;
+    MQTT_DeserializeAck_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_DeserializeAck_ReturnThruPtr_pSessionPresent( &sessionPresent );
+
+    MQTT_PublishToResend_ExpectAnyArgsAndReturn( 1 );
+    MQTT_PublishToResend_ExpectAnyArgsAndReturn( MQTT_PACKET_TYPE_INVALID );
+    MQTT_SerializeConnectFixedHeader_Stub( MQTT_SerializeConnectFixedHeader_cb );
+    status = MQTT_Connect( &mqttContext, &connectInfo, NULL, timeout, &sessionPresentResult );
+    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
+    TEST_ASSERT_EQUAL_INT( MQTTConnected, mqttContext.connectStatus );
+    TEST_ASSERT_EQUAL_INT( connectInfo.keepAliveSeconds, mqttContext.keepAliveIntervalSec );
+    TEST_ASSERT_FALSE( sessionPresentResult );
+}
+
+void test_MQTT_Connect_resendUnAckedPublishes2( void )
+{
+    MQTTContext_t mqttContext = { 0 };
+    MQTTConnectInfo_t connectInfo = { 0 };
+    uint32_t timeout = 2;
+    bool sessionPresent, sessionPresentResult;
+    MQTTStatus_t status;
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
+    MQTTPacketInfo_t incomingPacket = { 0 };
+    MQTTPubAckInfo_t incomingRecords = { 0 };
+    MQTTPubAckInfo_t outgoingRecords = { 0 };
+    uint8_t * localPublishCopyBuffer = ( uint8_t * ) "Hello world!";
+
+    publishCopyBuffer = localPublishCopyBuffer;
+    publishCopyBufferSize = sizeof( "Hello world!" );
+
+    setupTransportInterface( &transport );
+    setupNetworkBuffer( &networkBuffer );
+
+    memset( &mqttContext, 0x0, sizeof( mqttContext ) );
+    memset( &connectInfo, 0x00, sizeof( connectInfo ) );
+    MQTT_Init( &mqttContext, &transport, getTime, eventCallback, &networkBuffer );
+
+    MQTT_InitStatefulQoS( &mqttContext,
+                          &outgoingRecords, 4,
+                          &incomingRecords, 4 );
+
+    MQTT_InitRetransmits( &mqttContext, publishStoreCallbackSuccess,
+                          publishRetrieveCallbackSuccess,
+                          publishClearCallback );
+
+    MQTT_SerializeConnect_IgnoreAndReturn( MQTTSuccess );
+    MQTT_GetConnectPacketSize_IgnoreAndReturn( MQTTSuccess );
+    connectInfo.keepAliveSeconds = MQTT_SAMPLE_KEEPALIVE_INTERVAL_S;
+    mqttContext.clearFunction = publishClearCallback;
+
+    /* Test 3. No publishes to resend reestablishing a session. */
+    /* successful receive CONNACK packet. */
+    incomingPacket.type = MQTT_PACKET_TYPE_CONNACK;
+    incomingPacket.remainingLength = 2;
+    MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_GetIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
+    /* Return with a session present flag. */
+    sessionPresent = true;
+    MQTT_DeserializeAck_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_DeserializeAck_ReturnThruPtr_pSessionPresent( &sessionPresent );
+    /* No acks to resend. */
+    MQTT_PubrelToResend_ExpectAnyArgsAndReturn( MQTT_PACKET_TYPE_INVALID );
+    /* No publishes to resend. */
+    MQTT_PublishToResend_ExpectAnyArgsAndReturn( MQTT_PACKET_TYPE_INVALID );
+    MQTT_SerializeConnectFixedHeader_Stub( MQTT_SerializeConnectFixedHeader_cb );
+    status = MQTT_Connect( &mqttContext, &connectInfo, NULL, timeout, &sessionPresentResult );
+    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
+    TEST_ASSERT_EQUAL_INT( MQTTConnected, mqttContext.connectStatus );
+    TEST_ASSERT_EQUAL_INT( connectInfo.keepAliveSeconds, mqttContext.keepAliveIntervalSec );
+    TEST_ASSERT_TRUE( sessionPresentResult );
+}
+
+void test_MQTT_Connect_resendUnAckedPublishes3( void )
+{
+    MQTTContext_t mqttContext = { 0 };
+    MQTTConnectInfo_t connectInfo = { 0 };
+    uint32_t timeout = 2;
+    bool sessionPresent, sessionPresentResult;
+    MQTTStatus_t status;
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
+    MQTTPacketInfo_t incomingPacket = { 0 };
     uint16_t packetIdentifier = 1;
     /* MQTTPublishState_t pubRelState = MQTTPubRelSend; */
     MQTTPubAckInfo_t incomingRecords = { 0 };
@@ -2402,86 +2464,70 @@ void test_MQTT_Connect_resendUnAckedPublishes( void )
 
     MQTT_InitRetransmits( &mqttContext, publishStoreCallbackSuccess,
                           publishRetrieveCallbackSuccess,
-                          publishClearCallbackSuccess,
-                          publishClearAllCallbackSuccess );
+                          publishClearCallback );
 
     MQTT_SerializeConnect_IgnoreAndReturn( MQTTSuccess );
     MQTT_GetConnectPacketSize_IgnoreAndReturn( MQTTSuccess );
     connectInfo.keepAliveSeconds = MQTT_SAMPLE_KEEPALIVE_INTERVAL_S;
-
-    /* Test 1. Connecting with a clean session. Clear all callback successfully executes */
-    /* successful receive CONNACK packet. */
-    incomingPacket.type = MQTT_PACKET_TYPE_CONNACK;
-    incomingPacket.remainingLength = 2;
-    MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
-    MQTT_GetIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
-    /* Return with a session present flag. */
-    sessionPresent = false;
-    MQTT_DeserializeAck_ExpectAnyArgsAndReturn( MQTTSuccess );
-    MQTT_DeserializeAck_ReturnThruPtr_pSessionPresent( &sessionPresent );
-    MQTT_SerializeConnectFixedHeader_Stub( MQTT_SerializeConnectFixedHeader_cb );
-    status = MQTT_Connect( &mqttContext, &connectInfo, NULL, timeout, &sessionPresentResult );
-    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
-    TEST_ASSERT_EQUAL_INT( MQTTConnected, mqttContext.connectStatus );
-    TEST_ASSERT_EQUAL_INT( connectInfo.keepAliveSeconds, mqttContext.keepAliveIntervalSec );
-    TEST_ASSERT_FALSE( sessionPresentResult );
-    mqttContext.connectStatus = MQTTNotConnected;
-
-    /* Test 2. Connecting with a clean session. Clear all callback fails */
-    /* successful receive CONNACK packet. */
-    incomingPacket.type = MQTT_PACKET_TYPE_CONNACK;
-    incomingPacket.remainingLength = 2;
-    MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
-    MQTT_GetIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
-    /* Return with a session present flag. */
-    sessionPresent = false;
-    MQTT_DeserializeAck_ExpectAnyArgsAndReturn( MQTTSuccess );
-    MQTT_DeserializeAck_ReturnThruPtr_pSessionPresent( &sessionPresent );
-    MQTT_SerializeConnectFixedHeader_Stub( MQTT_SerializeConnectFixedHeader_cb );
-    mqttContext.clearAllFunction = publishClearAllCallbackFailed;
-    status = MQTT_Connect( &mqttContext, &connectInfo, NULL, timeout, &sessionPresentResult );
-    TEST_ASSERT_EQUAL_INT( MQTTPublishClearAllFailed, status );
-    TEST_ASSERT_EQUAL_INT( MQTTNotConnected, mqttContext.connectStatus );
-    TEST_ASSERT_EQUAL_INT( connectInfo.keepAliveSeconds, mqttContext.keepAliveIntervalSec );
-    TEST_ASSERT_FALSE( sessionPresentResult );
-    mqttContext.clearAllFunction = publishClearAllCallbackSuccess;
-
-    /* Test 3. No publishes to resend reestablishing a session. */
-    /* successful receive CONNACK packet. */
-    incomingPacket.type = MQTT_PACKET_TYPE_CONNACK;
-    incomingPacket.remainingLength = 2;
-    MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
-    MQTT_GetIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
-    /* Return with a session present flag. */
-    sessionPresent = true;
-    MQTT_DeserializeAck_ExpectAnyArgsAndReturn( MQTTSuccess );
-    MQTT_DeserializeAck_ReturnThruPtr_pSessionPresent( &sessionPresent );
-    /* No acks to resend. */
-    MQTT_PubrelToResend_ExpectAnyArgsAndReturn( MQTT_PACKET_TYPE_INVALID );
-    /* No publishes to resend. */
-    MQTT_PublishToResend_ExpectAnyArgsAndReturn( MQTT_PACKET_TYPE_INVALID );
-    MQTT_SerializeConnectFixedHeader_Stub( MQTT_SerializeConnectFixedHeader_cb );
-    status = MQTT_Connect( &mqttContext, &connectInfo, NULL, timeout, &sessionPresentResult );
-    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
-    TEST_ASSERT_EQUAL_INT( MQTTConnected, mqttContext.connectStatus );
-    TEST_ASSERT_EQUAL_INT( connectInfo.keepAliveSeconds, mqttContext.keepAliveIntervalSec );
-    TEST_ASSERT_TRUE( sessionPresentResult );
-
     /* Test 4. One publish packet found to resend, but retrieve failed. */
     sessionPresentResult = false;
     mqttContext.connectStatus = MQTTNotConnected;
     mqttContext.keepAliveIntervalSec = 0;
+    incomingPacket.type = MQTT_PACKET_TYPE_CONNACK;
+    incomingPacket.remainingLength = 2;
+    sessionPresent = true;
     MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_GetIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
     MQTT_DeserializeAck_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_DeserializeAck_ReturnThruPtr_pSessionPresent( &sessionPresent );
     MQTT_PubrelToResend_ExpectAnyArgsAndReturn( MQTT_PACKET_TYPE_INVALID );
     MQTT_PublishToResend_ExpectAnyArgsAndReturn( packetIdentifier );
+    MQTT_SerializeConnectFixedHeader_Stub( MQTT_SerializeConnectFixedHeader_cb );
     mqttContext.retrieveFunction = publishRetrieveCallbackFailed;
     status = MQTT_Connect( &mqttContext, &connectInfo, NULL, timeout, &sessionPresentResult );
     TEST_ASSERT_EQUAL_INT( MQTTPublishRetrieveFailed, status );
     TEST_ASSERT_EQUAL_INT( MQTTDisconnectPending, mqttContext.connectStatus );
     TEST_ASSERT_TRUE( sessionPresentResult );
+}
+
+void test_MQTT_Connect_resendUnAckedPublishes4( void )
+{
+    MQTTContext_t mqttContext = { 0 };
+    MQTTConnectInfo_t connectInfo = { 0 };
+    uint32_t timeout = 2;
+    bool sessionPresent, sessionPresentResult;
+    MQTTStatus_t status;
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
+    MQTTPacketInfo_t incomingPacket = { 0 };
+    uint16_t packetIdentifier = 1;
+    /* MQTTPublishState_t pubRelState = MQTTPubRelSend; */
+    MQTTPubAckInfo_t incomingRecords = { 0 };
+    MQTTPubAckInfo_t outgoingRecords = { 0 };
+    /* MQTTPublishState_t expectedState = { 0 }; */
+    uint8_t * localPublishCopyBuffer = ( uint8_t * ) "Hello world!";
+
+    publishCopyBuffer = localPublishCopyBuffer;
+    publishCopyBufferSize = sizeof( "Hello world!" );
+
+    setupTransportInterface( &transport );
+    setupNetworkBuffer( &networkBuffer );
+
+    memset( &mqttContext, 0x0, sizeof( mqttContext ) );
+    memset( &connectInfo, 0x00, sizeof( connectInfo ) );
+    MQTT_Init( &mqttContext, &transport, getTime, eventCallback, &networkBuffer );
+
+    MQTT_InitStatefulQoS( &mqttContext,
+                          &outgoingRecords, 4,
+                          &incomingRecords, 4 );
+
+    MQTT_InitRetransmits( &mqttContext, publishStoreCallbackSuccess,
+                          publishRetrieveCallbackSuccess,
+                          publishClearCallback );
+
+    MQTT_SerializeConnect_IgnoreAndReturn( MQTTSuccess );
+    MQTT_GetConnectPacketSize_IgnoreAndReturn( MQTTSuccess );
+    connectInfo.keepAliveSeconds = MQTT_SAMPLE_KEEPALIVE_INTERVAL_S;
     mqttContext.retrieveFunction = publishRetrieveCallbackSuccess;
 
     /* Test 5. One publish packet found to resend, but Transport Send failed. */
@@ -2490,20 +2536,65 @@ void test_MQTT_Connect_resendUnAckedPublishes( void )
     mqttContext.keepAliveIntervalSec = 0;
     mqttContext.transportInterface.writev = NULL;
     mqttContext.transportInterface.send = transportSendSucceedThenFailAfterConnect;
+    incomingPacket.type = MQTT_PACKET_TYPE_CONNACK;
+    incomingPacket.remainingLength = 2;
+    sessionPresent = true;
     MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_GetIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
     MQTT_DeserializeAck_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_DeserializeAck_ReturnThruPtr_pSessionPresent( &sessionPresent );
     MQTT_PubrelToResend_ExpectAnyArgsAndReturn( MQTT_PACKET_TYPE_INVALID );
     MQTT_PublishToResend_ExpectAnyArgsAndReturn( packetIdentifier );
+    MQTT_SerializeConnectFixedHeader_Stub( MQTT_SerializeConnectFixedHeader_cb );
     status = MQTT_Connect( &mqttContext, &connectInfo, NULL, timeout, &sessionPresentResult );
     TEST_ASSERT_EQUAL_INT( MQTTSendFailed, status );
     TEST_ASSERT_EQUAL_INT( MQTTDisconnectPending, mqttContext.connectStatus );
     TEST_ASSERT_TRUE( sessionPresentResult );
+}
+
+void test_MQTT_Connect_resendUnAckedPublishes5( void )
+{
+    MQTTContext_t mqttContext = { 0 };
+    MQTTConnectInfo_t connectInfo = { 0 };
+    uint32_t timeout = 2;
+    bool sessionPresent;
+    MQTTStatus_t status;
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
+    MQTTPacketInfo_t incomingPacket = { 0 };
+    uint16_t packetIdentifier = 1;
+    MQTTPubAckInfo_t incomingRecords = { 0 };
+    MQTTPubAckInfo_t outgoingRecords = { 0 };
+    uint8_t * localPublishCopyBuffer = ( uint8_t * ) "Hello world!";
+
+    publishCopyBuffer = localPublishCopyBuffer;
+    publishCopyBufferSize = sizeof( "Hello world!" );
+
+    setupTransportInterface( &transport );
+    setupNetworkBuffer( &networkBuffer );
+
+    memset( &mqttContext, 0x0, sizeof( mqttContext ) );
+    memset( &connectInfo, 0x00, sizeof( connectInfo ) );
+    MQTT_Init( &mqttContext, &transport, getTime, eventCallback, &networkBuffer );
+
+    MQTT_InitStatefulQoS( &mqttContext,
+                          &outgoingRecords, 4,
+                          &incomingRecords, 4 );
+
+    MQTT_InitRetransmits( &mqttContext, publishStoreCallbackSuccess,
+                          publishRetrieveCallbackSuccess,
+                          publishClearCallback );
+
+    MQTT_SerializeConnect_IgnoreAndReturn( MQTTSuccess );
+    MQTT_GetConnectPacketSize_IgnoreAndReturn( MQTTSuccess );
+    connectInfo.keepAliveSeconds = MQTT_SAMPLE_KEEPALIVE_INTERVAL_S;
     mqttContext.transportInterface.send = transportSendSuccess;
 
     /* Test 6. One publish packet found to resend, Sent successfully. */
     mqttContext.connectStatus = MQTTNotConnected;
+    incomingPacket.type = MQTT_PACKET_TYPE_CONNACK;
+    incomingPacket.remainingLength = 2;
+    sessionPresent = true;
     MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_GetIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
     MQTT_DeserializeAck_ExpectAnyArgsAndReturn( MQTTSuccess );
@@ -2511,16 +2602,55 @@ void test_MQTT_Connect_resendUnAckedPublishes( void )
     MQTT_PubrelToResend_ExpectAnyArgsAndReturn( MQTT_PACKET_TYPE_INVALID );
     MQTT_PublishToResend_ExpectAnyArgsAndReturn( packetIdentifier );
     MQTT_PublishToResend_ExpectAnyArgsAndReturn( MQTT_PACKET_TYPE_INVALID );
+    MQTT_SerializeConnectFixedHeader_Stub( MQTT_SerializeConnectFixedHeader_cb );
     /* Query for any remaining packets pending to ack. */
     status = MQTT_Connect( &mqttContext, &connectInfo, NULL, timeout, &sessionPresent );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
     TEST_ASSERT_EQUAL_INT( MQTTConnected, mqttContext.connectStatus );
     TEST_ASSERT_EQUAL_INT( connectInfo.keepAliveSeconds, mqttContext.keepAliveIntervalSec );
+}
 
+void test_MQTT_Connect_resendUnAckedPublishes6( void )
+{
+    MQTTContext_t mqttContext = { 0 };
+    MQTTConnectInfo_t connectInfo = { 0 };
+    uint32_t timeout = 2;
+    bool sessionPresent;
+    MQTTStatus_t status;
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
+    MQTTPacketInfo_t incomingPacket = { 0 };
+    uint16_t packetIdentifier = 1;
+    MQTTPubAckInfo_t incomingRecords = { 0 };
+    MQTTPubAckInfo_t outgoingRecords = { 0 };
+    uint8_t * localPublishCopyBuffer = ( uint8_t * ) "Hello world!";
+
+    publishCopyBuffer = localPublishCopyBuffer;
+    publishCopyBufferSize = sizeof( "Hello world!" );
+
+    setupTransportInterface( &transport );
+    setupNetworkBuffer( &networkBuffer );
+
+    MQTT_Init( &mqttContext, &transport, getTime, eventCallback, &networkBuffer );
+
+    MQTT_InitStatefulQoS( &mqttContext,
+                          &outgoingRecords, 4,
+                          &incomingRecords, 4 );
+
+    MQTT_InitRetransmits( &mqttContext, publishStoreCallbackSuccess,
+                          publishRetrieveCallbackSuccessThenFail,
+                          publishClearCallback );
+
+    MQTT_SerializeConnect_IgnoreAndReturn( MQTTSuccess );
+    MQTT_GetConnectPacketSize_IgnoreAndReturn( MQTTSuccess );
+    connectInfo.keepAliveSeconds = MQTT_SAMPLE_KEEPALIVE_INTERVAL_S;
     /* Test 7. Two publish packets found to resend. Sent successfully
      * for first and failed for second. */
     mqttContext.keepAliveIntervalSec = 0;
     mqttContext.connectStatus = MQTTNotConnected;
+    sessionPresent = true;
+    incomingPacket.type = MQTT_PACKET_TYPE_CONNACK;
+    incomingPacket.remainingLength = 2;
     MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_GetIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
     MQTT_DeserializeAck_ExpectAnyArgsAndReturn( MQTTSuccess );
@@ -2530,11 +2660,10 @@ void test_MQTT_Connect_resendUnAckedPublishes( void )
     MQTT_PublishToResend_ExpectAnyArgsAndReturn( packetIdentifier );
     /* Second packet. */
     MQTT_PublishToResend_ExpectAnyArgsAndReturn( packetIdentifier + 1 );
-    mqttContext.retrieveFunction = publishRetrieveCallbackSuccessThenFail;
+    MQTT_SerializeConnectFixedHeader_Stub( MQTT_SerializeConnectFixedHeader_cb );
     status = MQTT_Connect( &mqttContext, &connectInfo, NULL, timeout, &sessionPresent );
     TEST_ASSERT_EQUAL_INT( MQTTPublishRetrieveFailed, status );
     TEST_ASSERT_EQUAL_INT( MQTTDisconnectPending, mqttContext.connectStatus );
-    mqttContext.retrieveFunction = publishRetrieveCallbackSuccess;
 }
 
 /**
@@ -3002,8 +3131,7 @@ void test_MQTT_Publish_Storing_Publish_Success( void )
 
     MQTT_InitRetransmits( &mqttContext, publishStoreCallbackSuccess,
                           publishRetrieveCallbackSuccess,
-                          publishClearCallbackSuccess,
-                          publishClearAllCallbackSuccess );
+                          publishClearCallback );
 
     mqttContext.connectStatus = MQTTConnected;
 
@@ -3054,8 +3182,7 @@ void test_MQTT_Publish_Storing_Publish_Failed( void )
 
     MQTT_InitRetransmits( &mqttContext, publishStoreCallbackFailed,
                           publishRetrieveCallbackSuccess,
-                          publishClearCallbackSuccess,
-                          publishClearAllCallbackSuccess );
+                          publishClearCallback );
 
     mqttContext.connectStatus = MQTTConnected;
 
@@ -4671,8 +4798,7 @@ void test_MQTT_ProcessLoop_handleIncomingAck_Clear_Publish_Copies( void )
 
     mqttStatus = MQTT_InitRetransmits( &context, publishStoreCallbackSuccess,
                                        publishRetrieveCallbackSuccess,
-                                       publishClearCallbackSuccess,
-                                       publishClearAllCallbackSuccess );
+                                       publishClearCallback );
 
     context.connectStatus = MQTTConnected;
 
@@ -4696,7 +4822,7 @@ void test_MQTT_ProcessLoop_handleIncomingAck_Clear_Publish_Copies( void )
     expectParams.stateAfterSerialize = MQTTPubCompPending;
     expectProcessLoopCalls( &context, &expectParams );
 
-    context.clearFunction = publishClearCallbackFailed;
+    context.clearFunction = publishClearCallback;
 
     /* Mock the receiving of a PUBACK packet type and expect the appropriate
      * calls made from the process loop. */
@@ -7053,11 +7179,7 @@ void test_MQTT_Status_strerror( void )
     str = MQTT_Status_strerror( status );
     TEST_ASSERT_EQUAL_STRING( "MQTTPublishRetrieveFailed", str );
 
-    status = MQTTPublishClearAllFailed;
-    str = MQTT_Status_strerror( status );
-    TEST_ASSERT_EQUAL_STRING( "MQTTPublishClearAllFailed", str );
-
-    status = MQTTPublishClearAllFailed + 1;
+    status = MQTTPublishRetrieveFailed + 1;
     str = MQTT_Status_strerror( status );
     TEST_ASSERT_EQUAL_STRING( "Invalid MQTT Status code", str );
 }
