@@ -90,6 +90,12 @@
  */
 #define CORE_MQTT_UNSUBSCRIBE_PER_TOPIC_VECTOR_LENGTH    ( 2U )
 
+struct MQTTVec
+{
+    TransportOutVector_t * pVector; /**< Pointer to transport vector. USER SHOULD NOT ACCESS THIS DIRECTLY - IT IS AN INTERNAL DETAIL AND CAN CHANGE. */
+    size_t vectorLen;               /**< Length of the transport vector. USER SHOULD NOT ACCESS THIS DIRECTLY - IT IS AN INTERNAL DETAIL AND CAN CHANGE. */
+};
+
 /*-----------------------------------------------------------*/
 
 /**
@@ -444,8 +450,10 @@ static MQTTStatus_t handleUncleanSessionResumption( MQTTContext_t * pContext );
  * @brief Clears existing state records for a clean session.
  *
  * @param[in] pContext Initialized MQTT context.
+ *
+ * @return #MQTTSuccess always otherwise.
  */
-static void handleCleanSession( MQTTContext_t * pContext );
+static MQTTStatus_t handleCleanSession( MQTTContext_t * pContext );
 
 /**
  * @brief Send the publish packet without copying the topic string and payload in
@@ -463,7 +471,7 @@ static void handleCleanSession( MQTTContext_t * pContext );
  */
 static MQTTStatus_t sendPublishWithoutCopy( MQTTContext_t * pContext,
                                             const MQTTPublishInfo_t * pPublishInfo,
-                                            const uint8_t * pMqttHeader,
+                                            uint8_t * pMqttHeader,
                                             size_t headerSize,
                                             uint16_t packetId );
 
@@ -1597,6 +1605,15 @@ static MQTTStatus_t handlePublishAcks( MQTTContext_t * pContext,
         }
     }
 
+    if( ( ackType == MQTTPuback ) || ( ackType == MQTTPubrec ) )
+    {
+        if( ( status == MQTTSuccess ) &&
+            ( pContext->clearFunction != NULL ) )
+        {
+            pContext->clearFunction( pContext, packetIdentifier );
+        }
+    }
+
     if( status == MQTTSuccess )
     {
         /* Set fields of deserialized struct. */
@@ -2133,13 +2150,14 @@ static MQTTStatus_t sendUnsubscribeWithoutCopy( MQTTContext_t * pContext,
 
 static MQTTStatus_t sendPublishWithoutCopy( MQTTContext_t * pContext,
                                             const MQTTPublishInfo_t * pPublishInfo,
-                                            const uint8_t * pMqttHeader,
+                                            uint8_t * pMqttHeader,
                                             size_t headerSize,
                                             uint16_t packetId )
 {
     MQTTStatus_t status = MQTTSuccess;
     size_t ioVectorLength;
     size_t totalMessageLength;
+    bool dupFlagChanged = false;
 
     /* Bytes required to encode the packet ID in an MQTT header according to
      * the MQTT specification. */
@@ -2190,7 +2208,42 @@ static MQTTStatus_t sendPublishWithoutCopy( MQTTContext_t * pContext,
         totalMessageLength += pPublishInfo->payloadLength;
     }
 
-    if( sendMessageVector( pContext, pIoVector, ioVectorLength ) != ( int32_t ) totalMessageLength )
+    /* If not already set, set the dup flag before storing a copy of the publish
+     * this is because on retrieving back this copy we will get it in the form of an
+     * array of TransportOutVector_t that holds the data in a const pointer which cannot be
+     * changed after retrieving. */
+    if( pPublishInfo->dup != true )
+    {
+        MQTT_UpdateDuplicatePublishFlag( pMqttHeader, true );
+
+        dupFlagChanged = true;
+    }
+
+    /* store a copy of the publish for retransmission purposes */
+    if( ( pPublishInfo->qos > MQTTQoS0 ) &&
+        ( pContext->storeFunction != NULL ) )
+    {
+        MQTTVec_t mqttVec;
+
+        mqttVec.pVector = pIoVector;
+        mqttVec.vectorLen = ioVectorLength;
+
+        if( pContext->storeFunction( pContext, packetId, &mqttVec ) != true )
+        {
+            status = MQTTPublishStoreFailed;
+        }
+    }
+
+    /* change the value of the dup flag to its original, if it was changed */
+    if( dupFlagChanged )
+    {
+        MQTT_UpdateDuplicatePublishFlag( pMqttHeader, false );
+
+        dupFlagChanged = false;
+    }
+
+    if( ( status == MQTTSuccess ) &&
+        ( sendMessageVector( pContext, pIoVector, ioVectorLength ) != ( int32_t ) totalMessageLength ) )
     {
         status = MQTTSendFailed;
     }
@@ -2477,6 +2530,8 @@ static MQTTStatus_t handleUncleanSessionResumption( MQTTContext_t * pContext )
     MQTTStateCursor_t cursor = MQTT_STATE_CURSOR_INITIALIZER;
     uint16_t packetId = MQTT_PACKET_ID_INVALID;
     MQTTPublishState_t state = MQTTStateNull;
+    size_t totalMessageLength;
+    uint8_t * pMqttPacket;
 
     assert( pContext != NULL );
 
@@ -2492,16 +2547,70 @@ static MQTTStatus_t handleUncleanSessionResumption( MQTTContext_t * pContext )
         packetId = MQTT_PubrelToResend( pContext, &cursor, &state );
     }
 
+    if( ( status == MQTTSuccess ) &&
+        ( pContext->retrieveFunction != NULL ) )
+    {
+        cursor = MQTT_STATE_CURSOR_INITIALIZER;
+
+        /* Resend all the PUBLISH for which PUBACK/PUBREC is not received
+         * after session is reestablished. */
+        do
+        {
+            packetId = MQTT_PublishToResend( pContext, &cursor );
+
+            if( packetId != MQTT_PACKET_ID_INVALID )
+            {
+                if( pContext->retrieveFunction( pContext, packetId, &pMqttPacket, &totalMessageLength ) != true )
+                {
+                    status = MQTTPublishRetrieveFailed;
+                    break;
+                }
+
+                MQTT_PRE_STATE_UPDATE_HOOK( pContext );
+
+                if( sendBuffer( pContext, pMqttPacket, totalMessageLength ) != ( int32_t ) totalMessageLength )
+                {
+                    status = MQTTSendFailed;
+                }
+
+                MQTT_POST_STATE_UPDATE_HOOK( pContext );
+            }
+        } while( ( packetId != MQTT_PACKET_ID_INVALID ) &&
+                 ( status == MQTTSuccess ) );
+    }
+
     return status;
 }
 
-static void handleCleanSession( MQTTContext_t * pContext )
+static MQTTStatus_t handleCleanSession( MQTTContext_t * pContext )
 {
+    MQTTStatus_t status = MQTTSuccess;
+    MQTTStateCursor_t cursor = MQTT_STATE_CURSOR_INITIALIZER;
+    uint16_t packetId = MQTT_PACKET_ID_INVALID;
+
     assert( pContext != NULL );
 
     /* Reset the index and clear the buffer when a new session is established. */
     pContext->index = 0;
     ( void ) memset( pContext->networkBuffer.pBuffer, 0, pContext->networkBuffer.size );
+
+    if( pContext->clearFunction != NULL )
+    {
+        cursor = MQTT_STATE_CURSOR_INITIALIZER;
+
+        /* Resend all the PUBLISH for which PUBACK/PUBREC is not received
+         * after session is reestablished. */
+        do
+        {
+            packetId = MQTT_PublishToResend( pContext, &cursor );
+
+            if( packetId != MQTT_PACKET_ID_INVALID )
+            {
+                pContext->clearFunction( pContext, packetId );
+            }
+        } while( ( packetId != MQTT_PACKET_ID_INVALID ) &&
+                 ( status == MQTTSuccess ) );
+    }
 
     if( pContext->outgoingPublishRecordMaxCount > 0U )
     {
@@ -2517,6 +2626,8 @@ static void handleCleanSession( MQTTContext_t * pContext )
                          0x00,
                          pContext->incomingPublishRecordMaxCount * sizeof( *pContext->incomingPublishRecords ) );
     }
+
+    return status;
 }
 
 static MQTTStatus_t validatePublishParams( const MQTTContext_t * pContext,
@@ -2681,6 +2792,46 @@ MQTTStatus_t MQTT_InitStatefulQoS( MQTTContext_t * pContext,
 
 /*-----------------------------------------------------------*/
 
+MQTTStatus_t MQTT_InitRetransmits( MQTTContext_t * pContext,
+                                   MQTTStorePacketForRetransmit storeFunction,
+                                   MQTTRetrievePacketForRetransmit retrieveFunction,
+                                   MQTTClearPacketForRetransmit clearFunction )
+{
+    MQTTStatus_t status = MQTTSuccess;
+
+    if( pContext == NULL )
+    {
+        LogError( ( "Argument cannot be NULL: pContext=%p\n",
+                    ( void * ) pContext ) );
+        status = MQTTBadParameter;
+    }
+    else if( storeFunction == NULL )
+    {
+        LogError( ( "Invalid parameter: storeFunction is NULL" ) );
+        status = MQTTBadParameter;
+    }
+    else if( retrieveFunction == NULL )
+    {
+        LogError( ( "Invalid parameter: retrieveFunction is NULL" ) );
+        status = MQTTBadParameter;
+    }
+    else if( clearFunction == NULL )
+    {
+        LogError( ( "Invalid parameter: clearFunction is NULL" ) );
+        status = MQTTBadParameter;
+    }
+    else
+    {
+        pContext->storeFunction = storeFunction;
+        pContext->retrieveFunction = retrieveFunction;
+        pContext->clearFunction = clearFunction;
+    }
+
+    return status;
+}
+
+/*-----------------------------------------------------------*/
+
 MQTTStatus_t MQTT_CancelCallback( const MQTTContext_t * pContext,
                                   uint16_t packetId )
 {
@@ -2820,7 +2971,7 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
 
         if( ( status == MQTTSuccess ) && ( *pSessionPresent != true ) )
         {
-            handleCleanSession( pContext );
+            status = handleCleanSession( pContext );
         }
 
         if( status == MQTTSuccess )
@@ -2837,7 +2988,7 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
 
     if( ( status == MQTTSuccess ) && ( *pSessionPresent == true ) )
     {
-        /* Resend PUBRELs when reestablishing a session */
+        /* Resend PUBRELs and PUBLISHES when reestablishing a session */
         status = handleUncleanSessionResumption( pContext );
     }
 
@@ -3560,12 +3711,54 @@ const char * MQTT_Status_strerror( MQTTStatus_t status )
             str = "MQTTStatusDisconnectPending";
             break;
 
+        case MQTTPublishStoreFailed:
+            str = "MQTTPublishStoreFailed";
+            break;
+
+        case MQTTPublishRetrieveFailed:
+            str = "MQTTPublishRetrieveFailed";
+            break;
+
         default:
             str = "Invalid MQTT Status code";
             break;
     }
 
     return str;
+}
+
+/*-----------------------------------------------------------*/
+
+size_t MQTT_GetBytesInMQTTVec( MQTTVec_t * pVec )
+{
+    size_t memoryRequired = 0;
+    size_t i;
+    TransportOutVector_t * pTransportVec = pVec->pVector;
+    size_t vecLen = pVec->vectorLen;
+
+    for( i = 0; i < vecLen; i++ )
+    {
+        memoryRequired += pTransportVec[ i ].iov_len;
+    }
+
+    return memoryRequired;
+}
+
+/*-----------------------------------------------------------*/
+
+void MQTT_SerializeMQTTVec( uint8_t * pAllocatedMem,
+                            MQTTVec_t * pVec )
+{
+    TransportOutVector_t * pTransportVec = pVec->pVector;
+    const size_t vecLen = pVec->vectorLen;
+    size_t index = 0;
+    size_t i = 0;
+
+    for( i = 0; i < vecLen; i++ )
+    {
+        memcpy( &pAllocatedMem[ index ], pTransportVec[ i ].iov_base, pTransportVec[ i ].iov_len );
+        index += pTransportVec[ i ].iov_len;
+    }
 }
 
 /*-----------------------------------------------------------*/
