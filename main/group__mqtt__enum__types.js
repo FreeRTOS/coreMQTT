@@ -45,7 +45,9 @@ var group__mqtt__enum__types =
       [ "MQTTNeedMoreBytes", "group__mqtt__enum__types.html#ggaba7ec045874a1c3432f99173367f735caa97df53014d919df5ecd54398f89f9b9", null ],
       [ "MQTTStatusConnected", "group__mqtt__enum__types.html#ggaba7ec045874a1c3432f99173367f735caa13a678a441c9ef6b88d6d8be8a64090", null ],
       [ "MQTTStatusNotConnected", "group__mqtt__enum__types.html#ggaba7ec045874a1c3432f99173367f735ca074273b04f70b93c1f20702096cac273", null ],
-      [ "MQTTStatusDisconnectPending", "group__mqtt__enum__types.html#ggaba7ec045874a1c3432f99173367f735ca230baa3eaabf50e6b319f792a82bb863", null ]
+      [ "MQTTStatusDisconnectPending", "group__mqtt__enum__types.html#ggaba7ec045874a1c3432f99173367f735ca230baa3eaabf50e6b319f792a82bb863", null ],
+      [ "MQTTPublishStoreFailed", "group__mqtt__enum__types.html#ggaba7ec045874a1c3432f99173367f735ca61a3e19715d8ee1ee330c9bbd4b2708a", null ],
+      [ "MQTTPublishRetrieveFailed", "group__mqtt__enum__types.html#ggaba7ec045874a1c3432f99173367f735ca274b61e8a2aea2cf551353c6d09a6eb2", null ]
     ] ],
     [ "MQTTQoS_t", "group__mqtt__enum__types.html#gae308a5928d7f537379c29a894228093a", [
       [ "MQTTQoS0", "group__mqtt__enum__types.html#ggae308a5928d7f537379c29a894228093aaad51b23a1ae1417f96d8f343c788d1d2", null ],

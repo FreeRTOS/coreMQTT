@@ -8,5 +8,6 @@ var searchData=
   ['recvexact_5',['recvExact',['../core__mqtt_8c.html#abe9fbe1e681fa7b248489ab4a22be49c',1,'core_mqtt.c']]],
   ['remaininglength_6',['remainingLength',['../struct_m_q_t_t_packet_info__t.html#a7c85becf08de0ec9776dd4be1fcc4bf8',1,'MQTTPacketInfo_t']]],
   ['remaininglengthencodedsize_7',['remainingLengthEncodedSize',['../core__mqtt__serializer_8c.html#aeead0813fa045d754e3d6ec964d0686e',1,'core_mqtt_serializer.c']]],
-  ['retain_8',['retain',['../struct_m_q_t_t_publish_info__t.html#a343b0af89c46a900db4aa5c775a0975a',1,'MQTTPublishInfo_t']]]
+  ['retain_8',['retain',['../struct_m_q_t_t_publish_info__t.html#a343b0af89c46a900db4aa5c775a0975a',1,'MQTTPublishInfo_t']]],
+  ['retrievefunction_9',['retrieveFunction',['../struct_m_q_t_t_context__t.html#a270e9e595ecd60948c960d059f8fe718',1,'MQTTContext_t']]]
 ];

@@ -7,6 +7,7 @@
     <includes id="core__mqtt_8h" name="core_mqtt.h" local="yes" imported="no">core_mqtt.h</includes>
     <includes id="core__mqtt__state_8h" name="core_mqtt_state.h" local="yes" imported="no">core_mqtt_state.h</includes>
     <includes id="core__mqtt__config__defaults_8h" name="core_mqtt_config_defaults.h" local="yes" imported="no">core_mqtt_config_defaults.h</includes>
+    <class kind="struct">MQTTVec</class>
     <member kind="define">
       <type>#define</type>
       <name>MQTT_PRE_SEND_HOOK</name>
@@ -211,18 +212,18 @@
       <arglist>(MQTTContext_t *pContext)</arglist>
     </member>
     <member kind="function" static="yes">
-      <type>static void</type>
+      <type>static MQTTStatus_t</type>
       <name>handleCleanSession</name>
       <anchorfile>core__mqtt_8c.html</anchorfile>
-      <anchor>aaba646b7d3723b69e8ce62389ba43270</anchor>
+      <anchor>a91519103b8929035e95a218d54ce1407</anchor>
       <arglist>(MQTTContext_t *pContext)</arglist>
     </member>
     <member kind="function" static="yes">
       <type>static MQTTStatus_t</type>
       <name>sendPublishWithoutCopy</name>
       <anchorfile>core__mqtt_8c.html</anchorfile>
-      <anchor>aaaca64a926603116f5dfec4a65f28283</anchor>
-      <arglist>(MQTTContext_t *pContext, const MQTTPublishInfo_t *pPublishInfo, const uint8_t *pMqttHeader, size_t headerSize, uint16_t packetId)</arglist>
+      <anchor>af775574fd302e755d793a07818b62a2a</anchor>
+      <arglist>(MQTTContext_t *pContext, const MQTTPublishInfo_t *pPublishInfo, uint8_t *pMqttHeader, size_t headerSize, uint16_t packetId)</arglist>
     </member>
     <member kind="function" static="yes">
       <type>static MQTTStatus_t</type>
@@ -265,6 +266,13 @@
       <anchorfile>core__mqtt_8c.html</anchorfile>
       <anchor>afe4c020749e3b9ca044e0e9ad96025c5</anchor>
       <arglist>(MQTTContext_t *pContext, MQTTPubAckInfo_t *pOutgoingPublishRecords, size_t outgoingPublishCount, MQTTPubAckInfo_t *pIncomingPublishRecords, size_t incomingPublishCount)</arglist>
+    </member>
+    <member kind="function">
+      <type>MQTTStatus_t</type>
+      <name>MQTT_InitRetransmits</name>
+      <anchorfile>core__mqtt_8c.html</anchorfile>
+      <anchor>af2d6f94bf234a888541919195002a13f</anchor>
+      <arglist>(MQTTContext_t *pContext, MQTTStorePacketForRetransmit storeFunction, MQTTRetrievePacketForRetransmit retrieveFunction, MQTTClearPacketForRetransmit clearFunction)</arglist>
     </member>
     <member kind="function">
       <type>MQTTStatus_t</type>
@@ -363,6 +371,20 @@
       <anchorfile>core__mqtt_8c.html</anchorfile>
       <anchor>a05d9facfce89c5f9edef09ca13717f50</anchor>
       <arglist>(MQTTStatus_t status)</arglist>
+    </member>
+    <member kind="function">
+      <type>size_t</type>
+      <name>MQTT_GetBytesInMQTTVec</name>
+      <anchorfile>core__mqtt_8c.html</anchorfile>
+      <anchor>af15463f575fbbcc76bf1f27f9b0a02b0</anchor>
+      <arglist>(MQTTVec_t *pVec)</arglist>
+    </member>
+    <member kind="function">
+      <type>void</type>
+      <name>MQTT_SerializeMQTTVec</name>
+      <anchorfile>core__mqtt_8c.html</anchorfile>
+      <anchor>a1b2e56ed1c0a328d86062857e695d673</anchor>
+      <arglist>(uint8_t *pAllocatedMem, MQTTVec_t *pVec)</arglist>
     </member>
   </compound>
   <compound kind="file">
@@ -523,6 +545,13 @@
       <name>UINT8_SET_BIT</name>
       <anchorfile>core__mqtt__serializer_8c.html</anchorfile>
       <anchor>af259c91b3075c24df53fa3ffe516b208</anchor>
+      <arglist>(x, position)</arglist>
+    </member>
+    <member kind="define">
+      <type>#define</type>
+      <name>UINT8_CLEAR_BIT</name>
+      <anchorfile>core__mqtt__serializer_8c.html</anchorfile>
+      <anchor>a549d24726d8ff1b4b32a6cb48654ad90</anchor>
       <arglist>(x, position)</arglist>
     </member>
     <member kind="define">
@@ -875,6 +904,13 @@
     </member>
     <member kind="function">
       <type>MQTTStatus_t</type>
+      <name>MQTT_UpdateDuplicatePublishFlag</name>
+      <anchorfile>core__mqtt__serializer_8c.html</anchorfile>
+      <anchor>a269f0b0e193a7a10a6e392b88768ae94</anchor>
+      <arglist>(uint8_t *pHeader, bool set)</arglist>
+    </member>
+    <member kind="function">
+      <type>MQTTStatus_t</type>
       <name>MQTT_ProcessIncomingPacketTypeAndLength</name>
       <anchorfile>core__mqtt__serializer_8c.html</anchorfile>
       <anchor>a94fd3f746074b3f6e16ae6b23dad9a28</anchor>
@@ -1086,6 +1122,27 @@
       <anchor>ga00d348277ed4fde23c95bfc749ae954a</anchor>
       <arglist>)(struct MQTTContext *pContext, struct MQTTPacketInfo *pPacketInfo, struct MQTTDeserializedInfo *pDeserializedInfo)</arglist>
     </member>
+    <member kind="typedef">
+      <type>bool(*</type>
+      <name>MQTTStorePacketForRetransmit</name>
+      <anchorfile>core__mqtt_8h.html</anchorfile>
+      <anchor>ae4ae1546af467967e2c996daeb78e0ba</anchor>
+      <arglist>)(struct MQTTContext *pContext, uint16_t packetId, MQTTVec_t *pMqttVec)</arglist>
+    </member>
+    <member kind="typedef">
+      <type>bool(*</type>
+      <name>MQTTRetrievePacketForRetransmit</name>
+      <anchorfile>core__mqtt_8h.html</anchorfile>
+      <anchor>a56514a9a33dbf82a5d33afedb54903b6</anchor>
+      <arglist>)(struct MQTTContext *pContext, uint16_t packetId, uint8_t **pSerializedMqttVec, size_t *pSerializedMqttVecLen)</arglist>
+    </member>
+    <member kind="typedef">
+      <type>void(*</type>
+      <name>MQTTClearPacketForRetransmit</name>
+      <anchorfile>core__mqtt_8h.html</anchorfile>
+      <anchor>a864718ceee18ff04e9c92fe9825d601b</anchor>
+      <arglist>)(struct MQTTContext *pContext, uint16_t packetId)</arglist>
+    </member>
     <member kind="enumeration">
       <type></type>
       <name>MQTTConnectionStatus_t</name>
@@ -1262,6 +1319,13 @@
     </member>
     <member kind="function">
       <type>MQTTStatus_t</type>
+      <name>MQTT_InitRetransmits</name>
+      <anchorfile>core__mqtt_8h.html</anchorfile>
+      <anchor>af2d6f94bf234a888541919195002a13f</anchor>
+      <arglist>(MQTTContext_t *pContext, MQTTStorePacketForRetransmit storeFunction, MQTTRetrievePacketForRetransmit retrieveFunction, MQTTClearPacketForRetransmit clearFunction)</arglist>
+    </member>
+    <member kind="function">
+      <type>MQTTStatus_t</type>
       <name>MQTT_CheckConnectStatus</name>
       <anchorfile>core__mqtt_8h.html</anchorfile>
       <anchor>ad138a95422d22d61538f6ff69db9a784</anchor>
@@ -1357,6 +1421,20 @@
       <anchorfile>core__mqtt_8h.html</anchorfile>
       <anchor>a05d9facfce89c5f9edef09ca13717f50</anchor>
       <arglist>(MQTTStatus_t status)</arglist>
+    </member>
+    <member kind="function">
+      <type>size_t</type>
+      <name>MQTT_GetBytesInMQTTVec</name>
+      <anchorfile>core__mqtt_8h.html</anchorfile>
+      <anchor>af15463f575fbbcc76bf1f27f9b0a02b0</anchor>
+      <arglist>(MQTTVec_t *pVec)</arglist>
+    </member>
+    <member kind="function">
+      <type>void</type>
+      <name>MQTT_SerializeMQTTVec</name>
+      <anchorfile>core__mqtt_8h.html</anchorfile>
+      <anchor>a1b2e56ed1c0a328d86062857e695d673</anchor>
+      <arglist>(uint8_t *pAllocatedMem, MQTTVec_t *pVec)</arglist>
     </member>
   </compound>
   <compound kind="file">
@@ -1660,6 +1738,18 @@
       <anchor>ggaba7ec045874a1c3432f99173367f735ca230baa3eaabf50e6b319f792a82bb863</anchor>
       <arglist></arglist>
     </member>
+    <member kind="enumvalue">
+      <name>MQTTPublishStoreFailed</name>
+      <anchorfile>group__mqtt__enum__types.html</anchorfile>
+      <anchor>ggaba7ec045874a1c3432f99173367f735ca61a3e19715d8ee1ee330c9bbd4b2708a</anchor>
+      <arglist></arglist>
+    </member>
+    <member kind="enumvalue">
+      <name>MQTTPublishRetrieveFailed</name>
+      <anchorfile>group__mqtt__enum__types.html</anchorfile>
+      <anchor>ggaba7ec045874a1c3432f99173367f735ca274b61e8a2aea2cf551353c6d09a6eb2</anchor>
+      <arglist></arglist>
+    </member>
     <member kind="enumeration">
       <type></type>
       <name>MQTTQoS_t</name>
@@ -1817,6 +1907,13 @@
       <anchorfile>core__mqtt__serializer_8h.html</anchorfile>
       <anchor>a94fd3f746074b3f6e16ae6b23dad9a28</anchor>
       <arglist>(const uint8_t *pBuffer, const size_t *pIndex, MQTTPacketInfo_t *pIncomingPacket)</arglist>
+    </member>
+    <member kind="function">
+      <type>MQTTStatus_t</type>
+      <name>MQTT_UpdateDuplicatePublishFlag</name>
+      <anchorfile>core__mqtt__serializer_8h.html</anchorfile>
+      <anchor>a269f0b0e193a7a10a6e392b88768ae94</anchor>
+      <arglist>(uint8_t *pHeader, bool set)</arglist>
     </member>
   </compound>
   <compound kind="file">
@@ -2063,6 +2160,27 @@
       <anchor>ac7073f43645f7b7c0c5b7763980004bb</anchor>
       <arglist></arglist>
     </member>
+    <member kind="variable">
+      <type>MQTTStorePacketForRetransmit</type>
+      <name>storeFunction</name>
+      <anchorfile>struct_m_q_t_t_context__t.html</anchorfile>
+      <anchor>ac205fc33078b0cfa0dfc62807bd9574f</anchor>
+      <arglist></arglist>
+    </member>
+    <member kind="variable">
+      <type>MQTTRetrievePacketForRetransmit</type>
+      <name>retrieveFunction</name>
+      <anchorfile>struct_m_q_t_t_context__t.html</anchorfile>
+      <anchor>a270e9e595ecd60948c960d059f8fe718</anchor>
+      <arglist></arglist>
+    </member>
+    <member kind="variable">
+      <type>MQTTClearPacketForRetransmit</type>
+      <name>clearFunction</name>
+      <anchorfile>struct_m_q_t_t_context__t.html</anchorfile>
+      <anchor>a36e3d500e6efa050d6e666aefa3ff577</anchor>
+      <arglist></arglist>
+    </member>
   </compound>
   <compound kind="struct">
     <name>MQTTDeserializedInfo_t</name>
@@ -2239,6 +2357,24 @@
       <name>topicFilterLength</name>
       <anchorfile>struct_m_q_t_t_subscribe_info__t.html</anchorfile>
       <anchor>a6972f8e036f8bde9b1f23a2aacb61382</anchor>
+      <arglist></arglist>
+    </member>
+  </compound>
+  <compound kind="struct">
+    <name>MQTTVec</name>
+    <filename>struct_m_q_t_t_vec.html</filename>
+    <member kind="variable">
+      <type>TransportOutVector_t *</type>
+      <name>pVector</name>
+      <anchorfile>struct_m_q_t_t_vec.html</anchorfile>
+      <anchor>a35ba714afe80db56d4346949ce635a5f</anchor>
+      <arglist></arglist>
+    </member>
+    <member kind="variable">
+      <type>size_t</type>
+      <name>vectorLen</name>
+      <anchorfile>struct_m_q_t_t_vec.html</anchorfile>
+      <anchor>a53b13c310696095b7f1a5254e75552fb</anchor>
       <arglist></arglist>
     </member>
   </compound>
@@ -2551,6 +2687,18 @@
       <name>MQTTStatusDisconnectPending</name>
       <anchorfile>group__mqtt__enum__types.html</anchorfile>
       <anchor>ggaba7ec045874a1c3432f99173367f735ca230baa3eaabf50e6b319f792a82bb863</anchor>
+      <arglist></arglist>
+    </member>
+    <member kind="enumvalue">
+      <name>MQTTPublishStoreFailed</name>
+      <anchorfile>group__mqtt__enum__types.html</anchorfile>
+      <anchor>ggaba7ec045874a1c3432f99173367f735ca61a3e19715d8ee1ee330c9bbd4b2708a</anchor>
+      <arglist></arglist>
+    </member>
+    <member kind="enumvalue">
+      <name>MQTTPublishRetrieveFailed</name>
+      <anchorfile>group__mqtt__enum__types.html</anchorfile>
+      <anchor>ggaba7ec045874a1c3432f99173367f735ca274b61e8a2aea2cf551353c6d09a6eb2</anchor>
       <arglist></arglist>
     </member>
     <member kind="enumeration">
