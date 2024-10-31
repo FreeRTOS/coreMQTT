@@ -15,10 +15,10 @@
  * copies or substantial portions of the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
- * FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
- * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
- * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+ * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+ * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
@@ -300,6 +300,59 @@ uint16_t MQTT_PublishToResend( const MQTTContext_t * pMqttContext,
  */
 const char * MQTT_State_strerror( MQTTPublishState_t state );
 /** @endcond */
+
+/**
+ * @brief Set an outgoing publish record in the MQTT context.
+ *
+ * This function allows the application to set an outgoing publish record in the
+ * MQTT context. It can be used to restore the state of the MQTT context after a
+ * device reboot.
+ *
+ * @param[in] pMqttContext Initialized MQTT context.
+ * @param[in] packetId ID of the PUBLISH packet.
+ * @param[in] qos QoS of the PUBLISH packet.
+ * @param[in] publishState State of the PUBLISH packet.
+ *
+ * @return #MQTTBadParameter, #MQTTNoMemory, or #MQTTSuccess.
+ */
+MQTTStatus_t MQTT_SetOutgoingPublishRecord( MQTTContext_t * pMqttContext,
+                                            uint16_t packetId,
+                                            MQTTQoS_t qos,
+                                            MQTTPublishState_t publishState );
+
+/**
+ * @brief Get an outgoing publish record from the MQTT context.
+ *
+ * This function allows the application to get an outgoing publish record from the
+ * MQTT context. It can be used to store the state of the MQTT context in persistent
+ * memory before a device reboot.
+ *
+ * @param[in] pMqttContext Initialized MQTT context.
+ * @param[in] packetId ID of the PUBLISH packet.
+ * @param[out] pQos QoS of the PUBLISH packet.
+ * @param[out] pPublishState State of the PUBLISH packet.
+ *
+ * @return #MQTTBadParameter, #MQTTSuccess.
+ */
+MQTTStatus_t MQTT_GetOutgoingPublishRecord( const MQTTContext_t * pMqttContext,
+                                            uint16_t packetId,
+                                            MQTTQoS_t * pQos,
+                                            MQTTPublishState_t * pPublishState );
+
+/**
+ * @brief Get the packet ID of the failed packet.
+ *
+ * This function allows the application to get the packet ID of the failed packet
+ * from the MQTT context. It can be used to handle the situation when the library
+ * loses state after a device reboot.
+ *
+ * @param[in] pMqttContext Initialized MQTT context.
+ * @param[out] pPacketId ID of the failed packet.
+ *
+ * @return #MQTTBadParameter, #MQTTSuccess.
+ */
+MQTTStatus_t MQTT_GetFailedPacketId( const MQTTContext_t * pMqttContext,
+                                     uint16_t * pPacketId );
 
 /* *INDENT-OFF* */
 #ifdef __cplusplus

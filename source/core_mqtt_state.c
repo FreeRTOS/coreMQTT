@@ -1204,3 +1204,93 @@ const char * MQTT_State_strerror( MQTTPublishState_t state )
 }
 
 /*-----------------------------------------------------------*/
+
+MQTTStatus_t MQTT_SetOutgoingPublishRecord( MQTTContext_t * pMqttContext,
+                                            uint16_t packetId,
+                                            MQTTQoS_t qos,
+                                            MQTTPublishState_t publishState )
+{
+    MQTTStatus_t status = MQTTSuccess;
+
+    if( ( pMqttContext == NULL ) || ( packetId == MQTT_PACKET_ID_INVALID ) || ( qos == MQTTQoS0 ) )
+    {
+        status = MQTTBadParameter;
+    }
+    else
+    {
+        status = addRecord( pMqttContext->outgoingPublishRecords,
+                            pMqttContext->outgoingPublishRecordMaxCount,
+                            packetId,
+                            qos,
+                            publishState );
+    }
+
+    return status;
+}
+
+MQTTStatus_t MQTT_GetOutgoingPublishRecord( const MQTTContext_t * pMqttContext,
+                                            uint16_t packetId,
+                                            MQTTQoS_t * pQos,
+                                            MQTTPublishState_t * pPublishState )
+{
+    MQTTStatus_t status = MQTTSuccess;
+    size_t recordIndex;
+
+    if( ( pMqttContext == NULL ) || ( packetId == MQTT_PACKET_ID_INVALID ) || ( pQos == NULL ) || ( pPublishState == NULL ) )
+    {
+        status = MQTTBadParameter;
+    }
+    else
+    {
+        recordIndex = findInRecord( pMqttContext->outgoingPublishRecords,
+                                    pMqttContext->outgoingPublishRecordMaxCount,
+                                    packetId,
+                                    pQos,
+                                    pPublishState );
+
+        if( recordIndex == MQTT_INVALID_STATE_COUNT )
+        {
+            status = MQTTBadParameter;
+        }
+    }
+
+    return status;
+}
+
+MQTTStatus_t MQTT_GetFailedPacketId( const MQTTContext_t * pMqttContext,
+                                     uint16_t * pPacketId )
+{
+    MQTTStatus_t status = MQTTSuccess;
+    size_t recordIndex;
+    MQTTQoS_t qos;
+    MQTTPublishState_t publishState;
+
+    if( ( pMqttContext == NULL ) || ( pPacketId == NULL ) )
+    {
+        status = MQTTBadParameter;
+    }
+    else
+    {
+        for( recordIndex = 0; recordIndex < pMqttContext->outgoingPublishRecordMaxCount; recordIndex++ )
+        {
+            if( pMqttContext->outgoingPublishRecords[ recordIndex ].packetId != MQTT_PACKET_ID_INVALID )
+            {
+                qos = pMqttContext->outgoingPublishRecords[ recordIndex ].qos;
+                publishState = pMqttContext->outgoingPublishRecords[ recordIndex ].publishState;
+
+                if( ( qos == MQTTQoS2 ) && ( publishState == MQTTPubRelSend ) )
+                {
+                    *pPacketId = pMqttContext->outgoingPublishRecords[ recordIndex ].packetId;
+                    break;
+                }
+            }
+        }
+
+        if( recordIndex == pMqttContext->outgoingPublishRecordMaxCount )
+        {
+            status = MQTTBadParameter;
+        }
+    }
+
+    return status;
+}

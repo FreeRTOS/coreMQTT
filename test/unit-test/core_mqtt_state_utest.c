@@ -15,10 +15,10 @@
  * copies or substantial portions of the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
- * FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
- * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
- * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+ * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+ * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
@@ -1168,3 +1168,143 @@ void test_MQTT_State_strerror( void )
 }
 
 /* ========================================================================== */
+
+void test_MQTT_SetOutgoingPublishRecord( void )
+{
+    MQTTContext_t mqttContext = { 0 };
+    MQTTStatus_t status;
+    const uint16_t PACKET_ID = 1;
+    const MQTTQoS_t qos = MQTTQoS2;
+    const MQTTPublishState_t publishState = MQTTPubRelSend;
+    TransportInterface_t transport;
+    MQTTFixedBuffer_t networkBuffer = { 0 };
+
+    transport.recv = transportRecvSuccess;
+    transport.send = transportSendSuccess;
+
+    MQTTPubAckInfo_t incomingRecords[ MQTT_STATE_ARRAY_MAX_COUNT ] = { 0 };
+    MQTTPubAckInfo_t outgoingRecords[ MQTT_STATE_ARRAY_MAX_COUNT ] = { 0 };
+
+    status = MQTT_Init( &mqttContext, &transport,
+                        getTime, eventCallback, &networkBuffer );
+    TEST_ASSERT_EQUAL( MQTTSuccess, status );
+
+    status = MQTT_InitStatefulQoS( &mqttContext,
+                                   outgoingRecords, MQTT_STATE_ARRAY_MAX_COUNT,
+                                   incomingRecords, MQTT_STATE_ARRAY_MAX_COUNT );
+    TEST_ASSERT_EQUAL( MQTTSuccess, status );
+
+    /* Test for bad parameters */
+    status = MQTT_SetOutgoingPublishRecord( NULL, PACKET_ID, qos, publishState );
+    TEST_ASSERT_EQUAL( MQTTBadParameter, status );
+    status = MQTT_SetOutgoingPublishRecord( &mqttContext, MQTT_PACKET_ID_INVALID, qos, publishState );
+    TEST_ASSERT_EQUAL( MQTTBadParameter, status );
+    status = MQTT_SetOutgoingPublishRecord( &mqttContext, PACKET_ID, MQTTQoS0, publishState );
+    TEST_ASSERT_EQUAL( MQTTBadParameter, status );
+
+    /* Success. */
+    status = MQTT_SetOutgoingPublishRecord( &mqttContext, PACKET_ID, qos, publishState );
+    TEST_ASSERT_EQUAL( MQTTSuccess, status );
+    /* Verify the record is added correctly. */
+    TEST_ASSERT_EQUAL( PACKET_ID, mqttContext.outgoingPublishRecords[ 0 ].packetId );
+    TEST_ASSERT_EQUAL( qos, mqttContext.outgoingPublishRecords[ 0 ].qos );
+    TEST_ASSERT_EQUAL( publishState, mqttContext.outgoingPublishRecords[ 0 ].publishState );
+}
+
+/* ========================================================================== */
+
+void test_MQTT_GetOutgoingPublishRecord( void )
+{
+    MQTTContext_t mqttContext = { 0 };
+    MQTTStatus_t status;
+    const uint16_t PACKET_ID = 1;
+    const MQTTQoS_t qos = MQTTQoS2;
+    const MQTTPublishState_t publishState = MQTTPubRelSend;
+    MQTTQoS_t retrievedQos;
+    MQTTPublishState_t retrievedPublishState;
+    TransportInterface_t transport;
+    MQTTFixedBuffer_t networkBuffer = { 0 };
+
+    transport.recv = transportRecvSuccess;
+    transport.send = transportSendSuccess;
+
+    MQTTPubAckInfo_t incomingRecords[ MQTT_STATE_ARRAY_MAX_COUNT ] = { 0 };
+    MQTTPubAckInfo_t outgoingRecords[ MQTT_STATE_ARRAY_MAX_COUNT ] = { 0 };
+
+    status = MQTT_Init( &mqttContext, &transport,
+                        getTime, eventCallback, &networkBuffer );
+    TEST_ASSERT_EQUAL( MQTTSuccess, status );
+
+    status = MQTT_InitStatefulQoS( &mqttContext,
+                                   outgoingRecords, MQTT_STATE_ARRAY_MAX_COUNT,
+                                   incomingRecords, MQTT_STATE_ARRAY_MAX_COUNT );
+    TEST_ASSERT_EQUAL( MQTTSuccess, status );
+
+    /* Test for bad parameters */
+    status = MQTT_GetOutgoingPublishRecord( NULL, PACKET_ID, &retrievedQos, &retrievedPublishState );
+    TEST_ASSERT_EQUAL( MQTTBadParameter, status );
+    status = MQTT_GetOutgoingPublishRecord( &mqttContext, MQTT_PACKET_ID_INVALID, &retrievedQos, &retrievedPublishState );
+    TEST_ASSERT_EQUAL( MQTTBadParameter, status );
+    status = MQTT_GetOutgoingPublishRecord( &mqttContext, PACKET_ID, NULL, &retrievedPublishState );
+    TEST_ASSERT_EQUAL( MQTTBadParameter, status );
+    status = MQTT_GetOutgoingPublishRecord( &mqttContext, PACKET_ID, &retrievedQos, NULL );
+    TEST_ASSERT_EQUAL( MQTTBadParameter, status );
+
+    /* No record found. */
+    status = MQTT_GetOutgoingPublishRecord( &mqttContext, PACKET_ID, &retrievedQos, &retrievedPublishState );
+    TEST_ASSERT_EQUAL( MQTTBadParameter, status );
+
+    /* Success. */
+    addToRecord( mqttContext.outgoingPublishRecords, 0, PACKET_ID, qos, publishState );
+    status = MQTT_GetOutgoingPublishRecord( &mqttContext, PACKET_ID, &retrievedQos, &retrievedPublishState );
+    TEST_ASSERT_EQUAL( MQTTSuccess, status );
+    /* Verify the record is retrieved correctly. */
+    TEST_ASSERT_EQUAL( qos, retrievedQos );
+    TEST_ASSERT_EQUAL( publishState, retrievedPublishState );
+}
+
+/* ========================================================================== */
+
+void test_MQTT_GetFailedPacketId( void )
+{
+    MQTTContext_t mqttContext = { 0 };
+    MQTTStatus_t status;
+    const uint16_t PACKET_ID = 1;
+    const MQTTQoS_t qos = MQTTQoS2;
+    const MQTTPublishState_t publishState = MQTTPubRelSend;
+    uint16_t retrievedPacketId;
+    TransportInterface_t transport;
+    MQTTFixedBuffer_t networkBuffer = { 0 };
+
+    transport.recv = transportRecvSuccess;
+    transport.send = transportSendSuccess;
+
+    MQTTPubAckInfo_t incomingRecords[ MQTT_STATE_ARRAY_MAX_COUNT ] = { 0 };
+    MQTTPubAckInfo_t outgoingRecords[ MQTT_STATE_ARRAY_MAX_COUNT ] = { 0 };
+
+    status = MQTT_Init( &mqttContext, &transport,
+                        getTime, eventCallback, &networkBuffer );
+    TEST_ASSERT_EQUAL( MQTTSuccess, status );
+
+    status = MQTT_InitStatefulQoS( &mqttContext,
+                                   outgoingRecords, MQTT_STATE_ARRAY_MAX_COUNT,
+                                   incomingRecords, MQTT_STATE_ARRAY_MAX_COUNT );
+    TEST_ASSERT_EQUAL( MQTTSuccess, status );
+
+    /* Test for bad parameters */
+    status = MQTT_GetFailedPacketId( NULL, &retrievedPacketId );
+    TEST_ASSERT_EQUAL( MQTTBadParameter, status );
+    status = MQTT_GetFailedPacketId( &mqttContext, NULL );
+    TEST_ASSERT_EQUAL( MQTTBadParameter, status );
+
+    /* No record found. */
+    status = MQTT_GetFailedPacketId( &mqttContext, &retrievedPacketId );
+    TEST_ASSERT_EQUAL( MQTTBadParameter, status );
+
+    /* Success. */
+    addToRecord( mqttContext.outgoingPublishRecords, 0, PACKET_ID, qos, publishState );
+    status = MQTT_GetFailedPacketId( &mqttContext, &retrievedPacketId );
+    TEST_ASSERT_EQUAL( MQTTSuccess, status );
+    /* Verify the packet ID is retrieved correctly. */
+    TEST_ASSERT_EQUAL( PACKET_ID, retrievedPacketId );
+}
