@@ -40,6 +40,11 @@
 #define MQTT_VERSION_3_1_1                          ( ( uint8_t ) 4U )
 
 /**
+ * @brief MQTT protocol version 5.0.
+ */
+#define MQTT_VERSION_5_0                            ( ( uint8_t ) 5U )
+
+/**
  * @brief Size of the fixed and variable header of a CONNECT packet.
  */
 #define MQTT_PACKET_CONNECT_HEADER_SIZE             ( 10UL )

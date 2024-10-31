@@ -275,6 +275,18 @@
     #define LogDebug( message )
 #endif
 
+/**
+ * @brief Define this macro to enable MQTT v5.x support in the library.
+ *
+ * When this macro is defined, the library will include support for MQTT v5.x
+ * features such as properties, reason codes, and user properties.
+ *
+ * <b>Default value</b>: MQTT v5.x support is disabled.
+ */
+#ifndef MQTT_VERSION_5_ENABLED
+    #define MQTT_VERSION_5_ENABLED    ( 0 )
+#endif
+
 /* *INDENT-OFF* */
 #ifdef __cplusplus
     }
