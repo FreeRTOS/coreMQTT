@@ -219,7 +219,7 @@ jobs:
           cd zip-check/${{ env.repository_compressed_name }}/"$REPO_NAME"
 
           # find "PROJECT_NUMBER = <version_number>"
-          DOXYGEN_VERSION_NUMBER=$(grep -x "[ ]*PROJECT_NUMBER[ ]*=[ ]*[^ ]*[ ]*" docs/doxygen/config.doxyfile | awk -F= '{gsub(" ","",$2); print $2 }');
+          export DOXYGEN_VERSION_NUMBER=$(grep -x "[ ]*PROJECT_NUMBER[ ]*=[ ]*[^ ]*[ ]*" docs/doxygen/config.doxyfile | awk -F= '{gsub(" ","",$2); print $2 }');
 
           # compare the <version_number> with input version number
           echo "Comparing $DOXYGEN_VERSION_NUMBER & $VERSION_NUMBER"
