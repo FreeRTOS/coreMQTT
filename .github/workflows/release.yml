@@ -93,7 +93,7 @@ jobs:
         env:
           VERSION_NUMBER: ${{ github.event.inputs.version_number }}
         run: |
-          sed -i -b '0,/^version/s/^version.*/version: "$VERSION_NUMBER"/g' ./manifest.yml
+          sed -i -b "0,/^version/s/^version.*/version: \"$VERSION_NUMBER\"/g" ./manifest.yml
           git add .
           git commit -m '[AUTO][RELEASE]: Update version number in manifest.yml'
           git push -u origin "$VERSION_NUMBER"
@@ -102,7 +102,7 @@ jobs:
         env:
           VERSION_NUMBER: ${{ github.event.inputs.version_number }}
         run: |
-          sed -i -b 's/PROJECT_NUMBER *=.*/PROJECT_NUMBER         = $VERSION_NUMBER/g' ./docs/doxygen/config.doxyfile
+          sed -i -b "s/PROJECT_NUMBER *=.*/PROJECT_NUMBER         = $VERSION_NUMBER/g" ./docs/doxygen/config.doxyfile
           git add .
           git commit -m '[AUTO][RELEASE]: Update version number in doxygen'
           git push -u origin "$VERSION_NUMBER"
@@ -112,7 +112,7 @@ jobs:
           VERSION_NUMBER: ${{ github.event.inputs.version_number }}
         if: ${{ github.event.repository.name == 'coreMQTT' }}
         run: |
-          sed -i -b 's/^\#define MQTT_LIBRARY_VERSION .*/\#define MQTT_LIBRARY_VERSION    "$VERSION_NUMBER"/g' source/include/core_mqtt.h
+          sed -i -b "s/^\#define MQTT_LIBRARY_VERSION .*/\#define MQTT_LIBRARY_VERSION    \"$VERSION_NUMBER\"/g" source/include/core_mqtt.h
           git add .
           git commit -m '[AUTO][RELEASE]: Update version number macro in source/include/core_mqtt.h'
           git push -u origin "$VERSION_NUMBER"
@@ -219,13 +219,13 @@ jobs:
           cd zip-check/${{ env.repository_compressed_name }}/"$REPO_NAME"
 
           # find "PROJECT_NUMBER = <version_number>"
-          DOXYGEN_VERSION=$(grep -x "[ ]*PROJECT_NUMBER[ ]*=[ ]*[^ ]*[ ]*" docs/doxygen/config.doxyfile | awk -F= '{gsub(" ","",$2); print $2 }');
+          DOXYGEN_VERSION_NUMBER=$(grep -x "[ ]*PROJECT_NUMBER[ ]*=[ ]*[^ ]*[ ]*" docs/doxygen/config.doxyfile | awk -F= '{gsub(" ","",$2); print $2 }');
 
           # compare the <version_number> with input version number
-          echo "Comparing $DOXYGEN_VERSION & $VERSION_NUMBER"
-          [[ $DOXYGEN_VERSION == $VERSION_NUMBER ]] \
+          echo "Comparing $DOXYGEN_VERSION_NUMBER & $VERSION_NUMBER"
+          [[ $DOXYGEN_VERSION_NUMBER == $VERSION_NUMBER ]] \
           && echo "config.doxyfile : match $VERSION_NUMBER" \
-          || { echo "config.doxyfile : $DOXYGEN_VERSION doesn't match $VERSION_NUMBER"; exit 255; }
+          || { echo "config.doxyfile : $DOXYGEN_VERSION_NUMBER doesn't match $VERSION_NUMBER"; exit 255; }
 
       - name: Check version number in manifest.yml
         env:
@@ -238,7 +238,7 @@ jobs:
           MANIFEST_VESION_NUMBER=$( grep -m 1 -E "^version:[ ]*\".*\"[ ]*" manifest.yml | awk -F: '{ gsub(" ","",$2); gsub("\"","",$2); print $2 }' );
 
           # compare the <version_number> with input version number
-          [[ $MANIFEST_VESION_NUMBER == "$VERSION_NUMBER" ]] \
+          [[ $MANIFEST_VESION_NUMBER == $VERSION_NUMBER ]] \
           && echo "manifest.yml : match $VERSION_NUMBER" \
           || { echo "manifest.yml : $MANIFEST_VESION_NUMBER doesn't match $VERSION_NUMBER"; exit 255; }
 
