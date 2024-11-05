@@ -219,13 +219,13 @@ jobs:
           cd zip-check/${{ env.repository_compressed_name }}/"$REPO_NAME"
 
           # find "PROJECT_NUMBER = <version_number>"
-          DOXYGEN_VERSION_NUMBER=$(grep -x "[ ]*PROJECT_NUMBER[ ]*=[ ]*[^ ]*[ ]*" docs/doxygen/config.doxyfile | awk -F= '{gsub(" ","",$2); print $2 }');
+          DOXYGEN_VERSION=$(grep -x "[ ]*PROJECT_NUMBER[ ]*=[ ]*[^ ]*[ ]*" docs/doxygen/config.doxyfile | awk -F= '{gsub(" ","",$2); print $2 }');
 
           # compare the <version_number> with input version number
-          echo "Comparing $DOXYGEN_VERSION_NUMBER & $VERSION_NUMBER"
-          [[ '$DOXYGEN_VERSION_NUMBER' == $VERSION_NUMBER ]] \
+          echo "Comparing $DOXYGEN_VERSION & $VERSION_NUMBER"
+          [[ $DOXYGEN_VERSION == $VERSION_NUMBER ]] \
           && echo "config.doxyfile : match $VERSION_NUMBER" \
-          || { echo "config.doxyfile : $DOXYGEN_VERSION_NUMBER doesn't match $VERSION_NUMBER"; exit 255; }
+          || { echo "config.doxyfile : $DOXYGEN_VERSION doesn't match $VERSION_NUMBER"; exit 255; }
 
       - name: Check version number in manifest.yml
         env:
