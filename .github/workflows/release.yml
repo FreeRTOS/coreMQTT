@@ -25,7 +25,7 @@ jobs:
     if: ${{ github.event.inputs.delete_existing_tag_release == 'true' }}
     runs-on: ubuntu-latest
     env:
-      VERSION_NUM: ${{ github.event.inputs.version_number }}
+      VERSION_NUMBER: ${{ github.event.inputs.version_number }}
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - name: Checkout code
@@ -34,10 +34,10 @@ jobs:
       - name: Check if tag exists
         run: |
           git fetch origin
-          if git tag --list $VERSION_NUM
+          if git tag --list $VERSION_NUMBER
           then
-              echo "Deleting existing tag for $VERSION_NUM"
-              git push origin --delete tags/$VERSION_NUM
+              echo "Deleting existing tag for $VERSION_NUMBER"
+              git push origin --delete tags/$VERSION_NUMBER
           fi
 
       - name: Check if release exists
@@ -46,10 +46,10 @@ jobs:
           sudo apt-add-repository https://cli.github.com/packages
           sudo apt update
           sudo apt-get install gh
-          if gh release list | grep $VERSION_NUM
+          if gh release list | grep $VERSION_NUMBER
           then
-              echo "Deleting existing release for $VERSION_NUM"
-              gh release delete --yes $VERSION_NUM
+              echo "Deleting existing release for $VERSION_NUMBER"
+              gh release delete --yes $VERSION_NUMBER
           fi
 
   add-sbom-and-tag-commit:
@@ -64,44 +64,58 @@ jobs:
           ref: ${{ github.event.inputs.commit_id }}
 
       - name: Configure git identity
+        env:
+          ACTOR: ${{ github.actor }}
         run: |
-          git config --global user.name ${{ github.actor }}
-          git config --global user.email ${{ github.actor }}@users.noreply.github.com
+          git config --global user.name "$ACTOR"
+          git config --global user.email "$ACTOR"@users.noreply.github.com
 
       - name: create a new branch that references commit id
-        run: git checkout -b ${{ github.event.inputs.version_number }} ${{ github.event.inputs.commit_id }}
+        env:
+          VERSION_NUMBER: ${{ github.event.inputs.version_number }}
+          COMMIT_ID: ${{ github.event.inputs.commit_id }}
+        run: git checkout -b "$VERSION_NUMBER" "$COMMIT_ID"
 
       - name: Update version number in source files
+        env:
+          VERSION_NUMBER: ${{ github.event.inputs.version_number }}
+          REPO_NAME: ${{ github.event.repository.name }}
         run: |
             echo "${{ env.source_folder_list }}" | \
             xargs -n 1 sh -c \
             'find $1 -type f \( -name "*.c" -o -name "*.h" \) \
-            -exec sed -i -b -E "0,/^ \* ${{ github.event.repository.name }}/s/^ \* ${{ github.event.repository.name }}.*/ \* ${{ github.event.repository.name }} ${{ github.event.inputs.version_number }}/g" {} +'
+            -exec sed -i -b -E "0,/^ \* $REPO_NAME/s/^ \* $REPO_NAME.*/ \* $REPO_NAME $VERSION_NUMBER/g" {} +'
             git add .
             git commit -m '[AUTO][RELEASE]: Update version number in source files'
-            git push -u origin ${{ github.event.inputs.version_number }}
+            git push -u origin "$VERSION_NUMBER"
 
       - name : Update version number in manifest.yml
+        env:
+          VERSION_NUMBER: ${{ github.event.inputs.version_number }}
         run: |
-          sed -i -b '0,/^version/s/^version.*/version: "${{ github.event.inputs.version_number }}"/g' ./manifest.yml
+          sed -i -b "0,/^version/s/^version.*/version: \"$VERSION_NUMBER\"/g" ./manifest.yml
           git add .
           git commit -m '[AUTO][RELEASE]: Update version number in manifest.yml'
-          git push -u origin ${{ github.event.inputs.version_number }}
+          git push -u origin "$VERSION_NUMBER"
 
       - name : Update version number in doxygen
+        env:
+          VERSION_NUMBER: ${{ github.event.inputs.version_number }}
         run: |
-          sed -i -b 's/PROJECT_NUMBER *=.*/PROJECT_NUMBER         = ${{ github.event.inputs.version_number }}/g' ./docs/doxygen/config.doxyfile
+          sed -i -b "s/PROJECT_NUMBER *=.*/PROJECT_NUMBER         = $VERSION_NUMBER/g" ./docs/doxygen/config.doxyfile
           git add .
           git commit -m '[AUTO][RELEASE]: Update version number in doxygen'
-          git push -u origin ${{ github.event.inputs.version_number }}
+          git push -u origin "$VERSION_NUMBER"
 
       - name : Update MQTT version number macro
+        env:
+          VERSION_NUMBER: ${{ github.event.inputs.version_number }}
         if: ${{ github.event.repository.name == 'coreMQTT' }}
         run: |
-          sed -i -b 's/^\#define MQTT_LIBRARY_VERSION .*/\#define MQTT_LIBRARY_VERSION    "${{ github.event.inputs.version_number }}"/g' source/include/core_mqtt.h
+          sed -i -b "s/^\#define MQTT_LIBRARY_VERSION .*/\#define MQTT_LIBRARY_VERSION    \"$VERSION_NUMBER\"/g" source/include/core_mqtt.h
           git add .
           git commit -m '[AUTO][RELEASE]: Update version number macro in source/include/core_mqtt.h'
-          git push -u origin ${{ github.event.inputs.version_number }}
+          git push -u origin "$VERSION_NUMBER"
 
       - name: Generate SBOM
         uses: FreeRTOS/CI-CD-Github-Actions/sbom-generator@main
@@ -110,22 +124,30 @@ jobs:
           source_path: ./source
 
       - name: commit SBOM file
+        env:
+          VERSION_NUMBER: ${{ github.event.inputs.version_number }}
         run: |
           git add .
           git commit -m 'Update SBOM'
-          git push -u origin ${{ github.event.inputs.version_number }}
+          git push -u origin "$VERSION_NUMBER"
 
       - name: Tag Commit and Push to remote
+        env:
+          VERSION_NUMBER: ${{ github.event.inputs.version_number }}
+          REPO_NAME: ${{ github.event.repository.name }}
         run: |
-          git tag ${{ github.event.inputs.version_number }} -a -m "${{ github.event.repository.name }} Library ${{ github.event.inputs.version_number }}"
+          git tag "$VERSION_NUMBER" -a -m "$REPO_NAME Library $VERSION_NUMBER"
           git push origin --tags
 
       - name: Verify tag on remote
+        env:
+          VERSION_NUMBER: ${{ github.event.inputs.version_number }}
+          COMMIT_ID: ${{ github.event.inputs.commit_id }}
         run: |
-          git tag -d ${{ github.event.inputs.version_number }}
+          git tag -d "$VERSION_NUMBER"
           git remote update
-          git checkout tags/${{ github.event.inputs.version_number }}
-          git diff ${{ github.event.inputs.commit_id }} tags/${{ github.event.inputs.version_number }}
+          git checkout tags/"$VERSION_NUMBER"
+          git diff "$COMMIT_ID" tags/"$VERSION_NUMBER"
 
   create-zip:
     if: ${{ ( github.event.inputs.delete_existing_tag_release == 'true' && success() )  || ( github.event.inputs.delete_existing_tag_release == 'false' && always() ) }}
@@ -144,82 +166,103 @@ jobs:
           submodules: recursive
 
       - name: Checkout disabled submodules
+        env:
+          REPO_NAME: ${{ github.event.repository.name }}
         run: |
-          cd ${{ github.event.repository.name }}
+          cd "$REPO_NAME"
           git submodule update --init --checkout --recursive
 
       - name: Create ZIP
+        env:
+          REPO_NAME: ${{ github.event.repository.name }}
         run: |
-          zip -r ${{ env.repository_zip_name }} ${{ github.event.repository.name }} -x "*.git*"
+          zip -r ${{ env.repository_zip_name }} "$REPO_NAME" -x "*.git*"
           ls ./
 
       - name: Validate created ZIP
+        env:
+          REPO_NAME: ${{ github.event.repository.name }}
         run: |
           mkdir zip-check
           mv ${{ env.repository_zip_name }} zip-check
           cd zip-check
           unzip ${{ env.repository_zip_name }} -d ${{ env.repository_compressed_name }}
           ls ${{ env.repository_compressed_name }}
-          diff -r -x "*.git*" ${{ env.repository_compressed_name }}/${{ github.event.repository.name }}/ ../${{ github.event.repository.name }}/
+          diff -r -x "*.git*" ${{ env.repository_compressed_name }}/"$REPO_NAME"/ ../"$REPO_NAME"/
           cd ../
 
       - name: Check version number in source files
+        env:
+          VERSION_NUMBER: ${{ github.event.inputs.version_number }}
+          REPO_NAME: ${{ github.event.repository.name }}
         run: |
-          cd zip-check/${{ env.repository_compressed_name }}/${{ github.event.repository.name }}
+          cd zip-check/${{ env.repository_compressed_name }}/"$REPO_NAME"
 
           # List all the *.h *.c files in <source_folder_list>
           SOURCE_FILE_LIST=$( echo "${{ env.source_folder_list }}" | \
           xargs -n 1 sh -c 'find $1 -type f \( -name "*.c" -o -name "*.h" \)' )
 
           # List all the files which contain " * <repository_name>.*" in SOURCE_FILE_LIST
-          SOURCE_FILE_WITH_VERSION_LIST=$( grep -l " \* ${{ github.event.repository.name }}.*" $SOURCE_FILE_LIST )
+          SOURCE_FILE_WITH_VERSION_LIST=$( grep -l " \* $REPO_NAME.*" $SOURCE_FILE_LIST )
 
           # Compare the <version_number> with input version number in files in SOURCE_FILE_LIST
           echo $SOURCE_FILE_WITH_VERSION_LIST | xargs -I{} sh -c \
-          'grep -x " \* ${{ github.event.repository.name }} ${{ github.event.inputs.version_number }}" {} && \
-          echo {} : match ${{ github.event.repository.name }} ${{ github.event.inputs.version_number }} || \
-          { echo "{} : ${{ github.event.repository.name }} ${{ github.event.inputs.version_number }} not found"; exit 255; }'
+          'grep -x " \* $REPO_NAME $VERSION_NUMBER" {} && \
+          echo {} : match "$REPO_NAME" "$VERSION_NUMBER" || \
+          { echo "{} : $REPO_NAME $VERSION_NUMBER not found"; exit 255; }'
 
       - name: Check version number in doxygen
+        env:
+          VERSION_NUMBER: ${{ github.event.inputs.version_number }}
+          REPO_NAME: ${{ github.event.repository.name }}
         run: |
-          cd zip-check/${{ env.repository_compressed_name }}/${{ github.event.repository.name }}
+          cd zip-check/${{ env.repository_compressed_name }}/"$REPO_NAME"
 
           # find "PROJECT_NUMBER = <version_number>"
           DOXYGEN_VERSION_NUMBER=$(grep -x "[ ]*PROJECT_NUMBER[ ]*=[ ]*[^ ]*[ ]*" docs/doxygen/config.doxyfile | awk -F= '{gsub(" ","",$2); print $2 }');
 
           # compare the <version_number> with input version number
-          [[ $DOXYGEN_VERSION_NUMBER == "${{ github.event.inputs.version_number }}" ]] \
-          && echo "config.doxyfile : match ${{ github.event.inputs.version_number }}" \
-          || { echo "config.doxyfile : $DOXYGEN_VERSION_NUMBER doesn't match ${{ github.event.inputs.version_number }}"; exit 255; }
+          echo "Comparing $DOXYGEN_VERSION_NUMBER & $VERSION_NUMBER"
+          [[ $DOXYGEN_VERSION_NUMBER == $VERSION_NUMBER ]] \
+          && echo "config.doxyfile : match $VERSION_NUMBER" \
+          || { echo "config.doxyfile : $DOXYGEN_VERSION_NUMBER doesn't match $VERSION_NUMBER"; exit 255; }
 
       - name: Check version number in manifest.yml
+        env:
+          VERSION_NUMBER: ${{ github.event.inputs.version_number }}
+          REPO_NAME: ${{ github.event.repository.name }}
         run: |
-          cd zip-check/${{ env.repository_compressed_name }}/${{ github.event.repository.name }}
+          cd zip-check/${{ env.repository_compressed_name }}/"$REPO_NAME"
 
           # find the first occurence of "version: <version_number>" and comare the <version_number> with input version number
           MANIFEST_VESION_NUMBER=$( grep -m 1 -E "^version:[ ]*\".*\"[ ]*" manifest.yml | awk -F: '{ gsub(" ","",$2); gsub("\"","",$2); print $2 }' );
 
           # compare the <version_number> with input version number
-          [[ $MANIFEST_VESION_NUMBER == "${{ github.event.inputs.version_number }}" ]] \
-          && echo "manifest.yml : match ${{ github.event.inputs.version_number }}" \
-          || { echo "manifest.yml : $MANIFEST_VESION_NUMBER doesn't match ${{ github.event.inputs.version_number }}"; exit 255; }
+          [[ $MANIFEST_VESION_NUMBER == $VERSION_NUMBER ]] \
+          && echo "manifest.yml : match $VERSION_NUMBER" \
+          || { echo "manifest.yml : $MANIFEST_VESION_NUMBER doesn't match $VERSION_NUMBER"; exit 255; }
 
       - name: Check MQTT version number macro in header file
+        env:
+          VERSION_NUMBER: ${{ github.event.inputs.version_number }}
+          REPO_NAME: ${{ github.event.repository.name }}
         if: ${{ github.event.repository.name == 'coreMQTT' }}
         run: |
-          cd zip-check/${{ env.repository_compressed_name }}/${{ github.event.repository.name }}
+          cd zip-check/${{ env.repository_compressed_name }}/"$REPO_NAME"
 
           # find "#define MQTT_LIBRARY_VERSION <version_number>" in core_mqtt.h
           MACRO_VERSION_NUMBER=$(grep -x "^\#define[ ]*MQTT_LIBRARY_VERSION[ ]*\".*\"[ ]*" source/include/core_mqtt.h | awk '{gsub("\"","",$3); print $3 }');
           
           # compare the <version_number> with input version number
-          [[ $MACRO_VERSION_NUMBER == "${{ github.event.inputs.version_number }}" ]] \
-          && echo "core_mqtt.h : match ${{ github.event.inputs.version_number }}" \
-          || { echo "core_mqtt.h : $MACRO_VERSION_NUMBER doesn't match ${{ github.event.inputs.version_number }}"; exit 255; }
+          [[ $MACRO_VERSION_NUMBER == "$VERSION_NUMBER" ]] \
+          && echo "core_mqtt.h : match $VERSION_NUMBER" \
+          || { echo "core_mqtt.h : $MACRO_VERSION_NUMBER doesn't match $VERSION_NUMBER"; exit 255; }
 
       - name: Build
+        env:
+          REPO_NAME: ${{ github.event.repository.name }}
         run: |
-          cd zip-check/${{ env.repository_compressed_name }}/${{ github.event.repository.name }}
+          cd zip-check/${{ env.repository_compressed_name }}/"$REPO_NAME"
           sudo apt-get install -y lcov
           cmake -S test -B build/ \
           -G "Unix Makefiles" \
@@ -229,8 +272,10 @@ jobs:
           make -C build/ all
 
       - name: Test
+        env:
+          REPO_NAME: ${{ github.event.repository.name }}
         run: |
-          cd zip-check/${{ env.repository_compressed_name }}/${{ github.event.repository.name }}/build/
+          cd zip-check/${{ env.repository_compressed_name }}/"$REPO_NAME"/build/
           ctest -E system --output-on-failure
           cd ..
 
@@ -287,3 +332,4 @@ jobs:
           asset_path: ./${{ env.repository_zip_name }}
           asset_name: ${{ env.repository_zip_name }}
           asset_content_type: application/zip
+  
