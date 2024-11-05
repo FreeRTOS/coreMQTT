@@ -248,3 +248,38 @@ doxygen docs/doxygen/config.doxyfile
 
 See [CONTRIBUTING.md](./.github/CONTRIBUTING.md) for information on
 contributing.
+
+## Using Setter and Getter Functions for Persistent Storage
+
+The coreMQTT library provides setter and getter functions to allow the application to store and restore MQTT state in persistent memory. This is useful for handling QoS2 messages after a device reboot.
+
+### Setter Function
+
+The `MQTT_SetOutgoingPublishRecord` function allows the application to set an outgoing publish record in the MQTT context. It can be used to restore the state of the MQTT context after a device reboot.
+
+```c
+MQTTStatus_t MQTT_SetOutgoingPublishRecord( MQTTContext_t * pMqttContext,
+                                            uint16_t packetId,
+                                            MQTTQoS_t qos,
+                                            MQTTPublishState_t publishState );
+```
+
+### Getter Function
+
+The `MQTT_GetOutgoingPublishRecord` function allows the application to get an outgoing publish record from the MQTT context. It can be used to store the state of the MQTT context in persistent memory before a device reboot.
+
+```c
+MQTTStatus_t MQTT_GetOutgoingPublishRecord( const MQTTContext_t * pMqttContext,
+                                            uint16_t packetId,
+                                            MQTTQoS_t * pQos,
+                                            MQTTPublishState_t * pPublishState );
+```
+
+### Getting the Failed Packet ID
+
+The `MQTT_GetFailedPacketId` function allows the application to get the packet ID of the failed packet from the MQTT context. It can be used to handle the situation when the library loses state after a device reboot.
+
+```c
+MQTTStatus_t MQTT_GetFailedPacketId( const MQTTContext_t * pMqttContext,
+                                     uint16_t * pPacketId );
+```
