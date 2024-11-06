@@ -146,7 +146,7 @@ typedef struct MQTTConnectInfo
     /**
      * @brief MQTT keep alive period.
      */
-    uint16_t keepAliveSeconds;
+    size_t keepAliveSeconds;
 
     /**
      * @brief MQTT client identifier. Must be unique per client.
@@ -156,7 +156,7 @@ typedef struct MQTTConnectInfo
     /**
      * @brief Length of the client identifier.
      */
-    uint16_t clientIdentifierLength;
+    size_t clientIdentifierLength;
 
     /**
      * @brief MQTT user name. Set to NULL if not used.
@@ -166,7 +166,7 @@ typedef struct MQTTConnectInfo
     /**
      * @brief Length of MQTT user name. Set to 0 if not used.
      */
-    uint16_t userNameLength;
+    size_t userNameLength;
 
     /**
      * @brief MQTT password. Set to NULL if not used.
@@ -176,7 +176,7 @@ typedef struct MQTTConnectInfo
     /**
      * @brief Length of MQTT password. Set to 0 if not used.
      */
-    uint16_t passwordLength;
+    size_t passwordLength;
 } MQTTConnectInfo_t;
 
 /**
@@ -198,7 +198,7 @@ typedef struct MQTTSubscribeInfo
     /**
      * @brief Length of subscription topic filter.
      */
-    uint16_t topicFilterLength;
+    size_t topicFilterLength;
 } MQTTSubscribeInfo_t;
 
 /**
@@ -230,7 +230,7 @@ typedef struct MQTTPublishInfo
     /**
      * @brief Length of topic name.
      */
-    uint16_t topicNameLength;
+    size_t topicNameLength;
 
     /**
      * @brief Message payload.

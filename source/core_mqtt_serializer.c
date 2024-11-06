@@ -292,7 +292,7 @@ static size_t remainingLengthEncodedSize( size_t length );
  */
 static uint8_t * encodeString( uint8_t * pDestination,
                                const char * pSource,
-                               uint16_t sourceLength );
+                               size_t sourceLength );
 
 /**
  * @brief Retrieves and decodes the Remaining Length from the network interface
@@ -525,7 +525,7 @@ static uint8_t * encodeRemainingLength( uint8_t * pDestination,
 
 static uint8_t * encodeString( uint8_t * pDestination,
                                const char * pSource,
-                               uint16_t sourceLength )
+                               size_t sourceLength )
 {
     uint8_t * pBuffer = NULL;
 
@@ -1667,7 +1667,7 @@ static void serializeConnectPacket( const MQTTConnectInfo_t * pConnectInfo,
 
         pIndex = encodeString( pIndex,
                                pWillInfo->pPayload,
-                               ( uint16_t ) pWillInfo->payloadLength );
+                               pWillInfo->payloadLength );
     }
 
     /* Encode the user name if provided. */
