@@ -2635,12 +2635,12 @@ MQTTStatus_t MQTT_UpdateDuplicatePublishFlag( uint8_t * pHeader,
 
     if( pHeader == NULL )
     {
-        LogError( "Header cannot be NULL" );
+        LogError( ( "Header cannot be NULL" ) );
         status = MQTTBadParameter;
     }
     else if( ( ( *pHeader ) & 0xF0U ) != MQTT_PACKET_TYPE_PUBLISH )
     {
-        LogError( "Header is not publish packet header" );
+        LogError( ( "Header is not publish packet header" ) );
         status = MQTTBadParameter;
     }
     else if( set == true )
