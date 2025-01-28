@@ -597,7 +597,7 @@ MQTTStatus_t MQTT_InitRetransmits( MQTTContext_t * pContext,
  * @endcode
  */
 /* @[declare_mqtt_checkconnectstatus] */
-MQTTStatus_t MQTT_CheckConnectStatus( MQTTContext_t * pContext );
+MQTTStatus_t MQTT_CheckConnectStatus( const MQTTContext_t * pContext );
 /* @[declare_mqtt_checkconnectstatus] */
 
 /**
@@ -1235,7 +1235,7 @@ const char * MQTT_Status_strerror( MQTTStatus_t status );
  * @return The bytes in the provided #MQTTVec array which can then be used to set aside memory to be used with MQTT_SerializeMQTTVec( void * pAllocatedMem, MQTTVec_t *pVec ) function.
  */
 /* @[declare_mqtt_getbytesinmqttvec] */
-size_t MQTT_GetBytesInMQTTVec( MQTTVec_t * pVec );
+size_t MQTT_GetBytesInMQTTVec( const MQTTVec_t * pVec );
 /* @[declare_mqtt_getbytesinmqttvec] */
 
 /**
@@ -1246,7 +1246,7 @@ size_t MQTT_GetBytesInMQTTVec( MQTTVec_t * pVec );
  */
 /* @[declare_mqtt_serializemqttvec] */
 void MQTT_SerializeMQTTVec( uint8_t * pAllocatedMem,
-                            MQTTVec_t * pVec );
+                            const MQTTVec_t * pVec );
 /* @[declare_mqtt_serializemqttvec] */
 
 /* *INDENT-OFF* */

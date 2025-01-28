@@ -2208,38 +2208,39 @@ static MQTTStatus_t sendPublishWithoutCopy( MQTTContext_t * pContext,
         totalMessageLength += pPublishInfo->payloadLength;
     }
 
-    /* If not already set, set the dup flag before storing a copy of the publish
-     * this is because on retrieving back this copy we will get it in the form of an
-     * array of TransportOutVector_t that holds the data in a const pointer which cannot be
-     * changed after retrieving. */
-    if( pPublishInfo->dup != true )
-    {
-        MQTT_UpdateDuplicatePublishFlag( pMqttHeader, true );
-
-        dupFlagChanged = true;
-    }
-
     /* store a copy of the publish for retransmission purposes */
     if( ( pPublishInfo->qos > MQTTQoS0 ) &&
         ( pContext->storeFunction != NULL ) )
     {
-        MQTTVec_t mqttVec;
-
-        mqttVec.pVector = pIoVector;
-        mqttVec.vectorLen = ioVectorLength;
-
-        if( pContext->storeFunction( pContext, packetId, &mqttVec ) != true )
+        /* If not already set, set the dup flag before storing a copy of the publish
+        * this is because on retrieving back this copy we will get it in the form of an
+        * array of TransportOutVector_t that holds the data in a const pointer which cannot be
+        * changed after retrieving. */
+        if( pPublishInfo->dup != true )
         {
-            status = MQTTPublishStoreFailed;
+            status = MQTT_UpdateDuplicatePublishFlag( pMqttHeader, true );
+
+            dupFlagChanged = ( status == MQTTSuccess );
         }
-    }
 
-    /* change the value of the dup flag to its original, if it was changed */
-    if( dupFlagChanged )
-    {
-        MQTT_UpdateDuplicatePublishFlag( pMqttHeader, false );
+        if( status == MQTTSuccess )
+        {
+            MQTTVec_t mqttVec;
 
-        dupFlagChanged = false;
+            mqttVec.pVector = pIoVector;
+            mqttVec.vectorLen = ioVectorLength;
+
+            if( pContext->storeFunction( pContext, packetId, &mqttVec ) != true )
+            {
+                status = MQTTPublishStoreFailed;
+            }
+        }
+
+        /* change the value of the dup flag to its original, if it was changed */
+        if( ( status == MQTTSuccess ) && ( dupFlagChanged == true ) )
+        {
+            status = MQTT_UpdateDuplicatePublishFlag( pMqttHeader, false );
+        }
     }
 
     if( ( status == MQTTSuccess ) &&
@@ -2608,8 +2609,7 @@ static MQTTStatus_t handleCleanSession( MQTTContext_t * pContext )
             {
                 pContext->clearFunction( pContext, packetId );
             }
-        } while( ( packetId != MQTT_PACKET_ID_INVALID ) &&
-                 ( status == MQTTSuccess ) );
+        } while( packetId != MQTT_PACKET_ID_INVALID );
     }
 
     if( pContext->outgoingPublishRecordMaxCount > 0U )
@@ -2864,7 +2864,7 @@ MQTTStatus_t MQTT_CancelCallback( const MQTTContext_t * pContext,
 
 /*-----------------------------------------------------------*/
 
-MQTTStatus_t MQTT_CheckConnectStatus( MQTTContext_t * pContext )
+MQTTStatus_t MQTT_CheckConnectStatus( const MQTTContext_t * pContext )
 {
     MQTTConnectionStatus_t connectStatus;
     MQTTStatus_t status = MQTTSuccess;
@@ -3729,11 +3729,11 @@ const char * MQTT_Status_strerror( MQTTStatus_t status )
 
 /*-----------------------------------------------------------*/
 
-size_t MQTT_GetBytesInMQTTVec( MQTTVec_t * pVec )
+size_t MQTT_GetBytesInMQTTVec( const MQTTVec_t * pVec )
 {
     size_t memoryRequired = 0;
     size_t i;
-    TransportOutVector_t * pTransportVec = pVec->pVector;
+    const TransportOutVector_t * pTransportVec = pVec->pVector;
     size_t vecLen = pVec->vectorLen;
 
     for( i = 0; i < vecLen; i++ )
@@ -3747,16 +3747,16 @@ size_t MQTT_GetBytesInMQTTVec( MQTTVec_t * pVec )
 /*-----------------------------------------------------------*/
 
 void MQTT_SerializeMQTTVec( uint8_t * pAllocatedMem,
-                            MQTTVec_t * pVec )
+                            const MQTTVec_t * pVec )
 {
-    TransportOutVector_t * pTransportVec = pVec->pVector;
+    const TransportOutVector_t * pTransportVec = pVec->pVector;
     const size_t vecLen = pVec->vectorLen;
     size_t index = 0;
     size_t i = 0;
 
     for( i = 0; i < vecLen; i++ )
     {
-        memcpy( &pAllocatedMem[ index ], pTransportVec[ i ].iov_base, pTransportVec[ i ].iov_len );
+        ( void ) memcpy( &pAllocatedMem[ index ], (const uint8_t *) pTransportVec[ i ].iov_base, pTransportVec[ i ].iov_len );
         index += pTransportVec[ i ].iov_len;
     }
 }
