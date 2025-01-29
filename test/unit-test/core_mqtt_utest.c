@@ -3164,6 +3164,56 @@ void test_MQTT_Publish_Storing_Publish_Success( void )
 /**
  * @brief Test that MQTT_Publish works as intended.
  */
+void test_MQTT_Publish_Storing_Publish_Success_For_Duplicate_Publish( void )
+{
+    MQTTContext_t mqttContext = { 0 };
+    MQTTPublishInfo_t publishInfo = { 0 };
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
+    MQTTStatus_t status;
+    MQTTPubAckInfo_t incomingRecords = { 0 };
+    MQTTPubAckInfo_t outgoingRecords = { 0 };
+    MQTTPublishState_t expectedState = { 0 };
+
+    setupTransportInterface( &transport );
+    setupNetworkBuffer( &networkBuffer );
+    transport.send = transportSendFailure;
+
+    memset( &mqttContext, 0x0, sizeof( mqttContext ) );
+    memset( &publishInfo, 0x0, sizeof( publishInfo ) );
+    MQTT_Init( &mqttContext, &transport, getTime, eventCallback, &networkBuffer );
+
+    MQTT_InitStatefulQoS( &mqttContext,
+                          &outgoingRecords, 4,
+                          &incomingRecords, 4 );
+
+    MQTT_InitRetransmits( &mqttContext, publishStoreCallbackSuccess,
+                          publishRetrieveCallbackSuccess,
+                          publishClearCallback );
+
+    mqttContext.connectStatus = MQTTConnected;
+
+    publishInfo.qos = MQTTQoS1;
+    publishInfo.dup = true;
+
+    expectedState = MQTTPublishSend;
+
+    MQTT_GetPublishPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_SerializePublishHeaderWithoutTopic_ExpectAnyArgsAndReturn( MQTTSuccess );
+
+    MQTT_ReserveState_ExpectAnyArgsAndReturn( MQTTSuccess );
+
+    MQTT_UpdateStatePublish_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_UpdateStatePublish_ReturnThruPtr_pNewState( &expectedState );
+
+    mqttContext.transportInterface.send = transportSendSuccess;
+    status = MQTT_Publish( &mqttContext, &publishInfo, 1 );
+    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
+}
+
+/**
+ * @brief Test that MQTT_Publish works as intended.
+ */
 void test_MQTT_Publish_Storing_Publish_Failed( void )
 {
     MQTTContext_t mqttContext = { 0 };
@@ -3204,6 +3254,51 @@ void test_MQTT_Publish_Storing_Publish_Failed( void )
     mqttContext.transportInterface.send = transportSendSuccess;
     status = MQTT_Publish( &mqttContext, &publishInfo, 1 );
     TEST_ASSERT_EQUAL_INT( MQTTPublishStoreFailed, status );
+}
+
+/**
+ * @brief Test that MQTT_Publish works as intended.
+ */
+void test_MQTT_Publish_Storing_Publish_Failed_Due_To_Dup_Flag_Not_Set( void )
+{
+    MQTTContext_t mqttContext = { 0 };
+    MQTTPublishInfo_t publishInfo = { 0 };
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
+    MQTTStatus_t status;
+    MQTTPubAckInfo_t incomingRecords = { 0 };
+    MQTTPubAckInfo_t outgoingRecords = { 0 };
+
+    setupTransportInterface( &transport );
+    setupNetworkBuffer( &networkBuffer );
+    transport.send = transportSendFailure;
+
+    memset( &mqttContext, 0x0, sizeof( mqttContext ) );
+    memset( &publishInfo, 0x0, sizeof( publishInfo ) );
+    MQTT_Init( &mqttContext, &transport, getTime, eventCallback, &networkBuffer );
+
+    MQTT_InitStatefulQoS( &mqttContext,
+                          &outgoingRecords, 4,
+                          &incomingRecords, 4 );
+
+    MQTT_InitRetransmits( &mqttContext, publishStoreCallbackFailed,
+                          publishRetrieveCallbackSuccess,
+                          publishClearCallback );
+
+    mqttContext.connectStatus = MQTTConnected;
+
+    publishInfo.qos = MQTTQoS1;
+
+    MQTT_GetPublishPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_SerializePublishHeaderWithoutTopic_ExpectAnyArgsAndReturn( MQTTSuccess );
+
+    MQTT_ReserveState_ExpectAnyArgsAndReturn( MQTTSuccess );
+
+    MQTT_UpdateDuplicatePublishFlag_ExpectAnyArgsAndReturn( MQTTBadParameter );
+
+    mqttContext.transportInterface.send = transportSendSuccess;
+    status = MQTT_Publish( &mqttContext, &publishInfo, 1 );
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
 }
 
 /**
