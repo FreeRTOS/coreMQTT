@@ -51,7 +51,7 @@ jobs:
 
           echo -e "::group::${{ env.bashInfo }} Generate Coverage Report ${{ env.bashEnd }}"
           # Generate coverage report, excluding extra directories
-          lcov --rc branch_coverage=1 -r build/coverage.info -o build/coverage.info '*test*' '*CMakeCCompilerId*' '*mocks*'
+          lcov --rc branch_coverage=1 -r build/coverage.info -o build/coverage.info
 
           echo "::endgroup::"
           lcov --rc branch_coverage=1 --list build/coverage.info
