@@ -2213,9 +2213,9 @@ static MQTTStatus_t sendPublishWithoutCopy( MQTTContext_t * pContext,
         ( pContext->storeFunction != NULL ) )
     {
         /* If not already set, set the dup flag before storing a copy of the publish
-        * this is because on retrieving back this copy we will get it in the form of an
-        * array of TransportOutVector_t that holds the data in a const pointer which cannot be
-        * changed after retrieving. */
+         * this is because on retrieving back this copy we will get it in the form of an
+         * array of TransportOutVector_t that holds the data in a const pointer which cannot be
+         * changed after retrieving. */
         if( pPublishInfo->dup != true )
         {
             status = MQTT_UpdateDuplicatePublishFlag( pMqttHeader, true );
@@ -3756,7 +3756,7 @@ void MQTT_SerializeMQTTVec( uint8_t * pAllocatedMem,
 
     for( i = 0; i < vecLen; i++ )
     {
-        ( void ) memcpy( &pAllocatedMem[ index ], (const uint8_t *) pTransportVec[ i ].iov_base, pTransportVec[ i ].iov_len );
+        ( void ) memcpy( &pAllocatedMem[ index ], ( const uint8_t * ) pTransportVec[ i ].iov_base, pTransportVec[ i ].iov_len );
         index += pTransportVec[ i ].iov_len;
     }
 }

@@ -113,7 +113,7 @@ typedef void (* MQTTEventCallback_t )( struct MQTTContext * pContext,
  *
  * @param[in] pContext Initialised MQTT Context.
  * @param[in] packetId Outgoing publish packet identifier.
- * @param[in] pMqttVec Pointer to the opaque mqtt vector structure. Users should use MQTT_GetBytesInMQTTVec 
+ * @param[in] pMqttVec Pointer to the opaque mqtt vector structure. Users should use MQTT_GetBytesInMQTTVec
  *                and MQTT_SerializeMQTTVec functions to get the memory required and to serialize the
  *                MQTTVec_t in the provided memory respectively.
  *
