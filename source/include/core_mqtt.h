@@ -113,8 +113,8 @@ typedef void (* MQTTEventCallback_t )( struct MQTTContext * pContext,
  *
  * @param[in] pContext Initialised MQTT Context.
  * @param[in] packetId Outgoing publish packet identifier.
- * @param[in] pMqttVec Pointer to the opaque mqtt vector structure. Users should use MQTT_SerializeMQTTVec
- *                and MQTT_GetBytesInMQTTVec functions to get the memory required and to serialize the
+ * @param[in] pMqttVec Pointer to the opaque mqtt vector structure. Users should use MQTT_GetBytesInMQTTVec 
+ *                and MQTT_SerializeMQTTVec functions to get the memory required and to serialize the
  *                MQTTVec_t in the provided memory respectively.
  *
  * @return True if the copy is successful else false.
@@ -152,8 +152,6 @@ typedef bool ( * MQTTRetrievePacketForRetransmit)( struct MQTTContext * pContext
  *
  * @param[in] pContext Initialised MQTT Context.
  * @param[in] packetId Copied publish packet identifier.
- *
- * @return True if the clear is successful else false.
  */
 /* @[define_mqtt_retransmitclearpacket] */
 typedef void (* MQTTClearPacketForRetransmit)( struct MQTTContext * pContext,
