@@ -528,10 +528,8 @@ static uint8_t * encodeString( uint8_t * pDestination,
                                uint16_t sourceLength )
 {
     uint8_t * pBuffer = NULL;
-
-    /* Typecast const char * typed source buffer to const uint8_t *.
-     * This is to use same type buffers in memcpy. */
-    const uint8_t * pSourceBuffer = ( const uint8_t * ) pSource;
+    void * copyDest = NULL;
+    const void * copySource = NULL;
 
     assert( pDestination != NULL );
 
@@ -546,9 +544,11 @@ static uint8_t * encodeString( uint8_t * pDestination,
     pBuffer++;
 
     /* Copy the string into pBuffer. */
-    if( pSourceBuffer != NULL )
+    copyDest = pBuffer;
+    copySource = pSource;
+    if( copySource != NULL )
     {
-        ( void ) memcpy( pBuffer, pSourceBuffer, sourceLength );
+        ( void ) memcpy( copyDest, copySource, sourceLength );
     }
 
     /* Return the pointer to the end of the encoded string. */
@@ -713,7 +713,8 @@ static void serializePublishCommon( const MQTTPublishInfo_t * pPublishInfo,
                                     bool serializePayload )
 {
     uint8_t * pIndex = NULL;
-    const uint8_t * pPayloadBuffer = NULL;
+    void * copyDest = NULL;
+    const void * copySource = NULL;
 
     /* The first byte of a PUBLISH packet contains the packet type and flags. */
     uint8_t publishFlags = MQTT_PACKET_TYPE_PUBLISH;
@@ -787,11 +788,10 @@ static void serializePublishCommon( const MQTTPublishInfo_t * pPublishInfo,
         LogDebug( ( "Copying PUBLISH payload of length =%lu to buffer",
                     ( unsigned long ) pPublishInfo->payloadLength ) );
 
-        /* Typecast const void * typed payload buffer to const uint8_t *.
-         * This is to use same type buffers in memcpy. */
-        pPayloadBuffer = ( const uint8_t * ) pPublishInfo->pPayload;
+        copyDest = pIndex;
+        copySource = pPublishInfo->pPayload;
 
-        ( void ) memcpy( pIndex, pPayloadBuffer, pPublishInfo->payloadLength );
+        ( void ) memcpy( copyDest, copySource, pPublishInfo->payloadLength );
         /* Move the index to after the payload. */
         pIndex = &pIndex[ pPublishInfo->payloadLength ];
     }

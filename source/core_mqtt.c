@@ -3751,12 +3751,16 @@ void MQTT_SerializeMQTTVec( uint8_t * pAllocatedMem,
 {
     const TransportOutVector_t * pTransportVec = pVec->pVector;
     const size_t vecLen = pVec->vectorLen;
+    void * copyDest = NULL;
+    const void * copySource = NULL;
     size_t index = 0;
     size_t i = 0;
 
     for( i = 0; i < vecLen; i++ )
     {
-        ( void ) memcpy( &pAllocatedMem[ index ], ( const uint8_t * ) pTransportVec[ i ].iov_base, pTransportVec[ i ].iov_len );
+        copyDest = &pAllocatedMem[ index ];
+        copySource = pTransportVec[ i ].iov_base;
+        ( void ) memcpy( copyDest, copySource, pTransportVec[ i ].iov_len );
         index += pTransportVec[ i ].iov_len;
     }
 }
