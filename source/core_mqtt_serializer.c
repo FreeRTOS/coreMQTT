@@ -546,6 +546,7 @@ static uint8_t * encodeString( uint8_t * pDestination,
     /* Copy the string into pBuffer. */
     copyDest = pBuffer;
     copySource = pSource;
+
     if( copySource != NULL )
     {
         ( void ) memcpy( copyDest, copySource, sourceLength );
