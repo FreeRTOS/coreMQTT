@@ -79,7 +79,7 @@ struct MQTTConnectInfo;
 struct MQTTSubscribeInfo;
 struct MQTTPublishInfo;
 struct MQTTPacketInfo;
-
+struct MQTTSubscribeProperties ; 
 struct MQTTConnectProperties;
 struct MQTTUserProperty;
 struct MQTTUserProperties;
@@ -104,6 +104,13 @@ typedef enum MQTTStatus
     MQTTNeedMoreBytes,     /**< MQTT_ProcessLoop/MQTT_ReceiveLoop has received
                           incomplete data; it should be called again (probably after
                           a delay). */
+    MQTTStatusConnected,            /**< MQTT connection is established with the broker. */
+    MQTTStatusNotConnected,         /**< MQTT connection is not established with the broker. */
+    MQTTStatusDisconnectPending,    /**< Transport Interface has failed and MQTT connection needs to be closed. */
+    MQTTPublishStoreFailed,         /**< User provided API to store a copy of outgoing publish for retransmission  purposes,
+                                    has failed. */
+    MQTTPublishRetrieveFailed,      /**< User provided API to retrieve the copy of a publish while reconnecting
+                                    with an unclean session has failed. */
 
     MQTTMalformedPacket=0x81,/**A malformed packet was received from the server. */
     MQTTProtocolError=0x82 /**A packet with protocol error was received from the server. */
@@ -120,6 +127,13 @@ typedef enum MQTTQoS
     MQTTQoS1 = 1, /**< Delivery at least once. */
     MQTTQoS2 = 2  /**< Delivery exactly once. */
 } MQTTQoS_t;
+
+#define MQTT_SUBSCRIBE_QOS1                    ( 0 ) /**< @brief MQTT SUBSCRIBE QoS1 flag. */
+#define MQTT_SUBSCRIBE_QOS2                    ( 1 ) /**< @brief MQTT SUBSCRIBE QoS2 flag. */
+#define MQTT_SUBSCRIBE_NO_LOCAL                ( 2 ) /**< @brief MQTT SUBSCRIBE no local flag. */
+#define MQTT_SUBSCRIBE_RETAIN_AS_PUBLISHED     ( 3 ) /**< @brief MQTT SUBSCRIBE retain as published flag. */
+#define MQTT_SUBSCRIBE_RETAIN_HANDLING1        ( 4 ) /**<@brief MQTT SUBSCRIBE Retain Handling Option 1 */
+#define MQTT_SUBSCRIBE_RETAIN_HANDLING2        ( 5 ) /**<@brief Retain Handling Option 2   -> in core_mqtt_serializer.c */
 
 /**
  * @ingroup mqtt_struct_types
@@ -138,6 +152,8 @@ typedef struct MQTTFixedBuffer
  * @ingroup mqtt_struct_types
  * @brief MQTT CONNECT packet parameters.
  */
+
+
 typedef struct MQTTConnectInfo
 {
     /**
@@ -185,10 +201,17 @@ typedef struct MQTTConnectInfo
  * @ingroup mqtt_struct_types
  * @brief MQTT SUBSCRIBE packet parameters.
  */
+
+typedef enum retainHandling{
+    retainSendOnSub = 0,
+    retainSendOnSubIfNotPresent = 1,
+    retainDoNotSendonSub = 2 
+}retainHandling_t; 
+
 typedef struct MQTTSubscribeInfo
 {
     /**
-     * @brief Quality of Service for subscription.
+     * @brief Quality of Service for subscription. Include protocol error of qos > 2 
      */
     MQTTQoS_t qos;
 
@@ -198,10 +221,19 @@ typedef struct MQTTSubscribeInfo
     const char * pTopicFilter;
 
     /**
-     * @brief Length of subscription topic filter.
+     * @brief Length of subscription topic filter - unsigned long
      */
-    uint16_t topicFilterLength;
+    uint16_t ultopicFilterLength;
+    /**
+     * @brief no local option for subscription. Include protocol error if noLocalOption = 1 in a shared subscription
+     */
+    #if (MQTT_VERSION_5_ENABLED)
+        bool noLocalOption;
+        bool retainAsPublishedOption;
+        retainHandling_t retainHandlingOption; 
+    #endif
 } MQTTSubscribeInfo_t;
+
 
 
    /**
@@ -553,7 +585,25 @@ typedef struct MQTTPacketInfo
      */
     size_t headerLength;
 } MQTTPacketInfo_t;
+// struct for subscribe properties -> have it in mqtt context ? 
 
+typedef struct MQTTSubscribeProperties
+{
+    /**
+     * Length of the property field - variable byte int
+     */
+    size_t propertyLength;
+    /**
+     * User properties - list of key value pairs
+     */
+    MQTTUserProperties_t* pUserProperties;
+    /**
+     * Subscription ID - variable byte int
+     */
+
+    size_t subscriptionId;
+
+} MQTTSubscribeProperties_t;
 /**
  * @brief Get the size and Remaining Length of an MQTT CONNECT packet.
  *
@@ -602,6 +652,9 @@ typedef struct MQTTPacketInfo
  * @endcode
  */
 /* @[declare_mqtt_getconnectpacketsize] */
+static MQTTStatus_t MQTT_GetUserPropertySize(const MQTTUserProperty_t* pUserProperty,
+    uint32_t number,
+    size_t* pSize); 
 MQTTStatus_t MQTT_GetConnectPacketSize( const MQTTConnectInfo_t * pConnectInfo,
                                         const MQTTPublishInfo_t * pWillInfo,
                                         size_t * pRemainingLength,
@@ -716,6 +769,12 @@ MQTTStatus_t MQTT_SerializeConnect( const MQTTConnectInfo_t * pConnectInfo,
  * @endcode
  */
 /* @[declare_mqtt_getsubscribepacketsize] */
+MQTTStatus_t MQTTV5_GetSubscribePacketSize(MQTTSubscribeInfo_t* pSubscriptionList,
+    MQTTSubscribeProperties_t* pSubscribeProperties,
+    size_t subscriptionCount,
+    size_t* pRemainingLength,
+    size_t* pPacketSize); 
+
 MQTTStatus_t MQTT_GetSubscribePacketSize( const MQTTSubscribeInfo_t * pSubscriptionList,
                                           size_t subscriptionCount,
                                           size_t * pRemainingLength,
@@ -1611,6 +1670,7 @@ uint8_t * MQTTV5_SerializeConnectProperties( uint8_t * pIndex,
  * @cond DOXYGEN_IGNORE
  * Doxygen should ignore this definition, this function is private.
  */
+
 uint8_t * MQTT_SerializePublishProperties( const MQTTPublishInfo_t * pPublishInfo,
                                            uint8_t * pIndex);
 /** @endcond */
@@ -1864,6 +1924,9 @@ MQTTStatus_t MQTTV5_SerializeConnect(const MQTTConnectInfo_t* pConnectInfo,
  * @endcode
  */
 /* @[declare_mqttv5_validatepublishparams] */
+
+
+
 MQTTStatus_t MQTTV5_ValidatePublishParams(const MQTTPublishInfo_t* pPublishInfo, uint16_t topicAliasMax, uint8_t retainAvailable, uint8_t maxQos);
 /* @[declare_mqttv5_validatepublishparams] */
 
@@ -2288,6 +2351,17 @@ MQTTStatus_t MQTTV5_SerializeDisconnectWithProperty( const MQTTAckInfo_t *pDisco
                                                      const MQTTFixedBuffer_t * pFixedBuffer,
                                                      uint32_t sessionExpiry);
 /* @[declare_mqttv5_serializedisconnectwithproperty] */
+
+static MQTTStatus_t MQTT_GetSubscribePropertiesSize(MQTTSubscribeProperties_t* pSubscribeProperties); 
+
+static MQTTStatus_t calculateSubscriptionPacketSizeV5(MQTTSubscribeInfo_t* pSubscriptionList,
+    MQTTSubscribeProperties_t* pSubscribeProperties,
+    size_t subscriptionCount,
+    size_t* pRemainingLength,
+    size_t* pPacketSize);
+
+
+
 
 /* *INDENT-OFF* */
 #ifdef __cplusplus

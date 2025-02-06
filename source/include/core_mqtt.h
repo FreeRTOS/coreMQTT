@@ -266,6 +266,16 @@ typedef struct MQTTContext
  * @brief Struct to hold deserialized packet information for an #MQTTEventCallback_t
  * callback.
  */
+
+
+static MQTTStatus_t sendSubscribeWithoutCopyV5(MQTTContext_t* pContext,
+    MQTTSubscribeInfo_t* pSubscriptionList,
+    size_t subscriptionCount,
+    MQTTSubscribeProperties_t* pSubscribeProperties,
+    uint16_t packetId,
+    size_t remainingLength); 
+
+
 typedef struct MQTTDeserializedInfo
 {
     uint16_t packetIdentifier;          /**< @brief Packet ID of deserialized packet. */
@@ -593,6 +603,12 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
  * @endcode
  */
 /* @[declare_mqtt_subscribe] */
+MQTTStatus_t MQTT_SubscribeV5(MQTTContext_t* pContext,
+    MQTTSubscribeInfo_t* pSubscriptionList,
+    MQTTSubscribeProperties_t *subscribeProperties,
+    size_t subscriptionCount,
+    uint16_t packetId); 
+
 MQTTStatus_t MQTT_Subscribe( MQTTContext_t * pContext,
                              const MQTTSubscribeInfo_t * pSubscriptionList,
                              size_t subscriptionCount,
@@ -749,6 +765,7 @@ MQTTStatus_t MQTT_Unsubscribe( MQTTContext_t * pContext,
  * #MQTTSuccess otherwise.
  */
 /* @[declare_mqtt_disconnect] */
+
 MQTTStatus_t MQTT_Disconnect( MQTTContext_t * pContext );
 /* @[declare_mqtt_disconnect] */
 
@@ -1018,6 +1035,11 @@ MQTTStatus_t MQTT_MatchTopic( const char * pTopicName,
  * @endcode
  */
 /* @[declare_mqtt_getsubackstatuscodes] */
+static MQTTStatus_t validateSubscribeUnsubscribeParamsV5(MQTTContext_t* pContext,
+    MQTTSubscribeInfo_t* pSubscriptionList,
+    MQTTSubscribeProperties_t* pSubscribeProperties,
+    size_t subscriptionCount,
+    uint16_t packetId);
 MQTTStatus_t MQTT_GetSubAckStatusCodes( const MQTTPacketInfo_t * pSubackPacket,
                                         uint8_t ** pPayloadStart,
                                         size_t * pPayloadSize );
