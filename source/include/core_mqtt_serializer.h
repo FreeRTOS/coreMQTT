@@ -223,7 +223,7 @@ typedef struct MQTTSubscribeInfo
     /**
      * @brief Length of subscription topic filter - unsigned long
      */
-    uint16_t ultopicFilterLength;
+    uint16_t topicFilterLength;
     /**
      * @brief no local option for subscription. Include protocol error if noLocalOption = 1 in a shared subscription
      */
@@ -585,7 +585,7 @@ typedef struct MQTTPacketInfo
      */
     size_t headerLength;
 } MQTTPacketInfo_t;
-// struct for subscribe properties -> have it in mqtt context ? 
+
 
 typedef struct MQTTSubscribeProperties
 {
@@ -652,9 +652,7 @@ typedef struct MQTTSubscribeProperties
  * @endcode
  */
 /* @[declare_mqtt_getconnectpacketsize] */
-static MQTTStatus_t MQTT_GetUserPropertySize(const MQTTUserProperty_t* pUserProperty,
-    uint32_t number,
-    size_t* pSize); 
+
 MQTTStatus_t MQTT_GetConnectPacketSize( const MQTTConnectInfo_t * pConnectInfo,
                                         const MQTTPublishInfo_t * pWillInfo,
                                         size_t * pRemainingLength,
@@ -2352,13 +2350,8 @@ MQTTStatus_t MQTTV5_SerializeDisconnectWithProperty( const MQTTAckInfo_t *pDisco
                                                      uint32_t sessionExpiry);
 /* @[declare_mqttv5_serializedisconnectwithproperty] */
 
-static MQTTStatus_t MQTT_GetSubscribePropertiesSize(MQTTSubscribeProperties_t* pSubscribeProperties); 
 
-static MQTTStatus_t calculateSubscriptionPacketSizeV5(MQTTSubscribeInfo_t* pSubscriptionList,
-    MQTTSubscribeProperties_t* pSubscribeProperties,
-    size_t subscriptionCount,
-    size_t* pRemainingLength,
-    size_t* pPacketSize);
+
 
 
 

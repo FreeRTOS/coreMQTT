@@ -297,6 +297,10 @@ static void eventCallback( MQTTContext_t * pContext,
  * @param[in] pPacketInfo Packet Info pointer for the incoming packet.
  * @param[in] pDeserializedInfo Deserialized information from the incoming packet.
  */
+
+MQTTAckInfo_t GlobalAckInfo;
+MQTTUserProperties_t GlobalUser;
+
 static void eventCallback1( MQTTContext_t * pContext,
                             MQTTPacketInfo_t * pPacketInfo,
                             MQTTDeserializedInfo_t * pDeserializedInfo )
@@ -304,20 +308,19 @@ static void eventCallback1( MQTTContext_t * pContext,
     ( void ) pContext;
     ( void ) pPacketInfo;
     ( void ) pDeserializedInfo;
-    MQTTAckInfo_t ackInfo;
-    MQTTUserProperties_t user;
-    memset( &user, 0x0, sizeof( user ) );
-    memset( &ackInfo, 0x0, sizeof( ackInfo ) );
+    /* MQTTUserProperties_t user;*/
+    memset( &GlobalUser, 0x0, sizeof( GlobalUser ) );
+    memset( &GlobalAckInfo, 0x0, sizeof( GlobalAckInfo ) );
     /* Update the global state to indicate that event callback is invoked. */
     isEventCallbackInvoked = true;
-    pDeserializedInfo->pNextAckInfo = &ackInfo;
+    pDeserializedInfo->pNextAckInfo = &GlobalAckInfo;
 
     if( pDeserializedInfo->packetIdentifier == 1 )
     {
-        ackInfo.reasonStringLength = 2;
-        ackInfo.pReasonString = "ab";
-        ackInfo.pUserProperty = &user;
-        user.count = 0;
+        GlobalAckInfo.reasonStringLength = 2;
+        GlobalAckInfo.pReasonString = "ab";
+        GlobalAckInfo.pUserProperty = &GlobalUser;
+        GlobalUser.count = 0;
     }
 }
 
