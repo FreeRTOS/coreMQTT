@@ -528,8 +528,6 @@ static uint8_t * encodeString( uint8_t * pDestination,
                                uint16_t sourceLength )
 {
     uint8_t * pBuffer = NULL;
-    void * copyDest = NULL;
-    const void * copySource = NULL;
 
     assert( pDestination != NULL );
 
@@ -544,12 +542,9 @@ static uint8_t * encodeString( uint8_t * pDestination,
     pBuffer++;
 
     /* Copy the string into pBuffer. */
-    copyDest = pBuffer;
-    copySource = pSource;
-
-    if( copySource != NULL )
+    if( pSource != NULL )
     {
-        ( void ) memcpy( copyDest, copySource, sourceLength );
+        ( void ) memcpy( ( void * ) pBuffer, ( const void * ) pSource, sourceLength );
     }
 
     /* Return the pointer to the end of the encoded string. */
@@ -714,8 +709,6 @@ static void serializePublishCommon( const MQTTPublishInfo_t * pPublishInfo,
                                     bool serializePayload )
 {
     uint8_t * pIndex = NULL;
-    void * copyDest = NULL;
-    const void * copySource = NULL;
 
     /* The first byte of a PUBLISH packet contains the packet type and flags. */
     uint8_t publishFlags = MQTT_PACKET_TYPE_PUBLISH;
@@ -789,10 +782,7 @@ static void serializePublishCommon( const MQTTPublishInfo_t * pPublishInfo,
         LogDebug( ( "Copying PUBLISH payload of length =%lu to buffer",
                     ( unsigned long ) pPublishInfo->payloadLength ) );
 
-        copyDest = pIndex;
-        copySource = pPublishInfo->pPayload;
-
-        ( void ) memcpy( copyDest, copySource, pPublishInfo->payloadLength );
+        ( void ) memcpy( ( void * ) pIndex, ( const void * ) pPublishInfo->pPayload, pPublishInfo->payloadLength );
         /* Move the index to after the payload. */
         pIndex = &pIndex[ pPublishInfo->payloadLength ];
     }
