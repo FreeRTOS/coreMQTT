@@ -671,7 +671,36 @@ static MQTTStatus_t MQTT_GetUserPropertySize( const MQTTUserProperty_t * pUserPr
 
     return status;
 }
+static MQTTStatus_t MQTT_GetSubscribePropertiesSize(MQTTSubscribeProperties_t *pSubscribeProperties )
+{
+    size_t propertyLength = 0;
+    MQTTStatus_t status = MQTTSuccess;
 
+    if(pSubscribeProperties->subscriptionId != 0 ){
+        propertyLength += 1U ; 
+        propertyLength += remainingLengthEncodedSize(pSubscribeProperties->subscriptionId);
+    }
+    #if ( MQTT_USER_PROPERTY_ENABLED )
+        /*Get the length of the user properties*/
+        if( ( status == MQTTSuccess ) && ( pSubscribeProperties->pUserProperties != NULL ) )
+        {
+            status = MQTT_GetUserPropertySize( pSubscribeProperties->pUserProperties->userProperty, pSubscribeProperties->pUserProperties->count, &propertyLength );
+        }
+    #endif
+
+    /*Variable length encoded values cannot have a value of more than 268435455U*/
+    if( ( status == MQTTSuccess ) && ( pSubscribeProperties->propertyLength > MQTT_MAX_REMAINING_LENGTH ) )
+    {
+        status = MQTTBadParameter;
+    }
+
+    if( status == MQTTSuccess )
+    {
+        pSubscribeProperties->propertyLength = propertyLength;
+    }
+
+    return status;
+}
 static MQTTStatus_t MQTT_GetPublishPropertiesSize( MQTTPublishInfo_t * pPublishProperties )
 {
     size_t propertyLength = 0U;
@@ -3278,3 +3307,128 @@ void test_MQTTV5_InitConnect()
     status = MQTTV5_InitConnect( &properties );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
 }
+
+/**
+ * Subscribe Packet - V5 
+ */
+
+void test_MQTTV5_GetSubscribePacketSize( void )
+{
+    MQTTStatus_t status = MQTTSuccess;
+    MQTTSubscribeInfo_t subscribeInfo;
+    MQTTSubscribeProperties_t subscribeProperties;
+    size_t remainingLength = 0;
+    size_t packetSize = 0;
+
+    /** Verify Parameters */
+
+    /** NULL parameters */
+    status = MQTTV5_GetSubscribePacketSize(NULL, &subscribeProperties, 1, &remainingLength, &packetSize); 
+    TEST_ASSERT_EQUAL_INT(MQTTBadParameter, status);
+
+    status = MQTTV5_GetSubscribePacketSize(&subscribeInfo, NULL , 1, &remainingLength, &packetSize); 
+    TEST_ASSERT_EQUAL_INT(MQTTBadParameter, status);
+
+    status = MQTTV5_GetSubscribePacketSize(&subscribeInfo, &subscribeProperties , 0, &remainingLength, &packetSize); 
+    TEST_ASSERT_EQUAL_INT(MQTTBadParameter, status);
+
+    /** Empty Empty Subscription List Fails */
+
+    memset( &subscribeInfo, 0x0, sizeof( subscribeInfo ) );
+    status = MQTTV5_GetSubscribePacketSize(&subscribeInfo, &subscribeProperties , 0, &remainingLength, &packetSize); 
+    TEST_ASSERT_EQUAL_INT(MQTTBadParameter, status);
+
+    status = MQTTV5_GetSubscribePacketSize(&subscribeInfo, &subscribeProperties , 1, &remainingLength, &packetSize); 
+    TEST_ASSERT_EQUAL_INT(MQTTBadParameter, status);
+
+    /** NULL topic filter , non zero length */
+
+    subscribeInfo.topicFilterLength = 1;
+    status = MQTTV5_GetSubscribePacketSize(&subscribeInfo, &subscribeProperties , 1, &remainingLength, &packetSize); 
+    TEST_ASSERT_EQUAL_INT(MQTTBadParameter, status);
+
+    /**Topic Filter Length == 0 , Topic Filter not null */
+
+    subscribeInfo.topicFilterLength = 0 ; 
+    subscribeInfo.pTopicFilter = "example/topic" ; 
+    status = MQTTV5_GetSubscribePacketSize(&subscribeInfo, &subscribeProperties , 1, &remainingLength, &packetSize); 
+    TEST_ASSERT_EQUAL_INT(MQTTBadParameter, status);
+}
+
+void test_MQTTV5_GetSubscribePacketSize_HappyPath(void){
+    MQTTStatus_t status = MQTTSuccess;
+    MQTTSubscribeInfo_t subscribeInfo;
+    MQTTSubscribeProperties_t subscribeProperties = {0};
+    size_t remainingLength = 0;
+    size_t packetSize = 0;
+
+    subscribeProperties.subscriptionId = 1 ; 
+    subscribeInfo.pTopicFilter = TEST_TOPIC_NAME ; 
+    subscribeInfo.topicFilterLength = TEST_TOPIC_NAME_LENGTH ;
+    subscribeInfo.qos = MQTTQoS0 ;
+    subscribeInfo.noLocalOption = 0 ; 
+    subscribeInfo.retainAsPublishedOption = 0 ; 
+    subscribeInfo.retainHandlingOption = 1 ;
+
+    status = MQTTV5_GetSubscribePacketSize(&subscribeInfo, &subscribeProperties, 1, &remainingLength, &packetSize);
+    TEST_ASSERT_EQUAL_INT(MQTTSuccess, status);
+    TEST_ASSERT_EQUAL_UINT32(19U, remainingLength);
+    TEST_ASSERT_EQUAL_UINT32(21U, packetSize);
+}
+
+/** Subscribe Packet size with multiple subscriptions and User Properties */
+void test_MQTTV5_GetSubscribePacketSize_MultipleSubscriptions(void){
+    MQTTStatus_t status = MQTTSuccess;
+    MQTTSubscribeInfo_t subscribeInfo[2];
+    MQTTSubscribeProperties_t subscribeProperties = {0};
+    MQTTUserProperties_t userProperties ; 
+    size_t remainingLength = 0;
+    size_t packetSize = 0;
+    userProperties.count = 1 ; 
+    userProperties.userProperty[ 0 ].pKey = "abc" ; 
+    userProperties.userProperty[ 0 ].pValue = "def" ;
+    userProperties.userProperty[ 0 ].keyLength = 3 ;
+    userProperties.userProperty[ 0 ].valueLength = 3 ; 
+    subscribeProperties.pUserProperties = &userProperties ;
+    subscribeProperties.subscriptionId = 1 ;
+    subscribeInfo[0].pTopicFilter = TEST_TOPIC_NAME ;
+    subscribeInfo[0].topicFilterLength = TEST_TOPIC_NAME_LENGTH ;
+    subscribeInfo[0].qos = MQTTQoS0 ;
+    subscribeInfo[0].noLocalOption = 0 ;
+    subscribeInfo[0].retainAsPublishedOption = 0 ;
+    subscribeInfo[0].retainHandlingOption = 1 ;
+
+    subscribeInfo[1].pTopicFilter = TEST_TOPIC_NAME ;
+    subscribeInfo[1].topicFilterLength = TEST_TOPIC_NAME_LENGTH ;
+    subscribeInfo[1].qos = MQTTQoS0 ;
+    subscribeInfo[1].noLocalOption = 0 ;
+    subscribeInfo[1].retainAsPublishedOption = 0 ;
+    subscribeInfo[1].retainHandlingOption = 1 ;
+
+    status = MQTTV5_GetSubscribePacketSize(subscribeInfo, &subscribeProperties, 2, &remainingLength, &packetSize);
+    TEST_ASSERT_EQUAL_INT(MQTTSuccess, status);
+    TEST_ASSERT_EQUAL_UINT32(44U, remainingLength);
+    TEST_ASSERT_EQUAL_UINT32(46U, packetSize);
+}
+
+void test_GetSubscribePropertiesSize_NoSubscriptionId_NoUserProps(void)
+{
+    MQTTSubscribeProperties_t props;
+    memset(&props, 0, sizeof(props));
+    /* subscriptionId = 0, pUserProperties is implicitly NULL. */
+    props.subscriptionId = 0;
+    props.propertyLength = 0;  /* Even if set, since not > MQTT_MAX_REMAINING_LENGTH, should be overwritten. */
+
+    MQTTStatus_t status = MQTT_GetSubscribePropertiesSize(&props);
+    TEST_ASSERT_EQUAL(MQTTSuccess, status);
+    TEST_ASSERT_EQUAL_UINT32(0U, props.propertyLength);
+}
+
+
+
+
+
+
+
+
+

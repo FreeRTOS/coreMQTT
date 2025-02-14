@@ -597,17 +597,20 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
  * @endcode
  */
 /* @[declare_mqtt_subscribe] */
+#if(MQTT_VERSION_5_ENABLED)
 MQTTStatus_t MQTT_SubscribeV5(MQTTContext_t* pContext,
     MQTTSubscribeInfo_t* pSubscriptionList,
     MQTTSubscribeProperties_t *subscribeProperties,
     size_t subscriptionCount,
     uint16_t packetId); 
+#endif
 
 MQTTStatus_t MQTT_Subscribe( MQTTContext_t * pContext,
                              const MQTTSubscribeInfo_t * pSubscriptionList,
                              size_t subscriptionCount,
                              uint16_t packetId );
 /* @[declare_mqtt_subscribe] */
+
 
 /**
  * @brief Publishes a message to the given topic name.

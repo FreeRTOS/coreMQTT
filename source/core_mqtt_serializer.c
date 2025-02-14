@@ -680,12 +680,14 @@ static bool calculatePublishPacketSize( const MQTTPublishInfo_t * pPublishInfo,
  * MQTT spec or a subscription is empty; #MQTTSuccess otherwise.
  * 
  */
-
+#if(MQTT_VERSION_5_ENABLED)
 static MQTTStatus_t calculateSubscriptionPacketSizeV5(MQTTSubscribeInfo_t* pSubscriptionList,
     MQTTSubscribeProperties_t* pSubscribeProperties,
     size_t subscriptionCount,
     size_t* pRemainingLength,
     size_t* pPacketSize); 
+#endif
+
 
 
 static MQTTStatus_t calculateSubscriptionPacketSize( const MQTTSubscribeInfo_t * pSubscriptionList,
@@ -693,6 +695,7 @@ static MQTTStatus_t calculateSubscriptionPacketSize( const MQTTSubscribeInfo_t *
                                                      size_t * pRemainingLength,
                                                      size_t * pPacketSize,
                                                      MQTTSubscriptionType_t subscriptionType );
+
 
 /**
  * @brief Validates parameters of #MQTT_SerializeSubscribe or
@@ -1516,7 +1519,6 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
 
         return status;
     }
-
     static MQTTStatus_t MQTT_GetSubscribePropertiesSize(MQTTSubscribeProperties_t *pSubscribeProperties )
     {
         size_t propertyLength = 0;
@@ -2692,6 +2694,80 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
         return status;
     }
 
+
+    static MQTTStatus_t calculateSubscriptionPacketSizeV5(MQTTSubscribeInfo_t *pSubscriptionList,
+                                                     MQTTSubscribeProperties_t *pSubscribeProperties,
+                                                     size_t subscriptionCount,
+                                                     size_t *pRemainingLength,
+                                                     size_t *pPacketSize)
+    {
+        size_t packetSize = 0U , i = 0; 
+        MQTTStatus_t status = MQTTSuccess ; 
+        assert( pSubscriptionList != NULL );
+        assert( subscriptionCount != 0U );
+
+        /*2 byte packet id*/
+        packetSize += sizeof( uint16_t ) ; 
+        /* Length of properties */
+
+        status = MQTT_GetSubscribePropertiesSize(pSubscribeProperties) ; 
+        LogDebug(("Property Length is %lu" , (unsigned long)pSubscribeProperties->propertyLength ));
+        if( status == MQTTSuccess )
+        {
+            packetSize += pSubscribeProperties->propertyLength;
+            packetSize += remainingLengthEncodedSize( pSubscribeProperties->propertyLength );
+        }
+
+
+        if(status == MQTTSuccess){
+            for(i = 0 ; i < subscriptionCount ; i++){
+                if((pSubscriptionList[i].topicFilterLength == 0U) || (pSubscriptionList[i].pTopicFilter== NULL)){
+                    LogError(("Argument cannot be null : pTopicFilter")) ; 
+                    status = MQTTBadParameter;
+                    break ;
+                }
+                packetSize += pSubscriptionList[i].topicFilterLength + sizeof(uint16_t) + 1U;
+            }
+        }
+        if( packetSize > MQTT_MAX_REMAINING_LENGTH )
+        {
+            LogError( ( "Subscribe packet size %lu exceeds %d. "
+                        "Packet size cannot be greater than %d.",
+                        ( unsigned long ) packetSize,
+                        UINT16_MAX,
+                        UINT16_MAX ) );
+            status = MQTTBadParameter;
+        }
+        if(status == MQTTSuccess){
+            *pRemainingLength = packetSize ; 
+            packetSize += 1U + remainingLengthEncodedSize(packetSize) ;
+            *pPacketSize = packetSize ; 
+
+        }
+        LogDebug( ( "Subscription packet remaining length=%lu and packet size=%lu.",
+                    ( unsigned long ) *pRemainingLength,
+                    ( unsigned long ) *pPacketSize ) );
+        return status ; 
+    }
+    MQTTStatus_t MQTTV5_GetSubscribePacketSize(MQTTSubscribeInfo_t *pSubscriptionList,
+                                            MQTTSubscribeProperties_t * pSubscribeProperties,
+                                            size_t subscriptionCount,
+                                            size_t *pRemainingLength,
+                                            size_t *pPacketSize)
+    {
+        MQTTStatus_t status = MQTTSuccess ; 
+        if(pSubscriptionList == NULL || pSubscribeProperties == NULL){
+            LogError(("Argument cannot be null : pSubscriptionList, pSubscriptionProperties")); 
+            status = MQTTBadParameter;
+        }else if(subscriptionCount == 0U){
+            LogError(("Subscription count cannot be 0")) ; 
+            status = MQTTBadParameter;
+        }else{
+            status = calculateSubscriptionPacketSizeV5(pSubscriptionList, pSubscribeProperties, subscriptionCount, pRemainingLength, pPacketSize);
+        }
+        return status ; 
+    }
+
     static uint8_t * serializePublishProperties( const MQTTPublishInfo_t * pPublishInfo,
                                                  uint8_t * pIndex )
     {
@@ -2850,7 +2926,7 @@ static size_t remainingLengthEncodedSize( size_t length )
 
 /*-----------------------------------------------------------*/
 
-uint8_t * encodeRemainingLength( uint8_t * pDestination,
+static uint8_t * encodeRemainingLength( uint8_t * pDestination,
                                         size_t length )
 {
     uint8_t lengthByte;
@@ -3540,60 +3616,6 @@ static MQTTStatus_t deserializeConnack( const MQTTPacketInfo_t * pConnack,
 }
 
 /*-----------------------------------------------------------*/
-static MQTTStatus_t calculateSubscriptionPacketSizeV5(MQTTSubscribeInfo_t *pSubscriptionList,
-                                                     MQTTSubscribeProperties_t *pSubscribeProperties,
-                                                     size_t subscriptionCount,
-                                                     size_t *pRemainingLength,
-                                                     size_t *pPacketSize)
-{
-    size_t packetSize = 0U , i = 0; 
-    MQTTStatus_t status = MQTTSuccess ; 
-    assert( pSubscriptionList != NULL );
-    assert( subscriptionCount != 0U );
-    assert( pPacketSize != NULL );
-    assert( pRemainingLength != NULL );
-    /*2 byte packet id*/
-    packetSize += sizeof( uint16_t ) ; 
-    /* Length of properties */
-
-    status = MQTT_GetSubscribePropertiesSize(pSubscribeProperties) ; 
-    if( status == MQTTSuccess )
-    {
-        packetSize += pSubscribeProperties->propertyLength;
-        packetSize += remainingLengthEncodedSize( pSubscribeProperties->propertyLength );
-    }
-
-
-    if(status == MQTTSuccess){
-        for(i = 0 ; i < subscriptionCount ; i++){
-            packetSize += pSubscriptionList[i].topicFilterLength + sizeof(uint16_t) + 1U;
-            if((pSubscriptionList[i].topicFilterLength == 0U) || (pSubscriptionList[i].pTopicFilter== NULL)){
-                LogError(("Argument cannot be null : pTopicFilter")) ; 
-                status = MQTTBadParameter;
-                break ;
-            }
-        }
-    }
-    if( packetSize > MQTT_MAX_REMAINING_LENGTH )
-    {
-        LogError( ( "Subscribe packet size %lu exceeds %d. "
-                    "Packet size cannot be greater than %d.",
-                    ( unsigned long ) packetSize,
-                    UINT16_MAX,
-                    UINT16_MAX ) );
-        status = MQTTBadParameter;
-    }
-    if(status == MQTTSuccess){
-        *pRemainingLength = packetSize ; 
-        packetSize += 1U + remainingLengthEncodedSize(packetSize) ;
-        *pPacketSize = packetSize ; 
-
-    }
-    LogDebug( ( "Subscription packet remaining length=%lu and packet size=%lu.",
-                ( unsigned long ) *pRemainingLength,
-                ( unsigned long ) *pPacketSize ) );
-    return status ; 
-}
 
 static MQTTStatus_t calculateSubscriptionPacketSize( const MQTTSubscribeInfo_t * pSubscriptionList,
                                                      size_t subscriptionCount,
@@ -3670,6 +3692,7 @@ static MQTTStatus_t calculateSubscriptionPacketSize( const MQTTSubscribeInfo_t *
 
     return status;
 }
+
 
 /*-----------------------------------------------------------*/
 
@@ -4279,25 +4302,6 @@ MQTTStatus_t MQTT_SerializeConnect( const MQTTConnectInfo_t * pConnectInfo,
 
 /*-----------------------------------------------------------*/
 
-MQTTStatus_t MQTTV5_GetSubscribePacketSize(MQTTSubscribeInfo_t *pSubscriptionList,
-                                            MQTTSubscribeProperties_t * pSubscribeProperties,
-                                            size_t subscriptionCount,
-                                            size_t *pRemainingLength,
-                                            size_t *pPacketSize)
-{
-    MQTTStatus_t status = MQTTSuccess ; 
-    if((pSubscriptionList == NULL)|| (pRemainingLength == NULL) || (pPacketSize ==NULL)){
-        LogError(("Argument cannot be null : pSubscriptionList, pRemainingLength, pPacketSize")); 
-        status = MQTTBadParameter;
-    }else if(subscriptionCount == 0U){
-        LogError(("Subscription count cannot be 0")) ; 
-        status = MQTTBadParameter;
-    }else{
-        status = calculateSubscriptionPacketSizeV5(pSubscriptionList, pSubscribeProperties, subscriptionCount, pRemainingLength, pPacketSize);
-    }
-    return status ; 
-}
-
 MQTTStatus_t MQTT_GetSubscribePacketSize( const MQTTSubscribeInfo_t * pSubscriptionList,
                                           size_t subscriptionCount,
                                           size_t * pRemainingLength,
@@ -4333,6 +4337,8 @@ MQTTStatus_t MQTT_GetSubscribePacketSize( const MQTTSubscribeInfo_t * pSubscript
 
     return status;
 }
+
+
 
 /*-----------------------------------------------------------*/
 

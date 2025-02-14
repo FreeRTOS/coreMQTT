@@ -104,12 +104,12 @@ typedef enum MQTTStatus
     MQTTNeedMoreBytes,     /**< MQTT_ProcessLoop/MQTT_ReceiveLoop has received
                           incomplete data; it should be called again (probably after
                           a delay). */
-    MQTTStatusConnected,            /**< MQTT connection is established with the broker. */
-    MQTTStatusNotConnected,         /**< MQTT connection is not established with the broker. */
-    MQTTStatusDisconnectPending,    /**< Transport Interface has failed and MQTT connection needs to be closed. */
-    MQTTPublishStoreFailed,         /**< User provided API to store a copy of outgoing publish for retransmission  purposes,
+    /*MQTTStatusConnected,            < MQTT connection is established with the broker. */
+    /*MQTTStatusNotConnected,         < MQTT connection is not established with the broker. */
+    /*MQTTStatusDisconnectPending,    < Transport Interface has failed and MQTT connection needs to be closed. */
+    /*MQTTPublishStoreFailed,         < User provided API to store a copy of outgoing publish for retransmission  purposes,
                                     has failed. */
-    MQTTPublishRetrieveFailed,      /**< User provided API to retrieve the copy of a publish while reconnecting
+    /*MQTTPublishRetrieveFailed,      < User provided API to retrieve the copy of a publish while reconnecting
                                     with an unclean session has failed. */
 
     MQTTMalformedPacket=0x81,/**A malformed packet was received from the server. */
@@ -201,12 +201,13 @@ typedef struct MQTTConnectInfo
  * @ingroup mqtt_struct_types
  * @brief MQTT SUBSCRIBE packet parameters.
  */
-
+#if(MQTT_VERSION_5_ENABLED)
 typedef enum retainHandling{
     retainSendOnSub = 0,
     retainSendOnSubIfNotPresent = 1,
     retainDoNotSendonSub = 2 
 }retainHandling_t; 
+#endif
 
 typedef struct MQTTSubscribeInfo
 {
@@ -596,7 +597,9 @@ typedef struct MQTTSubscribeProperties
     /**
      * User properties - list of key value pairs
      */
+    #if(MQTT_USER_PROPERTY_ENABLED)
     MQTTUserProperties_t* pUserProperties;
+    #endif 
     /**
      * Subscription ID - variable byte int
      */
@@ -767,12 +770,13 @@ MQTTStatus_t MQTT_SerializeConnect( const MQTTConnectInfo_t * pConnectInfo,
  * @endcode
  */
 /* @[declare_mqtt_getsubscribepacketsize] */
+#if(MQTT_VERSION_5_ENABLED)
 MQTTStatus_t MQTTV5_GetSubscribePacketSize(MQTTSubscribeInfo_t* pSubscriptionList,
     MQTTSubscribeProperties_t* pSubscribeProperties,
     size_t subscriptionCount,
     size_t* pRemainingLength,
     size_t* pPacketSize); 
-
+#endif
 MQTTStatus_t MQTT_GetSubscribePacketSize( const MQTTSubscribeInfo_t * pSubscriptionList,
                                           size_t subscriptionCount,
                                           size_t * pRemainingLength,

@@ -47,6 +47,8 @@ struct NetworkContext
     uint8_t ** buffer;
 };
 
+static MQTTStatus_t validateSubscribeReturn = MQTTSuccess;
+
 /**
  * @brief MQTT client identifier.
  */
@@ -1104,4 +1106,261 @@ void test_MQTT_ProcessLoop_handleIncomingDisconnect( void )
     MQTTV5_DeserializeDisconnect_IgnoreAndReturn( MQTTProtocolError );
     status = MQTT_ProcessLoop( &context );
     TEST_ASSERT_EQUAL_INT( MQTTProtocolError, status );
+}
+/**
+ * Start of subscribeV5 unit tests - 
+ */
+
+
+
+
+
+
+static void setupSubscriptionInfo( MQTTSubscribeInfo_t * pSubscribeInfo )
+{
+    pSubscribeInfo->qos = MQTTQoS1;
+    pSubscribeInfo->pTopicFilter = MQTT_SAMPLE_TOPIC_FILTER;
+    pSubscribeInfo->topicFilterLength = MQTT_SAMPLE_TOPIC_FILTER_LENGTH;
+    pSubscribeInfo->noLocalOption = 0 ; 
+    pSubscribeInfo->retainAsPublishedOption = 0;
+    pSubscribeInfo->retainHandlingOption = retainSendOnSubIfNotPresent ; 
+}
+static uint8_t * MQTTV5_SerializeSubscribedHeader_cb( size_t remainingLength,
+                                                    uint8_t * pIndex,
+                                                    uint16_t packetId,
+                                                    int numcallbacks )
+{
+    ( void ) remainingLength;
+    ( void ) pIndex;
+    ( void ) packetId;
+    ( void ) numcallbacks;
+
+    return pIndex;
+}
+
+
+void test_MQTTV5_Subscribe_invalid_params( void ) 
+{
+    MQTTStatus_t mqttStatus;
+    MQTTContext_t context = { 0 };
+    MQTTSubscribeInfo_t subscribeInfo = { 0 };
+    MQTTSubscribeProperties_t subscribeProperties = {0} ; 
+
+    /* Call subscribe with a NULL context. */
+    mqttStatus = MQTT_SubscribeV5( NULL, &subscribeInfo,&subscribeProperties, 1, MQTT_FIRST_VALID_PACKET_ID );
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, mqttStatus );
+
+    /* Call  with a NULL subscription list. */
+    mqttStatus = MQTT_SubscribeV5( &context, NULL, &subscribeProperties, 1, MQTT_FIRST_VALID_PACKET_ID );
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, mqttStatus );
+
+    /*Call subscribe with a NULL subscribe property*/
+    mqttStatus = MQTT_SubscribeV5(&context, &subscribeInfo, NULL, 1, MQTT_FIRST_VALID_PACKET_ID);
+    TEST_ASSERT_EQUAL_INT(MQTTBadParameter, mqttStatus);
+
+    /* Call subscribe with 0 subscriptions. */
+    mqttStatus = MQTT_SubscribeV5( &context, &subscribeInfo, &subscribeProperties, 0, MQTT_FIRST_VALID_PACKET_ID );
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, mqttStatus );
+
+    /* Packet ID cannot be 0 per MQTT 5.0 spec. */
+    mqttStatus = MQTT_SubscribeV5( &context, &subscribeInfo,&subscribeProperties, 1, 0 );
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, mqttStatus );
+
+    /* Incoming publish records NULL but QoS > 0. */
+    subscribeInfo.qos = MQTTQoS1;
+    mqttStatus = MQTT_SubscribeV5( &context, &subscribeInfo, &subscribeProperties, 1, 10 );
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, mqttStatus );
+
+    /* Subscription ID cannot be 0 per MQTT 5.0 spec. */
+    subscribeProperties.subscriptionId = 0 ; 
+    mqttStatus = MQTT_SubscribeV5(&context, &subscribeInfo, &subscribeProperties, 1, 10);
+    TEST_ASSERT_EQUAL_INT(MQTTBadParameter, mqttStatus); 
+
+    /* Test topic filter length is zero */
+    subscribeInfo.pTopicFilter = "test/topic";
+    subscribeInfo.topicFilterLength = 0;
+    mqttStatus = MQTT_SubscribeV5( &context, &subscribeInfo, &subscribeProperties, 1,MQTT_FIRST_VALID_PACKET_ID);
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, mqttStatus );
+
+    /* Test NULL topic filter */
+    subscribeInfo.pTopicFilter = NULL;
+    mqttStatus = MQTT_SubscribeV5( &context, &subscribeInfo, &subscribeProperties, 1,MQTT_FIRST_VALID_PACKET_ID);
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, mqttStatus );
+
+    /* Test invalid QoS level */
+    subscribeInfo.qos = 3; /* QoS must be 0, 1, or 2 */
+    mqttStatus = MQTT_SubscribeV5( &context, &subscribeInfo, &subscribeProperties, 1, MQTT_FIRST_VALID_PACKET_ID );
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, mqttStatus );
+
+    /* Test invalid shared subscription */
+    subscribeInfo.pTopicFilter = "$share/invalid#";
+    subscribeInfo.noLocalOption = 0 ; 
+    subscribeInfo.topicFilterLength = strlen( subscribeInfo.pTopicFilter );
+    mqttStatus = MQTT_SubscribeV5( &context, &subscribeInfo, &subscribeProperties, 1, MQTT_FIRST_VALID_PACKET_ID);
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, mqttStatus );
+
+    subscribeInfo.pTopicFilter = "$share/abc/#" ;
+    subscribeInfo.topicFilterLength = strlen( subscribeInfo.pTopicFilter );
+    mqttStatus = MQTT_SubscribeV5(&context, &subscribeInfo, &subscribeProperties, 1, MQTT_FIRST_VALID_PACKET_ID);
+    TEST_ASSERT_EQUAL_INT(MQTTBadParameter, mqttStatus); 
+
+}
+
+void test_MQTTV5_Subscribe_ValidateFailure( void )
+{
+    MQTTStatus_t mqttStatus;
+    MQTTSubscribeInfo_t subscribeInfo;
+    MQTTSubscribeProperties_t subscribeProps;
+    MQTTContext_t testContext = { 0 }; 
+    
+    memset( &subscribeInfo, 0, sizeof(subscribeInfo) );
+    memset( &subscribeProps, 0, sizeof(subscribeProps) );
+    
+    /* Force the validation function to return an error */
+    validateSubscribeReturn = MQTTBadParameter;
+    
+    mqttStatus = MQTT_SubscribeV5( &testContext, &subscribeInfo, &subscribeProps, 1, MQTT_FIRST_VALID_PACKET_ID );
+    TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
+    
+    /* Restore for later tests */
+    validateSubscribeReturn = MQTTSuccess;
+}
+
+void test_MQTTV5_Subscribe_happy_path(void){
+    MQTTStatus_t mqttStatus;
+    MQTTContext_t context = { 0 };
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
+    MQTTSubscribeInfo_t subscribeInfo = { 0 };
+    MQTTSubscribeProperties_t subscribeProperties ; 
+    size_t remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
+    size_t packetSize = MQTT_SAMPLE_REMAINING_LENGTH;
+    MQTTPubAckInfo_t incomingRecords = { 0 };
+    MQTTPubAckInfo_t outgoingRecords = { 0 };
+
+    subscribeProperties.propertyLength = 0 ; 
+    subscribeProperties.subscriptionId = 1; 
+    subscribeProperties.pUserProperties = NULL ; 
+
+    setupTransportInterface( &transport );
+    setupNetworkBuffer( &networkBuffer );
+    setupSubscriptionInfo( &subscribeInfo );
+
+    /* Initialize context. */
+    mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+
+    mqttStatus = MQTT_InitStatefulQoS( &context,
+                                       &outgoingRecords, 4,
+                                       &incomingRecords, 4 );
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+
+    /* Verify MQTTSuccess is returned with the following mocks. */
+    MQTTV5_GetSubscribePacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTTV5_GetSubscribePacketSize_ReturnThruPtr_pPacketSize( &packetSize );
+    MQTTV5_GetSubscribePacketSize_ReturnThruPtr_pRemainingLength( &remainingLength );
+    MQTT_SerializeSubscribeHeader_Stub( MQTTV5_SerializeSubscribedHeader_cb );
+
+    /* Expect the above calls when running MQTT_Subscribe. */
+    mqttStatus = MQTT_SubscribeV5( &context, &subscribeInfo,&subscribeProperties, 1, MQTT_FIRST_VALID_PACKET_ID );
+
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+    
+}
+
+
+void test_MQTTV5_Subscribe_happy_path1(void){
+    MQTTStatus_t mqttStatus;
+    MQTTContext_t context = { 0 };
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
+    MQTTSubscribeInfo_t subscribeInfo[2];
+    MQTTSubscribeProperties_t subscribeProperties = {0}; 
+    size_t remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
+    size_t packetSize = MQTT_SAMPLE_REMAINING_LENGTH;
+    MQTTPubAckInfo_t incomingRecords = { 0 };
+    MQTTPubAckInfo_t outgoingRecords = { 0 };
+
+
+    setupTransportInterface( &transport );
+    setupNetworkBuffer( &networkBuffer );
+
+    mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+
+    mqttStatus = MQTT_InitStatefulQoS( &context,
+                                       &outgoingRecords, 4,
+                                       &incomingRecords, 4 );
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+
+    /* Verify MQTTSuccess is returned with the following mocks. */
+    MQTTV5_GetSubscribePacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTTV5_GetSubscribePacketSize_ReturnThruPtr_pPacketSize( &packetSize );
+    MQTTV5_GetSubscribePacketSize_ReturnThruPtr_pRemainingLength( &remainingLength );
+    MQTT_SerializeSubscribeHeader_Stub( MQTTV5_SerializeSubscribedHeader_cb );
+
+    subscribeProperties.subscriptionId = 1 ; 
+
+    subscribeInfo[0].qos = MQTTQoS2 ; 
+    subscribeInfo[0].pTopicFilter = "abc" ; 
+    subscribeInfo[0].topicFilterLength = 3 ;
+    subscribeInfo[0].noLocalOption = 1 ; 
+    subscribeInfo[0].retainAsPublishedOption = 1 ; 
+    subscribeInfo[0].retainHandlingOption = 0 ; 
+
+    subscribeInfo[1].qos = MQTTQoS0 ; 
+    subscribeInfo[1].pTopicFilter = "def" ;
+    subscribeInfo[1].retainHandlingOption = 2 ;
+    subscribeInfo[1].topicFilterLength = 3 ;
+    subscribeInfo[1].noLocalOption = 0 ;
+    subscribeInfo[1].retainAsPublishedOption = 0 ;
+    
+
+    /* Expect the above calls when running MQTT_Subscribe. */
+    mqttStatus = MQTT_SubscribeV5( &context, subscribeInfo,&subscribeProperties, 2, MQTT_FIRST_VALID_PACKET_ID );
+    TEST_ASSERT_EQUAL_INT( MQTTSuccess, mqttStatus );
+
+}
+
+void test_MQTTV5_Subscribe_happy_path2(void){
+    MQTTStatus_t mqttStatus;
+    MQTTContext_t context = { 0 };
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
+    MQTTSubscribeInfo_t subscribeInfo = {0};
+    MQTTSubscribeProperties_t subscribeProperties = {0}; 
+    size_t remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
+    size_t packetSize = MQTT_SAMPLE_REMAINING_LENGTH;
+    MQTTPubAckInfo_t incomingRecords = { 0 };
+    MQTTPubAckInfo_t outgoingRecords = { 0 };
+
+    setupTransportInterface( &transport );
+    setupNetworkBuffer( &networkBuffer );
+
+    mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+
+    mqttStatus = MQTT_InitStatefulQoS( &context,
+                                       &outgoingRecords, 4,
+                                       &incomingRecords, 4 );
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+
+    /* Verify MQTTSuccess is returned with the following mocks. */
+    MQTTV5_GetSubscribePacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTTV5_GetSubscribePacketSize_ReturnThruPtr_pPacketSize( &packetSize );
+    MQTTV5_GetSubscribePacketSize_ReturnThruPtr_pRemainingLength( &remainingLength );
+    MQTT_SerializeSubscribeHeader_Stub( MQTTV5_SerializeSubscribedHeader_cb );
+
+    subscribeProperties.subscriptionId = 1 ;
+
+    subscribeInfo.qos = MQTTQoS1 ; 
+    subscribeInfo.pTopicFilter = "$share/abc" ;
+    subscribeInfo.topicFilterLength = 10 ;
+    subscribeInfo.noLocalOption = 0 ;
+    subscribeInfo.retainAsPublishedOption = 1 ;
+    subscribeInfo.retainHandlingOption = 0 ;
+
+    mqttStatus = MQTT_SubscribeV5( &context, &subscribeInfo,&subscribeProperties, 1, MQTT_FIRST_VALID_PACKET_ID );
+    TEST_ASSERT_EQUAL_INT( MQTTSuccess, mqttStatus );
+
 }

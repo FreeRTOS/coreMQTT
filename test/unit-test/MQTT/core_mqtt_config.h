@@ -73,4 +73,6 @@
 
 #define MQTT_SEND_TIMEOUT_MS                    ( 20U )
 
+#define MQTT_VERSION_5_ENABLED    ( false )
+
 #endif /* ifndef CORE_MQTT_CONFIG_H_ */

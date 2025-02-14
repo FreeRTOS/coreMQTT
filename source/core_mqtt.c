@@ -377,11 +377,9 @@ static size_t addEncodedStringToVector( uint8_t serializedLength[ CORE_MQTT_SERI
  *
  * @return #MQTTSuccess or #MQTTSendFailed.
  */
-static MQTTStatus_t sendSubscribeWithoutCopy( MQTTContext_t * pContext,
-                                              const MQTTSubscribeInfo_t * pSubscriptionList,
-                                              size_t subscriptionCount,
-                                              uint16_t packetId,
-                                              size_t remainingLength );
+
+
+
 
 /**
  * @brief Send MQTT UNSUBSCRIBE message without copying the user data into a buffer and
@@ -554,7 +552,7 @@ static MQTTStatus_t handleIncomingAck( MQTTContext_t * pContext,
                                        bool manageKeepAlive );
 
 
-static uint8_t* encodeRemainingLength(uint8_t* pDestination,
+static uint8_t* encodeRemainingLengthSub(uint8_t* pDestination,
     size_t length)
 {
     uint8_t lengthByte;
@@ -615,10 +613,7 @@ static MQTTStatus_t receiveSingleIteration( MQTTContext_t * pContext,
  * @return #MQTTBadParameter if invalid parameters are passed;
  * #MQTTSuccess otherwise.
  */
-static MQTTStatus_t validateSubscribeUnsubscribeParams( const MQTTContext_t * pContext,
-                                                        const MQTTSubscribeInfo_t * pSubscriptionList,
-                                                        size_t subscriptionCount,
-                                                        uint16_t packetId );
+
 
 /**
  * @brief Receives a CONNACK MQTT packet.
@@ -2686,7 +2681,9 @@ static MQTTStatus_t validateSubscribeUnsubscribeParams( const MQTTContext_t * pC
     return status;
 }
 
+
 /*-----------------------------------------------------------*/
+#if(MQTT_VERSION_5_ENABLED)
 static MQTTStatus_t sendSubscribeWithoutCopyV5( MQTTContext_t * pContext,
                                               MQTTSubscribeInfo_t * pSubscriptionList,
                                               size_t subscriptionCount,
@@ -2698,9 +2695,9 @@ static MQTTStatus_t sendSubscribeWithoutCopyV5( MQTTContext_t * pContext,
     /**
      * Fixed Size Properties 
      */
-    TransportOutVector_t pIoVector[MQTT_SUB_UNSUB_MAX_VECTORS];
+    TransportOutVector_t pIoVector[ MQTT_SUB_UNSUB_MAX_VECTORS + MAX_USER_PROPERTY * 5 ];
     TransportOutVector_t * pIterator;
-    uint8_t serializedTopicFieldLength[ MQTT_SUB_UNSUB_MAX_VECTORS ][ CORE_MQTT_SERIALIZED_LENGTH_FIELD_BYTES ];
+    uint8_t serializedTopicFieldLength[  MQTT_SUB_UNSUB_MAX_VECTORS + MAX_USER_PROPERTY * 5 ] [ CORE_MQTT_SERIALIZED_LENGTH_FIELD_BYTES ];
     size_t totalPacketLength = 0U;
     size_t ioVectorLength = 0U;
     size_t subscriptionsSent = 0U;
@@ -2749,14 +2746,15 @@ static MQTTStatus_t sendSubscribeWithoutCopyV5( MQTTContext_t * pContext,
      * prop len -                 + 4 = 9 
      * 
      */
+
     pIndex = serializedProperty; 
     pIterator = &pIoVector[ioVectorLength]; 
-    pIndex = encodeRemainingLength(pIndex , pSubscribeProperties->propertyLength) ;
+    pIndex = encodeRemainingLengthSub(pIndex , pSubscribeProperties->propertyLength) ;
 
     if(pSubscribeProperties->subscriptionId != 0){
         *pIndex = MQTT_SUBSCRIPTION_ID_ID;
         pIndex ++ ;
-        pIndex= encodeRemainingLength(pIndex, pSubscribeProperties->subscriptionId) ;
+        pIndex= encodeRemainingLengthSub(pIndex, pSubscribeProperties->subscriptionId) ;
     }
 
     pIterator->iov_base = serializedProperty ; 
@@ -2765,11 +2763,12 @@ static MQTTStatus_t sendSubscribeWithoutCopyV5( MQTTContext_t * pContext,
     pIterator ++; 
     ioVectorLength ++ ; 
 
-
+    #if(MQTT_USER_PROPERTY_ENABLED)
     if(pSubscribeProperties->pUserProperties != NULL){
         UserPropertyVector_t userVector ; 
         ioVectorLength += sendUserProperties(pSubscribeProperties->pUserProperties , &userVector, &totalPacketLength ,&pIterator) ;
     }
+    #endif
 
     /*USING SEND PROPERTIES END*/
 
@@ -2807,7 +2806,7 @@ static MQTTStatus_t sendSubscribeWithoutCopyV5( MQTTContext_t * pContext,
 
         /* Check whether the subscription topic (with QoS) will fit in the
          * given vector. */
-        while( ( ioVectorLength <= ( MQTT_SUB_UNSUB_MAX_VECTORS - CORE_MQTT_SUBSCRIBE_PER_TOPIC_VECTOR_LENGTH ) ) &&
+        while( ( ioVectorLength <= ( MQTT_SUB_UNSUB_MAX_VECTORS - CORE_MQTT_SUBSCRIBE_PER_TOPIC_VECTOR_LENGTH + MAX_USER_PROPERTY*5  ) ) &&
                ( subscriptionsSent < subscriptionCount ) )
         {
             /* The topic filter and the filter length gets sent next. (filter length - 2 bytes , topic filter - utf - 8 ) */
@@ -2825,35 +2824,35 @@ static MQTTStatus_t sendSubscribeWithoutCopyV5( MQTTContext_t * pContext,
             
 
             if(pSubscriptionList[subscriptionsSent].qos == MQTTQoS1) {
-                LogDebug(("Adding QoS as QoS 1 in SUBSCRIBE payload")) ; 
+                LogInfo(("Adding QoS as QoS 1 in SUBSCRIBE payload")) ; 
                 UINT8_SET_BIT(subscriptionOptions, MQTT_SUBSCRIBE_QOS1) ; 
             }else if(pSubscriptionList[subscriptionsSent].qos == MQTTQoS2){
-                LogDebug(("Adding QoS as QoS 2 in SUBSCRIBE payload"));
+                LogInfo(("Adding QoS as QoS 2 in SUBSCRIBE payload"));
                 UINT8_SET_BIT(subscriptionOptions, MQTT_SUBSCRIBE_QOS2) ;
             }else{
-                LogDebug(("dding QoS as QoS 0 in SUBSCRIBE payload"));
+                LogInfo(("dding QoS as QoS 0 in SUBSCRIBE payload"));
             }
             if(pSubscriptionList[subscriptionsSent].noLocalOption == 1) {
-                LogDebug(("Adding noLocalOption in SUBSCRIBE payload"));
+                LogInfo(("Adding noLocalOption in SUBSCRIBE payload"));
                 UINT8_SET_BIT(subscriptionOptions, MQTT_SUBSCRIBE_NO_LOCAL) ;
             }else LogDebug(("Adding noLocalOption as 0 in SUBSCRIBE payload")); 
 
             if(pSubscriptionList[subscriptionsSent].retainAsPublishedOption == 1) {
-                LogDebug((" retainAsPublishedOption in SUBSCRIBE payload"));
+                LogInfo((" retainAsPublishedOption in SUBSCRIBE payload"));
                 UINT8_SET_BIT(subscriptionOptions, MQTT_SUBSCRIBE_RETAIN_AS_PUBLISHED) ;
             }else LogDebug(("retainAsPublishedOption as 0 in SUBSCRIBE payload"));
 
             if(pSubscriptionList[subscriptionsSent].retainHandlingOption == 0) {
-                LogDebug(("Send Retain messages at the time of subscribe")); 
+                LogInfo(("Send Retain messages at the time of subscribe")); 
             }else if(pSubscriptionList[subscriptionsSent].retainHandlingOption == 1){
-                LogDebug(("Send retained messages at subscribe only if the subscription does not currently exist"));
+                LogInfo(("Send retained messages at subscribe only if the subscription does not currently exist"));
                 UINT8_SET_BIT(subscriptionOptions, MQTT_SUBSCRIBE_RETAIN_HANDLING1) ;
 
             }else if(pSubscriptionList[subscriptionsSent].retainHandlingOption == 2) {
-                LogDebug(("Do not send retained messages at subscribe"));
+                LogInfo(("Do not send retained messages at subscribe"));
                 UINT8_SET_BIT(subscriptionOptions, MQTT_SUBSCRIBE_RETAIN_HANDLING2) ;
             }else{
-                LogDebug(("Protocol Error, retain handling is 3")); 
+                LogInfo(("Protocol Error, retain handling is 3")); 
                 status = MQTTBadParameter ;
                 break ; 
             }
@@ -2930,7 +2929,6 @@ static MQTTStatus_t validateSubscribeUnsubscribeParamsV5(MQTTContext_t* pContext
                     status = MQTTBadParameter;
                     break;
                 }
-#if (MQTT_VERSION_5_ENABLED)
                 isSharedSub = ((strncmp(pSubscriptionList[iterator].pTopicFilter, "$share/", 7)) == 0);
                 if (isSharedSub) {
                     /**
@@ -2959,7 +2957,7 @@ static MQTTStatus_t validateSubscribeUnsubscribeParamsV5(MQTTContext_t* pContext
                     status = MQTTBadParameter;
                     break;
                 }
-#endif
+
             }
         }
     }
@@ -2969,13 +2967,17 @@ static MQTTStatus_t validateSubscribeUnsubscribeParamsV5(MQTTContext_t* pContext
             LogError(("Argument cannot be null : pSubscriberProperties"));
             status = MQTTBadParameter;
         }
-        else if ((pSubscribeProperties != NULL) && (pSubscribeProperties->subscriptionId == 0)) {
+        else if ((pSubscribeProperties->subscriptionId == 0)) {
             LogError(("Subscription Id cannot 0 for subscribe properties : Protocol Error "));
             status = MQTTBadParameter;
+        }else{
+            /* */
         }
     }
+    
     return status;
 }
+
 MQTTStatus_t MQTT_SubscribeV5( MQTTContext_t * pContext,
                              MQTTSubscribeInfo_t * pSubscriptionList,
                              MQTTSubscribeProperties_t *subscribeProperties,
@@ -2983,7 +2985,6 @@ MQTTStatus_t MQTT_SubscribeV5( MQTTContext_t * pContext,
                              uint16_t packetId)
 {
 
-    MQTTConnectionStatus_t connectStatus;
     size_t remainingLength = 0UL, packetSize = 0UL;
 
     MQTTStatus_t status = validateSubscribeUnsubscribeParamsV5( pContext , pSubscriptionList,
@@ -2994,53 +2995,31 @@ MQTTStatus_t MQTT_SubscribeV5( MQTTContext_t * pContext,
     if( status == MQTTSuccess ) 
     {
         /* Get the remaining length and packet size.*/
-        #if(!MQTT_VERSION_5_ENABLED)
-            status = MQTT_GetSubscribePacketSize( pSubscriptionList,
-                                              subscriptionCount,
-                                              &remainingLength,
-                                              &packetSize );
-        #else 
-            status = MQTTV5_GetSubscribePacketSize( pSubscriptionList,
-                                                    subscribeProperties, 
-                                                    subscriptionCount,
-                                                    &remainingLength,
-                                                    &packetSize );
-        #endif 
+        status = MQTTV5_GetSubscribePacketSize( pSubscriptionList,
+                                                subscribeProperties, 
+                                                subscriptionCount,
+                                                &remainingLength,
+                                                &packetSize );
         LogDebug( ( "SUBSCRIBE packet size is %lu and remaining length is %lu.",
                     ( unsigned long ) packetSize,
                     ( unsigned long ) remainingLength ) );
     }   
     if(status == MQTTSuccess){
         MQTT_PRE_SEND_HOOK(pContext);
-        connectStatus = pContext->connectStatus ;
-        if( connectStatus != MQTTConnected )
-        {
-            status = ( connectStatus == MQTTNotConnected ) ? MQTTStatusNotConnected : MQTTStatusDisconnectPending;
-        }
 
-        if( status == MQTTSuccess )
-        {
-            /* Send MQTT SUBSCRIBE packet. */
-            #if (MQTT_VERSION_5_ENABLED)
-                status = sendSubscribeWithoutCopyV5( pContext,
-                                               pSubscriptionList,
-                                               subscriptionCount,
-                                               subscribeProperties, 
-                                               packetId,
-                                               remainingLength );
-            #else
-            status = sendSubscribeWithoutCopy( pContext,
-                                               pSubscriptionList,
-                                               subscriptionCount,
-                                               packetId,
-                                               remainingLength );
-            #endif
-        }
+        /* Send MQTT SUBSCRIBE packet. */
+        status = sendSubscribeWithoutCopyV5( pContext,
+                                            pSubscriptionList,
+                                            subscriptionCount,
+                                            subscribeProperties, 
+                                            packetId,
+                                            remainingLength );
 
         MQTT_POST_STATE_UPDATE_HOOK( pContext );
     }
     return status;
 }
+#endif
 
 /*-----------------------------------------------------------*/
 
@@ -3145,6 +3124,7 @@ static MQTTStatus_t sendSubscribeWithoutCopy( MQTTContext_t * pContext,
 
     return status;
 }
+
 
 /*-----------------------------------------------------------*/
 
@@ -4041,7 +4021,6 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
 }
 
 /*-----------------------------------------------------------*/
-
 MQTTStatus_t MQTT_Subscribe( MQTTContext_t * pContext,
                              const MQTTSubscribeInfo_t * pSubscriptionList,
                              size_t subscriptionCount,
@@ -4083,6 +4062,7 @@ MQTTStatus_t MQTT_Subscribe( MQTTContext_t * pContext,
 
     return status;
 }
+
 
 /*-----------------------------------------------------------*/
 
@@ -4295,7 +4275,54 @@ MQTTStatus_t MQTT_Ping( MQTTContext_t * pContext )
 }
 
 /*-----------------------------------------------------------*/
+static MQTTStatus_t validateSubscribeUnsubscribeParamsUnsub( const MQTTContext_t * pContext,
+                                                        const MQTTSubscribeInfo_t * pSubscriptionList,
+                                                        size_t subscriptionCount,
+                                                        uint16_t packetId )
+{
+    MQTTStatus_t status = MQTTSuccess;
+    size_t iterator;
 
+    /* Validate all the parameters. */
+    if( ( pContext == NULL ) || ( pSubscriptionList == NULL ) )
+    {
+        LogError( ( "Argument cannot be NULL: pContext=%p, "
+                    "pSubscriptionList=%p.",
+                    ( void * ) pContext,
+                    ( void * ) pSubscriptionList ) );
+        status = MQTTBadParameter;
+    }
+    else if( subscriptionCount == 0UL )
+    {
+        LogError( ( "Subscription count is 0." ) );
+        status = MQTTBadParameter;
+    }
+    else if( packetId == 0U )
+    {
+        LogError( ( "Packet Id for subscription packet is 0." ) );
+        status = MQTTBadParameter;
+    }
+    else
+    {
+        if( pContext->incomingPublishRecords == NULL )
+        {
+            for( iterator = 0; iterator < subscriptionCount; iterator++ )
+            {
+                if( pSubscriptionList->qos > MQTTQoS0 )
+                {
+                    LogError( ( "The incoming publish record list is not "
+                                "initialised for QoS1/QoS2 records. Please call "
+                                " MQTT_InitStatefulQoS to enable use of QoS1 and "
+                                " QoS2 packets." ) );
+                    status = MQTTBadParameter;
+                    break;
+                }
+            }
+        }
+    }
+
+    return status;
+}
 MQTTStatus_t MQTT_Unsubscribe( MQTTContext_t * pContext,
                                const MQTTSubscribeInfo_t * pSubscriptionList,
                                size_t subscriptionCount,
@@ -4304,7 +4331,7 @@ MQTTStatus_t MQTT_Unsubscribe( MQTTContext_t * pContext,
     size_t remainingLength = 0UL, packetSize = 0UL;
 
     /* Validate arguments. */
-    MQTTStatus_t status = validateSubscribeUnsubscribeParams( pContext,
+    MQTTStatus_t status = validateSubscribeUnsubscribeParamsUnsub( pContext,
                                                               pSubscriptionList,
                                                               subscriptionCount,
                                                               packetId );
