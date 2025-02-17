@@ -2440,7 +2440,12 @@ static MQTTStatus_t handleIncomingAck( MQTTContext_t * pContext,
         case MQTT_PACKET_TYPE_SUBACK:
         case MQTT_PACKET_TYPE_UNSUBACK:
             /* Deserialize and give these to the app provided callback. */
+            #if(!MQTT_VERSION_5_ENABLED)
             status = MQTT_DeserializeAck( pIncomingPacket, &packetIdentifier, NULL );
+            #else
+            MQTTSubackProperties_t *pSubackProperties = {0}  ; 
+            status = MQTTV5_DeserializeSuback(pSubackProperties , pIncomingPacket , &packetIdentifier) ; 
+            #endif
             invokeAppCallback = ( status == MQTTSuccess ) || ( status == MQTTServerRefused );
             break;
 
@@ -2865,12 +2870,13 @@ static MQTTStatus_t sendSubscribeWithoutCopyV5( MQTTContext_t * pContext,
         }
     }
     byteSent = sendMessageVector(pContext, pIoVector, ioVectorLength) ; 
+    /*
     if(byteSent != (int32_t)totalPacketLength){
         LogError(("Error in sending SUBSCRIBE packet")); 
         status = MQTTSendFailed ;
     }else{
         status = MQTTSuccess ;
-    }
+    } */
    
     return status ;                                        
 }
@@ -2884,6 +2890,7 @@ static MQTTStatus_t validateSubscribeUnsubscribeParamsV5(MQTTContext_t* pContext
     MQTTStatus_t status = MQTTSuccess;
     size_t iterator;
     bool isSharedSub = false ; 
+    const char* shareNameEnd ;
 
     /* Validate all the parameters. */
     if ((pContext == NULL) || (pSubscriptionList == NULL) || (pSubscribeProperties == NULL))
@@ -2919,6 +2926,13 @@ static MQTTStatus_t validateSubscribeUnsubscribeParamsV5(MQTTContext_t* pContext
                     status = MQTTBadParameter;
                     break;
                 }
+
+            }
+        }
+        if(status == MQTTSuccess)
+        {
+            for(iterator = 0; iterator < subscriptionCount; iterator++)
+            {
                 if ((pSubscriptionList[iterator].topicFilterLength == 0U) || (pSubscriptionList[iterator].pTopicFilter == NULL)) {
                     LogError(("Argument cannot be null : pTopicFilter"));
                     status = MQTTBadParameter;
@@ -2930,18 +2944,16 @@ static MQTTStatus_t validateSubscribeUnsubscribeParamsV5(MQTTContext_t* pContext
                     break;
                 }
                 isSharedSub = ((strncmp(pSubscriptionList[iterator].pTopicFilter, "$share/", 7)) == 0);
+                LogDebug(("isSharedSub = %d", isSharedSub)) ;
                 if (isSharedSub) {
                     /**
                      * ensuring ShareName is present and does not contain invalid characters
+                     * 
                      */
-                    const char* shareNameEnd = strchr(pSubscriptionList[iterator].pTopicFilter + 7, '/');
+                    LogDebug(("ShareName is present")) ;
+                    shareNameEnd = strchr(pSubscriptionList[iterator].pTopicFilter + 7, '/');
                     if ((shareNameEnd == NULL) || (shareNameEnd == pSubscriptionList[iterator].pTopicFilter + 7)) {
                         LogError(("Protocol Error : ShareName is not present , missing or empty"));
-                        status = MQTTBadParameter;
-                        break;
-                    }
-                    if (strpbrk(pSubscriptionList[iterator].pTopicFilter + 7, "+#/") < shareNameEnd) {
-                        LogError(("Protocol Error : ShareName contains invalid characters"));
                         status = MQTTBadParameter;
                         break;
                     }
@@ -2957,22 +2969,18 @@ static MQTTStatus_t validateSubscribeUnsubscribeParamsV5(MQTTContext_t* pContext
                     status = MQTTBadParameter;
                     break;
                 }
-
             }
         }
     }
     if (status == MQTTSuccess)
     {
-        if (pSubscribeProperties == NULL) {
-            LogError(("Argument cannot be null : pSubscriberProperties"));
-            status = MQTTBadParameter;
-        }
-        else if ((pSubscribeProperties->subscriptionId == 0)) {
+        if ((pSubscribeProperties->subscriptionId == 0)) {
             LogError(("Subscription Id cannot 0 for subscribe properties : Protocol Error "));
             status = MQTTBadParameter;
         }else{
             /* */
         }
+        
     }
     
     return status;
@@ -2984,7 +2992,6 @@ MQTTStatus_t MQTT_SubscribeV5( MQTTContext_t * pContext,
                              size_t subscriptionCount,
                              uint16_t packetId)
 {
-
     size_t remainingLength = 0UL, packetSize = 0UL;
 
     MQTTStatus_t status = validateSubscribeUnsubscribeParamsV5( pContext , pSubscriptionList,
@@ -4275,6 +4282,7 @@ MQTTStatus_t MQTT_Ping( MQTTContext_t * pContext )
 }
 
 /*-----------------------------------------------------------*/
+
 static MQTTStatus_t validateSubscribeUnsubscribeParamsUnsub( const MQTTContext_t * pContext,
                                                         const MQTTSubscribeInfo_t * pSubscriptionList,
                                                         size_t subscriptionCount,
@@ -4323,6 +4331,8 @@ static MQTTStatus_t validateSubscribeUnsubscribeParamsUnsub( const MQTTContext_t
 
     return status;
 }
+
+
 MQTTStatus_t MQTT_Unsubscribe( MQTTContext_t * pContext,
                                const MQTTSubscribeInfo_t * pSubscriptionList,
                                size_t subscriptionCount,

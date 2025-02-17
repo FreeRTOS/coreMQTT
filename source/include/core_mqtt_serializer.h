@@ -607,6 +607,18 @@ typedef struct MQTTSubscribeProperties
     size_t subscriptionId;
 
 } MQTTSubscribeProperties_t;
+
+typedef struct MQTTSubackProperties
+{
+    size_t propertyLength ; 
+    #if(MQTT_USER_PROPERTY_ENABLED)
+    MQTTUserProperties_t * pUserProperties ; 
+    #endif
+    const char * pReasonString ; 
+    uint16_t reasonStringLength ; 
+
+}MQTTSubackProperties_t ; 
+
 /**
  * @brief Get the size and Remaining Length of an MQTT CONNECT packet.
  *
@@ -2040,7 +2052,9 @@ MQTTStatus_t MQTTV5_GetPublishPacketSize(MQTTPublishInfo_t * pPublishInfo,
 MQTTStatus_t MQTTV5_DeserializeAck( const MQTTPacketInfo_t * pIncomingPacket,
                                   uint16_t * pPacketId, MQTTAckInfo_t *pAckInfo, bool requestProblem,uint32_t maxPacketSize);
 /* @[declare_mqttv5_deserializeack] */
-
+MQTTStatus_t MQTTV5_DeserializeSuback(MQTTSubackProperties_t *pSubackProperties , 
+                                      const MQTTPacketInfo_t * pSuback,  
+                                      uint16_t *pPacketId) ;
 /**
  * @brief Get the size of an MQTT DISCONNECT packet.
  *

@@ -3423,6 +3423,50 @@ void test_GetSubscribePropertiesSize_NoSubscriptionId_NoUserProps(void)
     TEST_ASSERT_EQUAL(MQTTSuccess, status);
     TEST_ASSERT_EQUAL_UINT32(0U, props.propertyLength);
 }
+void test_calculateSubscriptionPacketSizeV5(void)
+{
+    MQTTSubscribeProperties_t subscriptionProperties;
+    size_t subscriptionCount = 1;
+    size_t remainingLength = 0;
+    size_t packetSize = 0;
+    MQTTStatus_t status = MQTTSuccess;
+    MQTTSubscribeInfo_t fourThousandSubscriptions[ 4096 ] = { 0 };
+    int i;
+    subscriptionProperties.subscriptionId = 1 ;
+    for( i = 0; i < 4096; i++ )
+    {
+        fourThousandSubscriptions[ i ].topicFilterLength = UINT16_MAX;
+
+        /* We need to set this to avoid an early bad parameter, however we do
+         * not need a 65535 byte buffer as the packet will not be serialized. */
+        fourThousandSubscriptions[ i ].pTopicFilter = "";
+    }
+
+    subscriptionCount = sizeof( fourThousandSubscriptions ) / sizeof( fourThousandSubscriptions[ 0 ] );
+    status = MQTTV5_GetSubscribePacketSize( fourThousandSubscriptions,
+                                          &subscriptionProperties,
+                                          subscriptionCount,
+                                          &remainingLength,
+                                          &packetSize );
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+}
+
+void test_MQTT_GetSubscribePropertiesSize_exceeds_max_length(void)
+{
+    MQTTSubscribeProperties_t subscribeProperties;
+    MQTTStatus_t status;
+
+    /* Initialize properties */
+    subscribeProperties.subscriptionId = 34232;  // Some valid subscription ID
+    subscribeProperties.propertyLength = MQTT_MAX_REMAINING_LENGTH + 1;  // Exceeding max limit
+
+    /* Call the function */
+    status = MQTT_GetSubscribePropertiesSize(&subscribeProperties);
+
+    /* Expect status to be MQTTBadParameter due to propertyLength overflow */
+    TEST_ASSERT_EQUAL_INT(MQTTBadParameter, status);
+}
+
 
 
 

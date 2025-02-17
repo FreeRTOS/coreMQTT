@@ -1204,6 +1204,17 @@ void test_MQTTV5_Subscribe_invalid_params( void )
     mqttStatus = MQTT_SubscribeV5(&context, &subscribeInfo, &subscribeProperties, 1, MQTT_FIRST_VALID_PACKET_ID);
     TEST_ASSERT_EQUAL_INT(MQTTBadParameter, mqttStatus); 
 
+    subscribeInfo.pTopicFilter = "abc" ; 
+    subscribeInfo.topicFilterLength = strlen( subscribeInfo.pTopicFilter );
+    subscribeInfo.retainHandlingOption= 3 ; 
+    mqttStatus = MQTT_SubscribeV5(&context, &subscribeInfo, &subscribeProperties, 1, MQTT_FIRST_VALID_PACKET_ID);
+    TEST_ASSERT_EQUAL_INT(MQTTBadParameter, mqttStatus);
+
+    subscribeInfo.retainHandlingOption  = 1 ; 
+    subscribeInfo.qos = 3 ; 
+    mqttStatus = MQTT_SubscribeV5(&context, &subscribeInfo, &subscribeProperties, 1, MQTT_FIRST_VALID_PACKET_ID);
+    TEST_ASSERT_EQUAL_INT(MQTTBadParameter, mqttStatus);
+
 }
 
 void test_MQTTV5_Subscribe_ValidateFailure( void )
@@ -1354,8 +1365,8 @@ void test_MQTTV5_Subscribe_happy_path2(void){
     subscribeProperties.subscriptionId = 1 ;
 
     subscribeInfo.qos = MQTTQoS1 ; 
-    subscribeInfo.pTopicFilter = "$share/abc" ;
-    subscribeInfo.topicFilterLength = 10 ;
+    subscribeInfo.pTopicFilter = "$share/abc/bcd" ;
+    subscribeInfo.topicFilterLength = 14 ;
     subscribeInfo.noLocalOption = 0 ;
     subscribeInfo.retainAsPublishedOption = 1 ;
     subscribeInfo.retainHandlingOption = 0 ;
@@ -1364,3 +1375,177 @@ void test_MQTTV5_Subscribe_happy_path2(void){
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, mqttStatus );
 
 }
+
+void test_MQTTV5_Subscribe_happy_path3(void){
+    MQTTStatus_t mqttStatus;
+    MQTTContext_t context = { 0 };
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
+    MQTTSubscribeInfo_t subscribeInfo = {0};
+    MQTTSubscribeProperties_t subscribeProperties = {0};
+    size_t remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
+    size_t packetSize = MQTT_SAMPLE_REMAINING_LENGTH;
+    MQTTPubAckInfo_t incomingRecords = { 0 };
+    MQTTPubAckInfo_t outgoingRecords = { 0 };
+
+    setupTransportInterface( &transport );
+    setupNetworkBuffer( &networkBuffer );
+
+    mqttStatus = MQTT_Init(&context, &transport, getTime, eventCallback, &networkBuffer);
+    TEST_ASSERT_EQUAL(MQTTSuccess, mqttStatus);
+
+    mqttStatus = MQTT_InitStatefulQoS( &context,
+                                       &outgoingRecords, 4,
+                                       &incomingRecords, 4 );
+    TEST_ASSERT_EQUAL(MQTTSuccess, mqttStatus);
+
+    /* Verify MQTTSuccess is returned with the following mocks. */
+    MQTTV5_GetSubscribePacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTTV5_GetSubscribePacketSize_ReturnThruPtr_pPacketSize( &packetSize );
+    MQTTV5_GetSubscribePacketSize_ReturnThruPtr_pRemainingLength( &remainingLength );
+    MQTT_SerializeSubscribeHeader_Stub( MQTTV5_SerializeSubscribedHeader_cb );
+
+    subscribeProperties.subscriptionId = 1 ;
+
+    subscribeInfo.qos = MQTTQoS1 ;
+    subscribeInfo.pTopicFilter = "$share/abc/" ;
+    subscribeInfo.topicFilterLength = 11 ;
+    subscribeInfo.noLocalOption = 0 ;
+    subscribeInfo.retainAsPublishedOption = 1 ;
+    subscribeInfo.retainHandlingOption = 0 ;
+
+    mqttStatus = MQTT_SubscribeV5(&context, &subscribeInfo, &subscribeProperties, 1, MQTT_FIRST_VALID_PACKET_ID);
+    TEST_ASSERT_EQUAL_INT(MQTTSuccess, mqttStatus);
+
+}
+
+void test_MQTTV5_Subscribe_happy_path4(void){
+    MQTTStatus_t mqttStatus;
+    MQTTContext_t context = { 0 };
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
+    MQTTSubscribeInfo_t subscribeInfo = {0};
+    MQTTSubscribeProperties_t subscribeProperties = {0};
+    MQTTUserProperties_t userProperties; 
+    size_t remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
+    size_t packetSize = MQTT_SAMPLE_REMAINING_LENGTH;
+    MQTTPubAckInfo_t incomingRecords = { 0 };
+    MQTTPubAckInfo_t outgoingRecords = { 0 };
+
+    setupTransportInterface( &transport );
+    setupNetworkBuffer( &networkBuffer );
+
+    mqttStatus = MQTT_Init(&context, &transport, getTime, eventCallback, &networkBuffer);
+    TEST_ASSERT_EQUAL(MQTTSuccess, mqttStatus);
+
+    mqttStatus = MQTT_InitStatefulQoS( &context,
+                                       &outgoingRecords, 4,
+                                       &incomingRecords, 4 );
+    TEST_ASSERT_EQUAL(MQTTSuccess, mqttStatus);
+
+    /* Verify MQTTSuccess is returned with the following mocks. */
+    MQTTV5_GetSubscribePacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTTV5_GetSubscribePacketSize_ReturnThruPtr_pPacketSize( &packetSize );
+    MQTTV5_GetSubscribePacketSize_ReturnThruPtr_pRemainingLength( &remainingLength );
+    MQTT_SerializeSubscribeHeader_Stub( MQTTV5_SerializeSubscribedHeader_cb );
+
+    subscribeProperties.subscriptionId = 1 ;
+
+    userProperties.count = 1 ; 
+    userProperties.userProperty[ 0 ].pKey = "abc" ; 
+    userProperties.userProperty[ 0 ].pValue = "def" ;
+    userProperties.userProperty[ 0 ].keyLength = 3 ;
+    userProperties.userProperty[ 0 ].valueLength = 3 ; 
+
+    subscribeProperties.pUserProperties = &userProperties ;
+
+
+    subscribeInfo.qos = MQTTQoS1 ;
+    subscribeInfo.pTopicFilter = "$share/abc/def" ;
+    subscribeInfo.topicFilterLength = 14 ;
+    subscribeInfo.noLocalOption = 0 ;
+    subscribeInfo.retainAsPublishedOption = 1 ;
+    subscribeInfo.retainHandlingOption = 0 ;
+
+    mqttStatus = MQTT_SubscribeV5(&context, &subscribeInfo, &subscribeProperties, 1, MQTT_FIRST_VALID_PACKET_ID);
+    TEST_ASSERT_EQUAL_INT(MQTTSuccess, mqttStatus);
+
+}
+
+void test_MQTTV5_shared_subscriptions(void){
+    MQTTStatus_t mqttStatus;
+    MQTTContext_t context = { 0 };
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
+    MQTTSubscribeInfo_t subscribeInfo = {0};
+    MQTTPubAckInfo_t incomingRecords = { 0 };
+    MQTTPubAckInfo_t outgoingRecords = { 0 };
+    MQTTSubscribeProperties_t subscribeProperties = {0}; 
+    size_t remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
+    size_t packetSize = MQTT_SAMPLE_REMAINING_LENGTH;
+
+    setupTransportInterface( &transport );
+    setupNetworkBuffer( &networkBuffer );
+
+    mqttStatus = MQTT_Init(&context, &transport, getTime, eventCallback, &networkBuffer);
+    TEST_ASSERT_EQUAL(MQTTSuccess, mqttStatus);
+
+    mqttStatus = MQTT_InitStatefulQoS( &context,
+                                       &outgoingRecords, 4,
+                                       &incomingRecords, 4 );
+    TEST_ASSERT_EQUAL(MQTTSuccess, mqttStatus);
+
+
+    /* Verify MQTTSuccess is returned with the following mocks. */
+    MQTTV5_GetSubscribePacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTTV5_GetSubscribePacketSize_ReturnThruPtr_pPacketSize( &packetSize );
+    MQTTV5_GetSubscribePacketSize_ReturnThruPtr_pRemainingLength( &remainingLength );
+    MQTT_SerializeSubscribeHeader_Stub( MQTTV5_SerializeSubscribedHeader_cb );
+
+    subscribeInfo.pTopicFilter = "$share/abc/bcd" ;
+    subscribeInfo.topicFilterLength = 10 ;
+    subscribeInfo.noLocalOption = 0 ;
+    subscribeInfo.retainAsPublishedOption = 1 ;
+    subscribeInfo.retainHandlingOption = 0 ;
+    subscribeInfo.qos = MQTTQoS1 ;
+
+    mqttStatus = MQTT_SubscribeV5(&context, &subscribeInfo, &subscribeProperties, 1, MQTT_FIRST_VALID_PACKET_ID);
+    TEST_ASSERT_EQUAL_INT(MQTTBadParameter, mqttStatus);
+
+
+    subscribeProperties.subscriptionId = 1 ;
+    
+    mqttStatus = MQTT_SubscribeV5(&context, &subscribeInfo, &subscribeProperties, 1, MQTT_FIRST_VALID_PACKET_ID);
+    TEST_ASSERT_EQUAL_INT(MQTTSuccess, mqttStatus);
+
+    subscribeProperties.subscriptionId = 0 ; 
+    mqttStatus = MQTT_SubscribeV5(&context, &subscribeInfo, &subscribeProperties, 1, MQTT_FIRST_VALID_PACKET_ID);
+    TEST_ASSERT_EQUAL_INT(MQTTBadParameter, mqttStatus);
+
+    subscribeProperties.subscriptionId = 1 ;
+    subscribeInfo.qos = 3 ; 
+    mqttStatus = MQTT_SubscribeV5(&context, &subscribeInfo, &subscribeProperties, 1, MQTT_FIRST_VALID_PACKET_ID);
+    TEST_ASSERT_EQUAL_INT(MQTTBadParameter, mqttStatus);
+
+    subscribeInfo.qos = MQTTQoS1 ;
+    subscribeInfo.retainHandlingOption = 3 ;
+    mqttStatus = MQTT_SubscribeV5(&context, &subscribeInfo, &subscribeProperties, 1, MQTT_FIRST_VALID_PACKET_ID);
+    TEST_ASSERT_EQUAL_INT(MQTTBadParameter, mqttStatus);
+    subscribeInfo.retainHandlingOption = 0 ;
+
+
+
+/** Invalid Sharename */
+    subscribeInfo.pTopicFilter = "$share/abc" ; 
+    subscribeInfo.topicFilterLength = 10 ; 
+    
+    mqttStatus = MQTT_SubscribeV5(&context, &subscribeInfo, &subscribeProperties, 1, MQTT_FIRST_VALID_PACKET_ID);
+    TEST_ASSERT_EQUAL_INT(MQTTBadParameter, mqttStatus);
+
+    subscribeInfo.pTopicFilter = "$share/abc/bcd" ;
+    subscribeInfo.topicFilterLength = 14 ;
+    subscribeInfo.noLocalOption = 1 ; 
+    mqttStatus = MQTT_SubscribeV5(&context, &subscribeInfo, &subscribeProperties, 1, MQTT_FIRST_VALID_PACKET_ID);
+    TEST_ASSERT_EQUAL_INT(MQTTBadParameter, mqttStatus);
+}
+

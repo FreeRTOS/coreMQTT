@@ -4909,6 +4909,12 @@ void test_MQTT_Unsubscribe_invalid_params( void )
     /* Packet ID cannot be 0 per MQTT 3.1.1 spec. */
     mqttStatus = MQTT_Unsubscribe( &context, &subscribeInfo, 1, 0 );
     TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
+
+    context.incomingPublishRecords = NULL ; 
+    subscribeInfo.qos = MQTTQoS2 ; 
+    mqttStatus = MQTT_Unsubscribe( &context, &subscribeInfo, 1, 1);
+    TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
+
 }
 
 static uint8_t * MQTT_SerializeUnsubscribeHeader_cb( size_t remainingLength,
