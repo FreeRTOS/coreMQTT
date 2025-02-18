@@ -3756,7 +3756,7 @@ void MQTT_SerializeMQTTVec( uint8_t * pAllocatedMem,
 
     for( i = 0; i < vecLen; i++ )
     {
-        ( void ) memcpy( (void * ) &pAllocatedMem[ index ], ( const void * ) pTransportVec[ i ].iov_base, pTransportVec[ i ].iov_len );
+        ( void ) memcpy( ( void * ) &pAllocatedMem[ index ], ( const void * ) pTransportVec[ i ].iov_base, pTransportVec[ i ].iov_len );
         index += pTransportVec[ i ].iov_len;
     }
 }
