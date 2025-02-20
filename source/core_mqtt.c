@@ -1556,6 +1556,8 @@ static int32_t sendMessageVector( MQTTContext_t * pContext,
         }
         else
         {
+            LogDebug(("sendResult: %d, bytesToSend: %d, bytesSentOrError: %d",
+            sendResult, bytesToSend, bytesSentOrError)); 
             sendResult = pContext->transportInterface.send( pContext->transportInterface.pNetworkContext,
                                                             pIoVectIterator->iov_base,
                                                             pIoVectIterator->iov_len );
@@ -1565,6 +1567,9 @@ static int32_t sendMessageVector( MQTTContext_t * pContext,
         {
             /* It is a bug in the application's transport send implementation if
              * more bytes than expected are sent. */
+            LogDebug(("sendResult: %d, bytesToSend: %d, bytesSentOrError: %d",
+            sendResult, bytesToSend, bytesSentOrError));
+
             assert( sendResult <= ( ( int32_t ) bytesToSend - bytesSentOrError ) );
 
             bytesSentOrError += sendResult;
@@ -2277,6 +2282,83 @@ static MQTTStatus_t handleIncomingPublish( MQTTContext_t * pContext,
 }
 
 /*-----------------------------------------------------------*/
+static MQTTStatus_t handleSuback( MQTTContext_t * pContext,
+                                MQTTPacketInfo_t * pIncomingPacket )
+{
+    MQTTStatus_t status = MQTTSuccess;
+    MQTTPublishState_t publishRecordState = MQTTStateNull; // suback state ? idtso
+    uint16_t packetIdentifier;
+    MQTTEventCallback_t appCallback;
+    MQTTDeserializedInfo_t deserializedInfo;
+
+    #if ( MQTT_VERSION_5_ENABLED )
+        MQTTSubackProperties_t ackInfo;
+        ( void ) memset( &ackInfo, 0x0, sizeof( ackInfo ) );
+    #endif
+
+    assert( pContext != NULL );
+    assert( pIncomingPacket != NULL );
+    assert( pContext->appCallback != NULL );
+
+    appCallback = pContext->appCallback;
+    #if ( !MQTT_VERSION_5_ENABLED )
+        status = MQTT_DeserializeAck( pIncomingPacket, &packetIdentifier, NULL );
+    #else
+        status = MQTTV5_DeserializeSuback( &ackInfo, pIncomingPacket, &packetIdentifier);
+    #endif
+    LogInfo( ( "Ack packet deserialized with result: %s.",
+               MQTT_Status_strerror( status ) ) );
+
+    // if( status == MQTTSuccess )
+    // {
+    //     MQTT_PRE_STATE_UPDATE_HOOK( pContext );
+
+    //     status = MQTT_UpdateStateAck( pContext,
+    //                                   packetIdentifier,
+    //                                   ackType,
+    //                                   MQTT_RECEIVE,
+    //                                   &publishRecordState );
+
+    //     MQTT_POST_STATE_UPDATE_HOOK( pContext );
+
+    //     if( status == MQTTSuccess )
+    //     {
+    //         LogInfo( ( "State record updated. New state=%s.",
+    //                    MQTT_State_strerror( publishRecordState ) ) );
+    //     }
+    //     else
+    //     {
+    //         LogError( ( "Updating the state engine for packet id %hu"
+    //                     " failed with error %s.",
+    //                     ( unsigned short ) packetIdentifier,
+    //                     MQTT_Status_strerror( status ) ) );
+    //     }
+    // }
+
+    #if ( MQTT_VERSION_5_ENABLED )
+        if( status == MQTTSuccess )
+        {
+            deserializedInfo.packetIdentifier = packetIdentifier;
+            deserializedInfo.deserializationResult = status;
+            deserializedInfo.pPublishInfo = NULL;
+            deserializedInfo.pAckInfo->reasonCode = 0xFF ; 
+            deserializedInfo.pAckInfo->pReasonString = ackInfo.pReasonString ;
+            deserializedInfo.pAckInfo->reasonStringLength = ackInfo.reasonStringLength ;
+            #if(USER_PROPERTY_ENABLED)
+            deserializedInfo.pAckInfo->pUserProperty = ackInfo.pUserProperties ; 
+            #endif
+            deserializedInfo.pAckInfo->propertyLength = ackInfo.propertyLength ; 
+            
+            //deserializedInfo.pAckInfo = &ackInfo;
+
+            /* Invoke application callback to hand the buffer over to application
+             * before sending acks. */
+            appCallback( pContext, pIncomingPacket, &deserializedInfo );
+        }
+    #endif /* if ( !MQTT_VERSION_5_ENABLED ) */
+
+    return status;
+}
 
 static MQTTStatus_t handlePublishAcks( MQTTContext_t * pContext,
                                        MQTTPacketInfo_t * pIncomingPacket )
@@ -2414,7 +2496,7 @@ static MQTTStatus_t handleIncomingAck( MQTTContext_t * pContext,
     LogDebug( ( "Received packet of type %02x.",
                 ( unsigned int ) pIncomingPacket->type ) );
 
-    switch( pIncomingPacket->type )
+    switch (pIncomingPacket->type)
     {
         case MQTT_PACKET_TYPE_PUBACK:
         case MQTT_PACKET_TYPE_PUBREC:
@@ -2422,15 +2504,15 @@ static MQTTStatus_t handleIncomingAck( MQTTContext_t * pContext,
         case MQTT_PACKET_TYPE_PUBCOMP:
 
             /* Handle all the publish acks. The app callback is invoked here. */
-            status = handlePublishAcks( pContext, pIncomingPacket );
+            status = handlePublishAcks(pContext, pIncomingPacket);
 
             break;
 
         case MQTT_PACKET_TYPE_PINGRESP:
-            status = MQTT_DeserializeAck( pIncomingPacket, &packetIdentifier, NULL );
-            invokeAppCallback = ( status == MQTTSuccess ) && !manageKeepAlive;
+            status = MQTT_DeserializeAck(pIncomingPacket, &packetIdentifier, NULL);
+            invokeAppCallback = (status == MQTTSuccess) && !manageKeepAlive;
 
-            if( ( status == MQTTSuccess ) && ( manageKeepAlive == true ) )
+            if ((status == MQTTSuccess) && (manageKeepAlive == true))
             {
                 pContext->waitingForPingResp = false;
             }
@@ -2440,13 +2522,15 @@ static MQTTStatus_t handleIncomingAck( MQTTContext_t * pContext,
         case MQTT_PACKET_TYPE_SUBACK:
         case MQTT_PACKET_TYPE_UNSUBACK:
             /* Deserialize and give these to the app provided callback. */
-            #if(!MQTT_VERSION_5_ENABLED)
-            status = MQTT_DeserializeAck( pIncomingPacket, &packetIdentifier, NULL );
-            #else
-            MQTTSubackProperties_t *pSubackProperties = {0}  ; 
-            status = MQTTV5_DeserializeSuback(pSubackProperties , pIncomingPacket , &packetIdentifier) ; 
-            #endif
+            //status = handleSuback(pContext , pIncomingPacket) ; 
+#if(!MQTT_VERSION_5_ENABLED)
+            status = MQTT_DeserializeAck(pIncomingPacket, &packetIdentifier, NULL);
             invokeAppCallback = ( status == MQTTSuccess ) || ( status == MQTTServerRefused );
+#else
+            status = handleSuback(pContext , pIncomingPacket) ; 
+            //status = MQTTV5_DeserializeSuback(&pSubackProperties, pIncomingPacket, &packetIdentifier);
+
+ #endif 
             break;
 
         default:
@@ -3970,7 +4054,10 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
                         ( unsigned long ) packetSize,
                         ( unsigned long ) remainingLength ) );
         #else
-            /* Get MQTT connect packet size and remaining length. */
+            /* Get MQTT connect packet size and remaining length.*/
+            LogDebug(("Calling MQTT_GetConnectPacketSize: pConnectInfo=%p, pWillInfo=%p",
+            pConnectInfo, pWillInfo));
+
             status = MQTT_GetConnectPacketSize( pConnectInfo,
                                                 pWillInfo,
                                                 &remainingLength,

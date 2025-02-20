@@ -3467,6 +3467,43 @@ void test_MQTT_GetSubscribePropertiesSize_exceeds_max_length(void)
     TEST_ASSERT_EQUAL_INT(MQTTBadParameter, status);
 }
 
+void test_MQTTV5_suback(void)
+{
+    MQTTStatus_t status;
+    // MQTTContext_t context = { 0 };
+    // TransportInterface_t transport = { 0 };
+    // MQTTFixedBuffer_t networkBuffer = { 0 };
+
+    // setupTransportInterface( &transport );
+    // setupNetworkBuffer( &networkBuffer );
+
+    // status = MQTT_Init(&context, &transport, getTime, eventCallback, &networkBuffer);
+    // TEST_ASSERT_EQUAL(MQTTSuccess, status);
+    uint8_t packetBuffer[12] = {
+        0x90,       // Fixed header: SUBACK type (0x90)
+        0x0A,       // Remaining Length = 10 bytes
+        0x00, 0x01, // Packet Identifier = 1
+        0x06,       // Property Length = 6 bytes
+        0x1F,       // Property ID = 0x1F (Reason String)
+        0x00, 0x03, // UTF-8 string length = 3
+        0x61, 0x62, 0x63, // The string "abc"
+        0x00        // Payload: Reason code = 0x00 (Success)
+    };
+
+    MQTTPacketInfo_t subackPacket;
+    memset(&subackPacket, 0, sizeof(subackPacket));
+    subackPacket.type = MQTT_PACKET_TYPE_SUBACK; // Should be defined as 0x90
+    subackPacket.remainingLength = 10;           // From the fixed header (0x0A)
+    subackPacket.headerLength = 2;               // Fixed header size in this example
+    subackPacket.pRemainingData = &packetBuffer[2];
+    uint16_t packetIdentifier = 0;
+    MQTTSubackProperties_t subackProperties;
+    memset(&subackProperties, 0, sizeof(subackProperties));
+    status = MQTTV5_DeserializeSuback(&subackProperties ,&subackPacket ,  &packetIdentifier);
+    TEST_ASSERT_EQUAL_INT(MQTTSuccess, status);
+}
+
+
 
 
 

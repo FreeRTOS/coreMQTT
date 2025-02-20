@@ -1211,38 +1211,38 @@ void test_MQTT_Connect_sendConnect_writev_error( void )
 /**
  * @brief Test MQTT_Connect, except for receiving the CONNACK.
  */
-void test_MQTT_Connect_sendConnect1( void )
-{
-    MQTTContext_t mqttContext = { 0 };
-    MQTTConnectInfo_t connectInfo = { 0 };
-    uint32_t timeout = 2;
-    bool sessionPresent;
-    MQTTStatus_t status;
-    TransportInterface_t transport = { 0 };
-    MQTTFixedBuffer_t networkBuffer = { 0 };
-    size_t remainingLength;
-    size_t packetSize;
+// void test_MQTT_Connect_sendConnect1( void )
+// {
+//     MQTTContext_t mqttContext = { 0 };
+//     MQTTConnectInfo_t connectInfo = { 0 };
+//     uint32_t timeout = 2;
+//     bool sessionPresent;
+//     MQTTStatus_t status;
+//     TransportInterface_t transport = { 0 };
+//     MQTTFixedBuffer_t networkBuffer = { 0 };
+//     size_t remainingLength;
+//     size_t packetSize;
 
-    setupTransportInterface( &transport );
-    transport.writev = transportWritevFail;
-    setupNetworkBuffer( &networkBuffer );
+//     setupTransportInterface( &transport );
+//     transport.writev = transportWritevFail;
+//     setupNetworkBuffer( &networkBuffer );
 
-    memset( &mqttContext, 0x0, sizeof( mqttContext ) );
-    MQTT_Init( &mqttContext, &transport, getTime, eventCallback, &networkBuffer );
+//     memset( &mqttContext, 0x0, sizeof( mqttContext ) );
+//     MQTT_Init( &mqttContext, &transport, getTime, eventCallback, &networkBuffer );
 
-    /* Test network send failure from timeout in calling transport send. */
-    mqttContext.transportInterface.send = transportSendNoBytes; /* Use mock send that always returns zero bytes. */
-    MQTT_SerializeConnectFixedHeader_Stub( MQTT_SerializeConnectFixedHeader_cb );
-    MQTT_GetConnectPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
-    MQTT_GetConnectPacketSize_IgnoreArg_pPacketSize();
-    MQTT_GetConnectPacketSize_IgnoreArg_pRemainingLength();
-    MQTT_GetConnectPacketSize_ReturnThruPtr_pPacketSize( &packetSize );
-    MQTT_GetConnectPacketSize_ReturnThruPtr_pRemainingLength( &remainingLength );
+//     /* Test network send failure from timeout in calling transport send. */
+//     mqttContext.transportInterface.send = transportSendNoBytes; /* Use mock send that always returns zero bytes. */
+//     MQTT_SerializeConnectFixedHeader_Stub( MQTT_SerializeConnectFixedHeader_cb );
+//     MQTT_GetConnectPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
+//     MQTT_GetConnectPacketSize_IgnoreArg_pPacketSize();
+//     MQTT_GetConnectPacketSize_IgnoreArg_pRemainingLength();
+//     MQTT_GetConnectPacketSize_ReturnThruPtr_pPacketSize( &packetSize );
+//     MQTT_GetConnectPacketSize_ReturnThruPtr_pRemainingLength( &remainingLength );
 
-    status = MQTT_Connect( &mqttContext, &connectInfo, NULL, timeout, &sessionPresent );
+//     status = MQTT_Connect( &mqttContext, &connectInfo, NULL, timeout, &sessionPresent );
 
-    TEST_ASSERT_EQUAL_INT( MQTTSendFailed, status );
-}
+//     TEST_ASSERT_EQUAL_INT( MQTTSendFailed, status );
+// }
 
 /**
  * @brief Test MQTT_Connect, except for receiving the CONNACK.

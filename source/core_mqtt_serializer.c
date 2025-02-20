@@ -2170,10 +2170,11 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
                 pVariableHeader = &pVariableHeader[ *pLength ];
                 *pPropertyLength -= *pLength;
                 *pUsed = true;
+                LogDebug(("Reason String is %s", *pProperty)) ;
             }
         }
 
-        *pIndex = pVariableHeader;
+        *pIndex = pVariableHeader; 
         return status;
     }
 
@@ -4301,7 +4302,7 @@ MQTTStatus_t MQTT_SerializeConnect( const MQTTConnectInfo_t * pConnectInfo,
 }
 
 /*-----------------------------------------------------------*/
-#if(!MQTT_VERSION_5_ENABLED)
+
 MQTTStatus_t MQTT_GetSubscribePacketSize( const MQTTSubscribeInfo_t * pSubscriptionList,
                                           size_t subscriptionCount,
                                           size_t * pRemainingLength,
@@ -4337,7 +4338,7 @@ MQTTStatus_t MQTT_GetSubscribePacketSize( const MQTTSubscribeInfo_t * pSubscript
 
     return status;
 }
-#endif 
+
 
 
 
@@ -5628,168 +5629,164 @@ MQTTStatus_t MQTT_ProcessIncomingPacketTypeAndLength( const uint8_t * pBuffer,
 
         return status;
     }
-    static MQTTStatus_t readSubackStatusV5(size_t statusCount , const uint8_t *pStatusStart)
+        static MQTTStatus_t readSubackStatusV5(size_t statusCount, const uint8_t* pStatusStart)
     {
-        MQTTStatus_t staus = MQTTSuccess; 
-        uint8_t subscriptionStatus = 0 ; 
-        size_t i = 0 ; 
-        assert(pStatusStart != NULL); 
+        MQTTStatus_t status = MQTTSuccess;
+        uint8_t subscriptionStatus = 0;
+        size_t i = 0;
+        assert(pStatusStart != NULL);
 
-        for(i = 0 ; i<statusCount ; i++){
-            subscriptionStatus = pStatusStart[i] ; 
-            switch( subscriptionStatus )
+        for (i = 0; i < statusCount; i++) {
+            subscriptionStatus = pStatusStart[i];
+            switch (subscriptionStatus)
             {
-                case 0x00 :
-                case 0x01 :
-                case 0x02 :
-                    LogDebug(("Topic Filter %lu accepted, max QoS %u.", 
-                    (unsigned long) i, 
-                    (unsigned int) subscriptionStatus)) ; 
-                case 0x80 :
-                    LogWarn(("Topic Filter Refused")) ; 
+            case 0x00:
+                LogDebug(("Pls work")); 
+                break; 
+            case 0x01:
+            case 0x02:
+                LogDebug(("Topic Filter %lu accepted, max QoS %u.",
+                    (unsigned long)i,
+                    (unsigned int)subscriptionStatus));
+                break; 
+            case 0x80:
+                LogWarn(("Topic Filter Refused"));
                 /** case 83 , 87, 8F, 91 , 97, 9E, A1 , A2 */
-                case 0x83 :
-                    LogWarn(("Implementation specific error.",
-                    (unsigned long) i)); 
-                case 0x87 :
-                    LogWarn(("Topic Filter %lu received, not authorized.",
-                    (unsigned long) i)) ;
-                case 0x8F :
-                    LogWarn(("Topic Filter %lu received, Topic Name Invalid.",
-                    (unsigned long) i)); 
-                case 0x91 :
-                    LogWarn(("Topic Filter %lu received, Packet Identifier In Use.",
-                    (unsigned long) i)) ;
-                case 0x97 :
-                    LogWarn(("Topic Filter %lu received, Quota Exceeded.",
-                    (unsigned long) i)) ;
-                case 0x9E :
-                    LogWarn(("Topic Filter %lu received, Shared Subscriptions Not Supported.",
-                    (unsigned long) i)) ;
-                case 0xA1 :
-                    LogWarn(("Topic Filter %lu received, Subscription Identifiers Not Supported.",
-                    (unsigned long) i)) ;
-                case 0xA2 :
-                    LogWarn(("Topic Filter %lu received, Wildcard Subscriptions Not Supported.",
-                    (unsigned long) i)) ; 
-                default :
-                    LogError(("Bad Subscribe status %u." , 
-                    (unsigned int) subscriptionStatus)) ; 
-                    status = MQTTBadResponse ; 
-                    break ; 
+                break;
+            case 0x83:
+                LogWarn(("Implementation specific error."));
+                break; 
+            case 0x87:
+                LogWarn(("Not authorized."));
+            case 0x8F:
+                LogWarn(("Topic Name Invalid."));
+                break;
+            case 0x91:
+                LogWarn(("Packet Identifier In Use."));
+                break;
+            case 0x97:
+                LogWarn(("Quota Exceeded."));
+                break; 
+            case 0x9E:
+                LogWarn(("Shared Subscriptions Not Supported."));
+                break;
+            case 0xA1:
+                LogWarn(("Subscription Identifiers Not Supported."));
+                break;
+            case 0xA2:
+                LogWarn(("Wildcard Subscriptions Not Supported."));
+                break; 
+            default:
+                LogError(("Bad Subscribe status %u.",
+                    (unsigned int)subscriptionStatus));
+                status = MQTTBadResponse;
+                break;
             }
-            if(status == MQTTBadResponse)
+            if (status == MQTTBadResponse)
             {
                 break;
             }
         }
-        return status ; 
+        return status;
     }
 
-    static MQTTStatus_t deserializeSubackProperties(MQTTSubackProperties_t *pSubackProperties, size_t length , const uint8_t *pIndex)
+    static MQTTStatus_t deserializeSubackProperties(MQTTSubackProperties_t* pSubackProperties, const uint8_t* pIndex, size_t length)
     {
-        MQTTStatus_t status = MQTTSuccess ; 
-        size_t propertyLength = 0U ; 
-        const uint8_t * pLocalIndex = pIndex ; 
+        MQTTStatus_t status = MQTTSuccess;
+        size_t propertyLength = 0U;
+        const uint8_t* pLocalIndex = pIndex;
 
         /*Decode Property Length */
 
-        status = decodeVariableLength(pLocalIndex , &propertyLength) ; 
+        status = decodeVariableLength(pLocalIndex, &propertyLength);
+        pSubackProperties->propertyLength = propertyLength ; 
 
-        if(status = MQTTSuccess)
+        if (status == MQTTSuccess)
         {
-            pLocalIndex = &pLocalIndex[remainingLengthEncodedSize(propertyLength)] ; 
-                /**Validate remaining Length */
-            if(length != (propertyLength + remainingLengthEncodedSize(propertyLength) + 3U))
-            {
-                status = MQTTMalformedPacket ; 
-            }
+            pLocalIndex = &pLocalIndex[remainingLengthEncodedSize(propertyLength)];
+            /**Validate remaining Length */
         }
-        if(status == MQTTSuccess)
+        if (status == MQTTSuccess)
         {
-            while((propertyLength > 0U) && (status == MQTTSuccess))
+            while ((propertyLength > 0U) && (status == MQTTSuccess))
             {
                 /** Decode propertyId  -> reason string if or user property id*/
-                uint8_t propertyId = *pLocalIndex ; 
-                bool reasonString = false ; 
-                pLocalIndex = &pLocalIndex[1] ; 
-                propertyLength -= sizeof(uint8_t) ; 
-                switch(propertyId)
+                uint8_t propertyId = *pLocalIndex;
+                bool reasonString = false;
+                pLocalIndex = &pLocalIndex[1];
+                propertyLength -= sizeof(uint8_t);
+                switch (propertyId)
                 {
-                    case MQTT_REASON_STRING_ID :
-                        status = decodeutf_8(&pSubackProperties->pReasonString, &pSubackProperties->reasonStringLength , &propertyLength,&reasonString ,  &pLocalIndex) ; 
-                        break ; 
-                    case MQTT_USER_PROPERTY_ID :
-                        #if(MQTT_USER_PROPERTY_ENABLED)
-                        status = decodeutf_8pair(pSubackProperties->pUserProperties, &pSubackProperties->pUserProperties->count , &propertyLength , &pLocalIndex) ;
-                        #else 
-                        status = decodeAndDiscard(&propertyLength , &pLocalIndex) ;  
-                        #endif
-                        break ; 
-                    default :
-                        status = MQTTProtocolError ; 
-                        break ; 
-                    
+                case MQTT_REASON_STRING_ID:
+                    status = decodeutf_8(&pSubackProperties->pReasonString, &pSubackProperties->reasonStringLength, &propertyLength, &reasonString, &pLocalIndex);
+                    break;
+                case MQTT_USER_PROPERTY_ID:
+                #if(MQTT_USER_PROPERTY_ENABLED)
+                    status = decodeutf_8pair(pSubackProperties->pUserProperties, &pSubackProperties->pUserProperties->count, &propertyLength, &pLocalIndex);
+                #else 
+                    status = decodeAndDiscard(&propertyLength, &pLocalIndex);
+                #endif
+                    break;
+                default:
+                    status = MQTTProtocolError;
+                    break;
+
                 }
-            }
+            } 
         }
-        return status ; 
+        return status;
     }
-    MQTTStatus_t MQTTV5_DeserializeSuback(MQTTSubackProperties_t *pSubackProperties , 
-                                      const MQTTPacketInfo_t * pSuback,  
-                                      uint16_t *pPacketId)
+    MQTTStatus_t MQTTV5_DeserializeSuback(MQTTSubackProperties_t* pSubackProperties,
+    const MQTTPacketInfo_t* pSuback,
+    uint16_t* pPacketId)
     {
-        MQTTStatus_t status = MQTTSuccess ; 
-        size_t propertyLength ; 
-        size_t remainingLength; 
-        const uint8_t * pIndex = NULL ; 
+        MQTTStatus_t status = MQTTSuccess;
+        const uint8_t* pIndex = pSuback-> pRemainingData;
+        size_t remainingLength = pSuback->remainingLength; 
 
-        if(pSubackProperties == NULL)
+        assert(pSuback != NULL);
+        assert(pPacketId != NULL);
+
+        pIndex = pSuback->pRemainingData;
+
+        if (pSuback->remainingLength < 3U)
         {
-            status = MQTTBadParameter ; 
-        }
-        
-        assert(pSuback != NULL) ; 
-        assert(pPacketId != NULL) ; 
-
-        remainingLength = pSuback->remainingLength ; 
-        pIndex = pSuback->pRemainingData ; 
-
-        if(remainingLength < 3U)
-        {
-            LogError(("Suback Packet Cannot have a remaining Length of less than 3")) ; 
-            status = MQTTBadResponse ; 
+            LogError(("Suback Packet Cannot have a remaining Length of less than 3"));
+            status = MQTTBadResponse;
         }
         else
         {
-            *pPacketId = UINT16_DECODE(pVariableHeader) ; 
-            pIndex = &pIndex[2] ; 
-            LogDebug(("Packet Identifier is %hu.", 
-                    (unsigned short) *pPacketId)) ; 
-            
-            if(*pPacketId == 0U)
+            *pPacketId = UINT16_DECODE(pIndex);
+            pIndex = &pIndex[2];
+            LogDebug(("Packet Identifier is %hu.",
+                (unsigned short)*pPacketId));
+
+            if (*pPacketId == 0U)
             {
-                status = MQTTBadParameter ; 
+                LogError(("Packet Id cannot be 0")); 
+                status = MQTTBadParameter;
             }
         }
-        if(status == MQTTSuccess && pSuback->remainingLength>4U)
-        {
-        #if(MQTT_USER_PROPERTY_ENABLED)
-            if(pSubackProperties->pUserProperties == NULL){
-                status = MQTTBadParameter ; 
-            }
-        #endif 
-            if(status == MQTTSuccess)
+        if (status == MQTTSuccess && pSuback->remainingLength > 4U)
+
+        { 
+#if(USER_PROPERTY_ENABLED)
+            if (pSubackProperties->pUserProperties == NULL)
             {
-                status = deserializeSubackProperties(pSubackProperties , pIndex, pSuback->remainingLength) ; 
+                status = MQTTBadResponse; 
+            }
+#endif 
+            if (status == MQTTSuccess)
+            {
+                status = deserializeSubackProperties(pSubackProperties, pIndex, pSuback->remainingLength);
             }
         }
 
-        if(status == MQTTSuccess)
+        if (status == MQTTSuccess)
         {
-            status = readSubackStatusV5(remainingLength - sizeof(uint16_t) - pSuback->propertyLength - remainingLengthEncodedSize(pSuback->propertyLength) , pIndex) ;  
+            status = readSubackStatusV5(remainingLength - sizeof(uint16_t) - pSubackProperties->propertyLength - remainingLengthEncodedSize(pSubackProperties->propertyLength), &pIndex[pSubackProperties->propertyLength + remainingLengthEncodedSize(pSubackProperties->propertyLength)]);
         }
-        return status ; 
+        return status;
     }
     MQTTStatus_t MQTTV5_DeserializeAck( const MQTTPacketInfo_t * pIncomingPacket,
                                         uint16_t * pPacketId,

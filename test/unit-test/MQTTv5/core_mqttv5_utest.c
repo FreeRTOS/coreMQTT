@@ -1549,3 +1549,4 @@ void test_MQTTV5_shared_subscriptions(void){
     TEST_ASSERT_EQUAL_INT(MQTTBadParameter, mqttStatus);
 }
 
+
