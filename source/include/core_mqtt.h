@@ -603,7 +603,14 @@ MQTTStatus_t MQTT_SubscribeV5(MQTTContext_t* pContext,
     MQTTSubscribeProperties_t *subscribeProperties,
     size_t subscriptionCount,
     uint16_t packetId); 
+
+MQTTStatus_t MQTT_UnsubscribeV5( MQTTContext_t * pContext,
+                               const MQTTSubscribeInfo_t * pSubscriptionList,
+                               MQTTSubscribeProperties_t *subscribeProperties,
+                               size_t subscriptionCount,
+                               uint16_t packetId ) ; 
 #endif
+
 
 MQTTStatus_t MQTT_Subscribe( MQTTContext_t * pContext,
                              const MQTTSubscribeInfo_t * pSubscriptionList,

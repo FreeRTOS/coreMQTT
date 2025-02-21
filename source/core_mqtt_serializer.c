@@ -681,11 +681,12 @@ static bool calculatePublishPacketSize( const MQTTPublishInfo_t * pPublishInfo,
  * 
  */
 #if(MQTT_VERSION_5_ENABLED)
-static MQTTStatus_t calculateSubscriptionPacketSizeV5(MQTTSubscribeInfo_t* pSubscriptionList,
-    MQTTSubscribeProperties_t* pSubscribeProperties,
-    size_t subscriptionCount,
-    size_t* pRemainingLength,
-    size_t* pPacketSize); 
+static MQTTStatus_t calculateSubscriptionPacketSizeV5(MQTTSubscribeInfo_t *pSubscriptionList,
+                                                    MQTTSubscribeProperties_t *pSubscribeProperties,
+                                                    size_t subscriptionCount,
+                                                    size_t *pRemainingLength,
+                                                    size_t *pPacketSize, 
+                                                    MQTTSubscriptionType_t subscriptionType) ;
 #endif
 
 
@@ -1519,14 +1520,16 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
 
         return status;
     }
-    static MQTTStatus_t MQTT_GetSubscribePropertiesSize(MQTTSubscribeProperties_t *pSubscribeProperties )
+    static MQTTStatus_t MQTT_GetSubscribePropertiesSize(MQTTSubscribeProperties_t *pSubscribeProperties, MQTTSubscriptionType_t subscriptionType )
     {
         size_t propertyLength = 0;
         MQTTStatus_t status = MQTTSuccess;
-
-        if(pSubscribeProperties->subscriptionId != 0 ){
-            propertyLength += 1U ; 
-            propertyLength += remainingLengthEncodedSize(pSubscribeProperties->subscriptionId);
+        if(subscriptionType == MQTT_SUBSCRIBE)
+        {
+            if(pSubscribeProperties->subscriptionId != 0 ){
+                propertyLength += 1U ; 
+                propertyLength += remainingLengthEncodedSize(pSubscribeProperties->subscriptionId);
+            }
         }
         #if ( MQTT_USER_PROPERTY_ENABLED )
             /*Get the length of the user properties*/
@@ -2700,7 +2703,8 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
                                                      MQTTSubscribeProperties_t *pSubscribeProperties,
                                                      size_t subscriptionCount,
                                                      size_t *pRemainingLength,
-                                                     size_t *pPacketSize)
+                                                     size_t *pPacketSize, 
+                                                     MQTTSubscriptionType_t subscriptionType)
     {
         size_t packetSize = 0U , i = 0; 
         MQTTStatus_t status = MQTTSuccess ; 
@@ -2711,7 +2715,7 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
         packetSize += sizeof( uint16_t ) ; 
         /* Length of properties */
 
-        status = MQTT_GetSubscribePropertiesSize(pSubscribeProperties) ; 
+        status = MQTT_GetSubscribePropertiesSize(pSubscribeProperties, subscriptionType) ; 
         LogDebug(("Property Length is %lu" , (unsigned long)pSubscribeProperties->propertyLength ));
         if( status == MQTTSuccess )
         {
@@ -2727,7 +2731,11 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
                     status = MQTTBadParameter;
                     break ;
                 }
-                packetSize += pSubscriptionList[i].topicFilterLength + sizeof(uint16_t) + 1U;
+                packetSize += pSubscriptionList[i].topicFilterLength + sizeof(uint16_t) ; 
+                if(subscriptionType == MQTT_SUBSCRIBE)
+                {
+                    packetSize += 1U ; 
+                }
             }
         }
         if( packetSize > MQTT_MAX_REMAINING_LENGTH )
@@ -2764,7 +2772,7 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
             LogError(("Subscription count cannot be 0")) ; 
             status = MQTTBadParameter;
         }else{
-            status = calculateSubscriptionPacketSizeV5(pSubscriptionList, pSubscribeProperties, subscriptionCount, pRemainingLength, pPacketSize);
+            status = calculateSubscriptionPacketSizeV5(pSubscriptionList, pSubscribeProperties, subscriptionCount, pRemainingLength, pPacketSize, MQTT_SUBSCRIBE);
         }
         return status ; 
     }
@@ -4435,6 +4443,44 @@ MQTTStatus_t MQTT_SerializeSubscribe( const MQTTSubscribeInfo_t * pSubscriptionL
 }
 
 /*-----------------------------------------------------------*/
+#if(MQTT_VERSION_5_ENABLED)
+MQTTStatus_t MQTTV5_GetUnsubscribePacketSize( const MQTTSubscribeInfo_t * pSubscriptionList,
+                                            MQTTSubscribeProperties_t * subscribeProperties,
+                                            size_t subscriptionCount,
+                                            size_t * pRemainingLength,
+                                            size_t * pPacketSize )
+{
+    MQTTStatus_t status = MQTTSuccess;
+
+    /* Validate parameters. */
+    if( ( pSubscriptionList == NULL ) || ( pRemainingLength == NULL ) ||
+        ( pPacketSize == NULL ) )
+    {
+        LogError( ( "Argument cannot be NULL: pSubscriptionList=%p, "
+                    "pRemainingLength=%p, pPacketSize=%p.",
+                    ( void * ) pSubscriptionList,
+                    ( void * ) pRemainingLength,
+                    ( void * ) pPacketSize ) );
+        status = MQTTBadParameter;
+    }
+    else if( subscriptionCount == 0U )
+    {
+        LogError( ( "Subscription count is 0." ) );
+        status = MQTTBadParameter;
+    }
+    else
+    {
+        /* Calculate the MQTT UNSUBSCRIBE packet size. */
+        status = calculateSubscriptionPacketSizeV5( pSubscriptionList,
+                                                  subscriptionCount,
+                                                  pRemainingLength,
+                                                  pPacketSize,
+                                                  MQTT_UNSUBSCRIBE );
+    }
+
+    return status;
+}
+#endif
 
 MQTTStatus_t MQTT_GetUnsubscribePacketSize( const MQTTSubscribeInfo_t * pSubscriptionList,
                                             size_t subscriptionCount,

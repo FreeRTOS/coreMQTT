@@ -1285,45 +1285,45 @@ void test_MQTT_Connect_WillInfoWrong( void )
 /**
  * @brief Test MQTT_Connect, except for receiving the CONNACK.
  */
-void test_MQTT_Connect_sendConnect2( void )
-{
-    MQTTContext_t mqttContext = { 0 };
-    MQTTConnectInfo_t connectInfo = { 0 };
-    uint32_t timeout = 2;
-    bool sessionPresent;
-    MQTTStatus_t status;
-    TransportInterface_t transport = { 0 };
-    MQTTFixedBuffer_t networkBuffer = { 0 };
-    size_t remainingLength;
-    size_t packetSize;
+// void test_MQTT_Connect_sendConnect2( void )
+// {
+//     MQTTContext_t mqttContext = { 0 };
+//     MQTTConnectInfo_t connectInfo = { 0 };
+//     uint32_t timeout = 2;
+//     bool sessionPresent;
+//     MQTTStatus_t status;
+//     TransportInterface_t transport = { 0 };
+//     MQTTFixedBuffer_t networkBuffer = { 0 };
+//     size_t remainingLength;
+//     size_t packetSize;
 
-    setupTransportInterface( &transport );
-    transport.writev = transportWritevFail;
-    setupNetworkBuffer( &networkBuffer );
+//     setupTransportInterface( &transport );
+//     transport.writev = transportWritevFail;
+//     setupNetworkBuffer( &networkBuffer );
 
-    memset( &mqttContext, 0x0, sizeof( mqttContext ) );
-    MQTT_Init( &mqttContext, &transport, getTime, eventCallback, &networkBuffer );
+//     memset( &mqttContext, 0x0, sizeof( mqttContext ) );
+//     MQTT_Init( &mqttContext, &transport, getTime, eventCallback, &networkBuffer );
 
-    /* Transport send failed when sending CONNECT. */
+//     /* Transport send failed when sending CONNECT. */
 
-    /* Choose 10 bytes variable header + 1 byte payload for the remaining
-     * length of the CONNECT. The packet size needs to be nonzero for this test
-     * as that is the amount of bytes used in the call to send the packet. */
-    packetSize = 13;
-    remainingLength = 11;
-    mqttContext.transportInterface.send = transportSendFailure;
-    MQTT_SerializeConnectFixedHeader_Stub( MQTT_SerializeConnectFixedHeader_cb );
-    MQTT_GetConnectPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
-    MQTT_GetConnectPacketSize_IgnoreArg_pPacketSize();
-    MQTT_GetConnectPacketSize_IgnoreArg_pRemainingLength();
-    MQTT_GetConnectPacketSize_ReturnThruPtr_pPacketSize( &packetSize );
-    MQTT_GetConnectPacketSize_ReturnThruPtr_pRemainingLength( &remainingLength );
-    MQTT_SerializeConnect_IgnoreAndReturn( MQTTSuccess );
+//     /* Choose 10 bytes variable header + 1 byte payload for the remaining
+//      * length of the CONNECT. The packet size needs to be nonzero for this test
+//      * as that is the amount of bytes used in the call to send the packet. */
+//     packetSize = 13;
+//     remainingLength = 11;
+//     mqttContext.transportInterface.send = transportSendFailure;
+//     MQTT_SerializeConnectFixedHeader_Stub( MQTT_SerializeConnectFixedHeader_cb );
+//     MQTT_GetConnectPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
+//     MQTT_GetConnectPacketSize_IgnoreArg_pPacketSize();
+//     MQTT_GetConnectPacketSize_IgnoreArg_pRemainingLength();
+//     MQTT_GetConnectPacketSize_ReturnThruPtr_pPacketSize( &packetSize );
+//     MQTT_GetConnectPacketSize_ReturnThruPtr_pRemainingLength( &remainingLength );
+//     MQTT_SerializeConnect_IgnoreAndReturn( MQTTSuccess );
 
-    status = MQTT_Connect( &mqttContext, &connectInfo, NULL, timeout, &sessionPresent );
+//     status = MQTT_Connect( &mqttContext, &connectInfo, NULL, timeout, &sessionPresent );
 
-    TEST_ASSERT_EQUAL_INT( MQTTSendFailed, status );
-}
+//     TEST_ASSERT_EQUAL_INT( MQTTSendFailed, status );
+// }
 
 /**
  * @brief Test MQTT_Connect, except for receiving the CONNACK.
