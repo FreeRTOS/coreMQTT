@@ -4472,10 +4472,11 @@ MQTTStatus_t MQTTV5_GetUnsubscribePacketSize( const MQTTSubscribeInfo_t * pSubsc
     {
         /* Calculate the MQTT UNSUBSCRIBE packet size. */
         status = calculateSubscriptionPacketSizeV5( pSubscriptionList,
-                                                  subscriptionCount,
-                                                  pRemainingLength,
-                                                  pPacketSize,
-                                                  MQTT_UNSUBSCRIBE );
+                                                subscribeProperties,
+                                                subscriptionCount,
+                                                pRemainingLength,
+                                                pPacketSize,
+                                                MQTT_UNSUBSCRIBE );
     }
 
     return status;

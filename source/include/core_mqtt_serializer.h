@@ -918,7 +918,7 @@ MQTTStatus_t MQTTV5_GetUnsubscribePacketSize( const MQTTSubscribeInfo_t * pSubsc
                                             MQTTSubscribeProperties_t * subscribeProperties,
                                             size_t subscriptionCount,
                                             size_t * pRemainingLength,
-                                            size_t * pPacketSize )
+                                            size_t * pPacketSize ) ;
 #endif
 /**
  * @brief Serialize an MQTT UNSUBSCRIBE packet in the given buffer.
