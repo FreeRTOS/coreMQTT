@@ -3502,14 +3502,3 @@ void test_MQTTV5_suback(void)
     status = MQTTV5_DeserializeSuback(&subackProperties ,&subackPacket ,  &packetIdentifier);
     TEST_ASSERT_EQUAL_INT(MQTTSuccess, status);
 }
-
-
-
-
-
-
-
-
-
-
-

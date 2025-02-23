@@ -1549,4 +1549,134 @@ void test_MQTTV5_shared_subscriptions(void){
     TEST_ASSERT_EQUAL_INT(MQTTBadParameter, mqttStatus);
 }
 
+/* Suback- Unsuback Happy path */
+void test_MQTT_ProcessLoop_handleIncomingAck_Happy_Paths_suback( void )
+{
+    MQTTStatus_t status;
+    MQTTContext_t context = { 0 };
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
+    MQTTConnectProperties_t properties;
+    MQTTPacketInfo_t incomingPacket = { 0 };
+    setupTransportInterface( &transport );
+    setupNetworkBuffer( &networkBuffer );
+    /* Modify incoming packet depending on type to be tested. */
+    incomingPacket.type = MQTT_PACKET_TYPE_SUBACK;
+    incomingPacket.remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
+    incomingPacket.headerLength = MQTT_SAMPLE_REMAINING_LENGTH;
+    status = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
+    TEST_ASSERT_EQUAL( MQTTSuccess, status );
+    properties.requestProblemInfo = 1;
+    context.pConnectProperties = &properties;
+    modifyIncomingPacketStatus = MQTTSuccess;
+    MQTT_ProcessIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_ProcessIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
+    MQTTV5_DeserializeSuback_ExpectAnyArgsAndReturn( MQTTSuccess );
+    status = MQTT_ProcessLoop( &context );
+    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
+}
+
+
+
+
+
+static uint8_t * MQTTV5_SerializeUnsubscribeHeader_cb( size_t remainingLength,
+    uint8_t * pIndex,
+    uint16_t packetId,
+    int numcallbacks )
+{
+( void ) remainingLength;
+( void ) pIndex;
+( void ) packetId;
+( void ) numcallbacks;
+
+return pIndex;
+}
+
+/**
+* @brief This test case verifies that MQTT_Unsubscribe returns successfully
+* when valid parameters are passed and all bytes are sent.
+*/
+void test_MQTT_UnsubscribeV5_happy_path( void )
+{
+    MQTTStatus_t mqttStatus;
+    MQTTContext_t context = { 0 };
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
+    MQTTSubscribeInfo_t subscribeInfo = { 0 };
+    MQTTSubscribeProperties_t subscribeProperties = {0} ; 
+    size_t remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
+    size_t packetSize = MQTT_SAMPLE_REMAINING_LENGTH;
+
+    setupTransportInterface( &transport );
+    setupNetworkBuffer( &networkBuffer );
+    setupSubscriptionInfo( &subscribeInfo );
+    subscribeInfo.qos = MQTTQoS0;
+
+    subscribeProperties.propertyLength = 0 ; 
+    subscribeProperties.pUserProperties = NULL ; 
+
+    /* Initialize context. */
+    mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+    /* Verify MQTTSuccess is returned with the following mocks. */
+    MQTT_SerializeUnsubscribeHeader_Stub(MQTTV5_SerializeUnsubscribeHeader_cb);
+    MQTTV5_GetUnsubscribePacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTTV5_GetUnsubscribePacketSize_ReturnThruPtr_pPacketSize( &packetSize );
+    MQTTV5_GetUnsubscribePacketSize_ReturnThruPtr_pRemainingLength( &remainingLength );
+
+    /* Expect the above calls when running MQTT_Unsubscribe. */
+    mqttStatus = MQTT_UnsubscribeV5( &context, &subscribeInfo, &subscribeProperties,  1, MQTT_FIRST_VALID_PACKET_ID );
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+}
+
+
+
+// void test_MQTTV5_Unsubscribe_happy_path(void){
+//     MQTTStatus_t mqttStatus;
+//     MQTTContext_t context = { 0 };
+//     TransportInterface_t transport = { 0 };
+//     MQTTFixedBuffer_t networkBuffer = { 0 };
+//     MQTTSubscribeInfo_t subscribeInfo = { 0 };
+//     MQTTSubscribeProperties_t subscribeProperties ; 
+//     size_t remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
+//     size_t packetSize = MQTT_SAMPLE_REMAINING_LENGTH;
+//     MQTTPubAckInfo_t incomingRecords = { 0 };
+//     MQTTPubAckInfo_t outgoingRecords = { 0 };
+
+//     subscribeProperties.propertyLength = 0 ; 
+//     subscribeProperties.pUserProperties = NULL ; 
+
+//     setupTransportInterface( &transport );
+//     setupNetworkBuffer( &networkBuffer );
+//     setupSubscriptionInfo( &subscribeInfo );
+
+//     /* Initialize context. */
+//     mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
+//     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+
+//     mqttStatus = MQTT_InitStatefulQoS( &context,
+//                                        &outgoingRecords, 4,
+//                                        &incomingRecords, 4 );
+//     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+
+//     /* Verify MQTTSuccess is returned with the following mocks. */
+//     MQTTV5_GetSubscribePacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
+//     MQTTV5_GetSubscribePacketSize_ReturnThruPtr_pPacketSize( &packetSize );
+//     MQTTV5_GetSubscribePacketSize_ReturnThruPtr_pRemainingLength( &remainingLength );
+//     MQTT_SerializeSubscribeHeader_Stub( MQTTV5_SerializeSubscribedHeader_cb );
+
+//     /* Expect the above calls when running MQTT_Subscribe. */
+//     mqttStatus = MQTT_SubscribeV5( &context, &subscribeInfo,&subscribeProperties, 1, MQTT_FIRST_VALID_PACKET_ID );
+
+//     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+// }
+// test sendUnsubscribeWithoutCopyv5 - CORE
+// test MQTT_UnsubscribeV5 - CORE
+// test MQTT_ReceiveLoop ? maybe
+// test MQTTV5_unsubscribePacketSize - serializer
+// readSubackStatusV5 
+// deserializerSubackProperties with user properties , second and discard , default : protocol error 
+// MQTTV5_DeserializeSuback - if oSuback-> remainingLength < 3 , 0 pId 
+
 
