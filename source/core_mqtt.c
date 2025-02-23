@@ -2291,26 +2291,25 @@ static MQTTStatus_t handleSuback( MQTTContext_t * pContext,
                                 MQTTPacketInfo_t * pIncomingPacket )
 {
     MQTTStatus_t status = MQTTSuccess;
-    MQTTPublishState_t publishRecordState = MQTTStateNull; // suback state ? idtso
+    //MQTTPublishState_t publishRecordState = MQTTStateNull; // suback state ? idtso
     uint16_t packetIdentifier;
     MQTTEventCallback_t appCallback;
     MQTTDeserializedInfo_t deserializedInfo;
 
-    #if ( MQTT_VERSION_5_ENABLED )
-        MQTTSubackProperties_t ackInfo;
-        ( void ) memset( &ackInfo, 0x0, sizeof( ackInfo ) );
-    #endif
+
+    MQTTSubackProperties_t ackInfo;
+    ( void ) memset( &ackInfo, 0x0, sizeof( ackInfo ) );
 
     assert( pContext != NULL );
     assert( pIncomingPacket != NULL );
     assert( pContext->appCallback != NULL );
 
     appCallback = pContext->appCallback;
-    #if ( !MQTT_VERSION_5_ENABLED )
-        status = MQTT_DeserializeAck( pIncomingPacket, &packetIdentifier, NULL );
-    #else
-        status = MQTTV5_DeserializeSuback( &ackInfo, pIncomingPacket, &packetIdentifier);
-    #endif
+    //#if ( !MQTT_VERSION_5_ENABLED )
+    //status = MQTT_DeserializeAck( pIncomingPacket, &packetIdentifier, NULL );
+    //#else
+    status = MQTTV5_DeserializeSuback( &ackInfo, pIncomingPacket, &packetIdentifier);
+    //#endif
     LogInfo( ( "Ack packet deserialized with result: %s.",
                MQTT_Status_strerror( status ) ) );
 
@@ -2346,13 +2345,13 @@ static MQTTStatus_t handleSuback( MQTTContext_t * pContext,
             deserializedInfo.packetIdentifier = packetIdentifier;
             deserializedInfo.deserializationResult = status;
             deserializedInfo.pPublishInfo = NULL;
-            deserializedInfo.pAckInfo->reasonCode = 0xFF ; 
-            deserializedInfo.pAckInfo->pReasonString = ackInfo.pReasonString ;
-            deserializedInfo.pAckInfo->reasonStringLength = ackInfo.reasonStringLength ;
-            #if(USER_PROPERTY_ENABLED)
-            deserializedInfo.pAckInfo->pUserProperty = ackInfo.pUserProperties ; 
-            #endif
-            deserializedInfo.pAckInfo->propertyLength = ackInfo.propertyLength ; 
+            //deserializedInfo.pAckInfo->reasonCode = 0xFF ; 
+            //deserializedInfo.pAckInfo->pReasonString = ackInfo.pReasonString ;
+            //deserializedInfo.pAckInfo->reasonStringLength = ackInfo.reasonStringLength ;
+            //#if(USER_PROPERTY_ENABLED)
+            //deserializedInfo.pAckInfo->pUserProperty = ackInfo.pUserProperties ; 
+            //#endif
+            //deserializedInfo.pAckInfo->propertyLength = ackInfo.propertyLength ; 
             
             //deserializedInfo.pAckInfo = &ackInfo;
 
@@ -2526,16 +2525,24 @@ static MQTTStatus_t handleIncomingAck( MQTTContext_t * pContext,
 
         case MQTT_PACKET_TYPE_SUBACK:
         case MQTT_PACKET_TYPE_UNSUBACK:
+            /*if (pIncomingPacket->type == MQTT_PACKET_TYPE_SUBACK && pIncomingPacket->remainingLength > 3)
+            {
+                LogError(("v5 subscribe packet"));
+            }
+            if (pIncomingPacket->type == MQTT_PACKET_TYPE_UNSUBACK && pIncomingPacket->remainingLength > 3)
+            {
+                LogError(("v5 subscribe packet"));
+            }*/
             /* Deserialize and give these to the app provided callback. */
             //status = handleSuback(pContext , pIncomingPacket) ; 
 #if(!MQTT_VERSION_5_ENABLED)
             status = MQTT_DeserializeAck(pIncomingPacket, &packetIdentifier, NULL);
-            invokeAppCallback = ( status == MQTTSuccess ) || ( status == MQTTServerRefused );
 #else
             status = handleSuback(pContext , pIncomingPacket) ; 
-            //status = MQTTV5_DeserializeSuback(&pSubackProperties, pIncomingPacket, &packetIdentifier);
-
- #endif 
+//            //status = MQTTV5_DeserializeSuback(&pSubackProperties, pIncomingPacket, &packetIdentifier);
+//
+#endif 
+            //invokeAppCallback = (status == MQTTSuccess) || (status == MQTTServerRefused);
             break;
 
         default:
@@ -3295,19 +3302,24 @@ static MQTTStatus_t sendUnsubscribeWithoutCopyV5( MQTTContext_t * pContext,
                                                      &totalPacketLength );
 
             /* Update the pointer after the above operation. */
-            pIterator = &pIterator[ vectorsAdded ];
+
+            /* Update the iterator to point to the next empty location. */
+            pIterator = &pIterator[vectorsAdded];
+            /* Update the total count based on how many vectors were added. */
             ioVectorLength += vectorsAdded;
 
-            /* Lastly, send the susbcription Options */
+            subscriptionsSent++;
+
+            /*pIterator = &pIterator[ vectorsAdded ];
+            ioVectorLength += vectorsAdded;
             totalPacketLength += 1U ; 
             pIterator ++ ; 
-            ioVectorLength ++ ;
-            subscriptionsSent ++ ;
+            subscriptionsSent ++ ;*/
         }
     }
     byteSent = sendMessageVector(pContext, pIoVector, ioVectorLength) ; 
     if(byteSent != (int32_t)totalPacketLength){
-        LogError(("Error in sending SUBSCRIBE packet")); 
+        LogError(("Error in sending UNSUBSCRIBE packet")); 
         status = MQTTSendFailed ;
     }else{
         status = MQTTSuccess ;
