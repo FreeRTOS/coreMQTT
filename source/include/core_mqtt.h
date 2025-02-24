@@ -113,8 +113,8 @@ typedef void (* MQTTEventCallback_t )( struct MQTTContext * pContext,
  *
  * @param[in] pContext Initialised MQTT Context.
  * @param[in] packetId Outgoing publish packet identifier.
- * @param[in] pMqttVec Pointer to the opaque mqtt vector structure. Users should use MQTT_SerializeMQTTVec
- *                and MQTT_GetBytesInMQTTVec functions to get the memory required and to serialize the
+ * @param[in] pMqttVec Pointer to the opaque mqtt vector structure. Users should use MQTT_GetBytesInMQTTVec
+ *                and MQTT_SerializeMQTTVec functions to get the memory required and to serialize the
  *                MQTTVec_t in the provided memory respectively.
  *
  * @return True if the copy is successful else false.
@@ -152,8 +152,6 @@ typedef bool ( * MQTTRetrievePacketForRetransmit)( struct MQTTContext * pContext
  *
  * @param[in] pContext Initialised MQTT Context.
  * @param[in] packetId Copied publish packet identifier.
- *
- * @return True if the clear is successful else false.
  */
 /* @[define_mqtt_retransmitclearpacket] */
 typedef void (* MQTTClearPacketForRetransmit)( struct MQTTContext * pContext,
@@ -597,7 +595,7 @@ MQTTStatus_t MQTT_InitRetransmits( MQTTContext_t * pContext,
  * @endcode
  */
 /* @[declare_mqtt_checkconnectstatus] */
-MQTTStatus_t MQTT_CheckConnectStatus( MQTTContext_t * pContext );
+MQTTStatus_t MQTT_CheckConnectStatus( const MQTTContext_t * pContext );
 /* @[declare_mqtt_checkconnectstatus] */
 
 /**
@@ -1235,7 +1233,7 @@ const char * MQTT_Status_strerror( MQTTStatus_t status );
  * @return The bytes in the provided #MQTTVec array which can then be used to set aside memory to be used with MQTT_SerializeMQTTVec( void * pAllocatedMem, MQTTVec_t *pVec ) function.
  */
 /* @[declare_mqtt_getbytesinmqttvec] */
-size_t MQTT_GetBytesInMQTTVec( MQTTVec_t * pVec );
+size_t MQTT_GetBytesInMQTTVec( const MQTTVec_t * pVec );
 /* @[declare_mqtt_getbytesinmqttvec] */
 
 /**
@@ -1246,7 +1244,7 @@ size_t MQTT_GetBytesInMQTTVec( MQTTVec_t * pVec );
  */
 /* @[declare_mqtt_serializemqttvec] */
 void MQTT_SerializeMQTTVec( uint8_t * pAllocatedMem,
-                            MQTTVec_t * pVec );
+                            const MQTTVec_t * pVec );
 /* @[declare_mqtt_serializemqttvec] */
 
 /* *INDENT-OFF* */

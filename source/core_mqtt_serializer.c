@@ -529,10 +529,6 @@ static uint8_t * encodeString( uint8_t * pDestination,
 {
     uint8_t * pBuffer = NULL;
 
-    /* Typecast const char * typed source buffer to const uint8_t *.
-     * This is to use same type buffers in memcpy. */
-    const uint8_t * pSourceBuffer = ( const uint8_t * ) pSource;
-
     assert( pDestination != NULL );
 
     pBuffer = pDestination;
@@ -546,9 +542,9 @@ static uint8_t * encodeString( uint8_t * pDestination,
     pBuffer++;
 
     /* Copy the string into pBuffer. */
-    if( pSourceBuffer != NULL )
+    if( pSource != NULL )
     {
-        ( void ) memcpy( pBuffer, pSourceBuffer, sourceLength );
+        ( void ) memcpy( ( void * ) pBuffer, ( const void * ) pSource, sourceLength );
     }
 
     /* Return the pointer to the end of the encoded string. */
@@ -713,7 +709,6 @@ static void serializePublishCommon( const MQTTPublishInfo_t * pPublishInfo,
                                     bool serializePayload )
 {
     uint8_t * pIndex = NULL;
-    const uint8_t * pPayloadBuffer = NULL;
 
     /* The first byte of a PUBLISH packet contains the packet type and flags. */
     uint8_t publishFlags = MQTT_PACKET_TYPE_PUBLISH;
@@ -787,11 +782,7 @@ static void serializePublishCommon( const MQTTPublishInfo_t * pPublishInfo,
         LogDebug( ( "Copying PUBLISH payload of length =%lu to buffer",
                     ( unsigned long ) pPublishInfo->payloadLength ) );
 
-        /* Typecast const void * typed payload buffer to const uint8_t *.
-         * This is to use same type buffers in memcpy. */
-        pPayloadBuffer = ( const uint8_t * ) pPublishInfo->pPayload;
-
-        ( void ) memcpy( pIndex, pPayloadBuffer, pPublishInfo->payloadLength );
+        ( void ) memcpy( ( void * ) pIndex, ( const void * ) pPublishInfo->pPayload, pPublishInfo->payloadLength );
         /* Move the index to after the payload. */
         pIndex = &pIndex[ pPublishInfo->payloadLength ];
     }
@@ -2635,10 +2626,12 @@ MQTTStatus_t MQTT_UpdateDuplicatePublishFlag( uint8_t * pHeader,
 
     if( pHeader == NULL )
     {
+        LogError( ( "Header cannot be NULL" ) );
         status = MQTTBadParameter;
     }
-    else if( ( ( *pHeader ) & 0xF0 ) != MQTT_PACKET_TYPE_PUBLISH )
+    else if( ( ( *pHeader ) & 0xF0U ) != MQTT_PACKET_TYPE_PUBLISH )
     {
+        LogError( ( "Header is not publish packet header" ) );
         status = MQTTBadParameter;
     }
     else if( set == true )
