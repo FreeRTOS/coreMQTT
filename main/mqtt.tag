@@ -285,8 +285,8 @@
       <type>MQTTStatus_t</type>
       <name>MQTT_CheckConnectStatus</name>
       <anchorfile>core__mqtt_8c.html</anchorfile>
-      <anchor>ad138a95422d22d61538f6ff69db9a784</anchor>
-      <arglist>(MQTTContext_t *pContext)</arglist>
+      <anchor>ab42f3cc5a0681373e4ee973df062bbcd</anchor>
+      <arglist>(const MQTTContext_t *pContext)</arglist>
     </member>
     <member kind="function">
       <type>MQTTStatus_t</type>
@@ -376,15 +376,15 @@
       <type>size_t</type>
       <name>MQTT_GetBytesInMQTTVec</name>
       <anchorfile>core__mqtt_8c.html</anchorfile>
-      <anchor>af15463f575fbbcc76bf1f27f9b0a02b0</anchor>
-      <arglist>(MQTTVec_t *pVec)</arglist>
+      <anchor>a4d6610604dc1ca49dd24888019d4445e</anchor>
+      <arglist>(const MQTTVec_t *pVec)</arglist>
     </member>
     <member kind="function">
       <type>void</type>
       <name>MQTT_SerializeMQTTVec</name>
       <anchorfile>core__mqtt_8c.html</anchorfile>
-      <anchor>a1b2e56ed1c0a328d86062857e695d673</anchor>
-      <arglist>(uint8_t *pAllocatedMem, MQTTVec_t *pVec)</arglist>
+      <anchor>ab65e1ed5db559aa7d9158e9311048b7e</anchor>
+      <arglist>(uint8_t *pAllocatedMem, const MQTTVec_t *pVec)</arglist>
     </member>
   </compound>
   <compound kind="file">
@@ -1328,8 +1328,8 @@
       <type>MQTTStatus_t</type>
       <name>MQTT_CheckConnectStatus</name>
       <anchorfile>core__mqtt_8h.html</anchorfile>
-      <anchor>ad138a95422d22d61538f6ff69db9a784</anchor>
-      <arglist>(MQTTContext_t *pContext)</arglist>
+      <anchor>ab42f3cc5a0681373e4ee973df062bbcd</anchor>
+      <arglist>(const MQTTContext_t *pContext)</arglist>
     </member>
     <member kind="function">
       <type>MQTTStatus_t</type>
@@ -1426,15 +1426,15 @@
       <type>size_t</type>
       <name>MQTT_GetBytesInMQTTVec</name>
       <anchorfile>core__mqtt_8h.html</anchorfile>
-      <anchor>af15463f575fbbcc76bf1f27f9b0a02b0</anchor>
-      <arglist>(MQTTVec_t *pVec)</arglist>
+      <anchor>a4d6610604dc1ca49dd24888019d4445e</anchor>
+      <arglist>(const MQTTVec_t *pVec)</arglist>
     </member>
     <member kind="function">
       <type>void</type>
       <name>MQTT_SerializeMQTTVec</name>
       <anchorfile>core__mqtt_8h.html</anchorfile>
-      <anchor>a1b2e56ed1c0a328d86062857e695d673</anchor>
-      <arglist>(uint8_t *pAllocatedMem, MQTTVec_t *pVec)</arglist>
+      <anchor>ab65e1ed5db559aa7d9158e9311048b7e</anchor>
+      <arglist>(uint8_t *pAllocatedMem, const MQTTVec_t *pVec)</arglist>
     </member>
   </compound>
   <compound kind="file">

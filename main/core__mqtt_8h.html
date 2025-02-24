@@ -202,9 +202,9 @@ Functions</h2></td></tr>
 <tr class="memitem:af2d6f94bf234a888541919195002a13f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__mqtt__enum__types.html#gaba7ec045874a1c3432f99173367f735c">MQTTStatus_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="core__mqtt_8h.html#af2d6f94bf234a888541919195002a13f">MQTT_InitRetransmits</a> (<a class="el" href="struct_m_q_t_t_context__t.html">MQTTContext_t</a> *pContext, <a class="el" href="core__mqtt_8h.html#ae4ae1546af467967e2c996daeb78e0ba">MQTTStorePacketForRetransmit</a> storeFunction, <a class="el" href="core__mqtt_8h.html#a56514a9a33dbf82a5d33afedb54903b6">MQTTRetrievePacketForRetransmit</a> retrieveFunction, <a class="el" href="core__mqtt_8h.html#a864718ceee18ff04e9c92fe9825d601b">MQTTClearPacketForRetransmit</a> clearFunction)</td></tr>
 <tr class="memdesc:af2d6f94bf234a888541919195002a13f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Initialize an MQTT context for publish retransmits for QoS &gt; 0.  <br /></td></tr>
 <tr class="separator:af2d6f94bf234a888541919195002a13f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad138a95422d22d61538f6ff69db9a784"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__mqtt__enum__types.html#gaba7ec045874a1c3432f99173367f735c">MQTTStatus_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="core__mqtt_8h.html#ad138a95422d22d61538f6ff69db9a784">MQTT_CheckConnectStatus</a> (<a class="el" href="struct_m_q_t_t_context__t.html">MQTTContext_t</a> *pContext)</td></tr>
-<tr class="memdesc:ad138a95422d22d61538f6ff69db9a784"><td class="mdescLeft">&#160;</td><td class="mdescRight">Checks the MQTT connection status with the broker.  <br /></td></tr>
-<tr class="separator:ad138a95422d22d61538f6ff69db9a784"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab42f3cc5a0681373e4ee973df062bbcd"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__mqtt__enum__types.html#gaba7ec045874a1c3432f99173367f735c">MQTTStatus_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="core__mqtt_8h.html#ab42f3cc5a0681373e4ee973df062bbcd">MQTT_CheckConnectStatus</a> (const <a class="el" href="struct_m_q_t_t_context__t.html">MQTTContext_t</a> *pContext)</td></tr>
+<tr class="memdesc:ab42f3cc5a0681373e4ee973df062bbcd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Checks the MQTT connection status with the broker.  <br /></td></tr>
+<tr class="separator:ab42f3cc5a0681373e4ee973df062bbcd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aed1e4dc123a8ba79ac569cb17c69bfa0"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__mqtt__enum__types.html#gaba7ec045874a1c3432f99173367f735c">MQTTStatus_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="core__mqtt_8h.html#aed1e4dc123a8ba79ac569cb17c69bfa0">MQTT_Connect</a> (<a class="el" href="struct_m_q_t_t_context__t.html">MQTTContext_t</a> *pContext, const <a class="el" href="struct_m_q_t_t_connect_info__t.html">MQTTConnectInfo_t</a> *pConnectInfo, const <a class="el" href="struct_m_q_t_t_publish_info__t.html">MQTTPublishInfo_t</a> *pWillInfo, uint32_t timeoutMs, bool *pSessionPresent)</td></tr>
 <tr class="memdesc:aed1e4dc123a8ba79ac569cb17c69bfa0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Establish an MQTT session.  <br /></td></tr>
 <tr class="separator:aed1e4dc123a8ba79ac569cb17c69bfa0"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -244,12 +244,12 @@ Functions</h2></td></tr>
 <tr class="memitem:a05d9facfce89c5f9edef09ca13717f50"><td class="memItemLeft" align="right" valign="top">const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="core__mqtt_8h.html#a05d9facfce89c5f9edef09ca13717f50">MQTT_Status_strerror</a> (<a class="el" href="group__mqtt__enum__types.html#gaba7ec045874a1c3432f99173367f735c">MQTTStatus_t</a> status)</td></tr>
 <tr class="memdesc:a05d9facfce89c5f9edef09ca13717f50"><td class="mdescLeft">&#160;</td><td class="mdescRight">Error code to string conversion for MQTT statuses.  <br /></td></tr>
 <tr class="separator:a05d9facfce89c5f9edef09ca13717f50"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af15463f575fbbcc76bf1f27f9b0a02b0"><td class="memItemLeft" align="right" valign="top">size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="core__mqtt_8h.html#af15463f575fbbcc76bf1f27f9b0a02b0">MQTT_GetBytesInMQTTVec</a> (MQTTVec_t *pVec)</td></tr>
-<tr class="memdesc:af15463f575fbbcc76bf1f27f9b0a02b0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the bytes in a <a class="el" href="struct_m_q_t_t_vec.html" title="An opaque structure provided by the library to the MQTTStorePacketForRetransmit function when using M...">MQTTVec</a> pointer which can store the whole array as a an MQTT packet when calling MQTT_SerializeMQTTVec( void * pAllocatedMem, MQTTVec_t *pVec ) function.  <br /></td></tr>
-<tr class="separator:af15463f575fbbcc76bf1f27f9b0a02b0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1b2e56ed1c0a328d86062857e695d673"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="core__mqtt_8h.html#a1b2e56ed1c0a328d86062857e695d673">MQTT_SerializeMQTTVec</a> (uint8_t *pAllocatedMem, MQTTVec_t *pVec)</td></tr>
-<tr class="memdesc:a1b2e56ed1c0a328d86062857e695d673"><td class="mdescLeft">&#160;</td><td class="mdescRight">Serialize the bytes in an array of <a class="el" href="struct_m_q_t_t_vec.html" title="An opaque structure provided by the library to the MQTTStorePacketForRetransmit function when using M...">MQTTVec</a> in the provided <code>pAllocatedMem</code>.  <br /></td></tr>
-<tr class="separator:a1b2e56ed1c0a328d86062857e695d673"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4d6610604dc1ca49dd24888019d4445e"><td class="memItemLeft" align="right" valign="top">size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="core__mqtt_8h.html#a4d6610604dc1ca49dd24888019d4445e">MQTT_GetBytesInMQTTVec</a> (const MQTTVec_t *pVec)</td></tr>
+<tr class="memdesc:a4d6610604dc1ca49dd24888019d4445e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the bytes in a <a class="el" href="struct_m_q_t_t_vec.html" title="An opaque structure provided by the library to the MQTTStorePacketForRetransmit function when using M...">MQTTVec</a> pointer which can store the whole array as a an MQTT packet when calling MQTT_SerializeMQTTVec( void * pAllocatedMem, MQTTVec_t *pVec ) function.  <br /></td></tr>
+<tr class="separator:a4d6610604dc1ca49dd24888019d4445e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab65e1ed5db559aa7d9158e9311048b7e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="core__mqtt_8h.html#ab65e1ed5db559aa7d9158e9311048b7e">MQTT_SerializeMQTTVec</a> (uint8_t *pAllocatedMem, const MQTTVec_t *pVec)</td></tr>
+<tr class="memdesc:ab65e1ed5db559aa7d9158e9311048b7e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Serialize the bytes in an array of <a class="el" href="struct_m_q_t_t_vec.html" title="An opaque structure provided by the library to the MQTTStorePacketForRetransmit function when using M...">MQTTVec</a> in the provided <code>pAllocatedMem</code>.  <br /></td></tr>
+<tr class="separator:ab65e1ed5db559aa7d9158e9311048b7e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>User-facing functions of the MQTT 3.1.1 library. </p>
@@ -271,7 +271,7 @@ Functions</h2></td></tr>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">pContext</td><td>Initialised MQTT Context. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">packetId</td><td>Outgoing publish packet identifier. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">pMqttVec</td><td>Pointer to the opaque mqtt vector structure. Users should use MQTT_SerializeMQTTVec and MQTT_GetBytesInMQTTVec functions to get the memory required and to serialize the MQTTVec_t in the provided memory respectively.</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">pMqttVec</td><td>Pointer to the opaque mqtt vector structure. Users should use MQTT_GetBytesInMQTTVec and MQTT_SerializeMQTTVec functions to get the memory required and to serialize the MQTTVec_t in the provided memory respectively.</td></tr>
   </table>
   </dd>
 </dl>
@@ -321,11 +321,10 @@ Functions</h2></td></tr>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">pContext</td><td>Initialised MQTT Context. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">packetId</td><td>Copied publish packet identifier.</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">packetId</td><td>Copied publish packet identifier. </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>True if the clear is successful else false. </dd></dl>
 
 </div>
 </div>
@@ -431,8 +430,8 @@ Functions</h2></td></tr>
 <div class="ttc" id="acore__mqtt_8h_html_ae8444f3a85535e62cdb1ae9c192677d6"><div class="ttname"><a href="core__mqtt_8h.html#ae8444f3a85535e62cdb1ae9c192677d6">MQTT_Init</a></div><div class="ttdeci">MQTTStatus_t MQTT_Init(MQTTContext_t *pContext, const TransportInterface_t *pTransportInterface, MQTTGetCurrentTimeFunc_t getTimeFunction, MQTTEventCallback_t userCallback, const MQTTFixedBuffer_t *pNetworkBuffer)</div><div class="ttdoc">Initialize an MQTT context.</div><div class="ttdef"><b>Definition:</b> core_mqtt.c:2679</div></div>
 <div class="ttc" id="agroup__mqtt__enum__types_html_ggaba7ec045874a1c3432f99173367f735ca484e062cb4f3fccc1858dd25cfeee056"><div class="ttname"><a href="group__mqtt__enum__types.html#ggaba7ec045874a1c3432f99173367f735ca484e062cb4f3fccc1858dd25cfeee056">MQTTSuccess</a></div><div class="ttdeci">@ MQTTSuccess</div><div class="ttdef"><b>Definition:</b> core_mqtt_serializer.h:88</div></div>
 <div class="ttc" id="agroup__mqtt__struct__types_html_ga7769e434e7811caed8cd6fd7f9ec26ec"><div class="ttname"><a href="group__mqtt__struct__types.html#ga7769e434e7811caed8cd6fd7f9ec26ec">NetworkContext_t</a></div><div class="ttdeci">struct NetworkContext NetworkContext_t</div><div class="ttdoc">The NetworkContext is an incomplete type. An implementation of this interface must define struct Netw...</div><div class="ttdef"><b>Definition:</b> transport_interface.h:191</div></div>
-<div class="ttc" id="astruct_m_q_t_t_context__t_html"><div class="ttname"><a href="struct_m_q_t_t_context__t.html">MQTTContext_t</a></div><div class="ttdoc">A struct representing an MQTT connection.</div><div class="ttdef"><b>Definition:</b> core_mqtt.h:233</div></div>
-<div class="ttc" id="astruct_m_q_t_t_deserialized_info__t_html"><div class="ttname"><a href="struct_m_q_t_t_deserialized_info__t.html">MQTTDeserializedInfo_t</a></div><div class="ttdoc">Struct to hold deserialized packet information for an MQTTEventCallback_t callback.</div><div class="ttdef"><b>Definition:</b> core_mqtt.h:332</div></div>
+<div class="ttc" id="astruct_m_q_t_t_context__t_html"><div class="ttname"><a href="struct_m_q_t_t_context__t.html">MQTTContext_t</a></div><div class="ttdoc">A struct representing an MQTT connection.</div><div class="ttdef"><b>Definition:</b> core_mqtt.h:231</div></div>
+<div class="ttc" id="astruct_m_q_t_t_deserialized_info__t_html"><div class="ttname"><a href="struct_m_q_t_t_deserialized_info__t.html">MQTTDeserializedInfo_t</a></div><div class="ttdoc">Struct to hold deserialized packet information for an MQTTEventCallback_t callback.</div><div class="ttdef"><b>Definition:</b> core_mqtt.h:330</div></div>
 <div class="ttc" id="astruct_m_q_t_t_fixed_buffer__t_html"><div class="ttname"><a href="struct_m_q_t_t_fixed_buffer__t.html">MQTTFixedBuffer_t</a></div><div class="ttdoc">Buffer passed to MQTT library.</div><div class="ttdef"><b>Definition:</b> core_mqtt_serializer.h:130</div></div>
 <div class="ttc" id="astruct_m_q_t_t_fixed_buffer__t_html_a0b0b6a93cc62751ebeb03095d5431636"><div class="ttname"><a href="struct_m_q_t_t_fixed_buffer__t.html#a0b0b6a93cc62751ebeb03095d5431636">MQTTFixedBuffer_t::size</a></div><div class="ttdeci">size_t size</div><div class="ttdoc">Size of buffer.</div><div class="ttdef"><b>Definition:</b> core_mqtt_serializer.h:132</div></div>
 <div class="ttc" id="astruct_m_q_t_t_fixed_buffer__t_html_acea147448e044870fb36b7fa2347dbd6"><div class="ttname"><a href="struct_m_q_t_t_fixed_buffer__t.html#acea147448e044870fb36b7fa2347dbd6">MQTTFixedBuffer_t::pBuffer</a></div><div class="ttdeci">uint8_t * pBuffer</div><div class="ttdoc">Pointer to buffer.</div><div class="ttdef"><b>Definition:</b> core_mqtt_serializer.h:131</div></div>
@@ -544,7 +543,7 @@ Functions</h2></td></tr>
 <div class="line">     <span class="comment">// Now QoS1 and/or QoS2 publishes can be sent with this context.</span></div>
 <div class="line">}</div>
 <div class="ttc" id="acore__mqtt_8h_html_afe4c020749e3b9ca044e0e9ad96025c5"><div class="ttname"><a href="core__mqtt_8h.html#afe4c020749e3b9ca044e0e9ad96025c5">MQTT_InitStatefulQoS</a></div><div class="ttdeci">MQTTStatus_t MQTT_InitStatefulQoS(MQTTContext_t *pContext, MQTTPubAckInfo_t *pOutgoingPublishRecords, size_t outgoingPublishCount, MQTTPubAckInfo_t *pIncomingPublishRecords, size_t incomingPublishCount)</div><div class="ttdoc">Initialize an MQTT context for QoS &gt; 0.</div><div class="ttdef"><b>Definition:</b> core_mqtt.c:2738</div></div>
-<div class="ttc" id="astruct_m_q_t_t_pub_ack_info__t_html"><div class="ttname"><a href="struct_m_q_t_t_pub_ack_info__t.html">MQTTPubAckInfo_t</a></div><div class="ttdoc">An element of the state engine records for QoS 1 or Qos 2 publishes.</div><div class="ttdef"><b>Definition:</b> core_mqtt.h:222</div></div>
+<div class="ttc" id="astruct_m_q_t_t_pub_ack_info__t_html"><div class="ttname"><a href="struct_m_q_t_t_pub_ack_info__t.html">MQTTPubAckInfo_t</a></div><div class="ttdoc">An element of the state engine records for QoS 1 or Qos 2 publishes.</div><div class="ttdef"><b>Definition:</b> core_mqtt.h:220</div></div>
 </div><!-- fragment --> 
 </div>
 </div>
@@ -669,8 +668,8 @@ Functions</h2></td></tr>
 </div><!-- fragment --> 
 </div>
 </div>
-<a id="ad138a95422d22d61538f6ff69db9a784" name="ad138a95422d22d61538f6ff69db9a784"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ad138a95422d22d61538f6ff69db9a784">&#9670;&#160;</a></span>MQTT_CheckConnectStatus()</h2>
+<a id="ab42f3cc5a0681373e4ee973df062bbcd" name="ab42f3cc5a0681373e4ee973df062bbcd"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab42f3cc5a0681373e4ee973df062bbcd">&#9670;&#160;</a></span>MQTT_CheckConnectStatus()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -678,7 +677,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="memname"><a class="el" href="group__mqtt__enum__types.html#gaba7ec045874a1c3432f99173367f735c">MQTTStatus_t</a> MQTT_CheckConnectStatus </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="struct_m_q_t_t_context__t.html">MQTTContext_t</a> *&#160;</td>
+          <td class="paramtype">const <a class="el" href="struct_m_q_t_t_context__t.html">MQTTContext_t</a> *&#160;</td>
           <td class="paramname"><em>pContext</em></td><td>)</td>
           <td></td>
         </tr>
@@ -1262,8 +1261,8 @@ Functions</h2></td></tr>
 <div class="line">}</div>
 <div class="ttc" id="acore__mqtt_8h_html_a66eced0c62ace790354ae3de40fc0959"><div class="ttname"><a href="core__mqtt_8h.html#a66eced0c62ace790354ae3de40fc0959">MQTT_Ping</a></div><div class="ttdeci">MQTTStatus_t MQTT_Ping(MQTTContext_t *pContext)</div><div class="ttdoc">Sends an MQTT PINGREQ to broker.</div><div class="ttdef"><b>Definition:</b> core_mqtt.c:3211</div></div>
 <div class="ttc" id="acore__mqtt_8h_html_aeb7c37284fcf6f68eb577427a6763fc6"><div class="ttname"><a href="core__mqtt_8h.html#aeb7c37284fcf6f68eb577427a6763fc6">MQTT_ReceiveLoop</a></div><div class="ttdeci">MQTTStatus_t MQTT_ReceiveLoop(MQTTContext_t *pContext)</div><div class="ttdoc">Loop to receive packets from the transport interface. Does not handle keep alive.</div><div class="ttdef"><b>Definition:</b> core_mqtt.c:3465</div></div>
-<div class="ttc" id="astruct_m_q_t_t_context__t_html_a01acf90953e830ba3e7f44182cb1d482"><div class="ttname"><a href="struct_m_q_t_t_context__t.html#a01acf90953e830ba3e7f44182cb1d482">MQTTContext_t::lastPacketTxTime</a></div><div class="ttdeci">uint32_t lastPacketTxTime</div><div class="ttdoc">Timestamp of the last packet sent by the library.</div><div class="ttdef"><b>Definition:</b> core_mqtt.h:287</div></div>
-<div class="ttc" id="astruct_m_q_t_t_context__t_html_aabe1d302a16771292151013e8e30c582"><div class="ttname"><a href="struct_m_q_t_t_context__t.html#aabe1d302a16771292151013e8e30c582">MQTTContext_t::getTime</a></div><div class="ttdeci">MQTTGetCurrentTimeFunc_t getTime</div><div class="ttdoc">Function used to get millisecond timestamps.</div><div class="ttdef"><b>Definition:</b> core_mqtt.h:277</div></div>
+<div class="ttc" id="astruct_m_q_t_t_context__t_html_a01acf90953e830ba3e7f44182cb1d482"><div class="ttname"><a href="struct_m_q_t_t_context__t.html#a01acf90953e830ba3e7f44182cb1d482">MQTTContext_t::lastPacketTxTime</a></div><div class="ttdeci">uint32_t lastPacketTxTime</div><div class="ttdoc">Timestamp of the last packet sent by the library.</div><div class="ttdef"><b>Definition:</b> core_mqtt.h:285</div></div>
+<div class="ttc" id="astruct_m_q_t_t_context__t_html_aabe1d302a16771292151013e8e30c582"><div class="ttname"><a href="struct_m_q_t_t_context__t.html#aabe1d302a16771292151013e8e30c582">MQTTContext_t::getTime</a></div><div class="ttdeci">MQTTGetCurrentTimeFunc_t getTime</div><div class="ttdoc">Function used to get millisecond timestamps.</div><div class="ttdef"><b>Definition:</b> core_mqtt.h:275</div></div>
 </div><!-- fragment --> 
 </div>
 </div>
@@ -1482,7 +1481,7 @@ Functions</h2></td></tr>
 <div class="ttc" id="acore__mqtt_8h_html_ac43449e06856c6703cda73359c222bd2"><div class="ttname"><a href="core__mqtt_8h.html#ac43449e06856c6703cda73359c222bd2">MQTT_GetSubAckStatusCodes</a></div><div class="ttdeci">MQTTStatus_t MQTT_GetSubAckStatusCodes(const MQTTPacketInfo_t *pSubackPacket, uint8_t **pPayloadStart, size_t *pPayloadSize)</div><div class="ttdoc">Parses the payload of an MQTT SUBACK packet that contains status codes corresponding to topic filter ...</div><div class="ttdef"><b>Definition:</b> core_mqtt.c:3589</div></div>
 <div class="ttc" id="acore__mqtt__config__defaults_8h_html_a7da92048aaf0cbfcacde9539c98a0e05"><div class="ttname"><a href="core__mqtt__config__defaults_8h.html#a7da92048aaf0cbfcacde9539c98a0e05">LogWarn</a></div><div class="ttdeci">#define LogWarn(message)</div><div class="ttdoc">Macro that is called in the MQTT library for logging &quot;Warning&quot; level messages.</div><div class="ttdef"><b>Definition:</b> core_mqtt_config_defaults.h:235</div></div>
 <div class="ttc" id="agroup__mqtt__constants_html_ga307e0186aa17fdd0d6d181d3d2715766"><div class="ttname"><a href="group__mqtt__constants.html#ga307e0186aa17fdd0d6d181d3d2715766">MQTT_PACKET_TYPE_SUBACK</a></div><div class="ttdeci">#define MQTT_PACKET_TYPE_SUBACK</div><div class="ttdoc">SUBACK (server-to-client).</div><div class="ttdef"><b>Definition:</b> core_mqtt_serializer.h:61</div></div>
-<div class="ttc" id="agroup__mqtt__enum__types_html_gga48dabc1579e3c0ac6058ce9068054611aeb83b20da8eda934cde6b92db225a808"><div class="ttname"><a href="group__mqtt__enum__types.html#gga48dabc1579e3c0ac6058ce9068054611aeb83b20da8eda934cde6b92db225a808">MQTTSubAckFailure</a></div><div class="ttdeci">@ MQTTSubAckFailure</div><div class="ttdoc">Failure.</div><div class="ttdef"><b>Definition:</b> core_mqtt.h:214</div></div>
+<div class="ttc" id="agroup__mqtt__enum__types_html_gga48dabc1579e3c0ac6058ce9068054611aeb83b20da8eda934cde6b92db225a808"><div class="ttname"><a href="group__mqtt__enum__types.html#gga48dabc1579e3c0ac6058ce9068054611aeb83b20da8eda934cde6b92db225a808">MQTTSubAckFailure</a></div><div class="ttdeci">@ MQTTSubAckFailure</div><div class="ttdoc">Failure.</div><div class="ttdef"><b>Definition:</b> core_mqtt.h:212</div></div>
 <div class="ttc" id="astruct_m_q_t_t_packet_info__t_html_a7fef40548c1aa0f0e7f812a6a7243758"><div class="ttname"><a href="struct_m_q_t_t_packet_info__t.html#a7fef40548c1aa0f0e7f812a6a7243758">MQTTPacketInfo_t::type</a></div><div class="ttdeci">uint8_t type</div><div class="ttdoc">Type of incoming MQTT packet.</div><div class="ttdef"><b>Definition:</b> core_mqtt_serializer.h:255</div></div>
 </div><!-- fragment --> 
 </div>
@@ -1514,8 +1513,8 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="af15463f575fbbcc76bf1f27f9b0a02b0" name="af15463f575fbbcc76bf1f27f9b0a02b0"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#af15463f575fbbcc76bf1f27f9b0a02b0">&#9670;&#160;</a></span>MQTT_GetBytesInMQTTVec()</h2>
+<a id="a4d6610604dc1ca49dd24888019d4445e" name="a4d6610604dc1ca49dd24888019d4445e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4d6610604dc1ca49dd24888019d4445e">&#9670;&#160;</a></span>MQTT_GetBytesInMQTTVec()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1523,7 +1522,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="memname">size_t MQTT_GetBytesInMQTTVec </td>
           <td>(</td>
-          <td class="paramtype">MQTTVec_t *&#160;</td>
+          <td class="paramtype">const MQTTVec_t *&#160;</td>
           <td class="paramname"><em>pVec</em></td><td>)</td>
           <td></td>
         </tr>
@@ -1541,8 +1540,8 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a1b2e56ed1c0a328d86062857e695d673" name="a1b2e56ed1c0a328d86062857e695d673"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a1b2e56ed1c0a328d86062857e695d673">&#9670;&#160;</a></span>MQTT_SerializeMQTTVec()</h2>
+<a id="ab65e1ed5db559aa7d9158e9311048b7e" name="ab65e1ed5db559aa7d9158e9311048b7e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab65e1ed5db559aa7d9158e9311048b7e">&#9670;&#160;</a></span>MQTT_SerializeMQTTVec()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1556,7 +1555,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">MQTTVec_t *&#160;</td>
+          <td class="paramtype">const MQTTVec_t *&#160;</td>
           <td class="paramname"><em>pVec</em>&#160;</td>
         </tr>
         <tr>
@@ -1570,7 +1569,7 @@ Functions</h2></td></tr>
 <p>Serialize the bytes in an array of <a class="el" href="struct_m_q_t_t_vec.html" title="An opaque structure provided by the library to the MQTTStorePacketForRetransmit function when using M...">MQTTVec</a> in the provided <code>pAllocatedMem</code>. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">pAllocatedMem</td><td>Memory in which to serialize the data in the <a class="el" href="struct_m_q_t_t_vec.html" title="An opaque structure provided by the library to the MQTTStorePacketForRetransmit function when using M...">MQTTVec</a> array. It must be of size provided by <a class="el" href="core__mqtt_8h.html#af15463f575fbbcc76bf1f27f9b0a02b0" title="Get the bytes in a MQTTVec pointer which can store the whole array as a an MQTT packet when calling M...">MQTT_GetBytesInMQTTVec( MQTTVec_t *pVec )</a>. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">pAllocatedMem</td><td>Memory in which to serialize the data in the <a class="el" href="struct_m_q_t_t_vec.html" title="An opaque structure provided by the library to the MQTTStorePacketForRetransmit function when using M...">MQTTVec</a> array. It must be of size provided by MQTT_GetBytesInMQTTVec( MQTTVec_t *pVec ). </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">pVec</td><td>The <a class="el" href="struct_m_q_t_t_vec.html" title="An opaque structure provided by the library to the MQTTStorePacketForRetransmit function when using M...">MQTTVec</a> pointer. </td></tr>
   </table>
   </dd>
