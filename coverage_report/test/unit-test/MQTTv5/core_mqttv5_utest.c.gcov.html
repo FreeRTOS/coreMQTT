@@ -32,17 +32,17 @@
             <td></td>
             <td class="headerItem">Lines:</td>
             <td class="headerCovTableEntryHi">99.8&nbsp;%</td>
-            <td class="headerCovTableEntry">835</td>
-            <td class="headerCovTableEntry">833</td>
+            <td class="headerCovTableEntry">887</td>
+            <td class="headerCovTableEntry">885</td>
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2025-02-23 11:14:44</td>
+            <td class="headerValue">2025-02-24 10:15:39</td>
             <td></td>
             <td class="headerItem">Functions:</td>
-            <td class="headerCovTableEntryHi">97.8&nbsp;%</td>
-            <td class="headerCovTableEntry">45</td>
-            <td class="headerCovTableEntry">44</td>
+            <td class="headerCovTableEntryHi">97.9&nbsp;%</td>
+            <td class="headerCovTableEntry">48</td>
+            <td class="headerCovTableEntry">47</td>
           </tr>
                   <tr><td><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
                 </table>
@@ -283,18 +283,18 @@
 <span id="L221"><span class="lineNum">     221</span>              : /* ============================   UNITY FIXTURES ============================ */</span>
 <span id="L222"><span class="lineNum">     222</span>              : </span>
 <span id="L223"><span class="lineNum">     223</span>              : /* Called before each test method. */</span>
-<span id="L224"><span class="lineNum">     224</span> <span class="tlaGNC tlaBgGNC">          44 : void setUp()</span></span>
+<span id="L224"><span class="lineNum">     224</span> <span class="tlaGNC tlaBgGNC">          48 : void setUp()</span></span>
 <span id="L225"><span class="lineNum">     225</span>              : {</span>
-<span id="L226"><span class="lineNum">     226</span> <span class="tlaGNC">          44 :     memset( mqttBuffer, 0x0, sizeof( mqttBuffer ) );</span></span>
-<span id="L227"><span class="lineNum">     227</span> <span class="tlaGNC">          44 :     MQTT_State_strerror_IgnoreAndReturn( &quot;DUMMY_MQTT_STATE&quot; );</span></span>
+<span id="L226"><span class="lineNum">     226</span> <span class="tlaGNC">          48 :     memset( mqttBuffer, 0x0, sizeof( mqttBuffer ) );</span></span>
+<span id="L227"><span class="lineNum">     227</span> <span class="tlaGNC">          48 :     MQTT_State_strerror_IgnoreAndReturn( &quot;DUMMY_MQTT_STATE&quot; );</span></span>
 <span id="L228"><span class="lineNum">     228</span>              : </span>
-<span id="L229"><span class="lineNum">     229</span> <span class="tlaGNC">          44 :     globalEntryTime = 0;</span></span>
-<span id="L230"><span class="lineNum">     230</span> <span class="tlaGNC">          44 : }</span></span>
+<span id="L229"><span class="lineNum">     229</span> <span class="tlaGNC">          48 :     globalEntryTime = 0;</span></span>
+<span id="L230"><span class="lineNum">     230</span> <span class="tlaGNC">          48 : }</span></span>
 <span id="L231"><span class="lineNum">     231</span>              : </span>
 <span id="L232"><span class="lineNum">     232</span>              : /* Called after each test method. */</span>
-<span id="L233"><span class="lineNum">     233</span> <span class="tlaGNC">          44 : void tearDown()</span></span>
+<span id="L233"><span class="lineNum">     233</span> <span class="tlaGNC">          48 : void tearDown()</span></span>
 <span id="L234"><span class="lineNum">     234</span>              : {</span>
-<span id="L235"><span class="lineNum">     235</span> <span class="tlaGNC">          44 : }</span></span>
+<span id="L235"><span class="lineNum">     235</span> <span class="tlaGNC">          48 : }</span></span>
 <span id="L236"><span class="lineNum">     236</span>              : </span>
 <span id="L237"><span class="lineNum">     237</span>              : /* Called at the beginning of the whole suite. */</span>
 <span id="L238"><span class="lineNum">     238</span> <span class="tlaGNC">           2 : void suiteSetUp()</span></span>
@@ -316,9 +316,9 @@
 <span id="L254"><span class="lineNum">     254</span>              :  * guarantees that only a single iteration runs in the ProcessLoop for ease</span>
 <span id="L255"><span class="lineNum">     255</span>              :  * of testing.</span>
 <span id="L256"><span class="lineNum">     256</span>              :  */</span>
-<span id="L257"><span class="lineNum">     257</span> <span class="tlaGNC tlaBgGNC">         574 : static uint32_t getTime( void )</span></span>
+<span id="L257"><span class="lineNum">     257</span> <span class="tlaGNC tlaBgGNC">         586 : static uint32_t getTime( void )</span></span>
 <span id="L258"><span class="lineNum">     258</span>              : {</span>
-<span id="L259"><span class="lineNum">     259</span> <span class="tlaGNC">         574 :     return globalEntryTime++;</span></span>
+<span id="L259"><span class="lineNum">     259</span> <span class="tlaGNC">         586 :     return globalEntryTime++;</span></span>
 <span id="L260"><span class="lineNum">     260</span>              : }</span>
 <span id="L261"><span class="lineNum">     261</span>              : </span>
 <span id="L262"><span class="lineNum">     262</span>              : /**</span>
@@ -482,21 +482,21 @@
 <span id="L420"><span class="lineNum">     420</span>              :  * @return Number of bytes sent; negative value on error;</span>
 <span id="L421"><span class="lineNum">     421</span>              :  * 0 for timeout or 0 bytes sent.</span>
 <span id="L422"><span class="lineNum">     422</span>              :  */</span>
-<span id="L423"><span class="lineNum">     423</span> <span class="tlaGNC">          34 : static int32_t transportWritevSuccess( NetworkContext_t * pNetworkContext,</span></span>
+<span id="L423"><span class="lineNum">     423</span> <span class="tlaGNC">          38 : static int32_t transportWritevSuccess( NetworkContext_t * pNetworkContext,</span></span>
 <span id="L424"><span class="lineNum">     424</span>              :                                        TransportOutVector_t * pIoVectorIterator,</span>
 <span id="L425"><span class="lineNum">     425</span>              :                                        size_t vectorsToBeSent )</span>
 <span id="L426"><span class="lineNum">     426</span>              : {</span>
-<span id="L427"><span class="lineNum">     427</span> <span class="tlaGNC">          34 :     TEST_ASSERT_EQUAL( MQTT_SAMPLE_NETWORK_CONTEXT, pNetworkContext );</span></span>
-<span id="L428"><span class="lineNum">     428</span> <span class="tlaGNC">          34 :     int32_t bytesToWrite = 0;</span></span>
+<span id="L427"><span class="lineNum">     427</span> <span class="tlaGNC">          38 :     TEST_ASSERT_EQUAL( MQTT_SAMPLE_NETWORK_CONTEXT, pNetworkContext );</span></span>
+<span id="L428"><span class="lineNum">     428</span> <span class="tlaGNC">          38 :     int32_t bytesToWrite = 0;</span></span>
 <span id="L429"><span class="lineNum">     429</span>              :     size_t i;</span>
 <span id="L430"><span class="lineNum">     430</span>              : </span>
-<span id="L431"><span class="lineNum">     431</span> <span class="tlaGNC">         340 :     for( i = 0; i &lt; vectorsToBeSent; ++i )</span></span>
+<span id="L431"><span class="lineNum">     431</span> <span class="tlaGNC">         370 :     for( i = 0; i &lt; vectorsToBeSent; ++i )</span></span>
 <span id="L432"><span class="lineNum">     432</span>              :     {</span>
-<span id="L433"><span class="lineNum">     433</span> <span class="tlaGNC">         306 :         bytesToWrite += pIoVectorIterator-&gt;iov_len;</span></span>
-<span id="L434"><span class="lineNum">     434</span> <span class="tlaGNC">         306 :         pIoVectorIterator++;</span></span>
+<span id="L433"><span class="lineNum">     433</span> <span class="tlaGNC">         332 :         bytesToWrite += pIoVectorIterator-&gt;iov_len;</span></span>
+<span id="L434"><span class="lineNum">     434</span> <span class="tlaGNC">         332 :         pIoVectorIterator++;</span></span>
 <span id="L435"><span class="lineNum">     435</span>              :     }</span>
 <span id="L436"><span class="lineNum">     436</span>              : </span>
-<span id="L437"><span class="lineNum">     437</span> <span class="tlaGNC">          34 :     return bytesToWrite;</span></span>
+<span id="L437"><span class="lineNum">     437</span> <span class="tlaGNC">          38 :     return bytesToWrite;</span></span>
 <span id="L438"><span class="lineNum">     438</span>              : }</span>
 <span id="L439"><span class="lineNum">     439</span>              : </span>
 <span id="L440"><span class="lineNum">     440</span>              : </span>
@@ -557,24 +557,24 @@
 <span id="L495"><span class="lineNum">     495</span>              :  *</span>
 <span id="L496"><span class="lineNum">     496</span>              :  * @brief param[in] pTransport The transport interface to use with the context.</span>
 <span id="L497"><span class="lineNum">     497</span>              :  */</span>
-<span id="L498"><span class="lineNum">     498</span> <span class="tlaGNC">          40 : static void setupTransportInterface( TransportInterface_t * pTransport )</span></span>
+<span id="L498"><span class="lineNum">     498</span> <span class="tlaGNC">          44 : static void setupTransportInterface( TransportInterface_t * pTransport )</span></span>
 <span id="L499"><span class="lineNum">     499</span>              : {</span>
-<span id="L500"><span class="lineNum">     500</span> <span class="tlaGNC">          40 :     pTransport-&gt;pNetworkContext = MQTT_SAMPLE_NETWORK_CONTEXT;</span></span>
-<span id="L501"><span class="lineNum">     501</span> <span class="tlaGNC">          40 :     pTransport-&gt;send = transportSendSuccess;</span></span>
-<span id="L502"><span class="lineNum">     502</span> <span class="tlaGNC">          40 :     pTransport-&gt;recv = transportRecvSuccess;</span></span>
-<span id="L503"><span class="lineNum">     503</span> <span class="tlaGNC">          40 :     pTransport-&gt;writev = transportWritevSuccess;</span></span>
-<span id="L504"><span class="lineNum">     504</span> <span class="tlaGNC">          40 : }</span></span>
+<span id="L500"><span class="lineNum">     500</span> <span class="tlaGNC">          44 :     pTransport-&gt;pNetworkContext = MQTT_SAMPLE_NETWORK_CONTEXT;</span></span>
+<span id="L501"><span class="lineNum">     501</span> <span class="tlaGNC">          44 :     pTransport-&gt;send = transportSendSuccess;</span></span>
+<span id="L502"><span class="lineNum">     502</span> <span class="tlaGNC">          44 :     pTransport-&gt;recv = transportRecvSuccess;</span></span>
+<span id="L503"><span class="lineNum">     503</span> <span class="tlaGNC">          44 :     pTransport-&gt;writev = transportWritevSuccess;</span></span>
+<span id="L504"><span class="lineNum">     504</span> <span class="tlaGNC">          44 : }</span></span>
 <span id="L505"><span class="lineNum">     505</span>              : </span>
 <span id="L506"><span class="lineNum">     506</span>              : /**</span>
 <span id="L507"><span class="lineNum">     507</span>              :  * @brief Initialize pNetworkBuffer using static buffer.</span>
 <span id="L508"><span class="lineNum">     508</span>              :  *</span>
 <span id="L509"><span class="lineNum">     509</span>              :  * @param[in] pNetworkBuffer Network buffer provided for the context.</span>
 <span id="L510"><span class="lineNum">     510</span>              :  */</span>
-<span id="L511"><span class="lineNum">     511</span> <span class="tlaGNC">          40 : static void setupNetworkBuffer( MQTTFixedBuffer_t * const pNetworkBuffer )</span></span>
+<span id="L511"><span class="lineNum">     511</span> <span class="tlaGNC">          44 : static void setupNetworkBuffer( MQTTFixedBuffer_t * const pNetworkBuffer )</span></span>
 <span id="L512"><span class="lineNum">     512</span>              : {</span>
-<span id="L513"><span class="lineNum">     513</span> <span class="tlaGNC">          40 :     pNetworkBuffer-&gt;pBuffer = mqttBuffer;</span></span>
-<span id="L514"><span class="lineNum">     514</span> <span class="tlaGNC">          40 :     pNetworkBuffer-&gt;size = MQTT_TEST_BUFFER_LENGTH;</span></span>
-<span id="L515"><span class="lineNum">     515</span> <span class="tlaGNC">          40 : }</span></span>
+<span id="L513"><span class="lineNum">     513</span> <span class="tlaGNC">          44 :     pNetworkBuffer-&gt;pBuffer = mqttBuffer;</span></span>
+<span id="L514"><span class="lineNum">     514</span> <span class="tlaGNC">          44 :     pNetworkBuffer-&gt;size = MQTT_TEST_BUFFER_LENGTH;</span></span>
+<span id="L515"><span class="lineNum">     515</span> <span class="tlaGNC">          44 : }</span></span>
 <span id="L516"><span class="lineNum">     516</span>              : </span>
 <span id="L517"><span class="lineNum">     517</span> <span class="tlaGNC">           2 : static void setupPublishProperties( MQTTPublishInfo_t * pPublishInfo )</span></span>
 <span id="L518"><span class="lineNum">     518</span>              : {</span>
@@ -1178,15 +1178,15 @@
 <span id="L1116"><span class="lineNum">    1116</span>              : </span>
 <span id="L1117"><span class="lineNum">    1117</span>              : </span>
 <span id="L1118"><span class="lineNum">    1118</span>              : </span>
-<span id="L1119"><span class="lineNum">    1119</span> <span class="tlaGNC">           2 : static void setupSubscriptionInfo( MQTTSubscribeInfo_t * pSubscribeInfo )</span></span>
+<span id="L1119"><span class="lineNum">    1119</span> <span class="tlaGNC">           6 : static void setupSubscriptionInfo( MQTTSubscribeInfo_t * pSubscribeInfo )</span></span>
 <span id="L1120"><span class="lineNum">    1120</span>              : {</span>
-<span id="L1121"><span class="lineNum">    1121</span> <span class="tlaGNC">           2 :     pSubscribeInfo-&gt;qos = MQTTQoS1;</span></span>
-<span id="L1122"><span class="lineNum">    1122</span> <span class="tlaGNC">           2 :     pSubscribeInfo-&gt;pTopicFilter = MQTT_SAMPLE_TOPIC_FILTER;</span></span>
-<span id="L1123"><span class="lineNum">    1123</span> <span class="tlaGNC">           2 :     pSubscribeInfo-&gt;topicFilterLength = MQTT_SAMPLE_TOPIC_FILTER_LENGTH;</span></span>
-<span id="L1124"><span class="lineNum">    1124</span> <span class="tlaGNC">           2 :     pSubscribeInfo-&gt;noLocalOption = 0 ; </span></span>
-<span id="L1125"><span class="lineNum">    1125</span> <span class="tlaGNC">           2 :     pSubscribeInfo-&gt;retainAsPublishedOption = 0;</span></span>
-<span id="L1126"><span class="lineNum">    1126</span> <span class="tlaGNC">           2 :     pSubscribeInfo-&gt;retainHandlingOption = retainSendOnSubIfNotPresent ; </span></span>
-<span id="L1127"><span class="lineNum">    1127</span> <span class="tlaGNC">           2 : }</span></span>
+<span id="L1121"><span class="lineNum">    1121</span> <span class="tlaGNC">           6 :     pSubscribeInfo-&gt;qos = MQTTQoS1;</span></span>
+<span id="L1122"><span class="lineNum">    1122</span> <span class="tlaGNC">           6 :     pSubscribeInfo-&gt;pTopicFilter = MQTT_SAMPLE_TOPIC_FILTER;</span></span>
+<span id="L1123"><span class="lineNum">    1123</span> <span class="tlaGNC">           6 :     pSubscribeInfo-&gt;topicFilterLength = MQTT_SAMPLE_TOPIC_FILTER_LENGTH;</span></span>
+<span id="L1124"><span class="lineNum">    1124</span> <span class="tlaGNC">           6 :     pSubscribeInfo-&gt;noLocalOption = 0 ; </span></span>
+<span id="L1125"><span class="lineNum">    1125</span> <span class="tlaGNC">           6 :     pSubscribeInfo-&gt;retainAsPublishedOption = 0;</span></span>
+<span id="L1126"><span class="lineNum">    1126</span> <span class="tlaGNC">           6 :     pSubscribeInfo-&gt;retainHandlingOption = retainSendOnSubIfNotPresent ; </span></span>
+<span id="L1127"><span class="lineNum">    1127</span> <span class="tlaGNC">           6 : }</span></span>
 <span id="L1128"><span class="lineNum">    1128</span> <span class="tlaGNC">          12 : static uint8_t * MQTTV5_SerializeSubscribedHeader_cb( size_t remainingLength,</span></span>
 <span id="L1129"><span class="lineNum">    1129</span>              :                                                     uint8_t * pIndex,</span>
 <span id="L1130"><span class="lineNum">    1130</span>              :                                                     uint16_t packetId,</span>
@@ -1611,7 +1611,7 @@
 <span id="L1549"><span class="lineNum">    1549</span> <span class="tlaGNC">           2 :     TEST_ASSERT_EQUAL_INT(MQTTBadParameter, mqttStatus);</span></span>
 <span id="L1550"><span class="lineNum">    1550</span> <span class="tlaGNC">           2 : }</span></span>
 <span id="L1551"><span class="lineNum">    1551</span>              : </span>
-<span id="L1552"><span class="lineNum">    1552</span>              : </span>
+<span id="L1552"><span class="lineNum">    1552</span>              : /* Suback- Unsuback Happy path */</span>
 <span id="L1553"><span class="lineNum">    1553</span> <span class="tlaGNC">           2 : void test_MQTT_ProcessLoop_handleIncomingAck_Happy_Paths_suback( void )</span></span>
 <span id="L1554"><span class="lineNum">    1554</span>              : {</span>
 <span id="L1555"><span class="lineNum">    1555</span>              :     MQTTStatus_t status;</span>
@@ -1639,6 +1639,147 @@
 <span id="L1577"><span class="lineNum">    1577</span> <span class="tlaGNC">           2 : }</span></span>
 <span id="L1578"><span class="lineNum">    1578</span>              : </span>
 <span id="L1579"><span class="lineNum">    1579</span>              : </span>
+<span id="L1580"><span class="lineNum">    1580</span>              : </span>
+<span id="L1581"><span class="lineNum">    1581</span>              : </span>
+<span id="L1582"><span class="lineNum">    1582</span>              : </span>
+<span id="L1583"><span class="lineNum">    1583</span> <span class="tlaGNC">           4 : static uint8_t * MQTTV5_SerializeUnsubscribeHeader_cb( size_t remainingLength,</span></span>
+<span id="L1584"><span class="lineNum">    1584</span>              :     uint8_t * pIndex,</span>
+<span id="L1585"><span class="lineNum">    1585</span>              :     uint16_t packetId,</span>
+<span id="L1586"><span class="lineNum">    1586</span>              :     int numcallbacks )</span>
+<span id="L1587"><span class="lineNum">    1587</span>              : {</span>
+<span id="L1588"><span class="lineNum">    1588</span>              : ( void ) remainingLength;</span>
+<span id="L1589"><span class="lineNum">    1589</span>              : ( void ) pIndex;</span>
+<span id="L1590"><span class="lineNum">    1590</span>              : ( void ) packetId;</span>
+<span id="L1591"><span class="lineNum">    1591</span>              : ( void ) numcallbacks;</span>
+<span id="L1592"><span class="lineNum">    1592</span>              : </span>
+<span id="L1593"><span class="lineNum">    1593</span> <span class="tlaGNC">           4 : return pIndex;</span></span>
+<span id="L1594"><span class="lineNum">    1594</span>              : }</span>
+<span id="L1595"><span class="lineNum">    1595</span>              : </span>
+<span id="L1596"><span class="lineNum">    1596</span>              : /**</span>
+<span id="L1597"><span class="lineNum">    1597</span>              : * @brief This test case verifies that MQTT_Unsubscribe returns successfully</span>
+<span id="L1598"><span class="lineNum">    1598</span>              : * when valid parameters are passed and all bytes are sent.</span>
+<span id="L1599"><span class="lineNum">    1599</span>              : */</span>
+<span id="L1600"><span class="lineNum">    1600</span> <span class="tlaGNC">           2 : void test_MQTT_UnsubscribeV5_happy_path( void )</span></span>
+<span id="L1601"><span class="lineNum">    1601</span>              : {</span>
+<span id="L1602"><span class="lineNum">    1602</span>              :     MQTTStatus_t mqttStatus;</span>
+<span id="L1603"><span class="lineNum">    1603</span> <span class="tlaGNC">           2 :     MQTTContext_t context = { 0 };</span></span>
+<span id="L1604"><span class="lineNum">    1604</span> <span class="tlaGNC">           2 :     TransportInterface_t transport = { 0 };</span></span>
+<span id="L1605"><span class="lineNum">    1605</span> <span class="tlaGNC">           2 :     MQTTFixedBuffer_t networkBuffer = { 0 };</span></span>
+<span id="L1606"><span class="lineNum">    1606</span> <span class="tlaGNC">           2 :     MQTTSubscribeInfo_t subscribeInfo = { 0 };</span></span>
+<span id="L1607"><span class="lineNum">    1607</span> <span class="tlaGNC">           2 :     MQTTSubscribeProperties_t subscribeProperties = {0} ; </span></span>
+<span id="L1608"><span class="lineNum">    1608</span> <span class="tlaGNC">           2 :     size_t remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;</span></span>
+<span id="L1609"><span class="lineNum">    1609</span> <span class="tlaGNC">           2 :     size_t packetSize = MQTT_SAMPLE_REMAINING_LENGTH;</span></span>
+<span id="L1610"><span class="lineNum">    1610</span>              : </span>
+<span id="L1611"><span class="lineNum">    1611</span> <span class="tlaGNC">           2 :     setupTransportInterface( &amp;transport );</span></span>
+<span id="L1612"><span class="lineNum">    1612</span> <span class="tlaGNC">           2 :     setupNetworkBuffer( &amp;networkBuffer );</span></span>
+<span id="L1613"><span class="lineNum">    1613</span> <span class="tlaGNC">           2 :     setupSubscriptionInfo( &amp;subscribeInfo );</span></span>
+<span id="L1614"><span class="lineNum">    1614</span> <span class="tlaGNC">           2 :     subscribeInfo.qos = MQTTQoS0;</span></span>
+<span id="L1615"><span class="lineNum">    1615</span>              : </span>
+<span id="L1616"><span class="lineNum">    1616</span> <span class="tlaGNC">           2 :     subscribeProperties.propertyLength = 0 ; </span></span>
+<span id="L1617"><span class="lineNum">    1617</span> <span class="tlaGNC">           2 :     subscribeProperties.pUserProperties = NULL ; </span></span>
+<span id="L1618"><span class="lineNum">    1618</span>              : </span>
+<span id="L1619"><span class="lineNum">    1619</span>              :     /* Initialize context. */</span>
+<span id="L1620"><span class="lineNum">    1620</span> <span class="tlaGNC">           2 :     mqttStatus = MQTT_Init( &amp;context, &amp;transport, getTime, eventCallback, &amp;networkBuffer );</span></span>
+<span id="L1621"><span class="lineNum">    1621</span> <span class="tlaGNC">           2 :     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );</span></span>
+<span id="L1622"><span class="lineNum">    1622</span>              :     /* Verify MQTTSuccess is returned with the following mocks. */</span>
+<span id="L1623"><span class="lineNum">    1623</span> <span class="tlaGNC">           2 :     MQTT_SerializeUnsubscribeHeader_Stub(MQTTV5_SerializeUnsubscribeHeader_cb);</span></span>
+<span id="L1624"><span class="lineNum">    1624</span> <span class="tlaGNC">           2 :     MQTTV5_GetUnsubscribePacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );</span></span>
+<span id="L1625"><span class="lineNum">    1625</span> <span class="tlaGNC">           2 :     MQTTV5_GetUnsubscribePacketSize_ReturnThruPtr_pPacketSize( &amp;packetSize );</span></span>
+<span id="L1626"><span class="lineNum">    1626</span> <span class="tlaGNC">           2 :     MQTTV5_GetUnsubscribePacketSize_ReturnThruPtr_pRemainingLength( &amp;remainingLength );</span></span>
+<span id="L1627"><span class="lineNum">    1627</span>              : </span>
+<span id="L1628"><span class="lineNum">    1628</span>              :     /* Expect the above calls when running MQTT_Unsubscribe. */</span>
+<span id="L1629"><span class="lineNum">    1629</span> <span class="tlaGNC">           2 :     mqttStatus = MQTT_UnsubscribeV5( &amp;context, &amp;subscribeInfo, &amp;subscribeProperties,  1, MQTT_FIRST_VALID_PACKET_ID );</span></span>
+<span id="L1630"><span class="lineNum">    1630</span> <span class="tlaGNC">           2 :     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );</span></span>
+<span id="L1631"><span class="lineNum">    1631</span>              : </span>
+<span id="L1632"><span class="lineNum">    1632</span> <span class="tlaGNC">           2 : }</span></span>
+<span id="L1633"><span class="lineNum">    1633</span>              : </span>
+<span id="L1634"><span class="lineNum">    1634</span> <span class="tlaGNC">           2 : void test_MQTT_UnsubscribeV5_happy_path_withUP( void )</span></span>
+<span id="L1635"><span class="lineNum">    1635</span>              : {</span>
+<span id="L1636"><span class="lineNum">    1636</span>              :     MQTTStatus_t mqttStatus;</span>
+<span id="L1637"><span class="lineNum">    1637</span> <span class="tlaGNC">           2 :     MQTTContext_t context = { 0 };</span></span>
+<span id="L1638"><span class="lineNum">    1638</span> <span class="tlaGNC">           2 :     TransportInterface_t transport = { 0 };</span></span>
+<span id="L1639"><span class="lineNum">    1639</span> <span class="tlaGNC">           2 :     MQTTFixedBuffer_t networkBuffer = { 0 };</span></span>
+<span id="L1640"><span class="lineNum">    1640</span> <span class="tlaGNC">           2 :     MQTTSubscribeInfo_t subscribeInfo = { 0 };</span></span>
+<span id="L1641"><span class="lineNum">    1641</span> <span class="tlaGNC">           2 :     MQTTSubscribeProperties_t subscribeProperties = {0} ; </span></span>
+<span id="L1642"><span class="lineNum">    1642</span> <span class="tlaGNC">           2 :     size_t remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;</span></span>
+<span id="L1643"><span class="lineNum">    1643</span> <span class="tlaGNC">           2 :     size_t packetSize = MQTT_SAMPLE_REMAINING_LENGTH;</span></span>
+<span id="L1644"><span class="lineNum">    1644</span>              : </span>
+<span id="L1645"><span class="lineNum">    1645</span> <span class="tlaGNC">           2 :     setupTransportInterface( &amp;transport );</span></span>
+<span id="L1646"><span class="lineNum">    1646</span> <span class="tlaGNC">           2 :     setupNetworkBuffer( &amp;networkBuffer );</span></span>
+<span id="L1647"><span class="lineNum">    1647</span> <span class="tlaGNC">           2 :     setupSubscriptionInfo( &amp;subscribeInfo );</span></span>
+<span id="L1648"><span class="lineNum">    1648</span> <span class="tlaGNC">           2 :     subscribeInfo.qos = MQTTQoS0;</span></span>
+<span id="L1649"><span class="lineNum">    1649</span>              :     /* Initialize context. */</span>
+<span id="L1650"><span class="lineNum">    1650</span> <span class="tlaGNC">           2 :     mqttStatus = MQTT_Init( &amp;context, &amp;transport, getTime, eventCallback, &amp;networkBuffer );</span></span>
+<span id="L1651"><span class="lineNum">    1651</span> <span class="tlaGNC">           2 :     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );</span></span>
+<span id="L1652"><span class="lineNum">    1652</span>              :     /* Verify MQTTSuccess is returned with the following mocks. */</span>
+<span id="L1653"><span class="lineNum">    1653</span> <span class="tlaGNC">           2 :     MQTT_SerializeUnsubscribeHeader_Stub(MQTTV5_SerializeUnsubscribeHeader_cb);</span></span>
+<span id="L1654"><span class="lineNum">    1654</span> <span class="tlaGNC">           2 :     MQTTV5_GetUnsubscribePacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );</span></span>
+<span id="L1655"><span class="lineNum">    1655</span> <span class="tlaGNC">           2 :     MQTTV5_GetUnsubscribePacketSize_ReturnThruPtr_pPacketSize( &amp;packetSize );</span></span>
+<span id="L1656"><span class="lineNum">    1656</span> <span class="tlaGNC">           2 :     MQTTV5_GetUnsubscribePacketSize_ReturnThruPtr_pRemainingLength( &amp;remainingLength );</span></span>
+<span id="L1657"><span class="lineNum">    1657</span>              :     MQTTUserProperties_t userProperties ; </span>
+<span id="L1658"><span class="lineNum">    1658</span> <span class="tlaGNC">           2 :     userProperties.count = 1 ; </span></span>
+<span id="L1659"><span class="lineNum">    1659</span> <span class="tlaGNC">           2 :     userProperties.userProperty[ 0 ].pKey = &quot;abc&quot; ; </span></span>
+<span id="L1660"><span class="lineNum">    1660</span> <span class="tlaGNC">           2 :     userProperties.userProperty[ 0 ].pValue = &quot;def&quot; ;</span></span>
+<span id="L1661"><span class="lineNum">    1661</span> <span class="tlaGNC">           2 :     userProperties.userProperty[ 0 ].keyLength = 3 ;</span></span>
+<span id="L1662"><span class="lineNum">    1662</span> <span class="tlaGNC">           2 :     userProperties.userProperty[ 0 ].valueLength = 3 ; </span></span>
+<span id="L1663"><span class="lineNum">    1663</span>              : </span>
+<span id="L1664"><span class="lineNum">    1664</span> <span class="tlaGNC">           2 :     subscribeProperties.pUserProperties = &amp;userProperties ;</span></span>
+<span id="L1665"><span class="lineNum">    1665</span>              : </span>
+<span id="L1666"><span class="lineNum">    1666</span> <span class="tlaGNC">           2 :     mqttStatus = MQTT_UnsubscribeV5( &amp;context, &amp;subscribeInfo, &amp;subscribeProperties,  1, MQTT_FIRST_VALID_PACKET_ID );</span></span>
+<span id="L1667"><span class="lineNum">    1667</span> <span class="tlaGNC">           2 :     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );</span></span>
+<span id="L1668"><span class="lineNum">    1668</span> <span class="tlaGNC">           2 : }</span></span>
+<span id="L1669"><span class="lineNum">    1669</span>              : </span>
+<span id="L1670"><span class="lineNum">    1670</span>              : </span>
+<span id="L1671"><span class="lineNum">    1671</span>              : </span>
+<span id="L1672"><span class="lineNum">    1672</span>              : </span>
+<span id="L1673"><span class="lineNum">    1673</span>              : // void test_MQTTV5_Unsubscribe_happy_path(void){</span>
+<span id="L1674"><span class="lineNum">    1674</span>              : //     MQTTStatus_t mqttStatus;</span>
+<span id="L1675"><span class="lineNum">    1675</span>              : //     MQTTContext_t context = { 0 };</span>
+<span id="L1676"><span class="lineNum">    1676</span>              : //     TransportInterface_t transport = { 0 };</span>
+<span id="L1677"><span class="lineNum">    1677</span>              : //     MQTTFixedBuffer_t networkBuffer = { 0 };</span>
+<span id="L1678"><span class="lineNum">    1678</span>              : //     MQTTSubscribeInfo_t subscribeInfo = { 0 };</span>
+<span id="L1679"><span class="lineNum">    1679</span>              : //     MQTTSubscribeProperties_t subscribeProperties ; </span>
+<span id="L1680"><span class="lineNum">    1680</span>              : //     size_t remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;</span>
+<span id="L1681"><span class="lineNum">    1681</span>              : //     size_t packetSize = MQTT_SAMPLE_REMAINING_LENGTH;</span>
+<span id="L1682"><span class="lineNum">    1682</span>              : //     MQTTPubAckInfo_t incomingRecords = { 0 };</span>
+<span id="L1683"><span class="lineNum">    1683</span>              : //     MQTTPubAckInfo_t outgoingRecords = { 0 };</span>
+<span id="L1684"><span class="lineNum">    1684</span>              : </span>
+<span id="L1685"><span class="lineNum">    1685</span>              : //     subscribeProperties.propertyLength = 0 ; </span>
+<span id="L1686"><span class="lineNum">    1686</span>              : //     subscribeProperties.pUserProperties = NULL ; </span>
+<span id="L1687"><span class="lineNum">    1687</span>              : </span>
+<span id="L1688"><span class="lineNum">    1688</span>              : //     setupTransportInterface( &amp;transport );</span>
+<span id="L1689"><span class="lineNum">    1689</span>              : //     setupNetworkBuffer( &amp;networkBuffer );</span>
+<span id="L1690"><span class="lineNum">    1690</span>              : //     setupSubscriptionInfo( &amp;subscribeInfo );</span>
+<span id="L1691"><span class="lineNum">    1691</span>              : </span>
+<span id="L1692"><span class="lineNum">    1692</span>              : //     /* Initialize context. */</span>
+<span id="L1693"><span class="lineNum">    1693</span>              : //     mqttStatus = MQTT_Init( &amp;context, &amp;transport, getTime, eventCallback, &amp;networkBuffer );</span>
+<span id="L1694"><span class="lineNum">    1694</span>              : //     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );</span>
+<span id="L1695"><span class="lineNum">    1695</span>              : </span>
+<span id="L1696"><span class="lineNum">    1696</span>              : //     mqttStatus = MQTT_InitStatefulQoS( &amp;context,</span>
+<span id="L1697"><span class="lineNum">    1697</span>              : //                                        &amp;outgoingRecords, 4,</span>
+<span id="L1698"><span class="lineNum">    1698</span>              : //                                        &amp;incomingRecords, 4 );</span>
+<span id="L1699"><span class="lineNum">    1699</span>              : //     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );</span>
+<span id="L1700"><span class="lineNum">    1700</span>              : </span>
+<span id="L1701"><span class="lineNum">    1701</span>              : //     /* Verify MQTTSuccess is returned with the following mocks. */</span>
+<span id="L1702"><span class="lineNum">    1702</span>              : //     MQTTV5_GetSubscribePacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );</span>
+<span id="L1703"><span class="lineNum">    1703</span>              : //     MQTTV5_GetSubscribePacketSize_ReturnThruPtr_pPacketSize( &amp;packetSize );</span>
+<span id="L1704"><span class="lineNum">    1704</span>              : //     MQTTV5_GetSubscribePacketSize_ReturnThruPtr_pRemainingLength( &amp;remainingLength );</span>
+<span id="L1705"><span class="lineNum">    1705</span>              : //     MQTT_SerializeSubscribeHeader_Stub( MQTTV5_SerializeSubscribedHeader_cb );</span>
+<span id="L1706"><span class="lineNum">    1706</span>              : </span>
+<span id="L1707"><span class="lineNum">    1707</span>              : //     /* Expect the above calls when running MQTT_Subscribe. */</span>
+<span id="L1708"><span class="lineNum">    1708</span>              : //     mqttStatus = MQTT_SubscribeV5( &amp;context, &amp;subscribeInfo,&amp;subscribeProperties, 1, MQTT_FIRST_VALID_PACKET_ID );</span>
+<span id="L1709"><span class="lineNum">    1709</span>              : </span>
+<span id="L1710"><span class="lineNum">    1710</span>              : //     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );</span>
+<span id="L1711"><span class="lineNum">    1711</span>              : // }</span>
+<span id="L1712"><span class="lineNum">    1712</span>              : // test sendUnsubscribeWithoutCopyv5 - CORE-done, with user properties </span>
+<span id="L1713"><span class="lineNum">    1713</span>              : // test MQTT_UnsubscribeV5 - CORE</span>
+<span id="L1714"><span class="lineNum">    1714</span>              : // test MQTT_ReceiveLoop ? maybe</span>
+<span id="L1715"><span class="lineNum">    1715</span>              : // test MQTTV5_unsubscribePacketSize - serializer</span>
+<span id="L1716"><span class="lineNum">    1716</span>              : // readSubackStatusV5 </span>
+<span id="L1717"><span class="lineNum">    1717</span>              : // deserializerSubackProperties with user properties , second and discard , default : protocol error </span>
+<span id="L1718"><span class="lineNum">    1718</span>              : // MQTTV5_DeserializeSuback - if oSuback-&gt; remainingLength &lt; 3 , 0 pId </span>
+<span id="L1719"><span class="lineNum">    1719</span>              : </span>
+<span id="L1720"><span class="lineNum">    1720</span>              : </span>
         </pre>
               </td>
             </tr>

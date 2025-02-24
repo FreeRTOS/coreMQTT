@@ -2287,7 +2287,7 @@ static MQTTStatus_t handleIncomingPublish( MQTTContext_t * pContext,
 }
 
 /*-----------------------------------------------------------*/
-static MQTTStatus_t handleSuback( MQTTContext_t * pContext,
+MQTTStatus_t handleSuback( MQTTContext_t * pContext,
                                 MQTTPacketInfo_t * pIncomingPacket )
 {
     MQTTStatus_t status = MQTTSuccess;

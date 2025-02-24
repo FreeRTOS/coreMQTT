@@ -1628,7 +1628,45 @@ void test_MQTT_UnsubscribeV5_happy_path( void )
     /* Expect the above calls when running MQTT_Unsubscribe. */
     mqttStatus = MQTT_UnsubscribeV5( &context, &subscribeInfo, &subscribeProperties,  1, MQTT_FIRST_VALID_PACKET_ID );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+
 }
+
+void test_MQTT_UnsubscribeV5_happy_path_withUP( void )
+{
+    MQTTStatus_t mqttStatus;
+    MQTTContext_t context = { 0 };
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
+    MQTTSubscribeInfo_t subscribeInfo = { 0 };
+    MQTTSubscribeProperties_t subscribeProperties = {0} ; 
+    size_t remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
+    size_t packetSize = MQTT_SAMPLE_REMAINING_LENGTH;
+
+    setupTransportInterface( &transport );
+    setupNetworkBuffer( &networkBuffer );
+    setupSubscriptionInfo( &subscribeInfo );
+    subscribeInfo.qos = MQTTQoS0;
+    /* Initialize context. */
+    mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+    /* Verify MQTTSuccess is returned with the following mocks. */
+    MQTT_SerializeUnsubscribeHeader_Stub(MQTTV5_SerializeUnsubscribeHeader_cb);
+    MQTTV5_GetUnsubscribePacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTTV5_GetUnsubscribePacketSize_ReturnThruPtr_pPacketSize( &packetSize );
+    MQTTV5_GetUnsubscribePacketSize_ReturnThruPtr_pRemainingLength( &remainingLength );
+    MQTTUserProperties_t userProperties ; 
+    userProperties.count = 1 ; 
+    userProperties.userProperty[ 0 ].pKey = "abc" ; 
+    userProperties.userProperty[ 0 ].pValue = "def" ;
+    userProperties.userProperty[ 0 ].keyLength = 3 ;
+    userProperties.userProperty[ 0 ].valueLength = 3 ; 
+
+    subscribeProperties.pUserProperties = &userProperties ;
+
+    mqttStatus = MQTT_UnsubscribeV5( &context, &subscribeInfo, &subscribeProperties,  1, MQTT_FIRST_VALID_PACKET_ID );
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+}
+
 
 
 
@@ -1671,7 +1709,7 @@ void test_MQTT_UnsubscribeV5_happy_path( void )
 
 //     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
 // }
-// test sendUnsubscribeWithoutCopyv5 - CORE
+// test sendUnsubscribeWithoutCopyv5 - CORE-done, with user properties 
 // test MQTT_UnsubscribeV5 - CORE
 // test MQTT_ReceiveLoop ? maybe
 // test MQTTV5_unsubscribePacketSize - serializer

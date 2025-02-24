@@ -31,18 +31,18 @@
             <td class="headerValue">base_coverage.info</td>
             <td></td>
             <td class="headerItem">Lines:</td>
-            <td class="headerCovTableEntryHi">98.0&nbsp;%</td>
-            <td class="headerCovTableEntry">2049</td>
-            <td class="headerCovTableEntry">2009</td>
+            <td class="headerCovTableEntryHi">98.1&nbsp;%</td>
+            <td class="headerCovTableEntry">2090</td>
+            <td class="headerCovTableEntry">2050</td>
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2025-02-23 11:14:44</td>
+            <td class="headerValue">2025-02-24 10:15:39</td>
             <td></td>
             <td class="headerItem">Functions:</td>
-            <td class="headerCovTableEntryHi">96.7&nbsp;%</td>
+            <td class="headerCovTableEntryHi">96.8&nbsp;%</td>
+            <td class="headerCovTableEntry">62</td>
             <td class="headerCovTableEntry">60</td>
-            <td class="headerCovTableEntry">58</td>
           </tr>
                   <tr><td><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
                 </table>
@@ -343,19 +343,19 @@
 <span id="L281"><span class="lineNum">     281</span>              : /* ============================   UNITY FIXTURES ============================ */</span>
 <span id="L282"><span class="lineNum">     282</span>              : </span>
 <span id="L283"><span class="lineNum">     283</span>              : /* Called before each test method. */</span>
-<span id="L284"><span class="lineNum">     284</span> <span class="tlaGNC tlaBgGNC">          66 : void setUp( void )</span></span>
+<span id="L284"><span class="lineNum">     284</span> <span class="tlaGNC tlaBgGNC">          70 : void setUp( void )</span></span>
 <span id="L285"><span class="lineNum">     285</span>              : {</span>
-<span id="L286"><span class="lineNum">     286</span> <span class="tlaGNC">          66 :     memset( &amp;properties, 0x0, sizeof( properties ) );</span></span>
-<span id="L287"><span class="lineNum">     287</span> <span class="tlaGNC">          66 :     memset( &amp;userProperties, 0x0, sizeof( userProperties ) );</span></span>
-<span id="L288"><span class="lineNum">     288</span> <span class="tlaGNC">          66 :     memset( &amp;publishInfo, 0x0, sizeof( publishInfo ) );</span></span>
-<span id="L289"><span class="lineNum">     289</span> <span class="tlaGNC">          66 :     memset( &amp;connectInfo, 0x0, sizeof( connectInfo ) );</span></span>
-<span id="L290"><span class="lineNum">     290</span> <span class="tlaGNC">          66 :     memset( &amp;packetInfo, 0x0, sizeof( packetInfo ) );</span></span>
-<span id="L291"><span class="lineNum">     291</span> <span class="tlaGNC">          66 : }</span></span>
+<span id="L286"><span class="lineNum">     286</span> <span class="tlaGNC">          70 :     memset( &amp;properties, 0x0, sizeof( properties ) );</span></span>
+<span id="L287"><span class="lineNum">     287</span> <span class="tlaGNC">          70 :     memset( &amp;userProperties, 0x0, sizeof( userProperties ) );</span></span>
+<span id="L288"><span class="lineNum">     288</span> <span class="tlaGNC">          70 :     memset( &amp;publishInfo, 0x0, sizeof( publishInfo ) );</span></span>
+<span id="L289"><span class="lineNum">     289</span> <span class="tlaGNC">          70 :     memset( &amp;connectInfo, 0x0, sizeof( connectInfo ) );</span></span>
+<span id="L290"><span class="lineNum">     290</span> <span class="tlaGNC">          70 :     memset( &amp;packetInfo, 0x0, sizeof( packetInfo ) );</span></span>
+<span id="L291"><span class="lineNum">     291</span> <span class="tlaGNC">          70 : }</span></span>
 <span id="L292"><span class="lineNum">     292</span>              : </span>
 <span id="L293"><span class="lineNum">     293</span>              : /* Called after each test method. */</span>
-<span id="L294"><span class="lineNum">     294</span> <span class="tlaGNC">          66 : void tearDown( void )</span></span>
+<span id="L294"><span class="lineNum">     294</span> <span class="tlaGNC">          70 : void tearDown( void )</span></span>
 <span id="L295"><span class="lineNum">     295</span>              : {</span>
-<span id="L296"><span class="lineNum">     296</span> <span class="tlaGNC">          66 : }</span></span>
+<span id="L296"><span class="lineNum">     296</span> <span class="tlaGNC">          70 : }</span></span>
 <span id="L297"><span class="lineNum">     297</span>              : </span>
 <span id="L298"><span class="lineNum">     298</span>              : /* Called at the beginning of the whole suite. */</span>
 <span id="L299"><span class="lineNum">     299</span> <span class="tlaGNC">           2 : void suiteSetUp()</span></span>
@@ -3563,7 +3563,80 @@
 <span id="L3501"><span class="lineNum">    3501</span> <span class="tlaGNC">           2 :     memset(&amp;subackProperties, 0, sizeof(subackProperties));</span></span>
 <span id="L3502"><span class="lineNum">    3502</span> <span class="tlaGNC">           2 :     status = MQTTV5_DeserializeSuback(&amp;subackProperties ,&amp;subackPacket ,  &amp;packetIdentifier);</span></span>
 <span id="L3503"><span class="lineNum">    3503</span> <span class="tlaGNC">           2 :     TEST_ASSERT_EQUAL_INT(MQTTSuccess, status);</span></span>
-<span id="L3504"><span class="lineNum">    3504</span> <span class="tlaGNC">           2 : }</span></span>
+<span id="L3504"><span class="lineNum">    3504</span>              : </span>
+<span id="L3505"><span class="lineNum">    3505</span> <span class="tlaGNC">           2 : }</span></span>
+<span id="L3506"><span class="lineNum">    3506</span>              : </span>
+<span id="L3507"><span class="lineNum">    3507</span> <span class="tlaGNC">           2 : void test_MQTTV5_GetUnsubscribePacketSize_Path(void){</span></span>
+<span id="L3508"><span class="lineNum">    3508</span> <span class="tlaGNC">           2 :     MQTTStatus_t status = MQTTSuccess;</span></span>
+<span id="L3509"><span class="lineNum">    3509</span> <span class="tlaGNC">           2 :     MQTTSubscribeInfo_t subscribeInfo = {0};</span></span>
+<span id="L3510"><span class="lineNum">    3510</span> <span class="tlaGNC">           2 :     MQTTSubscribeProperties_t subscribeProperties = {0};</span></span>
+<span id="L3511"><span class="lineNum">    3511</span> <span class="tlaGNC">           2 :     size_t remainingLength = 0;</span></span>
+<span id="L3512"><span class="lineNum">    3512</span> <span class="tlaGNC">           2 :     size_t packetSize = 0;</span></span>
+<span id="L3513"><span class="lineNum">    3513</span>              : </span>
+<span id="L3514"><span class="lineNum">    3514</span> <span class="tlaGNC">           2 :     status = MQTTV5_GetUnsubscribePacketSize(NULL, &amp;subscribeProperties, 1, &amp;remainingLength, &amp;packetSize);</span></span>
+<span id="L3515"><span class="lineNum">    3515</span> <span class="tlaGNC">           2 :     TEST_ASSERT_EQUAL_INT(MQTTBadParameter, status);</span></span>
+<span id="L3516"><span class="lineNum">    3516</span>              : </span>
+<span id="L3517"><span class="lineNum">    3517</span> <span class="tlaGNC">           2 :     subscribeInfo.pTopicFilter = TEST_TOPIC_NAME ; </span></span>
+<span id="L3518"><span class="lineNum">    3518</span> <span class="tlaGNC">           2 :     subscribeInfo.topicFilterLength = TEST_TOPIC_NAME_LENGTH ;</span></span>
+<span id="L3519"><span class="lineNum">    3519</span>              : </span>
+<span id="L3520"><span class="lineNum">    3520</span>              : </span>
+<span id="L3521"><span class="lineNum">    3521</span> <span class="tlaGNC">           2 :     status = MQTTV5_GetUnsubscribePacketSize(&amp;subscribeInfo, &amp;subscribeProperties, 1, &amp;remainingLength, &amp;packetSize);</span></span>
+<span id="L3522"><span class="lineNum">    3522</span> <span class="tlaGNC">           2 :     TEST_ASSERT_EQUAL_INT(MQTTSuccess, status);</span></span>
+<span id="L3523"><span class="lineNum">    3523</span> <span class="tlaGNC">           2 :     TEST_ASSERT_EQUAL_UINT32(16U, remainingLength);</span></span>
+<span id="L3524"><span class="lineNum">    3524</span> <span class="tlaGNC">           2 :     TEST_ASSERT_EQUAL_UINT32(18U, packetSize);</span></span>
+<span id="L3525"><span class="lineNum">    3525</span>              : </span>
+<span id="L3526"><span class="lineNum">    3526</span> <span class="tlaGNC">           2 :     status = MQTTV5_GetUnsubscribePacketSize(&amp;subscribeInfo, &amp;subscribeProperties, 0, &amp;remainingLength, &amp;packetSize);</span></span>
+<span id="L3527"><span class="lineNum">    3527</span> <span class="tlaGNC">           2 :     TEST_ASSERT_EQUAL_INT(MQTTBadParameter, status);</span></span>
+<span id="L3528"><span class="lineNum">    3528</span>              : </span>
+<span id="L3529"><span class="lineNum">    3529</span> <span class="tlaGNC">           2 : }</span></span>
+<span id="L3530"><span class="lineNum">    3530</span> <span class="tlaGNC">           2 : void test_MQTTV5_DeserializeSuback( void )</span></span>
+<span id="L3531"><span class="lineNum">    3531</span>              : {</span>
+<span id="L3532"><span class="lineNum">    3532</span>              :     MQTTPacketInfo_t mqttPacketInfo;</span>
+<span id="L3533"><span class="lineNum">    3533</span>              :     uint16_t packetIdentifier;</span>
+<span id="L3534"><span class="lineNum">    3534</span> <span class="tlaGNC">           2 :     MQTTStatus_t status = MQTTSuccess;</span></span>
+<span id="L3535"><span class="lineNum">    3535</span> <span class="tlaGNC">           2 :     uint8_t buffer[ 14 ] = { 0 };</span></span>
+<span id="L3536"><span class="lineNum">    3536</span>              : </span>
+<span id="L3537"><span class="lineNum">    3537</span>              :     /* Bad remaining length. */</span>
+<span id="L3538"><span class="lineNum">    3538</span> <span class="tlaGNC">           2 :     mqttPacketInfo.type = MQTT_PACKET_TYPE_SUBACK;</span></span>
+<span id="L3539"><span class="lineNum">    3539</span> <span class="tlaGNC">           2 :     mqttPacketInfo.pRemainingData = buffer;</span></span>
+<span id="L3540"><span class="lineNum">    3540</span> <span class="tlaGNC">           2 :     mqttPacketInfo.remainingLength = 14;</span></span>
+<span id="L3541"><span class="lineNum">    3541</span>              :     /* Set packet identifier. */</span>
+<span id="L3542"><span class="lineNum">    3542</span> <span class="tlaGNC">           2 :     buffer[ 0 ] = 0;</span></span>
+<span id="L3543"><span class="lineNum">    3543</span> <span class="tlaGNC">           2 :     buffer[ 1 ] = 1;</span></span>
+<span id="L3544"><span class="lineNum">    3544</span> <span class="tlaGNC">           2 :     buffer[2] = 0 ; </span></span>
+<span id="L3545"><span class="lineNum">    3545</span> <span class="tlaGNC">           2 :     buffer[3] = 0x01 ; </span></span>
+<span id="L3546"><span class="lineNum">    3546</span> <span class="tlaGNC">           2 :     buffer[4] = 0x02 ;</span></span>
+<span id="L3547"><span class="lineNum">    3547</span> <span class="tlaGNC">           2 :     buffer[5] = 0x80 ;</span></span>
+<span id="L3548"><span class="lineNum">    3548</span> <span class="tlaGNC">           2 :     buffer[6] = 0x83 ;</span></span>
+<span id="L3549"><span class="lineNum">    3549</span> <span class="tlaGNC">           2 :     buffer[7] = 0x87 ;</span></span>
+<span id="L3550"><span class="lineNum">    3550</span> <span class="tlaGNC">           2 :     buffer[8] = 0x8F ; </span></span>
+<span id="L3551"><span class="lineNum">    3551</span> <span class="tlaGNC">           2 :     buffer[9] = 0x91 ; </span></span>
+<span id="L3552"><span class="lineNum">    3552</span> <span class="tlaGNC">           2 :     buffer[10] = 0x97 ; </span></span>
+<span id="L3553"><span class="lineNum">    3553</span> <span class="tlaGNC">           2 :     buffer[11] = 0x9E ; </span></span>
+<span id="L3554"><span class="lineNum">    3554</span> <span class="tlaGNC">           2 :     buffer[12] = 0xA1 ; </span></span>
+<span id="L3555"><span class="lineNum">    3555</span> <span class="tlaGNC">           2 :     buffer[13] = 0xA2 ; </span></span>
+<span id="L3556"><span class="lineNum">    3556</span>              : </span>
+<span id="L3557"><span class="lineNum">    3557</span>              : </span>
+<span id="L3558"><span class="lineNum">    3558</span>              : </span>
+<span id="L3559"><span class="lineNum">    3559</span>              :     // /* Process a valid SUBACK with server refused response code. */</span>
+<span id="L3560"><span class="lineNum">    3560</span>              :     // mqttPacketInfo.remainingLength = 3;</span>
+<span id="L3561"><span class="lineNum">    3561</span>              :     // buffer[ 2 ] = 0x80;</span>
+<span id="L3562"><span class="lineNum">    3562</span>              :     // status = MQTT_DeserializeAck( &amp;mqttPacketInfo, &amp;packetIdentifier, &amp;sessionPresent );</span>
+<span id="L3563"><span class="lineNum">    3563</span>              :     // TEST_ASSERT_EQUAL_INT( MQTTServerRefused, status );</span>
+<span id="L3564"><span class="lineNum">    3564</span>              : </span>
+<span id="L3565"><span class="lineNum">    3565</span>              :     // /* Process a valid SUBACK with various server acceptance codes. */</span>
+<span id="L3566"><span class="lineNum">    3566</span>              :     // mqttPacketInfo.remainingLength = 5;</span>
+<span id="L3567"><span class="lineNum">    3567</span>              :     // buffer[ 2 ] = 0x00;</span>
+<span id="L3568"><span class="lineNum">    3568</span>              :     // buffer[ 3 ] = 0x01;</span>
+<span id="L3569"><span class="lineNum">    3569</span>              :     // buffer[ 4 ] = 0x02;</span>
+<span id="L3570"><span class="lineNum">    3570</span>              :     MQTTSubackProperties_t subackProperties;</span>
+<span id="L3571"><span class="lineNum">    3571</span> <span class="tlaGNC">           2 :     memset(&amp;subackProperties, 0, sizeof(subackProperties));</span></span>
+<span id="L3572"><span class="lineNum">    3572</span> <span class="tlaGNC">           2 :     status = MQTTV5_DeserializeSuback(&amp;subackProperties ,&amp;mqttPacketInfo ,  &amp;packetIdentifier);</span></span>
+<span id="L3573"><span class="lineNum">    3573</span>              :     // status = handleSuback( &amp;mqttPacketInfo, &amp;packetIdentifier);</span>
+<span id="L3574"><span class="lineNum">    3574</span> <span class="tlaGNC">           2 :     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );</span></span>
+<span id="L3575"><span class="lineNum">    3575</span> <span class="tlaGNC">           2 : }</span></span>
+<span id="L3576"><span class="lineNum">    3576</span>              : </span>
+<span id="L3577"><span class="lineNum">    3577</span>              :  </span>
         </pre>
               </td>
             </tr>

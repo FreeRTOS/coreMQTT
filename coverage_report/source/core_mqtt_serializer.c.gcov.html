@@ -31,18 +31,18 @@
             <td class="headerValue">base_coverage.info</td>
             <td></td>
             <td class="headerItem">Lines:</td>
-            <td class="headerCovTableEntryHi">97.3&nbsp;%</td>
+            <td class="headerCovTableEntryHi">99.2&nbsp;%</td>
             <td class="headerCovTableEntry">2043</td>
-            <td class="headerCovTableEntry">1987</td>
+            <td class="headerCovTableEntry">2026</td>
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2025-02-23 11:14:44</td>
+            <td class="headerValue">2025-02-24 10:15:39</td>
             <td></td>
             <td class="headerItem">Functions:</td>
-            <td class="headerCovTableEntryHi">98.9&nbsp;%</td>
+            <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
             <td class="headerCovTableEntry">90</td>
-            <td class="headerCovTableEntry">89</td>
+            <td class="headerCovTableEntry">90</td>
           </tr>
                   <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
                 </table>
@@ -1582,11 +1582,11 @@
 <span id="L1520"><span class="lineNum">    1520</span>              : </span>
 <span id="L1521"><span class="lineNum">    1521</span> <span class="tlaGNC">          16 :         return status;</span></span>
 <span id="L1522"><span class="lineNum">    1522</span>              :     }</span>
-<span id="L1523"><span class="lineNum">    1523</span> <span class="tlaGNC">          12 :     static MQTTStatus_t MQTT_GetSubscribePropertiesSize(MQTTSubscribeProperties_t *pSubscribeProperties, MQTTSubscriptionType_t subscriptionType )</span></span>
+<span id="L1523"><span class="lineNum">    1523</span> <span class="tlaGNC">          14 :     static MQTTStatus_t MQTT_GetSubscribePropertiesSize(MQTTSubscribeProperties_t *pSubscribeProperties, MQTTSubscriptionType_t subscriptionType )</span></span>
 <span id="L1524"><span class="lineNum">    1524</span>              :     {</span>
-<span id="L1525"><span class="lineNum">    1525</span> <span class="tlaGNC">          12 :         size_t propertyLength = 0;</span></span>
-<span id="L1526"><span class="lineNum">    1526</span> <span class="tlaGNC">          12 :         MQTTStatus_t status = MQTTSuccess;</span></span>
-<span id="L1527"><span class="lineNum">    1527</span> <span class="tlaGNC">          12 :         if(subscriptionType == MQTT_SUBSCRIBE)</span></span>
+<span id="L1525"><span class="lineNum">    1525</span> <span class="tlaGNC">          14 :         size_t propertyLength = 0;</span></span>
+<span id="L1526"><span class="lineNum">    1526</span> <span class="tlaGNC">          14 :         MQTTStatus_t status = MQTTSuccess;</span></span>
+<span id="L1527"><span class="lineNum">    1527</span> <span class="tlaGNC">          14 :         if(subscriptionType == MQTT_SUBSCRIBE)</span></span>
 <span id="L1528"><span class="lineNum">    1528</span>              :         {</span>
 <span id="L1529"><span class="lineNum">    1529</span> <span class="tlaGNC">          12 :             if(pSubscribeProperties-&gt;subscriptionId != 0 ){</span></span>
 <span id="L1530"><span class="lineNum">    1530</span> <span class="tlaGNC">          12 :                 propertyLength += 1U ; </span></span>
@@ -1595,24 +1595,24 @@
 <span id="L1533"><span class="lineNum">    1533</span>              :         }</span>
 <span id="L1534"><span class="lineNum">    1534</span>              :         #if ( MQTT_USER_PROPERTY_ENABLED )</span>
 <span id="L1535"><span class="lineNum">    1535</span>              :             /*Get the length of the user properties*/</span>
-<span id="L1536"><span class="lineNum">    1536</span> <span class="tlaGNC">          12 :             if( ( status == MQTTSuccess ) &amp;&amp; ( pSubscribeProperties-&gt;pUserProperties != NULL ) )</span></span>
+<span id="L1536"><span class="lineNum">    1536</span> <span class="tlaGNC">          14 :             if( ( status == MQTTSuccess ) &amp;&amp; ( pSubscribeProperties-&gt;pUserProperties != NULL ) )</span></span>
 <span id="L1537"><span class="lineNum">    1537</span>              :             {</span>
 <span id="L1538"><span class="lineNum">    1538</span> <span class="tlaGNC">           8 :                 status = MQTT_GetUserPropertySize( pSubscribeProperties-&gt;pUserProperties-&gt;userProperty, pSubscribeProperties-&gt;pUserProperties-&gt;count, &amp;propertyLength );</span></span>
 <span id="L1539"><span class="lineNum">    1539</span>              :             }</span>
 <span id="L1540"><span class="lineNum">    1540</span>              :         #endif</span>
 <span id="L1541"><span class="lineNum">    1541</span>              : </span>
 <span id="L1542"><span class="lineNum">    1542</span>              :         /*Variable length encoded values cannot have a value of more than 268435455U*/</span>
-<span id="L1543"><span class="lineNum">    1543</span> <span class="tlaGNC">          12 :         if( ( status == MQTTSuccess ) &amp;&amp; ( pSubscribeProperties-&gt;propertyLength &gt; MQTT_MAX_REMAINING_LENGTH ) )</span></span>
+<span id="L1543"><span class="lineNum">    1543</span> <span class="tlaGNC">          14 :         if( ( status == MQTTSuccess ) &amp;&amp; ( pSubscribeProperties-&gt;propertyLength &gt; MQTT_MAX_REMAINING_LENGTH ) )</span></span>
 <span id="L1544"><span class="lineNum">    1544</span>              :         {</span>
 <span id="L1545"><span class="lineNum">    1545</span> <span class="tlaUNC tlaBgUNC">           0 :             status = MQTTBadParameter;</span></span>
 <span id="L1546"><span class="lineNum">    1546</span>              :         }</span>
 <span id="L1547"><span class="lineNum">    1547</span>              : </span>
-<span id="L1548"><span class="lineNum">    1548</span> <span class="tlaGNC tlaBgGNC">          12 :         if( status == MQTTSuccess )</span></span>
+<span id="L1548"><span class="lineNum">    1548</span> <span class="tlaGNC tlaBgGNC">          14 :         if( status == MQTTSuccess )</span></span>
 <span id="L1549"><span class="lineNum">    1549</span>              :         {</span>
-<span id="L1550"><span class="lineNum">    1550</span> <span class="tlaGNC">          12 :             pSubscribeProperties-&gt;propertyLength = propertyLength;</span></span>
+<span id="L1550"><span class="lineNum">    1550</span> <span class="tlaGNC">          14 :             pSubscribeProperties-&gt;propertyLength = propertyLength;</span></span>
 <span id="L1551"><span class="lineNum">    1551</span>              :         }</span>
 <span id="L1552"><span class="lineNum">    1552</span>              : </span>
-<span id="L1553"><span class="lineNum">    1553</span> <span class="tlaGNC">          12 :         return status;</span></span>
+<span id="L1553"><span class="lineNum">    1553</span> <span class="tlaGNC">          14 :         return status;</span></span>
 <span id="L1554"><span class="lineNum">    1554</span>              :     }</span>
 <span id="L1555"><span class="lineNum">    1555</span> <span class="tlaGNC">         116 :     static MQTTStatus_t MQTT_GetConnectPropertiesSize( MQTTConnectProperties_t * pConnectProperties )</span></span>
 <span id="L1556"><span class="lineNum">    1556</span>              :     {</span>
@@ -2041,20 +2041,20 @@
 <span id="L1979"><span class="lineNum">    1979</span> <span class="tlaGNC">         138 :         return status;</span></span>
 <span id="L1980"><span class="lineNum">    1980</span>              :     }</span>
 <span id="L1981"><span class="lineNum">    1981</span>              : </span>
-<span id="L1982"><span class="lineNum">    1982</span> <span class="tlaGNC">          96 :     static MQTTStatus_t decodeVariableLength( const uint8_t * pBuffer,</span></span>
+<span id="L1982"><span class="lineNum">    1982</span> <span class="tlaGNC">          98 :     static MQTTStatus_t decodeVariableLength( const uint8_t * pBuffer,</span></span>
 <span id="L1983"><span class="lineNum">    1983</span>              :                                               size_t * pLength )</span>
 <span id="L1984"><span class="lineNum">    1984</span>              :     {</span>
-<span id="L1985"><span class="lineNum">    1985</span> <span class="tlaGNC">          96 :         size_t remainingLength = 0;</span></span>
-<span id="L1986"><span class="lineNum">    1986</span> <span class="tlaGNC">          96 :         size_t multiplier = 1;</span></span>
-<span id="L1987"><span class="lineNum">    1987</span> <span class="tlaGNC">          96 :         size_t bytesDecoded = 0;</span></span>
-<span id="L1988"><span class="lineNum">    1988</span> <span class="tlaGNC">          96 :         size_t expectedSize = 0;</span></span>
-<span id="L1989"><span class="lineNum">    1989</span> <span class="tlaGNC">          96 :         uint8_t encodedByte = 0;</span></span>
-<span id="L1990"><span class="lineNum">    1990</span> <span class="tlaGNC">          96 :         MQTTStatus_t status = MQTTSuccess;</span></span>
+<span id="L1985"><span class="lineNum">    1985</span> <span class="tlaGNC">          98 :         size_t remainingLength = 0;</span></span>
+<span id="L1986"><span class="lineNum">    1986</span> <span class="tlaGNC">          98 :         size_t multiplier = 1;</span></span>
+<span id="L1987"><span class="lineNum">    1987</span> <span class="tlaGNC">          98 :         size_t bytesDecoded = 0;</span></span>
+<span id="L1988"><span class="lineNum">    1988</span> <span class="tlaGNC">          98 :         size_t expectedSize = 0;</span></span>
+<span id="L1989"><span class="lineNum">    1989</span> <span class="tlaGNC">          98 :         uint8_t encodedByte = 0;</span></span>
+<span id="L1990"><span class="lineNum">    1990</span> <span class="tlaGNC">          98 :         MQTTStatus_t status = MQTTSuccess;</span></span>
 <span id="L1991"><span class="lineNum">    1991</span>              : </span>
 <span id="L1992"><span class="lineNum">    1992</span>              :         /* This algorithm is copied from the MQTT v3.1.1 spec. */</span>
 <span id="L1993"><span class="lineNum">    1993</span>              :         do</span>
 <span id="L1994"><span class="lineNum">    1994</span>              :         {</span>
-<span id="L1995"><span class="lineNum">    1995</span> <span class="tlaGNC">         130 :             if( multiplier &gt; 2097152U ) /* 128 ^ 3 */</span></span>
+<span id="L1995"><span class="lineNum">    1995</span> <span class="tlaGNC">         126 :             if( multiplier &gt; 2097152U ) /* 128 ^ 3 */</span></span>
 <span id="L1996"><span class="lineNum">    1996</span>              :             {</span>
 <span id="L1997"><span class="lineNum">    1997</span> <span class="tlaGNC">           4 :                 remainingLength = MQTT_REMAINING_LENGTH_INVALID;</span></span>
 <span id="L1998"><span class="lineNum">    1998</span>              : </span>
@@ -2066,37 +2066,37 @@
 <span id="L2004"><span class="lineNum">    2004</span>              :             {</span>
 <span id="L2005"><span class="lineNum">    2005</span>              :                 /* Get the next byte. It is at the next position after the bytes</span>
 <span id="L2006"><span class="lineNum">    2006</span>              :                  * decoded till now since the header of one byte was read before. */</span>
-<span id="L2007"><span class="lineNum">    2007</span> <span class="tlaGNC">         126 :                 encodedByte = pBuffer[ bytesDecoded ];</span></span>
-<span id="L2008"><span class="lineNum">    2008</span> <span class="tlaGNC">         126 :                 remainingLength += ( ( size_t ) encodedByte &amp; 0x7FU ) * multiplier;</span></span>
-<span id="L2009"><span class="lineNum">    2009</span> <span class="tlaGNC">         126 :                 multiplier *= 128U;</span></span>
-<span id="L2010"><span class="lineNum">    2010</span> <span class="tlaGNC">         126 :                 bytesDecoded++;</span></span>
+<span id="L2007"><span class="lineNum">    2007</span> <span class="tlaGNC">         122 :                 encodedByte = pBuffer[ bytesDecoded ];</span></span>
+<span id="L2008"><span class="lineNum">    2008</span> <span class="tlaGNC">         122 :                 remainingLength += ( ( size_t ) encodedByte &amp; 0x7FU ) * multiplier;</span></span>
+<span id="L2009"><span class="lineNum">    2009</span> <span class="tlaGNC">         122 :                 multiplier *= 128U;</span></span>
+<span id="L2010"><span class="lineNum">    2010</span> <span class="tlaGNC">         122 :                 bytesDecoded++;</span></span>
 <span id="L2011"><span class="lineNum">    2011</span>              :             }</span>
 <span id="L2012"><span class="lineNum">    2012</span>              : </span>
 <span id="L2013"><span class="lineNum">    2013</span>              :             /* If the response is incorrect then</span>
 <span id="L2014"><span class="lineNum">    2014</span>              :              * break out of the loop. */</span>
-<span id="L2015"><span class="lineNum">    2015</span> <span class="tlaGNC">         130 :             if( remainingLength == MQTT_REMAINING_LENGTH_INVALID )</span></span>
+<span id="L2015"><span class="lineNum">    2015</span> <span class="tlaGNC">         126 :             if( remainingLength == MQTT_REMAINING_LENGTH_INVALID )</span></span>
 <span id="L2016"><span class="lineNum">    2016</span>              :             {</span>
 <span id="L2017"><span class="lineNum">    2017</span> <span class="tlaGNC">           4 :                 break;</span></span>
 <span id="L2018"><span class="lineNum">    2018</span>              :             }</span>
-<span id="L2019"><span class="lineNum">    2019</span> <span class="tlaGNC">         126 :         } while( ( encodedByte &amp; 0x80U ) != 0U );</span></span>
+<span id="L2019"><span class="lineNum">    2019</span> <span class="tlaGNC">         122 :         } while( ( encodedByte &amp; 0x80U ) != 0U );</span></span>
 <span id="L2020"><span class="lineNum">    2020</span>              : </span>
-<span id="L2021"><span class="lineNum">    2021</span> <span class="tlaGNC">          96 :         if( status == MQTTSuccess )</span></span>
+<span id="L2021"><span class="lineNum">    2021</span> <span class="tlaGNC">          98 :         if( status == MQTTSuccess )</span></span>
 <span id="L2022"><span class="lineNum">    2022</span>              :         {</span>
 <span id="L2023"><span class="lineNum">    2023</span>              :             /* Check that the decoded remaining length conforms to the MQTT specification. */</span>
-<span id="L2024"><span class="lineNum">    2024</span> <span class="tlaGNC">          92 :             expectedSize = remainingLengthEncodedSize( remainingLength );</span></span>
+<span id="L2024"><span class="lineNum">    2024</span> <span class="tlaGNC">          94 :             expectedSize = remainingLengthEncodedSize( remainingLength );</span></span>
 <span id="L2025"><span class="lineNum">    2025</span>              : </span>
-<span id="L2026"><span class="lineNum">    2026</span> <span class="tlaGNC">          92 :             if( bytesDecoded != expectedSize )</span></span>
+<span id="L2026"><span class="lineNum">    2026</span> <span class="tlaGNC">          94 :             if( bytesDecoded != expectedSize )</span></span>
 <span id="L2027"><span class="lineNum">    2027</span>              :             {</span>
 <span id="L2028"><span class="lineNum">    2028</span> <span class="tlaGNC">           4 :                 LogError( ( &quot;Expected and actual length of decoded bytes do not match.\n&quot; ) );</span></span>
 <span id="L2029"><span class="lineNum">    2029</span> <span class="tlaGNC">           4 :                 status = MQTTBadResponse;</span></span>
 <span id="L2030"><span class="lineNum">    2030</span>              :             }</span>
 <span id="L2031"><span class="lineNum">    2031</span>              :             else</span>
 <span id="L2032"><span class="lineNum">    2032</span>              :             {</span>
-<span id="L2033"><span class="lineNum">    2033</span> <span class="tlaGNC">          88 :                 *pLength = remainingLength;</span></span>
+<span id="L2033"><span class="lineNum">    2033</span> <span class="tlaGNC">          90 :                 *pLength = remainingLength;</span></span>
 <span id="L2034"><span class="lineNum">    2034</span>              :             }</span>
 <span id="L2035"><span class="lineNum">    2035</span>              :         }</span>
 <span id="L2036"><span class="lineNum">    2036</span>              : </span>
-<span id="L2037"><span class="lineNum">    2037</span> <span class="tlaGNC">          96 :         return status;</span></span>
+<span id="L2037"><span class="lineNum">    2037</span> <span class="tlaGNC">          98 :         return status;</span></span>
 <span id="L2038"><span class="lineNum">    2038</span>              :     }</span>
 <span id="L2039"><span class="lineNum">    2039</span>              : </span>
 <span id="L2040"><span class="lineNum">    2040</span> <span class="tlaGNC">          12 :     static MQTTStatus_t decodeuint32_t( uint32_t * pProperty,</span></span>
@@ -2761,46 +2761,46 @@
 <span id="L2699"><span class="lineNum">    2699</span>              :     }</span>
 <span id="L2700"><span class="lineNum">    2700</span>              : </span>
 <span id="L2701"><span class="lineNum">    2701</span>              : </span>
-<span id="L2702"><span class="lineNum">    2702</span> <span class="tlaGNC">          12 :     static MQTTStatus_t calculateSubscriptionPacketSizeV5(MQTTSubscribeInfo_t *pSubscriptionList,</span></span>
+<span id="L2702"><span class="lineNum">    2702</span> <span class="tlaGNC">          14 :     static MQTTStatus_t calculateSubscriptionPacketSizeV5(MQTTSubscribeInfo_t *pSubscriptionList,</span></span>
 <span id="L2703"><span class="lineNum">    2703</span>              :                                                      MQTTSubscribeProperties_t *pSubscribeProperties,</span>
 <span id="L2704"><span class="lineNum">    2704</span>              :                                                      size_t subscriptionCount,</span>
 <span id="L2705"><span class="lineNum">    2705</span>              :                                                      size_t *pRemainingLength,</span>
 <span id="L2706"><span class="lineNum">    2706</span>              :                                                      size_t *pPacketSize, </span>
 <span id="L2707"><span class="lineNum">    2707</span>              :                                                      MQTTSubscriptionType_t subscriptionType)</span>
 <span id="L2708"><span class="lineNum">    2708</span>              :     {</span>
-<span id="L2709"><span class="lineNum">    2709</span> <span class="tlaGNC">          12 :         size_t packetSize = 0U , i = 0; </span></span>
-<span id="L2710"><span class="lineNum">    2710</span> <span class="tlaGNC">          12 :         MQTTStatus_t status = MQTTSuccess ; </span></span>
-<span id="L2711"><span class="lineNum">    2711</span> <span class="tlaGNC">          12 :         assert( pSubscriptionList != NULL );</span></span>
-<span id="L2712"><span class="lineNum">    2712</span> <span class="tlaGNC">          12 :         assert( subscriptionCount != 0U );</span></span>
+<span id="L2709"><span class="lineNum">    2709</span> <span class="tlaGNC">          14 :         size_t packetSize = 0U , i = 0; </span></span>
+<span id="L2710"><span class="lineNum">    2710</span> <span class="tlaGNC">          14 :         MQTTStatus_t status = MQTTSuccess ; </span></span>
+<span id="L2711"><span class="lineNum">    2711</span> <span class="tlaGNC">          14 :         assert( pSubscriptionList != NULL );</span></span>
+<span id="L2712"><span class="lineNum">    2712</span> <span class="tlaGNC">          14 :         assert( subscriptionCount != 0U );</span></span>
 <span id="L2713"><span class="lineNum">    2713</span>              : </span>
 <span id="L2714"><span class="lineNum">    2714</span>              :         /*2 byte packet id*/</span>
-<span id="L2715"><span class="lineNum">    2715</span> <span class="tlaGNC">          12 :         packetSize += sizeof( uint16_t ) ; </span></span>
+<span id="L2715"><span class="lineNum">    2715</span> <span class="tlaGNC">          14 :         packetSize += sizeof( uint16_t ) ; </span></span>
 <span id="L2716"><span class="lineNum">    2716</span>              :         /* Length of properties */</span>
 <span id="L2717"><span class="lineNum">    2717</span>              : </span>
-<span id="L2718"><span class="lineNum">    2718</span> <span class="tlaGNC">          12 :         status = MQTT_GetSubscribePropertiesSize(pSubscribeProperties, subscriptionType) ; </span></span>
-<span id="L2719"><span class="lineNum">    2719</span> <span class="tlaGNC">          12 :         LogDebug((&quot;Property Length is %lu&quot; , (unsigned long)pSubscribeProperties-&gt;propertyLength ));</span></span>
-<span id="L2720"><span class="lineNum">    2720</span> <span class="tlaGNC">          12 :         if( status == MQTTSuccess )</span></span>
+<span id="L2718"><span class="lineNum">    2718</span> <span class="tlaGNC">          14 :         status = MQTT_GetSubscribePropertiesSize(pSubscribeProperties, subscriptionType) ; </span></span>
+<span id="L2719"><span class="lineNum">    2719</span> <span class="tlaGNC">          14 :         LogDebug((&quot;Property Length is %lu&quot; , (unsigned long)pSubscribeProperties-&gt;propertyLength ));</span></span>
+<span id="L2720"><span class="lineNum">    2720</span> <span class="tlaGNC">          14 :         if( status == MQTTSuccess )</span></span>
 <span id="L2721"><span class="lineNum">    2721</span>              :         {</span>
-<span id="L2722"><span class="lineNum">    2722</span> <span class="tlaGNC">          12 :             packetSize += pSubscribeProperties-&gt;propertyLength;</span></span>
-<span id="L2723"><span class="lineNum">    2723</span> <span class="tlaGNC">          12 :             packetSize += remainingLengthEncodedSize( pSubscribeProperties-&gt;propertyLength );</span></span>
+<span id="L2722"><span class="lineNum">    2722</span> <span class="tlaGNC">          14 :             packetSize += pSubscribeProperties-&gt;propertyLength;</span></span>
+<span id="L2723"><span class="lineNum">    2723</span> <span class="tlaGNC">          14 :             packetSize += remainingLengthEncodedSize( pSubscribeProperties-&gt;propertyLength );</span></span>
 <span id="L2724"><span class="lineNum">    2724</span>              :         }</span>
 <span id="L2725"><span class="lineNum">    2725</span>              : </span>
 <span id="L2726"><span class="lineNum">    2726</span>              : </span>
-<span id="L2727"><span class="lineNum">    2727</span> <span class="tlaGNC">          12 :         if(status == MQTTSuccess){</span></span>
-<span id="L2728"><span class="lineNum">    2728</span> <span class="tlaGNC">        8210 :             for(i = 0 ; i &lt; subscriptionCount ; i++){</span></span>
-<span id="L2729"><span class="lineNum">    2729</span> <span class="tlaGNC">        8204 :                 if((pSubscriptionList[i].topicFilterLength == 0U) || (pSubscriptionList[i].pTopicFilter== NULL)){</span></span>
+<span id="L2727"><span class="lineNum">    2727</span> <span class="tlaGNC">          14 :         if(status == MQTTSuccess){</span></span>
+<span id="L2728"><span class="lineNum">    2728</span> <span class="tlaGNC">        8214 :             for(i = 0 ; i &lt; subscriptionCount ; i++){</span></span>
+<span id="L2729"><span class="lineNum">    2729</span> <span class="tlaGNC">        8206 :                 if((pSubscriptionList[i].topicFilterLength == 0U) || (pSubscriptionList[i].pTopicFilter== NULL)){</span></span>
 <span id="L2730"><span class="lineNum">    2730</span> <span class="tlaGNC">           6 :                     LogError((&quot;Argument cannot be null : pTopicFilter&quot;)) ; </span></span>
 <span id="L2731"><span class="lineNum">    2731</span> <span class="tlaGNC">           6 :                     status = MQTTBadParameter;</span></span>
 <span id="L2732"><span class="lineNum">    2732</span> <span class="tlaGNC">           6 :                     break ;</span></span>
 <span id="L2733"><span class="lineNum">    2733</span>              :                 }</span>
-<span id="L2734"><span class="lineNum">    2734</span> <span class="tlaGNC">        8198 :                 packetSize += pSubscriptionList[i].topicFilterLength + sizeof(uint16_t) ; </span></span>
-<span id="L2735"><span class="lineNum">    2735</span> <span class="tlaGNC">        8198 :                 if(subscriptionType == MQTT_SUBSCRIBE)</span></span>
+<span id="L2734"><span class="lineNum">    2734</span> <span class="tlaGNC">        8200 :                 packetSize += pSubscriptionList[i].topicFilterLength + sizeof(uint16_t) ; </span></span>
+<span id="L2735"><span class="lineNum">    2735</span> <span class="tlaGNC">        8200 :                 if(subscriptionType == MQTT_SUBSCRIBE)</span></span>
 <span id="L2736"><span class="lineNum">    2736</span>              :                 {</span>
 <span id="L2737"><span class="lineNum">    2737</span> <span class="tlaGNC">        8198 :                     packetSize += 1U ; </span></span>
 <span id="L2738"><span class="lineNum">    2738</span>              :                 }</span>
 <span id="L2739"><span class="lineNum">    2739</span>              :             }</span>
 <span id="L2740"><span class="lineNum">    2740</span>              :         }</span>
-<span id="L2741"><span class="lineNum">    2741</span> <span class="tlaGNC">          12 :         if( packetSize &gt; MQTT_MAX_REMAINING_LENGTH )</span></span>
+<span id="L2741"><span class="lineNum">    2741</span> <span class="tlaGNC">          14 :         if( packetSize &gt; MQTT_MAX_REMAINING_LENGTH )</span></span>
 <span id="L2742"><span class="lineNum">    2742</span>              :         {</span>
 <span id="L2743"><span class="lineNum">    2743</span> <span class="tlaGNC">           2 :             LogError( ( &quot;Subscribe packet size %lu exceeds %d. &quot;</span></span>
 <span id="L2744"><span class="lineNum">    2744</span>              :                         &quot;Packet size cannot be greater than %d.&quot;,</span>
@@ -2809,16 +2809,16 @@
 <span id="L2747"><span class="lineNum">    2747</span>              :                         UINT16_MAX ) );</span>
 <span id="L2748"><span class="lineNum">    2748</span> <span class="tlaGNC">           2 :             status = MQTTBadParameter;</span></span>
 <span id="L2749"><span class="lineNum">    2749</span>              :         }</span>
-<span id="L2750"><span class="lineNum">    2750</span> <span class="tlaGNC">          12 :         if(status == MQTTSuccess){</span></span>
-<span id="L2751"><span class="lineNum">    2751</span> <span class="tlaGNC">           4 :             *pRemainingLength = packetSize ; </span></span>
-<span id="L2752"><span class="lineNum">    2752</span> <span class="tlaGNC">           4 :             packetSize += 1U + remainingLengthEncodedSize(packetSize) ;</span></span>
-<span id="L2753"><span class="lineNum">    2753</span> <span class="tlaGNC">           4 :             *pPacketSize = packetSize ; </span></span>
+<span id="L2750"><span class="lineNum">    2750</span> <span class="tlaGNC">          14 :         if(status == MQTTSuccess){</span></span>
+<span id="L2751"><span class="lineNum">    2751</span> <span class="tlaGNC">           6 :             *pRemainingLength = packetSize ; </span></span>
+<span id="L2752"><span class="lineNum">    2752</span> <span class="tlaGNC">           6 :             packetSize += 1U + remainingLengthEncodedSize(packetSize) ;</span></span>
+<span id="L2753"><span class="lineNum">    2753</span> <span class="tlaGNC">           6 :             *pPacketSize = packetSize ; </span></span>
 <span id="L2754"><span class="lineNum">    2754</span>              : </span>
 <span id="L2755"><span class="lineNum">    2755</span>              :         }</span>
-<span id="L2756"><span class="lineNum">    2756</span> <span class="tlaGNC">          12 :         LogDebug( ( &quot;Subscription packet remaining length=%lu and packet size=%lu.&quot;,</span></span>
+<span id="L2756"><span class="lineNum">    2756</span> <span class="tlaGNC">          14 :         LogDebug( ( &quot;Subscription packet remaining length=%lu and packet size=%lu.&quot;,</span></span>
 <span id="L2757"><span class="lineNum">    2757</span>              :                     ( unsigned long ) *pRemainingLength,</span>
 <span id="L2758"><span class="lineNum">    2758</span>              :                     ( unsigned long ) *pPacketSize ) );</span>
-<span id="L2759"><span class="lineNum">    2759</span> <span class="tlaGNC">          12 :         return status ; </span></span>
+<span id="L2759"><span class="lineNum">    2759</span> <span class="tlaGNC">          14 :         return status ; </span></span>
 <span id="L2760"><span class="lineNum">    2760</span>              :     }</span>
 <span id="L2761"><span class="lineNum">    2761</span> <span class="tlaGNC">          20 :     MQTTStatus_t MQTTV5_GetSubscribePacketSize(MQTTSubscribeInfo_t *pSubscriptionList,</span></span>
 <span id="L2762"><span class="lineNum">    2762</span>              :                                             MQTTSubscribeProperties_t * pSubscribeProperties,</span>
@@ -2960,7 +2960,7 @@
 <span id="L2898"><span class="lineNum">    2898</span>              : #endif /* if ( MQTT_VERSION_5_ENABLED ) */</span>
 <span id="L2899"><span class="lineNum">    2899</span>              : /*-----------------------------------------------------------*/</span>
 <span id="L2900"><span class="lineNum">    2900</span>              : </span>
-<span id="L2901"><span class="lineNum">    2901</span> <span class="tlaGNC">         914 : static size_t remainingLengthEncodedSize( size_t length )</span></span>
+<span id="L2901"><span class="lineNum">    2901</span> <span class="tlaGNC">         926 : static size_t remainingLengthEncodedSize( size_t length )</span></span>
 <span id="L2902"><span class="lineNum">    2902</span>              : {</span>
 <span id="L2903"><span class="lineNum">    2903</span>              :     size_t encodedSize;</span>
 <span id="L2904"><span class="lineNum">    2904</span>              : </span>
@@ -2968,31 +2968,31 @@
 <span id="L2906"><span class="lineNum">    2906</span>              :      * The values below are taken from the MQTT 3.1.1 spec. */</span>
 <span id="L2907"><span class="lineNum">    2907</span>              : </span>
 <span id="L2908"><span class="lineNum">    2908</span>              :     /* 1 byte is needed to encode lengths between 0 and 127. */</span>
-<span id="L2909"><span class="lineNum">    2909</span> <span class="tlaGNC">         914 :     if( length &lt; 128U )</span></span>
+<span id="L2909"><span class="lineNum">    2909</span> <span class="tlaGNC">         926 :     if( length &lt; 128U )</span></span>
 <span id="L2910"><span class="lineNum">    2910</span>              :     {</span>
-<span id="L2911"><span class="lineNum">    2911</span> <span class="tlaGNC">         865 :         encodedSize = 1U;</span></span>
+<span id="L2911"><span class="lineNum">    2911</span> <span class="tlaGNC">         880 :         encodedSize = 1U;</span></span>
 <span id="L2912"><span class="lineNum">    2912</span>              :     }</span>
 <span id="L2913"><span class="lineNum">    2913</span>              :     /* 2 bytes are needed to encode lengths between 128 and 16,383. */</span>
-<span id="L2914"><span class="lineNum">    2914</span> <span class="tlaGNC">          49 :     else if( length &lt; 16384U )</span></span>
+<span id="L2914"><span class="lineNum">    2914</span> <span class="tlaGNC">          46 :     else if( length &lt; 16384U )</span></span>
 <span id="L2915"><span class="lineNum">    2915</span>              :     {</span>
 <span id="L2916"><span class="lineNum">    2916</span> <span class="tlaGNC">          12 :         encodedSize = 2U;</span></span>
 <span id="L2917"><span class="lineNum">    2917</span>              :     }</span>
 <span id="L2918"><span class="lineNum">    2918</span>              :     /* 3 bytes are needed to encode lengths between 16,384 and 2,097,151. */</span>
-<span id="L2919"><span class="lineNum">    2919</span> <span class="tlaGNC">          37 :     else if( length &lt; 2097152U )</span></span>
+<span id="L2919"><span class="lineNum">    2919</span> <span class="tlaGNC">          34 :     else if( length &lt; 2097152U )</span></span>
 <span id="L2920"><span class="lineNum">    2920</span>              :     {</span>
 <span id="L2921"><span class="lineNum">    2921</span> <span class="tlaGNC">          20 :         encodedSize = 3U;</span></span>
 <span id="L2922"><span class="lineNum">    2922</span>              :     }</span>
 <span id="L2923"><span class="lineNum">    2923</span>              :     /* 4 bytes are needed to encode lengths between 2,097,152 and 268,435,455. */</span>
 <span id="L2924"><span class="lineNum">    2924</span>              :     else</span>
 <span id="L2925"><span class="lineNum">    2925</span>              :     {</span>
-<span id="L2926"><span class="lineNum">    2926</span> <span class="tlaGNC">          17 :         encodedSize = 4U;</span></span>
+<span id="L2926"><span class="lineNum">    2926</span> <span class="tlaGNC">          14 :         encodedSize = 4U;</span></span>
 <span id="L2927"><span class="lineNum">    2927</span>              :     }</span>
 <span id="L2928"><span class="lineNum">    2928</span>              : </span>
-<span id="L2929"><span class="lineNum">    2929</span> <span class="tlaGNC">         914 :     LogDebug( ( &quot;Encoded size for length %lu is %lu bytes.&quot;,</span></span>
+<span id="L2929"><span class="lineNum">    2929</span> <span class="tlaGNC">         926 :     LogDebug( ( &quot;Encoded size for length %lu is %lu bytes.&quot;,</span></span>
 <span id="L2930"><span class="lineNum">    2930</span>              :                 ( unsigned long ) length,</span>
 <span id="L2931"><span class="lineNum">    2931</span>              :                 ( unsigned long ) encodedSize ) );</span>
 <span id="L2932"><span class="lineNum">    2932</span>              : </span>
-<span id="L2933"><span class="lineNum">    2933</span> <span class="tlaGNC">         914 :     return encodedSize;</span></span>
+<span id="L2933"><span class="lineNum">    2933</span> <span class="tlaGNC">         926 :     return encodedSize;</span></span>
 <span id="L2934"><span class="lineNum">    2934</span>              : }</span>
 <span id="L2935"><span class="lineNum">    2935</span>              : </span>
 <span id="L2936"><span class="lineNum">    2936</span>              : /*-----------------------------------------------------------*/</span>
@@ -4506,34 +4506,34 @@
 <span id="L4444"><span class="lineNum">    4444</span>              : </span>
 <span id="L4445"><span class="lineNum">    4445</span>              : /*-----------------------------------------------------------*/</span>
 <span id="L4446"><span class="lineNum">    4446</span>              : #if(MQTT_VERSION_5_ENABLED)</span>
-<span id="L4447"><span class="lineNum">    4447</span> <span class="tlaUNC tlaBgUNC">           0 : MQTTStatus_t MQTTV5_GetUnsubscribePacketSize( const MQTTSubscribeInfo_t * pSubscriptionList,</span></span>
+<span id="L4447"><span class="lineNum">    4447</span> <span class="tlaGNC">           6 : MQTTStatus_t MQTTV5_GetUnsubscribePacketSize( const MQTTSubscribeInfo_t * pSubscriptionList,</span></span>
 <span id="L4448"><span class="lineNum">    4448</span>              :                                             MQTTSubscribeProperties_t * subscribeProperties,</span>
 <span id="L4449"><span class="lineNum">    4449</span>              :                                             size_t subscriptionCount,</span>
 <span id="L4450"><span class="lineNum">    4450</span>              :                                             size_t * pRemainingLength,</span>
 <span id="L4451"><span class="lineNum">    4451</span>              :                                             size_t * pPacketSize )</span>
 <span id="L4452"><span class="lineNum">    4452</span>              : {</span>
-<span id="L4453"><span class="lineNum">    4453</span> <span class="tlaUNC">           0 :     MQTTStatus_t status = MQTTSuccess;</span></span>
+<span id="L4453"><span class="lineNum">    4453</span> <span class="tlaGNC">           6 :     MQTTStatus_t status = MQTTSuccess;</span></span>
 <span id="L4454"><span class="lineNum">    4454</span>              : </span>
 <span id="L4455"><span class="lineNum">    4455</span>              :     /* Validate parameters. */</span>
-<span id="L4456"><span class="lineNum">    4456</span> <span class="tlaUNC">           0 :     if( ( pSubscriptionList == NULL ) || ( pRemainingLength == NULL ) ||</span></span>
+<span id="L4456"><span class="lineNum">    4456</span> <span class="tlaGNC">           6 :     if( ( pSubscriptionList == NULL ) || ( pRemainingLength == NULL ) ||</span></span>
 <span id="L4457"><span class="lineNum">    4457</span>              :         ( pPacketSize == NULL ) )</span>
 <span id="L4458"><span class="lineNum">    4458</span>              :     {</span>
-<span id="L4459"><span class="lineNum">    4459</span> <span class="tlaUNC">           0 :         LogError( ( &quot;Argument cannot be NULL: pSubscriptionList=%p, &quot;</span></span>
+<span id="L4459"><span class="lineNum">    4459</span> <span class="tlaGNC">           2 :         LogError( ( &quot;Argument cannot be NULL: pSubscriptionList=%p, &quot;</span></span>
 <span id="L4460"><span class="lineNum">    4460</span>              :                     &quot;pRemainingLength=%p, pPacketSize=%p.&quot;,</span>
 <span id="L4461"><span class="lineNum">    4461</span>              :                     ( void * ) pSubscriptionList,</span>
 <span id="L4462"><span class="lineNum">    4462</span>              :                     ( void * ) pRemainingLength,</span>
 <span id="L4463"><span class="lineNum">    4463</span>              :                     ( void * ) pPacketSize ) );</span>
-<span id="L4464"><span class="lineNum">    4464</span> <span class="tlaUNC">           0 :         status = MQTTBadParameter;</span></span>
+<span id="L4464"><span class="lineNum">    4464</span> <span class="tlaGNC">           2 :         status = MQTTBadParameter;</span></span>
 <span id="L4465"><span class="lineNum">    4465</span>              :     }</span>
-<span id="L4466"><span class="lineNum">    4466</span> <span class="tlaUNC">           0 :     else if( subscriptionCount == 0U )</span></span>
+<span id="L4466"><span class="lineNum">    4466</span> <span class="tlaGNC">           4 :     else if( subscriptionCount == 0U )</span></span>
 <span id="L4467"><span class="lineNum">    4467</span>              :     {</span>
-<span id="L4468"><span class="lineNum">    4468</span> <span class="tlaUNC">           0 :         LogError( ( &quot;Subscription count is 0.&quot; ) );</span></span>
-<span id="L4469"><span class="lineNum">    4469</span> <span class="tlaUNC">           0 :         status = MQTTBadParameter;</span></span>
+<span id="L4468"><span class="lineNum">    4468</span> <span class="tlaGNC">           2 :         LogError( ( &quot;Subscription count is 0.&quot; ) );</span></span>
+<span id="L4469"><span class="lineNum">    4469</span> <span class="tlaGNC">           2 :         status = MQTTBadParameter;</span></span>
 <span id="L4470"><span class="lineNum">    4470</span>              :     }</span>
 <span id="L4471"><span class="lineNum">    4471</span>              :     else</span>
 <span id="L4472"><span class="lineNum">    4472</span>              :     {</span>
 <span id="L4473"><span class="lineNum">    4473</span>              :         /* Calculate the MQTT UNSUBSCRIBE packet size. */</span>
-<span id="L4474"><span class="lineNum">    4474</span> <span class="tlaUNC">           0 :         status = calculateSubscriptionPacketSizeV5( pSubscriptionList,</span></span>
+<span id="L4474"><span class="lineNum">    4474</span> <span class="tlaGNC">           2 :         status = calculateSubscriptionPacketSizeV5( pSubscriptionList,</span></span>
 <span id="L4475"><span class="lineNum">    4475</span>              :                                                 subscribeProperties,</span>
 <span id="L4476"><span class="lineNum">    4476</span>              :                                                 subscriptionCount,</span>
 <span id="L4477"><span class="lineNum">    4477</span>              :                                                 pRemainingLength,</span>
@@ -4541,11 +4541,11 @@
 <span id="L4479"><span class="lineNum">    4479</span>              :                                                 MQTT_UNSUBSCRIBE );</span>
 <span id="L4480"><span class="lineNum">    4480</span>              :     }</span>
 <span id="L4481"><span class="lineNum">    4481</span>              : </span>
-<span id="L4482"><span class="lineNum">    4482</span> <span class="tlaUNC">           0 :     return status;</span></span>
+<span id="L4482"><span class="lineNum">    4482</span> <span class="tlaGNC">           6 :     return status;</span></span>
 <span id="L4483"><span class="lineNum">    4483</span>              : }</span>
 <span id="L4484"><span class="lineNum">    4484</span>              : #endif</span>
 <span id="L4485"><span class="lineNum">    4485</span>              : </span>
-<span id="L4486"><span class="lineNum">    4486</span> <span class="tlaGNC tlaBgGNC">          18 : MQTTStatus_t MQTT_GetUnsubscribePacketSize( const MQTTSubscribeInfo_t * pSubscriptionList,</span></span>
+<span id="L4486"><span class="lineNum">    4486</span> <span class="tlaGNC">          18 : MQTTStatus_t MQTT_GetUnsubscribePacketSize( const MQTTSubscribeInfo_t * pSubscriptionList,</span></span>
 <span id="L4487"><span class="lineNum">    4487</span>              :                                             size_t subscriptionCount,</span>
 <span id="L4488"><span class="lineNum">    4488</span>              :                                             size_t * pRemainingLength,</span>
 <span id="L4489"><span class="lineNum">    4489</span>              :                                             size_t * pPacketSize )</span>
@@ -5738,86 +5738,86 @@
 <span id="L5676"><span class="lineNum">    5676</span>              : </span>
 <span id="L5677"><span class="lineNum">    5677</span> <span class="tlaGNC">          32 :         return status;</span></span>
 <span id="L5678"><span class="lineNum">    5678</span>              :     }</span>
-<span id="L5679"><span class="lineNum">    5679</span> <span class="tlaGNC">           2 :         static MQTTStatus_t readSubackStatusV5(size_t statusCount, const uint8_t* pStatusStart)</span></span>
+<span id="L5679"><span class="lineNum">    5679</span> <span class="tlaGNC">           4 :         static MQTTStatus_t readSubackStatusV5(size_t statusCount, const uint8_t* pStatusStart)</span></span>
 <span id="L5680"><span class="lineNum">    5680</span>              :     {</span>
-<span id="L5681"><span class="lineNum">    5681</span> <span class="tlaGNC">           2 :         MQTTStatus_t status = MQTTSuccess;</span></span>
-<span id="L5682"><span class="lineNum">    5682</span> <span class="tlaGNC">           2 :         uint8_t subscriptionStatus = 0;</span></span>
-<span id="L5683"><span class="lineNum">    5683</span> <span class="tlaGNC">           2 :         size_t i = 0;</span></span>
-<span id="L5684"><span class="lineNum">    5684</span> <span class="tlaGNC">           2 :         assert(pStatusStart != NULL);</span></span>
+<span id="L5681"><span class="lineNum">    5681</span> <span class="tlaGNC">           4 :         MQTTStatus_t status = MQTTSuccess;</span></span>
+<span id="L5682"><span class="lineNum">    5682</span> <span class="tlaGNC">           4 :         uint8_t subscriptionStatus = 0;</span></span>
+<span id="L5683"><span class="lineNum">    5683</span> <span class="tlaGNC">           4 :         size_t i = 0;</span></span>
+<span id="L5684"><span class="lineNum">    5684</span> <span class="tlaGNC">           4 :         assert(pStatusStart != NULL);</span></span>
 <span id="L5685"><span class="lineNum">    5685</span>              : </span>
-<span id="L5686"><span class="lineNum">    5686</span> <span class="tlaGNC">           4 :         for (i = 0; i &lt; statusCount; i++) {</span></span>
-<span id="L5687"><span class="lineNum">    5687</span> <span class="tlaGNC">           2 :             subscriptionStatus = pStatusStart[i];</span></span>
-<span id="L5688"><span class="lineNum">    5688</span> <span class="tlaGNC">           2 :             switch (subscriptionStatus)</span></span>
+<span id="L5686"><span class="lineNum">    5686</span> <span class="tlaGNC">          28 :         for (i = 0; i &lt; statusCount; i++) {</span></span>
+<span id="L5687"><span class="lineNum">    5687</span> <span class="tlaGNC">          24 :             subscriptionStatus = pStatusStart[i];</span></span>
+<span id="L5688"><span class="lineNum">    5688</span> <span class="tlaGNC">          24 :             switch (subscriptionStatus)</span></span>
 <span id="L5689"><span class="lineNum">    5689</span>              :             {</span>
 <span id="L5690"><span class="lineNum">    5690</span> <span class="tlaGNC">           2 :             case 0x00:</span></span>
 <span id="L5691"><span class="lineNum">    5691</span> <span class="tlaGNC">           2 :                 LogDebug((&quot;Pls work&quot;)); </span></span>
 <span id="L5692"><span class="lineNum">    5692</span> <span class="tlaGNC">           2 :                 break; </span></span>
-<span id="L5693"><span class="lineNum">    5693</span> <span class="tlaUNC tlaBgUNC">           0 :             case 0x01:</span></span>
+<span id="L5693"><span class="lineNum">    5693</span> <span class="tlaGNC">           4 :             case 0x01:</span></span>
 <span id="L5694"><span class="lineNum">    5694</span>              :             case 0x02:</span>
-<span id="L5695"><span class="lineNum">    5695</span> <span class="tlaUNC">           0 :                 LogDebug((&quot;Topic Filter %lu accepted, max QoS %u.&quot;,</span></span>
+<span id="L5695"><span class="lineNum">    5695</span> <span class="tlaGNC">           4 :                 LogDebug((&quot;Topic Filter %lu accepted, max QoS %u.&quot;,</span></span>
 <span id="L5696"><span class="lineNum">    5696</span>              :                     (unsigned long)i,</span>
 <span id="L5697"><span class="lineNum">    5697</span>              :                     (unsigned int)subscriptionStatus));</span>
-<span id="L5698"><span class="lineNum">    5698</span> <span class="tlaUNC">           0 :                 break; </span></span>
-<span id="L5699"><span class="lineNum">    5699</span> <span class="tlaUNC">           0 :             case 0x80:</span></span>
-<span id="L5700"><span class="lineNum">    5700</span> <span class="tlaUNC">           0 :                 LogWarn((&quot;Topic Filter Refused&quot;));</span></span>
+<span id="L5698"><span class="lineNum">    5698</span> <span class="tlaGNC">           4 :                 break; </span></span>
+<span id="L5699"><span class="lineNum">    5699</span> <span class="tlaGNC">           2 :             case 0x80:</span></span>
+<span id="L5700"><span class="lineNum">    5700</span> <span class="tlaGNC">           2 :                 LogWarn((&quot;Topic Filter Refused&quot;));</span></span>
 <span id="L5701"><span class="lineNum">    5701</span>              :                 /** case 83 , 87, 8F, 91 , 97, 9E, A1 , A2 */</span>
-<span id="L5702"><span class="lineNum">    5702</span> <span class="tlaUNC">           0 :                 break;</span></span>
-<span id="L5703"><span class="lineNum">    5703</span> <span class="tlaUNC">           0 :             case 0x83:</span></span>
-<span id="L5704"><span class="lineNum">    5704</span> <span class="tlaUNC">           0 :                 LogWarn((&quot;Implementation specific error.&quot;));</span></span>
-<span id="L5705"><span class="lineNum">    5705</span> <span class="tlaUNC">           0 :                 break; </span></span>
-<span id="L5706"><span class="lineNum">    5706</span> <span class="tlaUNC">           0 :             case 0x87:</span></span>
-<span id="L5707"><span class="lineNum">    5707</span> <span class="tlaUNC">           0 :                 LogWarn((&quot;Not authorized.&quot;));</span></span>
-<span id="L5708"><span class="lineNum">    5708</span> <span class="tlaUNC">           0 :             case 0x8F:</span></span>
-<span id="L5709"><span class="lineNum">    5709</span> <span class="tlaUNC">           0 :                 LogWarn((&quot;Topic Name Invalid.&quot;));</span></span>
-<span id="L5710"><span class="lineNum">    5710</span> <span class="tlaUNC">           0 :                 break;</span></span>
-<span id="L5711"><span class="lineNum">    5711</span> <span class="tlaUNC">           0 :             case 0x91:</span></span>
-<span id="L5712"><span class="lineNum">    5712</span> <span class="tlaUNC">           0 :                 LogWarn((&quot;Packet Identifier In Use.&quot;));</span></span>
-<span id="L5713"><span class="lineNum">    5713</span> <span class="tlaUNC">           0 :                 break;</span></span>
-<span id="L5714"><span class="lineNum">    5714</span> <span class="tlaUNC">           0 :             case 0x97:</span></span>
-<span id="L5715"><span class="lineNum">    5715</span> <span class="tlaUNC">           0 :                 LogWarn((&quot;Quota Exceeded.&quot;));</span></span>
-<span id="L5716"><span class="lineNum">    5716</span> <span class="tlaUNC">           0 :                 break; </span></span>
-<span id="L5717"><span class="lineNum">    5717</span> <span class="tlaUNC">           0 :             case 0x9E:</span></span>
-<span id="L5718"><span class="lineNum">    5718</span> <span class="tlaUNC">           0 :                 LogWarn((&quot;Shared Subscriptions Not Supported.&quot;));</span></span>
-<span id="L5719"><span class="lineNum">    5719</span> <span class="tlaUNC">           0 :                 break;</span></span>
-<span id="L5720"><span class="lineNum">    5720</span> <span class="tlaUNC">           0 :             case 0xA1:</span></span>
-<span id="L5721"><span class="lineNum">    5721</span> <span class="tlaUNC">           0 :                 LogWarn((&quot;Subscription Identifiers Not Supported.&quot;));</span></span>
-<span id="L5722"><span class="lineNum">    5722</span> <span class="tlaUNC">           0 :                 break;</span></span>
-<span id="L5723"><span class="lineNum">    5723</span> <span class="tlaUNC">           0 :             case 0xA2:</span></span>
-<span id="L5724"><span class="lineNum">    5724</span> <span class="tlaUNC">           0 :                 LogWarn((&quot;Wildcard Subscriptions Not Supported.&quot;));</span></span>
-<span id="L5725"><span class="lineNum">    5725</span> <span class="tlaUNC">           0 :                 break; </span></span>
-<span id="L5726"><span class="lineNum">    5726</span> <span class="tlaUNC">           0 :             default:</span></span>
+<span id="L5702"><span class="lineNum">    5702</span> <span class="tlaGNC">           2 :                 break;</span></span>
+<span id="L5703"><span class="lineNum">    5703</span> <span class="tlaGNC">           2 :             case 0x83:</span></span>
+<span id="L5704"><span class="lineNum">    5704</span> <span class="tlaGNC">           2 :                 LogWarn((&quot;Implementation specific error.&quot;));</span></span>
+<span id="L5705"><span class="lineNum">    5705</span> <span class="tlaGNC">           2 :                 break; </span></span>
+<span id="L5706"><span class="lineNum">    5706</span> <span class="tlaGNC">           2 :             case 0x87:</span></span>
+<span id="L5707"><span class="lineNum">    5707</span> <span class="tlaGNC">           2 :                 LogWarn((&quot;Not authorized.&quot;));</span></span>
+<span id="L5708"><span class="lineNum">    5708</span> <span class="tlaGNC">           4 :             case 0x8F:</span></span>
+<span id="L5709"><span class="lineNum">    5709</span> <span class="tlaGNC">           4 :                 LogWarn((&quot;Topic Name Invalid.&quot;));</span></span>
+<span id="L5710"><span class="lineNum">    5710</span> <span class="tlaGNC">           4 :                 break;</span></span>
+<span id="L5711"><span class="lineNum">    5711</span> <span class="tlaGNC">           2 :             case 0x91:</span></span>
+<span id="L5712"><span class="lineNum">    5712</span> <span class="tlaGNC">           2 :                 LogWarn((&quot;Packet Identifier In Use.&quot;));</span></span>
+<span id="L5713"><span class="lineNum">    5713</span> <span class="tlaGNC">           2 :                 break;</span></span>
+<span id="L5714"><span class="lineNum">    5714</span> <span class="tlaGNC">           2 :             case 0x97:</span></span>
+<span id="L5715"><span class="lineNum">    5715</span> <span class="tlaGNC">           2 :                 LogWarn((&quot;Quota Exceeded.&quot;));</span></span>
+<span id="L5716"><span class="lineNum">    5716</span> <span class="tlaGNC">           2 :                 break; </span></span>
+<span id="L5717"><span class="lineNum">    5717</span> <span class="tlaGNC">           2 :             case 0x9E:</span></span>
+<span id="L5718"><span class="lineNum">    5718</span> <span class="tlaGNC">           2 :                 LogWarn((&quot;Shared Subscriptions Not Supported.&quot;));</span></span>
+<span id="L5719"><span class="lineNum">    5719</span> <span class="tlaGNC">           2 :                 break;</span></span>
+<span id="L5720"><span class="lineNum">    5720</span> <span class="tlaGNC">           2 :             case 0xA1:</span></span>
+<span id="L5721"><span class="lineNum">    5721</span> <span class="tlaGNC">           2 :                 LogWarn((&quot;Subscription Identifiers Not Supported.&quot;));</span></span>
+<span id="L5722"><span class="lineNum">    5722</span> <span class="tlaGNC">           2 :                 break;</span></span>
+<span id="L5723"><span class="lineNum">    5723</span> <span class="tlaGNC">           2 :             case 0xA2:</span></span>
+<span id="L5724"><span class="lineNum">    5724</span> <span class="tlaGNC">           2 :                 LogWarn((&quot;Wildcard Subscriptions Not Supported.&quot;));</span></span>
+<span id="L5725"><span class="lineNum">    5725</span> <span class="tlaGNC">           2 :                 break; </span></span>
+<span id="L5726"><span class="lineNum">    5726</span> <span class="tlaUNC tlaBgUNC">           0 :             default:</span></span>
 <span id="L5727"><span class="lineNum">    5727</span> <span class="tlaUNC">           0 :                 LogError((&quot;Bad Subscribe status %u.&quot;,</span></span>
 <span id="L5728"><span class="lineNum">    5728</span>              :                     (unsigned int)subscriptionStatus));</span>
 <span id="L5729"><span class="lineNum">    5729</span> <span class="tlaUNC">           0 :                 status = MQTTBadResponse;</span></span>
 <span id="L5730"><span class="lineNum">    5730</span> <span class="tlaUNC">           0 :                 break;</span></span>
 <span id="L5731"><span class="lineNum">    5731</span>              :             }</span>
-<span id="L5732"><span class="lineNum">    5732</span> <span class="tlaGNC tlaBgGNC">           2 :             if (status == MQTTBadResponse)</span></span>
+<span id="L5732"><span class="lineNum">    5732</span> <span class="tlaGNC tlaBgGNC">          24 :             if (status == MQTTBadResponse)</span></span>
 <span id="L5733"><span class="lineNum">    5733</span>              :             {</span>
 <span id="L5734"><span class="lineNum">    5734</span> <span class="tlaUNC tlaBgUNC">           0 :                 break;</span></span>
 <span id="L5735"><span class="lineNum">    5735</span>              :             }</span>
 <span id="L5736"><span class="lineNum">    5736</span>              :         }</span>
-<span id="L5737"><span class="lineNum">    5737</span> <span class="tlaGNC tlaBgGNC">           2 :         return status;</span></span>
+<span id="L5737"><span class="lineNum">    5737</span> <span class="tlaGNC tlaBgGNC">           4 :         return status;</span></span>
 <span id="L5738"><span class="lineNum">    5738</span>              :     }</span>
 <span id="L5739"><span class="lineNum">    5739</span>              : </span>
-<span id="L5740"><span class="lineNum">    5740</span> <span class="tlaGNC">           2 :     static MQTTStatus_t deserializeSubackProperties(MQTTSubackProperties_t* pSubackProperties, const uint8_t* pIndex, size_t length)</span></span>
+<span id="L5740"><span class="lineNum">    5740</span> <span class="tlaGNC">           4 :     static MQTTStatus_t deserializeSubackProperties(MQTTSubackProperties_t* pSubackProperties, const uint8_t* pIndex, size_t length)</span></span>
 <span id="L5741"><span class="lineNum">    5741</span>              :     {</span>
-<span id="L5742"><span class="lineNum">    5742</span> <span class="tlaGNC">           2 :         MQTTStatus_t status = MQTTSuccess;</span></span>
-<span id="L5743"><span class="lineNum">    5743</span> <span class="tlaGNC">           2 :         size_t propertyLength = 0U;</span></span>
-<span id="L5744"><span class="lineNum">    5744</span> <span class="tlaGNC">           2 :         const uint8_t* pLocalIndex = pIndex;</span></span>
+<span id="L5742"><span class="lineNum">    5742</span> <span class="tlaGNC">           4 :         MQTTStatus_t status = MQTTSuccess;</span></span>
+<span id="L5743"><span class="lineNum">    5743</span> <span class="tlaGNC">           4 :         size_t propertyLength = 0U;</span></span>
+<span id="L5744"><span class="lineNum">    5744</span> <span class="tlaGNC">           4 :         const uint8_t* pLocalIndex = pIndex;</span></span>
 <span id="L5745"><span class="lineNum">    5745</span>              : </span>
 <span id="L5746"><span class="lineNum">    5746</span>              :         /*Decode Property Length */</span>
 <span id="L5747"><span class="lineNum">    5747</span>              : </span>
-<span id="L5748"><span class="lineNum">    5748</span> <span class="tlaGNC">           2 :         status = decodeVariableLength(pLocalIndex, &amp;propertyLength);</span></span>
-<span id="L5749"><span class="lineNum">    5749</span> <span class="tlaGNC">           2 :         pSubackProperties-&gt;propertyLength = propertyLength ; </span></span>
+<span id="L5748"><span class="lineNum">    5748</span> <span class="tlaGNC">           4 :         status = decodeVariableLength(pLocalIndex, &amp;propertyLength);</span></span>
+<span id="L5749"><span class="lineNum">    5749</span> <span class="tlaGNC">           4 :         pSubackProperties-&gt;propertyLength = propertyLength ; </span></span>
 <span id="L5750"><span class="lineNum">    5750</span>              : </span>
-<span id="L5751"><span class="lineNum">    5751</span> <span class="tlaGNC">           2 :         if (status == MQTTSuccess)</span></span>
+<span id="L5751"><span class="lineNum">    5751</span> <span class="tlaGNC">           4 :         if (status == MQTTSuccess)</span></span>
 <span id="L5752"><span class="lineNum">    5752</span>              :         {</span>
-<span id="L5753"><span class="lineNum">    5753</span> <span class="tlaGNC">           2 :             pLocalIndex = &amp;pLocalIndex[remainingLengthEncodedSize(propertyLength)];</span></span>
+<span id="L5753"><span class="lineNum">    5753</span> <span class="tlaGNC">           4 :             pLocalIndex = &amp;pLocalIndex[remainingLengthEncodedSize(propertyLength)];</span></span>
 <span id="L5754"><span class="lineNum">    5754</span>              :             /**Validate remaining Length */</span>
 <span id="L5755"><span class="lineNum">    5755</span>              :         }</span>
-<span id="L5756"><span class="lineNum">    5756</span> <span class="tlaGNC">           2 :         if (status == MQTTSuccess)</span></span>
+<span id="L5756"><span class="lineNum">    5756</span> <span class="tlaGNC">           4 :         if (status == MQTTSuccess)</span></span>
 <span id="L5757"><span class="lineNum">    5757</span>              :         {</span>
-<span id="L5758"><span class="lineNum">    5758</span> <span class="tlaGNC">           4 :             while ((propertyLength &gt; 0U) &amp;&amp; (status == MQTTSuccess))</span></span>
+<span id="L5758"><span class="lineNum">    5758</span> <span class="tlaGNC">           6 :             while ((propertyLength &gt; 0U) &amp;&amp; (status == MQTTSuccess))</span></span>
 <span id="L5759"><span class="lineNum">    5759</span>              :             {</span>
 <span id="L5760"><span class="lineNum">    5760</span>              :                 /** Decode propertyId  -&gt; reason string if or user property id*/</span>
 <span id="L5761"><span class="lineNum">    5761</span> <span class="tlaGNC">           2 :                 uint8_t propertyId = *pLocalIndex;</span></span>
@@ -5843,40 +5843,40 @@
 <span id="L5781"><span class="lineNum">    5781</span>              :                 }</span>
 <span id="L5782"><span class="lineNum">    5782</span>              :             } </span>
 <span id="L5783"><span class="lineNum">    5783</span>              :         }</span>
-<span id="L5784"><span class="lineNum">    5784</span> <span class="tlaGNC tlaBgGNC">           2 :         return status;</span></span>
+<span id="L5784"><span class="lineNum">    5784</span> <span class="tlaGNC tlaBgGNC">           4 :         return status;</span></span>
 <span id="L5785"><span class="lineNum">    5785</span>              :     }</span>
-<span id="L5786"><span class="lineNum">    5786</span> <span class="tlaGNC">           2 :     MQTTStatus_t MQTTV5_DeserializeSuback(MQTTSubackProperties_t* pSubackProperties,</span></span>
+<span id="L5786"><span class="lineNum">    5786</span> <span class="tlaGNC">           4 :     MQTTStatus_t MQTTV5_DeserializeSuback(MQTTSubackProperties_t* pSubackProperties,</span></span>
 <span id="L5787"><span class="lineNum">    5787</span>              :     const MQTTPacketInfo_t* pSuback,</span>
 <span id="L5788"><span class="lineNum">    5788</span>              :     uint16_t* pPacketId)</span>
 <span id="L5789"><span class="lineNum">    5789</span>              :     {</span>
-<span id="L5790"><span class="lineNum">    5790</span> <span class="tlaGNC">           2 :         MQTTStatus_t status = MQTTSuccess;</span></span>
-<span id="L5791"><span class="lineNum">    5791</span> <span class="tlaGNC">           2 :         const uint8_t* pIndex = pSuback-&gt; pRemainingData;</span></span>
-<span id="L5792"><span class="lineNum">    5792</span> <span class="tlaGNC">           2 :         size_t remainingLength = pSuback-&gt;remainingLength; </span></span>
+<span id="L5790"><span class="lineNum">    5790</span> <span class="tlaGNC">           4 :         MQTTStatus_t status = MQTTSuccess;</span></span>
+<span id="L5791"><span class="lineNum">    5791</span> <span class="tlaGNC">           4 :         const uint8_t* pIndex = pSuback-&gt; pRemainingData;</span></span>
+<span id="L5792"><span class="lineNum">    5792</span> <span class="tlaGNC">           4 :         size_t remainingLength = pSuback-&gt;remainingLength; </span></span>
 <span id="L5793"><span class="lineNum">    5793</span>              : </span>
-<span id="L5794"><span class="lineNum">    5794</span> <span class="tlaGNC">           2 :         assert(pSuback != NULL);</span></span>
-<span id="L5795"><span class="lineNum">    5795</span> <span class="tlaGNC">           2 :         assert(pPacketId != NULL);</span></span>
+<span id="L5794"><span class="lineNum">    5794</span> <span class="tlaGNC">           4 :         assert(pSuback != NULL);</span></span>
+<span id="L5795"><span class="lineNum">    5795</span> <span class="tlaGNC">           4 :         assert(pPacketId != NULL);</span></span>
 <span id="L5796"><span class="lineNum">    5796</span>              : </span>
-<span id="L5797"><span class="lineNum">    5797</span> <span class="tlaGNC">           2 :         pIndex = pSuback-&gt;pRemainingData;</span></span>
+<span id="L5797"><span class="lineNum">    5797</span> <span class="tlaGNC">           4 :         pIndex = pSuback-&gt;pRemainingData;</span></span>
 <span id="L5798"><span class="lineNum">    5798</span>              : </span>
-<span id="L5799"><span class="lineNum">    5799</span> <span class="tlaGNC">           2 :         if (pSuback-&gt;remainingLength &lt; 3U)</span></span>
+<span id="L5799"><span class="lineNum">    5799</span> <span class="tlaGNC">           4 :         if (pSuback-&gt;remainingLength &lt; 3U)</span></span>
 <span id="L5800"><span class="lineNum">    5800</span>              :         {</span>
 <span id="L5801"><span class="lineNum">    5801</span> <span class="tlaUNC tlaBgUNC">           0 :             LogError((&quot;Suback Packet Cannot have a remaining Length of less than 3&quot;));</span></span>
 <span id="L5802"><span class="lineNum">    5802</span> <span class="tlaUNC">           0 :             status = MQTTBadResponse;</span></span>
 <span id="L5803"><span class="lineNum">    5803</span>              :         }</span>
 <span id="L5804"><span class="lineNum">    5804</span>              :         else</span>
 <span id="L5805"><span class="lineNum">    5805</span>              :         {</span>
-<span id="L5806"><span class="lineNum">    5806</span> <span class="tlaGNC tlaBgGNC">           2 :             *pPacketId = UINT16_DECODE(pIndex);</span></span>
-<span id="L5807"><span class="lineNum">    5807</span> <span class="tlaGNC">           2 :             pIndex = &amp;pIndex[2];</span></span>
-<span id="L5808"><span class="lineNum">    5808</span> <span class="tlaGNC">           2 :             LogDebug((&quot;Packet Identifier is %hu.&quot;,</span></span>
+<span id="L5806"><span class="lineNum">    5806</span> <span class="tlaGNC tlaBgGNC">           4 :             *pPacketId = UINT16_DECODE(pIndex);</span></span>
+<span id="L5807"><span class="lineNum">    5807</span> <span class="tlaGNC">           4 :             pIndex = &amp;pIndex[2];</span></span>
+<span id="L5808"><span class="lineNum">    5808</span> <span class="tlaGNC">           4 :             LogDebug((&quot;Packet Identifier is %hu.&quot;,</span></span>
 <span id="L5809"><span class="lineNum">    5809</span>              :                 (unsigned short)*pPacketId));</span>
 <span id="L5810"><span class="lineNum">    5810</span>              : </span>
-<span id="L5811"><span class="lineNum">    5811</span> <span class="tlaGNC">           2 :             if (*pPacketId == 0U)</span></span>
+<span id="L5811"><span class="lineNum">    5811</span> <span class="tlaGNC">           4 :             if (*pPacketId == 0U)</span></span>
 <span id="L5812"><span class="lineNum">    5812</span>              :             {</span>
 <span id="L5813"><span class="lineNum">    5813</span> <span class="tlaUNC tlaBgUNC">           0 :                 LogError((&quot;Packet Id cannot be 0&quot;)); </span></span>
 <span id="L5814"><span class="lineNum">    5814</span> <span class="tlaUNC">           0 :                 status = MQTTBadParameter;</span></span>
 <span id="L5815"><span class="lineNum">    5815</span>              :             }</span>
 <span id="L5816"><span class="lineNum">    5816</span>              :         }</span>
-<span id="L5817"><span class="lineNum">    5817</span> <span class="tlaGNC tlaBgGNC">           2 :         if (status == MQTTSuccess &amp;&amp; pSuback-&gt;remainingLength &gt; 4U)</span></span>
+<span id="L5817"><span class="lineNum">    5817</span> <span class="tlaGNC tlaBgGNC">           4 :         if (status == MQTTSuccess &amp;&amp; pSuback-&gt;remainingLength &gt; 4U)</span></span>
 <span id="L5818"><span class="lineNum">    5818</span>              : </span>
 <span id="L5819"><span class="lineNum">    5819</span>              :         { </span>
 <span id="L5820"><span class="lineNum">    5820</span>              : #if(USER_PROPERTY_ENABLED)</span>
@@ -5885,17 +5885,17 @@
 <span id="L5823"><span class="lineNum">    5823</span>              :                 status = MQTTBadResponse; </span>
 <span id="L5824"><span class="lineNum">    5824</span>              :             }</span>
 <span id="L5825"><span class="lineNum">    5825</span>              : #endif </span>
-<span id="L5826"><span class="lineNum">    5826</span> <span class="tlaGNC">           2 :             if (status == MQTTSuccess)</span></span>
+<span id="L5826"><span class="lineNum">    5826</span> <span class="tlaGNC">           4 :             if (status == MQTTSuccess)</span></span>
 <span id="L5827"><span class="lineNum">    5827</span>              :             {</span>
-<span id="L5828"><span class="lineNum">    5828</span> <span class="tlaGNC">           2 :                 status = deserializeSubackProperties(pSubackProperties, pIndex, pSuback-&gt;remainingLength);</span></span>
+<span id="L5828"><span class="lineNum">    5828</span> <span class="tlaGNC">           4 :                 status = deserializeSubackProperties(pSubackProperties, pIndex, pSuback-&gt;remainingLength);</span></span>
 <span id="L5829"><span class="lineNum">    5829</span>              :             }</span>
 <span id="L5830"><span class="lineNum">    5830</span>              :         }</span>
 <span id="L5831"><span class="lineNum">    5831</span>              : </span>
-<span id="L5832"><span class="lineNum">    5832</span> <span class="tlaGNC">           2 :         if (status == MQTTSuccess)</span></span>
+<span id="L5832"><span class="lineNum">    5832</span> <span class="tlaGNC">           4 :         if (status == MQTTSuccess)</span></span>
 <span id="L5833"><span class="lineNum">    5833</span>              :         {</span>
-<span id="L5834"><span class="lineNum">    5834</span> <span class="tlaGNC">           2 :             status = readSubackStatusV5(remainingLength - sizeof(uint16_t) - pSubackProperties-&gt;propertyLength - remainingLengthEncodedSize(pSubackProperties-&gt;propertyLength), &amp;pIndex[pSubackProperties-&gt;propertyLength + remainingLengthEncodedSize(pSubackProperties-&gt;propertyLength)]);</span></span>
+<span id="L5834"><span class="lineNum">    5834</span> <span class="tlaGNC">           4 :             status = readSubackStatusV5(remainingLength - sizeof(uint16_t) - pSubackProperties-&gt;propertyLength - remainingLengthEncodedSize(pSubackProperties-&gt;propertyLength), &amp;pIndex[pSubackProperties-&gt;propertyLength + remainingLengthEncodedSize(pSubackProperties-&gt;propertyLength)]);</span></span>
 <span id="L5835"><span class="lineNum">    5835</span>              :         }</span>
-<span id="L5836"><span class="lineNum">    5836</span> <span class="tlaGNC">           2 :         return status;</span></span>
+<span id="L5836"><span class="lineNum">    5836</span> <span class="tlaGNC">           4 :         return status;</span></span>
 <span id="L5837"><span class="lineNum">    5837</span>              :     }</span>
 <span id="L5838"><span class="lineNum">    5838</span> <span class="tlaGNC">          66 :     MQTTStatus_t MQTTV5_DeserializeAck( const MQTTPacketInfo_t * pIncomingPacket,</span></span>
 <span id="L5839"><span class="lineNum">    5839</span>              :                                         uint16_t * pPacketId,</span>

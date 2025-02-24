@@ -3501,4 +3501,63 @@ void test_MQTTV5_suback(void)
     memset(&subackProperties, 0, sizeof(subackProperties));
     status = MQTTV5_DeserializeSuback(&subackProperties ,&subackPacket ,  &packetIdentifier);
     TEST_ASSERT_EQUAL_INT(MQTTSuccess, status);
+
 }
+
+void test_MQTTV5_GetUnsubscribePacketSize_Path(void){
+    MQTTStatus_t status = MQTTSuccess;
+    MQTTSubscribeInfo_t subscribeInfo = {0};
+    MQTTSubscribeProperties_t subscribeProperties = {0};
+    size_t remainingLength = 0;
+    size_t packetSize = 0;
+
+    status = MQTTV5_GetUnsubscribePacketSize(NULL, &subscribeProperties, 1, &remainingLength, &packetSize);
+    TEST_ASSERT_EQUAL_INT(MQTTBadParameter, status);
+
+    subscribeInfo.pTopicFilter = TEST_TOPIC_NAME ; 
+    subscribeInfo.topicFilterLength = TEST_TOPIC_NAME_LENGTH ;
+
+
+    status = MQTTV5_GetUnsubscribePacketSize(&subscribeInfo, &subscribeProperties, 1, &remainingLength, &packetSize);
+    TEST_ASSERT_EQUAL_INT(MQTTSuccess, status);
+    TEST_ASSERT_EQUAL_UINT32(16U, remainingLength);
+    TEST_ASSERT_EQUAL_UINT32(18U, packetSize);
+
+    status = MQTTV5_GetUnsubscribePacketSize(&subscribeInfo, &subscribeProperties, 0, &remainingLength, &packetSize);
+    TEST_ASSERT_EQUAL_INT(MQTTBadParameter, status);
+
+}
+void test_MQTTV5_DeserializeSuback( void )
+{
+    MQTTPacketInfo_t mqttPacketInfo;
+    uint16_t packetIdentifier;
+    MQTTStatus_t status = MQTTSuccess;
+    uint8_t buffer[ 14 ] = { 0 };
+
+    /* Bad remaining length. */
+    mqttPacketInfo.type = MQTT_PACKET_TYPE_SUBACK;
+    mqttPacketInfo.pRemainingData = buffer;
+    mqttPacketInfo.remainingLength = 14;
+    /* Set packet identifier. */
+    buffer[ 0 ] = 0;
+    buffer[ 1 ] = 1;
+    buffer[2] = 0 ; 
+    buffer[3] = 0x01 ; 
+    buffer[4] = 0x02 ;
+    buffer[5] = 0x80 ;
+    buffer[6] = 0x83 ;
+    buffer[7] = 0x87 ;
+    buffer[8] = 0x8F ; 
+    buffer[9] = 0x91 ; 
+    buffer[10] = 0x97 ; 
+    buffer[11] = 0x9E ; 
+    buffer[12] = 0xA1 ; 
+    buffer[13] = 0xA2 ; 
+
+    MQTTSubackProperties_t subackProperties;
+    memset(&subackProperties, 0, sizeof(subackProperties));
+    status = MQTTV5_DeserializeSuback(&subackProperties ,&mqttPacketInfo ,  &packetIdentifier);
+    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
+}
+
+ 
