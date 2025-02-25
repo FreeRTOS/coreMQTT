@@ -31,7 +31,7 @@
 
 void harness()
 {
-    MQTTVec_t *mqttVec;
+    MQTTVec_t * mqttVec;
     size_t memoryRequired;
 
     mqttVec = allocateMqttVec( NULL );

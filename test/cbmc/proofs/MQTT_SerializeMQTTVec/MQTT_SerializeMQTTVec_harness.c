@@ -31,7 +31,7 @@
 
 void harness()
 {
-    MQTTVec_t *mqttVec;
+    MQTTVec_t * mqttVec;
     size_t memoryRequired;
 
     mqttVec = allocateMqttVec( NULL );
@@ -39,8 +39,8 @@ void harness()
     memoryRequired = MQTT_GetBytesInMQTTVec( mqttVec );
 
     /* It is a part of the API contract that #MQTT_SerializeMQTTVec will be called with
-     * a memory buffer of size output by #MQTT_GetBytesInMQTTVec function and the 
-     * #MQTTVec_t pointer given by the library as an input to the user defined 
+     * a memory buffer of size output by #MQTT_GetBytesInMQTTVec function and the
+     * #MQTTVec_t pointer given by the library as an input to the user defined
      * #MQTTStorePacketForRetransmit callback function. Hence the memory buffer should
      * not be NULL.
      */
