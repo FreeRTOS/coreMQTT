@@ -81,7 +81,7 @@
  * retransmission purposes
  *
  * @note The definition of this struct is hidden from the application code. The intent
- * behinf defining the struct here is to simulate the actual process flow.
+ * behind defining the struct here is to simulate the actual process flow.
  */
 struct MQTTVec
 {
