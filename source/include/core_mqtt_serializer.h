@@ -556,6 +556,8 @@ typedef struct MQTTPublishInfo
      */
     MQTTUserProperties_t* pUserProperty;
     #endif
+
+    size_t subscriptionId ;
 #endif
 
 } MQTTPublishInfo_t;

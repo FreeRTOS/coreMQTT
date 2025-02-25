@@ -2181,6 +2181,52 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
         return status;
     }
 
+
+    static MQTTStatus_t decodeBinaryData( const uint8_t ** pProperty,
+                                          uint16_t * pLength,
+                                          size_t * pPropertyLength,
+                                          bool * pUsed,
+                                          const uint8_t ** pIndex )
+    {
+        const uint8_t * pVariableHeader = *pIndex;
+        MQTTStatus_t status = MQTTSuccess;
+
+        /*Protocol error to include the same property twice.*/
+
+        if( *pUsed == true )
+        {
+            status = MQTTProtocolError;
+        }
+        /*Validate the length and decode.*/
+
+        else if( *pPropertyLength < sizeof( uint16_t ) )
+        {
+            status = MQTTMalformedPacket;
+        }
+        else
+        {
+            *pLength = UINT16_DECODE( pVariableHeader );
+            pVariableHeader = &pVariableHeader[ sizeof( uint16_t ) ];
+            *pPropertyLength -= sizeof( uint16_t );
+
+            if( *pPropertyLength < *pLength )
+            {
+                status = MQTTMalformedPacket;
+            }
+            else
+            {
+                *pProperty = pVariableHeader;
+                pVariableHeader = &pVariableHeader[ *pLength ];
+                *pPropertyLength -= *pLength;
+                *pUsed = true;
+            }
+        }
+
+        *pIndex = pVariableHeader;
+        return status;
+    }
+
+
     static MQTTStatus_t decodeAuthInfo( const MQTTConnectProperties_t * pConnackProperties,
                                         bool * pAuthMethod,
                                         bool * pAuthData,
@@ -3862,6 +3908,221 @@ static MQTTStatus_t validateSubscriptionSerializeParams( const MQTTSubscribeInfo
 }
 
 /*-----------------------------------------------------------*/
+#if(MQTT_VERSION_5_ENABLED)
+
+    MQTTStatus_t deserializePublishProperties( MQTTPublishInfo_t * pPublishInfo, const uint8_t* pIndex)
+    {
+        MQTTStatus_t status = MQTTSuccess;
+        size_t propertyLength = 0U;
+        const uint8_t* pLocalIndex = pIndex;
+
+        /*Decode Property Length */
+
+        status = decodeVariableLength(pLocalIndex, &propertyLength);
+        pPublishInfo->propertyLength = propertyLength ; 
+
+        if (status == MQTTSuccess)
+        {
+            pLocalIndex = &pLocalIndex[remainingLengthEncodedSize(propertyLength)];
+            /**Validate remaining Length */
+        }
+        if (status == MQTTSuccess)
+        {
+            while ((propertyLength > 0U) && (status == MQTTSuccess))
+            {
+                /** Decode propertyId  -> reason string if or user property id*/
+                uint8_t propertyId = *pLocalIndex;
+                bool contentType = false ; 
+                bool messageExpiryInterval = false ;
+                bool responseTopic = false ;
+                bool topicAlias = false ;
+                bool payloadFormatIndicator = false ; 
+                bool correlationData = false ; 
+                pLocalIndex = &pLocalIndex[1];
+                propertyLength -= sizeof(uint8_t);
+                switch (propertyId)
+                {
+                case MQTT_PAYLOAD_FORMAT_ID:
+                    decodeuint8_t(&pPublishInfo->payloadFormat, &propertyLength, &payloadFormatIndicator, &pLocalIndex) ; 
+                    break ; 
+                case MQTT_TOPIC_ALIAS_ID :
+                    decodeuint16_t(&pPublishInfo->topicAlias, &propertyLength, &topicAlias, &pLocalIndex) ;
+                    break ; 
+
+                case MQTT_RESPONSE_TOPIC_ID:
+                    decodeutf_8(&pPublishInfo->pResponseTopic, &pPublishInfo->responseTopicLength, &propertyLength, &responseTopic, &pLocalIndex);
+                    break ; 
+
+                case MQTT_CORRELATION_DATA_ID:
+                    decodeBinaryData(&pPublishInfo->pCorrelationData, &pPublishInfo->correlationLength, &propertyLength, &correlationData, &pLocalIndex) ;
+                    break ; 
+
+                case MQTT_MSG_EXPIRY_ID:
+                    decodeuint32_t(&pPublishInfo->msgExpiryInterval, &propertyLength, &messageExpiryInterval, &pLocalIndex) ; 
+                    break ; 
+
+                case MQTT_CONTENT_TYPE_ID:
+                    decodeutf_8(&pPublishInfo->pContentType, &pPublishInfo->contentTypeLength, &propertyLength,&contentType ,  &pLocalIndex);
+                    break ; 
+
+                case SUBSCRIPTION_ID_ID:
+                    decodeVariableLength(&pLocalIndex,&pPublishInfo->subscriptionId);
+                    break ; 
+                    
+                // case MQTT_REASON_STRING_ID:
+                //     status = decodeutf_8(&pSubackProperties->pReasonString, &pSubackProperties->reasonStringLength, &propertyLength, &reasonString, &pLocalIndex);
+                //     break;
+                case MQTT_USER_PROPERTY_ID:
+                #if(MQTT_USER_PROPERTY_ENABLED)
+                    status = decodeutf_8pair(pSubackProperties->pUserProperties, &pSubackProperties->pUserProperties->count, &propertyLength, &pLocalIndex);
+                #else 
+                    status = decodeAndDiscard(&propertyLength, &pLocalIndex);
+                #endif
+                    break;
+                default:
+                    status = MQTTProtocolError;
+                    break;
+
+                }
+            } 
+        }
+        return status ; 
+    }
+
+    static MQTTStatus_t checkPublishRemainingLengthV5( size_t remainingLength,
+        MQTTQoS_t qos,
+        size_t qos0Minimum )
+    {
+        MQTTStatus_t status = MQTTSuccess;
+
+        /* Sanity checks for "Remaining length". */
+        if( qos == MQTTQoS0 )
+        {
+            /* Check that the "Remaining length" is greater than the minimum. */
+            if( remainingLength < qos0Minimum )
+            {
+                LogError( ( "QoS 0 PUBLISH cannot have a remaining length less than %lu.",
+                ( unsigned long ) qos0Minimum ) );
+
+                status = MQTTBadResponse;
+                }
+            }
+        else
+        {
+            /* Check that the "Remaining length" is greater than the minimum. For
+            * QoS 1 or 2, this will be two bytes greater than for QoS 0 due to the
+            * packet identifier. */
+            if( remainingLength < ( qos0Minimum + 2U ) )
+            {
+            LogError( ( "QoS 1 or 2 PUBLISH cannot have a remaining length less than %lu.",
+            ( unsigned long ) ( qos0Minimum + 2U ) ) );
+
+            status = MQTTBadResponse;
+            }
+        }
+        return status;
+    }
+
+
+    static MQTTStatus_t deserializePublishV5( const MQTTPacketInfo_t * pIncomingPacket,
+                                                uint16_t * pPacketId,
+                                                MQTTPublishInfo_t * pPublishInfo )
+    {
+        MQTTStatus_t status = MQTTSuccess;
+        const uint8_t * pVariableHeader, * pPacketIdentifierHigh = NULL;
+        uint8_t * pIndex = NULL;
+
+        assert( pIncomingPacket != NULL );
+        assert( pPacketId != NULL );
+        assert( pPublishInfo != NULL );
+        assert( pIncomingPacket->pRemainingData != NULL );
+
+        pVariableHeader = pIncomingPacket->pRemainingData;
+        pIndex = pVariableHeader ; 
+        /* The flags are the lower 4 bits of the first byte in PUBLISH. */
+        status = processPublishFlags( ( pIncomingPacket->type & 0x0FU ), pPublishInfo );
+
+        if( status == MQTTSuccess )
+        {
+            /* Sanity checks for "Remaining length". A QoS 0 PUBLISH  must have a remaining
+            * length of at least 3 to accommodate topic name length (2 bytes) and topic
+            * name (at least 1 byte). A QoS 1 or 2 PUBLISH must have a remaining length of
+            * at least 5 for the packet identifier in addition to the topic name length and
+            * topic name. */
+            status = checkPublishRemainingLengthV5( pIncomingPacket->remainingLength,
+            pPublishInfo->qos,
+            4U);
+        }
+
+        if( status == MQTTSuccess )
+        {
+            /* Extract the topic name starting from the first byte of the variable header.
+            * The topic name string starts at byte 3 in the variable header. */
+            pPublishInfo->topicNameLength = UINT16_DECODE( pVariableHeader );
+            pIndex = &pIndex[2] ; 
+
+            /* Sanity checks for topic name length and "Remaining length". The remaining
+            * length must be at least as large as the variable length header. */
+            status = checkPublishRemainingLengthV5( pIncomingPacket->remainingLength,
+            pPublishInfo->qos,
+            pPublishInfo->topicNameLength + sizeof( uint16_t ) );
+            pIndex = &pIndex[pPublishInfo->topicNameLength] ;
+        }
+
+        if( status == MQTTSuccess )
+        {
+            /* Parse the topic. */
+            pPublishInfo->pTopicName = ( const char * ) ( &pVariableHeader[ sizeof( uint16_t ) ] );
+            LogDebug( ( "Topic name length: %hu.", ( unsigned short ) pPublishInfo->topicNameLength ) );
+
+            /* Extract the packet identifier for QoS 1 or 2 PUBLISH packets. Packet
+            * identifier starts immediately after the topic name. */
+            pPacketIdentifierHigh = ( const uint8_t * ) ( &pPublishInfo->pTopicName[ pPublishInfo->topicNameLength ] );
+
+            if( pPublishInfo->qos > MQTTQoS0 )
+            {
+                *pPacketId = UINT16_DECODE( pPacketIdentifierHigh );
+
+                LogDebug( ( "Packet identifier %hu.",
+                ( unsigned short ) *pPacketId ) );
+
+                /* Advance pointer two bytes to start of payload as in the QoS 0 case. */
+                pPacketIdentifierHigh = &pPacketIdentifierHigh[ sizeof( uint16_t ) ];
+
+                /* Packet identifier cannot be 0. */
+                if( *pPacketId == 0U )
+                {
+                    LogError( ( "Packet identifier cannot be 0." ) );
+                    status = MQTTBadResponse;
+                }
+                pIndex = &pIndex[2] ; 
+            }
+        }
+        // insert code for properties here, maybe make a new function - 
+        status = deserializePublishProperties( pPublishInfo , pIndex);
+        if( status == MQTTSuccess )
+        {
+            /* Calculate the length of the payload. QoS 1 or 2 PUBLISH packets contain
+            * a packet identifier, but QoS 0 PUBLISH packets do not. */
+            pPublishInfo->payloadLength = pIncomingPacket->remainingLength - pPublishInfo->topicNameLength - sizeof( uint16_t ) - pPublishInfo->propertyLength - remainingLengthEncodedSize(pPublishInfo->propertyLength);
+
+            if( pPublishInfo->qos != MQTTQoS0 )
+            {
+                /* Two more bytes for the packet identifier. */
+                pPublishInfo->payloadLength -= sizeof( uint16_t );
+            }
+
+            /* Set payload if it exists. */
+            pPublishInfo->pPayload = ( pPublishInfo->payloadLength != 0U ) ? pPacketIdentifierHigh : NULL;
+
+            LogDebug( ( "Payload length %lu.",
+            ( unsigned long ) pPublishInfo->payloadLength ) );
+        }
+
+        return status;
+    }
+#endif
+
 
 static MQTTStatus_t deserializePublish( const MQTTPacketInfo_t * pIncomingPacket,
                                         uint16_t * pPacketId,
@@ -3932,7 +4193,7 @@ static MQTTStatus_t deserializePublish( const MQTTPacketInfo_t * pIncomingPacket
             }
         }
     }
-
+// insert code for properties here, maybe make a new function - 
     if( status == MQTTSuccess )
     {
         /* Calculate the length of the payload. QoS 1 or 2 PUBLISH packets contain
@@ -4981,7 +5242,11 @@ MQTTStatus_t MQTT_DeserializePublish( const MQTTPacketInfo_t * pIncomingPacket,
     }
     else
     {
+        #if(MQTT_VERSION_5_ENABLED)
+        status = deserializePublishV5(pIncomingPacket, pPacketId, pPublishInfo) ; 
+        #else
         status = deserializePublish( pIncomingPacket, pPacketId, pPublishInfo );
+        #endif 
     }
 
     return status;

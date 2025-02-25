@@ -556,7 +556,7 @@ static MQTTStatus_t handleIncomingAck( MQTTContext_t * pContext,
                                        MQTTPacketInfo_t * pIncomingPacket,
                                        bool manageKeepAlive );
 
-
+#if(MQTT_VERSION_5_ENABLED)
 static uint8_t* encodeRemainingLengthSub(uint8_t* pDestination,
     size_t length)
 {
@@ -587,6 +587,7 @@ static uint8_t* encodeRemainingLengthSub(uint8_t* pDestination,
 
     return pLengthEnd;
 }
+#endif
 
 
 /**
@@ -2258,6 +2259,38 @@ static MQTTStatus_t handleIncomingPublish( MQTTContext_t * pContext,
                         MQTT_Status_strerror( status ) ) );
         }
     }
+
+
+
+    // if( status == MQTTSuccess )
+    // {
+    //     deserializedInfo.packetIdentifier = packetIdentifier;
+    //     deserializedInfo.deserializationResult = status;
+    //     deserializedInfo.pPublishInfo = &publishInfo;
+    //     deserializedInfo.pAckInfo = &ackInfo;
+    //     deserializedInfo.pNextAckInfo = &nextAckInfo;
+
+    //     /* Invoke application callback to hand the buffer over to application
+    //         * before sending acks. */
+    //     appCallback( pContext, pIncomingPacket, &deserializedInfo );
+
+    //     /* Send PUBREL or PUBCOMP if necessary. */
+    //     if( deserializedInfo.pNextAckInfo == NULL )
+    //     {
+    //         status = sendPublishAcks( pContext,
+    //                                     packetIdentifier,
+    //                                     publishRecordState );
+    //     }
+    //     else
+    //     {
+    //         MQTT_PRE_SEND_HOOK( pContext );
+
+    //         status = sendPublishAcksWithProperty( pContext, packetIdentifier, publishRecordState, deserializedInfo.pNextAckInfo );
+
+    //         MQTT_POST_SEND_HOOK( pContext );
+    //     }
+    // }
+
 
     if( status == MQTTSuccess )
     {
