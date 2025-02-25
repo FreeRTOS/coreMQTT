@@ -25,32 +25,36 @@ To compile and run the Coverity target successfully, you must have the following
 
 ### To build and run coverity:
 Go to the root directory of the library and run the following commands in terminal:
-1. Update the compiler configuration in Coverity
+1. Create a local directory for the configuration files
   ~~~
-  cov-configure --force --compiler cc --comptype gcc
+  mkdir covConfig
   ~~~
-2. Create the build files using CMake in a `build` directory
+2. Update the compiler configuration in Coverity
+  ~~~
+  cov-configure --config covConfig/coverity.xml --compiler cc --comptype gcc --template
+  ~~~
+3. Create the build files using CMake in a `build` directory
   ~~~
   cmake -B build -S test
   ~~~
-3. Go to the build directory and copy the coverity configuration file
+4. Go to the build directory and copy the coverity configuration file
   ~~~
   cd build/
   ~~~
-4. Build the static analysis target
+5. Build the static analysis target
   ~~~
-  cov-build --emit-complementary-info --dir cov-out make coverity_analysis
+  cov-build --config ../covConfig/coverity.xml --emit-complementary-info --dir cov-out make coverity_analysis
   ~~~
-5. Go to the Coverity output directory (`cov-out`) and begin Coverity static analysis
+6. Go to the Coverity output directory (`cov-out`) and begin Coverity static analysis
   ~~~
   cd cov-out/
   cov-analyze --dir . --coding-standard-config ../../tools/coverity/misra.config --tu-pattern "file('.*/source/.*')"
   ~~~
-6. Format the errors in HTML format so that it is more readable while removing the test and build directory from the report
+7. Format the errors in HTML format so that it is more readable while removing the test and build directory from the report
   ~~~
   cov-format-errors --dir . --file "source" --exclude-files '(/build/|/test/)' --html-output html-out;
   ~~~
-7. Format the errors in JSON format to perform a jq query to get a simplified list of any exceptions.
+8. Format the errors in JSON format to perform a jq query to get a simplified list of any exceptions.
   NOTE: A blank output means there are no defects that aren't being suppressed by the config or inline comments.
   ~~~
   cov-format-errors --dir . --file "source" --exclude-files '(/build/|/test/)' --json-output-v2 defects.json;
@@ -61,10 +65,11 @@ Go to the root directory of the library and run the following commands in termin
 
 For your convenience the commands above are below to be copy/pasted into a UNIX command friendly terminal.
  ~~~
- cov-configure --force --compiler cc --comptype gcc;
+ mkdir covConfig
+ cov-configure --config covConfig/coverity.xml --compiler cc --comptype gcc --template
  cmake -B build -S test;
  cd build/;
- cov-build --emit-complementary-info --dir cov-out make coverity_analysis;
+ cov-build --config ../covConfig/coverity.xml --emit-complementary-info --dir cov-out make coverity_analysis
  cd cov-out/
  cov-analyze --dir . --coding-standard-config ../../tools/coverity/misra.config --tu-pattern "file('.*/source/.*')";
  cov-format-errors --dir . --file "source" --exclude-files '(/build/|/test/)' --html-output html-out;
