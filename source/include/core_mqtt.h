@@ -1228,7 +1228,7 @@ const char * MQTT_Status_strerror( MQTTStatus_t status );
 /**
  * @brief Get the bytes in a #MQTTVec pointer which can store the whole array as a an MQTT packet when calling MQTT_SerializeMQTTVec( void * pAllocatedMem, MQTTVec_t *pVec ) function.
  *
- * @param[in] pVec The #MQTTVec pointer given as input to the user defined #MQTTStorePacketForRetransmit callback function.
+ * @param[in] pVec The #MQTTVec pointer given as input to the user defined #MQTTStorePacketForRetransmit callback function. Should not be NULL.
  *
  * @return The bytes in the provided #MQTTVec array which can then be used to set aside memory to be used with MQTT_SerializeMQTTVec( void * pAllocatedMem, MQTTVec_t *pVec ) function.
  */
@@ -1239,8 +1239,8 @@ size_t MQTT_GetBytesInMQTTVec( const MQTTVec_t * pVec );
 /**
  * @brief Serialize the bytes in an array of #MQTTVec in the provided \p pAllocatedMem
  *
- * @param[in] pAllocatedMem Memory in which to serialize the data in the #MQTTVec array. It must be of size provided by MQTT_GetBytesInMQTTVec( MQTTVec_t *pVec ).
- * @param[in] pVec The #MQTTVec pointer given as input to the user defined #MQTTStorePacketForRetransmit callback function.
+ * @param[in] pAllocatedMem Memory in which to serialize the data in the #MQTTVec array. It must be of size provided by MQTT_GetBytesInMQTTVec( MQTTVec_t *pVec ). Should not be NULL.
+ * @param[in] pVec The #MQTTVec pointer given as input to the user defined #MQTTStorePacketForRetransmit callback function. Should not be NULL.
  */
 /* @[declare_mqtt_serializemqttvec] */
 void MQTT_SerializeMQTTVec( uint8_t * pAllocatedMem,

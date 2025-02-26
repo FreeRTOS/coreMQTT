@@ -33,6 +33,7 @@ void harness()
 {
     MQTTVec_t * mqttVec;
     size_t memoryRequired;
+    uint8_t * memoryBuffer;
 
     mqttVec = allocateMqttVec( NULL );
 
@@ -44,7 +45,8 @@ void harness()
      * #MQTTStorePacketForRetransmit callback function. Hence the memory buffer should
      * not be NULL.
      */
-    uint8_t memoryBuffer[ memoryRequired ];
+    memoryBuffer = malloc(memoryRequired);
+    __CPROVER_assume( memoryBuffer != NULL );
 
     MQTT_SerializeMQTTVec( memoryBuffer, mqttVec );
 }

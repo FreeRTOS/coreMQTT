@@ -334,11 +334,12 @@ MQTTVec_t * allocateMqttVec( MQTTVec_t * mqttVec )
 
     for( int i = 0; i < vecLen; i++ )
     {
-        /* Every vector can hold a buffer whose length is encoded in 2 bytes. Hence the maximum
-         * size of the buffer in the vector can be 65535
+        /* One of there vectors will also hold the buffer pointing to the publish payload. The
+         * maximum size of thepublish payload is limited by the remaining length field. Hence the maximum
+         * size of the buffer in the vector can be 268435455 B.
          */
-        __CPROVER_assume( pVector[ i ].iov_len <= 65535 );
-        __CPROVER_assume( pVector[ i ].iov_len > 0U );
+        __CPROVER_assume( pVector[ i ].iov_len <= 268435455 );
+        __CPROVER_assume( pVector[ i ].iov_len >= 0U );
 
         pVector[ i ].iov_base = malloc( pVector[ i ].iov_len * sizeof( uint8_t ) );
 
