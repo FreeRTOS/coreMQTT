@@ -212,6 +212,7 @@ static uint8_t * serializeutf_8pair( uint8_t * pIndex )
     return pIndexLocal;
 }
 
+
 void test_MQTTV5_DeserializeConnackOnlyUserProperty( void )
 {
     uint8_t buffer[ 100 ] = { 0 };
@@ -320,5 +321,6 @@ void test_MQTTV5_DeserializeDisconnect()
     status = MQTTV5_DeserializeDisconnect( &packetInfo, &disconnectInfo, &pServerRef, &serverRefLength, maxPacketSize );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
 }
+
 
 

@@ -528,7 +528,7 @@ static MQTTStatus_t handleKeepAlive( MQTTContext_t * pContext );
  *
  * @return MQTTSuccess, MQTTIllegalState or deserialization error.
  */
-static MQTTStatus_t handleIncomingPublish( MQTTContext_t * pContext,
+MQTTStatus_t handleIncomingPublish( MQTTContext_t * pContext,
                                            MQTTPacketInfo_t * pIncomingPacket );
 
 /**
@@ -2160,19 +2160,33 @@ static MQTTStatus_t handleKeepAlive( MQTTContext_t * pContext )
 
 /*-----------------------------------------------------------*/
 
-static MQTTStatus_t handleIncomingPublish( MQTTContext_t * pContext,
+MQTTStatus_t handleIncomingPublish( MQTTContext_t * pContext,
                                            MQTTPacketInfo_t * pIncomingPacket )
 {
     MQTTStatus_t status = MQTTBadParameter;
     MQTTPublishState_t publishRecordState = MQTTStateNull;
     uint16_t packetIdentifier = 0U;
     MQTTPublishInfo_t publishInfo;
+    (void)memset(&publishInfo, 0x0, sizeof(publishInfo));
     MQTTDeserializedInfo_t deserializedInfo;
     bool duplicatePublish = false;
+
 
     assert( pContext != NULL );
     assert( pIncomingPacket != NULL );
     assert( pContext->appCallback != NULL );
+
+#if ( MQTT_VERSION_5_ENABLED )
+    MQTTAckInfo_t ackInfo;
+    MQTTAckInfo_t nextAckInfo;
+    (void)memset(&ackInfo, 0x0, sizeof(ackInfo));
+    (void)memset(&nextAckInfo, 0x0, sizeof(nextAckInfo));
+    #if(MQTT_USER_PROPERTY_ENABLED)
+    MQTTUserProperties_t userProperty ;
+    (void)memset(&userProperty, 0x0, sizeof(userProperty));
+    publishInfo.pUserProperty = &userProperty;
+    #endif
+#endif
 
     status = MQTT_DeserializePublish( pIncomingPacket, &packetIdentifier, &publishInfo );
     LogInfo( ( "De-serialized incoming PUBLISH packet: DeserializerResult=%s.",
@@ -2292,29 +2306,81 @@ static MQTTStatus_t handleIncomingPublish( MQTTContext_t * pContext,
     // }
 
 
-    if( status == MQTTSuccess )
+    // if( status == MQTTSuccess )
+    // {
+    //     /* Set fields of deserialized struct. */
+    //     deserializedInfo.packetIdentifier = packetIdentifier;
+    //     deserializedInfo.pPublishInfo = &publishInfo;
+    //     deserializedInfo.deserializationResult = status;
+
+    //     /* Invoke application callback to hand the buffer over to application
+    //      * before sending acks.
+    //      * Application callback will be invoked for all publishes, except for
+    //      * duplicate incoming publishes. */
+    //     if( duplicatePublish == false )
+    //     {
+    //         pContext->appCallback( pContext,
+    //                                pIncomingPacket,
+    //                                &deserializedInfo );
+    //     }
+
+    //     /* Send PUBACK or PUBREC if necessary. */
+    //     status = sendPublishAcks( pContext,
+    //                               packetIdentifier,
+    //                               publishRecordState );
+    // }
+
+    // return status;
+
+
+
+    #if ( !MQTT_VERSION_5_ENABLED )
+    if (status == MQTTSuccess)
     {
         /* Set fields of deserialized struct. */
         deserializedInfo.packetIdentifier = packetIdentifier;
-        deserializedInfo.pPublishInfo = &publishInfo;
         deserializedInfo.deserializationResult = status;
+        deserializedInfo.pPublishInfo = &publishInfo;
 
         /* Invoke application callback to hand the buffer over to application
-         * before sending acks.
-         * Application callback will be invoked for all publishes, except for
-         * duplicate incoming publishes. */
-        if( duplicatePublish == false )
-        {
-            pContext->appCallback( pContext,
-                                   pIncomingPacket,
-                                   &deserializedInfo );
-        }
+         * before sending acks. */
+        pContext->appCallback(pContext, pIncomingPacket, &deserializedInfo);
 
-        /* Send PUBACK or PUBREC if necessary. */
-        status = sendPublishAcks( pContext,
-                                  packetIdentifier,
-                                  publishRecordState );
+        /* Send PUBREL or PUBCOMP if necessary. */
+        status = sendPublishAcks(pContext,
+            packetIdentifier,
+            publishRecordState);
     }
+#else /* if ( !MQTT_VERSION_5_ENABLED ) */
+    if (status == MQTTSuccess)
+    {
+        deserializedInfo.packetIdentifier = packetIdentifier;
+        deserializedInfo.deserializationResult = status;
+        deserializedInfo.pPublishInfo = &publishInfo;
+        deserializedInfo.pAckInfo = &ackInfo;
+        deserializedInfo.pNextAckInfo = &nextAckInfo;
+
+        /* Invoke application callback to hand the buffer over to application
+         * before sending acks. */
+        pContext->appCallback(pContext, pIncomingPacket, &deserializedInfo);
+
+        /* Send PUBREL or PUBCOMP if necessary. */
+        if (deserializedInfo.pNextAckInfo == NULL)
+        {
+            status = sendPublishAcks(pContext,
+                packetIdentifier,
+                publishRecordState);
+        }
+        else
+        {
+            MQTT_PRE_SEND_HOOK(pContext);
+
+            status = sendPublishAcksWithProperty(pContext, packetIdentifier, publishRecordState, deserializedInfo.pNextAckInfo);
+
+            MQTT_POST_SEND_HOOK(pContext);
+        }
+    }
+#endif /* if ( !MQTT_VERSION_5_ENABLED ) */
 
     return status;
 }

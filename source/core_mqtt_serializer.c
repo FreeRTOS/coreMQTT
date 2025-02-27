@@ -2182,7 +2182,7 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
     }
 
 
-    static MQTTStatus_t decodeBinaryData( const uint8_t ** pProperty,
+    static MQTTStatus_t decodeBinaryData( const void ** pProperty,
                                           uint16_t * pLength,
                                           size_t * pPropertyLength,
                                           bool * pUsed,
@@ -3910,84 +3910,84 @@ static MQTTStatus_t validateSubscriptionSerializeParams( const MQTTSubscribeInfo
 /*-----------------------------------------------------------*/
 #if(MQTT_VERSION_5_ENABLED)
 
-    MQTTStatus_t deserializePublishProperties( MQTTPublishInfo_t * pPublishInfo, const uint8_t* pIndex)
+MQTTStatus_t deserializePublishProperties( MQTTPublishInfo_t * pPublishInfo, const uint8_t* pIndex)
+{
+    MQTTStatus_t status = MQTTSuccess;
+    size_t propertyLength = 0U;
+    const uint8_t* pLocalIndex = pIndex;
+
+    /*Decode Property Length */
+
+    status = decodeVariableLength(pLocalIndex, &propertyLength);
+    pPublishInfo->propertyLength = propertyLength ; 
+
+    if (status == MQTTSuccess)
     {
-        MQTTStatus_t status = MQTTSuccess;
-        size_t propertyLength = 0U;
-        const uint8_t* pLocalIndex = pIndex;
-
-        /*Decode Property Length */
-
-        status = decodeVariableLength(pLocalIndex, &propertyLength);
-        pPublishInfo->propertyLength = propertyLength ; 
-
-        if (status == MQTTSuccess)
-        {
-            pLocalIndex = &pLocalIndex[remainingLengthEncodedSize(propertyLength)];
-            /**Validate remaining Length */
-        }
-        if (status == MQTTSuccess)
-        {
-            while ((propertyLength > 0U) && (status == MQTTSuccess))
-            {
-                /** Decode propertyId  -> reason string if or user property id*/
-                uint8_t propertyId = *pLocalIndex;
-                bool contentType = false ; 
-                bool messageExpiryInterval = false ;
-                bool responseTopic = false ;
-                bool topicAlias = false ;
-                bool payloadFormatIndicator = false ; 
-                bool correlationData = false ; 
-                pLocalIndex = &pLocalIndex[1];
-                propertyLength -= sizeof(uint8_t);
-                switch (propertyId)
-                {
-                case MQTT_PAYLOAD_FORMAT_ID:
-                    decodeuint8_t(&pPublishInfo->payloadFormat, &propertyLength, &payloadFormatIndicator, &pLocalIndex) ; 
-                    break ; 
-                case MQTT_TOPIC_ALIAS_ID :
-                    decodeuint16_t(&pPublishInfo->topicAlias, &propertyLength, &topicAlias, &pLocalIndex) ;
-                    break ; 
-
-                case MQTT_RESPONSE_TOPIC_ID:
-                    decodeutf_8(&pPublishInfo->pResponseTopic, &pPublishInfo->responseTopicLength, &propertyLength, &responseTopic, &pLocalIndex);
-                    break ; 
-
-                case MQTT_CORRELATION_DATA_ID:
-                    decodeBinaryData(&pPublishInfo->pCorrelationData, &pPublishInfo->correlationLength, &propertyLength, &correlationData, &pLocalIndex) ;
-                    break ; 
-
-                case MQTT_MSG_EXPIRY_ID:
-                    decodeuint32_t(&pPublishInfo->msgExpiryInterval, &propertyLength, &messageExpiryInterval, &pLocalIndex) ; 
-                    break ; 
-
-                case MQTT_CONTENT_TYPE_ID:
-                    decodeutf_8(&pPublishInfo->pContentType, &pPublishInfo->contentTypeLength, &propertyLength,&contentType ,  &pLocalIndex);
-                    break ; 
-
-                case SUBSCRIPTION_ID_ID:
-                    decodeVariableLength(&pLocalIndex,&pPublishInfo->subscriptionId);
-                    break ; 
-                    
-                // case MQTT_REASON_STRING_ID:
-                //     status = decodeutf_8(&pSubackProperties->pReasonString, &pSubackProperties->reasonStringLength, &propertyLength, &reasonString, &pLocalIndex);
-                //     break;
-                case MQTT_USER_PROPERTY_ID:
-                #if(MQTT_USER_PROPERTY_ENABLED)
-                    status = decodeutf_8pair(pSubackProperties->pUserProperties, &pSubackProperties->pUserProperties->count, &propertyLength, &pLocalIndex);
-                #else 
-                    status = decodeAndDiscard(&propertyLength, &pLocalIndex);
-                #endif
-                    break;
-                default:
-                    status = MQTTProtocolError;
-                    break;
-
-                }
-            } 
-        }
-        return status ; 
+        pLocalIndex = &pLocalIndex[remainingLengthEncodedSize(propertyLength)];
+        /**Validate remaining Length */
     }
+    if (status == MQTTSuccess)
+    {
+        while ((propertyLength > 0U) && (status == MQTTSuccess))
+        {
+            /** Decode propertyId  -> reason string if or user property id*/
+            uint8_t propertyId = *pLocalIndex;
+            bool contentType = false ; 
+            bool messageExpiryInterval = false ;
+            bool responseTopic = false ;
+            bool topicAlias = false ;
+            bool payloadFormatIndicator = false ; 
+            bool correlationData = false ; 
+            pLocalIndex = &pLocalIndex[1];
+            propertyLength -= sizeof(uint8_t);
+            switch (propertyId)
+            {
+            case MQTT_PAYLOAD_FORMAT_ID:
+                decodeuint8_t(&pPublishInfo->payloadFormat, &propertyLength, &payloadFormatIndicator, &pLocalIndex) ; 
+                break ; 
+            case MQTT_TOPIC_ALIAS_ID :
+                decodeuint16_t(&pPublishInfo->topicAlias, &propertyLength, &topicAlias, &pLocalIndex) ;
+                break ; 
+
+            case MQTT_RESPONSE_TOPIC_ID:
+                decodeutf_8(&pPublishInfo->pResponseTopic, &pPublishInfo->responseTopicLength, &propertyLength, &responseTopic, &pLocalIndex);
+                break ; 
+
+            case MQTT_CORRELATION_DATA_ID:
+                decodeBinaryData(&pPublishInfo->pCorrelationData, &pPublishInfo->correlationLength, &propertyLength, &correlationData, &pLocalIndex) ;
+                break ; 
+
+            case MQTT_MSG_EXPIRY_ID:
+                decodeuint32_t(&pPublishInfo->msgExpiryInterval, &propertyLength, &messageExpiryInterval, &pLocalIndex) ; 
+                break ; 
+
+            case MQTT_CONTENT_TYPE_ID:
+                decodeutf_8(&pPublishInfo->pContentType, &pPublishInfo->contentTypeLength, &propertyLength,&contentType ,  &pLocalIndex);
+                break ; 
+
+            case MQTT_SUBSCRIPTION_ID_ID:
+                decodeVariableLength(pLocalIndex,&pPublishInfo->subscriptionId);
+                break ; 
+                
+            // case MQTT_REASON_STRING_ID:
+            //     status = decodeutf_8(&pSubackProperties->pReasonString, &pSubackProperties->reasonStringLength, &propertyLength, &reasonString, &pLocalIndex);
+            //     break;
+            case MQTT_USER_PROPERTY_ID:
+            #if(MQTT_USER_PROPERTY_ENABLED)
+                status = decodeutf_8pair(pPublishInfo->pUserProperty, &pPublishInfo->pUserProperty->count, &propertyLength, &pLocalIndex);
+            #else 
+                status = decodeAndDiscard(&propertyLength, &pLocalIndex);
+            #endif
+                break;
+            default:
+                status = MQTTProtocolError;
+                break;
+
+            }
+        } 
+    }
+    return status ; 
+}
 
     static MQTTStatus_t checkPublishRemainingLengthV5( size_t remainingLength,
         MQTTQoS_t qos,
@@ -4065,7 +4065,7 @@ static MQTTStatus_t validateSubscriptionSerializeParams( const MQTTSubscribeInfo
             * length must be at least as large as the variable length header. */
             status = checkPublishRemainingLengthV5( pIncomingPacket->remainingLength,
             pPublishInfo->qos,
-            pPublishInfo->topicNameLength + sizeof( uint16_t ) );
+            pPublishInfo->topicNameLength + sizeof( uint16_t ) + sizeof(uint8_t) );
             pIndex = &pIndex[pPublishInfo->topicNameLength] ;
         }
 
@@ -4095,11 +4095,17 @@ static MQTTStatus_t validateSubscriptionSerializeParams( const MQTTSubscribeInfo
                     LogError( ( "Packet identifier cannot be 0." ) );
                     status = MQTTBadResponse;
                 }
-                pIndex = &pIndex[2] ; 
+                if(status == MQTTSuccess)
+                {
+                    pIndex = &pIndex[2] ; 
+                }
             }
         }
         // insert code for properties here, maybe make a new function - 
-        status = deserializePublishProperties( pPublishInfo , pIndex);
+        if(status == MQTTSuccess)
+        {
+            status = deserializePublishProperties( pPublishInfo , pIndex);
+        }
         if( status == MQTTSuccess )
         {
             /* Calculate the length of the payload. QoS 1 or 2 PUBLISH packets contain
@@ -5953,8 +5959,6 @@ MQTTStatus_t MQTT_ProcessIncomingPacketTypeAndLength( const uint8_t * pBuffer,
             switch (subscriptionStatus)
             {
             case 0x00:
-                LogDebug(("Pls work")); 
-                break; 
             case 0x01:
             case 0x02:
                 LogDebug(("Topic Filter %lu accepted, max QoS %u.",
@@ -6009,6 +6013,12 @@ MQTTStatus_t MQTT_ProcessIncomingPacketTypeAndLength( const uint8_t * pBuffer,
         const uint8_t* pLocalIndex = pIndex;
 
         /*Decode Property Length */
+        #if(MQTT_USER_PROPERTY_ENABLED)
+            MQTTUserProperties_t userProperty ;
+            (void)memset(&userProperty, 0x0, sizeof(userProperty));
+            pSubackProperties->pUserProperties = &userProperty;
+        #endif
+
 
         status = decodeVariableLength(pLocalIndex, &propertyLength);
         pSubackProperties->propertyLength = propertyLength ; 

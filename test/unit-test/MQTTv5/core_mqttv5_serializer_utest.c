@@ -3479,21 +3479,22 @@ void test_MQTTV5_suback(void)
 
     // status = MQTT_Init(&context, &transport, getTime, eventCallback, &networkBuffer);
     // TEST_ASSERT_EQUAL(MQTTSuccess, status);
-    uint8_t packetBuffer[12] = {
+    uint8_t packetBuffer[22] = {
         0x90,       // Fixed header: SUBACK type (0x90)
-        0x0A,       // Remaining Length = 10 bytes
+        0x14,       // Remaining Length = 20 bytes
         0x00, 0x01, // Packet Identifier = 1
-        0x06,       // Property Length = 6 bytes
+        0x11,       // Property Length = 17 bytes
         0x1F,       // Property ID = 0x1F (Reason String)
         0x00, 0x03, // UTF-8 string length = 3
         0x61, 0x62, 0x63, // The string "abc"
+        0x26, 0x00, 0x03, 0x61, 0x62, 0x63, 0x00 , 0x03 , 0x61, 0x62, 0x63,
         0x00        // Payload: Reason code = 0x00 (Success)
     };
 
     MQTTPacketInfo_t subackPacket;
     memset(&subackPacket, 0, sizeof(subackPacket));
     subackPacket.type = MQTT_PACKET_TYPE_SUBACK; // Should be defined as 0x90
-    subackPacket.remainingLength = 10;           // From the fixed header (0x0A)
+    subackPacket.remainingLength = 20;           // From the fixed header (0x0A)
     subackPacket.headerLength = 2;               // Fixed header size in this example
     subackPacket.pRemainingData = &packetBuffer[2];
     uint16_t packetIdentifier = 0;
@@ -3501,6 +3502,11 @@ void test_MQTTV5_suback(void)
     memset(&subackProperties, 0, sizeof(subackProperties));
     status = MQTTV5_DeserializeSuback(&subackProperties ,&subackPacket ,  &packetIdentifier);
     TEST_ASSERT_EQUAL_INT(MQTTSuccess, status);
+
+    packetBuffer[11] = 0x00 ; 
+    status = MQTTV5_DeserializeSuback(&subackProperties ,&subackPacket ,  &packetIdentifier);
+    TEST_ASSERT_EQUAL_INT(MQTTProtocolError, status);
+
 
 }
 
@@ -3558,6 +3564,158 @@ void test_MQTTV5_DeserializeSuback( void )
     memset(&subackProperties, 0, sizeof(subackProperties));
     status = MQTTV5_DeserializeSuback(&subackProperties ,&mqttPacketInfo ,  &packetIdentifier);
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
+
+    buffer[13] = 0xA4 ; 
+    status = MQTTV5_DeserializeSuback(&subackProperties ,&mqttPacketInfo ,  &packetIdentifier);
+    TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
+
 }
+
+void test_incoming_publishV5(void)
+{
+    MQTTPublishInfo_t PublishInfo = {0} ; 
+    MQTTStatus_t status = MQTTSuccess;
+    uint8_t buffer[ 14 ] = { 0 };
+    buffer[0] = 2 ;
+    buffer[1] = 0x01 ; 
+    buffer[2] = 0x01 ; 
+    status = deserializePublishProperties(&PublishInfo, &buffer) ; 
+    TEST_ASSERT_EQUAL_INT(MQTTSuccess, status);
+
+}
+void test_incoming_publish1V5(void)
+{
+    MQTTPacketInfo_t mqttPacketInfo;
+    uint16_t packetIdentifier = 1 ;
+    MQTTStatus_t status = MQTTSuccess;
+    uint8_t buffer[47] = { 0 };
+
+    mqttPacketInfo.type = MQTT_PACKET_TYPE_PUBLISH;
+    mqttPacketInfo.pRemainingData = buffer;
+    mqttPacketInfo.remainingLength = 47;
+
+    buffer[0] = 0x00 ; 
+    buffer[1] = 0x03 ; 
+    buffer[2] = 0x61 ; 
+    buffer[3] = 0x62 ; 
+    buffer[4] = 0x63 ; 
+    buffer[5] = 0x29 ; 
+    buffer[6] = 0x01 ;
+    buffer[7] = 0x01 ; 
+    buffer[8] = 0x26 ; 
+    buffer[9] = 0x00 ; 
+    buffer[10] = 0x03 ; 
+    buffer[11] = 0x61 ; 
+    buffer[12] = 0x62 ;
+    buffer[13] = 0x63 ; 
+    buffer[14] = 0x00 ; 
+    buffer[15] = 0x03 ; 
+    buffer[16] = 0x61 ; 
+    buffer[17] = 0x62 ;
+    buffer[18] = 0x63 ; 
+    buffer[19] = 0x09 ; 
+    buffer[20] = 0x00 ; 
+    buffer[21] = 0x03; 
+    buffer[22] = 't' ; 
+    buffer[23] = 'e' ;
+    buffer[24] = 's' ;
+    buffer[25] = 0x23 ; 
+    buffer[26] = 0x00 ; 
+    buffer[27] = 0x01 ; 
+    buffer[28] = 0x08 ; 
+    buffer[29] = 0x00 ; 
+    buffer[30] = 0x03 ; 
+    buffer[31] = 't' ;
+    buffer[32] = 'e' ;
+    buffer[33] = 's' ; 
+    buffer[34] = 0x02 ; 
+    buffer[35] = 0x00 ; 
+    buffer[36] = 0x00 ; 
+    buffer[37] = 0x00 ; 
+    buffer[38] = 0xB ; 
+    buffer[39] = 0x03 ; 
+    buffer[40] = 0x00 ; 
+    buffer[41] = 0x03 ; 
+    buffer[42] = 't' ;
+    buffer[43] = 'e' ;
+    buffer[44] = 's' ;
+    buffer[45] = 0x0B ; 
+    buffer[46] = 0x01 ; 
+
+
+    MQTTPublishInfo_t publishIn ; 
+    (void)memset(&publishIn, 0x0, sizeof(publishIn));
+    MQTTUserProperties_t userPropert ;
+    (void)memset(&userPropert, 0x0, sizeof(userPropert));
+    publishIn.pUserProperty = &userPropert;
+    status = MQTT_DeserializePublish(&mqttPacketInfo ,&packetIdentifier, &publishIn); 
+    TEST_ASSERT_EQUAL_INT(MQTTSuccess, status);
+
+
+}
+void test_incoming_publish_withPacketId(void)
+{
+    MQTTPacketInfo_t mqttPacketInfo;
+    uint16_t packetIdentifier = 1 ;
+    MQTTStatus_t status = MQTTSuccess;
+    uint8_t buffer[8] = { 0 };
+
+    mqttPacketInfo.type = MQTT_PACKET_TYPE_PUBLISH | 0x2;
+    mqttPacketInfo.pRemainingData = buffer;
+    mqttPacketInfo.remainingLength = 8;
+
+    buffer[0] = 0x00 ; 
+    buffer[1] = 0x03 ; 
+    buffer[2] = 0x61 ; 
+    buffer[3] = 0x62 ; 
+    buffer[4] = 0x63 ; 
+    buffer[5] = 0x00 ; 
+    buffer[6] = 0x01 ; 
+    buffer[7] = 0x00 ; 
+
+    MQTTPublishInfo_t publishIn ; 
+    (void)memset(&publishIn, 0x0, sizeof(publishIn));
+    MQTTUserProperties_t userPropert ;
+    (void)memset(&userPropert, 0x0, sizeof(userPropert));
+    publishIn.pUserProperty = &userPropert;
+    status = MQTT_DeserializePublish(&mqttPacketInfo ,&packetIdentifier, &publishIn); 
+    TEST_ASSERT_EQUAL_INT(MQTTSuccess, status);
+
+    buffer[6] = 0x00 ; 
+    status = MQTT_DeserializePublish(&mqttPacketInfo ,&packetIdentifier, &publishIn); 
+    TEST_ASSERT_EQUAL_INT(MQTTBadResponse, status);
+
+
+}
+
+void test_Invalid_IncomingPublish(void)
+{
+    MQTTPacketInfo_t mqttPacketInfo;
+    uint16_t packetIdentifier = 1 ;
+    MQTTStatus_t status = MQTTSuccess;
+    uint8_t buffer[3] = { 0 };
+
+    mqttPacketInfo.type = MQTT_PACKET_TYPE_PUBLISH;
+    mqttPacketInfo.pRemainingData = buffer;
+    mqttPacketInfo.remainingLength = 3;
+
+    buffer[0] = 0x00 ;
+    buffer[1] = 0x01 ;
+    buffer[2] = 0x61 ;
+
+
+    MQTTPublishInfo_t publishIn ;
+    (void)memset(&publishIn, 0x0, sizeof(publishIn));
+    status = MQTT_DeserializePublish(&mqttPacketInfo, &packetIdentifier, &publishIn);
+    TEST_ASSERT_EQUAL_INT(MQTTBadResponse, status);
+
+    mqttPacketInfo.type = MQTT_PACKET_TYPE_PUBLISH | 0x02 ; 
+    status = MQTT_DeserializePublish(&mqttPacketInfo, &packetIdentifier, &publishIn);
+    TEST_ASSERT_EQUAL_INT(MQTTBadResponse, status);
+
+}
+
+
+
 
  

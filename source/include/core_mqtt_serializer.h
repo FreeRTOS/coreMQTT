@@ -1453,6 +1453,7 @@ MQTTStatus_t MQTT_SerializePingreq( const MQTTFixedBuffer_t * pFixedBuffer );
  * @endcode
  */
 /* @[declare_mqtt_deserializepublish] */
+
 MQTTStatus_t MQTT_DeserializePublish( const MQTTPacketInfo_t * pIncomingPacket,
                                       uint16_t * pPacketId,
                                       MQTTPublishInfo_t * pPublishInfo );
