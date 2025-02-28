@@ -67,7 +67,27 @@
  * @note This definition must exist in order to compile. 10U is a typical value
  * used in the MQTT demos.
  */
-#define MAX_UNACKED_PACKETS    ( 20U )
+#define MAX_UNACKED_PACKETS       ( 20U )
+
+/**
+ * @brief Gives the maximum number of transport vectors required to encode
+ * a publish packet to send over the network interface.
+ */
+#define PUBLISH_PACKET_VECTORS    ( 4U )
+
+/**
+ * @brief Definition of the MQTTVec_t struct that is used to pass the outgoing
+ * publish packet content to the user callback function to store the packet for
+ * retransmission purposes
+ *
+ * @note The definition of this struct is hidden from the application code. The intent
+ * behind defining the struct here is to simulate the actual process flow.
+ */
+struct MQTTVec
+{
+    TransportOutVector_t * pVector; /**< Pointer to transport vector. USER SHOULD NOT ACCESS THIS DIRECTLY - IT IS AN INTERNAL DETAIL AND CAN CHANGE. */
+    size_t vectorLen;               /**< Length of the transport vector. USER SHOULD NOT ACCESS THIS DIRECTLY - IT IS AN INTERNAL DETAIL AND CAN CHANGE. */
+};
 
 MQTTPacketInfo_t * allocateMqttPacketInfo( MQTTPacketInfo_t * pPacketInfo )
 {
@@ -283,4 +303,51 @@ bool isValidMqttContext( const MQTTContext_t * pContext )
     }
 
     return isValid;
+}
+
+MQTTVec_t * allocateMqttVec( MQTTVec_t * mqttVec )
+{
+    size_t vecLen;
+    TransportOutVector_t * pVector;
+
+    if( mqttVec == NULL )
+    {
+        mqttVec = malloc( sizeof( MQTTVec_t ) );
+    }
+
+    /* It is a part of the API contract that the #MQTT_GetBytesInMQTTVec API will be called
+     * with the #MQTTVec_t pointer given by the library as an input to the user defined
+     * #MQTTStorePacketForRetransmit callback function. The library would never provide with
+     * a NULL pointer. As this is a simulation of the real flow, it can be assumed that the
+     * mqttVec pointer is non-NULL.
+     */
+    __CPROVER_assume( mqttVec != NULL );
+    __CPROVER_assume( vecLen <= PUBLISH_PACKET_VECTORS );
+    __CPROVER_assume( vecLen > 0U );
+
+    pVector = malloc( vecLen * sizeof( TransportOutVector_t ) );
+
+    /* The library is responsible with providing the memory for pVector within the mqttVec. Hence
+     * it can be assumed that pVector is also non-NULL
+     */
+    __CPROVER_assume( pVector != NULL );
+
+    for( int i = 0; i < vecLen; i++ )
+    {
+        /* One of there vectors will also hold the buffer pointing to the publish payload. The
+         * maximum size of thepublish payload is limited by the remaining length field. Hence the maximum
+         * size of the buffer in the vector can be 268435455 B.
+         */
+        __CPROVER_assume( pVector[ i ].iov_len <= 268435455 );
+        __CPROVER_assume( pVector[ i ].iov_len >= 0U );
+
+        pVector[ i ].iov_base = malloc( pVector[ i ].iov_len * sizeof( uint8_t ) );
+
+        __CPROVER_assume( pVector[ i ].iov_base != NULL );
+    }
+
+    mqttVec->pVector = pVector;
+    mqttVec->vectorLen = vecLen;
+
+    return mqttVec;
 }

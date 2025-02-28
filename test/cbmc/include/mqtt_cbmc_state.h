@@ -165,4 +165,13 @@ MQTTContext_t * allocateMqttContext( MQTTContext_t * pContext );
  */
 bool isValidMqttContext( const MQTTContext_t * pContext );
 
+/**
+ * @brief Allocate a #MQTTVec_t object.
+ *
+ * @param[in] mqttVec #MQTTVec_t object information.
+ *
+ * @return NULL or allocated #MQTTContext_t memory.
+ */
+MQTTVec_t * allocateMqttVec( MQTTVec_t * mqttVec );
+
 #endif /* ifndef MQTT_CBMC_STATE_H_ */
