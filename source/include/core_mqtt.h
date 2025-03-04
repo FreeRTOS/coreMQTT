@@ -1228,7 +1228,7 @@ const char * MQTT_Status_strerror( MQTTStatus_t status );
 /**
  * @brief Get the bytes in a #MQTTVec pointer which can store the whole array as a an MQTT packet when calling MQTT_SerializeMQTTVec( void * pAllocatedMem, MQTTVec_t *pVec ) function.
  *
- * @param[in] pVec The #MQTTVec pointer given as input to the user defined #MQTTStorePacketForRetransmit callback function. Should not be NULL.
+ * @param[in] pVec The #MQTTVec pointer given as input to the user defined #MQTTStorePacketForRetransmit callback function. Must not be NULL.
  *
  * @return The bytes in the provided #MQTTVec array which can then be used to set aside memory to be used with MQTT_SerializeMQTTVec( void * pAllocatedMem, MQTTVec_t *pVec ) function.
  */
