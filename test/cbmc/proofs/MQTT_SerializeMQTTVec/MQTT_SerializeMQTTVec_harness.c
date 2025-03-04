@@ -42,7 +42,7 @@ void harness()
     /* It is a part of the API contract that #MQTT_SerializeMQTTVec will be called with
      * a memory buffer of size output by #MQTT_GetBytesInMQTTVec function and the
      * #MQTTVec_t pointer given by the library as an input to the user defined
-     * #MQTTStorePacketForRetransmit callback function. Hence the memory buffer should
+     * #MQTTStorePacketForRetransmit callback function. Hence the memory buffer must
      * not be NULL.
      */
     memoryBuffer = malloc( memoryRequired );
