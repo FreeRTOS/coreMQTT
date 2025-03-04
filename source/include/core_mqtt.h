@@ -1240,7 +1240,7 @@ size_t MQTT_GetBytesInMQTTVec( const MQTTVec_t * pVec );
  * @brief Serialize the bytes in an array of #MQTTVec in the provided \p pAllocatedMem
  *
  * @param[in] pAllocatedMem Memory in which to serialize the data in the #MQTTVec array. It must be of size provided by MQTT_GetBytesInMQTTVec( MQTTVec_t *pVec ). Should not be NULL.
- * @param[in] pVec The #MQTTVec pointer given as input to the user defined #MQTTStorePacketForRetransmit callback function. Should not be NULL.
+ * @param[in] pVec The #MQTTVec pointer given as input to the user defined #MQTTStorePacketForRetransmit callback function. Must not be NULL.
  */
 /* @[declare_mqtt_serializemqttvec] */
 void MQTT_SerializeMQTTVec( uint8_t * pAllocatedMem,
