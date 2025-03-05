@@ -3024,7 +3024,7 @@ MQTTRecvFailed if transport recv failed;</h2>
 <p>Get the bytes in a <a class="el" href="struct_m_q_t_t_vec.html" title="An opaque structure provided by the library to the MQTTStorePacketForRetransmit function when using M...">MQTTVec</a> pointer which can store the whole array as a an MQTT packet when calling MQTT_SerializeMQTTVec( void * pAllocatedMem, MQTTVec_t *pVec ) function. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">pVec</td><td>The <a class="el" href="struct_m_q_t_t_vec.html" title="An opaque structure provided by the library to the MQTTStorePacketForRetransmit function when using M...">MQTTVec</a> pointer.</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">pVec</td><td>The <a class="el" href="struct_m_q_t_t_vec.html" title="An opaque structure provided by the library to the MQTTStorePacketForRetransmit function when using M...">MQTTVec</a> pointer given as input to the user defined <a class="el" href="core__mqtt_8h.html#ae4ae1546af467967e2c996daeb78e0ba" title="User defined callback used to store outgoing publishes. Used to track any publish retransmit on an un...">MQTTStorePacketForRetransmit</a> callback function. Must not be NULL.</td></tr>
   </table>
   </dd>
 </dl>
@@ -3061,8 +3061,8 @@ MQTTRecvFailed if transport recv failed;</h2>
 <p>Serialize the bytes in an array of <a class="el" href="struct_m_q_t_t_vec.html" title="An opaque structure provided by the library to the MQTTStorePacketForRetransmit function when using M...">MQTTVec</a> in the provided <code>pAllocatedMem</code>. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">pAllocatedMem</td><td>Memory in which to serialize the data in the <a class="el" href="struct_m_q_t_t_vec.html" title="An opaque structure provided by the library to the MQTTStorePacketForRetransmit function when using M...">MQTTVec</a> array. It must be of size provided by MQTT_GetBytesInMQTTVec( MQTTVec_t *pVec ). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">pVec</td><td>The <a class="el" href="struct_m_q_t_t_vec.html" title="An opaque structure provided by the library to the MQTTStorePacketForRetransmit function when using M...">MQTTVec</a> pointer. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">pAllocatedMem</td><td>Memory in which to serialize the data in the <a class="el" href="struct_m_q_t_t_vec.html" title="An opaque structure provided by the library to the MQTTStorePacketForRetransmit function when using M...">MQTTVec</a> array. It must be of size provided by MQTT_GetBytesInMQTTVec( MQTTVec_t *pVec ). Should not be NULL. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">pVec</td><td>The <a class="el" href="struct_m_q_t_t_vec.html" title="An opaque structure provided by the library to the MQTTStorePacketForRetransmit function when using M...">MQTTVec</a> pointer given as input to the user defined <a class="el" href="core__mqtt_8h.html#ae4ae1546af467967e2c996daeb78e0ba" title="User defined callback used to store outgoing publishes. Used to track any publish retransmit on an un...">MQTTStorePacketForRetransmit</a> callback function. Must not be NULL. </td></tr>
   </table>
   </dd>
 </dl>
