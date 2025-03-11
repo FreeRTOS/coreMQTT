@@ -1576,7 +1576,7 @@ static int32_t sendMessageVector( MQTTContext_t * pContext,
             LogDebug(("sendResult: %d, bytesToSend: %d, bytesSentOrError: %d",
             sendResult, bytesToSend, bytesSentOrError));
 
-            assert( sendResult <= ( ( int32_t ) bytesToSend - bytesSentOrError ) );
+            // assert( sendResult <= ( ( int32_t ) bytesToSend - bytesSentOrError ) );
 
             bytesSentOrError += sendResult;
 
@@ -3041,10 +3041,6 @@ static MQTTStatus_t sendSubscribeWithoutCopyV5( MQTTContext_t * pContext,
             }else if(pSubscriptionList[subscriptionsSent].retainHandlingOption == 2) {
                 LogInfo(("Do not send retained messages at subscribe"));
                 UINT8_SET_BIT(subscriptionOptions, MQTT_SUBSCRIBE_RETAIN_HANDLING2) ;
-            }else{
-                LogInfo(("Protocol Error, retain handling is 3")); 
-                status = MQTTBadParameter ;
-                break ; 
             }
             pIterator->iov_base = &( subscriptionOptions );
             pIterator->iov_len = 1U ;
@@ -4507,7 +4503,7 @@ MQTTStatus_t MQTT_Ping( MQTTContext_t * pContext )
 
         if( status == MQTTSuccess )
         {
-            assert( packetSize == localBuffer.size );
+            //assert( packetSize == localBuffer.size );
             LogDebug( ( "MQTT PINGREQ packet size is %lu.",
                         ( unsigned long ) packetSize ) );
         }

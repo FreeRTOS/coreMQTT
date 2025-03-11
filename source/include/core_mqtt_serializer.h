@@ -259,7 +259,14 @@ typedef struct MQTTAuthInfo
      * @brief Length of the authentication data.
      */
     uint16_t authDataLength;
+
+    uint8_t reasonCode ; 
+
+    // #if(MQTT_USER_PROPERTY_ENABLED)
+    // MQTTUserProperties *pUserProperties  ; 
+    // #endif
 } MQTTAuthInfo_t;
+
 
 #if(MQTT_USER_PROPERTY_ENABLED)
    /**

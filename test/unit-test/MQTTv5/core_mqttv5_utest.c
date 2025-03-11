@@ -1247,7 +1247,7 @@ void test_MQTTV5_Subscribe_happy_path(void){
     MQTTPubAckInfo_t incomingRecords = { 0 };
     MQTTPubAckInfo_t outgoingRecords = { 0 };
 
-    subscribeProperties.propertyLength = 0 ; 
+    subscribeProperties.propertyLength = 0; 
     subscribeProperties.subscriptionId = 1; 
     subscribeProperties.pUserProperties = NULL ; 
 
@@ -1274,6 +1274,7 @@ void test_MQTTV5_Subscribe_happy_path(void){
     mqttStatus = MQTT_SubscribeV5( &context, &subscribeInfo,&subscribeProperties, 1, MQTT_FIRST_VALID_PACKET_ID );
 
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+
     
 }
 
@@ -2032,7 +2033,71 @@ void test_IncomingPublishV5(void)
     expectParams.stateAfterSerialize = MQTTPublishDone;
     expectParams.incomingPublish = true;
     expectProcessLoopCalls( &context, &expectParams );
+
+
+}
+static uint8_t * MQTT_SerializeSubscribedHeader_cb( size_t remainingLength,
+    uint8_t * pIndex,
+    uint16_t packetId,
+    int numcallbacks )
+{
+    ( void ) remainingLength;
+    ( void ) pIndex;
+    ( void ) packetId;
+    ( void ) numcallbacks;
+
+    return pIndex;
 }
 
+static int32_t transportWritevFail( NetworkContext_t * pNetworkContext,
+    TransportOutVector_t * pIoVectorIterator,
+    size_t vectorsToBeSent )
+{
+TEST_ASSERT_EQUAL( MQTT_SAMPLE_NETWORK_CONTEXT, pNetworkContext );
+int32_t bytesToWrite = 0;
+size_t i;
+
+for( i = 0; i < vectorsToBeSent; ++i )
+{
+bytesToWrite += pIoVectorIterator->iov_len;
+pIoVectorIterator++;
+}
+
+return bytesToWrite + 3;
+}
+void test_MQTT_SubscribeV5_sendFailed( void )
+{
+    MQTTStatus_t mqttStatus = { 0 };
+    MQTTContext_t context = { 0 };
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
+    MQTTSubscribeInfo_t subscribeInfo = { 0 };
+    MQTTSubscribeProperties_t subscribeProperties = {0} ; 
+    subscribeProperties.subscriptionId = 1; 
+    size_t remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
+    size_t packetSize = MQTT_SAMPLE_REMAINING_LENGTH;
+
+    /* Verify that an error is propagated when transport interface returns an error. */
+    setupNetworkBuffer( &networkBuffer );
+    setupSubscriptionInfo( &subscribeInfo );
+    subscribeInfo.qos = MQTTQoS0;
+    setupTransportInterface( &transport );
+    transport.send = transportSendFailure;
+    transport.writev = transportWritevFail;
+
+    /* Initialize context. */
+    mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+    /* Verify MQTTSendFailed is propagated when transport interface returns an error. */
+    MQTTV5_GetSubscribePacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTTV5_GetSubscribePacketSize_ReturnThruPtr_pPacketSize( &packetSize );
+    MQTTV5_GetSubscribePacketSize_ReturnThruPtr_pRemainingLength( &remainingLength );
+    MQTT_SerializeSubscribeHeader_Stub( MQTT_SerializeSubscribedHeader_cb );
+    /* Expect the above calls when running MQTT_Subscribe. */
+    mqttStatus = MQTT_SubscribeV5( &context, &subscribeInfo, &subscribeProperties, 1, MQTT_FIRST_VALID_PACKET_ID );
+    TEST_ASSERT_EQUAL( MQTTSendFailed, mqttStatus );
+}
+
+// send publish acks with property, sendUnsubscribeWitoutCopyV5 - sendFailed, 
 
 
