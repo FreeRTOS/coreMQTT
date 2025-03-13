@@ -615,7 +615,7 @@ typedef struct MQTTSubscribeProperties
 
     size_t subscriptionId;
 
-} MQTTSubscribeProperties_t;
+} MQTTSubscribeProperties_t; 
 
 typedef struct MQTTSubackProperties
 {

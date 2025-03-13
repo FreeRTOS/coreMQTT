@@ -2877,7 +2877,7 @@ static MQTTStatus_t validateSubscribeUnsubscribeParams( const MQTTContext_t * pC
 static MQTTStatus_t sendSubscribeWithoutCopyV5( MQTTContext_t * pContext,
                                               MQTTSubscribeInfo_t * pSubscriptionList,
                                               size_t subscriptionCount,
-                                              MQTTSubscribeProperties_t *pSubscribeProperties,
+                                              MqttPropBuilder_t * pPropertyBuilder, 
                                               uint16_t packetId,
                                               size_t remainingLength ){
     MQTTStatus_t status = MQTTSuccess;
@@ -2911,83 +2911,14 @@ static MQTTStatus_t sendSubscribeWithoutCopyV5( MQTTContext_t * pContext,
     pIterator++ ; 
     ioVectorLength++ ; 
 
-    /*Encode subscription properties*/
     /**
-     * Questions- 
-     * In Pooja's code, to encode user properties, she made a new IoVector, Why
-     * In User Properties, do we need to send the length of the string as well. 
-     * 
-     * 1. Fixed size properties in subscribe = property length , subscription id = send in 1 vector index 
-     * 2. Variable Sized Property - 5 * MAX_USER_PROPERTY 
-     * 
-     * Maximum number of vectors required to encode and send a subscribe packet. The breakdown is shown -
-     * Fixed Header (Includes Packet Id)    0 + 1 = 1
-     * Fixed Size properties                  + 1 = 2
-     * Payload                                + 1 = 3 
-     * User Property                          + 5 * MAX_USER_PROPERTIES
+     * Sending Property Buffer
      */
-
-
-    /*USING SEND PROPERTIES START*/
-    /**
-     * Maximum number of bytes required by Fixed Size Propertis - 
-     * Subscription Id            + 4 = 4
-     * Subscription Id ID         + 1 = 5
-     * prop len -                 + 4 = 9 
-     * 
-     */
-
-    pIndex = serializedProperty; 
-    pIterator = &pIoVector[ioVectorLength]; 
-    pIndex = encodeRemainingLengthSub(pIndex , pSubscribeProperties->propertyLength) ;
-
-    if(pSubscribeProperties->subscriptionId != 0){
-        *pIndex = MQTT_SUBSCRIPTION_ID_ID;
-        pIndex ++ ;
-        pIndex= encodeRemainingLengthSub(pIndex, pSubscribeProperties->subscriptionId) ;
-    }
-
-    pIterator->iov_base = serializedProperty ; 
-    pIterator->iov_len = (size_t)(pIndex - serializedProperty) ; 
-    totalPacketLength += pIterator->iov_len ;
-    pIterator ++; 
-    ioVectorLength ++ ; 
-
-    #if(MQTT_USER_PROPERTY_ENABLED)
-    if(pSubscribeProperties->pUserProperties != NULL){
-        UserPropertyVector_t userVector ; 
-        ioVectorLength += sendUserProperties(pSubscribeProperties->pUserProperties , &userVector, &totalPacketLength ,&pIterator) ;
-    }
-    #endif
-
-    /*USING SEND PROPERTIES END*/
-
-/*
-    uint8_t propertyBuffer[MQTT_MAX_PACKET_PROPERTY_SIZE] ;
-    pIndex = propertyBuffer ; 
-    pIndex = encodeRemainingLength(pIndex, pSubscribeProperties->propertyLength) ;
-    if(pSubscribeProperties->pUserProperties != NULL){
-        *pIndex = MQTT_USER_PROPERTY_ID;
-        pIndex ++ ;
-        for(int i = 0; i < pSubscribeProperties->pUserProperties->count; i++){
-            pIndex = encodeString(pIndex, pSubscribeProperties->pUserProperties->pUserProperties[i].pKey, strlen(pSubscribeProperties->pUserProperties->pUserProperties[i].pKey), encodedKeyLength);
-            pIndex = encodeString(pIndex, pSubscribeProperties->pUserProperties->pUserProperties[i].pValue, strlen(pSubscribeProperties->pUserProperties->pUserProperties[i].pValue), encodedKeyLength);
-        }
-    }
-    if(pSubscribeProperties->subscriptionId != NULL){
-        *pIndex = MQTT_SUBSCRIPTION_ID_ID;
-        pIndex ++ ;
-        pIndex = encodeRemainingLength(pIndex, pProperties->subscriptionId) ;
-    }
-
-    pIterator->iov_base = propertyBuffer ; 
-    pIterator->iov_len = (size_t)(pIndex - propertyBuffer) ;
-
+    pIterator->iov_base = pPropertyBuilder->pBuffer ; 
+    pIterator->iov_len = pPropertyBuilder->currentIndex ; 
     totalPacketLength += pIterator->iov_len ;
     pIterator ++ ; 
-    ioVectorLength++ ; 
-
-*/
+    ioVectorLength ++ ; 
 
     while( ( status == MQTTSuccess ) && ( subscriptionsSent < subscriptionCount ) )
     {
@@ -3000,7 +2931,7 @@ static MQTTStatus_t sendSubscribeWithoutCopyV5( MQTTContext_t * pContext,
                ( subscriptionsSent < subscriptionCount ) )
         {
             /* The topic filter and the filter length gets sent next. (filter length - 2 bytes , topic filter - utf - 8 ) */
-            vectorsAdded = addEncodedStringToVector( serializedTopicFieldLength[ topicFieldLengthIndex ],
+            vectorsAdded = ( serializedTopicFieldLength[ topicFieldLengthIndex ],
                                                      pSubscriptionList[ subscriptionsSent ].pTopicFilter,
                                                      pSubscriptionList[ subscriptionsSent ].topicFilterLength,
                                                      pIterator,
@@ -3062,7 +2993,6 @@ static MQTTStatus_t sendSubscribeWithoutCopyV5( MQTTContext_t * pContext,
 
 static MQTTStatus_t validateSubscribeUnsubscribeParamsV5(MQTTContext_t* pContext,
     MQTTSubscribeInfo_t* pSubscriptionList,
-    MQTTSubscribeProperties_t * pSubscribeProperties,
     size_t subscriptionCount,
     uint16_t packetId, 
     MQTTSubscriptionType_t subscriptionType )
@@ -3073,7 +3003,7 @@ static MQTTStatus_t validateSubscribeUnsubscribeParamsV5(MQTTContext_t* pContext
     const char* shareNameEnd ;
 
     /* Validate all the parameters. */
-    if ((pContext == NULL) || (pSubscriptionList == NULL) || (pSubscribeProperties == NULL))
+    if ((pContext == NULL) || (pSubscriptionList == NULL))
     {
         LogError(("Argument cannot be NULL: pContext=%p, "
             "pSubscriptionList=%p.",
@@ -3153,16 +3083,6 @@ static MQTTStatus_t validateSubscribeUnsubscribeParamsV5(MQTTContext_t* pContext
                     }
                 }
             }
-            if (status == MQTTSuccess)
-            {
-                if ((pSubscribeProperties->subscriptionId == 0)) {
-                    LogError(("Subscription Id cannot 0 for subscribe properties : Protocol Error "));
-                    status = MQTTBadParameter;
-                }else{
-                    /* */
-                }
-            
-            } 
         }
     }
     return status;
@@ -3170,25 +3090,26 @@ static MQTTStatus_t validateSubscribeUnsubscribeParamsV5(MQTTContext_t* pContext
 
 MQTTStatus_t MQTT_SubscribeV5( MQTTContext_t * pContext,
                              MQTTSubscribeInfo_t * pSubscriptionList,
-                             MQTTSubscribeProperties_t *subscribeProperties,
                              size_t subscriptionCount,
-                             uint16_t packetId)
+                             uint16_t packetId, 
+                             MqttPropBuilder_t * pPropertyBuilder)
 {
     size_t remainingLength = 0UL, packetSize = 0UL;
 
-    MQTTStatus_t status = validateSubscribeUnsubscribeParamsV5( pContext , pSubscriptionList,
-                                                              subscribeProperties, 
-                                                              subscriptionCount,
-                                                              packetId, MQTT_SUBSCRIBE );
+    MQTTStatus_t status = validateSubscribeUnsubscribeParamsV5( pContext , 
+                                                                pSubscriptionList, 
+                                                                subscriptionCount,
+                                                                packetId, 
+                                                                MQTT_SUBSCRIBE);
     
     if( status == MQTTSuccess ) 
     {
         /* Get the remaining length and packet size.*/
         status = MQTTV5_GetSubscribePacketSize( pSubscriptionList,
-                                                subscribeProperties, 
                                                 subscriptionCount,
                                                 &remainingLength,
-                                                &packetSize );
+                                                &packetSize,
+                                                pPropertyBuilder->currentIndex );
         LogDebug( ( "SUBSCRIBE packet size is %lu and remaining length is %lu.",
                     ( unsigned long ) packetSize,
                     ( unsigned long ) remainingLength ) );
@@ -3200,7 +3121,7 @@ MQTTStatus_t MQTT_SubscribeV5( MQTTContext_t * pContext,
         status = sendSubscribeWithoutCopyV5( pContext,
                                             pSubscriptionList,
                                             subscriptionCount,
-                                            subscribeProperties, 
+                                            pPropertyBuilder, 
                                             packetId,
                                             remainingLength );
 

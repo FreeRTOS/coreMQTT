@@ -261,14 +261,32 @@ typedef struct MQTTContext
     #endif
 } MQTTContext_t;
 
+
+/**
+ * @brief The generic structure used to build a 'property' section of the packet
+ * into.
+ * @member pBuffer pointer to the user provided buffer.
+ * @member bufferLength length of the user provided buffer.
+ * @member currentIndex Index of the location which is yet to be written to in the
+ * buffer.
+ * @member fieldsSet This is a bitmask to track which fields have already been set.
+ * This allows the library to throw an error in case certain fields are included more
+ * than once as it is a protocol error to include certain fields more than once.
+ */
+typedef struct MqttPropBuilder
+{
+    uint8_t * pBuffer;
+    size_t bufferLength;
+    size_t curentIndex;
+    uint32_t fieldsSet;
+} MqttPropBuilder_t;
+
+
 /**
  * @ingroup mqtt_struct_types
  * @brief Struct to hold deserialized packet information for an #MQTTEventCallback_t
  * callback.
  */
-
-
-
 
 typedef struct MQTTDeserializedInfo
 {
@@ -598,19 +616,23 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
  */
 /* @[declare_mqtt_subscribe] */
 #if(MQTT_VERSION_5_ENABLED)
-MQTTStatus_t MQTT_SubscribeV5(MQTTContext_t* pContext,
-    MQTTSubscribeInfo_t* pSubscriptionList,
-    MQTTSubscribeProperties_t *subscribeProperties,
+MQTTStatus_t MQTT_SubscribeV5( MQTTContext_t * pContext,
+    MQTTSubscribeInfo_t * pSubscriptionList,
     size_t subscriptionCount,
-    uint16_t packetId); 
+    uint16_t packetId, 
+    MqttPropBuilder_t * pPropertyBuilder) ; 
 
 MQTTStatus_t MQTT_UnsubscribeV5( MQTTContext_t * pContext,
                                const MQTTSubscribeInfo_t * pSubscriptionList,
                                MQTTSubscribeProperties_t *subscribeProperties,
                                size_t subscriptionCount,
                                uint16_t packetId ) ; 
+
 #endif
 
+
+MQTTStatus_t MQTTPropAdd_SubscribeId(MqttPropBuilder_t * pPropertyBuilder, size_t subscriptionId); 
+MQTTStatus_t MQTTPropAdd_UserProps(MqttPropBuilder_t * pPropertyBuilder, MQTTUserProperties_t* pUserProperties) ; 
 
 MQTTStatus_t MQTT_Subscribe( MQTTContext_t * pContext,
                              const MQTTSubscribeInfo_t * pSubscriptionList,

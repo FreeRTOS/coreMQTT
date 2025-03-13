@@ -2746,11 +2746,11 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
 
 
     static MQTTStatus_t calculateSubscriptionPacketSizeV5(MQTTSubscribeInfo_t *pSubscriptionList,
-                                                     MQTTSubscribeProperties_t *pSubscribeProperties,
-                                                     size_t subscriptionCount,
-                                                     size_t *pRemainingLength,
-                                                     size_t *pPacketSize, 
-                                                     MQTTSubscriptionType_t subscriptionType)
+                                                          size_t subscriptionCount,
+                                                          size_t *pRemainingLength,
+                                                          size_t *pPacketSize, 
+                                                          size_t propLen, 
+                                                          MQTTSubscriptionType_t subscriptionType)
     {
         size_t packetSize = 0U , i = 0; 
         MQTTStatus_t status = MQTTSuccess ; 
@@ -2759,14 +2759,12 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
 
         /*2 byte packet id*/
         packetSize += sizeof( uint16_t ) ; 
-        /* Length of properties */
 
-        status = MQTT_GetSubscribePropertiesSize(pSubscribeProperties, subscriptionType) ; 
-        LogDebug(("Property Length is %lu" , (unsigned long)pSubscribeProperties->propertyLength ));
+        LogDebug(("Property Length is %lu" , (unsigned long)propLen));
         if( status == MQTTSuccess )
         {
-            packetSize += pSubscribeProperties->propertyLength;
-            packetSize += remainingLengthEncodedSize( pSubscribeProperties->propertyLength );
+            packetSize += propLen;
+            packetSize += remainingLengthEncodedSize( propLen );
         }
 
 
@@ -2805,20 +2803,20 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
         return status ; 
     }
     MQTTStatus_t MQTTV5_GetSubscribePacketSize(MQTTSubscribeInfo_t *pSubscriptionList,
-                                            MQTTSubscribeProperties_t * pSubscribeProperties,
                                             size_t subscriptionCount,
                                             size_t *pRemainingLength,
-                                            size_t *pPacketSize)
+                                            size_t *pPacketSize, 
+                                            size_t propLen)
     {
         MQTTStatus_t status = MQTTSuccess ; 
-        if(pSubscriptionList == NULL || pSubscribeProperties == NULL){
-            LogError(("Argument cannot be null : pSubscriptionList, pSubscriptionProperties")); 
+        if(pSubscriptionList == NULL || propLen == 0){
+            LogError(("Argument cannot be null : SubscriptionList, SubscribeProperties")); 
             status = MQTTBadParameter;
         }else if(subscriptionCount == 0U){
             LogError(("Subscription count cannot be 0")) ; 
             status = MQTTBadParameter;
         }else{
-            status = calculateSubscriptionPacketSizeV5(pSubscriptionList, pSubscribeProperties, subscriptionCount, pRemainingLength, pPacketSize, MQTT_SUBSCRIBE);
+            status = calculateSubscriptionPacketSizeV5(pSubscriptionList, subscriptionCount, pRemainingLength, pPacketSize, propLen, MQTT_SUBSCRIBE);
         }
         return status ; 
     }
@@ -3047,6 +3045,41 @@ static uint8_t * encodeString( uint8_t * pDestination,
 
     return pBuffer;
 }
+
+static uint8_t * encodeBinaryData( uint8_t * pDestination,
+                               const void * pSource,
+                               uint16_t sourceLength )
+{
+    uint8_t * pBuffer = NULL;
+
+    /* Typecast const char * typed source buffer to const uint8_t *.
+    * This is to use same type buffers in memcpy. */
+    const uint8_t * pSourceBuffer = ( const uint8_t * ) pSource;
+
+    assert( pDestination != NULL );
+
+    pBuffer = pDestination;
+
+    /* The first byte of a UTF-8 string is the high byte of the string length. */
+    *pBuffer = UINT16_HIGH_BYTE( sourceLength );
+    pBuffer++;
+
+    /* The second byte of a UTF-8 string is the low byte of the string length. */
+    *pBuffer = UINT16_LOW_BYTE( sourceLength );
+    pBuffer++;
+
+    /* Copy the string into pBuffer. */
+    if( pSourceBuffer != NULL )
+    {
+        ( void ) memcpy( pBuffer, pSourceBuffer, sourceLength );
+    }
+
+    /* Return the pointer to the end of the encoded string. */
+    pBuffer = &pBuffer[ sourceLength ];
+
+    return pBuffer;
+}
+
 
 /*-----------------------------------------------------------*/
 
