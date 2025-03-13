@@ -277,10 +277,11 @@ typedef struct MqttPropBuilder
 {
     uint8_t * pBuffer;
     size_t bufferLength;
-    size_t curentIndex;
-    uint32_t fieldsSet;
+    size_t currentIndex;
+    uint32_t fieldSet;
 } MqttPropBuilder_t;
 
+MQTTStatus_t MqttPropertyBuilder_Init(MqttPropBuilder_t* pPropertyBuilder, uint8_t *buffer, size_t length); 
 
 /**
  * @ingroup mqtt_struct_types

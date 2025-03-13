@@ -75,7 +75,12 @@
 #define CORE_MQTT_SERIALIZED_LENGTH_FIELD_BYTES          ( 2U )
 
 #define UINT8_SET_BIT( x, position )      ( ( x ) = ( uint8_t ) ( ( x ) | ( 0x01U << ( position ) ) ) )
+#define UINT16_HIGH_BYTE( x )             ( ( uint8_t ) ( ( x ) >> 8 ) )
 
+ /**
+  * @brief Get the low byte of a 16-bit unsigned integer.
+  */
+#define UINT16_LOW_BYTE( x )              ( ( uint8_t ) ( ( x ) & 0x00ffU ) )
 
 /**
  * @brief Number of vectors required to encode one topic filter in a subscribe
@@ -2891,9 +2896,8 @@ static MQTTStatus_t sendSubscribeWithoutCopyV5( MQTTContext_t * pContext,
     size_t totalPacketLength = 0U;
     size_t ioVectorLength = 0U;
     size_t subscriptionsSent = 0U;
-    size_t vectorsAdded;
+    size_t vectorsAdded = 0U;
     size_t topicFieldLengthIndex;
-    uint8_t serializedProperty[9U] ; 
     uint8_t subscriptionOptions = 0U; 
     int32_t byteSent; 
     /**
@@ -2914,6 +2918,18 @@ static MQTTStatus_t sendSubscribeWithoutCopyV5( MQTTContext_t * pContext,
     /**
      * Sending Property Buffer
      */
+    uint8_t propertyLength[4]; 
+    pIndex = propertyLength; 
+    pIndex = encodeRemainingLengthSub(pIndex, pPropertyBuilder->currentIndex); 
+    pIterator->iov_base = propertyLength; 
+    pIterator->iov_len = (size_t)(pIndex - propertyLength);
+    totalPacketLength += pIterator->iov_len;
+    pIterator++;
+    ioVectorLength++;
+    for (int i = 0; i < 4; i++) {
+        LogInfo(("Property Length %d", propertyLength[i]));
+    }
+
     pIterator->iov_base = pPropertyBuilder->pBuffer ; 
     pIterator->iov_len = pPropertyBuilder->currentIndex ; 
     totalPacketLength += pIterator->iov_len ;
@@ -2931,7 +2947,7 @@ static MQTTStatus_t sendSubscribeWithoutCopyV5( MQTTContext_t * pContext,
                ( subscriptionsSent < subscriptionCount ) )
         {
             /* The topic filter and the filter length gets sent next. (filter length - 2 bytes , topic filter - utf - 8 ) */
-            vectorsAdded = ( serializedTopicFieldLength[ topicFieldLengthIndex ],
+            vectorsAdded = addEncodedStringToVector(serializedTopicFieldLength[ topicFieldLengthIndex ],
                                                      pSubscriptionList[ subscriptionsSent ].pTopicFilter,
                                                      pSubscriptionList[ subscriptionsSent ].topicFilterLength,
                                                      pIterator,
@@ -3096,6 +3112,11 @@ MQTTStatus_t MQTT_SubscribeV5( MQTTContext_t * pContext,
 {
     size_t remainingLength = 0UL, packetSize = 0UL;
 
+    //LogError(("pProperrty len %lu", pPropertyBuilder->currentIndex)); 
+    //for (int i = 0; i < pPropertyBuilder->currentIndex; i++) {
+    //    LogError(("Property %d : %d", i, pPropertyBuilder->pBuffer[i]));
+    //}
+
     MQTTStatus_t status = validateSubscribeUnsubscribeParamsV5( pContext , 
                                                                 pSubscriptionList, 
                                                                 subscriptionCount,
@@ -3110,7 +3131,7 @@ MQTTStatus_t MQTT_SubscribeV5( MQTTContext_t * pContext,
                                                 &remainingLength,
                                                 &packetSize,
                                                 pPropertyBuilder->currentIndex );
-        LogDebug( ( "SUBSCRIBE packet size is %lu and remaining length is %lu.",
+        LogError( ( "SUBSCRIBE packet size is %lu and remaining length is %lu.",
                     ( unsigned long ) packetSize,
                     ( unsigned long ) remainingLength ) );
     }   
@@ -3124,12 +3145,141 @@ MQTTStatus_t MQTT_SubscribeV5( MQTTContext_t * pContext,
                                             pPropertyBuilder, 
                                             packetId,
                                             remainingLength );
+        LogError(("It is good till here?")); 
 
         MQTT_POST_STATE_UPDATE_HOOK( pContext );
     }
     return status;
 }
 #endif
+
+
+static uint8_t* encodeString(uint8_t* pDestination,
+    const char* pSource,
+    uint16_t sourceLength)
+{
+    uint8_t* pBuffer = NULL;
+
+    /* Typecast const char * typed source buffer to const uint8_t *.
+     * This is to use same type buffers in memcpy. */
+    const uint8_t* pSourceBuffer = (const uint8_t*)pSource;
+
+    assert(pDestination != NULL);
+
+    pBuffer = pDestination;
+
+    /* The first byte of a UTF-8 string is the high byte of the string length. */
+    *pBuffer = UINT16_HIGH_BYTE(sourceLength);
+    pBuffer++;
+
+    /* The second byte of a UTF-8 string is the low byte of the string length. */
+    *pBuffer = UINT16_LOW_BYTE(sourceLength);
+    pBuffer++;
+
+    /* Copy the string into pBuffer. */
+    if (pSourceBuffer != NULL)
+    {
+        (void)memcpy(pBuffer, pSourceBuffer, sourceLength);
+    }
+
+    /* Return the pointer to the end of the encoded string. */
+    pBuffer = &pBuffer[sourceLength];
+
+    return pBuffer;
+}
+
+static uint8_t* encodeBinaryData(uint8_t* pDestination,
+    const void* pSource,
+    uint16_t sourceLength)
+{
+    uint8_t* pBuffer = NULL;
+
+    /* Typecast const char * typed source buffer to const uint8_t *.
+    * This is to use same type buffers in memcpy. */
+    const uint8_t* pSourceBuffer = (const uint8_t*)pSource;
+
+    assert(pDestination != NULL);
+
+    pBuffer = pDestination;
+
+    /* The first byte of a UTF-8 string is the high byte of the string length. */
+    *pBuffer = UINT16_HIGH_BYTE(sourceLength);
+    pBuffer++;
+
+    /* The second byte of a UTF-8 string is the low byte of the string length. */
+    *pBuffer = UINT16_LOW_BYTE(sourceLength);
+    pBuffer++;
+
+    /* Copy the string into pBuffer. */
+    if (pSourceBuffer != NULL)
+    {
+        (void)memcpy(pBuffer, pSourceBuffer, sourceLength);
+    }
+
+    /* Return the pointer to the end of the encoded string. */
+    pBuffer = &pBuffer[sourceLength];
+
+    return pBuffer;
+}
+
+
+MQTTStatus_t MqttPropertyBuilder_Init(MqttPropBuilder_t* pPropertyBuilder, uint8_t *buffer, size_t length)
+{
+    MQTTStatus_t status = MQTTSuccess;
+    if (pPropertyBuilder == NULL || buffer == NULL || length == 0)
+    {
+        LogError(("Invalid arguments passed to MqttPropertyBuilder_Init."));
+        status = MQTTBadParameter;
+    }
+    if (status == MQTTSuccess)
+    {
+        pPropertyBuilder->pBuffer = buffer;
+        pPropertyBuilder->currentIndex = 0;
+        pPropertyBuilder->bufferLength = length;
+        pPropertyBuilder->fieldSet = 0; /* 0 means no field is set */
+    }
+    return status;
+}
+MQTTStatus_t MQTTPropAdd_SubscribeId(MqttPropBuilder_t* pPropertyBuilder, size_t subscriptionId)
+{
+    MQTTStatus_t status = MQTTSuccess;
+    uint8_t* pIndex = pPropertyBuilder->pBuffer + pPropertyBuilder->currentIndex;
+    if (subscriptionId == 0)
+    {
+        LogError(("Subscription Id cannot 0 for subscribe properties : Protocol Error "));
+        status = MQTTBadParameter;
+    }
+    // serialization logic 
+    // id_id and then id
+    *pIndex = MQTT_SUBSCRIPTION_ID_ID;
+    pIndex++;
+    pIndex = encodeRemainingLengthSub(pIndex, subscriptionId);
+    pPropertyBuilder->currentIndex += (size_t) (pIndex - (pPropertyBuilder->pBuffer + pPropertyBuilder->currentIndex));
+    return status; 
+}
+MQTTStatus_t MQTTPropAdd_UserProps(MqttPropBuilder_t* pPropertyBuilder, MQTTUserProperties_t* pUserProperties)
+{
+    MQTTStatus_t status = MQTTSuccess;
+    uint8_t* start = pPropertyBuilder->pBuffer + pPropertyBuilder->currentIndex;
+    uint8_t* pIndex = pPropertyBuilder->pBuffer + pPropertyBuilder->currentIndex;
+    uint32_t i = 0;
+    uint32_t size = pUserProperties->count;
+    const MQTTUserProperty_t* userProperty = pUserProperties->userProperty; /*Pointer to the array of user props*/
+
+    for (; i < size; i++)
+    {
+        *pIndex = MQTT_USER_PROPERTY_ID;
+        pIndex++;
+
+        /*Encoding key*/
+        pIndex = encodeString(pIndex, userProperty[i].pKey, userProperty[i].keyLength);
+        pIndex = encodeString(pIndex, userProperty[i].pValue, userProperty[i].valueLength);
+    }
+    pPropertyBuilder->currentIndex += (size_t)(pIndex - start);
+    return status; 
+}
+
+
 
 /*-----------------------------------------------------------*/
 
@@ -4527,52 +4677,52 @@ static MQTTStatus_t validateSubscribeUnsubscribeParamsUnsub( const MQTTContext_t
 }
 
 #if(MQTT_VERSION_5_ENABLED)
-MQTTStatus_t MQTT_UnsubscribeV5( MQTTContext_t * pContext,
-                               const MQTTSubscribeInfo_t * pSubscriptionList,
-                               MQTTSubscribeProperties_t *subscribeProperties,
-                               size_t subscriptionCount,
-                               uint16_t packetId )
-{
-    size_t remainingLength = 0UL, packetSize = 0UL;
-
-    /* Validate arguments. */
-    MQTTStatus_t status = validateSubscribeUnsubscribeParamsV5( pContext,
-                                                              pSubscriptionList,
-                                                              subscribeProperties,
-                                                              subscriptionCount,
-                                                              packetId, MQTT_UNSUBSCRIBE);
-
-    if( status == MQTTSuccess )
-    {
-        /* Get the remaining length and packet size.*/
-        status = MQTTV5_GetUnsubscribePacketSize( pSubscriptionList,
-                                                subscribeProperties,
-                                                subscriptionCount,
-                                                &remainingLength,
-                                                &packetSize );
-        LogDebug( ( "UNSUBSCRIBE packet size is %lu and remaining length is %lu.",
-                    ( unsigned long ) packetSize,
-                    ( unsigned long ) remainingLength ) );
-    }
-
-    if( status == MQTTSuccess )
-    {
-        /* Take the mutex because the below call should not be interrupted. */
-        MQTT_PRE_SEND_HOOK( pContext );
-
-        status = sendUnsubscribeWithoutCopyV5( pContext,
-                                             pSubscriptionList,
-                                             subscribeProperties,
-                                             subscriptionCount,
-                                             packetId,
-                                             remainingLength );
-
-        /* Give the mutex away. */
-        MQTT_POST_SEND_HOOK( pContext );
-    }
-
-    return status;
-}
+//MQTTStatus_t MQTT_UnsubscribeV5( MQTTContext_t * pContext,
+//                               const MQTTSubscribeInfo_t * pSubscriptionList,
+//                               size_t subscriptionCount,
+//                               uint16_t packetId, 
+//                               MqttPropBuilder_t* pPropertyBuilder)
+//{
+//    size_t remainingLength = 0UL, packetSize = 0UL;
+//
+//    /* Validate arguments. */
+//    MQTTStatus_t status = validateSubscribeUnsubscribeParamsV5( pContext,
+//                                                              pSubscriptionList,
+//                                                              subscriptionCount,
+//                                                              packetId, 
+//                                                              MQTT_UNSUBSCRIBE);
+//
+//    if( status == MQTTSuccess )
+//    {
+//        /* Get the remaining length and packet size.*/
+//        status = MQTTV5_GetUnsubscribePacketSize( pSubscriptionList,
+//                                                subscriptionCount,
+//                                                &remainingLength,
+//                                                &packetSize, 
+//                                                pPropertyBuilder->currentIndex);
+//        LogDebug( ( "UNSUBSCRIBE packet size is %lu and remaining length is %lu.",
+//                    ( unsigned long ) packetSize,
+//                    ( unsigned long ) remainingLength ) );
+//    }
+//
+//    if( status == MQTTSuccess )
+//    {
+//        /* Take the mutex because the below call should not be interrupted. */
+//        MQTT_PRE_SEND_HOOK( pContext );
+//
+//        status = sendUnsubscribeWithoutCopyV5( pContext,
+//                                             pSubscriptionList,
+//                                             pPropertyBuilder,
+//                                             subscriptionCount,
+//                                             packetId,
+//                                             remainingLength );
+//
+//        /* Give the mutex away. */
+//        MQTT_POST_SEND_HOOK( pContext );
+//    }
+//
+//    return status;
+//}
 #endif 
 MQTTStatus_t MQTT_Unsubscribe( MQTTContext_t * pContext,
                                const MQTTSubscribeInfo_t * pSubscriptionList,

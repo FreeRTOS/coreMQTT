@@ -2817,6 +2817,7 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
             status = MQTTBadParameter;
         }else{
             status = calculateSubscriptionPacketSizeV5(pSubscriptionList, subscriptionCount, pRemainingLength, pPacketSize, propLen, MQTT_SUBSCRIBE);
+           
         }
         return status ; 
     }

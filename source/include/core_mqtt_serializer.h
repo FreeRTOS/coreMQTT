@@ -792,11 +792,12 @@ MQTTStatus_t MQTT_SerializeConnect( const MQTTConnectInfo_t * pConnectInfo,
  */
 /* @[declare_mqtt_getsubscribepacketsize] */
 #if(MQTT_VERSION_5_ENABLED)
+
 MQTTStatus_t MQTTV5_GetSubscribePacketSize(MQTTSubscribeInfo_t* pSubscriptionList,
-    MQTTSubscribeProperties_t* pSubscribeProperties,
     size_t subscriptionCount,
     size_t* pRemainingLength,
-    size_t* pPacketSize); 
+    size_t* pPacketSize,
+    size_t propLen); 
 #endif
 MQTTStatus_t MQTT_GetSubscribePacketSize( const MQTTSubscribeInfo_t * pSubscriptionList,
                                           size_t subscriptionCount,
