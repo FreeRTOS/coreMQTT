@@ -3238,7 +3238,9 @@ static uint8_t* encodeBinaryData(uint8_t* pDestination,
     return pBuffer;
 }
 
-
+/**
+ * User Facing APIs for Optional Properties  --> 
+ */
 MQTTStatus_t MqttPropertyBuilder_Init(MqttPropBuilder_t* pPropertyBuilder, uint8_t *buffer, size_t length)
 {
     MQTTStatus_t status = MQTTSuccess;
@@ -3294,6 +3296,102 @@ MQTTStatus_t MQTTPropAdd_UserProps(MqttPropBuilder_t* pPropertyBuilder, MQTTUser
     pPropertyBuilder->currentIndex += (size_t)(pIndex - start);
     return status; 
 }
+
+MQTTStatus_t MQTTPropAdd_ConnSessionExpiry(MqttPropBuilder_t * pPropertyBuilder, uint32_t sessionExpiry)
+{
+    uint8_t * pIndex = pPropertyBuilder->pBuffer + pPropertyBuilder->currentIndex;
+    *pIndex = MQTT_SESSION_EXPIRY_ID ;
+    pIndex ++ ;
+    pIndex[0] = UINT32_BYTE3(sessionExpiry );
+    pIndex[1] = UINT32_BYTE2(sessionExpiry );
+    pIndex[2] = UINT32_BYTE1(sessionExpiry );
+    pIndex[3] = UINT32_BYTE0(sessionExpiry );
+    pIndex = &pIndex[4] ; 
+
+    pPropertyBuilder->currentIndex += 5 ; 
+
+    return MQTTSuccess ; 
+}
+MQTTStatus_t MQTTPropAdd_ConnReceiveMax(MqttPropBuilder_t * pPropertyBuilder, uint16_t receiveMax)
+{
+    uint8_t * pIndex = pPropertyBuilder->pBuffer + pPropertyBuilder->currentIndex;
+    *pIndex = MQTT_RECEIVE_MAX_ID;
+    pIndex ++ ;
+    pIndex[0] = UINT16_HIGH_BYTE(receiveMax);
+    pIndex[1] = UINT16_LOW_BYTE(receiveMax);
+    pIndex = &pIndex[2] ;   
+
+    pPropertyBuilder->currentIndex += 3 ; 
+    return MQTTSuccess ; 
+}
+
+MQTTStatus_t MQTTPropAdd_ConnMaxPacketSize(MqttPropBuilder_t * pPropertyBuilder, uint32_t maxPacketSize)
+{
+    uint8_t * pIndex = pPropertyBuilder->pBuffer + pPropertyBuilder->currentIndex;
+    *pIndex = MQTT_MAX_PACKET_SIZE_ID;
+    pIndex ++ ;
+    pIndex[0] = UINT32_BYTE3(maxPacketSize);
+    pIndex[1] = UINT32_BYTE2(maxPacketSize);
+    pIndex[2] = UINT32_BYTE1(maxPacketSize);
+    pIndex[3] = UINT32_BYTE0(maxPacketSize);
+    pIndex = &pIndex[4] ;
+
+    pPropertyBuilder->currentIndex += 5 ; 
+    return MQTTSuccess ; 
+}
+
+MQTTStatus_t MQTTPropAdd_ConnRequestRespInfo( MqttPropBuilder_t * pPropBuilder, bool requestResponseInfo )
+{
+    uint8_t * pIndex = pPropertyBuilder->pBuffer + pPropertyBuilder->currentIndex;
+    *pIndex = MQTT_REQUEST_RESPONSE_ID;
+    pIndex++;
+    *pIndex = 1U;
+    pIndex++;
+
+    pPropertyBuilder->currentIndex += 2 ; 
+    return MQTTSuccess ; 
+}
+
+MQTTStatus_t MQTTPropAdd_ConnRequestProbInfo( MqttPropBuilder_t * pPropBuilder, bool requestProblemInfo )
+{
+    uint8_t * pIndex = pPropertyBuilder->pBuffer + pPropertyBuilder->currentIndex;
+    *pIndex = MQTT_REQUEST_PROBLEM_ID;
+    pIndex ++ ; 
+    *pIndex = 0U ; 
+    pIndex ++ ; 
+
+    pPropertyBuilder->currentIndex += 2 ; 
+    return MQTTSuccess ;     
+}
+
+MQTTStatus_t MQTTPropAdd_ConnAuthMethod( MqttPropBuilder_t * pPropBuilder,
+                                        const char * authMethod,
+                                        uint16_t authMethodLength)
+{
+    uint8_t * pIndex = pPropertyBuilder->pBuffer + pPropertyBuilder->currentIndex;
+    *pIndex = MQTT_AUTH_METHOD_ID;
+    pIndex++;
+    pIndex = encodeString( pIndex, authMethod, authMethodLength );
+
+    pPropertyBuilder->currentIndex += (size_t)(pIndex - (pPropertyBuilder->pBuffer + pPropertyBuilder->currentIndex)) ;
+    return MQTTSuccess ;
+
+}
+
+MQTTStatus_t MQTTPropAdd_ConnAuthData( MqttPropBuilder_t * pPropBuilder,
+                                       const char * authData,
+                                       uint16_t authDataLength )
+{
+    uint8_t * pIndex = pPropertyBuilder->pBuffer + pPropertyBuilder->currentIndex;
+    *pIndex = MQTT_AUTH_DATA_ID;
+    pIndex++;
+    pIndex = encodeString(pIndex, authData, authDataLength);
+
+    pPropertyBuilder->currentIndex += (size_t)(pIndex - (pPropertyBuilder->pBuffer + pPropertyBuilder->currentIndex)) ;
+    return MQTTSuccess ; 
+}
+
+
 
 
 
@@ -3744,7 +3842,7 @@ static MQTTStatus_t sendConnectWithoutCopy( MQTTContext_t * pContext,
          * Total- 39
          */
 
-        uint8_t connectPacketHeader[ 39U ];
+        uint8_t connectPacketHeader[ 15U ];
 
         /* Maximum number of bytes required by the fixed size will properties.
          * Property length               0 + 4 = 4
@@ -3794,26 +3892,48 @@ static MQTTStatus_t sendConnectWithoutCopy( MQTTContext_t * pContext,
                                                    pWillInfo,
                                                    remainingLength );
 
-        #if ( MQTT_VERSION_5_ENABLED )
-            pIndex = MQTTV5_SerializeConnectProperties( pIndex, pContext->pConnectProperties );
-        #endif
-        assert( ( ( size_t ) ( pIndex - connectPacketHeader ) ) <= sizeof( connectPacketHeader ) );
-
-        /* The header gets sent first. */
         iterator->iov_base = connectPacketHeader;
-        /* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-182 */
-        /* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-108 */
-        /* coverity[misra_c_2012_rule_18_2_violation] */
-        /* coverity[misra_c_2012_rule_10_8_violation] */
         iterator->iov_len = ( size_t ) ( pIndex - connectPacketHeader );
         totalMessageLength += iterator->iov_len;
         iterator++;
         ioVectorLength++;
 
+
         #if ( MQTT_VERSION_5_ENABLED )
-            /*Encode the connect Properties if provided*/
-            ioVectorLength += sendConnectProperties( pContext->pConnectProperties, &propertiesVector, &totalMessageLength, &iterator );
+            // pIndex = MQTTV5_SerializeConnectProperties( pIndex, pContext->pConnectProperties );
+            uint8_t propertyLength[4]; 
+            pIndex = propertyLength; 
+            pIndex = encodeRemainingLengthSub(pIndex, pPropertyBuilder->currentIndex); 
+            iterator->iov_base = propertyLength; 
+            iterator->iov_len = (size_t)(pIndex - propertyLength);
+            totalMessageLength += pIterator->iov_len;
+            iterator++;
+            ioVectorLength++;
+
+            iterator->iov_base = pPropertyBuilder->pBuffer ; 
+            iterator->iov_len = pPropertyBuilder->currentIndex ; 
+            totalMessageLength += pIterator->iov_len ;
+            iterator ++ ; 
+            ioVectorLength ++ ;
+
         #endif
+        // assert( ( ( size_t ) ( pIndex - connectPacketHeader ) ) <= sizeof( connectPacketHeader ) );
+
+        /* The header gets sent first. */
+        // iterator->iov_base = connectPacketHeader;
+        // /* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-182 */
+        // /* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-108 */
+        // /* coverity[misra_c_2012_rule_18_2_violation] */
+        // /* coverity[misra_c_2012_rule_10_8_violation] */
+        // iterator->iov_len = ( size_t ) ( pIndex - connectPacketHeader );
+        // totalMessageLength += iterator->iov_len;
+        // iterator++;
+        // ioVectorLength++;
+
+        // #if ( MQTT_VERSION_5_ENABLED )
+        //     /*Encode the connect Properties if provided*/
+        //     ioVectorLength += sendConnectProperties( pContext->pConnectProperties, &propertiesVector, &totalMessageLength, &iterator );
+        // #endif
 
         /* Serialize the client ID. */
         vectorsAdded = addEncodedStringToVector( serializedClientIDLength,
@@ -4297,7 +4417,8 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
                            const MQTTConnectInfo_t * pConnectInfo,
                            MQTTPublishInfo_t * pWillInfo,
                            uint32_t timeoutMs,
-                           bool * pSessionPresent )
+                           bool * pSessionPresent,
+                           MqttPropBuilder_t * pPropertyBuilder)
 {
     size_t remainingLength = 0UL, packetSize = 0UL;
     MQTTStatus_t status = MQTTSuccess;
@@ -4321,7 +4442,7 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
             /* Get MQTT connect packet size and remaining length. */
             status = MQTTV5_GetConnectPacketSize( pConnectInfo,
                                                   pWillInfo,
-                                                  pContext->pConnectProperties,
+                                                  pPropertyBuilder->currentIndex,
                                                   &remainingLength,
                                                   &packetSize );
             LogDebug( ( "CONNECT packet size is %lu and remaining length is %lu.",

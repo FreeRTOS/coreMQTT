@@ -5518,7 +5518,7 @@ MQTTStatus_t MQTT_ProcessIncomingPacketTypeAndLength( const uint8_t * pBuffer,
 
     MQTTStatus_t MQTTV5_GetConnectPacketSize( const MQTTConnectInfo_t * pConnectInfo,
                                               MQTTPublishInfo_t * pWillInfo,
-                                              MQTTConnectProperties_t * pConnectProperties,
+                                              size_t propLen,
                                               size_t * pRemainingLength,
                                               size_t * pPacketSize )
     {
@@ -5555,34 +5555,34 @@ MQTTStatus_t MQTT_ProcessIncomingPacketTypeAndLength( const uint8_t * pBuffer,
                         ( unsigned long ) pWillInfo->payloadLength ) );
             status = MQTTBadParameter;
         }
-        else if( pConnectProperties == NULL )
-        {
-            LogError( ( "Argument cannot be NULL: connectProperties" ) );
-            status = MQTTBadParameter;
-        }
-        else if( ( pConnectProperties->pOutgoingAuth != NULL ) && ( pConnectProperties->pIncomingAuth == NULL ) )
-        {
-            LogError( ( "Incoming Auth cannot be NULL" ) );
-            status = MQTTBadParameter;
-        }
+        // else if( pConnectProperties == NULL )
+        // {
+        //     LogError( ( "Argument cannot be NULL: connectProperties" ) );
+        //     status = MQTTBadParameter;
+        // }
+        // else if( ( pConnectProperties->pOutgoingAuth != NULL ) && ( pConnectProperties->pIncomingAuth == NULL ) )
+        // {
+        //     LogError( ( "Incoming Auth cannot be NULL" ) );
+        //     status = MQTTBadParameter;
+        // }
 
-        #if ( MQTT_USER_PROPERTY_ENABLED )
-            else if( pConnectProperties->pIncomingUserProperty == NULL )
-            {
-                LogError( ( "Incoming user property cannot be NULL" ) );
-                status = MQTTBadParameter;
-            }
-        #endif
-        else
-        {
-            /* Add the connect properties size. */
-            status = MQTT_GetConnectPropertiesSize( pConnectProperties );
-        }
+        // #if ( MQTT_USER_PROPERTY_ENABLED )
+        //     else if( pConnectProperties->pIncomingUserProperty == NULL )
+        //     {
+        //         LogError( ( "Incoming user property cannot be NULL" ) );
+        //         status = MQTTBadParameter;
+        //     }
+        // #endif
+        // else
+        // {
+        //     /* Add the connect properties size. */
+        //     status = MQTT_GetConnectPropertiesSize( pConnectProperties );
+        // }
 
         if( status == MQTTSuccess )
         {
-            connectPacketSize += pConnectProperties->propertyLength;
-            connectPacketSize += remainingLengthEncodedSize( pConnectProperties->propertyLength );
+            connectPacketSize += propLen;
+            connectPacketSize += remainingLengthEncodedSize(propLen);
             /* Add the length of the client identifier. */
             connectPacketSize += pConnectInfo->clientIdentifierLength + sizeof( uint16_t );
 

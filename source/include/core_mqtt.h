@@ -559,10 +559,11 @@ MQTTStatus_t MQTT_InitStatefulQoS( MQTTContext_t * pContext,
  */
 /* @[declare_mqtt_connect] */
 MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
-                           const MQTTConnectInfo_t * pConnectInfo,
-                           MQTTPublishInfo_t * pWillInfo,
-                           uint32_t timeoutMs,
-                           bool * pSessionPresent );
+                        const MQTTConnectInfo_t * pConnectInfo,
+                        MQTTPublishInfo_t * pWillInfo,
+                        uint32_t timeoutMs,
+                        bool * pSessionPresent,
+                        MqttPropBuilder_t * pPropertyBuilder); 
 /* @[declare_mqtt_connect] */
 
 /**
@@ -633,7 +634,28 @@ MQTTStatus_t MQTT_UnsubscribeV5( MQTTContext_t * pContext,
 
 
 MQTTStatus_t MQTTPropAdd_SubscribeId(MqttPropBuilder_t * pPropertyBuilder, size_t subscriptionId); 
+
 MQTTStatus_t MQTTPropAdd_UserProps(MqttPropBuilder_t * pPropertyBuilder, MQTTUserProperties_t* pUserProperties) ; 
+
+MQTTStatus_t MQTTPropAdd_ConnSessionExpiry(MqttPropBuilder_t * pPropertyBuilder, uint32_t sessionExpiry) ; 
+
+MQTTStatus_t MQTTPropAdd_ConnReceiveMax(MqttPropBuilder_t * pPropertyBuilder, uint16_t receiveMax);
+
+MQTTStatus_t MQTTPropAdd_ConnMaxPacketSize(MqttPropBuilder_t * pPropertyBuilder, uint32_t maxPacketSize);
+
+MQTTStatus_t MQTTPropAdd_ConnRequestRespInfo( MqttPropBuilder_t * pPropBuilder, bool requestResponseInfo );
+
+MQTTStatus_t MQTTPropAdd_ConnRequestProbInfo( MqttPropBuilder_t * pPropBuilder, bool requestProblemInfo );
+
+MQTTStatus_t MQTTPropAdd_ConnAuthMethod( MqttPropBuilder_t * pPropBuilder,
+                                        const char * authMethod,
+                                        uint16_t authMethodLength) ;
+
+
+MQTTStatus_t MQTTPropAdd_ConnAuthData( MqttPropBuilder_t * pPropBuilder,
+                                       const char * authData,
+                                       uint16_t authDataLength );
+
 
 MQTTStatus_t MQTT_Subscribe( MQTTContext_t * pContext,
                              const MQTTSubscribeInfo_t * pSubscriptionList,
