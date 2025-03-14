@@ -4746,10 +4746,10 @@ MQTTStatus_t MQTT_SerializeSubscribe( const MQTTSubscribeInfo_t * pSubscriptionL
 /*-----------------------------------------------------------*/
 #if(MQTT_VERSION_5_ENABLED)
 MQTTStatus_t MQTTV5_GetUnsubscribePacketSize( const MQTTSubscribeInfo_t * pSubscriptionList,
-                                            MQTTSubscribeProperties_t * subscribeProperties,
                                             size_t subscriptionCount,
                                             size_t * pRemainingLength,
-                                            size_t * pPacketSize )
+                                            size_t * pPacketSize,
+                                            size_t propLen)
 {
     MQTTStatus_t status = MQTTSuccess;
 
@@ -4773,10 +4773,10 @@ MQTTStatus_t MQTTV5_GetUnsubscribePacketSize( const MQTTSubscribeInfo_t * pSubsc
     {
         /* Calculate the MQTT UNSUBSCRIBE packet size. */
         status = calculateSubscriptionPacketSizeV5( pSubscriptionList,
-                                                subscribeProperties,
                                                 subscriptionCount,
                                                 pRemainingLength,
                                                 pPacketSize,
+                                                propLen,
                                                 MQTT_UNSUBSCRIBE );
     }
 

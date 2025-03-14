@@ -625,9 +625,9 @@ MQTTStatus_t MQTT_SubscribeV5( MQTTContext_t * pContext,
 
 MQTTStatus_t MQTT_UnsubscribeV5( MQTTContext_t * pContext,
                                const MQTTSubscribeInfo_t * pSubscriptionList,
-                               MQTTSubscribeProperties_t *subscribeProperties,
                                size_t subscriptionCount,
-                               uint16_t packetId ) ; 
+                               uint16_t packetId,
+                               MqttPropBuilder_t* pPropertyBuilder) ;
 
 #endif
 
