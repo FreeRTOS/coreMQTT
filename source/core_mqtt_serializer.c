@@ -681,12 +681,12 @@ static bool calculatePublishPacketSize( const MQTTPublishInfo_t * pPublishInfo,
  * 
  */
 #if(MQTT_VERSION_5_ENABLED)
-static MQTTStatus_t calculateSubscriptionPacketSizeV5(MQTTSubscribeInfo_t *pSubscriptionList,
-                                                    MQTTSubscribeProperties_t *pSubscribeProperties,
-                                                    size_t subscriptionCount,
-                                                    size_t *pRemainingLength,
-                                                    size_t *pPacketSize, 
-                                                    MQTTSubscriptionType_t subscriptionType) ;
+static MQTTStatus_t calculateSubscriptionPacketSizeV5(MQTTSubscribeInfo_t* pSubscriptionList,
+    size_t subscriptionCount,
+    size_t* pRemainingLength,
+    size_t* pPacketSize,
+    size_t propLen,
+    MQTTSubscriptionType_t subscriptionType); 
 #endif
 
 
@@ -5865,10 +5865,8 @@ MQTTStatus_t MQTT_ProcessIncomingPacketTypeAndLength( const uint8_t * pBuffer,
                 status = MQTTBadParameter;
             }
         #endif
-        else
-        {
-            status = validateConnackParams( pIncomingPacket, pSessionPresent );
-        }
+        
+        status = validateConnackParams( pIncomingPacket, pSessionPresent );
 
         if( status == MQTTSuccess )
         {

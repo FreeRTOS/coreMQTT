@@ -643,16 +643,16 @@ MQTTStatus_t MQTTPropAdd_ConnReceiveMax(MqttPropBuilder_t * pPropertyBuilder, ui
 
 MQTTStatus_t MQTTPropAdd_ConnMaxPacketSize(MqttPropBuilder_t * pPropertyBuilder, uint32_t maxPacketSize);
 
-MQTTStatus_t MQTTPropAdd_ConnRequestRespInfo( MqttPropBuilder_t * pPropBuilder, bool requestResponseInfo );
+MQTTStatus_t MQTTPropAdd_ConnRequestRespInfo( MqttPropBuilder_t * pPropertyBuilder, bool requestResponseInfo );
 
-MQTTStatus_t MQTTPropAdd_ConnRequestProbInfo( MqttPropBuilder_t * pPropBuilder, bool requestProblemInfo );
+MQTTStatus_t MQTTPropAdd_ConnRequestProbInfo( MqttPropBuilder_t * pPropertyBuilder, bool requestProblemInfo );
 
-MQTTStatus_t MQTTPropAdd_ConnAuthMethod( MqttPropBuilder_t * pPropBuilder,
+MQTTStatus_t MQTTPropAdd_ConnAuthMethod( MqttPropBuilder_t * pPropertyBuilder,
                                         const char * authMethod,
                                         uint16_t authMethodLength) ;
 
 
-MQTTStatus_t MQTTPropAdd_ConnAuthData( MqttPropBuilder_t * pPropBuilder,
+MQTTStatus_t MQTTPropAdd_ConnAuthData( MqttPropBuilder_t * pPropertyBuilder,
                                        const char * authData,
                                        uint16_t authDataLength );
 
