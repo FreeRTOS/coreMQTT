@@ -650,6 +650,21 @@ MQTTStatus_t MQTTPropAdd_ConnRequestProbInfo( MqttPropBuilder_t * pPropertyBuild
 MQTTStatus_t MQTTPropAdd_ConnAuthMethod( MqttPropBuilder_t * pPropertyBuilder,
                                         const char * authMethod,
                                         uint16_t authMethodLength) ;
+MQTTStatus_t MQTTPropAdd_PubMessageExpiry(MqttPropBuilder_t* pPropertyBuilder, uint32_t messageExpiry); 
+MQTTStatus_t MQTTPropAdd_PubPayloadFormat(MqttPropBuilder_t* pPropertyBuilder, bool payloadFormat); 
+MQTTStatus_t MQTTPropAdd_PubTopicAlias(MqttPropBuilder_t* pPropBuilder,
+    uint16_t topicAlias);
+MQTTStatus_t MQTTPropAdd_PubResponseTopic(MqttPropBuilder_t* pPropBuilder,
+    const char* responseTopic,
+    uint16_t responseTopicLength);
+MQTTStatus_t MQTTPropAdd_PubCorrelationData(MqttPropBuilder_t* pPropBuilder,
+    const void* pCorrelationData,
+    uint16_t correlationLength);
+MQTTStatus_t MQTTPropAdd_PubSubscriptionId(MqttPropBuilder_t* pPropBuilder, size_t subscriptionId);
+MQTTStatus_t MQTTPropAdd_PubContentType(MqttPropBuilder_t* pPropBuilder,
+    const char* contentType,
+    uint16_t contentTypeLength);
+
 
 
 MQTTStatus_t MQTTPropAdd_ConnAuthData( MqttPropBuilder_t * pPropertyBuilder,
@@ -706,9 +721,10 @@ MQTTStatus_t MQTT_Subscribe( MQTTContext_t * pContext,
  * @endcode
  */
 /* @[declare_mqtt_publish] */
-MQTTStatus_t MQTT_Publish( MQTTContext_t * pContext,
-                           MQTTPublishInfo_t * pPublishInfo,
-                           uint16_t packetId );
+MQTTStatus_t MQTT_Publish(MQTTContext_t* pContext,
+    MQTTPublishInfo_t* pPublishInfo,
+    uint16_t packetId,
+    MqttPropBuilder_t* pPropertyBuilder); 
 /* @[declare_mqtt_publish] */
 
 /**

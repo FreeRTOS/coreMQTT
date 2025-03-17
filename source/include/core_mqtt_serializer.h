@@ -2023,7 +2023,8 @@ MQTTStatus_t MQTTV5_ValidatePublishParams(const MQTTPublishInfo_t* pPublishInfo,
 MQTTStatus_t MQTTV5_GetPublishPacketSize(MQTTPublishInfo_t * pPublishInfo,
                                         size_t * pRemainingLength,
                                         size_t * pPacketSize ,
-                                        uint32_t maxPacketSize);
+                                        uint32_t maxPacketSize, 
+                                        size_t propLen);
 /* @[declare_mqttv5_getpublishpacketsize] */
 
 

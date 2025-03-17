@@ -196,6 +196,21 @@
 */
     #define CORE_MQTT_ID_SIZE    ( 1U )
 
+/**
+ * @brief Payload format id.
+ */
+#define MQTT_PAYLOAD_FORMAT_ID      ( 0x01 )
+
+ /**
+  * @brief Message Expiry id.
+  */
+#define MQTT_MSG_EXPIRY_ID          ( 0x02 )
+
+  /**
+   * @brief Topic alias id.
+   */
+#define MQTT_TOPIC_ALIAS_ID         ( 0x23 )
+
 
 /**
  * @brief Get the 4th byte of a 32-bit unsigned integer.
@@ -3728,7 +3743,7 @@ MQTTStatus_t MQTTPropAdd_ConnRequestProbInfo( MqttPropBuilder_t * pPropertyBuild
     uint8_t * pIndex = pPropertyBuilder->pBuffer + pPropertyBuilder->currentIndex;
     *pIndex = MQTT_REQUEST_PROBLEM_ID;
     pIndex ++ ; 
-    *pIndex = 0U ; 
+    *pIndex = requestProblemInfo ;
     pIndex ++ ; 
 
     pPropertyBuilder->currentIndex += 2 ; 
@@ -3761,6 +3776,113 @@ MQTTStatus_t MQTTPropAdd_ConnAuthData( MqttPropBuilder_t * pPropertyBuilder,
     pPropertyBuilder->currentIndex += (size_t)(pIndex - (pPropertyBuilder->pBuffer + pPropertyBuilder->currentIndex)) ;
     return MQTTSuccess ; 
 }
+
+MQTTStatus_t MQTTPropAdd_PubPayloadFormat(MqttPropBuilder_t* pPropertyBuilder, bool payloadFormat)
+{
+    uint8_t* pIndex = pPropertyBuilder->pBuffer + pPropertyBuilder->currentIndex;
+    *pIndex = MQTT_PAYLOAD_FORMAT_ID;
+    pIndex++;
+    if (payloadFormat == 0)
+    {
+        *pIndex = 0x00;
+    }
+    else
+    {
+        *pIndex = 0x01;
+    }
+    pIndex++;
+
+    pPropertyBuilder->currentIndex += 2;
+    return MQTTSuccess;
+}
+
+MQTTStatus_t MQTTPropAdd_PubMessageExpiry(MqttPropBuilder_t* pPropertyBuilder, uint32_t messageExpiry)
+{
+    uint8_t* pIndex = pPropertyBuilder->pBuffer + pPropertyBuilder->currentIndex;
+    *pIndex = MQTT_MSG_EXPIRY_ID;
+    pIndex++;
+    pIndex[0] = UINT32_BYTE3(messageExpiry);
+    pIndex[1] = UINT32_BYTE2(messageExpiry);
+    pIndex[2] = UINT32_BYTE1(messageExpiry);
+    pIndex[3] = UINT32_BYTE0(messageExpiry);
+    pIndex = &pIndex[4];
+
+    pPropertyBuilder->currentIndex += 5;
+    return MQTTSuccess;
+}
+MQTTStatus_t MQTTPropAdd_PubTopicAlias(MqttPropBuilder_t* pPropertyBuilder,
+    uint16_t topicAlias)
+{
+    uint8_t* pIndex = pPropertyBuilder->pBuffer + pPropertyBuilder->currentIndex;
+    *pIndex = MQTT_TOPIC_ALIAS_ID;
+    pIndex++;
+    pIndex[0] = UINT16_HIGH_BYTE(topicAlias);
+    pIndex[1] = UINT16_LOW_BYTE(topicAlias);
+    pIndex = &pIndex[2];
+
+    pPropertyBuilder->currentIndex += 3;
+    return MQTTSuccess;
+}
+
+MQTTStatus_t MQTTPropAdd_PubResponseTopic(MqttPropBuilder_t* pPropertyBuilder,
+    const char* responseTopic,
+    uint16_t responseTopicLength)
+{
+    uint8_t* pIndex = pPropertyBuilder->pBuffer + pPropertyBuilder->currentIndex;
+    *pIndex = MQTT_RESPONSE_TOPIC_ID;
+    pIndex++;
+    pIndex = encodeString(pIndex, responseTopic, responseTopicLength);
+
+    pPropertyBuilder->currentIndex += (size_t)(pIndex - (pPropertyBuilder->pBuffer + pPropertyBuilder->currentIndex));
+    return MQTTSuccess;
+}
+
+MQTTStatus_t MQTTPropAdd_PubCorrelationData(MqttPropBuilder_t* pPropertyBuilder,
+    const void* pCorrelationData,
+    uint16_t correlationLength)
+{
+    uint8_t* pIndex = pPropertyBuilder->pBuffer + pPropertyBuilder->currentIndex;
+    *pIndex = MQTT_CORRELATION_DATA_ID;
+    pIndex++;
+    pIndex = encodeBinaryData(pIndex, pCorrelationData, correlationLength);
+
+    pPropertyBuilder->currentIndex += (size_t)(pIndex - (pPropertyBuilder->pBuffer + pPropertyBuilder->currentIndex));
+    return MQTTSuccess;
+}
+
+MQTTStatus_t MQTTPropAdd_PubSubscriptionId(MqttPropBuilder_t* pPropertyBuilder, size_t subscriptionId)
+{
+    MQTTStatus_t status = MQTTSuccess;
+    uint8_t* pIndex = pPropertyBuilder->pBuffer + pPropertyBuilder->currentIndex;
+    if (subscriptionId == 0)
+    {
+        LogError(("Subscription Id cannot 0 for subscribe properties : Protocol Error "));
+        status = MQTTBadParameter;
+    }
+    if (status == MQTTSuccess)
+    {
+        *pIndex = MQTT_SUBSCRIPTION_ID_ID;
+        pIndex++;
+        pIndex = encodeRemainingLengthSub(pIndex, subscriptionId);
+    }
+
+    pPropertyBuilder->currentIndex += (size_t)(pIndex - (pPropertyBuilder->pBuffer + pPropertyBuilder->currentIndex));
+    return status;
+}
+
+MQTTStatus_t MQTTPropAdd_PubContentType(MqttPropBuilder_t* pPropertyBuilder,
+    const char* contentType,
+    uint16_t contentTypeLength)
+{
+    uint8_t* pIndex = pPropertyBuilder->pBuffer + pPropertyBuilder->currentIndex;
+    *pIndex = MQTT_CONTENT_TYPE_ID;
+    pIndex++;
+    pIndex = encodeString(pIndex, contentType, contentTypeLength);
+
+    pPropertyBuilder->currentIndex += (size_t)(pIndex - (pPropertyBuilder->pBuffer + pPropertyBuilder->currentIndex));
+    return MQTTSuccess;
+}
+
 
 
 
@@ -4057,7 +4179,8 @@ static MQTTStatus_t sendPublishWithoutCopy( MQTTContext_t * pContext,
                                             const MQTTPublishInfo_t * pPublishInfo,
                                             const uint8_t * pMqttHeader,
                                             size_t headerSize,
-                                            uint16_t packetId )
+                                            uint16_t packetId,
+                                            MqttPropBuilder_t* pPropertyBuilder)
 {
     MQTTStatus_t status = MQTTSuccess;
     size_t ioVectorLength;
@@ -4127,19 +4250,37 @@ static MQTTStatus_t sendPublishWithoutCopy( MQTTContext_t * pContext,
 
     #if ( MQTT_VERSION_5_ENABLED )
         /*Serialize the fixed publish properties.*/
-        pIndex = serializedProperty;
-        iterator = &pIoVector[ ioVectorLength ];
-        pIndex = MQTT_SerializePublishProperties( pPublishInfo, pIndex );
-        iterator->iov_base = serializedProperty;
-        /* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-182 */
-        /* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-108 */
-        /* coverity[misra_c_2012_rule_18_2_violation] */
-        /* coverity[misra_c_2012_rule_10_8_violation] */
-        iterator->iov_len = ( size_t ) ( pIndex - serializedProperty );
+
+        uint8_t propertyLength[4];
+        iterator = &pIoVector[ioVectorLength];
+        pIndex = propertyLength;
+        pIndex = encodeRemainingLengthSub(pIndex, pPropertyBuilder->currentIndex);
+        iterator->iov_base = propertyLength;
+        iterator->iov_len = (size_t)(pIndex - propertyLength);
         totalMessageLength += iterator->iov_len;
         iterator++;
         ioVectorLength++;
-        ioVectorLength += sendPublishProperties( pPublishInfo, &publishVector, &totalMessageLength, &iterator );
+
+        iterator->iov_base = pPropertyBuilder->pBuffer;
+        iterator->iov_len = pPropertyBuilder->currentIndex;
+        totalMessageLength += iterator->iov_len;
+        iterator++;
+        ioVectorLength++;
+
+        //pIndex = serializedProperty;
+        //iterator = &pIoVector[ ioVectorLength ];
+        //pIndex = MQTT_SerializePublishProperties( pPublishInfo, pIndex );
+        //iterator->iov_base = serializedProperty;
+        ///* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-182 */
+        ///* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-108 */
+        ///* coverity[misra_c_2012_rule_18_2_violation] */
+        ///* coverity[misra_c_2012_rule_10_8_violation] */
+        //iterator->iov_len = ( size_t ) ( pIndex - serializedProperty );
+        //totalMessageLength += iterator->iov_len;
+        //iterator++;
+        //ioVectorLength++;
+        //ioVectorLength += sendPublishProperties( pPublishInfo, &publishVector, &totalMessageLength, &iterator );
+
     #endif /* if ( MQTT_VERSION_5_ENABLED ) */
 
     /* Publish packets are allowed to contain no payload. */
@@ -4949,7 +5090,8 @@ MQTTStatus_t MQTT_Subscribe( MQTTContext_t * pContext,
 
 MQTTStatus_t MQTT_Publish( MQTTContext_t * pContext,
                            MQTTPublishInfo_t * pPublishInfo,
-                           uint16_t packetId )
+                           uint16_t packetId,
+                           MqttPropBuilder_t* pPropertyBuilder)
 {
     size_t headerSize = 0UL;
     size_t remainingLength = 0UL;
@@ -4991,7 +5133,8 @@ MQTTStatus_t MQTT_Publish( MQTTContext_t * pContext,
                 status = MQTTV5_GetPublishPacketSize( pPublishInfo,
                                                       &remainingLength,
                                                       &packetSize,
-                                                      pContext->pConnectProperties->serverReceiveMax);
+                                                      pContext->pConnectProperties->serverReceiveMax, 
+                                                      pPropertyBuilder->currentIndex);
             }
         #endif /* if ( !MQTT_VERSION_5_ENABLED ) */
     }
@@ -5034,7 +5177,7 @@ MQTTStatus_t MQTT_Publish( MQTTContext_t * pContext,
                                          pPublishInfo,
                                          mqttHeader,
                                          headerSize,
-                                         packetId );
+                                         packetId, pPropertyBuilder);
 
         /* Give the mutex away for the next taker. */
         MQTT_POST_SEND_HOOK( pContext );

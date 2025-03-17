@@ -1186,7 +1186,7 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
     static MQTTStatus_t calculatePublishPacketSizeV5( MQTTPublishInfo_t * pPublishInfo,
                                                       size_t * pRemainingLength,
                                                       size_t * pPacketSize,
-                                                      uint32_t maxPacketSize );
+                                                      uint32_t maxPacketSize, size_t proplen);
 
 /**
  * @brief Serialize a MQTT Publish Ack packet in the given buffer.
@@ -2397,7 +2397,7 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
     static MQTTStatus_t calculatePublishPacketSizeV5( MQTTPublishInfo_t * pPublishInfo,
                                                       size_t * pRemainingLength,
                                                       size_t * pPacketSize,
-                                                      uint32_t maxPacketSize )
+                                                      uint32_t maxPacketSize, size_t proplen)
     {
         MQTTStatus_t status = MQTTSuccess;
         size_t packetSize = 0, payloadLimit = 0;
@@ -2419,12 +2419,12 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
         }
 
         /*Calculate the size of the publish properties*/
-        status = MQTT_GetPublishPropertiesSize( pPublishInfo );
+        /*status = MQTT_GetPublishPropertiesSize( pPublishInfo );*/
 
         if( status == MQTTSuccess )
         {
-            packetSize += pPublishInfo->propertyLength;
-            packetSize += remainingLengthEncodedSize( pPublishInfo->propertyLength );
+            packetSize += proplen;
+            packetSize += remainingLengthEncodedSize(proplen);
 
             /* Calculate the maximum allowed size of the payload for the given parameters.
              * This calculation excludes the "Remaining length" encoding, whose size is not
@@ -5939,7 +5939,7 @@ MQTTStatus_t MQTT_ProcessIncomingPacketTypeAndLength( const uint8_t * pBuffer,
     MQTTStatus_t MQTTV5_GetPublishPacketSize( MQTTPublishInfo_t * pPublishInfo,
                                               size_t * pRemainingLength,
                                               size_t * pPacketSize,
-                                              uint32_t maxPacketSize )
+                                              uint32_t maxPacketSize, size_t proplen)
     {
         MQTTStatus_t status = MQTTSuccess;
 
@@ -5974,7 +5974,7 @@ MQTTStatus_t MQTT_ProcessIncomingPacketTypeAndLength( const uint8_t * pBuffer,
         }
         else
         {
-            status = calculatePublishPacketSizeV5( pPublishInfo, pRemainingLength, pPacketSize, maxPacketSize );
+            status = calculatePublishPacketSizeV5( pPublishInfo, pRemainingLength, pPacketSize, maxPacketSize , proplen);
         }
 
         return status;
