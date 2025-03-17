@@ -1672,6 +1672,7 @@ MQTTStatus_t updateContextWithConnectProps(MqttPropBuilder_t* pPropBuilder, MQTT
 
         }
     }
+    LogError(("max Packet size is getting updated in the context ? %d" , pConnectProperties->maxPacketSize));
     return status;
 }
 #endif 
@@ -4292,8 +4293,10 @@ static MQTTStatus_t sendConnectWithoutCopy( MQTTContext_t * pContext,
             /*
             * Updating Context with optional properties 
             */
-            
-            status = updateContextWithConnectProps(pPropertyBuilder, pContext->pConnectProperties);
+            MQTTConnectProperties_t connectProps; 
+            pContext->pConnectProperties = &connectProps; 
+            status = MQTTV5_InitConnect(pContext->pConnectProperties); 
+            status = updateContextWithConnectProps(pPropertyBuilder, &connectProps);
 
         #endif
         // assert( ( ( size_t ) ( pIndex - connectPacketHeader ) ) <= sizeof( connectPacketHeader ) );
@@ -4808,10 +4811,7 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
     size_t remainingLength = 0UL, packetSize = 0UL;
     MQTTStatus_t status = MQTTSuccess;
     MQTTPacketInfo_t incomingPacket = { 0 };
-#if(MQTT_VERSION_5_ENABLED)
-    MQTTConnectProperties_t connectProperties;
-    pContext->pConnectProperties = &connectProperties; 
-#endif
+
 
 
     incomingPacket.type = ( uint8_t ) 0;
@@ -4991,7 +4991,7 @@ MQTTStatus_t MQTT_Publish( MQTTContext_t * pContext,
                 status = MQTTV5_GetPublishPacketSize( pPublishInfo,
                                                       &remainingLength,
                                                       &packetSize,
-                                                      pContext->pConnectProperties->serverMaxPacketSize );
+                                                      pContext->pConnectProperties->serverReceiveMax);
             }
         #endif /* if ( !MQTT_VERSION_5_ENABLED ) */
     }
