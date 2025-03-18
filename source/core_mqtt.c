@@ -1687,7 +1687,6 @@ MQTTStatus_t updateContextWithConnectProps(MqttPropBuilder_t* pPropBuilder, MQTT
 
         }
     }
-    LogError(("max Packet size is getting updated in the context ? %d" , pConnectProperties->maxPacketSize));
     return status;
 }
 #endif 
@@ -3411,10 +3410,7 @@ MQTTStatus_t MQTT_SubscribeV5( MQTTContext_t * pContext,
 {
     size_t remainingLength = 0UL, packetSize = 0UL;
 
-    //LogError(("pProperrty len %lu", pPropertyBuilder->currentIndex)); 
-    //for (int i = 0; i < pPropertyBuilder->currentIndex; i++) {
-    //    LogError(("Property %d : %d", i, pPropertyBuilder->pBuffer[i]));
-    //}
+
 
     MQTTStatus_t status = validateSubscribeUnsubscribeParamsV5( pContext , 
                                                                 pSubscriptionList, 
@@ -3444,7 +3440,6 @@ MQTTStatus_t MQTT_SubscribeV5( MQTTContext_t * pContext,
                                             subscriptionCount,
                                             packetId,
                                             remainingLength, MQTT_SUBSCRIBE );
-        LogError(("It is good till here?")); 
 
         MQTT_POST_STATE_UPDATE_HOOK( pContext );
     }
@@ -4470,10 +4465,6 @@ static MQTTStatus_t receiveConnack( const MQTTContext_t * pContext,
         #else
 
             status = MQTTV5_DeserializeConnack( pContext->pConnectProperties, pIncomingPacket, pSessionPresent );
-            if (status == MQTTSuccess)
-            {
-                LogError(("Gooood tiiiilll herererereeee pls im gonna kms "));
-            }
 
         #endif
     }
