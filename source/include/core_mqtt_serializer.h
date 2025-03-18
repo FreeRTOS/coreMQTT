@@ -446,6 +446,7 @@ typedef struct MQTTAckInfo
      * @brief Response code;
      */
     uint8_t * reasonCode;
+    size_t reasonCodeLength ; 
     /**
      * @brief Property Length.
      */

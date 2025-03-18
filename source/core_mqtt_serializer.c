@@ -5979,7 +5979,7 @@ MQTTStatus_t MQTT_ProcessIncomingPacketTypeAndLength( const uint8_t * pBuffer,
 
         return status;
     }
-        static MQTTStatus_t readSubackStatusV5(size_t statusCount, const uint8_t* pStatusStart)
+        static MQTTStatus_t readSubackStatusV5(size_t statusCount, const uint8_t* pStatusStart, MQTTAckInfo_t * ackInfo)
     {
         MQTTStatus_t status = MQTTSuccess;
         uint8_t subscriptionStatus = 0;
@@ -5988,6 +5988,7 @@ MQTTStatus_t MQTT_ProcessIncomingPacketTypeAndLength( const uint8_t * pBuffer,
 
         for (i = 0; i < statusCount; i++) {
             subscriptionStatus = pStatusStart[i];
+            ackInfo->reasonCode[i] = subscriptionStatus ; 
             switch (subscriptionStatus)
             {
             case 0x00:
