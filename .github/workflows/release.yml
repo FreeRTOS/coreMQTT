@@ -1,0 +1,335 @@
+name: Release automation
+
+on:
+  workflow_dispatch:
+    inputs:
+      commit_id:
+        description: 'Commit ID to tag and create a release for'
+        required: true
+      version_number:
+        description: 'Release Version Number (Eg, v1.0.0)'
+        required: true
+      delete_existing_tag_release:
+        description: 'Is this a re-release of existing tag/release? (Default: false)'
+        default: 'false'
+        required: false
+
+env:
+  repository_compressed_name: ${{ github.event.repository.name }}-${{ github.event.inputs.version_number }}
+  repository_zip_name: ${{ github.event.repository.name }}-${{ github.event.inputs.version_number }}.zip
+  # Source folder list for version number updates
+  source_folder_list: "source test"
+
+jobs:
+  clean-existing-tag-and-release:
+    if: ${{ github.event.inputs.delete_existing_tag_release == 'true' }}
+    runs-on: ubuntu-latest
+    env:
+      VERSION_NUMBER: ${{ github.event.inputs.version_number }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check if tag exists
+        run: |
+          git fetch origin
+          if git tag --list $VERSION_NUMBER
+          then
+              echo "Deleting existing tag for $VERSION_NUMBER"
+              git push origin --delete tags/$VERSION_NUMBER
+          fi
+
+      - name: Check if release exists
+        run: |
+          sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-key 23F3D4EA75716059
+          sudo apt-add-repository https://cli.github.com/packages
+          sudo apt update
+          sudo apt-get install gh
+          if gh release list | grep $VERSION_NUMBER
+          then
+              echo "Deleting existing release for $VERSION_NUMBER"
+              gh release delete --yes $VERSION_NUMBER
+          fi
+
+  add-sbom-and-tag-commit:
+    if: ${{ ( github.event.inputs.delete_existing_tag_release == 'true' && success() )  || ( github.event.inputs.delete_existing_tag_release == 'false' && always() ) }}
+    needs: clean-existing-tag-and-release
+    name: Tag commit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.commit_id }}
+
+      - name: Configure git identity
+        env:
+          ACTOR: ${{ github.actor }}
+        run: |
+          git config --global user.name "$ACTOR"
+          git config --global user.email "$ACTOR"@users.noreply.github.com
+
+      - name: create a new branch that references commit id
+        env:
+          VERSION_NUMBER: ${{ github.event.inputs.version_number }}
+          COMMIT_ID: ${{ github.event.inputs.commit_id }}
+        run: git checkout -b "$VERSION_NUMBER" "$COMMIT_ID"
+
+      - name: Update version number in source files
+        env:
+          VERSION_NUMBER: ${{ github.event.inputs.version_number }}
+          REPO_NAME: ${{ github.event.repository.name }}
+        run: |
+            echo "${{ env.source_folder_list }}" | \
+            xargs -n 1 sh -c \
+            'find $1 -type f \( -name "*.c" -o -name "*.h" \) \
+            -exec sed -i -b -E "0,/^ \* $REPO_NAME/s/^ \* $REPO_NAME.*/ \* $REPO_NAME $VERSION_NUMBER/g" {} +'
+            git add .
+            git commit -m '[AUTO][RELEASE]: Update version number in source files'
+            git push -u origin "$VERSION_NUMBER"
+
+      - name : Update version number in manifest.yml
+        env:
+          VERSION_NUMBER: ${{ github.event.inputs.version_number }}
+        run: |
+          sed -i -b "0,/^version/s/^version.*/version: \"$VERSION_NUMBER\"/g" ./manifest.yml
+          git add .
+          git commit -m '[AUTO][RELEASE]: Update version number in manifest.yml'
+          git push -u origin "$VERSION_NUMBER"
+
+      - name : Update version number in doxygen
+        env:
+          VERSION_NUMBER: ${{ github.event.inputs.version_number }}
+        run: |
+          sed -i -b "s/PROJECT_NUMBER *=.*/PROJECT_NUMBER         = $VERSION_NUMBER/g" ./docs/doxygen/config.doxyfile
+          git add .
+          git commit -m '[AUTO][RELEASE]: Update version number in doxygen'
+          git push -u origin "$VERSION_NUMBER"
+
+      - name : Update MQTT version number macro
+        env:
+          VERSION_NUMBER: ${{ github.event.inputs.version_number }}
+        if: ${{ github.event.repository.name == 'coreMQTT' }}
+        run: |
+          sed -i -b "s/^\#define MQTT_LIBRARY_VERSION .*/\#define MQTT_LIBRARY_VERSION    \"$VERSION_NUMBER\"/g" source/include/core_mqtt.h
+          git add .
+          git commit -m '[AUTO][RELEASE]: Update version number macro in source/include/core_mqtt.h'
+          git push -u origin "$VERSION_NUMBER"
+
+      - name: Generate SBOM
+        uses: FreeRTOS/CI-CD-Github-Actions/sbom-generator@main
+        with:
+          repo_path: ./
+          source_path: ./source
+
+      - name: commit SBOM file
+        env:
+          VERSION_NUMBER: ${{ github.event.inputs.version_number }}
+        run: |
+          git add .
+          git commit -m 'Update SBOM'
+          git push -u origin "$VERSION_NUMBER"
+
+      - name: Tag Commit and Push to remote
+        env:
+          VERSION_NUMBER: ${{ github.event.inputs.version_number }}
+          REPO_NAME: ${{ github.event.repository.name }}
+        run: |
+          git tag "$VERSION_NUMBER" -a -m "$REPO_NAME Library $VERSION_NUMBER"
+          git push origin --tags
+
+      - name: Verify tag on remote
+        env:
+          VERSION_NUMBER: ${{ github.event.inputs.version_number }}
+          COMMIT_ID: ${{ github.event.inputs.commit_id }}
+        run: |
+          git tag -d "$VERSION_NUMBER"
+          git remote update
+          git checkout tags/"$VERSION_NUMBER"
+          git diff "$COMMIT_ID" tags/"$VERSION_NUMBER"
+
+  create-zip:
+    if: ${{ ( github.event.inputs.delete_existing_tag_release == 'true' && success() )  || ( github.event.inputs.delete_existing_tag_release == 'false' && always() ) }}
+    needs: add-sbom-and-tag-commit
+    name: Create ZIP and verify package for release asset.
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install ZIP tools
+        run: sudo apt-get install zip unzip
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.version_number }}
+          path: ${{ github.event.repository.name }}
+          submodules: recursive
+
+      - name: Checkout disabled submodules
+        env:
+          REPO_NAME: ${{ github.event.repository.name }}
+        run: |
+          cd "$REPO_NAME"
+          git submodule update --init --checkout --recursive
+
+      - name: Create ZIP
+        env:
+          REPO_NAME: ${{ github.event.repository.name }}
+        run: |
+          zip -r ${{ env.repository_zip_name }} "$REPO_NAME" -x "*.git*"
+          ls ./
+
+      - name: Validate created ZIP
+        env:
+          REPO_NAME: ${{ github.event.repository.name }}
+        run: |
+          mkdir zip-check
+          mv ${{ env.repository_zip_name }} zip-check
+          cd zip-check
+          unzip ${{ env.repository_zip_name }} -d ${{ env.repository_compressed_name }}
+          ls ${{ env.repository_compressed_name }}
+          diff -r -x "*.git*" ${{ env.repository_compressed_name }}/"$REPO_NAME"/ ../"$REPO_NAME"/
+          cd ../
+
+      - name: Check version number in source files
+        env:
+          VERSION_NUMBER: ${{ github.event.inputs.version_number }}
+          REPO_NAME: ${{ github.event.repository.name }}
+        run: |
+          cd zip-check/${{ env.repository_compressed_name }}/"$REPO_NAME"
+
+          # List all the *.h *.c files in <source_folder_list>
+          SOURCE_FILE_LIST=$( echo "${{ env.source_folder_list }}" | \
+          xargs -n 1 sh -c 'find $1 -type f \( -name "*.c" -o -name "*.h" \)' )
+
+          # List all the files which contain " * <repository_name>.*" in SOURCE_FILE_LIST
+          SOURCE_FILE_WITH_VERSION_LIST=$( grep -l " \* $REPO_NAME.*" $SOURCE_FILE_LIST )
+
+          # Compare the <version_number> with input version number in files in SOURCE_FILE_LIST
+          echo $SOURCE_FILE_WITH_VERSION_LIST | xargs -I{} sh -c \
+          'grep -x " \* $REPO_NAME $VERSION_NUMBER" {} && \
+          echo {} : match "$REPO_NAME" "$VERSION_NUMBER" || \
+          { echo "{} : $REPO_NAME $VERSION_NUMBER not found"; exit 255; }'
+
+      - name: Check version number in doxygen
+        env:
+          VERSION_NUMBER: ${{ github.event.inputs.version_number }}
+          REPO_NAME: ${{ github.event.repository.name }}
+        run: |
+          cd zip-check/${{ env.repository_compressed_name }}/"$REPO_NAME"
+
+          # find "PROJECT_NUMBER = <version_number>"
+          DOXYGEN_VERSION_NUMBER=$(grep -x "[ ]*PROJECT_NUMBER[ ]*=[ ]*[^ ]*[ ]*" docs/doxygen/config.doxyfile | awk -F= '{gsub(" ","",$2); print $2 }');
+
+          # compare the <version_number> with input version number
+          echo "Comparing $DOXYGEN_VERSION_NUMBER & $VERSION_NUMBER"
+          [[ $DOXYGEN_VERSION_NUMBER == $VERSION_NUMBER ]] \
+          && echo "config.doxyfile : match $VERSION_NUMBER" \
+          || { echo "config.doxyfile : $DOXYGEN_VERSION_NUMBER doesn't match $VERSION_NUMBER"; exit 255; }
+
+      - name: Check version number in manifest.yml
+        env:
+          VERSION_NUMBER: ${{ github.event.inputs.version_number }}
+          REPO_NAME: ${{ github.event.repository.name }}
+        run: |
+          cd zip-check/${{ env.repository_compressed_name }}/"$REPO_NAME"
+
+          # find the first occurence of "version: <version_number>" and comare the <version_number> with input version number
+          MANIFEST_VESION_NUMBER=$( grep -m 1 -E "^version:[ ]*\".*\"[ ]*" manifest.yml | awk -F: '{ gsub(" ","",$2); gsub("\"","",$2); print $2 }' );
+
+          # compare the <version_number> with input version number
+          [[ $MANIFEST_VESION_NUMBER == $VERSION_NUMBER ]] \
+          && echo "manifest.yml : match $VERSION_NUMBER" \
+          || { echo "manifest.yml : $MANIFEST_VESION_NUMBER doesn't match $VERSION_NUMBER"; exit 255; }
+
+      - name: Check MQTT version number macro in header file
+        env:
+          VERSION_NUMBER: ${{ github.event.inputs.version_number }}
+          REPO_NAME: ${{ github.event.repository.name }}
+        if: ${{ github.event.repository.name == 'coreMQTT' }}
+        run: |
+          cd zip-check/${{ env.repository_compressed_name }}/"$REPO_NAME"
+
+          # find "#define MQTT_LIBRARY_VERSION <version_number>" in core_mqtt.h
+          MACRO_VERSION_NUMBER=$(grep -x "^\#define[ ]*MQTT_LIBRARY_VERSION[ ]*\".*\"[ ]*" source/include/core_mqtt.h | awk '{gsub("\"","",$3); print $3 }');
+          
+          # compare the <version_number> with input version number
+          [[ $MACRO_VERSION_NUMBER == "$VERSION_NUMBER" ]] \
+          && echo "core_mqtt.h : match $VERSION_NUMBER" \
+          || { echo "core_mqtt.h : $MACRO_VERSION_NUMBER doesn't match $VERSION_NUMBER"; exit 255; }
+
+      - name: Build
+        env:
+          REPO_NAME: ${{ github.event.repository.name }}
+        run: |
+          cd zip-check/${{ env.repository_compressed_name }}/"$REPO_NAME"
+          sudo apt-get install -y lcov
+          cmake -S test -B build/ \
+          -G "Unix Makefiles" \
+          -DCMAKE_BUILD_TYPE=Debug \
+          -DBUILD_CLONE_SUBMODULES=ON \
+          -DCMAKE_C_FLAGS='--coverage -Wall -Wextra -Werror -DNDEBUG'
+          make -C build/ all
+
+      - name: Test
+        env:
+          REPO_NAME: ${{ github.event.repository.name }}
+        run: |
+          cd zip-check/${{ env.repository_compressed_name }}/"$REPO_NAME"/build/
+          ctest -E system --output-on-failure
+          cd ..
+
+      - name: Create artifact of ZIP
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.repository_zip_name }}
+          path: zip-check/${{ env.repository_zip_name }}
+
+  deploy-doxygen:
+    needs: add-sbom-and-tag-commit
+    if: ${{ ( github.event.inputs.delete_existing_tag_release == 'true' && success() )  || ( github.event.inputs.delete_existing_tag_release == 'false' && always() ) }}
+    name: Deploy doxygen documentation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Doxygen generation
+        uses: FreeRTOS/CI-CD-Github-Actions/doxygen-generation@main
+        with:
+          ref: ${{ github.event.inputs.version_number }}
+          add_release: "true"
+
+  create-release:
+    needs:
+      - create-zip
+      - deploy-doxygen
+    if: ${{ ( github.event.inputs.delete_existing_tag_release == 'true' && success() )  || ( github.event.inputs.delete_existing_tag_release == 'false' && always() ) }}
+    name: Create Release and Upload Release Asset
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.event.inputs.version_number }}
+          release_name: ${{ github.event.inputs.version_number }}
+          body: Release ${{ github.event.inputs.version_number }} of the ${{ github.event.repository.name }} Library.
+          draft: false
+          prerelease: false
+
+      - name: Download ZIP artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.repository_zip_name }}
+
+      - name: Upload Release Asset
+        id: upload-release-asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./${{ env.repository_zip_name }}
+          asset_name: ${{ env.repository_zip_name }}
+          asset_content_type: application/zip
+  
