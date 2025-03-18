@@ -2717,7 +2717,8 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
         /* If reason code is success, server can choose to not send the reason code.*/
         if( ( status == MQTTSuccess ) && ( pAck->remainingLength > 2U ) )
         {
-            pAckInfo->reasonCode = *pIndex;
+
+            pAckInfo->reasonCode = *pIndex; 
             pIndex++;
         }
 
@@ -5988,7 +5989,6 @@ MQTTStatus_t MQTT_ProcessIncomingPacketTypeAndLength( const uint8_t * pBuffer,
 
         for (i = 0; i < statusCount; i++) {
             subscriptionStatus = pStatusStart[i];
-            ackInfo->reasonCode[i] = subscriptionStatus ; 
             switch (subscriptionStatus)
             {
             case 0x00:
@@ -6036,6 +6036,10 @@ MQTTStatus_t MQTT_ProcessIncomingPacketTypeAndLength( const uint8_t * pBuffer,
                 break;
             }
         }
+        if (status == MQTTSuccess)
+        {
+            ackInfo->reasonCode = pStatusStart;
+        }
         return status;
     }
 
@@ -6049,7 +6053,7 @@ MQTTStatus_t MQTT_ProcessIncomingPacketTypeAndLength( const uint8_t * pBuffer,
         #if(MQTT_USER_PROPERTY_ENABLED)
             MQTTUserProperties_t userProperty ;
             (void)memset(&userProperty, 0x0, sizeof(userProperty));
-            pSubackProperties->pUserProperties = &userProperty;
+            pSubackProperties->pUserProperty = &userProperty;
         #endif
 
 
@@ -6077,7 +6081,7 @@ MQTTStatus_t MQTT_ProcessIncomingPacketTypeAndLength( const uint8_t * pBuffer,
                     break;
                 case MQTT_USER_PROPERTY_ID:
                 #if(MQTT_USER_PROPERTY_ENABLED)
-                    status = decodeutf_8pair(pSubackProperties->pUserProperties, &pSubackProperties->pUserProperties->count, &propertyLength, &pLocalIndex);
+                    status = decodeutf_8pair(pSubackProperties->pUserProperty, &pSubackProperties->pUserProperty->count, &propertyLength, &pLocalIndex);
                 #else 
                     status = decodeAndDiscard(&propertyLength, &pLocalIndex);
                 #endif
@@ -6139,7 +6143,7 @@ MQTTStatus_t MQTT_ProcessIncomingPacketTypeAndLength( const uint8_t * pBuffer,
 
         if (status == MQTTSuccess)
         {
-            status = readSubackStatusV5(remainingLength - sizeof(uint16_t) - pSubackProperties->propertyLength - remainingLengthEncodedSize(pSubackProperties->propertyLength), &pIndex[pSubackProperties->propertyLength + remainingLengthEncodedSize(pSubackProperties->propertyLength)]);
+            status = readSubackStatusV5(remainingLength - sizeof(uint16_t) - pSubackProperties->propertyLength - remainingLengthEncodedSize(pSubackProperties->propertyLength), &pIndex[pSubackProperties->propertyLength + remainingLengthEncodedSize(pSubackProperties->propertyLength)] , pSubackProperties);
         }
         return status;
     }
@@ -6193,7 +6197,7 @@ MQTTStatus_t MQTT_ProcessIncomingPacketTypeAndLength( const uint8_t * pBuffer,
 
                     if( status == MQTTSuccess )
                     {
-                        status = logAckResponseV5( pAckInfo->reasonCode, *pPacketId );
+                        status = logAckResponseV5( pAckInfo->rc, *pPacketId);
                     }
 
                     break;
@@ -6204,7 +6208,7 @@ MQTTStatus_t MQTT_ProcessIncomingPacketTypeAndLength( const uint8_t * pBuffer,
 
                     if( status == MQTTSuccess )
                     {
-                        status = logSimpleAckResponseV5( pAckInfo->reasonCode, *pPacketId );
+                        status = logSimpleAckResponseV5( pAckInfo->rc, *pPacketId);
                     }
 
                     break;
@@ -6402,7 +6406,7 @@ MQTTStatus_t MQTT_ProcessIncomingPacketTypeAndLength( const uint8_t * pBuffer,
             LogError( ( "If the Session Expiry in the CONNECT packet was zero, then it is a Protocol Error to set a non-zero Session Expiry Interval in the DISCONNECT packet." ) );
             status = MQTTBadParameter;
         }
-        else if( validateDisconnectResponseV5( pDisconnectInfo->reasonCode, false ) != MQTTSuccess )
+        else if( validateDisconnectResponseV5( pDisconnectInfo->rc, false ) != MQTTSuccess )
         {
             LogError( ( "Invalid reason code." ) );
             status = MQTTBadParameter;
@@ -6489,7 +6493,7 @@ MQTTStatus_t MQTT_ProcessIncomingPacketTypeAndLength( const uint8_t * pBuffer,
         /*After the packet type fixed header has remaining length.*/
         pIndexLocal = encodeRemainingLength( pIndexLocal, remainingLength );
         /*Encode the reason code.*/
-        *pIndexLocal = pDisconnectInfo->reasonCode;
+        *pIndexLocal = pDisconnectInfo->rc;
         pIndexLocal++;
         /*Encode the property length.*/
         pIndexLocal = encodeRemainingLength( pIndexLocal, pDisconnectInfo->propertyLength );
@@ -6645,10 +6649,10 @@ MQTTStatus_t MQTT_ProcessIncomingPacketTypeAndLength( const uint8_t * pBuffer,
         {
             /* Extract the reason code */
             pIndex = pPacket->pRemainingData;
-            pDisconnectInfo->reasonCode = *pIndex;
+            pDisconnectInfo->reasonCode[0] = *pIndex;
             pIndex++;
             /*Validate the reason code.*/
-            status = validateDisconnectResponseV5( pDisconnectInfo->reasonCode, true );
+            status = validateDisconnectResponseV5( *pDisconnectInfo->reasonCode, true );
         }
 
         if( status == MQTTSuccess )
