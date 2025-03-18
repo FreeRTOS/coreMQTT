@@ -6038,7 +6038,7 @@ MQTTStatus_t MQTT_ProcessIncomingPacketTypeAndLength( const uint8_t * pBuffer,
         return status;
     }
 
-    static MQTTStatus_t deserializeSubackProperties(MQTTSubackProperties_t* pSubackProperties, const uint8_t* pIndex, size_t length)
+    static MQTTStatus_t deserializeSubackProperties(MQTTAckInfo_t* pSubackProperties, const uint8_t* pIndex, size_t length)
     {
         MQTTStatus_t status = MQTTSuccess;
         size_t propertyLength = 0U;
@@ -6090,7 +6090,7 @@ MQTTStatus_t MQTT_ProcessIncomingPacketTypeAndLength( const uint8_t * pBuffer,
         }
         return status;
     }
-    MQTTStatus_t MQTTV5_DeserializeSuback(MQTTSubackProperties_t* pSubackProperties,
+    MQTTStatus_t MQTTV5_DeserializeSuback(MQTTAckInfo_t* pSubackProperties,
     const MQTTPacketInfo_t* pSuback,
     uint16_t* pPacketId)
     {

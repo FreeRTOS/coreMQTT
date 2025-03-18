@@ -2713,19 +2713,18 @@ MQTTStatus_t handleSuback( MQTTContext_t * pContext,
     MQTTEventCallback_t appCallback;
     MQTTDeserializedInfo_t deserializedInfo;
 
-    MQTTSubackProperties_t ackInfo;
+    MQTTAckInfo_t ackInfo;
     ( void ) memset( &ackInfo, 0x0, sizeof( ackInfo ) );
+
 
     assert( pContext != NULL );
     assert( pIncomingPacket != NULL );
     assert( pContext->appCallback != NULL );
 
     appCallback = pContext->appCallback;
-    // #if ( !MQTT_VERSION_5_ENABLED )
-    //     status = MQTT_DeserializeAck( pIncomingPacket, &packetIdentifier, NULL );
-    // #else
+
     status = MQTTV5_DeserializeSuback( &ackInfo, pIncomingPacket, &packetIdentifier);
-    // #endif
+
     LogInfo( ( "Ack packet deserialized with result: %s.",
                MQTT_Status_strerror( status ) ) );
 
@@ -2740,6 +2739,7 @@ MQTTStatus_t handleSuback( MQTTContext_t * pContext,
 
             /* Invoke application callback to hand the buffer over to application
              * before sending acks. */
+
 
             appCallback( pContext, pIncomingPacket, &deserializedInfo );
         }
