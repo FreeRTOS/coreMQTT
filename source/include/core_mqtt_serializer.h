@@ -621,16 +621,16 @@ typedef struct MQTTSubscribeProperties
 
 } MQTTSubscribeProperties_t; 
 
-typedef struct MQTTSubackProperties
-{
-    size_t propertyLength ; 
-    #if(MQTT_USER_PROPERTY_ENABLED)
-    MQTTUserProperties_t * pUserProperties ; 
-    #endif
-    const char * pReasonString ; 
-    uint16_t reasonStringLength ; 
-
-}MQTTSubackProperties_t ; 
+//typedef struct MQTTSubackProperties
+//{
+//    size_t propertyLength ; 
+//    #if(MQTT_USER_PROPERTY_ENABLED)
+//    MQTTUserProperties_t * pUserProperties ; 
+//    #endif
+//    const char * pReasonString ; 
+//    uint16_t reasonStringLength ; 
+//
+//}MQTTSubackProperties_t ; 
 
 /**
  * @brief Get the size and Remaining Length of an MQTT CONNECT packet.
@@ -2076,9 +2076,9 @@ MQTTStatus_t MQTTV5_GetPublishPacketSize(MQTTPublishInfo_t * pPublishInfo,
 MQTTStatus_t MQTTV5_DeserializeAck( const MQTTPacketInfo_t * pIncomingPacket,
                                   uint16_t * pPacketId, MQTTAckInfo_t *pAckInfo, bool requestProblem,uint32_t maxPacketSize);
 /* @[declare_mqttv5_deserializeack] */
-MQTTStatus_t MQTTV5_DeserializeSuback(MQTTSubackProperties_t *pSubackProperties , 
-                                      const MQTTPacketInfo_t * pSuback,  
-                                      uint16_t *pPacketId) ;
+MQTTStatus_t MQTTV5_DeserializeSuback(MQTTAckInfo_t* pSubackProperties,
+    const MQTTPacketInfo_t* pSuback,
+    uint16_t* pPacketId); 
 /**
  * @brief Get the size of an MQTT DISCONNECT packet.
  *
@@ -2111,8 +2111,11 @@ MQTTStatus_t MQTTV5_DeserializeSuback(MQTTSubackProperties_t *pSubackProperties 
  * @endcode
  */
 /* @[declare_mqttv5_getackpacketsize] */
-MQTTStatus_t MQTTV5_GetAckPacketSize( MQTTAckInfo_t *pAckInfo, size_t* pRemainingLength,size_t * pPacketSize, uint32_t maxPacketSize);
-/* @[declare_mqttv5_getackpacketsize] */
+//MQTTStatus_t MQTTV5_GetAckPacketSize(MQTTContext_t* pContext,
+//    MQTTAckInfo_t* pAckInfo,
+//    size_t* pRemainingLength,
+//    size_t* pPacketSize,
+//    uint32_t maxPacketSize); /* @[declare_mqttv5_getackpacketsize] */
 
 /**
  * @fn uint8_t * MQTTV5_SerializeAckFixed(uint8_t * pIndex,

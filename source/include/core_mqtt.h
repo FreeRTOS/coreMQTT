@@ -63,7 +63,7 @@
 struct MQTTPubAckInfo;
 struct MQTTContext;
 struct MQTTDeserializedInfo;
-
+struct MqttPropBuilder; 
 /**
  * @ingroup mqtt_callback_types
  * @brief Application provided function to query the time elapsed since a given
@@ -110,6 +110,24 @@ typedef enum MQTTConnectionStatus
     MQTTNotConnected, /**< @brief MQTT Connection is inactive. */
     MQTTConnected     /**< @brief MQTT Connection is active. */
 } MQTTConnectionStatus_t;
+/**
+ * @brief The generic structure used to build a 'property' section of the packet
+ * into.
+ * @member pBuffer pointer to the user provided buffer.
+ * @member bufferLength length of the user provided buffer.
+ * @member currentIndex Index of the location which is yet to be written to in the
+ * buffer.
+ * @member fieldsSet This is a bitmask to track which fields have already been set.
+ * This allows the library to throw an error in case certain fields are included more
+ * than once as it is a protocol error to include certain fields more than once.
+ */
+typedef struct MqttPropBuilder
+{
+    uint8_t* pBuffer;
+    size_t bufferLength;
+    size_t currentIndex;
+    uint32_t fieldSet;
+} MqttPropBuilder_t;
 
 /**
  * @ingroup mqtt_enum_types
@@ -202,6 +220,8 @@ typedef struct MQTTContext
      */
     MQTTFixedBuffer_t networkBuffer;
 
+    MqttPropBuilder_t ackPropsBuffer;
+
     /**
      * @brief The next available ID for outgoing MQTT packets.
      */
@@ -252,7 +272,7 @@ typedef struct MQTTContext
         /**
          * @brief Connect and Connack Properties.
          */
-        MQTTConnectProperties_t * pConnectProperties;
+        MQTTConnectProperties_t *pConnectProperties;
 
         /**
          * @brief To store disconnect information.
@@ -261,25 +281,6 @@ typedef struct MQTTContext
     #endif
 } MQTTContext_t;
 
-
-/**
- * @brief The generic structure used to build a 'property' section of the packet
- * into.
- * @member pBuffer pointer to the user provided buffer.
- * @member bufferLength length of the user provided buffer.
- * @member currentIndex Index of the location which is yet to be written to in the
- * buffer.
- * @member fieldsSet This is a bitmask to track which fields have already been set.
- * This allows the library to throw an error in case certain fields are included more
- * than once as it is a protocol error to include certain fields more than once.
- */
-typedef struct MqttPropBuilder
-{
-    uint8_t * pBuffer;
-    size_t bufferLength;
-    size_t currentIndex;
-    uint32_t fieldSet;
-} MqttPropBuilder_t;
 
 MQTTStatus_t MqttPropertyBuilder_Init(MqttPropBuilder_t* pPropertyBuilder, uint8_t *buffer, size_t length); 
 
@@ -378,7 +379,8 @@ MQTTStatus_t MQTT_Init( MQTTContext_t * pContext,
                         const TransportInterface_t * pTransportInterface,
                         MQTTGetCurrentTimeFunc_t getTimeFunction,
                         MQTTEventCallback_t userCallback,
-                        const MQTTFixedBuffer_t * pNetworkBuffer );
+                        const MQTTFixedBuffer_t * pNetworkBuffer, 
+                        const MqttPropBuilder_t * pAckPropsBuffer);
 /* @[declare_mqtt_init] */
 
 /**
