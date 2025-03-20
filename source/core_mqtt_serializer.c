@@ -4139,6 +4139,7 @@ MQTTStatus_t deserializePublishProperties( MQTTPublishInfo_t * pPublishInfo, con
         // insert code for properties here, maybe make a new function - 
         if(status == MQTTSuccess)
         {
+            pPublishInfo->startOfProps = pIndex; 
             status = deserializePublishProperties( pPublishInfo , pIndex);
         }
         if( status == MQTTSuccess )
@@ -6235,6 +6236,8 @@ MQTTStatus_t MQTT_ProcessIncomingPacketTypeAndLength( const uint8_t * pBuffer,
         size_t propertyLength = 0U;
         size_t packetSize = 0U;
 
+
+
         /*Validate the parameters.*/
         if( ( pAckInfo == NULL ) || ( pRemainingLength == NULL ) || ( pPacketSize == NULL ) )
         {
@@ -6262,8 +6265,8 @@ MQTTStatus_t MQTT_ProcessIncomingPacketTypeAndLength( const uint8_t * pBuffer,
             }
         }
 
-        #if ( MQTT_USER_PROPERTY_ENABLED )
-            if( ( status == MQTTSuccess ) && ( pAckInfo->pUserProperty != NULL ) )
+        #if ( MQTT_USER_PROPERTY_ENABLED )            
+        if( ( status == MQTTSuccess ) && ( pAckInfo->pUserProperty != NULL ) )
             {
                 status = MQTT_GetUserPropertySize( pAckInfo->pUserProperty->userProperty, pAckInfo->pUserProperty->count, &propertyLength );
             }

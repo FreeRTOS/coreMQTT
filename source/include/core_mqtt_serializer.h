@@ -567,6 +567,8 @@ typedef struct MQTTPublishInfo
     #endif
 
     size_t subscriptionId ;
+
+    uint8_t* startOfProps ;
 #endif
 
 } MQTTPublishInfo_t;

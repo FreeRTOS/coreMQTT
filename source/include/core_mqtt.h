@@ -671,6 +671,14 @@ MQTTStatus_t MQTTPropAdd_ConnAuthData( MqttPropBuilder_t * pPropertyBuilder,
                                        const char * authData,
                                        uint16_t authDataLength );
 
+MQTTStatus_t MQTTPropAdd_PubAckUserProperty(MQTTUserProperties_t *userProperties, MQTTDeserializedInfo_t* pDeserializedInfo); 
+MQTTStatus_t MQTTPropAdd_PubAckReasonString(const char* reasonString, uint16_t reasonStringLen, MQTTDeserializedInfo_t* pDeserializedInfo); 
+bool MQTT_IncomingPubGetNextProp(uint8_t** pCurrIndex,
+                                const char** pUserPropKey,
+                                uint16_t* pUserPropKeyLen,
+                                const char** pUserPropVal,
+                                uint16_t* pUserPropValLen,
+                                MQTTDeserializedInfo_t* deserializedInfo); 
 
 MQTTStatus_t MQTT_Subscribe( MQTTContext_t * pContext,
                              const MQTTSubscribeInfo_t * pSubscriptionList,

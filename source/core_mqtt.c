@@ -2559,6 +2559,7 @@ MQTTStatus_t handleIncomingPublish( MQTTContext_t * pContext,
     MQTTAckInfo_t nextAckInfo;
     (void)memset(&ackInfo, 0x0, sizeof(ackInfo));
     (void)memset(&nextAckInfo, 0x0, sizeof(nextAckInfo));
+
     #if(MQTT_USER_PROPERTY_ENABLED)
     MQTTUserProperties_t userProperty ;
     (void)memset(&userProperty, 0x0, sizeof(userProperty));
@@ -2679,9 +2680,17 @@ MQTTStatus_t handleIncomingPublish( MQTTContext_t * pContext,
         deserializedInfo.pAckInfo = &ackInfo;
         deserializedInfo.pNextAckInfo = &nextAckInfo;
 
+        MQTTUserProperties_t xUserProperties;
+        (void)memset((void*)&xUserProperties, 0x00, sizeof(xUserProperties));
+        deserializedInfo.pNextAckInfo->pUserProperty = &(xUserProperties);
+
         /* Invoke application callback to hand the buffer over to application
          * before sending acks. */
         pContext->appCallback(pContext, pIncomingPacket, &deserializedInfo);
+
+        
+
+        LogError(("value of userProperty %d", deserializedInfo.pNextAckInfo->pUserProperty->userProperty->pKey)); 
 
         /* Send PUBREL or PUBCOMP if necessary. */
         if (deserializedInfo.pNextAckInfo == NULL)
@@ -3787,9 +3796,68 @@ MQTTStatus_t MQTTPropAdd_PubContentType(MqttPropBuilder_t* pPropertyBuilder,
     return MQTTSuccess;
 }
 
+bool MQTT_IncomingPubGetNextProp(uint8_t** pCurrIndex,
+                                const char** pUserPropKey,
+                                uint16_t* pUserPropKeyLen,
+                                const char** pUserPropVal,
+                                uint16_t* pUserPropValLen,
+                                MQTTDeserializedInfo_t* deserializedInfo)
+{
+    MQTTStatus_t status = MQTTSuccess;
+    MQTTPublishInfo_t* pPublishInfo = deserializedInfo->pPublishInfo;
+    uint8_t* pIndex;
+    if (pCurrIndex == NULL)
+    {
+        pIndex = pPublishInfo->startOfProps;
+    }
+    else {
+        pIndex = *pCurrIndex;
+    }
+    size_t propertyLength = pPublishInfo->propertyLength;
+    bool userPropFlag = false;
+    bool userKey = false;
+    bool userVal = false;
+    while ((propertyLength > 0U) && (status == MQTTSuccess))
+    {
+        uint8_t packetId = *pIndex;
+        pIndex = &pIndex[1];
+        propertyLength -= sizeof(uint8_t);
+        if (packetId == MQTT_USER_PROPERTY_ID)
+        {
+            userPropFlag = true;
+#if ( MQTT_USER_PROPERTY_ENABLED )
+            status = decodeutf_8(pUserPropKey, pUserPropKeyLen, &propertyLength, &userKey, &pIndex);
+            status = decodeutf_8(pUserPropVal, pUserPropValLen, &propertyLength, &userVal, &pIndex);
+            // update currIndex to pIndex essentially\. 
+            *pCurrIndex = pIndex;
+#else
+            status = decodeAndDiscard(&propertyLength, &pIndex);
+#endif 
+            break;
+        }
+    }
+    if (status != MQTTSuccess)
+    {
+        LogError(("Failed to decode user property : %d", status));
+        userPropFlag = false;
+    }
+    return userPropFlag;
+}
 
+MQTTStatus_t MQTTPropAdd_PubAckReasonString(const char* reasonString, uint16_t reasonStringLen, MQTTDeserializedInfo_t* pDeserializedInfo)
+{
+    MQTTStatus_t result = MQTTSuccess;
+    pDeserializedInfo->pNextAckInfo->pReasonString = reasonString;
+    pDeserializedInfo->pNextAckInfo->reasonStringLength = reasonStringLen;
+    return result;
+}
 
-
+MQTTStatus_t MQTTPropAdd_PubAckUserProperty(MQTTUserProperties_t *userProperties, MQTTDeserializedInfo_t * pDeserializedInfo)
+{
+    MQTTStatus_t result = MQTTSuccess;
+    pDeserializedInfo->pNextAckInfo->pUserProperty = userProperties;
+    return result;
+}
 
 
 /*-----------------------------------------------------------*/
