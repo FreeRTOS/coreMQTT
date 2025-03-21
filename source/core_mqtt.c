@@ -3943,7 +3943,7 @@ bool MQTT_IncomingPubGetNextProp(uint8_t** pCurrIndex,
 #if ( MQTT_USER_PROPERTY_ENABLED )
             status = decodeutf_8(pUserPropKey, pUserPropKeyLen, &propertyLength, &userKey, &pIndex);
             status = decodeutf_8(pUserPropVal, pUserPropValLen, &propertyLength, &userVal, &pIndex);
-            // update currIndex to pIndex essentially\. 
+            // update currIndex to pIndex essentially. 
             *pCurrIndex = pIndex;
 #else
             status = decodeAndDiscard(&propertyLength, &pIndex);

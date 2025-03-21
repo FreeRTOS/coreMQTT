@@ -1414,7 +1414,7 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
 
             return status;
         }
-    #else /* if ( MQTT_USER_PROPERTY_ENABLED ) */
+    #endif /* if ( MQTT_USER_PROPERTY_ENABLED ) */
         static MQTTStatus_t decodeAndDiscard( size_t * pPropertyLength,
                                               const uint8_t ** pIndex )
         {
@@ -1482,7 +1482,7 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
             return status;
         }
 
-    #endif /* if ( MQTT_USER_PROPERTY_ENABLED ) */
+  /* if ( MQTT_USER_PROPERTY_ENABLED ) */
 
     static MQTTStatus_t MQTT_GetAuthInfoSize( const MQTTAuthInfo_t * pAuthInfo,
                                               size_t * pPropertyLength )
@@ -4004,15 +4004,12 @@ MQTTStatus_t deserializePublishProperties( MQTTPublishInfo_t * pPublishInfo, con
                 decodeVariableLength(pLocalIndex,&pPublishInfo->subscriptionId);
                 break ; 
                 
-            // case MQTT_REASON_STRING_ID:
-            //     status = decodeutf_8(&pSubackProperties->pReasonString, &pSubackProperties->reasonStringLength, &propertyLength, &reasonString, &pLocalIndex);
-            //     break;
             case MQTT_USER_PROPERTY_ID:
-            #if(MQTT_USER_PROPERTY_ENABLED)
-                status = decodeutf_8pair(pPublishInfo->pUserProperty, &pPublishInfo->pUserProperty->count, &propertyLength, &pLocalIndex);
-            #else 
+            //#if(MQTT_USER_PROPERTY_ENABLED)
+            //    status = decodeutf_8pair(pPublishInfo->pUserProperty, &pPublishInfo->pUserProperty->count, &propertyLength, &pLocalIndex);
+            //#else 
                 status = decodeAndDiscard(&propertyLength, &pLocalIndex);
-            #endif
+            //#endif
                 break;
             default:
                 status = MQTTProtocolError;
