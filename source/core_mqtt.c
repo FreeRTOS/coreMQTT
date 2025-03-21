@@ -1542,6 +1542,7 @@ static bool matchTopicFilter( const char * pTopicName,
             iterator++;
             ioVectorLength++;
 
+
             /* Encode the reason string if provided. */
             //if( pAckInfo->reasonStringLength != 0U )
             //{
@@ -1568,6 +1569,8 @@ static bool matchTopicFilter( const char * pTopicName,
             totalMessageLength += iterator->iov_len;
             iterator++;
             ioVectorLength++;
+
+            pContext->ackPropsBuffer.currentIndex = 0; 
 
 
             bytesSentOrError = sendMessageVector( pContext, pIoVector, ioVectorLength );
@@ -3172,6 +3175,7 @@ static MQTTStatus_t receiveSingleIteration( MQTTContext_t * pContext,
         {
             status = handleIncomingPublish( pContext, &incomingPacket );
         }
+        /*check*/
 
         #if ( MQTT_VERSION_5_ENABLED )
             else if( ( incomingPacket.type == MQTT_PACKET_TYPE_DISCONNECT ) )
@@ -3917,7 +3921,7 @@ bool MQTT_IncomingPubGetNextProp(uint8_t** pCurrIndex,
     MQTTStatus_t status = MQTTSuccess;
     MQTTPublishInfo_t* pPublishInfo = deserializedInfo->pPublishInfo;
     uint8_t* pIndex;
-    if (pCurrIndex == NULL)
+    if (*pCurrIndex == NULL)
     {
         pIndex = pPublishInfo->startOfProps;
     }
