@@ -6583,6 +6583,8 @@ MQTTStatus_t MQTT_ProcessIncomingPacketTypeAndLength( const uint8_t * pBuffer,
             }
         }
 
+        pDisconnectInfo->startOfAckProps = pIndex; 
+
         if( status == MQTTSuccess )
         {
             while( ( propertyLength > 0U ) && ( status == MQTTSuccess ) )
@@ -6602,11 +6604,7 @@ MQTTStatus_t MQTT_ProcessIncomingPacketTypeAndLength( const uint8_t * pBuffer,
                         break;
 
                     case MQTT_USER_PROPERTY_ID:
-                        #if ( MQTT_USER_PROPERTY_ENABLED )
-                            status = decodeutf_8pair( pDisconnectInfo->pUserProperty, &pDisconnectInfo->pUserProperty->count, &propertyLength, &pIndex );
-                        #else
-                            status = decodeAndDiscard( &propertyLength, &pIndex );
-                        #endif
+                        status = decodeAndDiscard( &propertyLength, &pIndex );
                         break;
 
                     case MQTT_SERVER_REF_ID:

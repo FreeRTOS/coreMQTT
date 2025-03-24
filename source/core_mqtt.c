@@ -1643,7 +1643,6 @@ static bool matchTopicFilter( const char * pTopicName,
          * User Property       + MAX_USER_PROPERTY*5*
          * */
         TransportOutVector_t pIoVector[ 4 + MAX_USER_PROPERTY * 5 ];
-        uint8_t serializedReasonStringLength[ 2 ];
         uint8_t reasonStringId = MQTT_REASON_STRING_ID;
 
         #if ( MQTT_USER_PROPERTY_ENABLED )
@@ -1666,26 +1665,6 @@ static bool matchTopicFilter( const char * pTopicName,
         iterator++;
         ioVectorLength++;
 
-        /* Encode the reason string if provided. */
-        //if( pDisconnectInfo->reasonStringLength != 0U )
-        //{
-        //    vectorsAdded = addEncodedStringToVectorWithId( serializedReasonStringLength,
-        //                                                   pDisconnectInfo->pReasonString,
-        //                                                   pDisconnectInfo->reasonStringLength,
-        //                                                   iterator,
-        //                                                   &totalMessageLength, &reasonStringId );
-        //    /* Update the iterator to point to the next empty slot. */
-        //    iterator = &iterator[ vectorsAdded ];
-        //    ioVectorLength += vectorsAdded;
-        //}
-
-        //#if ( MQTT_USER_PROPERTY_ENABLED )
-        //    /*Encode the user properties if provided.*/
-        //    if( pDisconnectInfo->pUserProperty != NULL )
-        //    {
-        //        ioVectorLength += sendUserProperties( pDisconnectInfo->pUserProperty, &userVector, &totalMessageLength, &iterator );
-        //    }
-        //#endif
 
         iterator->iov_base = pPropertyBuilder->pBuffer;
         iterator->iov_len = pPropertyBuilder->currentIndex;
@@ -4076,6 +4055,22 @@ MQTTStatus_t MQTTPropAdd_PubAckReasonString(MQTTContext_t* pContext, const char*
 
     return MQTTSuccess;
 }
+
+
+MQTTStatus_t MQTTPropAdd_DisconnReasonString(MqttPropBuilder_t* pPropertyBuilder,
+    const char* pReasonString,
+    uint16_t reasonStringLength)
+{
+    uint8_t* pIndex = pPropertyBuilder->pBuffer + pPropertyBuilder->currentIndex;
+    *pIndex = MQTT_REASON_STRING_ID;
+    pIndex++;
+    pIndex = encodeString(pIndex, pReasonString, reasonStringLength);
+
+    pPropertyBuilder->currentIndex += (size_t)(pIndex - (pPropertyBuilder->pBuffer + pPropertyBuilder->currentIndex));
+    return MQTTSuccess;
+}
+
+
 
 
 /*-----------------------------------------------------------*/
