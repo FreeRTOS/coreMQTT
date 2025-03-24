@@ -1230,10 +1230,11 @@ static bool matchTopicFilter( const char * pTopicName,
  * @return #MQTTSuccess, #MQTTBadParameter, #MQTTIllegalState or #MQTTSendFailed.
  */
 
-    static MQTTStatus_t sendDisconnectWithoutCopyV5( MQTTContext_t * pContext,
-                                                     const MQTTAckInfo_t * pDisconnectInfo,
-                                                     size_t remainingLength,
-                                                     uint32_t sessionExpiry );
+    static MQTTStatus_t sendDisconnectWithoutCopyV5(MQTTContext_t* pContext,
+        const MQTTAckInfo_t* pDisconnectInfo,
+        size_t remainingLength,
+        uint32_t sessionExpiry,
+        MqttPropBuilder_t* pPropertyBuilder); 
 
 /*-----------------------------------------------------------*/
 
@@ -1616,7 +1617,8 @@ static bool matchTopicFilter( const char * pTopicName,
     static MQTTStatus_t sendDisconnectWithoutCopyV5( MQTTContext_t * pContext,
                                                      const MQTTAckInfo_t * pDisconnectInfo,
                                                      size_t remainingLength,
-                                                     uint32_t sessionExpiry )
+                                                     uint32_t sessionExpiry, 
+                                                     MqttPropBuilder_t* pPropertyBuilder)
     {
         int32_t bytesSentOrError;
         size_t vectorsAdded = 0U;
@@ -1665,25 +1667,32 @@ static bool matchTopicFilter( const char * pTopicName,
         ioVectorLength++;
 
         /* Encode the reason string if provided. */
-        if( pDisconnectInfo->reasonStringLength != 0U )
-        {
-            vectorsAdded = addEncodedStringToVectorWithId( serializedReasonStringLength,
-                                                           pDisconnectInfo->pReasonString,
-                                                           pDisconnectInfo->reasonStringLength,
-                                                           iterator,
-                                                           &totalMessageLength, &reasonStringId );
-            /* Update the iterator to point to the next empty slot. */
-            iterator = &iterator[ vectorsAdded ];
-            ioVectorLength += vectorsAdded;
-        }
+        //if( pDisconnectInfo->reasonStringLength != 0U )
+        //{
+        //    vectorsAdded = addEncodedStringToVectorWithId( serializedReasonStringLength,
+        //                                                   pDisconnectInfo->pReasonString,
+        //                                                   pDisconnectInfo->reasonStringLength,
+        //                                                   iterator,
+        //                                                   &totalMessageLength, &reasonStringId );
+        //    /* Update the iterator to point to the next empty slot. */
+        //    iterator = &iterator[ vectorsAdded ];
+        //    ioVectorLength += vectorsAdded;
+        //}
 
-        #if ( MQTT_USER_PROPERTY_ENABLED )
-            /*Encode the user properties if provided.*/
-            if( pDisconnectInfo->pUserProperty != NULL )
-            {
-                ioVectorLength += sendUserProperties( pDisconnectInfo->pUserProperty, &userVector, &totalMessageLength, &iterator );
-            }
-        #endif
+        //#if ( MQTT_USER_PROPERTY_ENABLED )
+        //    /*Encode the user properties if provided.*/
+        //    if( pDisconnectInfo->pUserProperty != NULL )
+        //    {
+        //        ioVectorLength += sendUserProperties( pDisconnectInfo->pUserProperty, &userVector, &totalMessageLength, &iterator );
+        //    }
+        //#endif
+
+        iterator->iov_base = pPropertyBuilder->pBuffer;
+        iterator->iov_len = pPropertyBuilder->currentIndex;
+        totalMessageLength += iterator->iov_len;
+        iterator++;
+        ioVectorLength++;
+
 
         bytesSentOrError = sendMessageVector( pContext, pIoVector, ioVectorLength );
 
@@ -5890,7 +5899,8 @@ const char * MQTT_Status_strerror( MQTTStatus_t status )
 #if ( MQTT_VERSION_5_ENABLED )
     MQTTStatus_t MQTTV5_Disconnect( MQTTContext_t * pContext,
                                     MQTTAckInfo_t * pDisconnectInfo,
-                                    uint32_t sessionExpiry)
+                                    uint32_t sessionExpiry, 
+                                    MqttPropBuilder_t* pPropertyBuilder)
     {
         size_t packetSize = 0U;
         size_t remainingLength = 0U;
@@ -5906,7 +5916,7 @@ const char * MQTT_Status_strerror( MQTTStatus_t status )
         if( status == MQTTSuccess )
         {
             /* Get MQTT DISCONNECT packet size. */
-            status = MQTTV5_GetDisconnectPacketSize( pDisconnectInfo, &remainingLength, &packetSize, pContext->pConnectProperties->serverMaxPacketSize, sessionExpiry, pContext->pConnectProperties->sessionExpiry );
+            status = MQTTV5_GetDisconnectPacketSize( pDisconnectInfo, &remainingLength, &packetSize, pContext->pConnectProperties->serverMaxPacketSize, sessionExpiry, pContext->pConnectProperties->sessionExpiry, pPropertyBuilder->currentIndex );
             LogDebug( ( "MQTT DISCONNECT packet size is %lu.",
                         ( unsigned long ) packetSize ) );
         }
@@ -5916,7 +5926,7 @@ const char * MQTT_Status_strerror( MQTTStatus_t status )
             /* Take the mutex because the below call should not be interrupted. */
             MQTT_PRE_SEND_HOOK( pContext );
 
-            status = sendDisconnectWithoutCopyV5( pContext, pDisconnectInfo, remainingLength, sessionExpiry );
+            status = sendDisconnectWithoutCopyV5( pContext, pDisconnectInfo, remainingLength, sessionExpiry, pPropertyBuilder);
 
             /* Give the mutex away. */
             MQTT_POST_SEND_HOOK( pContext );

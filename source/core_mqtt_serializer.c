@@ -6283,7 +6283,8 @@ MQTTStatus_t MQTT_ProcessIncomingPacketTypeAndLength( const uint8_t * pBuffer,
                                                  size_t * pPacketSize,
                                                  uint32_t maxPacketSize,
                                                  uint32_t sessionExpiry,
-                                                 uint32_t prevSessionExpiry )
+                                                 uint32_t prevSessionExpiry,
+                                                 size_t proplen)
     {
         MQTTStatus_t status = MQTTSuccess;
         size_t length = 0U;
@@ -6328,7 +6329,7 @@ MQTTStatus_t MQTT_ProcessIncomingPacketTypeAndLength( const uint8_t * pBuffer,
             }
 
             /*Validate the reason string if provided.*/
-            if( pDisconnectInfo->reasonStringLength != 0U )
+            /*if( pDisconnectInfo->reasonStringLength != 0U )
             {
                 if( pDisconnectInfo->pReasonString == NULL )
                 {
@@ -6339,15 +6340,17 @@ MQTTStatus_t MQTT_ProcessIncomingPacketTypeAndLength( const uint8_t * pBuffer,
                     propertyLength += pDisconnectInfo->reasonStringLength;
                     propertyLength += MQTT_UTF8_LENGTH_SIZE;
                 }
-            }
+            }*/
         }
 
-        #if ( MQTT_USER_PROPERTY_ENABLED )
+        /*#if ( MQTT_USER_PROPERTY_ENABLED )
             if( ( status == MQTTSuccess ) && ( pDisconnectInfo->pUserProperty != NULL ) )
             {
                 status = MQTT_GetUserPropertySize( pDisconnectInfo->pUserProperty->userProperty, pDisconnectInfo->pUserProperty->count, &propertyLength );
             }
-        #endif
+        #endif*/
+
+        propertyLength += proplen;
 
         if( status == MQTTSuccess )
         {

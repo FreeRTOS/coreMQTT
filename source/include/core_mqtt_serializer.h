@@ -2256,7 +2256,13 @@ MQTTStatus_t MQTTV5_SerializePubAckWithProperty( const MQTTAckInfo_t *pAckInfo,
  * @endcode
  */
 /* @[declare_mqttv5_getdisconnectpacketsize] */
-MQTTStatus_t MQTTV5_GetDisconnectPacketSize( MQTTAckInfo_t* pDisconnectInfo, size_t * pRemainingLength, size_t * pPacketSize,uint32_t maxPacketSize, uint32_t sessionExpiry,uint32_t prevSessionExpiry );
+MQTTStatus_t MQTTV5_GetDisconnectPacketSize(MQTTAckInfo_t* pDisconnectInfo,
+    size_t* pRemainingLength,
+    size_t* pPacketSize,
+    uint32_t maxPacketSize,
+    uint32_t sessionExpiry,
+    uint32_t prevSessionExpiry,
+    size_t proplen); 
 /* @[declare_mqttv5_getdisconnectpacketsize] */
 
 
