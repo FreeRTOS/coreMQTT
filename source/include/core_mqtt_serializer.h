@@ -433,6 +433,8 @@ typedef struct MQTTConnectProperties
      */
     MQTTUserProperties_t *pIncomingUserProperty;
     #endif
+    uint8_t *startOfConnackProps; 
+    size_t connackPropLen; 
 
 } MQTTConnectProperties_t;
 
@@ -466,6 +468,8 @@ typedef struct MQTTAckInfo
      * @brief Length of reason string.
      */
     uint16_t reasonStringLength;
+
+    uint8_t* startOfAckProps; 
 } MQTTAckInfo_t;
 
 

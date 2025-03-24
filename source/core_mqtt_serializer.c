@@ -2278,7 +2278,11 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
         bool authMethod = false;
         bool authData = false;
 
+        pConnackProperties->connackPropLen = length; 
+
         pVariableHeader = &pVariableHeader[ remainingLengthEncodedSize( propertyLength ) ];
+
+        pConnackProperties->startOfConnackProps = pVariableHeader;
 
         /*Decode all the properties received, validate and store them in pConnackProperties.*/
         while( ( propertyLength > 0U ) && ( status == MQTTSuccess ) )
@@ -2322,11 +2326,7 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
                     break;
 
                 case MQTT_USER_PROPERTY_ID:
-                    #if ( MQTT_USER_PROPERTY_ENABLED )
-                        status = decodeutf_8pair( pConnackProperties->pIncomingUserProperty, &pConnackProperties->pIncomingUserProperty->count, &propertyLength, &pVariableHeader );
-                    #else
-                        status = decodeAndDiscard( &propertyLength, &pVariableHeader );
-                    #endif
+                    status = decodeAndDiscard( &propertyLength, &pVariableHeader );
                     break;
 
                 case MQTT_WILDCARD_ID:
@@ -2638,6 +2638,7 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
 
         /*Decode the property length*/
         status = decodeVariableLength( pLocalIndex, &propertyLength );
+        pAckInfo->propertyLength = propertyLength;
 
         if( status == MQTTSuccess )
         {
@@ -2649,7 +2650,7 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
                 status = MQTTMalformedPacket;
             }
         }
-
+        pAckInfo->startOfAckProps = pLocalIndex; 
         if( status == MQTTSuccess )
         {
             while( ( propertyLength > 0U ) && ( status == MQTTSuccess ) )
@@ -2667,11 +2668,7 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
                         break;
 
                     case MQTT_USER_PROPERTY_ID:
-                        #if ( MQTT_USER_PROPERTY_ENABLED )
-                            status = decodeutf_8pair( pAckInfo->pUserProperty, &pAckInfo->pUserProperty->count, &propertyLength, &pLocalIndex );
-                        #else
-                            status = decodeAndDiscard( &propertyLength, &pLocalIndex );
-                        #endif
+                        status = decodeAndDiscard( &propertyLength, &pLocalIndex );
                         break;
 
                     default:
@@ -2729,13 +2726,6 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
             {
                 status = MQTTProtocolError;
             }
-
-            #if ( MQTT_USER_PROPERTY_ENABLED )
-                else if( pAckInfo->pUserProperty == NULL )
-                {
-                    status = MQTTBadParameter;
-                }
-            #endif
             else
             {
                 status = decodeAckProperties( pAckInfo, pIndex, pAck->remainingLength );
@@ -4005,11 +3995,7 @@ MQTTStatus_t deserializePublishProperties( MQTTPublishInfo_t * pPublishInfo, con
                 break ; 
                 
             case MQTT_USER_PROPERTY_ID:
-            //#if(MQTT_USER_PROPERTY_ENABLED)
-            //    status = decodeutf_8pair(pPublishInfo->pUserProperty, &pPublishInfo->pUserProperty->count, &propertyLength, &pLocalIndex);
-            //#else 
                 status = decodeAndDiscard(&propertyLength, &pLocalIndex);
-            //#endif
                 break;
             default:
                 status = MQTTProtocolError;
@@ -5858,12 +5844,12 @@ MQTTStatus_t MQTT_ProcessIncomingPacketTypeAndLength( const uint8_t * pBuffer,
             status = MQTTBadParameter;
         }
 
-        #if ( MQTT_USER_PROPERTY_ENABLED )
-            else if( pConnackProperties->pIncomingUserProperty == NULL )
-            {
-                status = MQTTBadParameter;
-            }
-        #endif
+        //#if ( MQTT_USER_PROPERTY_ENABLED )
+        //    else if( pConnackProperties->pIncomingUserProperty == NULL )
+        //    {
+        //        status = MQTTBadParameter;
+        //    }
+        //#endif
         
         status = validateConnackParams( pIncomingPacket, pSessionPresent );
 
@@ -6048,15 +6034,17 @@ MQTTStatus_t MQTT_ProcessIncomingPacketTypeAndLength( const uint8_t * pBuffer,
         const uint8_t* pLocalIndex = pIndex;
 
         /*Decode Property Length */
-        #if(MQTT_USER_PROPERTY_ENABLED)
-            MQTTUserProperties_t userProperty ;
-            (void)memset(&userProperty, 0x0, sizeof(userProperty));
-            pSubackProperties->pUserProperty = &userProperty;
-        #endif
+        //#if(MQTT_USER_PROPERTY_ENABLED)
+        //    MQTTUserProperties_t userProperty ;
+        //    (void)memset(&userProperty, 0x0, sizeof(userProperty));
+        //    pSubackProperties->pUserProperty = &userProperty;
+        //#endif
 
 
         status = decodeVariableLength(pLocalIndex, &propertyLength);
         pSubackProperties->propertyLength = propertyLength ; 
+
+        pSubackProperties->startOfAckProps = pLocalIndex; 
 
         if (status == MQTTSuccess)
         {
@@ -6078,11 +6066,7 @@ MQTTStatus_t MQTT_ProcessIncomingPacketTypeAndLength( const uint8_t * pBuffer,
                     status = decodeutf_8(&pSubackProperties->pReasonString, &pSubackProperties->reasonStringLength, &propertyLength, &reasonString, &pLocalIndex);
                     break;
                 case MQTT_USER_PROPERTY_ID:
-                #if(MQTT_USER_PROPERTY_ENABLED)
-                    status = decodeutf_8pair(pSubackProperties->pUserProperty, &pSubackProperties->pUserProperty->count, &propertyLength, &pLocalIndex);
-                #else 
                     status = decodeAndDiscard(&propertyLength, &pLocalIndex);
-                #endif
                     break;
                 default:
                     status = MQTTProtocolError;

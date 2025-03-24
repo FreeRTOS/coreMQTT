@@ -3959,6 +3959,100 @@ bool MQTT_IncomingPubGetNextProp(uint8_t** pCurrIndex,
     return userPropFlag;
 }
 
+bool MQTT_ConnackGetNextProp(uint8_t** pCurrIndex,
+    const char** pUserPropKey,
+    uint16_t* pUserPropKeyLen,
+    const char** pUserPropVal,
+    uint16_t* pUserPropValLen,
+    MQTTContext_t* pContext)
+{
+    MQTTStatus_t status = MQTTSuccess;
+    uint8_t* pIndex;
+    size_t propertyLength = pContext->pConnectProperties->connackPropLen;
+    if (*pCurrIndex == NULL)
+    {
+        pIndex = pContext->pConnectProperties->startOfConnackProps;
+    }
+    else {
+        pIndex = *pCurrIndex;
+    }
+    bool userPropFlag = false;
+    bool userKey = false;
+    bool userVal = false;
+    while ((propertyLength > 0U) && (status == MQTTSuccess))
+    {
+        uint8_t packetId = *pIndex;
+        pIndex = &pIndex[1];
+        propertyLength -= sizeof(uint8_t);
+        if (packetId == MQTT_USER_PROPERTY_ID)
+        {
+            userPropFlag = true;
+#if ( MQTT_USER_PROPERTY_ENABLED )
+            status = decodeutf_8(pUserPropKey, pUserPropKeyLen, &propertyLength, &userKey, &pIndex);
+            status = decodeutf_8(pUserPropVal, pUserPropValLen, &propertyLength, &userVal, &pIndex);
+            // update currIndex to pIndex essentially. 
+            *pCurrIndex = pIndex;
+#else
+            status = decodeAndDiscard(&propertyLength, &pIndex);
+#endif 
+            break;
+        }
+    }
+    if (status != MQTTSuccess)
+    {
+        LogError(("Failed to decode user property : %d", status));
+        userPropFlag = false;
+    }
+    return userPropFlag;
+}
+
+bool MQTT_AckGetNextProp(uint8_t** pCurrIndex,
+    const char** pUserPropKey,
+    uint16_t* pUserPropKeyLen,
+    const char** pUserPropVal,
+    uint16_t* pUserPropValLen,
+    MQTTDeserializedInfo_t* deserializedInfo)
+{
+    MQTTStatus_t status = MQTTSuccess; 
+    uint8_t* pIndex;
+    size_t propertyLength = deserializedInfo->pAckInfo->propertyLength;
+    if (*pCurrIndex == NULL)
+    {
+        pIndex = deserializedInfo->pAckInfo->startOfAckProps; 
+    }
+    else {
+        pIndex = *pCurrIndex;
+    }
+    bool userPropFlag = false;
+    bool userKey = false;
+    bool userVal = false;
+    while ((propertyLength > 0U) && (status == MQTTSuccess))
+    {
+        uint8_t packetId = *pIndex;
+        pIndex = &pIndex[1];
+        propertyLength -= sizeof(uint8_t);
+        if (packetId == MQTT_USER_PROPERTY_ID)
+        {
+            userPropFlag = true;
+#if ( MQTT_USER_PROPERTY_ENABLED )
+            status = decodeutf_8(pUserPropKey, pUserPropKeyLen, &propertyLength, &userKey, &pIndex);
+            status = decodeutf_8(pUserPropVal, pUserPropValLen, &propertyLength, &userVal, &pIndex);
+            // update currIndex to pIndex essentially. 
+            *pCurrIndex = pIndex;
+#else
+            status = decodeAndDiscard(&propertyLength, &pIndex);
+#endif 
+            break;
+        }
+    }
+    if (status != MQTTSuccess)
+    {
+        LogError(("Failed to decode user property : %d", status));
+        userPropFlag = false;
+    }
+    return userPropFlag;
+}
+
 
 MQTTStatus_t MQTTPropAdd_PubAckReasonString(MQTTContext_t* pContext, const char* reasonString, uint16_t reasonStringLen)
 {
@@ -4560,6 +4654,8 @@ static MQTTStatus_t receiveConnack( const MQTTContext_t * pContext,
     uint32_t entryTimeMs = 0U, remainingTimeMs = 0U, timeTakenMs = 0U;
     bool breakFromLoop = false;
     uint16_t loopCount = 0U;
+    MQTTDeserializedInfo_t deserializedInfo; 
+    
 
     assert( pContext != NULL );
     assert( pIncomingPacket != NULL );
@@ -4672,6 +4768,13 @@ static MQTTStatus_t receiveConnack( const MQTTContext_t * pContext,
     {
         LogError( ( "CONNACK recv failed with status = %s.",
                     MQTT_Status_strerror( status ) ) );
+    }
+
+    if (status == MQTTSuccess)
+    {
+        deserializedInfo.deserializationResult = status; 
+        /*putting all the deserialized props in the pContext , so no need for deserializedInfo*/
+        pContext->appCallback(pContext, pIncomingPacket ,&deserializedInfo);
     }
 
     return status;
@@ -5787,7 +5890,7 @@ const char * MQTT_Status_strerror( MQTTStatus_t status )
 #if ( MQTT_VERSION_5_ENABLED )
     MQTTStatus_t MQTTV5_Disconnect( MQTTContext_t * pContext,
                                     MQTTAckInfo_t * pDisconnectInfo,
-                                    uint32_t sessionExpiry )
+                                    uint32_t sessionExpiry)
     {
         size_t packetSize = 0U;
         size_t remainingLength = 0U;
