@@ -74,12 +74,19 @@
  */
 #define CORE_MQTT_SERIALIZED_LENGTH_FIELD_BYTES          ( 2U )
 
+/**
+* @brief Set a bit in an 8-bit unsigned integer.
+*/
 #define UINT8_SET_BIT( x, position )      ( ( x ) = ( uint8_t ) ( ( x ) | ( 0x01U << ( position ) ) ) )
+
+/**
+ * @brief Get the high byte of a 16-bit unsigned integer.
+ */
 #define UINT16_HIGH_BYTE( x )             ( ( uint8_t ) ( ( x ) >> 8 ) )
 
- /**
-  * @brief Get the low byte of a 16-bit unsigned integer.
-  */
+/**
+* @brief Get the low byte of a 16-bit unsigned integer.
+*/
 #define UINT16_LOW_BYTE( x )              ( ( uint8_t ) ( ( x ) & 0x00ffU ) )
 
 /**
@@ -274,39 +281,39 @@
         UserPropertyVector_t userProperty;
 
         /**
-         * @brief Used to encode content type length.
-         *
-         **/
+        * @brief Used to encode content type length.
+        *
+        **/
         uint8_t serializedContentTypeLength[ 2 ];
 
         /**
-         * @brief Used to encode content type id.
-         *
-         **/
+        * @brief Used to encode content type id.
+        *
+        **/
         uint8_t contentTypeId;
 
         /**
-         * @brief Used to encode response topic length.
-         *
-         **/
+            * @brief Used to encode response topic length.
+            *
+            **/
         uint8_t serializedResponseTopicLength[ 2 ];
 
         /**
-         * @brief Used to encode response topic id.
-         *
-         **/
+        * @brief Used to encode response topic id.
+        *
+        **/
         uint8_t responseTopicId;
 
         /**
-         * @brief Used to encode correlation data length.
-         *
-         **/
+        * @brief Used to encode correlation data length.
+        *
+        **/
         uint8_t serializedCorrelationLength[ 2 ];
 
         /**
-         * @brief Used to encode correlation data id.
-         *
-         **/
+        * @brief Used to encode correlation data id.
+        *
+        **/
         uint8_t correlationDataId;
     } PublishVector_t;
 
@@ -4960,7 +4967,7 @@ MQTTStatus_t MQTT_UnsubscribeV5( MQTTContext_t * pContext,
                                                 &remainingLength,
                                                 &packetSize, 
                                                 pPropertyBuilder->currentIndex);
-        LogDebug( ( "UNSUBSCRIBE packet size is %lu and remaining length is %lu.",
+        LogInfo( ( "UNSUBSCRIBE packet size is %lu and remaining length is %lu.",
                     ( unsigned long ) packetSize,
                     ( unsigned long ) remainingLength ) );
     }
