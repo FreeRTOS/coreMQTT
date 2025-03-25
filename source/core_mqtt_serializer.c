@@ -99,8 +99,6 @@
  */
 #define MQTT_MAX_REMAINING_LENGTH                   ( 268435455UL )
 
-#if ( MQTT_VERSION_5_ENABLED )
-
 /**
  * @brief Per the MQTT spec, the max packet size  can be of  max remaining length + 5 bytes
  */
@@ -532,8 +530,6 @@
  */
     #define MQTT_REASON_WILDCARD_SUB_NOT_SUP            ( 0xA2 )
 
-#endif /* if ( MQTT_VERSION_5_ENABLED ) */
-
 /**
  * @brief Set a bit in an 8-bit unsigned integer.
  */
@@ -566,8 +562,6 @@
     ( uint16_t ) ( ( ( ( uint16_t ) ptr[ 0 ] ) << 8 ) | \
                    ( ( uint16_t ) ptr[ 1 ] ) )
 
-#if ( MQTT_VERSION_5_ENABLED )
-
 /**
  * @brief Get the 4th byte of a 32-bit unsigned integer.
  */
@@ -598,8 +592,6 @@
                    ( ( ( uint32_t ) ptr[ 1 ] ) << 16 ) | \
                    ( ( ( uint32_t ) ptr[ 2 ] ) << 8 ) |  \
                    ( ( uint32_t ) ptr[ 3 ] ) )
-
-#endif /* if ( MQTT_VERSION_5_ENABLED ) */
 
 /**
  * @brief A value that represents an invalid remaining length.
@@ -1263,20 +1255,6 @@ static uint8_t * serializePublishProperties( const MQTTPublishInfo_t * pPublishI
                                                  uint8_t * pIndex );
 
 /**
- * @brief Serialize an MQTT CONNECT packet in the given buffer.
- *
- * @param[in] pDisconnectInfo MQTT DISCONNECT packet parameters.
- * @param[out] pFixedBuffer Buffer for packet serialization.
- * @param[in] remainingLength Remaining Length of MQTT DISCONNECT packet.
- * @param[in] sessionExpiry Session Expiry Interval.
- *
- */
-static void serializeDisconnectPacketV5( const MQTTAckInfo_t * pDisconnectInfo,
-                                             const MQTTFixedBuffer_t * pFixedBuffer,
-                                             size_t remainingLength,
-                                             uint32_t sessionExpiry );
-
-/**
  * @brief Prints and validates the appropriate message for the Disconnect response code if logs
  * are enabled.
  *
@@ -1509,113 +1487,7 @@ static MQTTStatus_t MQTT_GetAuthInfoSize( const MQTTAuthInfo_t * pAuthInfo,
 
     return status;
 }
-static MQTTStatus_t MQTT_GetSubscribePropertiesSize(MQTTSubscribeProperties_t *pSubscribeProperties, MQTTSubscriptionType_t subscriptionType )
-{
-    size_t propertyLength = 0;
-    MQTTStatus_t status = MQTTSuccess;
-    if(subscriptionType == MQTT_SUBSCRIBE)
-    {
-        if(pSubscribeProperties->subscriptionId != 0 ){
-            propertyLength += 1U ; 
-            propertyLength += remainingLengthEncodedSize(pSubscribeProperties->subscriptionId);
-        }
-    }
-    #if ( MQTT_USER_PROPERTY_ENABLED )
-        /*Get the length of the user properties*/
-        if( ( status == MQTTSuccess ) && ( pSubscribeProperties->pUserProperties != NULL ) )
-        {
-            status = MQTT_GetUserPropertySize( pSubscribeProperties->pUserProperties->userProperty, pSubscribeProperties->pUserProperties->count, &propertyLength );
-        }
-    #endif
 
-    /*Variable length encoded values cannot have a value of more than 268435455U*/
-    if( ( status == MQTTSuccess ) && ( pSubscribeProperties->propertyLength > MQTT_MAX_REMAINING_LENGTH ) )
-    {
-        status = MQTTBadParameter;
-    }
-
-    if( status == MQTTSuccess )
-    {
-        pSubscribeProperties->propertyLength = propertyLength;
-    }
-
-    return status;
-}
-static MQTTStatus_t MQTT_GetConnectPropertiesSize( MQTTConnectProperties_t * pConnectProperties )
-{
-    size_t propertyLength = 0;
-    MQTTStatus_t status = MQTTSuccess;
-
-    /*Validate the arguments*/
-    if( pConnectProperties->maxPacketSize == 0U )
-    {
-        status = MQTTBadParameter;
-    }
-    else if( pConnectProperties->receiveMax == 0U )
-    {
-        status = MQTTBadParameter;
-    }
-    else
-    {
-        /*Add the lengths of the parameters if applicable*/
-        if( pConnectProperties->sessionExpiry != 0U )
-        {
-            propertyLength += MQTT_SESSION_EXPIRY_SIZE;
-        }
-
-        if( pConnectProperties->receiveMax != ( uint16_t ) UINT16_MAX )
-        {
-            propertyLength += MQTT_RECEIVE_MAX_SIZE;
-        }
-
-        if( pConnectProperties->maxPacketSize != MQTT_MAX_PACKET_SIZE )
-        {
-            propertyLength += MQTT_MAX_PACKET_PROPERTY_SIZE;
-        }
-
-        if( pConnectProperties->topicAliasMax != 0U )
-        {
-            propertyLength += MQTT_TOPIC_ALIAS_SIZE;
-        }
-
-        if( pConnectProperties->requestResponseInfo != false )
-        {
-            propertyLength += MQTT_REQUEST_RESPONSE_SIZE;
-        }
-
-        if( pConnectProperties->requestProblemInfo != true )
-        {
-            propertyLength += MQTT_REQUEST_PROBLEM_SIZE;
-        }
-
-        if( pConnectProperties->pOutgoingAuth != NULL )
-        {
-            /*Valid authentication parameters*/
-            status = MQTT_GetAuthInfoSize( pConnectProperties->pOutgoingAuth, &propertyLength );
-        }
-    }
-
-    #if ( MQTT_USER_PROPERTY_ENABLED )
-        /*Get the length of the user properties*/
-        if( ( status == MQTTSuccess ) && ( pConnectProperties->pOutgoingUserProperty != NULL ) )
-        {
-            status = MQTT_GetUserPropertySize( pConnectProperties->pOutgoingUserProperty->userProperty, pConnectProperties->pOutgoingUserProperty->count, &propertyLength );
-        }
-    #endif
-
-    /*Variable length encoded values cannot have a value of more than 268435455U*/
-    if( ( status == MQTTSuccess ) && ( pConnectProperties->propertyLength > MQTT_MAX_REMAINING_LENGTH ) )
-    {
-        status = MQTTBadParameter;
-    }
-
-    if( status == MQTTSuccess )
-    {
-        pConnectProperties->propertyLength = propertyLength;
-    }
-
-    return status;
-}
 
 static MQTTStatus_t MQTT_GetPublishPropertiesSize( MQTTPublishInfo_t * pPublishProperties )
 {
@@ -5861,98 +5733,6 @@ uint8_t * MQTTV5_SerializeDisconnectFixed( uint8_t * pIndex,
     return pIndexLocal;
 }
 
-    static void serializeDisconnectPacketV5( const MQTTAckInfo_t * pDisconnectInfo,
-                                             const MQTTFixedBuffer_t * pFixedBuffer,
-                                             size_t remainingLength,
-                                             uint32_t sessionExpiry )
-    {
-        uint8_t * pIndex = NULL;
-
-        assert( pDisconnectInfo != NULL );
-        assert( pFixedBuffer != NULL );
-        assert( pFixedBuffer->pBuffer != NULL );
-        pIndex = pFixedBuffer->pBuffer;
-        /* Serialize the header including reason code and property length */
-        pIndex = MQTTV5_SerializeDisconnectFixed( pIndex, pDisconnectInfo,
-                                                  remainingLength,
-                                                  sessionExpiry );
-
-        /*Serialize the reason string if provided.*/
-        if( pDisconnectInfo->reasonStringLength != 0U )
-        {
-            *pIndex = MQTT_REASON_STRING_ID;
-            pIndex++;
-            pIndex = encodeString( pIndex, pDisconnectInfo->pReasonString, pDisconnectInfo->reasonStringLength );
-        }
-
-        #if ( MQTT_USER_PROPERTY_ENABLED )
-            /*Serialize the user properties if provided.*/
-            if( pDisconnectInfo->pUserProperty != NULL )
-            {
-                uint32_t i = 0;
-                uint32_t size = pDisconnectInfo->pUserProperty->count;
-                const MQTTUserProperty_t * pUserProperty = pDisconnectInfo->pUserProperty->userProperty;
-
-                for( ; i < size; i++ )
-                {
-                    *pIndex = MQTT_USER_PROPERTY_ID;
-                    pIndex++;
-                    pIndex = encodeString( pIndex, pUserProperty[ i ].pKey, pUserProperty[ i ].keyLength );
-                    pIndex = encodeString( pIndex, pUserProperty[ i ].pValue, pUserProperty[ i ].valueLength );
-                }
-            }
-        #endif /* if ( MQTT_USER_PROPERTY_ENABLED ) */
-
-        /* Ensure that the difference between the end and beginning of the buffer
-         * is less than the buffer size. */
-        assert( ( ( size_t ) ( pIndex - pFixedBuffer->pBuffer ) ) <= pFixedBuffer->size );
-    }
-
-
-    MQTTStatus_t MQTTV5_SerializeDisconnectWithProperty( const MQTTAckInfo_t * pDisconnectInfo,
-                                                         size_t remainingLength,
-                                                         const MQTTFixedBuffer_t * pFixedBuffer,
-                                                         uint32_t sessionExpiry )
-    {
-        MQTTStatus_t status = MQTTSuccess;
-        size_t packetSize = 0;
-
-        /* Validate arguments. */
-        if( ( pDisconnectInfo == NULL ) || ( pFixedBuffer == NULL ) )
-        {
-            LogError( ( "Argument cannot be NULL: pDisconnectInfo=%p, "
-                        "pFixedBuffer=%p.",
-                        ( void * ) pDisconnectInfo,
-                        ( void * ) pFixedBuffer ) );
-            status = MQTTBadParameter;
-        }
-        /* A buffer must be configured for serialization. */
-        else if( pFixedBuffer->pBuffer == NULL )
-        {
-            LogError( ( "Argument cannot be NULL: pFixedBuffer->pBuffer is NULL." ) );
-            status = MQTTBadParameter;
-        }
-        else
-        {
-            packetSize = remainingLength + remainingLengthEncodedSize( remainingLength ) + 1U;
-
-            /* Check that the full packet size fits within the given buffer. */
-            if( packetSize > pFixedBuffer->size )
-            {
-                LogError( ( "Buffer size of %lu is not sufficient to hold "
-                            "serialized ACK packet of size of %lu.",
-                            ( unsigned long ) pFixedBuffer->size,
-                            ( unsigned long ) packetSize ) );
-                status = MQTTNoMemory;
-            }
-            else
-            {
-                serializeDisconnectPacketV5( pDisconnectInfo, pFixedBuffer, remainingLength, sessionExpiry );
-            }
-        }
-
-        return status;
-    }
 
     MQTTStatus_t MQTTV5_DeserializeDisconnect( const MQTTPacketInfo_t * pPacket,
                                                MQTTAckInfo_t * pDisconnectInfo,

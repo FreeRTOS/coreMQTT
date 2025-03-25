@@ -201,13 +201,13 @@ typedef struct MQTTConnectInfo
  * @ingroup mqtt_struct_types
  * @brief MQTT SUBSCRIBE packet parameters.
  */
-#if(MQTT_VERSION_5_ENABLED)
+
 typedef enum retainHandling{
     retainSendOnSub = 0,
     retainSendOnSubIfNotPresent = 1,
     retainDoNotSendonSub = 2 
 }retainHandling_t; 
-#endif
+
 
 typedef struct MQTTSubscribeInfo
 {
@@ -228,11 +228,11 @@ typedef struct MQTTSubscribeInfo
     /**
      * @brief no local option for subscription. Include protocol error if noLocalOption = 1 in a shared subscription
      */
-    #if (MQTT_VERSION_5_ENABLED)
+
         bool noLocalOption;
         bool retainAsPublishedOption;
         retainHandling_t retainHandlingOption; 
-    #endif
+
 } MQTTSubscribeInfo_t;
 
 
@@ -514,7 +514,6 @@ typedef struct MQTTPublishInfo
      */
     size_t payloadLength;
 
-#if (MQTT_VERSION_5_ENABLED)
      /**
      * @brief Length of the properties.
      */
@@ -563,17 +562,17 @@ typedef struct MQTTPublishInfo
      * @brief To identify which request the Response Message is for.
      */
     const void *pCorrelationData;
-    #if(MQTT_USER_PROPERTY_ENABLED)
+
      /**
      * @brief Pointer to the user properties.
      */
     MQTTUserProperties_t* pUserProperty;
-    #endif
+
 
     size_t subscriptionId ;
 
     uint8_t* startOfProps ;
-#endif
+
 
 } MQTTPublishInfo_t;
 

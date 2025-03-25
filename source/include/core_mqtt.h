@@ -267,18 +267,17 @@ typedef struct MQTTContext
     uint16_t keepAliveIntervalSec; /**< @brief Keep Alive interval. */
     uint32_t pingReqSendTimeMs;    /**< @brief Timestamp of the last sent PINGREQ. */
     bool waitingForPingResp;       /**< @brief If the library is currently awaiting a PINGRESP. */
-    #if ( MQTT_VERSION_5_ENABLED )
 
-        /**
-         * @brief Connect and Connack Properties.
-         */
-        MQTTConnectProperties_t *pConnectProperties;
+    /**
+    * @brief Connect and Connack Properties.
+    */
+    MQTTConnectProperties_t *pConnectProperties;
 
-        /**
-         * @brief To store disconnect information.
-         */
-        MQTTAckInfo_t * pDisconnectInfo;
-    #endif
+    /**
+    * @brief To store disconnect information.
+    */
+    MQTTAckInfo_t * pDisconnectInfo;
+
 
 } MQTTContext_t;
 
@@ -296,10 +295,9 @@ typedef struct MQTTDeserializedInfo
     uint16_t packetIdentifier;          /**< @brief Packet ID of deserialized packet. */
     MQTTPublishInfo_t * pPublishInfo;   /**< @brief Pointer to deserialized publish info. */
     MQTTStatus_t deserializationResult; /**< @brief Return code of deserialization. */
-    #if ( MQTT_VERSION_5_ENABLED )
-        MQTTAckInfo_t * pAckInfo;       /**< @brief Pointer to deserialized ack info. */
-        MQTTAckInfo_t * pNextAckInfo;   /**< @brief Pointer to next ack info to send. */
-    #endif
+    MQTTAckInfo_t * pAckInfo;       /**< @brief Pointer to deserialized ack info. */
+    MQTTAckInfo_t * pNextAckInfo;   /**< @brief Pointer to next ack info to send. */
+
 } MQTTDeserializedInfo_t;
 
 /**
@@ -620,7 +618,7 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
  * @endcode
  */
 /* @[declare_mqtt_subscribe] */
-#if(MQTT_VERSION_5_ENABLED)
+
 MQTTStatus_t MQTT_SubscribeV5( MQTTContext_t * pContext,
     MQTTSubscribeInfo_t * pSubscriptionList,
     size_t subscriptionCount,
@@ -632,8 +630,6 @@ MQTTStatus_t MQTT_UnsubscribeV5( MQTTContext_t * pContext,
                                size_t subscriptionCount,
                                uint16_t packetId,
                                MqttPropBuilder_t* pPropertyBuilder) ;
-
-#endif
 
 
 MQTTStatus_t MQTTPropAdd_SubscribeId(MqttPropBuilder_t * pPropertyBuilder, size_t subscriptionId); 

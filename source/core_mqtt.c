@@ -235,7 +235,6 @@
 */
 #define MQTT_PUBLISH_ACK_PACKET_SIZE_WITH_REASON    ( 3UL )
 
-    #if ( MQTT_USER_PROPERTY_ENABLED )
 
 /**
  * @brief Struct used to deserialize the will properties.
@@ -261,7 +260,6 @@
              **/
             uint8_t serializedUserValueLength[ MAX_USER_PROPERTY ][ 2 ];
         } UserPropertyVector_t;
-    #endif /* if ( MQTT_USER_PROPERTY_ENABLED ) */
 
 /**
  * @brief Struct used to deserialize the will properties.
@@ -269,14 +267,11 @@
  **/
     typedef struct  WillPropertiesVector
     {
-        #if ( MQTT_USER_PROPERTY_ENABLED )
-
-            /**
-             * @brief Used to encode user property.
-             *
-             **/
-            UserPropertyVector_t userProperty;
-        #endif
+        /**
+        * @brief Used to encode user property.
+        *
+        **/
+        UserPropertyVector_t userProperty;
 
         /**
          * @brief Used to encode content type length.
@@ -321,13 +316,11 @@
  **/
     typedef struct  ConnectPropertiesVector
     {
-        #if ( MQTT_USER_PROPERTY_ENABLED )
-            /**
-            * @brief Used to encode user property.
-            *
-            **/
-            UserPropertyVector_t userProperty;
-        #endif
+        /**
+        * @brief Used to encode user property.
+        *
+        **/
+        UserPropertyVector_t userProperty;
 
         /**
         * @brief Used to encode authentication method length.
