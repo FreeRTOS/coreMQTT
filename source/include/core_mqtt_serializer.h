@@ -625,16 +625,6 @@ typedef struct MQTTSubscribeProperties
 
 } MQTTSubscribeProperties_t; 
 
-//typedef struct MQTTSubackProperties
-//{
-//    size_t propertyLength ; 
-//    #if(MQTT_USER_PROPERTY_ENABLED)
-//    MQTTUserProperties_t * pUserProperties ; 
-//    #endif
-//    const char * pReasonString ; 
-//    uint16_t reasonStringLength ; 
-//
-//}MQTTSubackProperties_t ; 
 
 /**
  * @brief Get the size and Remaining Length of an MQTT CONNECT packet.
@@ -2404,12 +2394,6 @@ MQTTStatus_t MQTTV5_SerializeDisconnectWithProperty( const MQTTAckInfo_t *pDisco
                                                      const MQTTFixedBuffer_t * pFixedBuffer,
                                                      uint32_t sessionExpiry);
 /* @[declare_mqttv5_serializedisconnectwithproperty] */
-
-
-
-
-
-
 
 /* *INDENT-OFF* */
 #ifdef __cplusplus
