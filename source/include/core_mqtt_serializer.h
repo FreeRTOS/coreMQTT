@@ -626,60 +626,7 @@ typedef struct MQTTSubscribeProperties
 } MQTTSubscribeProperties_t; 
 
 
-/**
- * @brief Get the size and Remaining Length of an MQTT CONNECT packet.
- *
- * This function must be called before #MQTT_SerializeConnect in order to get
- * the size of the MQTT CONNECT packet that is generated from #MQTTConnectInfo_t
- * and optional #MQTTPublishInfo_t. The size of the #MQTTFixedBuffer_t supplied
- * to #MQTT_SerializeConnect must be at least @p pPacketSize. The provided
- * @p pConnectInfo and @p pWillInfo are valid for serialization with
- * #MQTT_SerializeConnect only if this function returns #MQTTSuccess. The
- * remaining length returned in @p pRemainingLength and the packet size returned
- * in @p pPacketSize are valid only if this function returns #MQTTSuccess.
- *
- * @param[in] pConnectInfo MQTT CONNECT packet parameters.
- * @param[in] pWillInfo Last Will and Testament. Pass NULL if not used.
- * @param[out] pRemainingLength The Remaining Length of the MQTT CONNECT packet.
- * @param[out] pPacketSize The total size of the MQTT CONNECT packet.
- *
- * @return #MQTTBadParameter if the packet would exceed the size allowed by the
- * MQTT spec; #MQTTSuccess otherwise.
- *
- * <b>Example</b>
- * @code{c}
- *
- * // Variables used in this example.
- * MQTTStatus_t status;
- * MQTTConnectInfo_t connectInfo = { 0 };
- * MQTTPublishInfo_t willInfo = { 0 };
- * size_t remainingLength = 0, packetSize = 0;
- *
- * // Initialize the connection info, the details are out of scope for this example.
- * initializeConnectInfo( &connectInfo );
- *
- * // Initialize the optional will info, the details are out of scope for this example.
- * initializeWillInfo( &willInfo );
- *
- * // Get the size requirement for the connect packet.
- * status = MQTT_GetConnectPacketSize(
- *      &connectInfo, &willInfo, &remainingLength, &packetSize
- * );
- *
- * if( status == MQTTSuccess )
- * {
- *      // The application should allocate or use a static #MQTTFixedBuffer_t
- *      // of size >= packetSize to serialize the connect request.
- * }
- * @endcode
- */
-/* @[declare_mqtt_getconnectpacketsize] */
 
-MQTTStatus_t MQTT_GetConnectPacketSize( const MQTTConnectInfo_t * pConnectInfo,
-                                        const MQTTPublishInfo_t * pWillInfo,
-                                        size_t * pRemainingLength,
-                                        size_t * pPacketSize );
-/* @[declare_mqtt_getconnectpacketsize] */
 
 /**
  * @brief Serialize an MQTT CONNECT packet in the given fixed buffer @p pFixedBuffer.
@@ -789,18 +736,15 @@ MQTTStatus_t MQTT_SerializeConnect( const MQTTConnectInfo_t * pConnectInfo,
  * @endcode
  */
 /* @[declare_mqtt_getsubscribepacketsize] */
-#if(MQTT_VERSION_5_ENABLED)
+
 
 MQTTStatus_t MQTTV5_GetSubscribePacketSize(MQTTSubscribeInfo_t* pSubscriptionList,
     size_t subscriptionCount,
     size_t* pRemainingLength,
     size_t* pPacketSize,
     size_t propLen); 
-#endif
-MQTTStatus_t MQTT_GetSubscribePacketSize( const MQTTSubscribeInfo_t * pSubscriptionList,
-                                          size_t subscriptionCount,
-                                          size_t * pRemainingLength,
-                                          size_t * pPacketSize );
+
+
 /* @[declare_mqtt_getsubscribepacketsize] */
 
 /**
@@ -914,20 +858,15 @@ MQTTStatus_t MQTT_SerializeSubscribe( const MQTTSubscribeInfo_t * pSubscriptionL
  * @endcode
  */
 /* @[declare_mqtt_getunsubscribepacketsize] */
-MQTTStatus_t MQTT_GetUnsubscribePacketSize( const MQTTSubscribeInfo_t * pSubscriptionList,
-                                            size_t subscriptionCount,
-                                            size_t * pRemainingLength,
-                                            size_t * pPacketSize );
-                                            
 
+                                           
 /* @[declare_mqtt_getunsubscribepacketsize] */
-#if(MQTT_VERSION_5_ENABLED)
+
 MQTTStatus_t MQTTV5_GetUnsubscribePacketSize(const MQTTSubscribeInfo_t* pSubscriptionList,
                                             size_t subscriptionCount,
                                             size_t* pRemainingLength,
                                             size_t* pPacketSize,
-                                            size_t propLen); 
-#endif
+                                            size_t propLen);
 /**
  * @brief Serialize an MQTT UNSUBSCRIBE packet in the given buffer.
  *
@@ -995,57 +934,7 @@ MQTTStatus_t MQTT_SerializeUnsubscribe( const MQTTSubscribeInfo_t * pSubscriptio
                                         const MQTTFixedBuffer_t * pFixedBuffer );
 /* @[declare_mqtt_serializeunsubscribe] */
 
-/**
- * @brief Get the packet size and remaining length of an MQTT PUBLISH packet.
- *
- * This function must be called before #MQTT_SerializePublish in order to get
- * the size of the MQTT PUBLISH packet that is generated from #MQTTPublishInfo_t.
- * The size of the #MQTTFixedBuffer_t supplied to #MQTT_SerializePublish must be
- * at least @p pPacketSize. The provided @p pPublishInfo is valid for
- * serialization with #MQTT_SerializePublish only if this function returns
- * #MQTTSuccess. The remaining length returned in @p pRemainingLength and the
- * packet size returned in @p pPacketSize are valid only if this function
- * returns #MQTTSuccess.
- *
- * @param[in] pPublishInfo MQTT PUBLISH packet parameters.
- * @param[out] pRemainingLength The Remaining Length of the MQTT PUBLISH packet.
- * @param[out] pPacketSize The total size of the MQTT PUBLISH packet.
- *
- * @return #MQTTBadParameter if the packet would exceed the size allowed by the
- * MQTT spec or if invalid parameters are passed; #MQTTSuccess otherwise.
- *
- * <b>Example</b>
- * @code{c}
- *
- * // Variables used in this example.
- * MQTTStatus_t status;
- * MQTTPublishInfo_t publishInfo = { 0 };
- * size_t remainingLength = 0, packetSize = 0;
- *
- * // Initialize the publish info.
- * publishInfo.qos = MQTTQoS0;
- * publishInfo.pTopicName = "/some/topic/name";
- * publishInfo.topicNameLength = strlen( publishInfo.pTopicName );
- * publishInfo.pPayload = "Hello World!";
- * publishInfo.payloadLength = strlen( "Hello World!" );
- *
- * // Get the size requirement for the publish packet.
- * status = MQTT_GetPublishPacketSize(
- *      &publishInfo, &remainingLength, &packetSize
- * );
- *
- * if( status == MQTTSuccess )
- * {
- *      // The application should allocate or use a static #MQTTFixedBuffer_t
- *      // of size >= packetSize to serialize the publish.
- * }
- * @endcode
- */
-/* @[declare_mqtt_getpublishpacketsize] */
-MQTTStatus_t MQTT_GetPublishPacketSize( const MQTTPublishInfo_t * pPublishInfo,
-                                        size_t * pRemainingLength,
-                                        size_t * pPacketSize );
-/* @[declare_mqtt_getpublishpacketsize] */
+
 
 /**
  * @brief Serialize an MQTT PUBLISH packet in the given buffer.
@@ -1263,74 +1152,7 @@ MQTTStatus_t MQTT_SerializeAck( const MQTTFixedBuffer_t * pFixedBuffer,
                                 uint16_t packetId );
 /* @[declare_mqtt_serializeack] */
 
-/**
- * @brief Get the size of an MQTT DISCONNECT packet.
- *
- * @param[out] pPacketSize The size of the MQTT DISCONNECT packet.
- *
- * @return #MQTTSuccess, or #MQTTBadParameter if @p pPacketSize is NULL.
- *
- * <b>Example</b>
- * @code{c}
- *
- * // Variables used in this example.
- * MQTTStatus_t status;
- * size_t packetSize = 0;
- *
- * // Get the size requirement for the disconnect packet.
- * status = MQTT_GetDisconnectPacketSize( &packetSize );
- * assert( status == MQTTSuccess );
- * assert( packetSize == 2 );
- *
- * // The application should allocate or use a static #MQTTFixedBuffer_t of
- * // size >= 2 to serialize the disconnect packet.
- *
- * @endcode
- */
-/* @[declare_mqtt_getdisconnectpacketsize] */
-MQTTStatus_t MQTT_GetDisconnectPacketSize( size_t * pPacketSize );
-/* @[declare_mqtt_getdisconnectpacketsize] */
 
-/**
- * @brief Serialize an MQTT DISCONNECT packet into the given buffer.
- *
- * The input #MQTTFixedBuffer_t.size must be at least as large as the size
- * returned by #MQTT_GetDisconnectPacketSize.
- *
- * @param[out] pFixedBuffer Buffer for packet serialization.
- *
- * @return #MQTTNoMemory if pFixedBuffer is too small to hold the MQTT packet;
- * #MQTTBadParameter if invalid parameters are passed;
- * #MQTTSuccess otherwise.
- *
- * <b>Example</b>
- * @code{c}
- *
- * // Variables used in this example.
- * MQTTStatus_t status;
- * MQTTFixedBuffer_t fixedBuffer;
- * uint8_t buffer[ BUFFER_SIZE ];
- *
- * fixedBuffer.pBuffer = buffer;
- * fixedBuffer.size = BUFFER_SIZE;
- *
- * // Get the disconnect packet size.
- * status = MQTT_GetDisconnectPacketSize( &packetSize );
- * assert( status == MQTTSuccess );
- * assert( packetSize <= BUFFER_SIZE );
- *
- * // Serialize the disconnect into the fixed buffer.
- * status = MQTT_SerializeDisconnect( &fixedBuffer );
- *
- * if( status == MQTTSuccess )
- * {
- *      // The disconnect packet can now be sent to the broker.
- * }
- * @endcode
- */
-/* @[declare_mqtt_serializedisconnect] */
-MQTTStatus_t MQTT_SerializeDisconnect( const MQTTFixedBuffer_t * pFixedBuffer );
-/* @[declare_mqtt_serializedisconnect] */
 
 /**
  * @brief Get the size of an MQTT PINGREQ packet.
