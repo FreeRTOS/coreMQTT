@@ -2652,7 +2652,6 @@ MQTTStatus_t handleIncomingPublish( MQTTContext_t * pContext,
     (void)memset(&ackInfo, 0x0, sizeof(ackInfo));
     (void)memset(&nextAckInfo, 0x0, sizeof(nextAckInfo));
 
-
     status = MQTT_DeserializePublish( pIncomingPacket, &packetIdentifier, &publishInfo );
     LogInfo( ( "De-serialized incoming PUBLISH packet: DeserializerResult=%s.",
                MQTT_Status_strerror( status ) ) );
@@ -3198,21 +3197,29 @@ static MQTTStatus_t sendSubscribeWithoutCopyV5( MQTTContext_t * pContext,
     /**
      * Sending Property Buffer
      */
+
+    size_t proplen = 0; 
+    if (pPropertyBuilder != NULL)
+    {
+        proplen = pPropertyBuilder->currentIndex;
+    }
     uint8_t propertyLength[4]; 
     pIndex = propertyLength; 
-    pIndex = encodeRemainingLength(pIndex, pPropertyBuilder->currentIndex); 
+    pIndex = encodeRemainingLength(pIndex, proplen); 
     pIterator->iov_base = propertyLength; 
     pIterator->iov_len = (size_t)(pIndex - propertyLength);
     totalPacketLength += pIterator->iov_len;
     pIterator++;
     ioVectorLength++;
 
-
-    pIterator->iov_base = pPropertyBuilder->pBuffer ; 
-    pIterator->iov_len = pPropertyBuilder->currentIndex ; 
-    totalPacketLength += pIterator->iov_len ;
-    pIterator ++ ; 
-    ioVectorLength ++ ; 
+    if (pPropertyBuilder != NULL)
+    {
+        pIterator->iov_base = pPropertyBuilder->pBuffer;
+        pIterator->iov_len = pPropertyBuilder->currentIndex;
+        totalPacketLength += pIterator->iov_len;
+        pIterator++;
+        ioVectorLength++;
+    }
 
     while( ( status == MQTTSuccess ) && ( subscriptionsSent < subscriptionCount ) )
     {
@@ -3398,7 +3405,11 @@ MQTTStatus_t MQTT_SubscribeV5( MQTTContext_t * pContext,
 {
     size_t remainingLength = 0UL, packetSize = 0UL;
 
-
+    size_t proplen = 0; 
+    if (pPropertyBuilder != NULL)
+    {
+        proplen = pPropertyBuilder->currentIndex;
+    }
 
     MQTTStatus_t status = validateSubscribeUnsubscribeParamsV5( pContext , 
                                                                 pSubscriptionList, 
@@ -3413,7 +3424,7 @@ MQTTStatus_t MQTT_SubscribeV5( MQTTContext_t * pContext,
                                                 subscriptionCount,
                                                 &remainingLength,
                                                 &packetSize,
-                                                pPropertyBuilder->currentIndex );
+                                                proplen);
         LogError( ( "SUBSCRIBE packet size is %lu and remaining length is %lu.",
                     ( unsigned long ) packetSize,
                     ( unsigned long ) remainingLength ) );
@@ -3433,7 +3444,6 @@ MQTTStatus_t MQTT_SubscribeV5( MQTTContext_t * pContext,
     }
     return status;
 }
-
 
 
 static uint8_t* encodeString(uint8_t* pDestination,
@@ -4015,22 +4025,29 @@ static MQTTStatus_t sendPublishWithoutCopy( MQTTContext_t * pContext,
     }
 
     /*Serialize the fixed publish properties.*/
-
+    size_t proplen = 0; 
+    if (pPropertyBuilder != NULL)
+    {
+        proplen = pPropertyBuilder->currentIndex;
+    }
     uint8_t propertyLength[4];
     iterator = &pIoVector[ioVectorLength];
     pIndex = propertyLength;
-    pIndex = encodeRemainingLength(pIndex, pPropertyBuilder->currentIndex);
+    pIndex = encodeRemainingLength(pIndex, proplen);
     iterator->iov_base = propertyLength;
     iterator->iov_len = (size_t)(pIndex - propertyLength);
     totalMessageLength += iterator->iov_len;
     iterator++;
     ioVectorLength++;
 
-    iterator->iov_base = pPropertyBuilder->pBuffer;
-    iterator->iov_len = pPropertyBuilder->currentIndex;
-    totalMessageLength += iterator->iov_len;
-    iterator++;
-    ioVectorLength++;
+    if (pPropertyBuilder != NULL)
+    {
+        iterator->iov_base = pPropertyBuilder->pBuffer;
+        iterator->iov_len = pPropertyBuilder->currentIndex;
+        totalMessageLength += iterator->iov_len;
+        iterator++;
+        ioVectorLength++;
+    }
 
     ///* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-182 */
     ///* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-108 */
@@ -4416,7 +4433,6 @@ static MQTTStatus_t receiveConnack( const MQTTContext_t * pContext,
     if (status == MQTTSuccess)
     {
         deserializedInfo.deserializationResult = status; 
-        /*putting all the deserialized props in the pContext , so no need for deserializedInfo*/
         pContext->appCallback(pContext, pIncomingPacket ,&deserializedInfo);
     }
 
@@ -4802,6 +4818,12 @@ MQTTStatus_t MQTT_Publish( MQTTContext_t * pContext,
     /* Validate arguments. */
     MQTTStatus_t status = validatePublishParams( pContext, pPublishInfo, packetId );
 
+    size_t proplen = 0; 
+    if (pPropertyBuilder != NULL)
+    {
+        proplen = pPropertyBuilder->currentIndex;
+    }
+
     if( status == MQTTSuccess )
     {
         /* Get the remaining length and packet size.*/
@@ -4817,7 +4839,7 @@ MQTTStatus_t MQTT_Publish( MQTTContext_t * pContext,
                                                     &remainingLength,
                                                     &packetSize,
                                                     pContext->pConnectProperties->serverMaxPacketSize,
-                                                    pPropertyBuilder->currentIndex);
+                                                    proplen);
         }
     }
 
@@ -4990,6 +5012,12 @@ MQTTStatus_t MQTT_UnsubscribeV5( MQTTContext_t * pContext,
                                MqttPropBuilder_t* pPropertyBuilder)
 {
     size_t remainingLength = 0UL, packetSize = 0UL;
+    size_t proplen = 0; 
+
+    if (pPropertyBuilder != NULL)
+    {
+        proplen = pPropertyBuilder->currentIndex; 
+    }
 
     /* Validate arguments. */
     MQTTStatus_t status = validateSubscribeUnsubscribeParamsV5( pContext,
@@ -5005,7 +5033,7 @@ MQTTStatus_t MQTT_UnsubscribeV5( MQTTContext_t * pContext,
                                                 subscriptionCount,
                                                 &remainingLength,
                                                 &packetSize, 
-                                                pPropertyBuilder->currentIndex);
+                                                proplen);
         LogInfo( ( "UNSUBSCRIBE packet size is %lu and remaining length is %lu.",
                     ( unsigned long ) packetSize,
                     ( unsigned long ) remainingLength ) );
