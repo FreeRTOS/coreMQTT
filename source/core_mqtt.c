@@ -3205,9 +3205,7 @@ static MQTTStatus_t sendSubscribeWithoutCopyV5( MQTTContext_t * pContext,
     totalPacketLength += pIterator->iov_len;
     pIterator++;
     ioVectorLength++;
-    for (int i = 0; i < 4; i++) {
-        LogInfo(("Property Length %d", propertyLength[i]));
-    }
+
 
     pIterator->iov_base = pPropertyBuilder->pBuffer ; 
     pIterator->iov_len = pPropertyBuilder->currentIndex ; 

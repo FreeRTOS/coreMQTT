@@ -268,7 +268,6 @@ typedef struct MQTTAuthInfo
 } MQTTAuthInfo_t;
 
 
-#if(MQTT_USER_PROPERTY_ENABLED)
    /**
  * @ingroup mqtt_struct_types
  * @brief Struct to hold user property.
@@ -310,7 +309,7 @@ typedef struct MQTTUserProperties
 
 } MQTTUserProperties_t;
 
-#endif
+
    /**
  * @ingroup mqtt_struct_types
  * @brief Struct to hold connect and connack properties.
@@ -448,21 +447,13 @@ typedef struct MQTTAckInfo
      * @brief Response code;
      */
     uint8_t * reasonCode;
-    uint8_t rc; 
+
     size_t reasonCodeLength ; 
     /**
      * @brief Property Length.
      */
     size_t propertyLength;
-    #if(MQTT_USER_PROPERTY_ENABLED)
-     /**
-     * @brief To store a key value pair.
-     */
-    MQTTUserProperties_t* pUserProperty;
-    #endif
-     /**
-     * @brief Reason String is a human readable string designed for diagnostics.
-     */
+
     const char* pReasonString;
      /**
      * @brief Length of reason string.

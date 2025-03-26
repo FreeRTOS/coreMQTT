@@ -2351,55 +2351,55 @@ static MQTTStatus_t calculatePublishPacketSizeV5( MQTTPublishInfo_t * pPublishIn
     return status;
 }
 
-static void serializePubAckPacketV5( const MQTTAckInfo_t * pAckInfo,
-                                        uint8_t packetType,
-                                        uint16_t packetId,
-                                        size_t remainingLength,
-                                        const MQTTFixedBuffer_t * pFixedBuffer )
-{
-    uint8_t * pIndex = NULL;
-
-    assert( pAckInfo != NULL );
-    assert( pFixedBuffer != NULL );
-    assert( pFixedBuffer->pBuffer != NULL );
-    pIndex = pFixedBuffer->pBuffer;
-    /* Serialize the header including reason code and property length */
-    pIndex = MQTTV5_SerializeAckFixed( pIndex,
-                                        packetType,
-                                        packetId,
-                                        remainingLength,
-                                        pAckInfo->propertyLength );
-
-    /*Serialize the reason string if provided.*/
-    if( pAckInfo->reasonStringLength != 0U )
-    {
-        *pIndex = MQTT_REASON_STRING_ID;
-        pIndex++;
-        pIndex = encodeString( pIndex, pAckInfo->pReasonString, pAckInfo->reasonStringLength );
-    }
-
-    #if ( MQTT_USER_PROPERTY_ENABLED )
-        /*Serialize the user properties if provided.*/
-        if( pAckInfo->pUserProperty != NULL )
-        {
-            uint32_t i = 0;
-            uint32_t size = pAckInfo->pUserProperty->count;
-            const MQTTUserProperty_t * pUserProperty = pAckInfo->pUserProperty->userProperty;
-
-            for( ; i < size; i++ )
-            {
-                *pIndex = MQTT_USER_PROPERTY_ID;
-                pIndex++;
-                pIndex = encodeString( pIndex, pUserProperty[ i ].pKey, pUserProperty[ i ].keyLength );
-                pIndex = encodeString( pIndex, pUserProperty[ i ].pValue, pUserProperty[ i ].valueLength );
-            }
-        }
-    #endif /* if ( MQTT_USER_PROPERTY_ENABLED ) */
-
-    /* Ensure that the difference between the end and beginning of the buffer
-        * is less than the buffer size. */
-    assert( ( ( size_t ) ( pIndex - pFixedBuffer->pBuffer ) ) <= pFixedBuffer->size );
-}
+//static void serializePubAckPacketV5( const MQTTAckInfo_t * pAckInfo,
+//                                        uint8_t packetType,
+//                                        uint16_t packetId,
+//                                        size_t remainingLength,
+//                                        const MQTTFixedBuffer_t * pFixedBuffer )
+//{
+//    uint8_t * pIndex = NULL;
+//
+//    assert( pAckInfo != NULL );
+//    assert( pFixedBuffer != NULL );
+//    assert( pFixedBuffer->pBuffer != NULL );
+//    pIndex = pFixedBuffer->pBuffer;
+//    /* Serialize the header including reason code and property length */
+//    pIndex = MQTTV5_SerializeAckFixed( pIndex,
+//                                        packetType,
+//                                        packetId,
+//                                        remainingLength,
+//                                        pAckInfo->propertyLength );
+//
+//    /*Serialize the reason string if provided.*/
+//    if( pAckInfo->reasonStringLength != 0U )
+//    {
+//        *pIndex = MQTT_REASON_STRING_ID;
+//        pIndex++;
+//        pIndex = encodeString( pIndex, pAckInfo->pReasonString, pAckInfo->reasonStringLength );
+//    }
+//
+//    #if ( MQTT_USER_PROPERTY_ENABLED )
+//        /*Serialize the user properties if provided.*/
+//        if( pAckInfo->pUserProperty != NULL )
+//        {
+//            uint32_t i = 0;
+//            uint32_t size = pAckInfo->pUserProperty->count;
+//            const MQTTUserProperty_t * pUserProperty = pAckInfo->pUserProperty->userProperty;
+//
+//            for( ; i < size; i++ )
+//            {
+//                *pIndex = MQTT_USER_PROPERTY_ID;
+//                pIndex++;
+//                pIndex = encodeString( pIndex, pUserProperty[ i ].pKey, pUserProperty[ i ].keyLength );
+//                pIndex = encodeString( pIndex, pUserProperty[ i ].pValue, pUserProperty[ i ].valueLength );
+//            }
+//        }
+//    #endif /* if ( MQTT_USER_PROPERTY_ENABLED ) */
+//
+//    /* Ensure that the difference between the end and beginning of the buffer
+//        * is less than the buffer size. */
+//    assert( ( ( size_t ) ( pIndex - pFixedBuffer->pBuffer ) ) <= pFixedBuffer->size );
+//}
 
 /* coverity[misra_c_2012_rule_2_7_violation] */
 static MQTTStatus_t logAckResponseV5( uint8_t reasonCode,
@@ -2661,15 +2661,14 @@ MQTTStatus_t MQTTV5_GetSubscribePacketSize(MQTTSubscribeInfo_t *pSubscriptionLis
                                         size_t propLen)
 {
     MQTTStatus_t status = MQTTSuccess ; 
-    if(pSubscriptionList == NULL || propLen == 0){
-        LogError(("Argument cannot be null : SubscriptionList, SubscribeProperties")); 
+    if(pSubscriptionList == NULL){
+        LogError(("Argument cannot be null : SubscriptionList")); 
         status = MQTTBadParameter;
     }else if(subscriptionCount == 0U){
         LogError(("Subscription count cannot be 0")) ; 
         status = MQTTBadParameter;
     }else{
         status = calculateSubscriptionPacketSizeV5(pSubscriptionList, subscriptionCount, pRemainingLength, pPacketSize, propLen, MQTT_SUBSCRIBE);
-           
     }
     return status ; 
 }
@@ -5510,9 +5509,9 @@ MQTTStatus_t MQTTV5_DeserializeAck( const MQTTPacketInfo_t * pIncomingPacket,
             case MQTT_PACKET_TYPE_PUBREC:
                 status = deserializeSimpleAckV5( pIncomingPacket, pPacketId, pAckInfo, requestProblem );
 
-                if( status == MQTTSuccess )
+                if( status == MQTTSuccess && pIncomingPacket->remainingLength > 2 )
                 {
-                    status = logAckResponseV5( pAckInfo->rc, *pPacketId);
+                    status = logAckResponseV5( *pAckInfo->reasonCode, *pPacketId);
                 }
 
                 break;
@@ -5521,9 +5520,9 @@ MQTTStatus_t MQTTV5_DeserializeAck( const MQTTPacketInfo_t * pIncomingPacket,
             case MQTT_PACKET_TYPE_PUBCOMP:
                 status = deserializeSimpleAckV5( pIncomingPacket, pPacketId, pAckInfo, requestProblem );
 
-                if( status == MQTTSuccess )
+                if( status == MQTTSuccess && pIncomingPacket->remainingLength > 2)
                 {
-                    status = logSimpleAckResponseV5( pAckInfo->rc, *pPacketId);
+                    status = logSimpleAckResponseV5(*pAckInfo->reasonCode, *pPacketId);
                 }
 
                 break;
@@ -5565,51 +5564,51 @@ uint8_t * MQTTV5_SerializeAckFixed( uint8_t * pIndex,
     return pIndexLocal;
 }
 
-MQTTStatus_t MQTTV5_SerializePubAckWithProperty( const MQTTAckInfo_t * pAckInfo,
-                                                    size_t remainingLength,
-                                                    const MQTTFixedBuffer_t * pFixedBuffer,
-                                                    uint8_t packetType,
-                                                    uint16_t packetId )
-{
-    MQTTStatus_t status = MQTTSuccess;
-    size_t ackPacketSize = 0;
-
-    /* Validate arguments. */
-    if( ( pAckInfo == NULL ) || ( pFixedBuffer == NULL ) )
-    {
-        LogError( ( "Argument cannot be NULL: pAckInfo=%p, "
-                    "pFixedBuffer=%p.",
-                    ( void * ) pAckInfo,
-                    ( void * ) pFixedBuffer ) );
-        status = MQTTBadParameter;
-    }
-    /* A buffer must be configured for serialization. */
-    else if( pFixedBuffer->pBuffer == NULL )
-    {
-        LogError( ( "Argument cannot be NULL: pFixedBuffer->pBuffer is NULL." ) );
-        status = MQTTBadParameter;
-    }
-    else
-    {
-        ackPacketSize = remainingLength + remainingLengthEncodedSize( remainingLength ) + 1U;
-
-        /* Check that the full packet size fits within the given buffer. */
-        if( ackPacketSize > pFixedBuffer->size )
-        {
-            LogError( ( "Buffer size of %lu is not sufficient to hold "
-                        "serialized ACK packet of size of %lu.",
-                        ( unsigned long ) pFixedBuffer->size,
-                        ( unsigned long ) ackPacketSize ) );
-            status = MQTTNoMemory;
-        }
-        else
-        {
-            serializePubAckPacketV5( pAckInfo, packetType, packetId, remainingLength, pFixedBuffer );
-        }
-    }
-
-    return status;
-}
+//MQTTStatus_t MQTTV5_SerializePubAckWithProperty( const MQTTAckInfo_t * pAckInfo,
+//                                                    size_t remainingLength,
+//                                                    const MQTTFixedBuffer_t * pFixedBuffer,
+//                                                    uint8_t packetType,
+//                                                    uint16_t packetId )
+//{
+//    MQTTStatus_t status = MQTTSuccess;
+//    size_t ackPacketSize = 0;
+//
+//    /* Validate arguments. */
+//    if( ( pAckInfo == NULL ) || ( pFixedBuffer == NULL ) )
+//    {
+//        LogError( ( "Argument cannot be NULL: pAckInfo=%p, "
+//                    "pFixedBuffer=%p.",
+//                    ( void * ) pAckInfo,
+//                    ( void * ) pFixedBuffer ) );
+//        status = MQTTBadParameter;
+//    }
+//    /* A buffer must be configured for serialization. */
+//    else if( pFixedBuffer->pBuffer == NULL )
+//    {
+//        LogError( ( "Argument cannot be NULL: pFixedBuffer->pBuffer is NULL." ) );
+//        status = MQTTBadParameter;
+//    }
+//    else
+//    {
+//        ackPacketSize = remainingLength + remainingLengthEncodedSize( remainingLength ) + 1U;
+//
+//        /* Check that the full packet size fits within the given buffer. */
+//        if( ackPacketSize > pFixedBuffer->size )
+//        {
+//            LogError( ( "Buffer size of %lu is not sufficient to hold "
+//                        "serialized ACK packet of size of %lu.",
+//                        ( unsigned long ) pFixedBuffer->size,
+//                        ( unsigned long ) ackPacketSize ) );
+//            status = MQTTNoMemory;
+//        }
+//        else
+//        {
+//            serializePubAckPacketV5( pAckInfo, packetType, packetId, remainingLength, pFixedBuffer );
+//        }
+//    }
+//
+//    return status;
+//}
 
 MQTTStatus_t MQTTV5_GetDisconnectPacketSize( MQTTAckInfo_t * pDisconnectInfo,
                                                 size_t * pRemainingLength,
@@ -5645,7 +5644,15 @@ MQTTStatus_t MQTTV5_GetDisconnectPacketSize( MQTTAckInfo_t * pDisconnectInfo,
         LogError( ( "If the Session Expiry in the CONNECT packet was zero, then it is a Protocol Error to set a non-zero Session Expiry Interval in the DISCONNECT packet." ) );
         status = MQTTBadParameter;
     }
-    else if( validateDisconnectResponseV5( pDisconnectInfo->rc, false ) != MQTTSuccess )
+    else if (pDisconnectInfo->reasonCode == NULL)
+    {
+        if (sessionExpiry != 0U)
+        {
+            propertyLength += MQTT_SESSION_EXPIRY_SIZE;
+        }
+
+    }
+    else if(validateDisconnectResponseV5( *pDisconnectInfo->reasonCode, false ) != MQTTSuccess )
     {
         LogError( ( "Invalid reason code." ) );
         status = MQTTBadParameter;
@@ -5713,8 +5720,11 @@ uint8_t * MQTTV5_SerializeDisconnectFixed( uint8_t * pIndex,
     /*After the packet type fixed header has remaining length.*/
     pIndexLocal = encodeRemainingLength( pIndexLocal, remainingLength );
     /*Encode the reason code.*/
-    *pIndexLocal = pDisconnectInfo->rc;
-    pIndexLocal++;
+    if (pDisconnectInfo->reasonCode != NULL)
+    {
+        *pIndexLocal = *pDisconnectInfo->reasonCode;
+        pIndexLocal++;
+    }
     /*Encode the property length.*/
     pIndexLocal = encodeRemainingLength( pIndexLocal, pDisconnectInfo->propertyLength );
 
@@ -5767,12 +5777,12 @@ uint8_t * MQTTV5_SerializeDisconnectFixed( uint8_t * pIndex,
             status = MQTTProtocolError;
         }
 
-        #if ( MQTT_USER_PROPERTY_ENABLED )
-            else if( pDisconnectInfo->pUserProperty == NULL )
-            {
-                status = MQTTBadParameter;
-            }
-        #endif
+        //#if ( MQTT_USER_PROPERTY_ENABLED )
+        //    else if( pDisconnectInfo->pUserProperty == NULL )
+        //    {
+        //        status = MQTTBadParameter;
+        //    }
+        //#endif
         else
         {
             /* Extract the reason code */
