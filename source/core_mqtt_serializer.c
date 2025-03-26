@@ -107,7 +107,7 @@
 /**
  * @brief Version 5 has the value 5.
  */
-    #define MQTT_VERSION_5                   ( 5U )
+    #define MQTT_VERSION_5                   ( ( uint8_t ) 5U )
 
 /**
  * @brief Per the MQTT 5 spec, the  session expiry is of  5 bytes.

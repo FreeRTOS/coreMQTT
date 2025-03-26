@@ -4120,15 +4120,13 @@ static MQTTStatus_t sendConnectWithoutCopy( MQTTContext_t * pContext,
     /* The maximum vectors required to encode and send a connect packet. The
     * breakdown is shown below.
     * Fixed header      0 + 1 = 1
-    * Client ID           + 2 = 3
-    * Will topic          + 2 = 5
-    * Will payload        + 2 = 7
-    * Username            + 2 = 9
-    * Password            + 2 = 11 
-    * User Property-      11 +  5* Max userProperty
-    * Authentication      17 +  5* Max userProperty
-    * Will Properties     27 +  10* Max userProperty
-    *
+    * Connect Properties  + 2 = 3
+    * Client ID           + 2 = 5
+    * Will Properties     + 2 = 7
+    * Will topic          + 2 = 9
+    * Will payload        + 2 = 11
+    * Username            + 2 = 13
+    * Password            + 2 = 15
     */
     TransportOutVector_t pIoVector[ 27 + 10 * MAX_USER_PROPERTY ];
 
@@ -4714,6 +4712,7 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
                     ( void * ) pSessionPresent ) );
         status = MQTTBadParameter;
     }
+
     size_t proplen = 0; 
     if (pPropertyBuilder != NULL)
     {
@@ -4725,6 +4724,7 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
     {
         willPropLen = willPropsBuilder->currentIndex;
     }
+
     if( status == MQTTSuccess )
     {
     /* Get MQTT connect packet size and remaining length. */

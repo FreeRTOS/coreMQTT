@@ -316,31 +316,38 @@ typedef struct MQTTConnectProperties
      * @brief Four Byte Integer representing the Session Expiry Interval in seconds.
      */
     uint32_t sessionExpiry;
+
      /**
      * @brief Maximum number of unacknowledged PUBLISH packets client is willing to receive.
      */
     uint16_t receiveMax;
+
      /**
      * @brief Four Byte Integer representing the Maximum Packet Size the Client is willing to accept.
      */
     uint32_t maxPacketSize;
+
      /**
      * @brief Two Byte Integer representing the Topic Alias Maximum value.
      */
     uint16_t topicAliasMax;
+
      /**
      * @brief  A value of 0 indicates that the Server MUST NOT return Response Information.
      */
     bool  requestResponseInfo;
+
      /**
      * @brief The Client uses this value to indicate whether the Reason String or User Properties
      *  are sent in the case of failures
      */
     bool  requestProblemInfo;
+
      /**
      * @brief Length of the connect properties.
      */
     size_t propertyLength;
+
      /**
      * @brief  Pointer to the incoming authentication information.
      */
@@ -350,85 +357,106 @@ typedef struct MQTTConnectProperties
      * @brief Maximum number of unacknowledged PUBLISH packets client is willing to receive.
      */
     uint16_t serverReceiveMax;
+
      /**
      * @brief  Max qos supported by the server.
      */
     uint8_t serverMaxQos;
+
      /**
      * @brief Byte declares whether the Server supports retained messages.
      */
     uint8_t retainAvailable;
+
      /**
      * @brief Four Byte Integer representing the Maximum Packet Size the Server is willing to accept.
      */
     uint32_t serverMaxPacketSize;
+
      /**
      * @brief Client identifier assigned by the client.
      */
     const char* pClientIdentifier;
+    
      /**
      * @brief Length of the assigned client identifier.
      */
     uint16_t clientIdLength;
+
      /**
      * @brief Two Byte Integer representing the Topic Alias Maximum value.
      */
     uint16_t serverTopicAliasMax;
+
      /**
      * @brief Reason String is a human readable string designed for diagnostics.
      */
     const char* pReasonString;
+
      /**
      * @brief Length of reason string.
      */
     uint16_t reasonStringLength;
+
      /**
      * @brief Whether wildcard subscription is available.
      */
     uint8_t isWildcardAvaiable;
+
      /**
      * @brief Whether the Server supports Subscription Identifiers.
      */
     uint8_t subscriptionId;
+
      /**
      * @brief Whether the Server supports Shared Subscription.
      */
     uint8_t isSharedAvailable;
+
      /**
      * @brief Keep Alive value given by the server.
      */
     uint16_t serverKeepAlive;
+
      /**
      * @brief UTF-8 Encoded String which is used as the basis for creating a Response Topic.
      */
     const char* pResponseInfo;
+
      /**
      * @brief Length of the response information.
      */
     uint16_t responseInfoLength;
+
      /**
      * @brief UTF-8 Encoded String which can be used by the Client to identify another Server to use
      */
     const char* pServerRef;
+
      /**
      * @brief Length of the server reference.
      */
     uint16_t serverRefLength;
+
      /**
      * @brief  Pointer to the incoming authentication information.
      */
     MQTTAuthInfo_t *pIncomingAuth;
+
     #if(MQTT_USER_PROPERTY_ENABLED)
      /**
      * @brief   Pointer to the outgoing user properties.
      */
     MQTTUserProperties_t *pOutgoingUserProperty;
+
      /**
      * @brief Pointer to the incoming user properties.
      */
     MQTTUserProperties_t *pIncomingUserProperty;
     #endif
+
     uint8_t *startOfConnackProps; 
+    
     size_t connackPropLen; 
 
 } MQTTConnectProperties_t;
