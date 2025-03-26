@@ -4884,6 +4884,7 @@ MQTTStatus_t MQTTV5_InitConnect( MQTTConnectProperties_t * pConnectProperties )
 MQTTStatus_t MQTTV5_GetConnectPacketSize( const MQTTConnectInfo_t * pConnectInfo,
                                             MQTTPublishInfo_t * pWillInfo,
                                             size_t propLen,
+                                            size_t willPropLen , 
                                             size_t * pRemainingLength,
                                             size_t * pPacketSize )
 {
@@ -4929,10 +4930,6 @@ MQTTStatus_t MQTTV5_GetConnectPacketSize( const MQTTConnectInfo_t * pConnectInfo
         connectPacketSize += pConnectInfo->clientIdentifierLength + sizeof( uint16_t );
 
         /* Add the lengths of the will properties if provided. */
-        if( pWillInfo != NULL )
-        {
-            status = MQTT_GetPublishPropertiesSize( pWillInfo );
-        }
     }
 
     if( status == MQTTSuccess )
@@ -4940,8 +4937,8 @@ MQTTStatus_t MQTTV5_GetConnectPacketSize( const MQTTConnectInfo_t * pConnectInfo
         /* Add the lengths of the will message and topic name if provided. */
         if( pWillInfo != NULL )
         {
-            connectPacketSize += pWillInfo->propertyLength;
-            connectPacketSize += remainingLengthEncodedSize( pWillInfo->propertyLength );
+            connectPacketSize += willPropLen; 
+            connectPacketSize += remainingLengthEncodedSize( willPropLen );
             connectPacketSize += pWillInfo->topicNameLength + sizeof( uint16_t ) +
                                     pWillInfo->payloadLength + sizeof( uint16_t );
         }

@@ -409,7 +409,8 @@ static MQTTStatus_t sendConnectWithoutCopy(MQTTContext_t* pContext,
     const MQTTConnectInfo_t* pConnectInfo,
     const MQTTPublishInfo_t* pWillInfo,
     size_t remainingLength,
-    MqttPropBuilder_t* pPropertyBuilder);
+    MqttPropBuilder_t* pPropertyBuilder,
+    MqttPropBuilder_t* willPropsBuilder); 
 
 /**
  * @brief Sends the vector array passed through the parameters over the network.
@@ -4060,7 +4061,8 @@ static MQTTStatus_t sendConnectWithoutCopy( MQTTContext_t * pContext,
                                             const MQTTConnectInfo_t * pConnectInfo,
                                             const MQTTPublishInfo_t * pWillInfo,
                                             size_t remainingLength,
-                                            MqttPropBuilder_t* pPropertyBuilder)
+                                            MqttPropBuilder_t* pPropertyBuilder, 
+                                            MqttPropBuilder_t* willPropsBuilder)
 {
     MQTTStatus_t status = MQTTSuccess;
     TransportOutVector_t * iterator;
@@ -4135,29 +4137,41 @@ static MQTTStatus_t sendConnectWithoutCopy( MQTTContext_t * pContext,
         iterator++;
         ioVectorLength++;
 
+        if (pPropertyBuilder != NULL)
+        {
+            uint8_t propertyLength[4];
+            pIndex = propertyLength;
+            pIndex = encodeRemainingLength(pIndex, pPropertyBuilder->currentIndex);
+            iterator->iov_base = propertyLength;
+            iterator->iov_len = (size_t)(pIndex - propertyLength);
+            totalMessageLength += iterator->iov_len;
+            iterator++;
+            ioVectorLength++;
 
-
-        uint8_t propertyLength[4]; 
-        pIndex = propertyLength; 
-        pIndex = encodeRemainingLength(pIndex, pPropertyBuilder->currentIndex); 
-        iterator->iov_base = propertyLength; 
-        iterator->iov_len = (size_t)(pIndex - propertyLength);
-        totalMessageLength += iterator->iov_len;
-        iterator++;
-        ioVectorLength++;
-
-        iterator->iov_base = pPropertyBuilder->pBuffer ; 
-        iterator->iov_len = pPropertyBuilder->currentIndex ; 
-        totalMessageLength += iterator->iov_len ;
-        iterator ++ ; 
-        ioVectorLength ++ ;
-
-
+            iterator->iov_base = pPropertyBuilder->pBuffer;
+            iterator->iov_len = pPropertyBuilder->currentIndex;
+            totalMessageLength += iterator->iov_len;
+            iterator++;
+            ioVectorLength++;
+        }
+        else
+        {
+            uint8_t propertyLength[4];
+            pIndex = propertyLength;
+            pIndex = encodeRemainingLength(pIndex, 0);
+            iterator->iov_base = propertyLength;
+            iterator->iov_len = (size_t)(pIndex - propertyLength);
+            totalMessageLength += iterator->iov_len;
+            iterator++;
+            ioVectorLength++;
+        }
         /*
         * Updating Context with optional properties
         */
- 
-        status = updateContextWithConnectProps(pPropertyBuilder, pContext->pConnectProperties);
+        if (pPropertyBuilder != NULL)
+        {
+            status = updateContextWithConnectProps(pPropertyBuilder, pContext->pConnectProperties);
+        }
 
         // assert( ( ( size_t ) ( pIndex - connectPacketHeader ) ) <= sizeof( connectPacketHeader ) );
 
@@ -4180,22 +4194,38 @@ static MQTTStatus_t sendConnectWithoutCopy( MQTTContext_t * pContext,
         iterator = &iterator[ vectorsAdded ];
         ioVectorLength += vectorsAdded;
 
-        if( pWillInfo != NULL )
+
+        size_t willPropsLen = 0; 
+
+        if (willPropsBuilder != NULL)
+        {
+            willPropsLen = willPropsBuilder->currentIndex;
+        }
+
+
+        uint8_t propertyLength[4];
+        pIndex = propertyLength;
+        pIndex = encodeRemainingLength(pIndex, willPropsLen);
+        iterator->iov_base = propertyLength;
+        iterator->iov_len = (size_t)(pIndex - propertyLength);
+        totalMessageLength += iterator->iov_len;
+        iterator++;
+        ioVectorLength++;
+
+        if (willPropsBuilder != NULL)
         {
             /*Serialize the will properties*/
-            pIndex = fixedSizeProperties;
-            pIndex = MQTT_SerializePublishProperties( pWillInfo, pIndex );
-            iterator->iov_base = fixedSizeProperties;
-            /* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-182 */
-            /* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-108 */
-            /* coverity[misra_c_2012_rule_18_2_violation] */
-            /* coverity[misra_c_2012_rule_10_8_violation] */
-            iterator->iov_len = ( size_t ) ( pIndex - fixedSizeProperties );
+
+            iterator->iov_base = willPropsBuilder->pBuffer;
+            iterator->iov_len = willPropsBuilder->currentIndex;
             totalMessageLength += iterator->iov_len;
             iterator++;
             ioVectorLength++;
-            ioVectorLength += sendPublishProperties( pWillInfo, &willVector, &totalMessageLength, &iterator );
+        }
 
+
+        if( pWillInfo != NULL )
+        {
             /* Serialize the topic. */
             vectorsAdded = addEncodedStringToVector( serializedTopicLength,
                                                      pWillInfo->pTopicName,
@@ -4650,13 +4680,12 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
                            MQTTPublishInfo_t * pWillInfo,
                            uint32_t timeoutMs,
                            bool * pSessionPresent,
-                           MqttPropBuilder_t * pPropertyBuilder)
+                           MqttPropBuilder_t * pPropertyBuilder, 
+                           MqttPropBuilder_t * willPropsBuilder)
 {
     size_t remainingLength = 0UL, packetSize = 0UL;
     MQTTStatus_t status = MQTTSuccess;
     MQTTPacketInfo_t incomingPacket = { 0 };
-
-
 
     incomingPacket.type = ( uint8_t ) 0;
 
@@ -4669,13 +4698,24 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
                     ( void * ) pSessionPresent ) );
         status = MQTTBadParameter;
     }
+    size_t proplen = 0; 
+    if (pPropertyBuilder != NULL)
+    {
+        proplen = pPropertyBuilder->currentIndex;
+    }
 
+    size_t willPropLen = 0; 
+    if (willPropsBuilder != NULL)
+    {
+        willPropLen = willPropsBuilder->currentIndex;
+    }
     if( status == MQTTSuccess )
     {
-        /* Get MQTT connect packet size and remaining length. */
+    /* Get MQTT connect packet size and remaining length. */
         status = MQTTV5_GetConnectPacketSize( pConnectInfo,
                                                 pWillInfo,
-                                                pPropertyBuilder->currentIndex,
+                                                proplen,
+                                                willPropLen,    
                                                 &remainingLength,
                                                 &packetSize );
         LogDebug( ( "CONNECT packet size is %lu and remaining length is %lu.",
@@ -4683,15 +4723,16 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
                     ( unsigned long ) remainingLength ) );
     }
 
-    if( status == MQTTSuccess )
+    if (status == MQTTSuccess)
     {
         MQTT_PRE_SEND_HOOK( pContext );
 
         status = sendConnectWithoutCopy( pContext,
-                                         pConnectInfo,
-                                         pWillInfo,
-                                         remainingLength, 
-                                         pPropertyBuilder);
+                                            pConnectInfo,
+                                            pWillInfo,
+                                            remainingLength, 
+                                            pPropertyBuilder,
+                                            willPropsBuilder);
 
         MQTT_POST_SEND_HOOK( pContext );
     }

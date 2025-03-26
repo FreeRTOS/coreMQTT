@@ -559,12 +559,13 @@ MQTTStatus_t MQTT_InitStatefulQoS( MQTTContext_t * pContext,
  * @endcode
  */
 /* @[declare_mqtt_connect] */
-MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
-                        const MQTTConnectInfo_t * pConnectInfo,
-                        MQTTPublishInfo_t * pWillInfo,
-                        uint32_t timeoutMs,
-                        bool * pSessionPresent,
-                        MqttPropBuilder_t * pPropertyBuilder); 
+MQTTStatus_t MQTT_Connect(MQTTContext_t* pContext,
+    const MQTTConnectInfo_t* pConnectInfo,
+    MQTTPublishInfo_t* pWillInfo,
+    uint32_t timeoutMs,
+    bool* pSessionPresent,
+    MqttPropBuilder_t* pPropertyBuilder,
+    MqttPropBuilder_t* willPropsBuilder); 
 /* @[declare_mqtt_connect] */
 
 /**

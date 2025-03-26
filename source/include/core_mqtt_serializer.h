@@ -1668,6 +1668,7 @@ MQTTStatus_t MQTTV5_InitConnect(MQTTConnectProperties_t *pConnectProperties);
 MQTTStatus_t MQTTV5_GetConnectPacketSize(const MQTTConnectInfo_t* pConnectInfo,
     MQTTPublishInfo_t* pWillInfo,
     size_t propLen,
+    size_t willPropLen,
     size_t* pRemainingLength,
     size_t* pPacketSize); 
 /* @[declare_mqttv5_getconnectpacketsize] */
