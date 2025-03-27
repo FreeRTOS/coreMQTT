@@ -3533,10 +3533,11 @@ MQTTStatus_t MQTTV5_GetConnectPacketSize( const MQTTConnectInfo_t * pConnectInfo
             * the "Remaining Length" field plus 1 byte for the "Packet Type" field. */
         connectPacketSize += 1U + remainingLengthEncodedSize( connectPacketSize );
 
-        /**
-            * 268,435,455 - max remaining length  according to spec MQTT-v5;
-            *
-            * */
+        /*
+        * It is possible that the remaining length becomes more than the maximum allowed by the MQTTV5-Spec, 
+        * i.e. 268,435,455. This is because the user may enter a large number of user properties for the connect packet and/or the last will. 
+        * Hence we need to have a check for this case
+        */
         if( remainingLength > MQTT_MAX_REMAINING_LENGTH )
         {
             status = MQTTBadParameter;
@@ -4134,7 +4135,7 @@ MQTTStatus_t MQTTV5_GetDisconnectPacketSize( MQTTAckInfo_t * pDisconnectInfo,
                                                 uint32_t maxPacketSize,
                                                 uint32_t sessionExpiry,
                                                 uint32_t prevSessionExpiry,
-                                                size_t proplen)
+                                                size_t disconnectPropLen)
 {
     MQTTStatus_t status = MQTTSuccess;
     size_t length = 0U;
@@ -4187,7 +4188,7 @@ MQTTStatus_t MQTTV5_GetDisconnectPacketSize( MQTTAckInfo_t * pDisconnectInfo,
         }
     }
 
-    propertyLength += proplen;
+    propertyLength += disconnectPropLen;
 
     if( status == MQTTSuccess )
     {
@@ -4225,8 +4226,7 @@ MQTTStatus_t MQTTV5_GetDisconnectPacketSize( MQTTAckInfo_t * pDisconnectInfo,
 
 uint8_t * MQTTV5_SerializeDisconnectFixed( uint8_t * pIndex,
                                             const MQTTAckInfo_t * pDisconnectInfo,
-                                            size_t remainingLength,
-                                            uint32_t sessionExpiry )
+                                            size_t remainingLength)
 {
     uint8_t * pIndexLocal = pIndex;
 
@@ -4243,21 +4243,6 @@ uint8_t * MQTTV5_SerializeDisconnectFixed( uint8_t * pIndex,
         *pIndexLocal = *pDisconnectInfo->reasonCode;
         pIndexLocal++;
     }
-    /*Encode the property length.*/
-    pIndexLocal = encodeRemainingLength( pIndexLocal, pDisconnectInfo->propertyLength );
-
-    /*Encode the session expiry if provided. */
-    if( sessionExpiry != 0U )
-    {
-        *pIndexLocal = MQTT_SESSION_EXPIRY_ID;
-        pIndexLocal++;
-        pIndexLocal[ 0 ] = UINT32_BYTE3( sessionExpiry );
-        pIndexLocal[ 1 ] = UINT32_BYTE2( sessionExpiry );
-        pIndexLocal[ 2 ] = UINT32_BYTE1( sessionExpiry );
-        pIndexLocal[ 3 ] = UINT32_BYTE0( sessionExpiry );
-        pIndexLocal = &pIndexLocal[ 4 ];
-    }
-
     return pIndexLocal;
 }
 

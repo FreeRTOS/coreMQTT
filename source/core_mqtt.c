@@ -1384,20 +1384,16 @@ static MQTTStatus_t sendDisconnectWithoutCopyV5( MQTTContext_t * pContext,
         * MQTT Control Byte      0 + 1 = 1
         * Remaining length (max)   + 4 = 5
         * Reason Code              + 1 = 6
-        * Property length (max)    + 4 = 10
-        * Session Expiry           + 5 = 15
         */
-    uint8_t fixedHeader[ 15 ];
+    uint8_t fixedHeader[ 6 ];
 
     /* The maximum vectors required to encode and send a disconnect packet. The
         * breakdown is shown below.
         * Fixed header      0 + 1 = 1
-        * Reason String       + 3 = 4
-        * User Property       + MAX_USER_PROPERTY*5*
+        * Property Length     + 1 = 2
+        * Optional Properties + 1 = 3
         * */
-    TransportOutVector_t pIoVector[ 4 + MAX_USER_PROPERTY * 5 ];
-    uint8_t reasonStringId = MQTT_REASON_STRING_ID;
-
+    TransportOutVector_t pIoVector[3];
 
     uint8_t * pIndex = fixedHeader;
     TransportOutVector_t * iterator = pIoVector;
@@ -1405,7 +1401,7 @@ static MQTTStatus_t sendDisconnectWithoutCopyV5( MQTTContext_t * pContext,
     assert( pDisconnectInfo != NULL );
 
     /* Only for fixed size fields. */
-    pIndex = MQTTV5_SerializeDisconnectFixed( pIndex, pDisconnectInfo, remainingLength, sessionExpiry );
+    pIndex = MQTTV5_SerializeDisconnectFixed( pIndex, pDisconnectInfo, remainingLength);
     iterator->iov_base = fixedHeader;
     /* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-182 */
     /* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-108 */
@@ -1416,12 +1412,29 @@ static MQTTStatus_t sendDisconnectWithoutCopyV5( MQTTContext_t * pContext,
     iterator++;
     ioVectorLength++;
 
+    size_t disconnectPropLen = 0; 
+    if (pPropertyBuilder != NULL)
+    {
+        disconnectPropLen = pPropertyBuilder->currentIndex;
+    }
 
-    iterator->iov_base = pPropertyBuilder->pBuffer;
-    iterator->iov_len = pPropertyBuilder->currentIndex;
+    uint8_t propertyLength[4];
+    pIndex = propertyLength;
+    pIndex = encodeRemainingLength(pIndex, disconnectPropLen);
+    iterator->iov_base = propertyLength;
+    iterator->iov_len = (size_t)(pIndex - propertyLength);
     totalMessageLength += iterator->iov_len;
     iterator++;
     ioVectorLength++;
+
+    if (pPropertyBuilder != NULL)
+    {
+        iterator->iov_base = pPropertyBuilder->pBuffer;
+        iterator->iov_len = pPropertyBuilder->currentIndex;
+        totalMessageLength += iterator->iov_len;
+        iterator++;
+        ioVectorLength++;
+    }
 
 
     bytesSentOrError = sendMessageVector( pContext, pIoVector, ioVectorLength );
@@ -1487,9 +1500,11 @@ MQTTStatus_t updateContextWithConnectProps(MqttPropBuilder_t* pPropBuilder, MQTT
     bool topicAlias = false;
     bool authMethod = false;
     bool authData = false;
+    size_t propertyLength = 0U; 
+    const uint8_t* pIndex; 
 
-    size_t propertyLength = pPropBuilder->currentIndex;
-    const uint8_t* pIndex = pPropBuilder->pBuffer; /*Pointer to the buffer*/
+    propertyLength = pPropBuilder->currentIndex;
+    pIndex = pPropBuilder->pBuffer; /*Pointer to the buffer*/
 
 
     MQTTAuthInfo_t outgoingAuth; 
@@ -3839,14 +3854,6 @@ static MQTTStatus_t sendConnectWithoutCopy( MQTTContext_t * pContext,
 
     uint8_t connectPacketHeader[ 15U ];
 
-    /* Maximum number of bytes required by the fixed size will properties.
-        * Property length               0 + 4 = 4
-        * Will delay                      + 5 = 9
-        * Payload Format Indicator        + 2 = 11
-        * Message Expiry                  + 5 = 16 */
-    uint8_t fixedSizeProperties[ 16U ];
-    PublishVector_t willVector;
-
     /* The maximum vectors required to encode and send a connect packet. The
     * breakdown is shown below.
     * Fixed header      0 + 1 = 1
@@ -3917,8 +3924,6 @@ static MQTTStatus_t sendConnectWithoutCopy( MQTTContext_t * pContext,
         {
             status = updateContextWithConnectProps(pPropertyBuilder, pContext->pConnectProperties);
         }
-
-        // assert( ( ( size_t ) ( pIndex - connectPacketHeader ) ) <= sizeof( connectPacketHeader ) );
 
         /* The header gets sent first. */
         // iterator->iov_base = connectPacketHeader;
@@ -5076,6 +5081,11 @@ MQTTStatus_t MQTTV5_Disconnect( MQTTContext_t * pContext,
     {
         LogError( ( "pContext, pDisconnectInfo and connect properties cannot be NULL." ) );
         status = MQTTBadParameter;
+    }
+    size_t disconnectPropLen = 0;
+    if (pPropertyBuilder != NULL)
+    {
+        disconnectPropLen = pPropertyBuilder->currentIndex;
     }
 
     if( status == MQTTSuccess )

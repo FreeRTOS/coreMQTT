@@ -1719,8 +1719,7 @@ MQTTStatus_t MQTTV5_GetDisconnectPacketSize(MQTTAckInfo_t* pDisconnectInfo,
  */
 uint8_t * MQTTV5_SerializeDisconnectFixed(uint8_t * pIndex,
                                         const MQTTAckInfo_t * pDisconnectInfo,
-                                        size_t remainingLength,
-                                        uint32_t sessionExpiry);
+                                        size_t remainingLength);
 /** @endcond */
 
 /**
