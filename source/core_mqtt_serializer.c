@@ -1815,7 +1815,7 @@ static MQTTStatus_t deserializeConnackV5( MQTTConnectProperties_t * pConnackProp
 static MQTTStatus_t calculatePublishPacketSizeV5( MQTTPublishInfo_t * pPublishInfo,
                                                     size_t * pRemainingLength,
                                                     size_t * pPacketSize,
-                                                    uint32_t maxPacketSize, size_t proplen)
+                                                    uint32_t maxPacketSize, size_t publishPropertyLength)
 {
     MQTTStatus_t status = MQTTSuccess;
     size_t packetSize = 0, payloadLimit = 0;
@@ -1841,8 +1841,8 @@ static MQTTStatus_t calculatePublishPacketSizeV5( MQTTPublishInfo_t * pPublishIn
 
     if( status == MQTTSuccess )
     {
-        packetSize += proplen;
-        packetSize += remainingLengthEncodedSize(proplen);
+        packetSize += publishPropertyLength;
+        packetSize += remainingLengthEncodedSize(publishPropertyLength);
 
         /* Calculate the maximum allowed size of the payload for the given parameters.
             * This calculation excludes the "Remaining length" encoding, whose size is not
@@ -1908,55 +1908,7 @@ static MQTTStatus_t calculatePublishPacketSizeV5( MQTTPublishInfo_t * pPublishIn
     return status;
 }
 
-//static void serializePubAckPacketV5( const MQTTAckInfo_t * pAckInfo,
-//                                        uint8_t packetType,
-//                                        uint16_t packetId,
-//                                        size_t remainingLength,
-//                                        const MQTTFixedBuffer_t * pFixedBuffer )
-//{
-//    uint8_t * pIndex = NULL;
-//
-//    assert( pAckInfo != NULL );
-//    assert( pFixedBuffer != NULL );
-//    assert( pFixedBuffer->pBuffer != NULL );
-//    pIndex = pFixedBuffer->pBuffer;
-//    /* Serialize the header including reason code and property length */
-//    pIndex = MQTTV5_SerializeAckFixed( pIndex,
-//                                        packetType,
-//                                        packetId,
-//                                        remainingLength,
-//                                        pAckInfo->propertyLength );
-//
-//    /*Serialize the reason string if provided.*/
-//    if( pAckInfo->reasonStringLength != 0U )
-//    {
-//        *pIndex = MQTT_REASON_STRING_ID;
-//        pIndex++;
-//        pIndex = encodeString( pIndex, pAckInfo->pReasonString, pAckInfo->reasonStringLength );
-//    }
-//
-//    #if ( MQTT_USER_PROPERTY_ENABLED )
-//        /*Serialize the user properties if provided.*/
-//        if( pAckInfo->pUserProperty != NULL )
-//        {
-//            uint32_t i = 0;
-//            uint32_t size = pAckInfo->pUserProperty->count;
-//            const MQTTUserProperty_t * pUserProperty = pAckInfo->pUserProperty->userProperty;
-//
-//            for( ; i < size; i++ )
-//            {
-//                *pIndex = MQTT_USER_PROPERTY_ID;
-//                pIndex++;
-//                pIndex = encodeString( pIndex, pUserProperty[ i ].pKey, pUserProperty[ i ].keyLength );
-//                pIndex = encodeString( pIndex, pUserProperty[ i ].pValue, pUserProperty[ i ].valueLength );
-//            }
-//        }
-//    #endif /* if ( MQTT_USER_PROPERTY_ENABLED ) */
-//
-//    /* Ensure that the difference between the end and beginning of the buffer
-//        * is less than the buffer size. */
-//    assert( ( ( size_t ) ( pIndex - pFixedBuffer->pBuffer ) ) <= pFixedBuffer->size );
-//}
+
 
 /* coverity[misra_c_2012_rule_2_7_violation] */
 static MQTTStatus_t logAckResponseV5( uint8_t reasonCode,
@@ -3827,7 +3779,7 @@ MQTTStatus_t MQTTV5_ValidatePublishParams( const MQTTPublishInfo_t * pPublishInf
 MQTTStatus_t MQTTV5_GetPublishPacketSize( MQTTPublishInfo_t * pPublishInfo,
                                             size_t * pRemainingLength,
                                             size_t * pPacketSize,
-                                            uint32_t maxPacketSize, size_t proplen)
+                                            uint32_t maxPacketSize, size_t publishPropertyLength)
 {
     MQTTStatus_t status = MQTTSuccess;
 
@@ -3862,7 +3814,7 @@ MQTTStatus_t MQTTV5_GetPublishPacketSize( MQTTPublishInfo_t * pPublishInfo,
     }
     else
     {
-        status = calculatePublishPacketSizeV5( pPublishInfo, pRemainingLength, pPacketSize, maxPacketSize , proplen);
+        status = calculatePublishPacketSizeV5( pPublishInfo, pRemainingLength, pPacketSize, maxPacketSize , publishPropertyLength);
     }
 
     return status;

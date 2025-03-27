@@ -3719,26 +3719,12 @@ static MQTTStatus_t sendPublishWithoutCopy( MQTTContext_t * pContext,
      * Fixed header (including topic string length)      0 + 1 = 1
      * Topic string                                        + 1 = 2
      * Packet ID (only when QoS > QoS0)                    + 1 = 3
-     * Payload                                             + 1 = 4  */
+     * Property Length                                     + 1 = 4   
+     * Optional Properties                                 + 1 = 5   
+     * Payload                                             + 1 = 6  */
 
-
-    /*
-    * Fixed sized properties                              + 1 = 5
-    * Response topic                                      + 3 = 8
-    * Correlation data                                    + 3 = 11
-    * Content type                                        + 3 = 14
-    * User property                                         5
-    */
-    TransportOutVector_t pIoVector[ 5 * MAX_USER_PROPERTY + 14 ];
-
-    /* Maximum number of bytes required by the fixed size publish properties.
-    * Property length               0 + 4 = 4
-    * Payload Format Indicator        + 2 = 6
-    * Message Expiry                  + 5 = 11
-    * Topic Alias                     + 3 = 14 */
-    /*uint8_t serializedProperty[ 14U ];*/
+    TransportOutVector_t pIoVector[6];
     uint8_t * pIndex;
-    /*PublishVector_t publishVector;*/
     TransportOutVector_t * iterator;
 
     /* The header is sent first. */
@@ -3769,15 +3755,15 @@ static MQTTStatus_t sendPublishWithoutCopy( MQTTContext_t * pContext,
     }
 
     /*Serialize the fixed publish properties.*/
-    size_t proplen = 0; 
+    size_t publishPropLength = 0; 
     if (pPropertyBuilder != NULL)
     {
-        proplen = pPropertyBuilder->currentIndex;
+        publishPropLength = pPropertyBuilder->currentIndex;
     }
     uint8_t propertyLength[4];
     iterator = &pIoVector[ioVectorLength];
     pIndex = propertyLength;
-    pIndex = encodeRemainingLength(pIndex, proplen);
+    pIndex = encodeRemainingLength(pIndex, publishPropLength);
     iterator->iov_base = propertyLength;
     iterator->iov_len = (size_t)(pIndex - propertyLength);
     totalMessageLength += iterator->iov_len;
@@ -4562,10 +4548,10 @@ MQTTStatus_t MQTT_Publish( MQTTContext_t * pContext,
     /* Validate arguments. */
     MQTTStatus_t status = validatePublishParams( pContext, pPublishInfo, packetId );
 
-    size_t proplen = 0; 
+    size_t publishPropertyLength = 0; 
     if (pPropertyBuilder != NULL)
     {
-        proplen = pPropertyBuilder->currentIndex;
+        publishPropertyLength = pPropertyBuilder->currentIndex;
     }
 
     if( status == MQTTSuccess )
@@ -4583,7 +4569,7 @@ MQTTStatus_t MQTT_Publish( MQTTContext_t * pContext,
                                                     &remainingLength,
                                                     &packetSize,
                                                     pContext->pConnectProperties->serverMaxPacketSize,
-                                                    proplen);
+                                                    publishPropertyLength);
         }
     }
 
