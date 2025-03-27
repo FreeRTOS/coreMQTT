@@ -950,7 +950,6 @@ static MQTTStatus_t sendPublishAcksWithProperty( MQTTContext_t * pContext,
 static MQTTStatus_t sendDisconnectWithoutCopyV5(MQTTContext_t* pContext,
     const MQTTAckInfo_t* pDisconnectInfo,
     size_t remainingLength,
-    uint32_t sessionExpiry,
     MqttPropBuilder_t* pPropertyBuilder); 
 
 /**
@@ -1370,7 +1369,6 @@ static MQTTStatus_t sendPublishAcksWithProperty( MQTTContext_t * pContext,
 static MQTTStatus_t sendDisconnectWithoutCopyV5( MQTTContext_t * pContext,
                                                     const MQTTAckInfo_t * pDisconnectInfo,
                                                     size_t remainingLength,
-                                                    uint32_t sessionExpiry, 
                                                     MqttPropBuilder_t* pPropertyBuilder)
 {
     int32_t bytesSentOrError;
@@ -2921,9 +2919,9 @@ static MQTTStatus_t sendSubscribeWithoutCopyV5( MQTTContext_t * pContext,
     /**
      * Fixed Size Properties 
      */
-    TransportOutVector_t pIoVector[ MQTT_SUB_UNSUB_MAX_VECTORS + MAX_USER_PROPERTY * 5 ];
+    TransportOutVector_t pIoVector[ MQTT_SUB_UNSUB_MAX_VECTORS ];
     TransportOutVector_t * pIterator;
-    uint8_t serializedTopicFieldLength[  MQTT_SUB_UNSUB_MAX_VECTORS + MAX_USER_PROPERTY * 5 ] [ CORE_MQTT_SERIALIZED_LENGTH_FIELD_BYTES ];
+    uint8_t serializedTopicFieldLength[  MQTT_SUB_UNSUB_MAX_VECTORS ] [ CORE_MQTT_SERIALIZED_LENGTH_FIELD_BYTES ];
     size_t totalPacketLength = 0U;
     size_t ioVectorLength = 0U;
     size_t subscriptionsSent = 0U;
@@ -2957,14 +2955,14 @@ static MQTTStatus_t sendSubscribeWithoutCopyV5( MQTTContext_t * pContext,
      * Sending Property Buffer
      */
 
-    size_t proplen = 0; 
+    size_t subscribePropLen = 0; 
     if (pPropertyBuilder != NULL)
     {
-        proplen = pPropertyBuilder->currentIndex;
+        subscribePropLen = pPropertyBuilder->currentIndex;
     }
     uint8_t propertyLength[4]; 
     pIndex = propertyLength; 
-    pIndex = encodeRemainingLength(pIndex, proplen); 
+    pIndex = encodeRemainingLength(pIndex, subscribePropLen);
     pIterator->iov_base = propertyLength; 
     pIterator->iov_len = (size_t)(pIndex - propertyLength);
     totalPacketLength += pIterator->iov_len;
@@ -2987,7 +2985,7 @@ static MQTTStatus_t sendSubscribeWithoutCopyV5( MQTTContext_t * pContext,
 
         /* Check whether the subscription topic (with QoS) will fit in the
          * given vector. */
-        while( ( ioVectorLength <= ( MQTT_SUB_UNSUB_MAX_VECTORS - CORE_MQTT_SUBSCRIBE_PER_TOPIC_VECTOR_LENGTH + MAX_USER_PROPERTY*5  ) ) &&
+        while( ( ioVectorLength <= ( MQTT_SUB_UNSUB_MAX_VECTORS - CORE_MQTT_SUBSCRIBE_PER_TOPIC_VECTOR_LENGTH   ) ) &&
                ( subscriptionsSent < subscriptionCount ) )
         {
             /* The topic filter and the filter length gets sent next. (filter length - 2 bytes , topic filter - utf - 8 ) */
@@ -3047,7 +3045,9 @@ static MQTTStatus_t sendSubscribeWithoutCopyV5( MQTTContext_t * pContext,
                 ioVectorLength++;
             }
             subscriptionsSent ++ ;
+            topicFieldLengthIndex++;
         }
+
     }
     byteSent = sendMessageVector(pContext, pIoVector, ioVectorLength) ; 
     if(byteSent != (int32_t)totalPacketLength){
@@ -3124,13 +3124,7 @@ static MQTTStatus_t validateSubscribeUnsubscribeParamsV5(MQTTContext_t* pContext
                         break;
                     }
                     isSharedSub = ((strncmp(pSubscriptionList[iterator].pTopicFilter, "$share/", 7)) == 0);
-                    LogDebug(("isSharedSub = %d", isSharedSub)) ;
                     if (isSharedSub) {
-                        /**
-                         * ensuring ShareName is present and does not contain invalid characters
-                         * 
-                         */
-                        LogDebug(("ShareName is present")) ;
                         shareNameEnd = strchr(pSubscriptionList[iterator].pTopicFilter + 7, '/');
                         if ((shareNameEnd == NULL) || (shareNameEnd == pSubscriptionList[iterator].pTopicFilter + 7)) {
                             LogError(("Protocol Error : ShareName is not present , missing or empty"));
@@ -3164,10 +3158,10 @@ MQTTStatus_t MQTT_SubscribeV5( MQTTContext_t * pContext,
 {
     size_t remainingLength = 0UL, packetSize = 0UL;
 
-    size_t proplen = 0; 
+    size_t subscribePropLen = 0; 
     if (pPropertyBuilder != NULL)
     {
-        proplen = pPropertyBuilder->currentIndex;
+        subscribePropLen = pPropertyBuilder->currentIndex;
     }
 
     MQTTStatus_t status = validateSubscribeUnsubscribeParamsV5( pContext , 
@@ -3183,7 +3177,7 @@ MQTTStatus_t MQTT_SubscribeV5( MQTTContext_t * pContext,
                                                 subscriptionCount,
                                                 &remainingLength,
                                                 &packetSize,
-                                                proplen);
+                                                subscribePropLen);
         LogError( ( "SUBSCRIBE packet size is %lu and remaining length is %lu.",
                     ( unsigned long ) packetSize,
                     ( unsigned long ) remainingLength ) );
@@ -3197,7 +3191,8 @@ MQTTStatus_t MQTT_SubscribeV5( MQTTContext_t * pContext,
                                             pPropertyBuilder, 
                                             subscriptionCount,
                                             packetId,
-                                            remainingLength, MQTT_SUBSCRIBE );
+                                            remainingLength, 
+                                            MQTT_SUBSCRIBE );
 
         MQTT_POST_STATE_UPDATE_HOOK( pContext );
     }
@@ -5069,7 +5064,6 @@ const char * MQTT_Status_strerror( MQTTStatus_t status )
 
 MQTTStatus_t MQTTV5_Disconnect( MQTTContext_t * pContext,
                                 MQTTAckInfo_t * pDisconnectInfo,
-                                uint32_t sessionExpiry, 
                                 MqttPropBuilder_t* pPropertyBuilder)
 {
     size_t packetSize = 0U;
@@ -5091,7 +5085,7 @@ MQTTStatus_t MQTTV5_Disconnect( MQTTContext_t * pContext,
     if( status == MQTTSuccess )
     {
         /* Get MQTT DISCONNECT packet size. */
-        status = MQTTV5_GetDisconnectPacketSize( pDisconnectInfo, &remainingLength, &packetSize, pContext->pConnectProperties->serverMaxPacketSize, sessionExpiry, pContext->pConnectProperties->sessionExpiry, pPropertyBuilder->currentIndex );
+        status = MQTTV5_GetDisconnectPacketSize( pDisconnectInfo, &remainingLength, &packetSize, pContext->pConnectProperties->serverMaxPacketSize, disconnectPropLen);
         LogDebug( ( "MQTT DISCONNECT packet size is %lu.",
                     ( unsigned long ) packetSize ) );
     }
@@ -5101,7 +5095,7 @@ MQTTStatus_t MQTTV5_Disconnect( MQTTContext_t * pContext,
         /* Take the mutex because the below call should not be interrupted. */
         MQTT_PRE_SEND_HOOK( pContext );
 
-        status = sendDisconnectWithoutCopyV5( pContext, pDisconnectInfo, remainingLength, sessionExpiry, pPropertyBuilder);
+        status = sendDisconnectWithoutCopyV5( pContext, pDisconnectInfo, remainingLength, pPropertyBuilder);
 
         /* Give the mutex away. */
         MQTT_POST_SEND_HOOK( pContext );

@@ -2110,7 +2110,7 @@ static MQTTStatus_t calculateSubscriptionPacketSizeV5(MQTTSubscribeInfo_t *pSubs
                                                         size_t subscriptionCount,
                                                         size_t *pRemainingLength,
                                                         size_t *pPacketSize, 
-                                                        size_t propLen, 
+                                                        size_t subscribePropLen, 
                                                         MQTTSubscriptionType_t subscriptionType)
 {
     size_t packetSize = 0U , i = 0; 
@@ -2124,8 +2124,8 @@ static MQTTStatus_t calculateSubscriptionPacketSizeV5(MQTTSubscribeInfo_t *pSubs
     LogDebug(("Property Length is %lu" , (unsigned long)propLen));
     if( status == MQTTSuccess )
     {
-        packetSize += propLen;
-        packetSize += remainingLengthEncodedSize( propLen );
+        packetSize += subscribePropLen;
+        packetSize += remainingLengthEncodedSize(subscribePropLen);
     }
 
 
@@ -2167,17 +2167,21 @@ MQTTStatus_t MQTTV5_GetSubscribePacketSize(MQTTSubscribeInfo_t *pSubscriptionLis
                                         size_t subscriptionCount,
                                         size_t *pRemainingLength,
                                         size_t *pPacketSize, 
-                                        size_t propLen)
+                                        size_t subscribePropLen)
 {
     MQTTStatus_t status = MQTTSuccess ; 
     if(pSubscriptionList == NULL){
         LogError(("Argument cannot be null : SubscriptionList")); 
         status = MQTTBadParameter;
-    }else if(subscriptionCount == 0U){
+    }
+    else if(subscriptionCount == 0U)
+    {
         LogError(("Subscription count cannot be 0")) ; 
         status = MQTTBadParameter;
-    }else{
-        status = calculateSubscriptionPacketSizeV5(pSubscriptionList, subscriptionCount, pRemainingLength, pPacketSize, propLen, MQTT_SUBSCRIBE);
+    }
+    else
+    {
+        status = calculateSubscriptionPacketSizeV5(pSubscriptionList, subscriptionCount, pRemainingLength, pPacketSize, subscribePropLen, MQTT_SUBSCRIBE);
     }
     return status ; 
 }
@@ -4133,8 +4137,6 @@ MQTTStatus_t MQTTV5_GetDisconnectPacketSize( MQTTAckInfo_t * pDisconnectInfo,
                                                 size_t * pRemainingLength,
                                                 size_t * pPacketSize,
                                                 uint32_t maxPacketSize,
-                                                uint32_t sessionExpiry,
-                                                uint32_t prevSessionExpiry,
                                                 size_t disconnectPropLen)
 {
     MQTTStatus_t status = MQTTSuccess;
@@ -4157,18 +4159,9 @@ MQTTStatus_t MQTTV5_GetDisconnectPacketSize( MQTTAckInfo_t * pDisconnectInfo,
         LogError( ( "Max packet size cannot be zero." ) );
         status = MQTTBadParameter;
     }
-    /*Cannot overwrite a session expiry of 0.*/
-    else if( ( prevSessionExpiry == 0U ) && ( sessionExpiry != 0U ) )
-    {
-        LogError( ( "If the Session Expiry in the CONNECT packet was zero, then it is a Protocol Error to set a non-zero Session Expiry Interval in the DISCONNECT packet." ) );
-        status = MQTTBadParameter;
-    }
     else if (pDisconnectInfo->reasonCode == NULL)
     {
-        if (sessionExpiry != 0U)
-        {
-            propertyLength += MQTT_SESSION_EXPIRY_SIZE;
-        }
+        /*Do nothing*/
 
     }
     else if(validateDisconnectResponseV5( *pDisconnectInfo->reasonCode, false ) != MQTTSuccess )
@@ -4180,12 +4173,6 @@ MQTTStatus_t MQTTV5_GetDisconnectPacketSize( MQTTAckInfo_t * pDisconnectInfo,
     {
         /*Reason code.*/
         length += 1U;
-
-        /*Add session expiry if provided.*/
-        if( sessionExpiry != 0U )
-        {
-            propertyLength += MQTT_SESSION_EXPIRY_SIZE;
-        }
     }
 
     propertyLength += disconnectPropLen;

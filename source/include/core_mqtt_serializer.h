@@ -1690,9 +1690,7 @@ MQTTStatus_t MQTTV5_GetDisconnectPacketSize(MQTTAckInfo_t* pDisconnectInfo,
     size_t* pRemainingLength,
     size_t* pPacketSize,
     uint32_t maxPacketSize,
-    uint32_t sessionExpiry,
-    uint32_t prevSessionExpiry,
-    size_t proplen); 
+    size_t disconnectPropLen); 
 /* @[declare_mqttv5_getdisconnectpacketsize] */
 
 
