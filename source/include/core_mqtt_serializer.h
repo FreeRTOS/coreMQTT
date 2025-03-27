@@ -1538,11 +1538,12 @@ MQTTStatus_t MQTTV5_DeserializeSuback(MQTTAckInfo_t* pSubackProperties,
  * @endcode
  */
 /* @[declare_mqttv5_getackpacketsize] */
-//MQTTStatus_t MQTTV5_GetAckPacketSize(MQTTContext_t* pContext,
+// MQTTStatus_t MQTTV5_GetAckPacketSize(MQTTContext_t* pContext,
 //    MQTTAckInfo_t* pAckInfo,
 //    size_t* pRemainingLength,
 //    size_t* pPacketSize,
-//    uint32_t maxPacketSize); /* @[declare_mqttv5_getackpacketsize] */
+//    uint32_t maxPacketSize); 
+// /* @[declare_mqttv5_getackpacketsize] */
 
 /**
  * @fn uint8_t * MQTTV5_SerializeAckFixed(uint8_t * pIndex,
@@ -1617,7 +1618,13 @@ uint8_t * MQTTV5_SerializeAckFixed(uint8_t * pIndex,
  * // Get the size requirement for the ack packet.
  * status = MQTTV5_GetAckPacketSize(&disconnectInfo,&remainingLength,&packetSize,maxPacketSize);
  *
- *
+ */
+MQTTStatus_t MQTTV5_GetAckPacketSize(MQTTAckInfo_t* pAckInfo,
+    size_t* pRemainingLength,
+    size_t* pPacketSize,
+    uint32_t maxPacketSize, 
+    size_t ackPropertyLength); 
+/*
  * assert( status == MQTTSuccess );
  * assert( packetSize <= BUFFER_SIZE );
  *

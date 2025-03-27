@@ -4117,51 +4117,64 @@ uint8_t * MQTTV5_SerializeAckFixed( uint8_t * pIndex,
     return pIndexLocal;
 }
 
-//MQTTStatus_t MQTTV5_SerializePubAckWithProperty( const MQTTAckInfo_t * pAckInfo,
-//                                                    size_t remainingLength,
-//                                                    const MQTTFixedBuffer_t * pFixedBuffer,
-//                                                    uint8_t packetType,
-//                                                    uint16_t packetId )
-//{
-//    MQTTStatus_t status = MQTTSuccess;
-//    size_t ackPacketSize = 0;
-//
-//    /* Validate arguments. */
-//    if( ( pAckInfo == NULL ) || ( pFixedBuffer == NULL ) )
-//    {
-//        LogError( ( "Argument cannot be NULL: pAckInfo=%p, "
-//                    "pFixedBuffer=%p.",
-//                    ( void * ) pAckInfo,
-//                    ( void * ) pFixedBuffer ) );
-//        status = MQTTBadParameter;
-//    }
-//    /* A buffer must be configured for serialization. */
-//    else if( pFixedBuffer->pBuffer == NULL )
-//    {
-//        LogError( ( "Argument cannot be NULL: pFixedBuffer->pBuffer is NULL." ) );
-//        status = MQTTBadParameter;
-//    }
-//    else
-//    {
-//        ackPacketSize = remainingLength + remainingLengthEncodedSize( remainingLength ) + 1U;
-//
-//        /* Check that the full packet size fits within the given buffer. */
-//        if( ackPacketSize > pFixedBuffer->size )
-//        {
-//            LogError( ( "Buffer size of %lu is not sufficient to hold "
-//                        "serialized ACK packet of size of %lu.",
-//                        ( unsigned long ) pFixedBuffer->size,
-//                        ( unsigned long ) ackPacketSize ) );
-//            status = MQTTNoMemory;
-//        }
-//        else
-//        {
-//            serializePubAckPacketV5( pAckInfo, packetType, packetId, remainingLength, pFixedBuffer );
-//        }
-//    }
-//
-//    return status;
-//}
+
+MQTTStatus_t MQTTV5_GetAckPacketSize(MQTTAckInfo_t* pAckInfo,
+    size_t* pRemainingLength,
+    size_t* pPacketSize,
+    uint32_t maxPacketSize, 
+    size_t ackPropertyLength)
+{
+    MQTTStatus_t status = MQTTSuccess;
+    size_t length = 0U;
+    size_t propertyLength = 0U;
+    size_t packetSize = 0U;
+
+    propertyLength = ackPropertyLength ; 
+
+    /*Validate the parameters.*/
+    if ((pAckInfo == NULL) || (pRemainingLength == NULL) || (pPacketSize == NULL))
+    {
+        status = MQTTBadParameter;
+    }
+    else if (maxPacketSize == 0U)
+    {
+        status = MQTTBadParameter;
+    }
+    else
+    {
+        length += MQTT_PUBLISH_ACK_PACKET_SIZE_WITH_REASON;
+        if (pAckInfo->reasonStringLength != 0U)
+        {
+            if (pAckInfo->pReasonString == NULL)
+            {
+                status = MQTTBadParameter;
+            }
+            else
+            {
+                propertyLength += pAckInfo->reasonStringLength;
+                propertyLength += MQTT_UTF8_LENGTH_SIZE;
+            }
+        }
+        length += remainingLengthEncodedSize(propertyLength) + propertyLength;
+        *pRemainingLength = length;
+
+    }
+
+    if (status == MQTTSuccess)
+    {
+        packetSize = length + 1U + remainingLengthEncodedSize(length);
+
+        if (packetSize > maxPacketSize)
+        {
+            status = MQTTBadParameter;
+        }
+        else
+        {
+            *pPacketSize = packetSize;
+        }
+    }
+    return status;
+}
 
 MQTTStatus_t MQTTV5_GetDisconnectPacketSize( MQTTAckInfo_t * pDisconnectInfo,
                                                 size_t * pRemainingLength,

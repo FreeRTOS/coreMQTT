@@ -1456,65 +1456,6 @@ static size_t sendPublishProperties( const MQTTPublishInfo_t * pPublishInfo,
 
 
 
-MQTTStatus_t MQTTV5_GetAckPacketSize(MQTTContext_t* pContext,
-    MQTTAckInfo_t* pAckInfo,
-    size_t* pRemainingLength,
-    size_t* pPacketSize,
-    uint32_t maxPacketSize)
-{
-    MQTTStatus_t status = MQTTSuccess;
-    size_t length = 0U;
-    size_t propertyLength = 0U;
-    size_t packetSize = 0U;
-
-    propertyLength = pContext->ackPropsBuffer.currentIndex;
-
-    /*Validate the parameters.*/
-    if ((pAckInfo == NULL) || (pRemainingLength == NULL) || (pPacketSize == NULL))
-    {
-        status = MQTTBadParameter;
-    }
-    else if (maxPacketSize == 0U)
-    {
-        status = MQTTBadParameter;
-    }
-    else
-    {
-        length += MQTT_PUBLISH_ACK_PACKET_SIZE_WITH_REASON;
-        if (pAckInfo->reasonStringLength != 0U)
-        {
-            if (pAckInfo->pReasonString == NULL)
-            {
-                status = MQTTBadParameter;
-            }
-            else
-            {
-                propertyLength += pAckInfo->reasonStringLength;
-                propertyLength += MQTT_UTF8_LENGTH_SIZE;
-            }
-        }
-        length += remainingLengthEncodedSize(propertyLength) + propertyLength;
-        *pRemainingLength = length;
-
-    }
-
-    if (status == MQTTSuccess)
-    {
-        packetSize = length + 1U + remainingLengthEncodedSize(length);
-
-        if (packetSize > maxPacketSize)
-        {
-            status = MQTTBadParameter;
-        }
-        else
-        {
-            *pPacketSize = packetSize;
-        }
-    }
-    return status;
-}
-
-
 static MQTTStatus_t sendPublishAcksWithProperty( MQTTContext_t * pContext,
                                                     uint16_t packetId,
                                                     MQTTPublishState_t publishState,
@@ -1551,7 +1492,7 @@ static MQTTStatus_t sendPublishAcksWithProperty( MQTTContext_t * pContext,
     assert( pContext != NULL );
     assert( pAckInfo != NULL );
     packetTypeByte = getAckTypeToSend( publishState );
-    status = MQTTV5_GetAckPacketSize( pContext , pAckInfo, &remainingLength, &packetSize, pContext->pConnectProperties->serverMaxPacketSize );
+    status = MQTTV5_GetAckPacketSize(pAckInfo, &remainingLength, &packetSize, pContext->pConnectProperties->serverMaxPacketSize, pContext->ackPropsBuffer.currentIndex );
 
     if( ( packetTypeByte != 0U ) && ( status == MQTTSuccess ) )
     {
