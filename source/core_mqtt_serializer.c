@@ -4027,7 +4027,7 @@ MQTTStatus_t MQTTV5_DeserializeAck( const MQTTPacketInfo_t * pIncomingPacket,
 
                 if( status == MQTTSuccess && pIncomingPacket->remainingLength > 2 )
                 {
-                    status = logAckResponseV5( *pAckInfo->reasonCode, *pPacketId);
+                    status = logAckResponseV5( pAckInfo->reasonCode, *pPacketId);
                 }
 
                 break;
@@ -4038,7 +4038,7 @@ MQTTStatus_t MQTTV5_DeserializeAck( const MQTTPacketInfo_t * pIncomingPacket,
 
                 if( status == MQTTSuccess && pIncomingPacket->remainingLength > 2)
                 {
-                    status = logSimpleAckResponseV5(*pAckInfo->reasonCode, *pPacketId);
+                    status = logSimpleAckResponseV5(pAckInfo->reasonCode, *pPacketId);
                 }
 
                 break;
