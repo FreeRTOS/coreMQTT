@@ -677,7 +677,7 @@ static MQTTStatus_t decodeuint32_t(uint32_t* pProperty,
 *
 * @return #MQTTSuccess, #MQTTProtocolError and #MQTTMalformedPacket
 **/
-static MQTTStatus_t decodeuint16_t(uint16_t* pProperty,
+extern MQTTStatus_t decodeuint16_t(uint16_t* pProperty,
     size_t* pPropertyLength,
     bool* pUsed,
     const uint8_t** pIndex); 
@@ -1036,37 +1036,6 @@ static MQTTStatus_t decodeuint32_t(uint32_t* pProperty,
     return status;
 }
 
-static MQTTStatus_t decodeuint16_t(uint16_t* pProperty,
-    size_t* pPropertyLength,
-    bool* pUsed,
-    const uint8_t** pIndex)
-{
-    const uint8_t* pVariableHeader = *pIndex;
-    MQTTStatus_t status = MQTTSuccess;
-
-    /*Protocol error to include the same property twice.*/
-
-    if (*pUsed == true)
-    {
-        status = MQTTProtocolError;
-    }
-    /*Validate the length and decode.*/
-
-    else if (*pPropertyLength < sizeof(uint16_t))
-    {
-        status = MQTTMalformedPacket;
-    }
-    else
-    {
-        *pProperty = UINT16_DECODE(pVariableHeader);
-        pVariableHeader = &pVariableHeader[sizeof(uint16_t)];
-        *pUsed = true;
-        *pPropertyLength -= sizeof(uint16_t);
-    }
-
-    *pIndex = pVariableHeader;
-    return status;
-}
 
 static MQTTStatus_t decodeutf_8pair(MQTTUserProperties_t* pUserProperties,
     uint32_t* count,
@@ -4728,7 +4697,6 @@ MQTTStatus_t MQTT_Ping( MQTTContext_t * pContext )
                         ( long int ) sendResult ) );
         }
     }
-
     return status;
 }
 

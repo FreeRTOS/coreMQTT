@@ -310,6 +310,12 @@
  */
     #define MQTT_PUBLISH_ACK_PACKET_SIZE_WITH_REASON    ( 3UL )
 
+/** 
+* @ingroup mqtt_constants
+* @brief The size of MQTT PUBACK, PUBREC, PUBREL, and PUBCOMP packets with only packet id.
+*/
+    #define MQTT_PUBLISH_ACK_PACKET_SIZE_WITHOUT_REASON   ( 2UL )
+
 /**
  * @brief The Connection is accepted.
  */
@@ -881,7 +887,7 @@ static MQTTStatus_t decodeuint32_t( uint32_t * pProperty,
  * @return #MQTTSuccess, #MQTTProtocolError and #MQTTMalformedPacket
  **/
 
-static MQTTStatus_t decodeuint16_t( uint16_t * pProperty,
+MQTTStatus_t decodeuint16_t( uint16_t * pProperty,
                                         size_t * pPropertyLength,
                                         bool * pUsed,
                                         const uint8_t ** pIndex );
@@ -1485,7 +1491,7 @@ static MQTTStatus_t decodeuint32_t( uint32_t * pProperty,
     return status;
 }
 
-static MQTTStatus_t decodeuint16_t( uint16_t * pProperty,
+MQTTStatus_t decodeuint16_t( uint16_t * pProperty,
                                     size_t * pPropertyLength,
                                     bool * pUsed,
                                     const uint8_t ** pIndex )
@@ -4100,23 +4106,12 @@ MQTTStatus_t MQTTV5_GetAckPacketSize(MQTTAckInfo_t* pAckInfo,
     else
     {
         length += MQTT_PUBLISH_ACK_PACKET_SIZE_WITH_REASON;
-        if (pAckInfo->reasonStringLength != 0U)
-        {
-            if (pAckInfo->pReasonString == NULL)
-            {
-                status = MQTTBadParameter;
-            }
-            else
-            {
-                propertyLength += pAckInfo->reasonStringLength;
-                propertyLength += MQTT_UTF8_LENGTH_SIZE;
-            }
-        }
+
         length += remainingLengthEncodedSize(propertyLength) + propertyLength;
+
         *pRemainingLength = length;
 
     }
-
     if (status == MQTTSuccess)
     {
         packetSize = length + 1U + remainingLengthEncodedSize(length);

@@ -443,18 +443,6 @@ typedef struct MQTTConnectProperties
      */
     MQTTAuthInfo_t *pIncomingAuth;
 
-    #if(MQTT_USER_PROPERTY_ENABLED)
-     /**
-     * @brief   Pointer to the outgoing user properties.
-     */
-    MQTTUserProperties_t *pOutgoingUserProperty;
-
-     /**
-     * @brief Pointer to the incoming user properties.
-     */
-    MQTTUserProperties_t *pIncomingUserProperty;
-    #endif
-
     uint8_t *startOfConnackProps; 
     
     size_t connackPropLen; 
