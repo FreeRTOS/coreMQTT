@@ -2091,7 +2091,7 @@ static MQTTStatus_t deserializeSimpleAckV5( const MQTTPacketInfo_t * pAck,
     if( ( status == MQTTSuccess ) && ( pAck->remainingLength > 2U ) )
     {
 
-        pAckInfo->reasonCode = *pIndex; 
+        *pAckInfo->reasonCode = *pIndex; 
         pIndex++;
     }
 
@@ -4027,7 +4027,7 @@ MQTTStatus_t MQTTV5_DeserializeAck( const MQTTPacketInfo_t * pIncomingPacket,
 
                 if( status == MQTTSuccess && pIncomingPacket->remainingLength > 2 )
                 {
-                    status = logAckResponseV5( pAckInfo->reasonCode, *pPacketId);
+                    status = logAckResponseV5( *pAckInfo->reasonCode, *pPacketId);
                 }
 
                 break;
@@ -4038,7 +4038,7 @@ MQTTStatus_t MQTTV5_DeserializeAck( const MQTTPacketInfo_t * pIncomingPacket,
 
                 if( status == MQTTSuccess && pIncomingPacket->remainingLength > 2)
                 {
-                    status = logSimpleAckResponseV5(pAckInfo->reasonCode, *pPacketId);
+                    status = logSimpleAckResponseV5( *pAckInfo->reasonCode, *pPacketId);
                 }
 
                 break;
@@ -4265,7 +4265,7 @@ uint8_t * MQTTV5_SerializeDisconnectFixed( uint8_t * pIndex,
         {
             /* Extract the reason code */
             pIndex = pPacket->pRemainingData;
-            pDisconnectInfo->reasonCode[0] = *pIndex;
+            *pDisconnectInfo->reasonCode = *pIndex;
             pIndex++;
             /*Validate the reason code.*/
             status = validateDisconnectResponseV5( *pDisconnectInfo->reasonCode, true );
@@ -4290,8 +4290,10 @@ uint8_t * MQTTV5_SerializeDisconnectFixed( uint8_t * pIndex,
                 }
             }
         }
-
-        pDisconnectInfo->startOfAckProps = pIndex; 
+        if (status == MQTTSuccess)
+        {
+            pDisconnectInfo->startOfAckProps = pIndex;
+        }
 
         if( status == MQTTSuccess )
         {
