@@ -812,21 +812,6 @@ static MQTTStatus_t deserializePublishV5( const MQTTPacketInfo_t * pIncomingPack
  */
 static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
 
-/**
- * @brief Validate the length and decode a user property.
- *
- * @param[out] pUserProperties To store the decoded property.
- * @param[out] count Number of user properties decoded.
- * @param[out] pPropertyLength  Size of the length.
- * @param[out]  pIndex Pointer to the current index of the buffer.
- *
- * @return #MQTTSuccess, #MQTTProtocolError and #MQTTMalformedPacket
- **/
-static MQTTStatus_t decodeutf_8pair( MQTTUserProperties_t * pUserProperties,
-                                             uint32_t * count,
-                                             size_t * pPropertyLength,
-                                             const uint8_t ** pIndex );
-
 
 /**
  * @brief Validate the length and decode a user property.
@@ -1078,86 +1063,7 @@ static MQTTStatus_t validateDisconnectResponseV5( uint8_t reasonCode,
                                                       bool incoming );
 /*-----------------------------------------------------------*/
 
-static MQTTStatus_t decodeutf_8pair( MQTTUserProperties_t * pUserProperties,
-                                        uint32_t * count,
-                                        size_t * pPropertyLength,
-                                        const uint8_t ** pIndex )
-{
-    const uint8_t * pVariableHeader = *pIndex;
-    MQTTStatus_t status = MQTTSuccess;
-    MQTTUserProperty_t discardUserProperty;
-    MQTTUserProperty_t * pUserProperty;
 
-    if( *count == ( uint32_t ) MAX_USER_PROPERTY )
-    {
-        pUserProperty = &discardUserProperty;
-    }
-    else
-    {
-        pUserProperty = pUserProperties->userProperty;
-        pUserProperty = &pUserProperty[ *count ];
-    }
-
-    /*Validate the property length and decode the user property received.*/
-    if( *pPropertyLength < sizeof( uint16_t ) )
-    {
-        status = MQTTMalformedPacket;
-    }
-    else
-    {
-        pUserProperty->keyLength = UINT16_DECODE( pVariableHeader );
-        *pPropertyLength -= sizeof( uint16_t );
-
-        if( *pPropertyLength < pUserProperty->keyLength )
-        {
-            status = MQTTMalformedPacket;
-        }
-        else
-        {
-            pVariableHeader = &pVariableHeader[ sizeof( uint16_t ) ];
-            pUserProperty->pKey = ( const char * ) pVariableHeader;
-            *pPropertyLength -= pUserProperty->keyLength;
-            pVariableHeader = &pVariableHeader[ pUserProperty->keyLength ];
-
-            if( *pPropertyLength < sizeof( uint16_t ) )
-            {
-                status = MQTTMalformedPacket;
-            }
-            else
-            {
-                pUserProperty->valueLength = UINT16_DECODE( pVariableHeader );
-                *pPropertyLength -= sizeof( uint16_t );
-                pVariableHeader = &pVariableHeader[ sizeof( uint16_t ) ];
-
-                if( *pPropertyLength < ( size_t ) ( pUserProperty->valueLength ) )
-                {
-                    status = MQTTMalformedPacket;
-                }
-                else
-                {
-                    pUserProperty->pValue = ( const char * ) pVariableHeader;
-                    pVariableHeader = &pVariableHeader[ pUserProperty->valueLength ];
-                    *pPropertyLength -= pUserProperty->valueLength;
-                }
-            }
-        }
-    }
-
-    *pIndex = pVariableHeader;
-
-    if( ( *count == ( uint32_t ) MAX_USER_PROPERTY ) && ( status == MQTTSuccess ) )
-    {
-        LogDebug( ( "Discarded additional user property with key %s and value %s. ",
-                    discardUserProperty.pKey,
-                    discardUserProperty.pValue ) );
-    }
-    else
-    {
-        *count += 1U;
-    }
-
-    return status;
-}
 static MQTTStatus_t decodeAndDiscard( size_t * pPropertyLength,
                                         const uint8_t ** pIndex )
 {
@@ -3085,11 +2991,6 @@ MQTTStatus_t updateContextWithConnectProps(MqttPropBuilder_t* pPropBuilder, MQTT
     propertyLength = pPropBuilder->currentIndex;
     pIndex = pPropBuilder->pBuffer; /*Pointer to the buffer*/
 
-
-    MQTTAuthInfo_t outgoingAuth;
-    (void)memset(&outgoingAuth, 0x0, sizeof(outgoingAuth));
-    pConnectProperties->pOutgoingAuth = &outgoingAuth;
-
     while ((propertyLength > 0U) && (status == MQTTSuccess))
     {
         uint8_t packetId = *pIndex;
@@ -4546,6 +4447,308 @@ uint8_t * MQTTV5_SerializeDisconnectFixed( uint8_t * pIndex,
         }
         return MQTTSuccess;
     }
+
+    MQTTStatus_t MQTTPropAdd_ConnTopicAliasMax(MqttPropBuilder_t* pPropertyBuilder, uint16_t topicAliasMax)
+    {
+        uint8_t* pIndex;
+        MQTTStatus_t status = MQTTSuccess; 
+        if (UINT32_CHECK_BIT(pPropertyBuilder->fieldSet, MQTT_TOPIC_ALIAS_MAX_POS))
+        {
+            LogError(("Topic Alias Maximum already set. "));
+            status = MQTTBadParameter;
+        }
+        else
+        {
+            pIndex = pPropertyBuilder->pBuffer + pPropertyBuilder->currentIndex;
+            *pIndex = MQTT_TOPIC_ALIAS_MAX_ID;
+            pIndex++;
+            pIndex[0] = UINT16_HIGH_BYTE(topicAliasMax);
+            pIndex[1] = UINT16_LOW_BYTE(topicAliasMax);
+            pIndex = &pIndex[2];
+            pPropertyBuilder->fieldSet = UINT32_SET_BIT(pPropertyBuilder->fieldSet, MQTT_TOPIC_ALIAS_MAX_POS); 
+            pPropertyBuilder->currentIndex += 3;
+        }
+        return status;
+    }
+
+    MQTTStatus_t MQTTPropAdd_ConnRequestRespInfo(MqttPropBuilder_t* pPropertyBuilder, bool requestResponseInfo)
+    {
+        uint8_t* pIndex; 
+        MQTTStatus_t status = MQTTSuccess;
+        if (UINT32_CHECK_BIT(pPropertyBuilder->fieldSet, MQTT_REQUEST_RESPONSE_INFO_POS))
+        {
+            LogError(("Request Response Info already set."));
+            status = MQTTBadParameter;
+        }
+        else
+        {
+            pIndex = pPropertyBuilder->pBuffer + pPropertyBuilder->currentIndex;
+            *pIndex = MQTT_REQUEST_RESPONSE_ID;
+            pIndex++;
+            *pIndex = 1U;
+            pIndex++;
+            pPropertyBuilder->fieldSet = UINT32_SET_BIT(pPropertyBuilder->fieldSet, MQTT_REQUEST_RESPONSE_INFO_POS);
+            pPropertyBuilder->currentIndex += 2;
+        }
+        return status;
+    }
+
+    MQTTStatus_t MQTTPropAdd_ConnRequestProbInfo(MqttPropBuilder_t* pPropertyBuilder, bool requestProblemInfo)
+    {
+        uint8_t* pIndex;
+        MQTTStatus_t status = MQTTSuccess;
+        if (UINT32_CHECK_BIT(pPropertyBuilder->fieldSet, MQTT_REQUEST_PROBLEM_INFO_POS))
+        {
+            LogError(("Request Problem Info already set."));
+            status =  MQTTBadParameter;
+        }
+        else
+        {
+            pIndex = pPropertyBuilder->pBuffer + pPropertyBuilder->currentIndex;
+            *pIndex = MQTT_REQUEST_RESPONSE_ID;
+            pIndex++;
+            *pIndex = 1U;
+            pIndex++;
+            pPropertyBuilder->fieldSet = UINT32_SET_BIT(pPropertyBuilder->fieldSet, MQTT_REQUEST_PROBLEM_INFO_POS);
+            pPropertyBuilder->currentIndex += 2;
+        }
+        return status;
+    }
+
+    MQTTStatus_t MQTTPropAdd_ConnAuthMethod(MqttPropBuilder_t* pPropertyBuilder,
+                                            const char* authMethod,
+                                            uint16_t authMethodLength)
+    {
+        uint8_t* pIndex;
+        MQTTStatus_t status = MQTTSuccess; 
+
+        if (UINT32_CHECK_BIT(pPropertyBuilder->fieldSet, MQTT_AUTHENTICATION_METHOD_POS))
+        {
+            LogError(("Auth Method already set."));
+            status = MQTTBadParameter;
+        }
+        else
+        {
+            pIndex = pPropertyBuilder->pBuffer + pPropertyBuilder->currentIndex;
+            *pIndex = MQTT_AUTH_METHOD_ID;
+            pIndex++;
+            pIndex = encodeString(pIndex, authMethod, authMethodLength);
+            pPropertyBuilder->fieldSet = UINT32_SET_BIT(pPropertyBuilder->fieldSet, MQTT_AUTHENTICATION_METHOD_POS);
+            pPropertyBuilder->currentIndex += (size_t)(pIndex - (pPropertyBuilder->pBuffer + pPropertyBuilder->currentIndex));
+        }
+        return status;
+    }
+
+
+    MQTTStatus_t MQTTPropAdd_ConnAuthData( MqttPropBuilder_t* pPropertyBuilder,
+                                           const char* authData,
+                                           uint16_t authDataLength)
+    {
+        uint8_t* pIndex;
+        MQTTStatus_t status = MQTTSuccess; 
+
+        if ((UINT32_CHECK_BIT(pPropertyBuilder->fieldSet, MQTT_AUTHENTICATION_DATA_POS)) || ( UINT32_CHECK_BIT(pPropertyBuilder->fieldSet, MQTT_AUTHENTICATION_METHOD_POS) == 0) )
+        {
+            LogError(("Invalid Auth data"));
+            status = MQTTBadParameter;
+        }
+        else
+        {
+            pIndex = pPropertyBuilder->pBuffer + pPropertyBuilder->currentIndex;
+            *pIndex = MQTT_AUTH_DATA_ID;
+            pIndex++;
+            pIndex = encodeString(pIndex, authData, authDataLength);
+            pPropertyBuilder->fieldSet = UINT32_SET_BIT(pPropertyBuilder->fieldSet, MQTT_AUTHENTICATION_DATA_POS);
+            pPropertyBuilder->currentIndex += (size_t)(pIndex - (pPropertyBuilder->pBuffer + pPropertyBuilder->currentIndex));
+        }
+        return status;
+    }
+
+    MQTTStatus_t MQTTPropAdd_PubPayloadFormat(MqttPropBuilder_t* pPropertyBuilder, bool payloadFormat)
+    {
+        uint8_t* pIndex;
+        MQTTStatus_t status = MQTTSuccess;
+
+        if ((UINT32_CHECK_BIT(pPropertyBuilder->fieldSet, MQTT_PAYLOAD_FORMAT_INDICATOR_POS)))
+        {
+            LogError(("Payload Format already set"));
+            status = MQTTBadParameter;
+        }
+        else
+        {
+            pIndex = pPropertyBuilder->pBuffer + pPropertyBuilder->currentIndex;
+            *pIndex = MQTT_PAYLOAD_FORMAT_ID;
+            pIndex++;
+            *pIndex = payloadFormat;
+            pIndex++;
+            pPropertyBuilder->fieldSet = UINT32_SET_BIT(pPropertyBuilder->fieldSet, MQTT_PAYLOAD_FORMAT_INDICATOR_POS);
+            pPropertyBuilder->currentIndex += 2;
+        }
+        return status;
+    }
+
+    MQTTStatus_t MQTTPropAdd_PubMessageExpiry(MqttPropBuilder_t* pPropertyBuilder, uint32_t messageExpiry)
+    {
+        uint8_t* pIndex;
+        MQTTStatus_t status = MQTTSuccess;
+
+        if ((UINT32_CHECK_BIT(pPropertyBuilder->fieldSet, MQTT_MESSAGE_EXPIRY_INTERVAL_POS)))
+        {
+            LogError(("Message Expiry Interval already set"));
+            status = MQTTBadParameter;
+        }
+        else
+        {
+            pIndex = pPropertyBuilder->pBuffer + pPropertyBuilder->currentIndex;
+            *pIndex = MQTT_MSG_EXPIRY_ID;
+            pIndex++;
+            pIndex[0] = UINT32_BYTE3(messageExpiry);
+            pIndex[1] = UINT32_BYTE2(messageExpiry);
+            pIndex[2] = UINT32_BYTE1(messageExpiry);
+            pIndex[3] = UINT32_BYTE0(messageExpiry);
+            pIndex = &pIndex[4];
+            pPropertyBuilder->fieldSet = UINT32_SET_BIT(pPropertyBuilder->fieldSet, MQTT_MESSAGE_EXPIRY_INTERVAL_POS);
+            pPropertyBuilder->currentIndex += 5;
+        }
+        return status;
+    }
+
+    MQTTStatus_t MQTTPropAdd_PubTopicAlias(MqttPropBuilder_t* pPropertyBuilder,
+        uint16_t topicAlias)
+    {
+        uint8_t* pIndex;
+        MQTTStatus_t status = MQTTSuccess;
+
+        if ((UINT32_CHECK_BIT(pPropertyBuilder->fieldSet, MQTT_PUBLISH_TOPIC_ALIAS_POS)) || (topicAlias == 0U))
+        {
+            LogError(("Invalid Topic Alias"));
+            status = MQTTBadParameter;
+        }
+        else
+        {
+            pIndex = pPropertyBuilder->pBuffer + pPropertyBuilder->currentIndex;
+            *pIndex = MQTT_TOPIC_ALIAS_ID;
+            pIndex++;
+            pIndex[0] = UINT16_HIGH_BYTE(topicAlias);
+            pIndex[1] = UINT16_LOW_BYTE(topicAlias);
+            pIndex = &pIndex[2];
+            pPropertyBuilder->fieldSet = UINT32_SET_BIT(pPropertyBuilder->fieldSet, MQTT_PUBLISH_TOPIC_ALIAS_POS);
+            pPropertyBuilder->currentIndex += 3;
+        }
+        return status;
+    }
+
+    MQTTStatus_t MQTTPropAdd_PubResponseTopic(MqttPropBuilder_t* pPropertyBuilder,
+        const char* responseTopic,
+        uint16_t responseTopicLength)
+    {
+        uint8_t* pIndex;
+        MQTTStatus_t status = MQTTSuccess;
+
+        if ((UINT32_CHECK_BIT(pPropertyBuilder->fieldSet, MQTT_PUBLISH_RESPONSE_TOPIC_POS)))
+        {
+            LogError(("Response Topic already set"));
+            status = MQTTBadParameter;
+        }
+        else if ( (strchr(responseTopic, '#') != NULL) || (strchr(responseTopic, '+') != NULL))
+        {
+            LogError(("Protocol Error : Response Topic contains wildcards"));
+            status = MQTTBadParameter;
+        }
+        else
+        {
+            pIndex = pPropertyBuilder->pBuffer + pPropertyBuilder->currentIndex;
+            *pIndex = MQTT_RESPONSE_TOPIC_ID;
+            pIndex++;
+            pIndex = encodeString(pIndex, responseTopic, responseTopicLength);
+
+            pPropertyBuilder->currentIndex += (size_t)(pIndex - (pPropertyBuilder->pBuffer + pPropertyBuilder->currentIndex));
+            pPropertyBuilder->fieldSet = UINT32_SET_BIT(pPropertyBuilder->fieldSet, MQTT_PUBLISH_RESPONSE_TOPIC_POS);
+        }
+        return status;
+    }
+    
+    MQTTStatus_t MQTTPropAdd_PubCorrelationData(MqttPropBuilder_t* pPropertyBuilder,
+                                                const void* pCorrelationData,
+                                                uint16_t correlationLength)
+    {
+        uint8_t* pIndex;
+        MQTTStatus_t status = MQTTSuccess;
+        if (UINT32_CHECK_BIT(pPropertyBuilder->fieldSet, MQTT_PUBLISH_CORRELATION_DATA_POS))
+        {
+            LogError(("Correlation Data already set"));
+            status = MQTTBadParameter;
+        }
+        else
+        {
+            pIndex = pPropertyBuilder->pBuffer + pPropertyBuilder->currentIndex;
+            *pIndex = MQTT_CORRELATION_DATA_ID;
+            pIndex++;
+            pIndex = encodeBinaryData(pIndex, pCorrelationData, correlationLength);
+            pPropertyBuilder->fieldSet = UINT32_SET_BIT(pPropertyBuilder->fieldSet, MQTT_PUBLISH_CORRELATION_DATA_POS);
+            pPropertyBuilder->currentIndex += (size_t)(pIndex - (pPropertyBuilder->pBuffer + pPropertyBuilder->currentIndex));
+        }
+        return status ;
+    }
+
+    MQTTStatus_t MQTTPropAdd_PubSubscriptionId(MqttPropBuilder_t* pPropertyBuilder, size_t subscriptionId)
+    {
+        MQTTStatus_t status = MQTTSuccess;
+        uint8_t* pIndex = pPropertyBuilder->pBuffer + pPropertyBuilder->currentIndex;
+        /*
+        * No field set is used as Multiple Subscription Identifiers 
+        * will be included if the publication is the result of a match to more than one subscription
+        * according to MQTT v5 spec
+        */
+        if (subscriptionId == 0)
+        {
+            LogError(("Subscription Id cannot 0 for subscribe properties : Protocol Error "));
+            status = MQTTBadParameter;
+        }
+        if (status == MQTTSuccess)
+        {
+            *pIndex = MQTT_SUBSCRIPTION_ID_ID;
+            pIndex++;
+            pIndex = encodeRemainingLength(pIndex, subscriptionId);
+        }
+
+        pPropertyBuilder->currentIndex += (size_t)(pIndex - (pPropertyBuilder->pBuffer + pPropertyBuilder->currentIndex));
+        return status;
+    }
+
+    MQTTStatus_t MQTTPropAdd_PubContentType(MqttPropBuilder_t* pPropertyBuilder,
+        const char* contentType,
+        uint16_t contentTypeLength)
+    {
+        uint8_t* pIndex;
+        MQTTStatus_t status = MQTTSuccess;
+        if (UINT32_CHECK_BIT(pPropertyBuilder->fieldSet, MQTT_PUBLISH_CONTENT_TYPE_POS))
+        {
+            LogError(("Correlation Data already set"));
+            status = MQTTBadParameter;
+        }
+        else
+        {
+
+            pIndex = pPropertyBuilder->pBuffer + pPropertyBuilder->currentIndex;
+            *pIndex = MQTT_CONTENT_TYPE_ID;
+            pIndex++;
+            pIndex = encodeString(pIndex, contentType, contentTypeLength);
+            pPropertyBuilder->fieldSet = UINT32_SET_BIT(pPropertyBuilder->fieldSet, MQTT_PUBLISH_CONTENT_TYPE_POS);
+            pPropertyBuilder->currentIndex += (size_t)(pIndex - (pPropertyBuilder->pBuffer + pPropertyBuilder->currentIndex));
+        }
+        return status;
+    }
+
+
+
+
+    
+
+
+
+
+
 
 
 

@@ -616,38 +616,6 @@ MQTTStatus_t MQTT_UnsubscribeV5( MQTTContext_t * pContext,
 
 
 
-
-
-MQTTStatus_t MQTTPropAdd_ConnRequestRespInfo( MqttPropBuilder_t * pPropertyBuilder, bool requestResponseInfo );
-
-MQTTStatus_t MQTTPropAdd_ConnRequestProbInfo( MqttPropBuilder_t * pPropertyBuilder, bool requestProblemInfo );
-
-MQTTStatus_t MQTTPropAdd_ConnAuthMethod( MqttPropBuilder_t * pPropertyBuilder,
-                                        const char * authMethod,
-                                        uint16_t authMethodLength) ;
-
-MQTTStatus_t MQTTPropAdd_ConnTopicAliasMax(MqttPropBuilder_t* pPropertyBuilder, uint16_t topicAliasMax) ;                                       
-MQTTStatus_t MQTTPropAdd_PubMessageExpiry(MqttPropBuilder_t* pPropertyBuilder, uint32_t messageExpiry); 
-MQTTStatus_t MQTTPropAdd_PubPayloadFormat(MqttPropBuilder_t* pPropertyBuilder, bool payloadFormat); 
-MQTTStatus_t MQTTPropAdd_PubTopicAlias(MqttPropBuilder_t* pPropBuilder,
-    uint16_t topicAlias);
-MQTTStatus_t MQTTPropAdd_PubResponseTopic(MqttPropBuilder_t* pPropBuilder,
-    const char* responseTopic,
-    uint16_t responseTopicLength);
-MQTTStatus_t MQTTPropAdd_PubCorrelationData(MqttPropBuilder_t* pPropBuilder,
-    const void* pCorrelationData,
-    uint16_t correlationLength);
-MQTTStatus_t MQTTPropAdd_PubSubscriptionId(MqttPropBuilder_t* pPropBuilder, size_t subscriptionId);
-MQTTStatus_t MQTTPropAdd_PubContentType(MqttPropBuilder_t* pPropBuilder,
-    const char* contentType,
-    uint16_t contentTypeLength);
-
-
-
-MQTTStatus_t MQTTPropAdd_ConnAuthData( MqttPropBuilder_t * pPropertyBuilder,
-                                       const char * authData,
-                                       uint16_t authDataLength );
-
 //MQTTStatus_t MQTTPropAdd_PubAckUserProperty(MQTTUserProperties_t *userProperties, MQTTDeserializedInfo_t* pDeserializedInfo); 
 //MQTTStatus_t MQTTPropAdd_PubAckReasonString(const char* reasonString, uint16_t reasonStringLen, MQTTDeserializedInfo_t* pDeserializedInfo); 
 bool MQTT_IncomingPubGetNextProp(uint8_t** pCurrIndex,
