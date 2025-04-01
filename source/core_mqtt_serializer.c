@@ -536,6 +536,29 @@
  */
     #define MQTT_REASON_WILDCARD_SUB_NOT_SUP            ( 0xA2 )
 
+/*
+*  Position of the properties for the fieldSet
+*/
+#define MQTT_SUBSCRIPTION_ID_POS                    ( 1 )
+#define MQTT_SESSION_EXPIRY_INTERVAL_POS            ( 2 )
+#define MQTT_RECEIVE_MAXIMUM_POS                    ( 3 )
+#define MQTT_MAX_PACKET_SIZE_POS                    ( 4 )
+#define MQTT_TOPIC_ALIAS_MAX_POS                    ( 5 )
+#define MQTT_REQUEST_RESPONSE_INFO_POS              ( 6 )
+#define MQTT_REQUEST_PROBLEM_INFO_POS               ( 7 )
+#define MQTT_USER_PROPERTY_POS                      ( 8 )
+#define MQTT_AUTHENTICATION_METHOD_POS              ( 9 )
+#define MQTT_AUTHENTICATION_DATA_POS                ( 10 )
+#define MQTT_PAYLOAD_FORMAT_INDICATOR_POS          ( 11 )
+#define MQTT_MESSAGE_EXPIRY_INTERVAL_POS           ( 12 )
+#define MQTT_PUBLISH_TOPIC_ALIAS_POS               ( 13 )
+#define MQTT_PUBLISH_RESPONSE_TOPIC_POS            ( 14 )
+#define MQTT_PUBLISH_CORRELATION_DATA_POS          ( 15 )
+#define MQTT_PUBLISH_SUBSCRIPTION_IDENTIFIER_POS   ( 16 )
+#define MQTT_PUBLISH_CONTENT_TYPE_POS              ( 17 )
+#define MQTT_PUBACK_REASON_STRING_POS              ( 18 )
+#define MQTT_DISCONNECT_SERVER_REFERENCE_POS       ( 19 )
+
 /**
  * @brief Set a bit in an 8-bit unsigned integer.
  */
@@ -548,7 +571,17 @@
  * @param[in] position Which bit to check.
  */
 #define UINT8_CHECK_BIT( x, position )    ( ( ( x ) & ( 0x01U << ( position ) ) ) == ( 0x01U << ( position ) ) )
-
+ /**
+ * @brief Set a bit in an 32-bit unsigned integer.
+ */
+#define UINT32_SET_BIT( x, position )      ( ( x ) = ( uint32_t ) ( ( x ) | ( 0x01U << ( position ) ) ) )
+ /**
+  * @brief Macro for checking if a bit is set in a 4-byte unsigned int.
+  *
+  * @param[in] x The unsigned int to check.
+  * @param[in] position Which bit to check.
+  */
+#define UINT32_CHECK_BIT( x, position )    ( ( ( x ) & ( 0x01U << ( position ) ) ) == ( 0x01U << ( position ) ) )
 /**
  * @brief Get the high byte of a 16-bit unsigned integer.
  */
@@ -2127,7 +2160,6 @@ static MQTTStatus_t calculateSubscriptionPacketSizeV5(MQTTSubscribeInfo_t *pSubs
     /*2 byte packet id*/
     packetSize += sizeof( uint16_t ) ; 
 
-    LogDebug(("Property Length is %lu" , (unsigned long)propLen));
     if( status == MQTTSuccess )
     {
         packetSize += subscribePropLen;
@@ -3034,6 +3066,59 @@ uint8_t * MQTT_SerializeConnectFixedHeader( uint8_t * pIndex,
     pIndexLocal = &pIndexLocal[ 2 ];
 
     return pIndexLocal;
+}
+
+MQTTStatus_t updateContextWithConnectProps(MqttPropBuilder_t* pPropBuilder, MQTTConnectProperties_t* pConnectProperties)
+{
+    // iterating over the buffer to find relevant properties, 
+    MQTTStatus_t status = MQTTSuccess;
+
+    bool maxPacket = false;
+    bool sessionExpiry = false;
+    bool serverReceiveMax = false;
+    bool topicAlias = false;
+    bool authMethod = false;
+    bool authData = false;
+    size_t propertyLength = 0U;
+    const uint8_t* pIndex;
+
+    propertyLength = pPropBuilder->currentIndex;
+    pIndex = pPropBuilder->pBuffer; /*Pointer to the buffer*/
+
+
+    MQTTAuthInfo_t outgoingAuth;
+    (void)memset(&outgoingAuth, 0x0, sizeof(outgoingAuth));
+    pConnectProperties->pOutgoingAuth = &outgoingAuth;
+
+    while ((propertyLength > 0U) && (status == MQTTSuccess))
+    {
+        uint8_t packetId = *pIndex;
+        pIndex = &pIndex[1];
+        propertyLength--;
+
+        switch (packetId)
+        {
+        case MQTT_MAX_PACKET_SIZE_ID:
+            status = decodeuint32_t(&pConnectProperties->maxPacketSize, &propertyLength, &maxPacket, &pIndex);
+            break;
+        case MQTT_SESSION_EXPIRY_ID:
+            status = decodeuint32_t(&pConnectProperties->sessionExpiry, &propertyLength, &sessionExpiry, &pIndex);
+            break;
+        case MQTT_RECEIVE_MAX_ID:
+            status = decodeuint16_t(&pConnectProperties->serverReceiveMax, &propertyLength, &serverReceiveMax, &pIndex);
+            break;
+        case MQTT_TOPIC_ALIAS_MAX_ID:
+            status = decodeuint16_t(&pConnectProperties->serverTopicAliasMax, &propertyLength, &topicAlias, &pIndex);
+            break;
+        case MQTT_AUTH_METHOD_ID:
+        case MQTT_AUTH_DATA_ID:
+
+            status = decodeAuthInfo(pConnectProperties, &authMethod, &authData, &propertyLength, &pIndex, packetId);
+            break;
+
+        }
+    }
+    return status;
 }
 
 /*-----------------------------------------------------------*/
@@ -4332,3 +4417,141 @@ uint8_t * MQTTV5_SerializeDisconnectFixed( uint8_t * pIndex,
     }
 
 /*-----------------------------------------------------------*/
+/*
+* API calls for Optional Subscribe Properties
+*/
+    MQTTStatus_t MQTTPropAdd_SubscribeId(MqttPropBuilder_t* pPropertyBuilder, size_t subscriptionId)
+    {
+        MQTTStatus_t status = MQTTSuccess;
+        uint8_t* pIndex = pPropertyBuilder->pBuffer + pPropertyBuilder->currentIndex;
+        if (subscriptionId == 0)
+        {
+            LogError(("Subscription Id cannot 0 for subscribe properties : Protocol Error "));
+            status = MQTTBadParameter;
+        }
+        else if (UINT32_CHECK_BIT(pPropertyBuilder->fieldSet , MQTT_SUBSCRIPTION_ID_POS))
+        {
+            LogError(("Subscription Id already set"));
+            status = MQTTBadParameter;
+        }
+        else if (pPropertyBuilder->currentIndex + 5 > pPropertyBuilder->bufferLength)
+        {
+            LogError(("Buffer too small to add subscription id"));
+            status = MQTTBadParameter;
+        }
+        else {
+            *pIndex = MQTT_SUBSCRIPTION_ID_ID;
+            pIndex++;
+            pIndex = encodeRemainingLength(pIndex, subscriptionId);
+            pPropertyBuilder->currentIndex += (size_t)(pIndex - (pPropertyBuilder->pBuffer + pPropertyBuilder->currentIndex));
+            pPropertyBuilder->fieldSet = UINT32_SET_BIT(pPropertyBuilder->fieldSet, MQTT_SUBSCRIPTION_ID_POS);
+        }
+        return status;
+    }
+
+/*
+* API call for sending User Properties 
+*/
+
+    MQTTStatus_t MQTTPropAdd_UserProps(MqttPropBuilder_t* pPropertyBuilder, MQTTUserProperties_t* pUserProperties)
+    {
+        MQTTStatus_t status = MQTTSuccess;
+        uint8_t* start = pPropertyBuilder->pBuffer + pPropertyBuilder->currentIndex;
+        uint8_t* pIndex = pPropertyBuilder->pBuffer + pPropertyBuilder->currentIndex;
+        uint32_t i = 0;
+        uint32_t size = pUserProperties->count;
+        const MQTTUserProperty_t* userProperty = pUserProperties->userProperty; /*Pointer to the array of user props*/
+
+        for (; i < size; i++)
+        {
+            *pIndex = MQTT_USER_PROPERTY_ID;
+            pIndex++;
+
+            /*Encoding key*/
+            pIndex = encodeString(pIndex, userProperty[i].pKey, userProperty[i].keyLength);
+            pIndex = encodeString(pIndex, userProperty[i].pValue, userProperty[i].valueLength);
+        }
+        pPropertyBuilder->currentIndex += (size_t)(pIndex - start);
+        return status;
+    }
+
+    MQTTStatus_t MQTTPropAdd_ConnSessionExpiry(MqttPropBuilder_t* pPropertyBuilder, uint32_t sessionExpiry)
+    {
+        uint8_t* pIndex = pPropertyBuilder->pBuffer + pPropertyBuilder->currentIndex;
+        MQTTStatus_t status = MQTTSuccess;
+
+        if (UINT32_CHECK_BIT(pPropertyBuilder->fieldSet, MQTT_SESSION_EXPIRY_INTERVAL_POS))
+        {
+            LogError(("Connect Session Expiry Already Set"));
+            status = MQTTBadParameter;
+        }
+        else
+        {
+            *pIndex = MQTT_SESSION_EXPIRY_ID;
+            pIndex++;
+            pIndex[0] = UINT32_BYTE3(sessionExpiry);
+            pIndex[1] = UINT32_BYTE2(sessionExpiry);
+            pIndex[2] = UINT32_BYTE1(sessionExpiry);
+            pIndex[3] = UINT32_BYTE0(sessionExpiry);
+            pIndex = &pIndex[4];
+            pPropertyBuilder->fieldSet = UINT32_SET_BIT(pPropertyBuilder->fieldSet, MQTT_SESSION_EXPIRY_INTERVAL_POS);
+            pPropertyBuilder->currentIndex += 5;
+        }
+        return status;
+    }
+
+    MQTTStatus_t MQTTPropAdd_ConnReceiveMax(MqttPropBuilder_t* pPropertyBuilder, uint16_t receiveMax)
+    {
+        MQTTStatus_t status = MQTTSuccess;
+        if ((receiveMax == 0) || (UINT32_CHECK_BIT(pPropertyBuilder->fieldSet, MQTT_RECEIVE_MAXIMUM_POS)))
+        {
+            LogError(("Invalid arguments passed to MQTTPropAdd_ConnReceiveMax."));
+            status = MQTTBadParameter;
+        }
+        else
+        {
+            uint8_t* pIndex = pPropertyBuilder->pBuffer + pPropertyBuilder->currentIndex;
+            *pIndex = MQTT_RECEIVE_MAX_ID;
+            pIndex++;
+            pIndex[0] = UINT16_HIGH_BYTE(receiveMax);
+            pIndex[1] = UINT16_LOW_BYTE(receiveMax);
+            pIndex = &pIndex[2];
+            pPropertyBuilder->fieldSet = UINT32_SET_BIT(pPropertyBuilder->fieldSet, MQTT_RECEIVE_MAXIMUM_POS);
+            pPropertyBuilder->currentIndex += 3;
+        }
+        return status;
+    }
+
+    MQTTStatus_t MQTTPropAdd_ConnMaxPacketSize(MqttPropBuilder_t* pPropertyBuilder, uint32_t maxPacketSize)
+    {
+        MQTTStatus_t status = MQTTSuccess;
+        uint8_t* pIndex;
+        if ((maxPacketSize == 0) || (UINT32_CHECK_BIT(pPropertyBuilder->fieldSet, MQTT_MAX_PACKET_SIZE_POS)))
+        {
+            LogError(("Max packet size already set"));
+            status = MQTTBadParameter;
+        }
+        else
+        {
+            pIndex = pPropertyBuilder->pBuffer + pPropertyBuilder->currentIndex;
+            *pIndex = MQTT_MAX_PACKET_SIZE_ID;
+            pIndex++;
+            pIndex[0] = UINT32_BYTE3(maxPacketSize);
+            pIndex[1] = UINT32_BYTE2(maxPacketSize);
+            pIndex[2] = UINT32_BYTE1(maxPacketSize);
+            pIndex[3] = UINT32_BYTE0(maxPacketSize);
+            pIndex = &pIndex[4];
+            pPropertyBuilder->fieldSet = UINT32_SET_BIT(pPropertyBuilder->fieldSet, MQTT_MAX_PACKET_SIZE_POS);
+            pPropertyBuilder->currentIndex += 5;
+        }
+        return MQTTSuccess;
+    }
+
+
+
+
+
+
+
+
+
