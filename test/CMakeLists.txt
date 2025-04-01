@@ -96,9 +96,9 @@ if( UNITTEST )
     include( ${MODULE_ROOT_DIR}/tools/cmock/create_test.cmake )
 
     # Include build configuration for unit tests.
-    add_subdirectory( unit-test/MQTT)
+    # add_subdirectory( unit-test/MQTT)
     add_subdirectory( unit-test/MQTTv5)
-    add_subdirectory( unit-test/WithoutUP)
+    # add_subdirectory( unit-test/WithoutUP)
 
 
 

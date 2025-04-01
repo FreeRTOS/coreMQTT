@@ -1100,9 +1100,9 @@ static MQTTStatus_t decodeAndDiscard( size_t * pPropertyLength,
 
     if( status == MQTTSuccess )
     {
-        LogDebug( ( "Discarded additional user property with key %s and value %s. ",
-                    pKey,
-                    pValue ) );
+        // LogDebug( ( "Discarded additional user property with key %s and value %s. ",
+        //             pKey,
+        //             pValue ) );
     }
 
     return status;
