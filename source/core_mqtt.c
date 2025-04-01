@@ -3076,42 +3076,39 @@ static MQTTStatus_t validateSubscribeUnsubscribeParamsV5(MQTTContext_t* pContext
 
             }
         }
-        if(subscriptionType == MQTT_SUBSCRIBE)
+        if( ( status == MQTTSuccess ) && ( subscriptionType == MQTT_SUBSCRIBE ) )
         {
-            if(status == MQTTSuccess)
+            for(iterator = 0; iterator < subscriptionCount; iterator++)
             {
-                for(iterator = 0; iterator < subscriptionCount; iterator++)
+                if ((pSubscriptionList[iterator].topicFilterLength == 0U) || (pSubscriptionList[iterator].pTopicFilter == NULL)) {
+                    LogError(("Argument cannot be null : pTopicFilter"));
+                    status = MQTTBadParameter;
+                    break;
+                }
+                if (pSubscriptionList[iterator].qos > MQTTQoS2) {
+                    LogError(("Protocol Error : QoS cannot be greater than 2"));
+                    status = MQTTBadParameter;
+                    break;
+                }
+                isSharedSub = ((strncmp(pSubscriptionList[iterator].pTopicFilter, "$share/", 7)) == 0);
+                if (isSharedSub) {
+                    shareNameEnd = strchr(pSubscriptionList[iterator].pTopicFilter + 7, '/');
+                    if ((shareNameEnd == NULL) || (shareNameEnd == pSubscriptionList[iterator].pTopicFilter + 7)) {
+                        LogError(("Protocol Error : ShareName is not present , missing or empty"));
+                        status = MQTTBadParameter;
+                        break;
+                    }
+                    if (pSubscriptionList[iterator].noLocalOption == 1) {
+                        LogError(("Protocol Error : noLocalOption cannot be 1 for shared subscriptions"));
+                        status = MQTTBadParameter;
+                        break;
+                    }
+                }
+                if (pSubscriptionList[iterator].retainHandlingOption > 2)
                 {
-                    if ((pSubscriptionList[iterator].topicFilterLength == 0U) || (pSubscriptionList[iterator].pTopicFilter == NULL)) {
-                        LogError(("Argument cannot be null : pTopicFilter"));
-                        status = MQTTBadParameter;
-                        break;
-                    }
-                    if (pSubscriptionList[iterator].qos > MQTTQoS2) {
-                        LogError(("Protocol Error : QoS cannot be greater than 2"));
-                        status = MQTTBadParameter;
-                        break;
-                    }
-                    isSharedSub = ((strncmp(pSubscriptionList[iterator].pTopicFilter, "$share/", 7)) == 0);
-                    if (isSharedSub) {
-                        shareNameEnd = strchr(pSubscriptionList[iterator].pTopicFilter + 7, '/');
-                        if ((shareNameEnd == NULL) || (shareNameEnd == pSubscriptionList[iterator].pTopicFilter + 7)) {
-                            LogError(("Protocol Error : ShareName is not present , missing or empty"));
-                            status = MQTTBadParameter;
-                            break;
-                        }
-                        if (pSubscriptionList[iterator].noLocalOption == 1) {
-                            LogError(("Protocol Error : noLocalOption cannot be 1 for shared subscriptions"));
-                            status = MQTTBadParameter;
-                            break;
-                        }
-                    }
-                    if (pSubscriptionList[iterator].retainHandlingOption > 2)
-                    {
-                        LogError(("Protocol Error : retainHandlingOption cannot be greater than 2"));
-                        status = MQTTBadParameter;
-                        break;
-                    }
+                    LogError(("Protocol Error : retainHandlingOption cannot be greater than 2"));
+                    status = MQTTBadParameter;
+                    break;
                 }
             }
         }

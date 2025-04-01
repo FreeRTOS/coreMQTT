@@ -354,7 +354,7 @@ typedef struct MQTTConnectProperties
     MQTTAuthInfo_t *pOutgoingAuth;
 
     /**
-     * @brief Maximum number of unacknowledged PUBLISH packets client is willing to receive.
+     * @brief Maximum number of unacknowledged PUBLISH packets server is willing to receive.
      */
     uint16_t serverReceiveMax;
 
