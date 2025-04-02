@@ -666,6 +666,49 @@ MQTTStatus_t MqttPropertyBuilder_Init(MqttPropBuilder_t* pPropertyBuilder, uint8
  */
 MQTTStatus_t MQTTV5_InitConnect(MQTTConnectProperties_t* pConnectProperties);
 
+/**
+ * @brief Validate the length and decode a utf 8 string.
+ *
+ * @param[out] pProperty To store the decoded string.
+ * @param[out] pLength  Size of the decoded utf-8 string.
+ * @param[out] pPropertyLength  Size of the length.
+ * @param[out] pUsed Whether the property is decoded before.
+ * @param[out]  pIndex Pointer to the current index of the buffer.
+ *
+ * @return #MQTTSuccess, #MQTTProtocolError and #MQTTMalformedPacket
+ **/
+static MQTTStatus_t decodeutf_8(const char** pProperty,
+                                uint16_t* pLength,
+                                size_t* pPropertyLength,
+                                bool* pUsed,
+                                const uint8_t** pIndex);
+
+/**
+ * @brief Encode a string whose size is at maximum 16 bits in length.
+ *
+ * @param[out] pDestination Destination buffer for the encoding.
+ * @param[in] pSource The source string to encode.
+ * @param[in] sourceLength The length of the source string to encode.
+ *
+ * @return A pointer to the end of the encoded string.
+ */
+static uint8_t* encodeString(uint8_t* pDestination,
+                            const char* pSource,
+                            uint16_t sourceLength); 
+
+/**
+ * @brief Encodes the remaining length of the packet using the variable length
+ * encoding scheme provided in the MQTT v3.1.1 specification.
+ *
+ * @param[out] pDestination The destination buffer to store the encoded remaining
+ * length.
+ * @param[in] length The remaining length to encode.
+ *
+ * @return The location of the byte following the encoded value.
+ */
+static uint8_t* encodeRemainingLength(uint8_t* pDestination,
+                                      size_t length);
+
 /*-----------------------------------------------------------*/
 
 static MQTTStatus_t sendPublishAcksWithProperty( MQTTContext_t * pContext,
@@ -775,6 +818,7 @@ static MQTTStatus_t sendPublishAcksWithProperty( MQTTContext_t * pContext,
 
     return status;
 }
+
 
 static MQTTStatus_t sendDisconnectWithoutCopyV5( MQTTContext_t * pContext,
                                                     const MQTTAckInfo_t * pDisconnectInfo,
@@ -1457,6 +1501,115 @@ static MQTTStatus_t discardPacket( const MQTTContext_t * pContext,
     return status;
 }
 
+static MQTTStatus_t decodeutf_8(const char** pProperty,
+    uint16_t* pLength,
+    size_t* pPropertyLength,
+    bool* pUsed,
+    const uint8_t** pIndex)
+{
+    const uint8_t* pVariableHeader = *pIndex;
+    MQTTStatus_t status = MQTTSuccess;
+
+    /*Protocol error to include the same property twice.*/
+
+    if (*pUsed == true)
+    {
+        status = MQTTProtocolError;
+    }
+    /*Validate the length and decode.*/
+
+    else if (*pPropertyLength < sizeof(uint16_t))
+    {
+        status = MQTTMalformedPacket;
+    }
+    else
+    {
+        *pLength = UINT16_DECODE(pVariableHeader);
+        pVariableHeader = &pVariableHeader[sizeof(uint16_t)];
+        *pPropertyLength -= sizeof(uint16_t);
+
+        if (*pPropertyLength < *pLength)
+        {
+            status = MQTTMalformedPacket;
+        }
+        else
+        {
+            *pProperty = (const char*)pVariableHeader;
+            pVariableHeader = &pVariableHeader[*pLength];
+            *pPropertyLength -= *pLength;
+            *pUsed = true;
+            LogDebug(("Reason String is %s", *pProperty));
+        }
+    }
+
+    *pIndex = pVariableHeader;
+    return status;
+}
+
+static uint8_t* encodeString(uint8_t* pDestination,
+                            const char* pSource,
+                            uint16_t sourceLength)
+{
+    uint8_t* pBuffer = NULL;
+
+    /* Typecast const char * typed source buffer to const uint8_t *.
+     * This is to use same type buffers in memcpy. */
+    const uint8_t* pSourceBuffer = (const uint8_t*)pSource;
+
+    assert(pDestination != NULL);
+
+    pBuffer = pDestination;
+
+    /* The first byte of a UTF-8 string is the high byte of the string length. */
+    *pBuffer = UINT16_HIGH_BYTE(sourceLength);
+    pBuffer++;
+
+    /* The second byte of a UTF-8 string is the low byte of the string length. */
+    *pBuffer = UINT16_LOW_BYTE(sourceLength);
+    pBuffer++;
+
+    /* Copy the string into pBuffer. */
+    if (pSourceBuffer != NULL)
+    {
+        (void)memcpy(pBuffer, pSourceBuffer, sourceLength);
+    }
+
+    /* Return the pointer to the end of the encoded string. */
+    pBuffer = &pBuffer[sourceLength];
+
+    return pBuffer;
+}
+
+static uint8_t* encodeRemainingLength(uint8_t* pDestination,
+    size_t length)
+{
+    uint8_t lengthByte;
+    uint8_t* pLengthEnd = NULL;
+    size_t remainingLength = length;
+
+    assert(pDestination != NULL);
+
+    pLengthEnd = pDestination;
+
+    /* This algorithm is copied from the MQTT v3.1.1 spec. */
+    do
+    {
+        lengthByte = (uint8_t)(remainingLength % 128U);
+        remainingLength = remainingLength / 128U;
+
+        /* Set the high bit of this byte, indicating that there's more data. */
+        if (remainingLength > 0U)
+        {
+            UINT8_SET_BIT(lengthByte, 7);
+        }
+
+        /* Output a single encoded byte. */
+        *pLengthEnd = lengthByte;
+        pLengthEnd++;
+    } while (remainingLength > 0U);
+
+    return pLengthEnd;
+}
 /*-----------------------------------------------------------*/
 
 static MQTTStatus_t discardStoredPacket( MQTTContext_t * pContext,
