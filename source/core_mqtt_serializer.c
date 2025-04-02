@@ -703,8 +703,8 @@ static void logConnackResponse( uint8_t responseCode );
  *
  * @return The location of the byte following the encoded value.
  */
-static uint8_t * encodeRemainingLength( uint8_t * pDestination,
-                                        size_t length );
+uint8_t * encodeRemainingLength( uint8_t * pDestination,
+                                size_t length );
 
 /**
  * @brief Retrieve the size of the remaining length if it were to be encoded.
@@ -724,9 +724,9 @@ static size_t remainingLengthEncodedSize( size_t length );
  *
  * @return A pointer to the end of the encoded string.
  */
-static uint8_t * encodeString( uint8_t * pDestination,
-                               const char * pSource,
-                               uint16_t sourceLength );
+uint8_t * encodeString( uint8_t * pDestination,
+                        const char * pSource,
+                        uint16_t sourceLength );
 
 /**
  * @brief Retrieves and decodes the Remaining Length from the network interface
@@ -936,7 +936,7 @@ static MQTTStatus_t decodeuint8_t( uint8_t * pProperty,
  *
  * @return #MQTTSuccess, #MQTTProtocolError and #MQTTMalformedPacket
  **/
-static MQTTStatus_t decodeutf_8( const char ** pProperty,
+MQTTStatus_t decodeutf_8( const char ** pProperty,
                                      uint16_t * pLength,
                                      size_t * pPropertyLength,
                                      bool * pUsed,
@@ -1499,7 +1499,7 @@ static MQTTStatus_t decodeuint8_t( uint8_t * pProperty,
     return status;
 }
 
-static MQTTStatus_t decodeutf_8( const char ** pProperty,
+MQTTStatus_t decodeutf_8( const char ** pProperty,
                                     uint16_t * pLength,
                                     size_t * pPropertyLength,
                                     bool * pUsed,
@@ -2239,8 +2239,8 @@ static size_t remainingLengthEncodedSize( size_t length )
 
 /*-----------------------------------------------------------*/
 
-static uint8_t * encodeRemainingLength( uint8_t * pDestination,
-                                        size_t length )
+uint8_t * encodeRemainingLength( uint8_t * pDestination,
+                                size_t length )
 {
     uint8_t lengthByte;
     uint8_t * pLengthEnd = NULL;
@@ -2272,9 +2272,9 @@ static uint8_t * encodeRemainingLength( uint8_t * pDestination,
 
 /*-----------------------------------------------------------*/
 
-static uint8_t * encodeString( uint8_t * pDestination,
-                               const char * pSource,
-                               uint16_t sourceLength )
+uint8_t * encodeString( uint8_t * pDestination,
+                        const char * pSource,
+                        uint16_t sourceLength )
 {
     uint8_t * pBuffer = NULL;
 
