@@ -90,6 +90,18 @@
 #define UINT16_LOW_BYTE( x )              ( ( uint8_t ) ( ( x ) & 0x00ffU ) )
 
 /**
+* @brief Set a bit in an 32-bit unsigned integer.
+*/
+#define UINT32_SET_BIT( x, position )      ( ( x ) = ( uint32_t ) ( ( x ) | ( 0x01U << ( position ) ) ) )
+/**
+ * @brief Macro for checking if a bit is set in a 4-byte unsigned int.
+ *
+ * @param[in] x The unsigned int to check.
+ * @param[in] position Which bit to check.
+ */
+#define UINT32_CHECK_BIT( x, position )    ( ( ( x ) & ( 0x01U << ( position ) ) ) == ( 0x01U << ( position ) ) )
+
+/**
  * @brief Number of vectors required to encode one topic filter in a subscribe
  * request. Three vectors are required as there are three fields in the
  * subscribe request namely:
@@ -205,6 +217,10 @@
  * @brief Payload format id.
  */
 #define MQTT_PAYLOAD_FORMAT_ID      ( 0x01 )
+
+/* Position of the reason string in the field set*/
+
+#define MQTT_REASON_STRING_POS                     ( 18 )
 
  /**
   * @brief Message Expiry id.
@@ -4416,6 +4432,165 @@ MQTTStatus_t MQTTV5_Disconnect( MQTTContext_t * pContext,
     }
 
     return status;
+}
+
+MQTTStatus_t MQTTPropAdd_PubAckReasonString(MQTTContext_t* pContext, const char* reasonString, uint16_t reasonStringLen)
+{
+
+    uint8_t* pIndex;
+    MQTTStatus_t status = MQTTSuccess;
+    if (UINT32_CHECK_BIT(pContext->ackPropsBuffer.fieldSet, MQTT_REASON_STRING_POS))
+    {
+        LogError(("Reason String already set"));
+        status = MQTTBadParameter;
+    }
+    else
+    {
+        pIndex = pContext->ackPropsBuffer.pBuffer + pContext->ackPropsBuffer.currentIndex;
+        *pIndex = MQTT_REASON_STRING_ID;
+        pIndex++;
+        pIndex = encodeString(pIndex, reasonString, reasonStringLen);
+        pContext->ackPropsBuffer.fieldSet = UINT32_SET_BIT(pContext->ackPropsBuffer.fieldSet, MQTT_REASON_STRING_POS);
+        pContext->ackPropsBuffer.currentIndex += (size_t)(pIndex - (pContext->ackPropsBuffer.pBuffer + pContext->ackPropsBuffer.currentIndex));
+    }
+    return status;
+}
+
+bool MQTT_AckGetNextProp(uint8_t** pCurrIndex,
+    const char** pUserPropKey,
+    uint16_t* pUserPropKeyLen,
+    const char** pUserPropVal,
+    uint16_t* pUserPropValLen,
+    MQTTDeserializedInfo_t* deserializedInfo)
+{
+    MQTTStatus_t status = MQTTSuccess;
+    uint8_t* pIndex;
+    size_t propertyLength = deserializedInfo->pAckInfo->propertyLength;
+    if (*pCurrIndex == NULL)
+    {
+        pIndex = deserializedInfo->pAckInfo->startOfAckProps;
+    }
+    else {
+        pIndex = *pCurrIndex;
+    }
+    bool userPropFlag = false;
+    bool userKey = false;
+    bool userVal = false;
+    while ((propertyLength > 0U) && (status == MQTTSuccess))
+    {
+        uint8_t packetId = *pIndex;
+        pIndex = &pIndex[1];
+        propertyLength -= sizeof(uint8_t);
+        if (packetId == MQTT_USER_PROPERTY_ID)
+        {
+            userPropFlag = true;
+            status = decodeutf_8(pUserPropKey, pUserPropKeyLen, &propertyLength, &userKey, &pIndex);
+            status = decodeutf_8(pUserPropVal, pUserPropValLen, &propertyLength, &userVal, &pIndex);
+            // update currIndex to pIndex essentially. 
+            *pCurrIndex = pIndex;
+            break;
+        }
+    }
+    if (status != MQTTSuccess)
+    {
+        LogError(("Failed to decode user property : %d", status));
+        userPropFlag = false;
+    }
+    return userPropFlag;
+}
+
+bool MQTT_ConnackGetNextProp(uint8_t** pCurrIndex,
+    const char** pUserPropKey,
+    uint16_t* pUserPropKeyLen,
+    const char** pUserPropVal,
+    uint16_t* pUserPropValLen,
+    MQTTContext_t* pContext)
+{
+    MQTTStatus_t status = MQTTSuccess;
+    uint8_t* pIndex;
+    size_t propertyLength = pContext->connectProperties.connackPropLen;
+    if (*pCurrIndex == NULL)
+    {
+        pIndex = pContext->connectProperties.startOfConnackProps;
+    }
+    else {
+        pIndex = *pCurrIndex;
+    }
+    bool userPropFlag = false;
+    bool userKey = false;
+    bool userVal = false;
+    while ((propertyLength > 0U) && (status == MQTTSuccess))
+    {
+        uint8_t packetId = *pIndex;
+        pIndex = &pIndex[1];
+        propertyLength -= sizeof(uint8_t);
+        if (packetId == MQTT_USER_PROPERTY_ID)
+        {
+            userPropFlag = true;
+#if ( MQTT_USER_PROPERTY_ENABLED )
+            status = decodeutf_8(pUserPropKey, pUserPropKeyLen, &propertyLength, &userKey, &pIndex);
+            status = decodeutf_8(pUserPropVal, pUserPropValLen, &propertyLength, &userVal, &pIndex);
+            // update currIndex to pIndex essentially. 
+            *pCurrIndex = pIndex;
+#else
+            status = decodeAndDiscard(&propertyLength, &pIndex);
+#endif 
+            break;
+        }
+    }
+    if (status != MQTTSuccess)
+    {
+        LogError(("Failed to decode user property : %d", status));
+        userPropFlag = false;
+    }
+    return userPropFlag;
+}
+
+
+bool MQTT_IncomingPubGetNextProp(uint8_t** pCurrIndex,
+    const char** pUserPropKey,
+    uint16_t* pUserPropKeyLen,
+    const char** pUserPropVal,
+    uint16_t* pUserPropValLen,
+    MQTTDeserializedInfo_t* deserializedInfo)
+{
+    MQTTStatus_t status = MQTTSuccess;
+    MQTTPublishInfo_t* pPublishInfo = deserializedInfo->pPublishInfo;
+    uint8_t* pIndex;
+    if (*pCurrIndex == NULL)
+    {
+        pIndex = pPublishInfo->startOfProps;
+    }
+    else {
+        pIndex = *pCurrIndex;
+    }
+    size_t propertyLength = pPublishInfo->propertyLength;
+    bool userPropFlag = false;
+    bool userKey = false;
+    bool userVal = false;
+    while ((propertyLength > 0U) && (status == MQTTSuccess))
+    {
+        uint8_t packetId = *pIndex;
+        pIndex = &pIndex[1];
+        propertyLength -= sizeof(uint8_t);
+        if (packetId == MQTT_USER_PROPERTY_ID)
+        {
+            userPropFlag = true;
+
+            status = decodeutf_8(pUserPropKey, pUserPropKeyLen, &propertyLength, &userKey, &pIndex);
+            status = decodeutf_8(pUserPropVal, pUserPropValLen, &propertyLength, &userVal, &pIndex);
+            // update currIndex to pIndex essentially. 
+            *pCurrIndex = pIndex;
+
+            break;
+        }
+    }
+    if (status != MQTTSuccess)
+    {
+        LogError(("Failed to decode user property : %d", status));
+        userPropFlag = false;
+    }
+    return userPropFlag;
 }
 
 

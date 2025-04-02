@@ -1004,6 +1004,31 @@ MQTTStatus_t MQTTV5_Disconnect(MQTTContext_t* pContext,
     MqttPropBuilder_t* pPropertyBuilder); 
 /* @[declare_mqttv5_disconnect] */
 
+bool MQTT_AckGetNextProp(uint8_t** pCurrIndex,
+    const char** pUserPropKey,
+    uint16_t* pUserPropKeyLen,
+    const char** pUserPropVal,
+    uint16_t* pUserPropValLen,
+    MQTTDeserializedInfo_t* deserializedInfo); 
+
+MQTTStatus_t MQTTPropAdd_PubAckReasonString(MQTTContext_t* pContext, const char* reasonString, uint16_t reasonStringLen); 
+
+bool MQTT_ConnackGetNextProp(uint8_t** pCurrIndex,
+    const char** pUserPropKey,
+    uint16_t* pUserPropKeyLen,
+    const char** pUserPropVal,
+    uint16_t* pUserPropValLen,
+    MQTTContext_t* pContext); 
+
+bool MQTT_IncomingPubGetNextProp(uint8_t** pCurrIndex,
+    const char** pUserPropKey,
+    uint16_t* pUserPropKeyLen,
+    const char** pUserPropVal,
+    uint16_t* pUserPropValLen,
+    MQTTDeserializedInfo_t* deserializedInfo); 
+
+
+
 /* *INDENT-OFF* */
 #ifdef __cplusplus
     }

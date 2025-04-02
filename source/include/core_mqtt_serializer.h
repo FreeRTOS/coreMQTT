@@ -1847,18 +1847,6 @@ MQTTStatus_t MQTTPropAdd_DisconnReasonString(MqttPropBuilder_t* pPropertyBuilder
     const char* pReasonString,
     uint16_t reasonStringLength); 
 
-//MQTTStatus_t MQTTPropAdd_PubAckReasonString(MQTTContext_t* pContext, const char* reasonString, uint16_t reasonStringLen); 
-//
-//bool MQTT_AckGetNextProp(uint8_t** pCurrIndex,
-//    const char** pUserPropKey,
-//    uint16_t* pUserPropKeyLen,
-//    const char** pUserPropVal,
-//    uint16_t* pUserPropValLen,
-//    MQTTDeserializedInfo_t* deserializedInfo);
-
-
-
-
 
 
 /* *INDENT-OFF* */
