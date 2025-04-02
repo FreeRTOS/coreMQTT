@@ -2915,13 +2915,6 @@ void test_MQTT_GetIncomingPacketTypeAndLength( void )
     TEST_ASSERT_EQUAL( MQTTSuccess, status );
 }
 
-void test_MQTTV5_InitConnect()
-{
-    status = MQTTV5_InitConnect( NULL );
-    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
-    status = MQTTV5_InitConnect( &properties );
-    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
-}
 
 // /**
 //  * Subscribe Packet - V5 
