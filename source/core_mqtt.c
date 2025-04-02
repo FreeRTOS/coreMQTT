@@ -2664,7 +2664,7 @@ static MQTTStatus_t sendSubscribeWithoutCopyV5( MQTTContext_t * pContext,
      * Remaining Length    + 4 = 5 
      * Packet Id           + 2 = 7 
      */
-    uint8_t subscribeHeader[7] ; 
+    uint8_t subscribeHeader[7U] ; 
     if (subscriptionType == MQTT_SUBSCRIBE)
     {
         pIndex = MQTT_SerializeSubscribeHeader(remainingLength, subscribeHeader, packetId);
