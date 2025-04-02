@@ -4004,16 +4004,104 @@ void test_MQTT_IncomingPubGetNextProp(void)
     
 }
 
-// void test_MQTT_ConnackGetNextProp(void)
-// {
-//     uint8_t* pCurrIndex = NULL;
-//     char * pUserPropKey = NULL;
-//     uint16_t userPropKeyLen, userPropKeyVal;
-//     char* pUserPropVal = NULL;
-//     MQTTContext_t context ; 
-//     MQTTConnectProperties_t connectProps ; 
-// }
+void test_MQTT_ConnackGetNextProp(void)
+{
+    uint8_t* pCurrIndex = NULL;
+    char * pUserPropKey = NULL;
+    uint16_t userPropKeyLen, userPropKeyVal;
+    char* pUserPropVal = NULL;
+    MQTTContext_t context ; 
+    MQTTConnectProperties_t connectProps ; 
+    setUPContext(&context) ; 
 
+    context.connectProperties.connackPropLen = 8 ;
+
+    uint8_t buf[16] ; 
+    buf[0] = 0x26 ; 
+    buf[1] = 0x00 ; 
+    buf[2] = 0x02 ; 
+    buf[3] = 'a' ; 
+    buf[4] = 'b' ;
+    buf[5] = 0x00 ; 
+    buf[6] = 0x01 ; 
+    buf[7] = 'c' ; 
+    buf[8] = 0x26 ;
+    buf[9] = 0x00 ;
+    buf[10] = 0x02 ;
+    buf[11] = 'd' ;
+    buf[12] = 'e' ;
+    buf[13] = 0x00 ;
+    buf[14] = 0x01 ;
+    buf[15] = 'f' ; 
+    context.connectProperties.startOfConnackProps = buf ; 
+
+    bool ans ; 
+    ans = MQTT_ConnackGetNextProp(&pCurrIndex,
+        &pUserPropKey,
+        &userPropKeyLen,
+        &pUserPropVal,
+        &userPropKeyVal,
+        &context) ; 
+    TEST_ASSERT_EQUAL_INT(ans , 1) ; 
+
+    ans = MQTT_ConnackGetNextProp(&pCurrIndex,
+        &pUserPropKey,
+        &userPropKeyLen,
+        &pUserPropVal,
+        &userPropKeyVal,
+        &context) ; 
+    TEST_ASSERT_EQUAL_INT(ans , 1) ; 
+}
+
+void test_MQTT_AckGetNextProp(void)
+{
+    uint8_t* pCurrIndex = NULL;
+    char * pUserPropKey = NULL;
+    uint16_t userPropKeyLen, userPropKeyVal;
+    char* pUserPropVal = NULL;
+    MQTTDeserializedInfo_t deserializedInfo ; 
+    MQTTAckInfo_t ackInfo ; 
+    ( void ) memset(( void * ) &ackInfo, 0x00, sizeof( ackInfo )); 
+    ( void ) memset(( void * ) &deserializedInfo, 0x00, sizeof( deserializedInfo ));
+
+    uint8_t buf[16] ; 
+    buf[0] = 0x26 ; 
+    buf[1] = 0x00 ; 
+    buf[2] = 0x02 ; 
+    buf[3] = 'a' ; 
+    buf[4] = 'b' ;
+    buf[5] = 0x00 ; 
+    buf[6] = 0x01 ; 
+    buf[7] = 'c' ; 
+    buf[8] = 0x26 ;
+    buf[9] = 0x00 ;
+    buf[10] = 0x02 ;
+    buf[11] = 'd' ;
+    buf[12] = 'e' ;
+    buf[13] = 0x00 ;
+    buf[14] = 0x01 ;
+    buf[15] = 'f' ; 
+
+    ackInfo.propertyLength = 16 ; 
+    ackInfo.startOfAckProps = buf ;
+    deserializedInfo.pAckInfo = &ackInfo ;
+    bool ans ;
+    ans = MQTT_AckGetNextProp(&pCurrIndex,
+        &pUserPropKey,
+        &userPropKeyLen,
+        &pUserPropVal,
+        &userPropKeyVal,
+        &deserializedInfo) ;
+    TEST_ASSERT_EQUAL_INT(ans , 1) ; 
+
+    ans = MQTT_AckGetNextProp(&pCurrIndex,
+        &pUserPropKey,
+        &userPropKeyLen,
+        &pUserPropVal,
+        &userPropKeyVal,
+        &deserializedInfo) ;
+    TEST_ASSERT_EQUAL_INT(ans , 1) ; 
+}
 void test_MQTTV5_InitConnect()
 {
     MQTTStatus_t status;
@@ -4099,5 +4187,7 @@ void test_MQTT_Init_Invalid_Params( void )
     mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer, &ackPropsBuilder );
     TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
 }
+
+
 
 /* ========================================================================== */
