@@ -1560,7 +1560,6 @@ void test_MQTTV5_Subscribe_invalid_params( void )
     MQTTStatus_t mqttStatus;
     MQTTContext_t context = { 0 };
     MQTTSubscribeInfo_t subscribeInfo = { 0 };
-    MQTTSubscribeProperties_t subscribeProperties = {0} ; 
 
     /* Call subscribe with a NULL context. */
     mqttStatus = MQTT_SubscribeV5( NULL, &subscribeInfo, 1, MQTT_FIRST_VALID_PACKET_ID , NULL);
@@ -1781,7 +1780,6 @@ void test_MQTTV5_Subscribe_happy_path2(void){
     TransportInterface_t transport = { 0 };
     MQTTFixedBuffer_t networkBuffer = { 0 };
     MQTTSubscribeInfo_t subscribeInfo = {0};
-    MQTTSubscribeProperties_t subscribeProperties = {0}; 
     size_t remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
     size_t packetSize = MQTT_SAMPLE_REMAINING_LENGTH;
     MQTTPubAckInfo_t incomingRecords = { 0 };
@@ -1925,7 +1923,6 @@ void test_MQTTV5_shared_subscriptions(void){
     MQTTSubscribeInfo_t subscribeInfo = {0};
     MQTTPubAckInfo_t incomingRecords = { 0 };
     MQTTPubAckInfo_t outgoingRecords = { 0 };
-    MQTTSubscribeProperties_t subscribeProperties = {0}; 
     size_t remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
     size_t packetSize = MQTT_SAMPLE_REMAINING_LENGTH;
     MqttPropBuilder_t ackPropsBuilder;
@@ -2041,7 +2038,6 @@ void test_MQTT_UnsubscribeV5_happy_path( void )
     TransportInterface_t transport = { 0 };
     MQTTFixedBuffer_t networkBuffer = { 0 };
     MQTTSubscribeInfo_t subscribeInfo = { 0 };
-    MQTTSubscribeProperties_t subscribeProperties = {0} ; 
     MQTTConnectProperties_t properties = {0} ; 
     size_t remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
     size_t packetSize = MQTT_SAMPLE_REMAINING_LENGTH;
@@ -2091,7 +2087,6 @@ void test_MQTT_UnsubscribeV5_happy_path_withUP( void )
     TransportInterface_t transport = { 0 };
     MQTTFixedBuffer_t networkBuffer = { 0 };
     MQTTSubscribeInfo_t subscribeInfo = { 0 };
-    MQTTSubscribeProperties_t subscribeProperties = {0} ; 
     size_t remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
     size_t packetSize = MQTT_SAMPLE_REMAINING_LENGTH;
 
@@ -2129,7 +2124,7 @@ void test_MQTTV5_Unsubscribe_happy_path(void){
     TransportInterface_t transport = { 0 };
     MQTTFixedBuffer_t networkBuffer = { 0 };
     MQTTSubscribeInfo_t subscribeInfo = { 0 };
-    MQTTSubscribeProperties_t subscribeProperties ; 
+
     size_t remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
     size_t packetSize = MQTT_SAMPLE_REMAINING_LENGTH;
     MQTTPubAckInfo_t incomingRecords = { 0 };
@@ -2527,8 +2522,6 @@ void test_MQTT_SubscribeV5_sendFailed( void )
     TransportInterface_t trans = { 0 };
     MQTTFixedBuffer_t networkBuffer = { 0 };
     MQTTSubscribeInfo_t subscribeInfo = { 0 };
-    MQTTSubscribeProperties_t subscribeProperties = {0} ; 
-    subscribeProperties.subscriptionId = 1; 
     size_t remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
     size_t packetSize = MQTT_SAMPLE_REMAINING_LENGTH;
 
