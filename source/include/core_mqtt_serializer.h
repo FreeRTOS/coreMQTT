@@ -1864,6 +1864,10 @@ MQTTStatus_t MQTTPropAdd_PubContentType(MqttPropBuilder_t* pPropBuilder,
     const char* contentType,
     uint16_t contentTypeLength);
 
+MQTTStatus_t MQTTPropAdd_DisconnReasonString(MqttPropBuilder_t* pPropertyBuilder,
+    const char* pReasonString,
+    uint16_t reasonStringLength); 
+
 /* *INDENT-OFF* */
 #ifdef __cplusplus
     }

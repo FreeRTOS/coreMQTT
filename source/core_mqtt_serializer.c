@@ -556,8 +556,8 @@
 #define MQTT_PUBLISH_CORRELATION_DATA_POS          ( 15 )
 #define MQTT_PUBLISH_SUBSCRIPTION_IDENTIFIER_POS   ( 16 )
 #define MQTT_PUBLISH_CONTENT_TYPE_POS              ( 17 )
-#define MQTT_PUBACK_REASON_STRING_POS              ( 18 )
-#define MQTT_DISCONNECT_SERVER_REFERENCE_POS       ( 19 )
+#define MQTT_REASON_STRING_POS                     ( 18 )
+
 
 /**
  * @brief Set a bit in an 8-bit unsigned integer.
@@ -4700,7 +4700,7 @@ uint8_t * MQTTV5_SerializeDisconnectFixed( uint8_t * pIndex,
         MQTTStatus_t status = MQTTSuccess;
         if (UINT32_CHECK_BIT(pPropertyBuilder->fieldSet, MQTT_PUBLISH_CONTENT_TYPE_POS))
         {
-            LogError(("Correlation Data already set"));
+            LogError(("Content type already set"));
             status = MQTTBadParameter;
         }
         else
@@ -4711,6 +4711,29 @@ uint8_t * MQTTV5_SerializeDisconnectFixed( uint8_t * pIndex,
             pIndex++;
             pIndex = encodeString(pIndex, contentType, contentTypeLength);
             pPropertyBuilder->fieldSet = UINT32_SET_BIT(pPropertyBuilder->fieldSet, MQTT_PUBLISH_CONTENT_TYPE_POS);
+            pPropertyBuilder->currentIndex += (size_t)(pIndex - (pPropertyBuilder->pBuffer + pPropertyBuilder->currentIndex));
+        }
+        return status;
+    }
+
+    MQTTStatus_t MQTTPropAdd_DisconnReasonString(MqttPropBuilder_t* pPropertyBuilder,
+        const char* pReasonString,
+        uint16_t reasonStringLength)
+    {
+        uint8_t* pIndex;
+        MQTTStatus_t status = MQTTSuccess;
+        if (UINT32_CHECK_BIT(pPropertyBuilder->fieldSet, MQTT_REASON_STRING_POS))
+        {
+            LogError(("Reason String already set"));
+            status = MQTTBadParameter;
+        }
+        else
+        {
+            pIndex = pPropertyBuilder->pBuffer + pPropertyBuilder->currentIndex;
+            *pIndex = MQTT_REASON_STRING_ID;
+            pIndex++;
+            pIndex = encodeString(pIndex, pReasonString, reasonStringLength);
+            pPropertyBuilder->fieldSet = UINT32_SET_BIT(pPropertyBuilder->fieldSet, MQTT_REASON_STRING_POS);
             pPropertyBuilder->currentIndex += (size_t)(pIndex - (pPropertyBuilder->pBuffer + pPropertyBuilder->currentIndex));
         }
         return status;

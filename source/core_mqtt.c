@@ -2776,14 +2776,17 @@ static MQTTStatus_t sendSubscribeWithoutCopyV5( MQTTContext_t * pContext,
             subscriptionsSent ++ ;
             topicFieldLengthIndex++;
         }
-
-    }
-    byteSent = sendMessageVector(pContext, pIoVector, ioVectorLength) ; 
-    if(byteSent != (int32_t)totalPacketLength){
-        LogError(("Error in sending SUBSCRIBE packet")); 
-        status = MQTTSendFailed ;
-    }else{
-        status = MQTTSuccess ;
+        if (sendMessageVector(pContext,pIoVector, ioVectorLength) != (int32_t)totalPacketLength)
+        {
+            LogError(("Error in sending SUBSCRIBE packet"));
+            status = MQTTSendFailed;
+        }
+        /* Update the iterator for the next potential loop iteration. */
+        pIterator = pIoVector;
+        /* Reset the vector length for the next potential loop iteration. */
+        ioVectorLength = 0U;
+        /* Reset the packet length for the next potential loop iteration. */
+        totalPacketLength = 0U;
     }
     return status ;                                        
 }
@@ -3134,20 +3137,6 @@ MQTTStatus_t MQTTPropAdd_PubAckReasonString(MQTTContext_t* pContext, const char*
     pContext->ackPropsBuffer.currentIndex += (size_t)(pIndex - start);
     LogError(("last available index %lu", pContext->ackPropsBuffer.currentIndex));
 
-    return MQTTSuccess;
-}
-
-
-MQTTStatus_t MQTTPropAdd_DisconnReasonString(MqttPropBuilder_t* pPropertyBuilder,
-    const char* pReasonString,
-    uint16_t reasonStringLength)
-{
-    uint8_t* pIndex = pPropertyBuilder->pBuffer + pPropertyBuilder->currentIndex;
-    *pIndex = MQTT_REASON_STRING_ID;
-    pIndex++;
-    pIndex = encodeString(pIndex, pReasonString, reasonStringLength);
-
-    pPropertyBuilder->currentIndex += (size_t)(pIndex - (pPropertyBuilder->pBuffer + pPropertyBuilder->currentIndex));
     return MQTTSuccess;
 }
 
