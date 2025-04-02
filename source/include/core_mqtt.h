@@ -253,7 +253,7 @@ typedef struct MQTTContext
     /**
     * @brief Connect and Connack Properties.
     */
-    MQTTConnectProperties_t *pConnectProperties;
+    MQTTConnectProperties_t connectProperties;
 
     /**
     * @brief To store disconnect information.

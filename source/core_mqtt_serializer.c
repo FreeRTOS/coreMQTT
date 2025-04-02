@@ -3762,7 +3762,7 @@ MQTTStatus_t MQTTV5_ValidatePublishParams( const MQTTPublishInfo_t * pPublishInf
     else if( ( pPublishInfo->qos != MQTTQoS0 ) && ( maxQos == 0U ) )
     {
         LogError( ( "Qos value = %hu is not allowed by the server ",
-                    ( unsigned short ) pPublishInfo->topicNameLength ) );
+                    ( unsigned short ) pPublishInfo->qos ) );
         status = MQTTBadParameter;
     }
     else
