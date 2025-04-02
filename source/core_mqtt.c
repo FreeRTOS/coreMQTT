@@ -242,6 +242,11 @@
 */
 #define MQTT_PUBLISH_ACK_PACKET_SIZE_WITH_REASON    ( 3UL )
 
+/**
+ * @brief Per the MQTT spec, the max packet size  can be of  max remaining length + 5 bytes
+ */
+#define MQTT_MAX_PACKET_SIZE             ( 268435460U )
+
 
 /**
  * @brief Struct used to deserialize the will properties.
@@ -927,6 +932,19 @@ static uint8_t* encodeString(uint8_t* pDestination,
 * @param[in] length Length of the buffer.
 */
 MQTTStatus_t MqttPropertyBuilder_Init(MqttPropBuilder_t* pPropertyBuilder, uint8_t* buffer, size_t length); 
+
+/**
+ * @brief Initialize an MQTTConnectProperties_t.
+ *
+ * This function can be called on an #MQTTConnectProperties_t to set the properties to their default value before calling MQTT_Connect or #MQTTV5_GetConnectPacketSize.
+ *
+ * @param[in] pConnectProperties The connect properties to initialize.
+ *
+ * @return #MQTTBadParameter if invalid parameters are passed;
+ * #MQTTSuccess otherwise
+ */
+MQTTStatus_t MQTTV5_InitConnect(MQTTConnectProperties_t* pConnectProperties);
+
 /*-----------------------------------------------------------*/
 
 static uint8_t* encodeRemainingLength(uint8_t* pDestination,
@@ -3801,6 +3819,30 @@ MQTTStatus_t MQTT_Init( MQTTContext_t * pContext,
         /* Setting default connect properties in our application */
         status = MQTTV5_InitConnect(&connectProperties); 
         pContext->connectProperties = connectProperties; 
+    }
+
+    return status;
+}
+
+MQTTStatus_t MQTTV5_InitConnect(MQTTConnectProperties_t* pConnectProperties)
+{
+    MQTTStatus_t status = MQTTSuccess;
+
+    if (pConnectProperties == NULL)
+    {
+        status = MQTTBadParameter;
+    }
+    else
+    {
+        pConnectProperties->receiveMax = UINT16_MAX;
+        pConnectProperties->maxPacketSize = MQTT_MAX_PACKET_SIZE;
+        pConnectProperties->requestProblemInfo = true;
+        pConnectProperties->serverReceiveMax = UINT16_MAX;
+        pConnectProperties->serverMaxQos = 1U;
+        pConnectProperties->serverMaxPacketSize = MQTT_MAX_PACKET_SIZE;
+        pConnectProperties->isWildcardAvaiable = 1U;
+        pConnectProperties->subscriptionId = 1U;
+        pConnectProperties->isSharedAvailable = 1U;
     }
 
     return status;

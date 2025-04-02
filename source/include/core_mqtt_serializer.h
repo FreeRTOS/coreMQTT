@@ -1270,35 +1270,6 @@ MQTTStatus_t MQTTV5_DeserializeConnack( MQTTConnectProperties_t *pConnackPropert
                                         bool * pSessionPresent );
 /* @[declare_mqttv5_deserializeconnack] */
 
-/**
- * @brief Initialize an MQTTConnectProperties_t.
- *
- * This function can be called on an #MQTTConnectProperties_t to set the properties to their default value before calling MQTT_Connect or #MQTTV5_GetConnectPacketSize.
- *
- * @param[in] pConnectProperties The connect properties to initialize.
- *
- * @return #MQTTBadParameter if invalid parameters are passed;
- * #MQTTSuccess otherwise.
- *
- * <b>Example</b>
- * @code{c}
- *
- * MQTTConnectProperties_t connectProperties;
- *
- * // Clear context.
- * memset( ( void * ) &connectProperties, 0x00, sizeof( MQTTConnectProperties_t ) );
- *
- * status = MQTTV5_InitConnect(&connectProperties);
- *
- * if( status == MQTTSuccess )
- * {
- * //Set the values for connect properties.
- * }
- * @endcode
- */
-/* @[declare_mqttv5_initconnect] */
-MQTTStatus_t MQTTV5_InitConnect(MQTTConnectProperties_t *pConnectProperties);
-/* @[declare_mqttv5_initconnect] */
 
 /**
  * @brief Get the size and Remaining Length of an MQTT Version 5 CONNECT packet .

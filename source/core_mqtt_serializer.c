@@ -3424,29 +3424,29 @@ MQTTStatus_t MQTT_ProcessIncomingPacketTypeAndLength( const uint8_t * pBuffer,
 }
 
 
-MQTTStatus_t MQTTV5_InitConnect( MQTTConnectProperties_t * pConnectProperties )
-{
-    MQTTStatus_t status = MQTTSuccess;
-
-    if( pConnectProperties == NULL )
-    {
-        status = MQTTBadParameter;
-    }
-    else
-    {
-        pConnectProperties->receiveMax = UINT16_MAX;
-        pConnectProperties->maxPacketSize = MQTT_MAX_PACKET_SIZE;
-        pConnectProperties->requestProblemInfo = true;
-        pConnectProperties->serverReceiveMax = UINT16_MAX;
-        pConnectProperties->serverMaxQos = 1U;
-        pConnectProperties->serverMaxPacketSize = MQTT_MAX_PACKET_SIZE;
-        pConnectProperties->isWildcardAvaiable = 1U;
-        pConnectProperties->subscriptionId = 1U;
-        pConnectProperties->isSharedAvailable = 1U;
-    }
-
-    return status;
-}
+//MQTTStatus_t MQTTV5_InitConnect( MQTTConnectProperties_t * pConnectProperties )
+//{
+//    MQTTStatus_t status = MQTTSuccess;
+//
+//    if( pConnectProperties == NULL )
+//    {
+//        status = MQTTBadParameter;
+//    }
+//    else
+//    {
+//        pConnectProperties->receiveMax = UINT16_MAX;
+//        pConnectProperties->maxPacketSize = MQTT_MAX_PACKET_SIZE;
+//        pConnectProperties->requestProblemInfo = true;
+//        pConnectProperties->serverReceiveMax = UINT16_MAX;
+//        pConnectProperties->serverMaxQos = 1U;
+//        pConnectProperties->serverMaxPacketSize = MQTT_MAX_PACKET_SIZE;
+//        pConnectProperties->isWildcardAvaiable = 1U;
+//        pConnectProperties->subscriptionId = 1U;
+//        pConnectProperties->isSharedAvailable = 1U;
+//    }
+//
+//    return status;
+//}
 
 MQTTStatus_t MQTTV5_GetConnectPacketSize( const MQTTConnectInfo_t * pConnectInfo,
                                             MQTTPublishInfo_t * pWillInfo,
