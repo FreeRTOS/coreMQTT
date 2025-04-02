@@ -625,27 +625,6 @@ typedef struct MQTTPacketInfo
 } MQTTPacketInfo_t;
 
 
-typedef struct MQTTSubscribeProperties
-{
-    /**
-     * Length of the property field - variable byte int
-     */
-    size_t propertyLength;
-    /**
-     * User properties - list of key value pairs
-     */
-    #if(MQTT_USER_PROPERTY_ENABLED)
-    MQTTUserProperties_t* pUserProperties;
-    #endif 
-    /**
-     * Subscription ID - variable byte int
-     */
-
-    size_t subscriptionId;
-
-} MQTTSubscribeProperties_t; 
-
-
 /**
  * @brief Get packet size and Remaining Length of an MQTT SUBSCRIBE packet.
  *
@@ -1867,6 +1846,20 @@ MQTTStatus_t MQTTPropAdd_PubContentType(MqttPropBuilder_t* pPropBuilder,
 MQTTStatus_t MQTTPropAdd_DisconnReasonString(MqttPropBuilder_t* pPropertyBuilder,
     const char* pReasonString,
     uint16_t reasonStringLength); 
+
+//MQTTStatus_t MQTTPropAdd_PubAckReasonString(MQTTContext_t* pContext, const char* reasonString, uint16_t reasonStringLen); 
+//
+//bool MQTT_AckGetNextProp(uint8_t** pCurrIndex,
+//    const char** pUserPropKey,
+//    uint16_t* pUserPropKeyLen,
+//    const char** pUserPropVal,
+//    uint16_t* pUserPropValLen,
+//    MQTTDeserializedInfo_t* deserializedInfo);
+
+
+
+
+
 
 /* *INDENT-OFF* */
 #ifdef __cplusplus
