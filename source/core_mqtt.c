@@ -2038,20 +2038,20 @@ MQTTStatus_t handleIncomingPublish( MQTTContext_t * pContext,
 
 
         /* Send PUBREL or PUBCOMP if necessary. */
-        if (deserializedInfo.pNextAckInfo == NULL)
-        {
-            status = sendPublishAcks(pContext,
-                packetIdentifier,
-                publishRecordState);
-        }
-        else
-        {
-            MQTT_PRE_SEND_HOOK(pContext);
+        //if (deserializedInfo.pNextAckInfo == NULL)
+        //{
+        //    status = sendPublishAcks(pContext,
+        //        packetIdentifier,
+        //        publishRecordState);
+        //}
+        //else
+        //{
+        MQTT_PRE_SEND_HOOK(pContext);
 
-            status = sendPublishAcksWithProperty(pContext, packetIdentifier, publishRecordState, deserializedInfo.pNextAckInfo);
+        status = sendPublishAcksWithProperty(pContext, packetIdentifier, publishRecordState, deserializedInfo.pNextAckInfo);
 
-            MQTT_POST_SEND_HOOK(pContext);
-        }
+        MQTT_POST_SEND_HOOK(pContext);
+        //}
     }
 
     return status;

@@ -816,21 +816,6 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
 static MQTTStatus_t decodeAndDiscard( size_t * pPropertyLength,
                                               const uint8_t ** pIndex );
 
-
-/**
- * @brief Get the size of authentication information.
- *
- * Validates the authentication method, data  and calculates the total size of authentication information.
- *
- * @param[in] pAuthInfo Pointer to an MQTT packet struct representing authentication information.
- * @param[out] pPropertyLength Size of the authentication information.
- *
- * @return #MQTTSuccess if user properties are valid and #MQTTBadParameter  if the user properties are not valid
- */
-
-static MQTTStatus_t MQTT_GetAuthInfoSize( const MQTTAuthInfo_t * pAuthInfo,
-                                              size_t * pPropertyLength );
-
 /**
  * @brief Decodes the variable length by reading a single byte at a time.
  *
@@ -1118,44 +1103,6 @@ static MQTTStatus_t decodeAndDiscard( size_t * pPropertyLength,
         LogDebug( ( "Discarded additional user property with key %s and value %s. ",
                     pKey,
                     pValue ) );
-    }
-
-    return status;
-}
-
-
-static MQTTStatus_t MQTT_GetAuthInfoSize( const MQTTAuthInfo_t * pAuthInfo,
-                                            size_t * pPropertyLength )
-{
-    MQTTStatus_t status = MQTTSuccess;
-
-    /*Validate the parameters*/
-    if( ( pAuthInfo->authMethodLength == 0U ) && ( pAuthInfo->authDataLength != 0U ) )
-    {
-        status = MQTTBadParameter;
-    }
-    else if( ( pAuthInfo->authMethodLength != 0U ) && ( pAuthInfo->pAuthMethod == NULL ) )
-    {
-        status = MQTTBadParameter;
-    }
-    else if( ( pAuthInfo->authDataLength != 0U ) && ( pAuthInfo->pAuthData == NULL ) )
-    {
-        status = MQTTBadParameter;
-    }
-    else
-    {
-        /*Add authentication method and data if provided*/
-        if( pAuthInfo->authMethodLength != 0U )
-        {
-            *pPropertyLength += pAuthInfo->authMethodLength;
-            *pPropertyLength += MQTT_UTF8_LENGTH_SIZE;
-
-            if( pAuthInfo->authDataLength != 0U )
-            {
-                *pPropertyLength += pAuthInfo->authDataLength;
-                *pPropertyLength += MQTT_UTF8_LENGTH_SIZE;
-            }
-        }
     }
 
     return status;
