@@ -4246,7 +4246,7 @@ uint8_t * MQTT_SerializeDisconnectFixed( uint8_t * pIndex,
             pPropertyBuilder->fieldSet = UINT32_SET_BIT(pPropertyBuilder->fieldSet, MQTT_MAX_PACKET_SIZE_POS);
             pPropertyBuilder->currentIndex += 5;
         }
-        return MQTTSuccess;
+        return status;
     }
 
     MQTTStatus_t MQTTPropAdd_ConnTopicAliasMax(MqttPropBuilder_t* pPropertyBuilder, uint16_t topicAliasMax)
