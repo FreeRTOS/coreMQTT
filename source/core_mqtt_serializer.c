@@ -3846,8 +3846,7 @@ MQTTStatus_t MQTTV5_DeserializeAck( const MQTTPacketInfo_t * pIncomingPacket,
 uint8_t * MQTTV5_SerializeAckFixed( uint8_t * pIndex,
                                     uint8_t packetType,
                                     uint16_t packetId,
-                                    size_t remainingLength,
-                                    size_t propertyLength )
+                                    size_t remainingLength)
 {
     uint8_t * pIndexLocal = pIndex;
 
@@ -3863,8 +3862,6 @@ uint8_t * MQTTV5_SerializeAckFixed( uint8_t * pIndex,
     /*We are only sending the ack back if the reason code is success.*/
     *pIndexLocal = MQTT_REASON_SUCCESS;
     pIndexLocal++;
-    /*Encode the property length.*/
-    pIndexLocal = encodeRemainingLength( pIndexLocal, propertyLength );
     return pIndexLocal;
 }
 

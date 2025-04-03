@@ -724,25 +724,32 @@ static MQTTStatus_t sendPublishAcksWithProperty( MQTTContext_t * pContext,
     MQTTPublishState_t newState = MQTTStateNull;
     uint8_t packetTypeByte = 0U;
     MQTTPubAckType_t packetType;
+    size_t propertyLength = 0U;
+    uint8_t propertyLengthBuf[4]; 
 
     /* Maximum number of bytes required by the fixed size properties and header.
         * MQTT Control Byte      0 + 1 = 1
         * Remaining length (max)   + 4 = 5
         * Packet Identifier        + 2 = 7
-        * Reason Code              + 1 = 8
-        * Property length (max)    + 4 = 12 */
-    uint8_t pubAckHeader[ 12 ];
+        * Reason Code              + 1 = 8 */
+    uint8_t pubAckHeader[ 8 ];
     size_t remainingLength = 0U;
     size_t packetSize = 0U;
     /*  The maximum vectors required to encode and send a publish ack. */
-    TransportOutVector_t pIoVector[2];
+    TransportOutVector_t pIoVector[3];
 
     uint8_t * pIndex = pubAckHeader;
     TransportOutVector_t * iterator = pIoVector;
     assert( pContext != NULL );
     assert( pAckInfo != NULL );
+
+    if (pContext->ackPropsBuffer.pBuffer != NULL)
+    {
+        propertyLength = pContext->ackPropsBuffer.currentIndex;
+    }
     packetTypeByte = getAckTypeToSend( publishState );
-    status = MQTTV5_GetAckPacketSize(pAckInfo, &remainingLength, &packetSize, pContext->connectProperties.serverMaxPacketSize, pContext->ackPropsBuffer.currentIndex );
+    status = MQTTV5_GetAckPacketSize(pAckInfo, &remainingLength, &packetSize, pContext->connectProperties.serverMaxPacketSize, propertyLength);
+
 
     if( ( packetTypeByte != 0U ) && ( status == MQTTSuccess ) )
     {
@@ -751,8 +758,7 @@ static MQTTStatus_t sendPublishAcksWithProperty( MQTTContext_t * pContext,
         pIndex = MQTTV5_SerializeAckFixed(pIndex,
             packetTypeByte,
             packetId,
-            remainingLength,
-            pContext->ackPropsBuffer.currentIndex); 
+            remainingLength); 
         iterator->iov_base = pubAckHeader;
         /* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-182 */
         /* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-108 */
@@ -763,20 +769,31 @@ static MQTTStatus_t sendPublishAcksWithProperty( MQTTContext_t * pContext,
         iterator++;
         ioVectorLength++;
 
+        if (pContext->ackPropsBuffer.pBuffer != NULL)
+        {
+            /* Encode the property length. */
+            pIndex = propertyLengthBuf;
+            pIndex = encodeRemainingLength(pIndex, propertyLength);
+            iterator->iov_base = propertyLengthBuf;
+            iterator->iov_len = (size_t)(pIndex - propertyLengthBuf);
+            totalMessageLength += iterator->iov_len;
+            iterator++;
+            ioVectorLength++;
 
+            /* Encode the properties. */
+            iterator->iov_base = pContext->ackPropsBuffer.pBuffer;
+            iterator->iov_len = pContext->ackPropsBuffer.currentIndex;
+            totalMessageLength += iterator->iov_len;
+            iterator++;
+            ioVectorLength++;
 
-        iterator->iov_base = pContext->ackPropsBuffer.pBuffer ; 
-        iterator->iov_len = pContext->ackPropsBuffer.currentIndex;
-        totalMessageLength += iterator->iov_len;
-        iterator++;
-        ioVectorLength++;
+            /*
+            * Resetting buffer after sending the message.
+            */
 
-        /*
-        * Resetting buffer after sending the message.
-        */
-
-        pContext->ackPropsBuffer.currentIndex = 0; 
-        pContext->ackPropsBuffer.fieldSet = 0; 
+            pContext->ackPropsBuffer.currentIndex = 0;
+            pContext->ackPropsBuffer.fieldSet = 0;
+        }
 
 
         bytesSentOrError = sendMessageVector( pContext, pIoVector, ioVectorLength );
@@ -3346,7 +3363,15 @@ MQTTStatus_t MQTT_Init( MQTTContext_t * pContext,
         pContext->getTime = getTimeFunction;
         pContext->appCallback = userCallback;
         pContext->networkBuffer = *pNetworkBuffer;
-        pContext->ackPropsBuffer = *pAckPropsBuffer; 
+        if (pAckPropsBuffer != NULL)
+        {
+            pContext->ackPropsBuffer = *pAckPropsBuffer;
+        }
+        else
+        {
+            pContext->ackPropsBuffer.pBuffer = NULL;
+            pContext->ackPropsBuffer.bufferLength = 0;
+        }
 
         /* Zero is not a valid packet ID per MQTT spec. Start from 1. */
         pContext->nextPacketId = 1;
@@ -4173,11 +4198,17 @@ MQTTStatus_t MQTTPropAdd_PubAckReasonString(MQTTContext_t* pContext, const char*
 
     uint8_t* pIndex;
     MQTTStatus_t status = MQTTSuccess;
-    if (UINT32_CHECK_BIT(pContext->ackPropsBuffer.fieldSet, MQTT_REASON_STRING_POS))
+    if (pContext->ackPropsBuffer.pBuffer == NULL)
+    {
+        LogError(("Set ackPropsBuffer to send properties. "));
+        status = MQTTBadParameter;
+    }
+    else if (UINT32_CHECK_BIT(pContext->ackPropsBuffer.fieldSet, MQTT_REASON_STRING_POS))
     {
         LogError(("Reason String already set"));
         status = MQTTBadParameter;
     }
+    
     else
     {
         pIndex = pContext->ackPropsBuffer.pBuffer + pContext->ackPropsBuffer.currentIndex;

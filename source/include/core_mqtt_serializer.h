@@ -1494,7 +1494,6 @@ MQTTStatus_t MQTTV5_DeserializeSuback(MQTTAckInfo_t* pSubackProperties,
  * @param[in] packetType Type of publish ack
  * @param[in] packetId Packed identifier of the ack packet.
  * @param[in] remainingLength Remaining length of the ack packet.
- * @param[in] propertyLength Property length of the ack packet.
  *
  *
  * @return A pointer to the end of the encoded string.
@@ -1507,8 +1506,7 @@ MQTTStatus_t MQTTV5_DeserializeSuback(MQTTAckInfo_t* pSubackProperties,
 uint8_t * MQTTV5_SerializeAckFixed(uint8_t * pIndex,
                                 uint8_t packetType,
                                 uint16_t packetId,
-                                size_t remainingLength,
-                                size_t propertyLength);
+                                size_t remainingLength);
 /** @endcond */
 
 /**
