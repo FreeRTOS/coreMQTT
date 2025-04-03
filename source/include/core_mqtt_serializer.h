@@ -1167,26 +1167,6 @@ uint8_t * MQTTV5_SerializeConnectProperties( uint8_t * pIndex,
 
 
 /**
- * @fn uint8_t * MQTT_SerializePublishProperties(const MQTTPublishInfo_t * pPublishInfo, uint8_t * pIndex);
- * @brief Serialize the will properties of the connect packet.
- * @param[in] pPublishInfo The publish/will properties information.
- * @param[out] pIndex Pointer to the buffer where the header is to
- * be serialized.
- *
- * @return A pointer to the end of the encoded string.
- */
-
-/**
- * @cond DOXYGEN_IGNORE
- * Doxygen should ignore this definition, this function is private.
- */
-
-uint8_t * MQTT_SerializePublishProperties( const MQTTPublishInfo_t * pPublishInfo,
-                                           uint8_t * pIndex);
-/** @endcond */
-
-
-/**
  * @brief Deserialize an MQTT CONNACK packet.
  *
  * @param[out] pConnackProperties To store the deserialized connack properties.

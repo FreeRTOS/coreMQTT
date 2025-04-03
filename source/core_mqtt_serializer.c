@@ -686,14 +686,6 @@ static MQTTStatus_t calculateSubscriptionPacketSizeV5(MQTTSubscribeInfo_t* pSubs
 
 
 /**
- * @brief Prints the appropriate message for the CONNACK response code if logs
- * are enabled.
- *
- * @param[in] responseCode MQTT standard CONNACK response code.
- */
-static void logConnackResponse( uint8_t responseCode );
-
-/**
  * @brief Encodes the remaining length of the packet using the variable length
  * encoding scheme provided in the MQTT v3.1.1 specification.
  *
@@ -2629,38 +2621,6 @@ static MQTTStatus_t processPublishFlags( uint8_t publishFlags,
 
 /*-----------------------------------------------------------*/
 
-static void logConnackResponse( uint8_t responseCode )
-{
-    const char * const pConnackResponses[ 6 ] =
-    {
-        "Connection accepted.",                               /* 0 */
-        "Connection refused: unacceptable protocol version.", /* 1 */
-        "Connection refused: identifier rejected.",           /* 2 */
-        "Connection refused: server unavailable",             /* 3 */
-        "Connection refused: bad user name or password.",     /* 4 */
-        "Connection refused: not authorized."                 /* 5 */
-    };
-
-    /* Avoid unused parameter warning when assert and logs are disabled. */
-    ( void ) responseCode;
-    ( void ) pConnackResponses;
-
-    assert( responseCode <= 5U );
-
-    if( responseCode == 0u )
-    {
-        /* Log at Debug level for a success CONNACK response. */
-        LogDebug( ( "%s", pConnackResponses[ 0 ] ) );
-    }
-    else
-    {
-        /* Log an error based on the CONNACK response code. */
-        LogError( ( "%s", pConnackResponses[ responseCode ] ) );
-    }
-}
-
-/*-----------------------------------------------------------*/
-
 
 MQTTStatus_t deserializePublishProperties( MQTTPublishInfo_t * pPublishInfo, const uint8_t* pIndex)
 {
@@ -3529,141 +3489,6 @@ MQTTStatus_t MQTTV5_GetConnectPacketSize( const MQTTConnectInfo_t * pConnectInfo
 
     return status;
 }
-
-uint8_t * MQTT_SerializePublishProperties( const MQTTPublishInfo_t * pPublishInfo,
-                                            uint8_t * pIndex )
-{
-    uint8_t * pIndexLocal = pIndex;
-
-    pIndexLocal = encodeRemainingLength( pIndexLocal, pPublishInfo->propertyLength );
-
-    /*Serialize the will delay if provided.*/
-
-    if( pPublishInfo->willDelay != 0U )
-    {
-        *pIndexLocal = MQTT_WILL_DELAY_ID;
-        pIndexLocal++;
-        pIndexLocal[ 0 ] = UINT32_BYTE3( pPublishInfo->willDelay );
-        pIndexLocal[ 1 ] = UINT32_BYTE2( pPublishInfo->willDelay );
-        pIndexLocal[ 2 ] = UINT32_BYTE1( pPublishInfo->willDelay );
-        pIndexLocal[ 3 ] = UINT32_BYTE0( pPublishInfo->willDelay );
-        pIndexLocal = &pIndexLocal[ 4 ];
-    }
-
-    /*Serialize the topic alias if provided*/
-
-    if( pPublishInfo->topicAlias != 0U )
-    {
-        *pIndexLocal = MQTT_TOPIC_ALIAS_ID;
-        pIndexLocal++;
-        pIndexLocal[ 0 ] = UINT16_HIGH_BYTE( pPublishInfo->topicAlias );
-        pIndexLocal[ 1 ] = UINT16_LOW_BYTE( pPublishInfo->topicAlias );
-        pIndexLocal = &pIndexLocal[ 2 ];
-    }
-
-    /*Serialize the payload format if provided.*/
-
-    if( pPublishInfo->payloadFormat != 0U )
-    {
-        *pIndexLocal = MQTT_PAYLOAD_FORMAT_ID;
-        pIndexLocal++;
-        *pIndexLocal = pPublishInfo->payloadFormat;
-        pIndexLocal++;
-    }
-
-    /*Serialize the message expiry if provided.*/
-
-    if( pPublishInfo->msgExpiryPresent != false )
-    {
-        *pIndexLocal = MQTT_MSG_EXPIRY_ID;
-        pIndexLocal++;
-        pIndexLocal[ 0 ] = UINT32_BYTE3( pPublishInfo->msgExpiryInterval );
-        pIndexLocal[ 1 ] = UINT32_BYTE2( pPublishInfo->msgExpiryInterval );
-        pIndexLocal[ 2 ] = UINT32_BYTE1( pPublishInfo->msgExpiryInterval );
-        pIndexLocal[ 3 ] = UINT32_BYTE0( pPublishInfo->msgExpiryInterval );
-        pIndexLocal = &pIndexLocal[ 4 ];
-    }
-
-    return pIndexLocal;
-}
-
-uint8_t * MQTTV5_SerializeConnectProperties( uint8_t * pIndex,
-                                                const MQTTConnectProperties_t * pConnectProperties )
-{
-    uint8_t * pIndexLocal = pIndex;
-
-    pIndexLocal = encodeRemainingLength( pIndexLocal, pConnectProperties->propertyLength );
-
-    /*Serialize session expiry if provided.*/
-    if( pConnectProperties->sessionExpiry != 0U )
-    {
-        *pIndexLocal = MQTT_SESSION_EXPIRY_ID;
-        pIndexLocal++;
-        pIndexLocal[ 0 ] = UINT32_BYTE3( pConnectProperties->sessionExpiry );
-        pIndexLocal[ 1 ] = UINT32_BYTE2( pConnectProperties->sessionExpiry );
-        pIndexLocal[ 2 ] = UINT32_BYTE1( pConnectProperties->sessionExpiry );
-        pIndexLocal[ 3 ] = UINT32_BYTE0( pConnectProperties->sessionExpiry );
-        pIndexLocal = &pIndexLocal[ 4 ];
-    }
-
-    /*Serialize receive max  if provided.*/
-
-    if( pConnectProperties->receiveMax != ( uint16_t ) UINT16_MAX )
-    {
-        *pIndexLocal = MQTT_RECEIVE_MAX_ID;
-        pIndexLocal++;
-        pIndexLocal[ 0 ] = UINT16_HIGH_BYTE( pConnectProperties->receiveMax );
-        pIndexLocal[ 1 ] = UINT16_LOW_BYTE( pConnectProperties->receiveMax );
-        pIndexLocal = &pIndexLocal[ 2 ];
-    }
-
-    /*Serialize the max packet size  if provided.*/
-
-    if( pConnectProperties->maxPacketSize != MQTT_MAX_PACKET_SIZE )
-    {
-        *pIndexLocal = MQTT_MAX_PACKET_SIZE_ID;
-        pIndexLocal++;
-        pIndexLocal[ 0 ] = UINT32_BYTE3( pConnectProperties->maxPacketSize );
-        pIndexLocal[ 1 ] = UINT32_BYTE2( pConnectProperties->maxPacketSize );
-        pIndexLocal[ 2 ] = UINT32_BYTE1( pConnectProperties->maxPacketSize );
-        pIndexLocal[ 3 ] = UINT32_BYTE0( pConnectProperties->maxPacketSize );
-        pIndexLocal = &pIndexLocal[ 4 ];
-    }
-
-    /*Serialize the topic alias if provided.*/
-
-    if( pConnectProperties->topicAliasMax != 0U )
-    {
-        *pIndexLocal = MQTT_TOPIC_ALIAS_MAX_ID;
-        pIndexLocal++;
-        pIndexLocal[ 0 ] = UINT16_HIGH_BYTE( pConnectProperties->topicAliasMax );
-        pIndexLocal[ 1 ] = UINT16_LOW_BYTE( pConnectProperties->topicAliasMax );
-        pIndexLocal = &pIndexLocal[ 2 ];
-    }
-
-    /*Serialize the request response information if provided.*/
-
-    if( pConnectProperties->requestResponseInfo != false )
-    {
-        *pIndexLocal = MQTT_REQUEST_RESPONSE_ID;
-        pIndexLocal++;
-        *pIndexLocal = 1U;
-        pIndexLocal++;
-    }
-
-    /*Serialize request problem information if provided.*/
-
-    if( pConnectProperties->requestProblemInfo != true )
-    {
-        *pIndexLocal = MQTT_REQUEST_PROBLEM_ID;
-        pIndexLocal++;
-        *pIndexLocal = 0U;
-        pIndexLocal++;
-    }
-
-    return pIndexLocal;
-}
-
 
 MQTTStatus_t MQTTV5_DeserializeConnack( MQTTConnectProperties_t * pConnackProperties,
                                         const MQTTPacketInfo_t * pIncomingPacket,
