@@ -406,7 +406,7 @@ typedef struct MQTTConnectProperties
      /**
      * @brief Whether the Server supports Subscription Identifiers.
      */
-    uint8_t subscriptionId;
+    uint8_t isSubscriptionIdAvailable;
 
      /**
      * @brief Whether the Server supports Shared Subscription.
@@ -1824,6 +1824,53 @@ MQTTStatus_t MQTTPropAdd_PubContentType(MqttPropBuilder_t* pPropBuilder,
 MQTTStatus_t MQTTPropAdd_DisconnReasonString(MqttPropBuilder_t* pPropertyBuilder,
     const char* pReasonString,
     uint16_t reasonStringLength); 
+
+/*
+* Util functions used to serialize / deserialize
+*/
+
+/**
+ * @brief Validate the length and decode a utf 8 string.
+ *
+ * @param[out] pProperty To store the decoded string.
+ * @param[out] pLength  Size of the decoded utf-8 string.
+ * @param[out] pPropertyLength  Size of the length.
+ * @param[out] pUsed Whether the property is decoded before.
+ * @param[out]  pIndex Pointer to the current index of the buffer.
+ *
+ * @return #MQTTSuccess, #MQTTProtocolError and #MQTTMalformedPacket
+ **/
+MQTTStatus_t decodeutf_8(const char** pProperty,
+    uint16_t* pLength,
+    size_t* pPropertyLength,
+    bool* pUsed,
+    const uint8_t** pIndex);
+
+/**
+ * @brief Encode a string whose size is at maximum 16 bits in length.
+ *
+ * @param[out] pDestination Destination buffer for the encoding.
+ * @param[in] pSource The source string to encode.
+ * @param[in] sourceLength The length of the source string to encode.
+ *
+ * @return A pointer to the end of the encoded string.
+ */
+uint8_t* encodeString(uint8_t* pDestination,
+    const char* pSource,
+    uint16_t sourceLength);
+
+/**
+ * @brief Encodes the remaining length of the packet using the variable length
+ * encoding scheme provided in the MQTT v3.1.1 specification.
+ *
+ * @param[out] pDestination The destination buffer to store the encoded remaining
+ * length.
+ * @param[in] length The remaining length to encode.
+ *
+ * @return The location of the byte following the encoded value.
+ */
+uint8_t* encodeRemainingLength(uint8_t* pDestination,
+    size_t length);
 
 /* *INDENT-OFF* */
 #ifdef __cplusplus

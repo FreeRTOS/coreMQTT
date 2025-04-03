@@ -148,6 +148,10 @@
 * @brief The size of MQTT PUBACK, PUBREC, PUBREL, and PUBCOMP packets with reason code, packet id.
 */
 #define MQTT_PUBLISH_ACK_PACKET_SIZE_WITH_REASON    ( 3UL )
+/*
+ * @brief Identifier of the subscription ID
+ */ 
+#define MQTT_SUBSCRIPTION_ID_ID                     ( 0x0B )
 
 /**
  * @brief Per the MQTT spec, the max packet size  can be of  max remaining length + 5 bytes
@@ -431,6 +435,10 @@ static MQTTStatus_t handleIncomingAck( MQTTContext_t * pContext,
                    ( ( ( uint32_t ) ptr[ 1 ] ) << 16 ) | \
                    ( ( ( uint32_t ) ptr[ 2 ] ) << 8 ) |  \
                    ( ( uint32_t ) ptr[ 3 ] ) )
+/**
+ * @brief Topic alias id.
+ */
+#define MQTT_TOPIC_ALIAS_ID         ( 0x23 )
 
 /**
  * @brief Utf 8 encoded string has 2 byte length field and 1 byte property id.
@@ -666,48 +674,9 @@ MQTTStatus_t MqttPropertyBuilder_Init(MqttPropBuilder_t* pPropertyBuilder, uint8
  */
 MQTTStatus_t MQTTV5_InitConnect(MQTTConnectProperties_t* pConnectProperties);
 
-/**
- * @brief Validate the length and decode a utf 8 string.
- *
- * @param[out] pProperty To store the decoded string.
- * @param[out] pLength  Size of the decoded utf-8 string.
- * @param[out] pPropertyLength  Size of the length.
- * @param[out] pUsed Whether the property is decoded before.
- * @param[out]  pIndex Pointer to the current index of the buffer.
- *
- * @return #MQTTSuccess, #MQTTProtocolError and #MQTTMalformedPacket
- **/
-static MQTTStatus_t decodeutf_8(const char** pProperty,
-                                uint16_t* pLength,
-                                size_t* pPropertyLength,
-                                bool* pUsed,
-                                const uint8_t** pIndex);
+MQTTStatus_t validatePublishProperties(MQTTContext_t* pContext, MQTTPublishInfo_t* pPublishInfo); 
 
-/**
- * @brief Encode a string whose size is at maximum 16 bits in length.
- *
- * @param[out] pDestination Destination buffer for the encoding.
- * @param[in] pSource The source string to encode.
- * @param[in] sourceLength The length of the source string to encode.
- *
- * @return A pointer to the end of the encoded string.
- */
-static uint8_t* encodeString(uint8_t* pDestination,
-                            const char* pSource,
-                            uint16_t sourceLength); 
-
-/**
- * @brief Encodes the remaining length of the packet using the variable length
- * encoding scheme provided in the MQTT v3.1.1 specification.
- *
- * @param[out] pDestination The destination buffer to store the encoded remaining
- * length.
- * @param[in] length The remaining length to encode.
- *
- * @return The location of the byte following the encoded value.
- */
-static uint8_t* encodeRemainingLength(uint8_t* pDestination,
-                                      size_t length);
+MQTTStatus_t validateSubscribeProperties(MQTTContext_t* pContext, MqttPropBuilder_t* propBuilder); 
 
 /*-----------------------------------------------------------*/
 
@@ -999,6 +968,38 @@ static bool matchEndWildcardsSpecialCases( const char * pTopicFilter,
 }
 
 /*-----------------------------------------------------------*/
+
+static MQTTStatus_t decodeuint16_t(uint16_t* pProperty,
+    size_t* pPropertyLength,
+    bool* pUsed,
+    const uint8_t** pIndex)
+{
+    const uint8_t* pVariableHeader = *pIndex;
+    MQTTStatus_t status = MQTTSuccess;
+
+    /*Protocol error to include the same property twice.*/
+
+    if (*pUsed == true)
+    {
+        status = MQTTProtocolError;
+    }
+    /*Validate the length and decode.*/
+
+    else if (*pPropertyLength < sizeof(uint16_t))
+    {
+        status = MQTTMalformedPacket;
+    }
+    else
+    {
+        *pProperty = UINT16_DECODE(pVariableHeader);
+        pVariableHeader = &pVariableHeader[sizeof(uint16_t)];
+        *pUsed = true;
+        *pPropertyLength -= sizeof(uint16_t);
+    }
+
+    *pIndex = pVariableHeader;
+    return status;
+}
 
 static bool matchWildcards( const char * pTopicName,
                             uint16_t topicNameLength,
@@ -1516,116 +1517,6 @@ static MQTTStatus_t discardPacket( const MQTTContext_t * pContext,
     }
 
     return status;
-}
-
-static MQTTStatus_t decodeutf_8(const char** pProperty,
-    uint16_t* pLength,
-    size_t* pPropertyLength,
-    bool* pUsed,
-    const uint8_t** pIndex)
-{
-    const uint8_t* pVariableHeader = *pIndex;
-    MQTTStatus_t status = MQTTSuccess;
-
-    /*Protocol error to include the same property twice.*/
-
-    if (*pUsed == true)
-    {
-        status = MQTTProtocolError;
-    }
-    /*Validate the length and decode.*/
-
-    else if (*pPropertyLength < sizeof(uint16_t))
-    {
-        status = MQTTMalformedPacket;
-    }
-    else
-    {
-        *pLength = UINT16_DECODE(pVariableHeader);
-        pVariableHeader = &pVariableHeader[sizeof(uint16_t)];
-        *pPropertyLength -= sizeof(uint16_t);
-
-        if (*pPropertyLength < *pLength)
-        {
-            status = MQTTMalformedPacket;
-        }
-        else
-        {
-            *pProperty = (const char*)pVariableHeader;
-            pVariableHeader = &pVariableHeader[*pLength];
-            *pPropertyLength -= *pLength;
-            *pUsed = true;
-            LogDebug(("Reason String is %s", *pProperty));
-        }
-    }
-
-    *pIndex = pVariableHeader;
-    return status;
-}
-
-static uint8_t* encodeString(uint8_t* pDestination,
-                            const char* pSource,
-                            uint16_t sourceLength)
-{
-    uint8_t* pBuffer = NULL;
-
-    /* Typecast const char * typed source buffer to const uint8_t *.
-     * This is to use same type buffers in memcpy. */
-    const uint8_t* pSourceBuffer = (const uint8_t*)pSource;
-
-    assert(pDestination != NULL);
-
-    pBuffer = pDestination;
-
-    /* The first byte of a UTF-8 string is the high byte of the string length. */
-    *pBuffer = UINT16_HIGH_BYTE(sourceLength);
-    pBuffer++;
-
-    /* The second byte of a UTF-8 string is the low byte of the string length. */
-    *pBuffer = UINT16_LOW_BYTE(sourceLength);
-    pBuffer++;
-
-    /* Copy the string into pBuffer. */
-    if (pSourceBuffer != NULL)
-    {
-        (void)memcpy(pBuffer, pSourceBuffer, sourceLength);
-    }
-
-    /* Return the pointer to the end of the encoded string. */
-    pBuffer = &pBuffer[sourceLength];
-
-    return pBuffer;
-}
-
-static uint8_t* encodeRemainingLength(uint8_t* pDestination,
-    size_t length)
-{
-    uint8_t lengthByte;
-    uint8_t* pLengthEnd = NULL;
-    size_t remainingLength = length;
-
-    assert(pDestination != NULL);
-
-    pLengthEnd = pDestination;
-
-    /* This algorithm is copied from the MQTT v3.1.1 spec. */
-    do
-    {
-        lengthByte = (uint8_t)(remainingLength % 128U);
-        remainingLength = remainingLength / 128U;
-
-        /* Set the high bit of this byte, indicating that there's more data. */
-        if (remainingLength > 0U)
-        {
-            UINT8_SET_BIT(lengthByte, 7);
-        }
-
-        /* Output a single encoded byte. */
-        *pLengthEnd = lengthByte;
-        pLengthEnd++;
-    } while (remainingLength > 0U);
-
-    return pLengthEnd;
 }
 /*-----------------------------------------------------------*/
 
@@ -2604,7 +2495,9 @@ static MQTTStatus_t validateSubscribeUnsubscribeParamsV5(MQTTContext_t* pContext
     MQTTStatus_t status = MQTTSuccess;
     size_t iterator;
     bool isSharedSub = false ; 
-    const char* shareNameEnd ;
+    char* shareNameEnd ;
+    char tmp; 
+    char* shareNameStart;
 
     /* Validate all the parameters. */
     if ((pContext == NULL) || (pSubscriptionList == NULL))
@@ -2657,9 +2550,17 @@ static MQTTStatus_t validateSubscribeUnsubscribeParamsV5(MQTTContext_t* pContext
                     status = MQTTBadParameter;
                     break;
                 }
+                /*Say that wildcards are avaliable by default. */
+                if (pContext->connectProperties.isWildcardAvaiable == 0 && (strchr(pSubscriptionList[iterator].pTopicFilter,'#') || strchr(pSubscriptionList[iterator].pTopicFilter, '#'))) 
+                {
+                    LogError(("Protocol Error : Wildcard Subscriptions not allowed. ")); 
+                    status = MQTTBadParameter; 
+                    break; 
+                }
                 isSharedSub = ((strncmp(pSubscriptionList[iterator].pTopicFilter, "$share/", 7)) == 0);
                 if (isSharedSub) {
-                    shareNameEnd = strchr(pSubscriptionList[iterator].pTopicFilter + 7, '/');
+                    shareNameStart = pSubscriptionList[iterator].pTopicFilter + 7; 
+                    shareNameEnd = strchr(shareNameStart, '/');
                     if ((shareNameEnd == NULL) || (shareNameEnd == pSubscriptionList[iterator].pTopicFilter + 7)) {
                         LogError(("Protocol Error : ShareName is not present , missing or empty"));
                         status = MQTTBadParameter;
@@ -2667,6 +2568,22 @@ static MQTTStatus_t validateSubscribeUnsubscribeParamsV5(MQTTContext_t* pContext
                     }
                     if (pSubscriptionList[iterator].noLocalOption == 1) {
                         LogError(("Protocol Error : noLocalOption cannot be 1 for shared subscriptions"));
+                        status = MQTTBadParameter;
+                        break;
+                    }
+                    tmp = *shareNameEnd; 
+                    *shareNameEnd = '\0'; 
+                    if (strchr(shareNameStart, '#') || strchr(shareNameStart, '+'))
+                    {
+                        LogError(("Protocol Error : Wildcard Subscriptions not allowed in ShareName"));
+                        status = MQTTBadParameter;
+                        break;
+                    }
+                    *shareNameEnd = tmp;
+
+                    if (pContext->connectProperties.isSharedAvailable == 0)
+                    {
+                        LogError(("Protocol Error : Shared Subscriptions not allowed"));
                         status = MQTTBadParameter;
                         break;
                     }
@@ -2681,6 +2598,36 @@ static MQTTStatus_t validateSubscribeUnsubscribeParamsV5(MQTTContext_t* pContext
         }
     }
     return status;
+}
+
+MQTTStatus_t validateSubscribeProperties(MQTTContext_t *pContext , MqttPropBuilder_t * propBuilder)
+{
+    MQTTStatus_t status = MQTTSuccess;
+    size_t propertyLength = propBuilder->currentIndex; 
+    const uint8_t* pLocalIndex = propBuilder->pBuffer;
+    MQTTConnectProperties_t connectProps = pContext->connectProperties;
+
+    if (status == MQTTSuccess)
+    {
+        while ((propertyLength > 0U) && (status == MQTTSuccess))
+        {
+            uint8_t packetId = *pLocalIndex; 
+            pLocalIndex = &pLocalIndex[1]; 
+            propertyLength -= sizeof(uint8_t); 
+
+            switch (packetId)
+            {
+            case MQTT_SUBSCRIPTION_ID_ID:
+                if (connectProps.isSubscriptionIdAvailable == 0)
+                {
+                    LogError(("Protocol Error : Subscription Id not allowed"));
+                    status = MQTTBadParameter;
+                }
+                break;
+            }
+        }
+    }
+    return status; 
 }
 
 MQTTStatus_t MQTT_SubscribeV5( MQTTContext_t * pContext,
@@ -2702,7 +2649,10 @@ MQTTStatus_t MQTT_SubscribeV5( MQTTContext_t * pContext,
                                                                 subscriptionCount,
                                                                 packetId, 
                                                                 MQTT_SUBSCRIBE);
-    
+    if (status == MQTTSuccess && pPropertyBuilder!=NULL)
+    {
+        status = validateSubscribeProperties(pContext , pPropertyBuilder);
+    }
     if( status == MQTTSuccess ) 
     {
         /* Get the remaining length and packet size.*/
@@ -3309,7 +3259,37 @@ static MQTTStatus_t validatePublishParams( const MQTTContext_t * pContext,
 
     return status;
 }
-
+MQTTStatus_t validatePublishProperties(MQTTContext_t* pContext, MqttPropBuilder_t * propBuilder)
+{
+    MQTTStatus_t status = MQTTSuccess;
+    size_t propertyLength = propBuilder->currentIndex;
+    const uint8_t* pLocalIndex = propBuilder->pBuffer;
+    MQTTConnectProperties_t connectProps = pContext->connectProperties;
+    bool repeatProperty = false; 
+    uint16_t topicAlias; 
+    if (status == MQTTSuccess)
+    {
+        while ((propertyLength > 0U) && (status == MQTTSuccess))
+        {
+            uint8_t packetId = *pLocalIndex;
+            pLocalIndex = &pLocalIndex[1];
+            propertyLength -= sizeof(uint8_t);
+            switch (packetId)
+            {
+            case MQTT_TOPIC_ALIAS_ID:
+                decodeuint16_t(&topicAlias, &propertyLength, &repeatProperty, &pLocalIndex); 
+                if (connectProps.serverTopicAliasMax < topicAlias)
+                {
+                    LogError(("Protocol Error : Topic Alias greater then Topic Alias Max"));
+                    status = MQTTBadParameter;
+                }
+                break;
+            }
+                // qos of the packets has to less than serverMaxQos
+        }
+    }
+    return status; 
+}
 /*-----------------------------------------------------------*/
 
 MQTTStatus_t MQTT_Init( MQTTContext_t * pContext,
@@ -3401,7 +3381,7 @@ MQTTStatus_t MQTTV5_InitConnect(MQTTConnectProperties_t* pConnectProperties)
         pConnectProperties->serverMaxQos = 1U;
         pConnectProperties->serverMaxPacketSize = MQTT_MAX_PACKET_SIZE;
         pConnectProperties->isWildcardAvaiable = 1U;
-        pConnectProperties->subscriptionId = 1U;
+        pConnectProperties->isSubscriptionIdAvailable = 1U;
         pConnectProperties->isSharedAvailable = 1U;
     }
 
@@ -3632,6 +3612,11 @@ MQTTStatus_t MQTT_Publish( MQTTContext_t * pContext,
     if (pPropertyBuilder != NULL)
     {
         publishPropertyLength = pPropertyBuilder->currentIndex;
+    }
+
+    if ( (status == MQTTSuccess) && (pPropertyBuilder!= NULL))
+    {
+        status = validatePublishProperties(pContext, pPropertyBuilder);
     }
 
     if( status == MQTTSuccess )
