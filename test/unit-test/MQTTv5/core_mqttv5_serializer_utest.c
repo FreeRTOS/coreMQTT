@@ -4019,11 +4019,38 @@ void test_updateContextWithConnectProps(void)
     MQTTConnectProperties_t connectProps  ; 
     mqttStatus = updateContextWithConnectProps(&propBuilder , &connectProps) ;
     TEST_ASSERT_EQUAL_INT(mqttStatus, MQTTSuccess) ;
+}
+
+void test_MQTT_SerializeAck(void)
+{
+    MQTTFixedBuffer_t fixedBuffer ; 
+    uint8_t buf[50] ; 
+    fixedBuffer.pBuffer = buf ; 
+    fixedBuffer.size = sizeof(buf) ;
+
+    MQTTStatus_t status = MQTTSuccess ; 
+    status = MQTT_SerializeAck(&fixedBuffer, MQTT_PACKET_TYPE_PUBACK , 100) ; 
+    TEST_ASSERT_EQUAL_INT(status, MQTTSuccess) ;
+
+    status = MQTT_SerializeAck(&fixedBuffer, MQTT_PACKET_TYPE_PUBACK , 0) ; 
+    TEST_ASSERT_EQUAL_INT(status, MQTTBadParameter) ;
+
+
+    status = MQTT_SerializeAck(&fixedBuffer, MQTT_PACKET_TYPE_SUBACK, 100) ;
+    TEST_ASSERT_EQUAL_INT(status, MQTTBadParameter) ;
+
+    status = MQTT_SerializeAck(NULL, MQTT_PACKET_TYPE_PUBACK , 100) ; 
+    TEST_ASSERT_EQUAL_INT(status, MQTTBadParameter) ;
+
+    fixedBuffer.pBuffer = NULL ; 
+    status = MQTT_SerializeAck(&fixedBuffer, MQTT_PACKET_TYPE_PUBACK , 100) ; 
+    TEST_ASSERT_EQUAL_INT(status,MQTTBadParameter ) ;
+
+    fixedBuffer.pBuffer = buf ;
+    fixedBuffer.size = 1 ; 
+    status = MQTT_SerializeAck(&fixedBuffer, MQTT_PACKET_TYPE_PUBACK , 100) ; 
+    TEST_ASSERT_EQUAL_INT(status,MQTTNoMemory ) ;
+
 
 
 }
-
-
-
-
-
