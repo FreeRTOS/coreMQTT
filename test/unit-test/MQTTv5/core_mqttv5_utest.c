@@ -4069,7 +4069,10 @@ void test_MQTT_Init_Invalid_Params( void )
 
 
 /* ========================================================================== */
-
+MQTTStatus_t decode_utf8_Stub(void)
+{
+    return MQTTSuccess; 
+}
 void test_MQTT_IncomingPubGetNextProp(void)
 {
     uint8_t* pCurrIndex = NULL;
@@ -4093,8 +4096,7 @@ void test_MQTT_IncomingPubGetNextProp(void)
     deserializedInfo.pPublishInfo = &publishInfo; 
     publishInfo.startOfProps = buf ; 
     publishInfo.propertyLength = 8 ; 
-
-
+    decodeutf_8_IgnoreAndReturn(MQTTSuccess);
     bool ans = true ; 
     ans = MQTT_IncomingPubGetNextProp(&pCurrIndex,
         &pUserPropKey,
@@ -4105,6 +4107,8 @@ void test_MQTT_IncomingPubGetNextProp(void)
     TEST_ASSERT_EQUAL(true, ans);
 
     buf[0] = 0x0B ; 
+    decodeutf_8_IgnoreAndReturn(MQTTSuccess);
+    // decodeutf_8_ExpectAnyArgsAndReturn(MQTTSuccess) ; 
     ans = MQTT_IncomingPubGetNextProp(&pCurrIndex,
         &pUserPropKey,
         &userPropKeyLen,
@@ -4147,6 +4151,7 @@ void test_MQTT_ConnackGetNextProp(void)
     context.connectProperties.startOfConnackProps = buf ; 
 
     bool ans ; 
+    decodeutf_8_IgnoreAndReturn(MQTTSuccess);
     ans = MQTT_ConnackGetNextProp(&pCurrIndex,
         &pUserPropKey,
         &userPropKeyLen,
@@ -4154,6 +4159,8 @@ void test_MQTT_ConnackGetNextProp(void)
         &userPropKeyVal,
         &context) ; 
     TEST_ASSERT_EQUAL_INT(ans , 1) ; 
+
+    decodeutf_8_IgnoreAndReturn(MQTTSuccess);
 
     ans = MQTT_ConnackGetNextProp(&pCurrIndex,
         &pUserPropKey,
@@ -4197,6 +4204,7 @@ void test_MQTT_AckGetNextProp(void)
     ackInfo.startOfAckProps = buf ;
     deserializedInfo.pAckInfo = &ackInfo ;
     bool ans ;
+    decodeutf_8_IgnoreAndReturn(MQTTSuccess);
     ans = MQTT_AckGetNextProp(&pCurrIndex,
         &pUserPropKey,
         &userPropKeyLen,
@@ -4204,7 +4212,7 @@ void test_MQTT_AckGetNextProp(void)
         &userPropKeyVal,
         &deserializedInfo) ;
     TEST_ASSERT_EQUAL_INT(ans , 1) ; 
-
+    decodeutf_8_IgnoreAndReturn(MQTTSuccess);
     ans = MQTT_AckGetNextProp(&pCurrIndex,
         &pUserPropKey,
         &userPropKeyLen,
@@ -4292,5 +4300,29 @@ void test_MQTT_ProcessLoop_handleIncomingPub_Error_Paths1( void )
 //     status = MQTT_ProcessLoop( &context );
 //     TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
 // }
+void test_validatePublish(void)
+{
+    MQTTStatus_t status= MQTTSuccess ; 
+    status = MQTT_Publish(NULL , NULL , 2, NULL); 
+    TEST_ASSERT_EQUAL_INT(MQTTBadParameter , status) ; 
 
+    MQTTPublishInfo_t publishInfo = { 0 };
+    MQTTContext_t context  = {0} ; 
+    publishInfo.qos = 2 ; 
+    status = MQTT_Publish(&context , &publishInfo , 0, NULL); 
+    TEST_ASSERT_EQUAL_INT(MQTTBadParameter, status) ;
+
+    publishInfo.qos = 0 ; 
+    publishInfo.payloadLength = 10 ; 
+    publishInfo.pPayload = NULL ; 
+    status = MQTT_Publish(&context , &publishInfo , 10, NULL) ; 
+    TEST_ASSERT_EQUAL_INT(MQTTBadParameter , status) ; 
+
+    publishInfo.pPayload = "abc" ; 
+    publishInfo.payloadLength = 3 ; 
+    publishInfo.qos = 2 ; 
+    status = MQTT_Publish(&context, &publishInfo, 10, NULL) ;
+    TEST_ASSERT_EQUAL_INT(MQTTBadParameter, status); 
+
+}
 
