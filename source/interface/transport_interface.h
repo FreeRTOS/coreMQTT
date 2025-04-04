@@ -198,7 +198,7 @@ typedef struct NetworkContext NetworkContext_t;
  *
  * @note It is HIGHLY RECOMMENDED that the transport receive
  * implementation does NOT block.
- * A non‐blocking implementation is essential so that the keep‐alive 
+ * A non‐blocking implementation is essential so that the keep‐alive
  * mechanism can work properly.
  * coreMQTT will continue to call the transport interface if it receives
  * a partial packet until it accumulates enough data to get the complete
