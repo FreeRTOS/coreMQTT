@@ -1893,20 +1893,20 @@ MQTTStatus_t handleIncomingPublish( MQTTContext_t * pContext,
 
 
         /* Send PUBREL or PUBCOMP if necessary. */
-        //if (deserializedInfo.pNextAckInfo == NULL)
-        //{
-        //    status = sendPublishAcks(pContext,
-        //        packetIdentifier,
-        //        publishRecordState);
-        //}
-        //else
-        //{
+        if (deserializedInfo.pNextAckInfo == NULL)
+        {
+            status = sendPublishAcks(pContext,
+                packetIdentifier,
+                publishRecordState);
+        }
+        else
+        {
         MQTT_PRE_SEND_HOOK(pContext);
 
         status = sendPublishAcksWithProperty(pContext, packetIdentifier, publishRecordState, deserializedInfo.pNextAckInfo);
 
         MQTT_POST_SEND_HOOK(pContext);
-        //}
+        }
     }
 
     return status;
@@ -2458,9 +2458,9 @@ static MQTTStatus_t validateSubscribeUnsubscribeParamsV5(MQTTContext_t* pContext
 {
     MQTTStatus_t status = MQTTSuccess;
     size_t iterator;
-    bool isSharedSub = false ; 
-    char* shareNameEnd ;
-    char tmp; 
+    bool isSharedSub = false;
+    char* shareNameEnd;
+    char tmp;
     char* shareNameStart;
 
     /* Validate all the parameters. */
@@ -2500,9 +2500,9 @@ static MQTTStatus_t validateSubscribeUnsubscribeParamsV5(MQTTContext_t* pContext
 
             }
         }
-        if( ( status == MQTTSuccess ) && ( subscriptionType == MQTT_SUBSCRIBE ) )
+        if ((status == MQTTSuccess) && (subscriptionType == MQTT_SUBSCRIBE))
         {
-            for(iterator = 0; iterator < subscriptionCount; iterator++)
+            for (iterator = 0; iterator < subscriptionCount; iterator++)
             {
                 if ((pSubscriptionList[iterator].topicFilterLength == 0U) || (pSubscriptionList[iterator].pTopicFilter == NULL)) {
                     LogError(("Argument cannot be null : pTopicFilter"));
@@ -2515,15 +2515,15 @@ static MQTTStatus_t validateSubscribeUnsubscribeParamsV5(MQTTContext_t* pContext
                     break;
                 }
                 /*Say that wildcards are avaliable by default. */
-                if (pContext->connectProperties.isWildcardAvaiable == 0 && (strchr(pSubscriptionList[iterator].pTopicFilter,'#') || strchr(pSubscriptionList[iterator].pTopicFilter, '#'))) 
+                if (pContext->connectProperties.isWildcardAvaiable == 0 && (strchr(pSubscriptionList[iterator].pTopicFilter, '#') || strchr(pSubscriptionList[iterator].pTopicFilter, '#')))
                 {
-                    LogError(("Protocol Error : Wildcard Subscriptions not allowed. ")); 
-                    status = MQTTBadParameter; 
-                    break; 
+                    LogError(("Protocol Error : Wildcard Subscriptions not allowed. "));
+                    status = MQTTBadParameter;
+                    break;
                 }
                 isSharedSub = ((strncmp(pSubscriptionList[iterator].pTopicFilter, "$share/", 7)) == 0);
                 if (isSharedSub) {
-                    shareNameStart = pSubscriptionList[iterator].pTopicFilter + 7; 
+                    shareNameStart = pSubscriptionList[iterator].pTopicFilter + 7;
                     shareNameEnd = strchr(shareNameStart, '/');
                     if ((shareNameEnd == NULL) || (shareNameEnd == pSubscriptionList[iterator].pTopicFilter + 7)) {
                         LogError(("Protocol Error : ShareName is not present , missing or empty"));
@@ -2535,16 +2535,15 @@ static MQTTStatus_t validateSubscribeUnsubscribeParamsV5(MQTTContext_t* pContext
                         status = MQTTBadParameter;
                         break;
                     }
-                    tmp = *shareNameEnd; 
-                    *shareNameEnd = '\0'; 
-                    if (strchr(shareNameStart, '#') || strchr(shareNameStart, '+'))
+                    const char* ptr;
+                    for (ptr = shareNameStart; ptr < shareNameEnd; ptr++)
                     {
-                        LogError(("Protocol Error : Wildcard Subscriptions not allowed in ShareName"));
-                        status = MQTTBadParameter;
-                        break;
+                        if (*ptr == '#' || *ptr == '+')
+                        {
+                            status = MQTTBadParameter;
+                            break; // Invalid share name
+                        }
                     }
-                    *shareNameEnd = tmp;
-
                     if (pContext->connectProperties.isSharedAvailable == 0)
                     {
                         LogError(("Protocol Error : Shared Subscriptions not allowed"));
