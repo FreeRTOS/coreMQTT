@@ -677,7 +677,7 @@ typedef enum MQTTSubscriptionType
  * 
  */
 
-static MQTTStatus_t calculateSubscriptionPacketSizeV5(MQTTSubscribeInfo_t* pSubscriptionList,
+static MQTTStatus_t calculateSubscriptionPacketSize(MQTTSubscribeInfo_t* pSubscriptionList,
     size_t subscriptionCount,
     size_t* pRemainingLength,
     size_t* pPacketSize,
@@ -788,7 +788,7 @@ static MQTTStatus_t processPublishFlags( uint8_t publishFlags,
  * @return #MQTTSuccess if PUBLISH is valid; #MQTTBadResponse
  * if the PUBLISH packet doesn't follow MQTT spec.
  */
-static MQTTStatus_t deserializePublishV5( const MQTTPacketInfo_t * pIncomingPacket,
+static MQTTStatus_t deserializePublish( const MQTTPacketInfo_t * pIncomingPacket,
                                         uint16_t * pPacketId,
                                         MQTTPublishInfo_t * pPublishInfo );
 
@@ -1036,7 +1036,7 @@ static MQTTStatus_t deserializeSimpleAckV5( const MQTTPacketInfo_t * pAck,
  *
  * @return #MQTTSuccess,#MQTTBadParameter and #MQTTProtocolError.
  */
-static MQTTStatus_t validateDisconnectResponseV5( uint8_t reasonCode,
+static MQTTStatus_t validateDisconnectResponse( uint8_t reasonCode,
                                                       bool incoming );
 /*-----------------------------------------------------------*/
 
@@ -1990,7 +1990,7 @@ static MQTTStatus_t deserializeSimpleAckV5( const MQTTPacketInfo_t * pAck,
 }
 
 
-static MQTTStatus_t calculateSubscriptionPacketSizeV5(MQTTSubscribeInfo_t *pSubscriptionList,
+static MQTTStatus_t calculateSubscriptionPacketSize(MQTTSubscribeInfo_t *pSubscriptionList,
                                                         size_t subscriptionCount,
                                                         size_t *pRemainingLength,
                                                         size_t *pPacketSize, 
@@ -2046,7 +2046,7 @@ static MQTTStatus_t calculateSubscriptionPacketSizeV5(MQTTSubscribeInfo_t *pSubs
                 ( unsigned long ) *pPacketSize ) );
     return status ; 
 }
-MQTTStatus_t MQTTV5_GetSubscribePacketSize(MQTTSubscribeInfo_t *pSubscriptionList,
+MQTTStatus_t MQTT_GetSubscribePacketSize(MQTTSubscribeInfo_t *pSubscriptionList,
                                         size_t subscriptionCount,
                                         size_t *pRemainingLength,
                                         size_t *pPacketSize, 
@@ -2064,12 +2064,12 @@ MQTTStatus_t MQTTV5_GetSubscribePacketSize(MQTTSubscribeInfo_t *pSubscriptionLis
     }
     else
     {
-        status = calculateSubscriptionPacketSizeV5(pSubscriptionList, subscriptionCount, pRemainingLength, pPacketSize, subscribePropLen, MQTT_SUBSCRIBE);
+        status = calculateSubscriptionPacketSize(pSubscriptionList, subscriptionCount, pRemainingLength, pPacketSize, subscribePropLen, MQTT_SUBSCRIBE);
     }
     return status ; 
 }
 
-static MQTTStatus_t validateDisconnectResponseV5( uint8_t reasonCode,
+static MQTTStatus_t validateDisconnectResponse( uint8_t reasonCode,
                                                     bool incoming )
 {
     MQTTStatus_t status;
@@ -2641,7 +2641,7 @@ MQTTStatus_t deserializePublishProperties( MQTTPublishInfo_t * pPublishInfo, con
     return status ; 
 }
 
-static MQTTStatus_t checkPublishRemainingLengthV5( size_t remainingLength,
+static MQTTStatus_t checkPublishRemainingLength( size_t remainingLength,
     MQTTQoS_t qos,
     size_t qos0Minimum )
 {
@@ -2676,7 +2676,7 @@ static MQTTStatus_t checkPublishRemainingLengthV5( size_t remainingLength,
 }
 
 
-static MQTTStatus_t deserializePublishV5( const MQTTPacketInfo_t * pIncomingPacket,
+static MQTTStatus_t deserializePublish( const MQTTPacketInfo_t * pIncomingPacket,
                                             uint16_t * pPacketId,
                                             MQTTPublishInfo_t * pPublishInfo )
 {
@@ -2701,7 +2701,7 @@ static MQTTStatus_t deserializePublishV5( const MQTTPacketInfo_t * pIncomingPack
         * name (at least 1 byte). A QoS 1 or 2 PUBLISH must have a remaining length of
         * at least 5 for the packet identifier in addition to the topic name length and
         * topic name. */
-        status = checkPublishRemainingLengthV5( pIncomingPacket->remainingLength,
+        status = checkPublishRemainingLength( pIncomingPacket->remainingLength,
         pPublishInfo->qos,
         4U);
     }
@@ -2715,7 +2715,7 @@ static MQTTStatus_t deserializePublishV5( const MQTTPacketInfo_t * pIncomingPack
 
         /* Sanity checks for topic name length and "Remaining length". The remaining
         * length must be at least as large as the variable length header. */
-        status = checkPublishRemainingLengthV5( pIncomingPacket->remainingLength,
+        status = checkPublishRemainingLength( pIncomingPacket->remainingLength,
         pPublishInfo->qos,
         pPublishInfo->topicNameLength + sizeof( uint16_t ) + sizeof(uint8_t) );
         pIndex = &pIndex[pPublishInfo->topicNameLength] ;
@@ -2981,7 +2981,7 @@ uint8_t * MQTT_SerializeUnsubscribeHeader( size_t remainingLength,
 
 /*-----------------------------------------------------------*/
 
-MQTTStatus_t MQTTV5_GetUnsubscribePacketSize( const MQTTSubscribeInfo_t * pSubscriptionList,
+MQTTStatus_t MQTT_GetUnsubscribePacketSize( const MQTTSubscribeInfo_t * pSubscriptionList,
                                             size_t subscriptionCount,
                                             size_t * pRemainingLength,
                                             size_t * pPacketSize,
@@ -3008,7 +3008,7 @@ MQTTStatus_t MQTTV5_GetUnsubscribePacketSize( const MQTTSubscribeInfo_t * pSubsc
     else
     {
         /* Calculate the MQTT UNSUBSCRIBE packet size. */
-        status = calculateSubscriptionPacketSizeV5( pSubscriptionList,
+        status = calculateSubscriptionPacketSize( pSubscriptionList,
                                                 subscriptionCount,
                                                 pRemainingLength,
                                                 pPacketSize,
@@ -3169,7 +3169,7 @@ MQTTStatus_t MQTT_DeserializePublish( const MQTTPacketInfo_t * pIncomingPacket,
     }
     else
     {
-       status = deserializePublishV5(pIncomingPacket, pPacketId, pPublishInfo) ; 
+       status = deserializePublish(pIncomingPacket, pPacketId, pPublishInfo) ; 
 
     }
 
@@ -3913,7 +3913,7 @@ MQTTStatus_t MQTTV5_GetAckPacketSize(MQTTAckInfo_t* pAckInfo,
     return status;
 }
 
-MQTTStatus_t MQTTV5_GetDisconnectPacketSize( MQTTAckInfo_t * pDisconnectInfo,
+MQTTStatus_t MQTT_GetDisconnectPacketSize( MQTTAckInfo_t * pDisconnectInfo,
                                                 size_t * pRemainingLength,
                                                 size_t * pPacketSize,
                                                 uint32_t maxPacketSize,
@@ -3944,7 +3944,7 @@ MQTTStatus_t MQTTV5_GetDisconnectPacketSize( MQTTAckInfo_t * pDisconnectInfo,
         /*Do nothing*/
 
     }
-    else if(validateDisconnectResponseV5( *pDisconnectInfo->reasonCode, false ) != MQTTSuccess )
+    else if(validateDisconnectResponse( *pDisconnectInfo->reasonCode, false ) != MQTTSuccess )
     {
         LogError( ( "Invalid reason code." ) );
         status = MQTTBadParameter;
@@ -3991,7 +3991,7 @@ MQTTStatus_t MQTTV5_GetDisconnectPacketSize( MQTTAckInfo_t * pDisconnectInfo,
     return status;
 }
 
-uint8_t * MQTTV5_SerializeDisconnectFixed( uint8_t * pIndex,
+uint8_t * MQTT_SerializeDisconnectFixed( uint8_t * pIndex,
                                             const MQTTAckInfo_t * pDisconnectInfo,
                                             size_t remainingLength)
 {
@@ -4053,7 +4053,7 @@ uint8_t * MQTTV5_SerializeDisconnectFixed( uint8_t * pIndex,
             *pDisconnectInfo->reasonCode = *pIndex;
             pIndex++;
             /*Validate the reason code.*/
-            status = validateDisconnectResponseV5( *pDisconnectInfo->reasonCode, true );
+            status = validateDisconnectResponse( *pDisconnectInfo->reasonCode, true );
         }
 
         if( status == MQTTSuccess )

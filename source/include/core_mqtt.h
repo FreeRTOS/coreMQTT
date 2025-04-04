@@ -602,13 +602,13 @@ MQTTStatus_t MQTT_Connect(MQTTContext_t* pContext,
  */
 /* @[declare_mqtt_subscribe] */
 
-MQTTStatus_t MQTT_SubscribeV5( MQTTContext_t * pContext,
+MQTTStatus_t MQTT_Subscribe( MQTTContext_t * pContext,
     MQTTSubscribeInfo_t * pSubscriptionList,
     size_t subscriptionCount,
     uint16_t packetId, 
     MqttPropBuilder_t * pPropertyBuilder) ; 
 
-MQTTStatus_t MQTT_UnsubscribeV5( MQTTContext_t * pContext,
+MQTTStatus_t MQTT_Unsubscribe( MQTTContext_t * pContext,
                                const MQTTSubscribeInfo_t * pSubscriptionList,
                                size_t subscriptionCount,
                                uint16_t packetId,
@@ -999,7 +999,7 @@ const char * MQTT_Status_strerror( MQTTStatus_t status );
  * #MQTTSuccess otherwise.
  */
 /* @[declare_mqttv5_disconnect] */
-MQTTStatus_t MQTTV5_Disconnect(MQTTContext_t* pContext,
+MQTTStatus_t MQTT_Disconnect(MQTTContext_t* pContext,
     MQTTAckInfo_t* pDisconnectInfo,
     MqttPropBuilder_t* pPropertyBuilder); 
 /* @[declare_mqttv5_disconnect] */

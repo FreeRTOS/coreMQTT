@@ -659,7 +659,7 @@ static MQTTStatus_t sendPublishAcksWithProperty( MQTTContext_t * pContext,
  * @return #MQTTSuccess, #MQTTBadParameter, #MQTTIllegalState or #MQTTSendFailed.
  */
 
-static MQTTStatus_t sendDisconnectWithoutCopyV5(MQTTContext_t* pContext,
+static MQTTStatus_t sendDisconnectWithoutCopy(MQTTContext_t* pContext,
     const MQTTAckInfo_t* pDisconnectInfo,
     size_t remainingLength,
     MqttPropBuilder_t* pPropertyBuilder); 
@@ -814,7 +814,7 @@ static MQTTStatus_t sendPublishAcksWithProperty( MQTTContext_t * pContext,
 }
 
 
-static MQTTStatus_t sendDisconnectWithoutCopyV5( MQTTContext_t * pContext,
+static MQTTStatus_t sendDisconnectWithoutCopy( MQTTContext_t * pContext,
                                                     const MQTTAckInfo_t * pDisconnectInfo,
                                                     size_t remainingLength,
                                                     MqttPropBuilder_t* pPropertyBuilder)
@@ -847,7 +847,7 @@ static MQTTStatus_t sendDisconnectWithoutCopyV5( MQTTContext_t * pContext,
     assert( pDisconnectInfo != NULL );
 
     /* Only for fixed size fields. */
-    pIndex = MQTTV5_SerializeDisconnectFixed( pIndex, pDisconnectInfo, remainingLength);
+    pIndex = MQTT_SerializeDisconnectFixed( pIndex, pDisconnectInfo, remainingLength);
     iterator->iov_base = fixedHeader;
     /* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-182 */
     /* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-108 */
@@ -2328,7 +2328,7 @@ static MQTTStatus_t receiveSingleIteration( MQTTContext_t * pContext,
 
 /*-----------------------------------------------------------*/
 
-static MQTTStatus_t sendSubscribeWithoutCopyV5( MQTTContext_t * pContext,
+static MQTTStatus_t sendSubscribeWithoutCopy( MQTTContext_t * pContext,
                                               MQTTSubscribeInfo_t * pSubscriptionList,
                                               MqttPropBuilder_t * pPropertyBuilder, 
                                               size_t subscriptionCount,   
@@ -2492,7 +2492,7 @@ static MQTTStatus_t sendSubscribeWithoutCopyV5( MQTTContext_t * pContext,
     return status ;                                        
 }
 
-static MQTTStatus_t validateSubscribeUnsubscribeParamsV5(MQTTContext_t* pContext,
+static MQTTStatus_t validateSubscribeUnsubscribeParams(MQTTContext_t* pContext,
     MQTTSubscribeInfo_t* pSubscriptionList,
     size_t subscriptionCount,
     uint16_t packetId, 
@@ -2605,7 +2605,7 @@ static MQTTStatus_t validateSubscribeUnsubscribeParamsV5(MQTTContext_t* pContext
     return status;
 }
 
-MQTTStatus_t MQTT_SubscribeV5( MQTTContext_t * pContext,
+MQTTStatus_t MQTT_Subscribe( MQTTContext_t * pContext,
                              MQTTSubscribeInfo_t * pSubscriptionList,
                              size_t subscriptionCount,
                              uint16_t packetId, 
@@ -2619,7 +2619,7 @@ MQTTStatus_t MQTT_SubscribeV5( MQTTContext_t * pContext,
         subscribePropLen = pPropertyBuilder->currentIndex;
     }
 
-    MQTTStatus_t status = validateSubscribeUnsubscribeParamsV5( pContext , 
+    MQTTStatus_t status = validateSubscribeUnsubscribeParams( pContext , 
                                                                 pSubscriptionList, 
                                                                 subscriptionCount,
                                                                 packetId, 
@@ -2631,7 +2631,7 @@ MQTTStatus_t MQTT_SubscribeV5( MQTTContext_t * pContext,
     if( status == MQTTSuccess ) 
     {
         /* Get the remaining length and packet size.*/
-        status = MQTTV5_GetSubscribePacketSize( pSubscriptionList,
+        status = MQTT_GetSubscribePacketSize( pSubscriptionList,
                                                 subscriptionCount,
                                                 &remainingLength,
                                                 &packetSize,
@@ -2644,7 +2644,7 @@ MQTTStatus_t MQTT_SubscribeV5( MQTTContext_t * pContext,
         MQTT_PRE_SEND_HOOK(pContext);
 
         /* Send MQTT SUBSCRIBE packet. */
-        status = sendSubscribeWithoutCopyV5( pContext,
+        status = sendSubscribeWithoutCopy( pContext,
                                             pSubscriptionList,
                                             pPropertyBuilder, 
                                             subscriptionCount,
@@ -3738,7 +3738,7 @@ MQTTStatus_t MQTT_Ping( MQTTContext_t * pContext )
 /*-----------------------------------------------------------*/
 
 
-MQTTStatus_t MQTT_UnsubscribeV5( MQTTContext_t * pContext,
+MQTTStatus_t MQTT_Unsubscribe( MQTTContext_t * pContext,
                                const MQTTSubscribeInfo_t * pSubscriptionList,
                                size_t subscriptionCount,
                                uint16_t packetId, 
@@ -3753,7 +3753,7 @@ MQTTStatus_t MQTT_UnsubscribeV5( MQTTContext_t * pContext,
     }
 
     /* Validate arguments. */
-    MQTTStatus_t status = validateSubscribeUnsubscribeParamsV5( pContext,
+    MQTTStatus_t status = validateSubscribeUnsubscribeParams( pContext,
                                                               pSubscriptionList,
                                                               subscriptionCount,
                                                               packetId, 
@@ -3762,7 +3762,7 @@ MQTTStatus_t MQTT_UnsubscribeV5( MQTTContext_t * pContext,
     if( status == MQTTSuccess )
     {
         /* Get the remaining length and packet size.*/
-        status = MQTTV5_GetUnsubscribePacketSize( pSubscriptionList,
+        status = MQTT_GetUnsubscribePacketSize( pSubscriptionList,
                                                 subscriptionCount,
                                                 &remainingLength,
                                                 &packetSize, 
@@ -3777,7 +3777,7 @@ MQTTStatus_t MQTT_UnsubscribeV5( MQTTContext_t * pContext,
         /* Take the mutex because the below call should not be interrupted. */
         MQTT_PRE_SEND_HOOK( pContext );
 
-        status = sendSubscribeWithoutCopyV5( pContext,
+        status = sendSubscribeWithoutCopy( pContext,
                                              pSubscriptionList,
                                              pPropertyBuilder,
                                              subscriptionCount,
@@ -4065,7 +4065,7 @@ const char * MQTT_Status_strerror( MQTTStatus_t status )
     return str;
 }
 
-MQTTStatus_t MQTTV5_Disconnect( MQTTContext_t * pContext,
+MQTTStatus_t MQTT_Disconnect( MQTTContext_t * pContext,
                                 MQTTAckInfo_t * pDisconnectInfo,
                                 MqttPropBuilder_t* pPropertyBuilder)
 {
@@ -4088,7 +4088,7 @@ MQTTStatus_t MQTTV5_Disconnect( MQTTContext_t * pContext,
     if( status == MQTTSuccess )
     {
         /* Get MQTT DISCONNECT packet size. */
-        status = MQTTV5_GetDisconnectPacketSize( pDisconnectInfo, &remainingLength, &packetSize, pContext->connectProperties.serverMaxPacketSize, disconnectPropLen);
+        status = MQTT_GetDisconnectPacketSize( pDisconnectInfo, &remainingLength, &packetSize, pContext->connectProperties.serverMaxPacketSize, disconnectPropLen);
         LogDebug( ( "MQTT DISCONNECT packet size is %lu.",
                     ( unsigned long ) packetSize ) );
     }
@@ -4098,7 +4098,7 @@ MQTTStatus_t MQTTV5_Disconnect( MQTTContext_t * pContext,
         /* Take the mutex because the below call should not be interrupted. */
         MQTT_PRE_SEND_HOOK( pContext );
 
-        status = sendDisconnectWithoutCopyV5( pContext, pDisconnectInfo, remainingLength, pPropertyBuilder);
+        status = sendDisconnectWithoutCopy( pContext, pDisconnectInfo, remainingLength, pPropertyBuilder);
 
         /* Give the mutex away. */
         MQTT_POST_SEND_HOOK( pContext );

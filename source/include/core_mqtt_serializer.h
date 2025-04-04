@@ -679,7 +679,7 @@ typedef struct MQTTPacketInfo
 /* @[declare_mqtt_getsubscribepacketsize] */
 
 
-MQTTStatus_t MQTTV5_GetSubscribePacketSize(MQTTSubscribeInfo_t* pSubscriptionList,
+MQTTStatus_t MQTT_GetSubscribePacketSize(MQTTSubscribeInfo_t* pSubscriptionList,
     size_t subscriptionCount,
     size_t* pRemainingLength,
     size_t* pPacketSize,
@@ -736,7 +736,7 @@ MQTTStatus_t MQTTV5_GetSubscribePacketSize(MQTTSubscribeInfo_t* pSubscriptionLis
                                            
 /* @[declare_mqtt_getunsubscribepacketsize] */
 
-MQTTStatus_t MQTTV5_GetUnsubscribePacketSize(const MQTTSubscribeInfo_t* pSubscriptionList,
+MQTTStatus_t MQTT_GetUnsubscribePacketSize(const MQTTSubscribeInfo_t* pSubscriptionList,
                                             size_t subscriptionCount,
                                             size_t* pRemainingLength,
                                             size_t* pPacketSize,
@@ -1620,7 +1620,7 @@ MQTTStatus_t MQTTV5_SerializePubAckWithProperty( const MQTTAckInfo_t *pAckInfo,
  * @endcode
  */
 /* @[declare_mqttv5_getdisconnectpacketsize] */
-MQTTStatus_t MQTTV5_GetDisconnectPacketSize(MQTTAckInfo_t* pDisconnectInfo,
+MQTTStatus_t MQTT_GetDisconnectPacketSize(MQTTAckInfo_t* pDisconnectInfo,
     size_t* pRemainingLength,
     size_t* pPacketSize,
     uint32_t maxPacketSize,
@@ -1649,7 +1649,7 @@ MQTTStatus_t MQTTV5_GetDisconnectPacketSize(MQTTAckInfo_t* pDisconnectInfo,
  * @cond DOXYGEN_IGNORE
  * Doxygen should ignore this definition, this function is private.
  */
-uint8_t * MQTTV5_SerializeDisconnectFixed(uint8_t * pIndex,
+uint8_t * MQTT_SerializeDisconnectFixed(uint8_t * pIndex,
                                         const MQTTAckInfo_t * pDisconnectInfo,
                                         size_t remainingLength);
 /** @endcond */
