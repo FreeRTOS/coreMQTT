@@ -1715,6 +1715,7 @@ void test_MQTTV5_Subscribe_happy_path(void){
 
 
     /* Verify MQTTSuccess is returned with the following mocks. */
+    validateSubscribeProperties_ExpectAnyArgsAndReturn(MQTTSuccess) ; 
     MQTTV5_GetSubscribePacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTTV5_GetSubscribePacketSize_ReturnThruPtr_pPacketSize( &packetSize );
     MQTTV5_GetSubscribePacketSize_ReturnThruPtr_pRemainingLength( &remainingLength );
@@ -1769,6 +1770,7 @@ void test_MQTTV5_Subscribe_happy_path1(void){
     subscribeInfo[1].noLocalOption = 0 ;
     subscribeInfo[1].retainAsPublishedOption = 0 ;
     /* Verify MQTTSuccess is returned with the following mocks. */
+    validateSubscribeProperties_ExpectAnyArgsAndReturn(MQTTSuccess); 
     MQTTV5_GetSubscribePacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTTV5_GetSubscribePacketSize_ReturnThruPtr_pPacketSize( &packetSize );
     MQTTV5_GetSubscribePacketSize_ReturnThruPtr_pRemainingLength( &remainingLength );
@@ -1784,6 +1786,7 @@ void test_MQTTV5_Subscribe_happy_path1(void){
     subscribeInfo[0].noLocalOption = 0 ;
     subscribeInfo[0].retainAsPublishedOption = 0 ;
 
+    validateSubscribeProperties_ExpectAnyArgsAndReturn(MQTTSuccess); 
     MQTTV5_GetSubscribePacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTTV5_GetSubscribePacketSize_ReturnThruPtr_pPacketSize( &packetSize );
     MQTTV5_GetSubscribePacketSize_ReturnThruPtr_pRemainingLength( &remainingLength );
@@ -1831,6 +1834,7 @@ void test_MQTTV5_Subscribe_happy_path2(void){
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
 
     /* Verify MQTTSuccess is returned with the following mocks. */
+    validateSubscribeProperties_ExpectAnyArgsAndReturn(MQTTSuccess); 
     MQTTV5_GetSubscribePacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTTV5_GetSubscribePacketSize_ReturnThruPtr_pPacketSize( &packetSize );
     MQTTV5_GetSubscribePacketSize_ReturnThruPtr_pRemainingLength( &remainingLength );
@@ -1876,6 +1880,7 @@ void test_MQTTV5_Subscribe_happy_path3(void){
     TEST_ASSERT_EQUAL(MQTTSuccess, mqttStatus);
 
     /* Verify MQTTSuccess is returned with the following mocks. */
+    validateSubscribeProperties_ExpectAnyArgsAndReturn(MQTTSuccess) ; 
     MQTTV5_GetSubscribePacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTTV5_GetSubscribePacketSize_ReturnThruPtr_pPacketSize( &packetSize );
     MQTTV5_GetSubscribePacketSize_ReturnThruPtr_pRemainingLength( &remainingLength );
@@ -1974,6 +1979,7 @@ void test_MQTTV5_shared_subscriptions(void){
 
 
     /* Verify MQTTSuccess is returned with the following mocks. */
+    validateSubscribeProperties_ExpectAnyArgsAndReturn(MQTTSuccess); 
     MQTTV5_GetSubscribePacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTTV5_GetSubscribePacketSize_ReturnThruPtr_pPacketSize( &packetSize );
     MQTTV5_GetSubscribePacketSize_ReturnThruPtr_pRemainingLength( &remainingLength );
@@ -2180,6 +2186,7 @@ void test_MQTTV5_Unsubscribe_happy_path(void){
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
 
     /* Verify MQTTSuccess is returned with the following mocks. */
+    validateSubscribeProperties_ExpectAnyArgsAndReturn(MQTTSuccess) ; 
     MQTTV5_GetSubscribePacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTTV5_GetSubscribePacketSize_ReturnThruPtr_pPacketSize( &packetSize );
     MQTTV5_GetSubscribePacketSize_ReturnThruPtr_pRemainingLength( &remainingLength );
@@ -2572,6 +2579,7 @@ void test_MQTT_SubscribeV5_sendFailed( void )
     mqttStatus = MQTT_Init( &con, &trans, getTime, eventCallback, &networkBuffer, &ackPropsBuilder );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
     /* Verify MQTTSendFailed is propagated when transport interface returns an error. */
+    validateSubscribeProperties_ExpectAnyArgsAndReturn(MQTTSuccess); 
     MQTTV5_GetSubscribePacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTTV5_GetSubscribePacketSize_ReturnThruPtr_pPacketSize( &packetSize );
     MQTTV5_GetSubscribePacketSize_ReturnThruPtr_pRemainingLength( &remainingLength );
