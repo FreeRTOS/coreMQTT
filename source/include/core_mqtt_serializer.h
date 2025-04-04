@@ -1859,18 +1859,6 @@ uint8_t* encodeString(uint8_t* pDestination,
     const char* pSource,
     uint16_t sourceLength);
 
-/**
- * @brief Encodes the remaining length of the packet using the variable length
- * encoding scheme provided in the MQTT v3.1.1 specification.
- *
- * @param[out] pDestination The destination buffer to store the encoded remaining
- * length.
- * @param[in] length The remaining length to encode.
- *
- * @return The location of the byte following the encoded value.
- */
-uint8_t* encodeRemainingLength(uint8_t* pDestination,
-    size_t length);
 
 MQTTStatus_t validatePublishProperties(uint16_t serverTopicAliasMax, MqttPropBuilder_t* propBuilder);
 MQTTStatus_t validateSubscribeProperties(uint8_t isSubscriptionIdAvailable, MqttPropBuilder_t* propBuilder); 

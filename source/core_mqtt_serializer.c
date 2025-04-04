@@ -695,7 +695,7 @@ static MQTTStatus_t calculateSubscriptionPacketSizeV5(MQTTSubscribeInfo_t* pSubs
  *
  * @return The location of the byte following the encoded value.
  */
-uint8_t * encodeRemainingLength( uint8_t * pDestination,
+static uint8_t * encodeRemainingLength( uint8_t * pDestination,
                                 size_t length );
 
 /**
@@ -2178,7 +2178,7 @@ static size_t remainingLengthEncodedSize( size_t length )
 
 /*-----------------------------------------------------------*/
 
-uint8_t * encodeRemainingLength( uint8_t * pDestination,
+static uint8_t * encodeRemainingLength( uint8_t * pDestination,
                                 size_t length )
 {
     uint8_t lengthByte;
