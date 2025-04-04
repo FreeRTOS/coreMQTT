@@ -96,6 +96,7 @@
  * without TLS, it is typically implemented by calling the TCP layer receive
  * function. @ref TransportRecv_t may be invoked multiple times by the protocol
  * library, if fewer bytes than were requested to receive are returned.
+ * Please note that it is HIGHLY RECOMMENDED that the transport receive implementation does NOT block.
  * <br><br>
  * <b>Example code:</b>
  * @code{c}
@@ -197,6 +198,8 @@ typedef struct NetworkContext NetworkContext_t;
  *
  * @note It is HIGHLY RECOMMENDED that the transport receive
  * implementation does NOT block.
+ * A non‐blocking implementation is essential so that the keep‐alive 
+ * mechanism can work properly.
  * coreMQTT will continue to call the transport interface if it receives
  * a partial packet until it accumulates enough data to get the complete
  * MQTT packet.
