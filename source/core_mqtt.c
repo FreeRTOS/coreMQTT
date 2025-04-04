@@ -674,10 +674,6 @@ MQTTStatus_t MqttPropertyBuilder_Init(MqttPropBuilder_t* pPropertyBuilder, uint8
  */
 MQTTStatus_t MQTTV5_InitConnect(MQTTConnectProperties_t* pConnectProperties);
 
-MQTTStatus_t validatePublishProperties(MQTTContext_t* pContext, MQTTPublishInfo_t* pPublishInfo); 
-
-MQTTStatus_t validateSubscribeProperties(MQTTContext_t* pContext, MqttPropBuilder_t* propBuilder); 
-
 /*-----------------------------------------------------------*/
 
 static MQTTStatus_t sendPublishAcksWithProperty( MQTTContext_t * pContext,
@@ -968,38 +964,6 @@ static bool matchEndWildcardsSpecialCases( const char * pTopicFilter,
 }
 
 /*-----------------------------------------------------------*/
-
-static MQTTStatus_t decodeuint16_t(uint16_t* pProperty,
-    size_t* pPropertyLength,
-    bool* pUsed,
-    const uint8_t** pIndex)
-{
-    const uint8_t* pVariableHeader = *pIndex;
-    MQTTStatus_t status = MQTTSuccess;
-
-    /*Protocol error to include the same property twice.*/
-
-    if (*pUsed == true)
-    {
-        status = MQTTProtocolError;
-    }
-    /*Validate the length and decode.*/
-
-    else if (*pPropertyLength < sizeof(uint16_t))
-    {
-        status = MQTTMalformedPacket;
-    }
-    else
-    {
-        *pProperty = UINT16_DECODE(pVariableHeader);
-        pVariableHeader = &pVariableHeader[sizeof(uint16_t)];
-        *pUsed = true;
-        *pPropertyLength -= sizeof(uint16_t);
-    }
-
-    *pIndex = pVariableHeader;
-    return status;
-}
 
 static bool matchWildcards( const char * pTopicName,
                             uint16_t topicNameLength,
@@ -2600,36 +2564,6 @@ static MQTTStatus_t validateSubscribeUnsubscribeParamsV5(MQTTContext_t* pContext
     return status;
 }
 
-MQTTStatus_t validateSubscribeProperties(MQTTContext_t *pContext , MqttPropBuilder_t * propBuilder)
-{
-    MQTTStatus_t status = MQTTSuccess;
-    size_t propertyLength = propBuilder->currentIndex; 
-    const uint8_t* pLocalIndex = propBuilder->pBuffer;
-    MQTTConnectProperties_t connectProps = pContext->connectProperties;
-
-    if (status == MQTTSuccess)
-    {
-        while ((propertyLength > 0U) && (status == MQTTSuccess))
-        {
-            uint8_t packetId = *pLocalIndex; 
-            pLocalIndex = &pLocalIndex[1]; 
-            propertyLength -= sizeof(uint8_t); 
-
-            switch (packetId)
-            {
-            case MQTT_SUBSCRIPTION_ID_ID:
-                if (connectProps.isSubscriptionIdAvailable == 0)
-                {
-                    LogError(("Protocol Error : Subscription Id not allowed"));
-                    status = MQTTBadParameter;
-                }
-                break;
-            }
-        }
-    }
-    return status; 
-}
-
 MQTTStatus_t MQTT_SubscribeV5( MQTTContext_t * pContext,
                              MQTTSubscribeInfo_t * pSubscriptionList,
                              size_t subscriptionCount,
@@ -2651,7 +2585,7 @@ MQTTStatus_t MQTT_SubscribeV5( MQTTContext_t * pContext,
                                                                 MQTT_SUBSCRIBE);
     if (status == MQTTSuccess && pPropertyBuilder!=NULL)
     {
-        status = validateSubscribeProperties(pContext , pPropertyBuilder);
+        status = validateSubscribeProperties(pContext->connectProperties.isSharedAvailable , pPropertyBuilder);
     }
     if( status == MQTTSuccess ) 
     {
@@ -3125,7 +3059,7 @@ static MQTTStatus_t receiveConnack( const MQTTContext_t * pContext,
         pIncomingPacket->pRemainingData = pContext->networkBuffer.pBuffer;
 
         /* Deserialize CONNACK. */
-        status = MQTTV5_DeserializeConnack( &pContext->connectProperties, pIncomingPacket, pSessionPresent );
+        status = MQTT_DeserializeConnack( &pContext->connectProperties, pIncomingPacket, pSessionPresent );
 
     }
 
@@ -3211,11 +3145,6 @@ static MQTTStatus_t handleSessionResumption( MQTTContext_t * pContext,
     return status;
 }
 
-
-
-
-
-
 static MQTTStatus_t validatePublishParams( const MQTTContext_t * pContext,
                                            const MQTTPublishInfo_t * pPublishInfo,
                                            uint16_t packetId )
@@ -3259,37 +3188,7 @@ static MQTTStatus_t validatePublishParams( const MQTTContext_t * pContext,
 
     return status;
 }
-MQTTStatus_t validatePublishProperties(MQTTContext_t* pContext, MqttPropBuilder_t * propBuilder)
-{
-    MQTTStatus_t status = MQTTSuccess;
-    size_t propertyLength = propBuilder->currentIndex;
-    const uint8_t* pLocalIndex = propBuilder->pBuffer;
-    MQTTConnectProperties_t connectProps = pContext->connectProperties;
-    bool repeatProperty = false; 
-    uint16_t topicAlias; 
-    if (status == MQTTSuccess)
-    {
-        while ((propertyLength > 0U) && (status == MQTTSuccess))
-        {
-            uint8_t packetId = *pLocalIndex;
-            pLocalIndex = &pLocalIndex[1];
-            propertyLength -= sizeof(uint8_t);
-            switch (packetId)
-            {
-            case MQTT_TOPIC_ALIAS_ID:
-                decodeuint16_t(&topicAlias, &propertyLength, &repeatProperty, &pLocalIndex); 
-                if (connectProps.serverTopicAliasMax < topicAlias)
-                {
-                    LogError(("Protocol Error : Topic Alias greater then Topic Alias Max"));
-                    status = MQTTBadParameter;
-                }
-                break;
-            }
-                // qos of the packets has to less than serverMaxQos
-        }
-    }
-    return status; 
-}
+
 /*-----------------------------------------------------------*/
 
 MQTTStatus_t MQTT_Init( MQTTContext_t * pContext,
@@ -3518,7 +3417,7 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
     if( status == MQTTSuccess )
     {
     /* Get MQTT connect packet size and remaining length. */
-        status = MQTTV5_GetConnectPacketSize( pConnectInfo,
+        status = MQTT_GetConnectPacketSize( pConnectInfo,
                                                 pWillInfo,
                                                 proplen,
                                                 willPropLen,    
@@ -3616,21 +3515,20 @@ MQTTStatus_t MQTT_Publish( MQTTContext_t * pContext,
 
     if ( (status == MQTTSuccess) && (pPropertyBuilder!= NULL))
     {
-        status = validatePublishProperties(pContext, pPropertyBuilder);
+        status = validatePublishProperties(pContext->connectProperties.serverTopicAliasMax, pPropertyBuilder);
     }
 
     if( status == MQTTSuccess )
     {
         /* Get the remaining length and packet size.*/
 
-        status = MQTTV5_ValidatePublishParams( pPublishInfo,
-                                                pContext->connectProperties.serverTopicAliasMax,
-                                                pContext->connectProperties.retainAvailable,
-                                                pContext->connectProperties.serverMaxQos );
+        status = MQTT_ValidatePublishParams( pPublishInfo,
+                                            pContext->connectProperties.retainAvailable,
+                                            pContext->connectProperties.serverMaxQos );
 
         if( status == MQTTSuccess )
         {
-            status = MQTTV5_GetPublishPacketSize( pPublishInfo,
+            status = MQTT_GetPublishPacketSize( pPublishInfo,
                                                     &remainingLength,
                                                     &packetSize,
                                                     pContext->connectProperties.serverMaxPacketSize,

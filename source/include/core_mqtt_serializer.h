@@ -1224,7 +1224,7 @@ uint8_t * MQTTV5_SerializeConnectProperties( uint8_t * pIndex,
  * @endcode
  */
 /* @[declare_mqttv5_deserializeconnack] */
-MQTTStatus_t MQTTV5_DeserializeConnack( MQTTConnectProperties_t *pConnackProperties,
+MQTTStatus_t MQTT_DeserializeConnack( MQTTConnectProperties_t *pConnackProperties,
                                         const MQTTPacketInfo_t * pIncomingPacket,
                                         bool * pSessionPresent );
 /* @[declare_mqttv5_deserializeconnack] */
@@ -1283,7 +1283,7 @@ MQTTStatus_t MQTTV5_DeserializeConnack( MQTTConnectProperties_t *pConnackPropert
  * @endcode
  */
 /* @[declare_mqttv5_getconnectpacketsize] */
-MQTTStatus_t MQTTV5_GetConnectPacketSize(const MQTTConnectInfo_t* pConnectInfo,
+MQTTStatus_t MQTT_GetConnectPacketSize(const MQTTConnectInfo_t* pConnectInfo,
     MQTTPublishInfo_t* pWillInfo,
     size_t propLen,
     size_t willPropLen,
@@ -1327,7 +1327,7 @@ MQTTStatus_t MQTTV5_GetConnectPacketSize(const MQTTConnectInfo_t* pConnectInfo,
  * @endcode
  */
 /* @[declare_mqttv5_validatepublishparams] */
-MQTTStatus_t MQTTV5_ValidatePublishParams(const MQTTPublishInfo_t* pPublishInfo, uint16_t topicAliasMax, uint8_t retainAvailable, uint8_t maxQos);
+MQTTStatus_t MQTT_ValidatePublishParams(const MQTTPublishInfo_t* pPublishInfo, uint8_t retainAvailable, uint8_t maxQos);
 /* @[declare_mqttv5_validatepublishparams] */
 
 
@@ -1387,7 +1387,7 @@ MQTTStatus_t MQTTV5_ValidatePublishParams(const MQTTPublishInfo_t* pPublishInfo,
  * @endcode
  */
 /* @[declare_mqttv5_getpublishpacketsize] */
-MQTTStatus_t MQTTV5_GetPublishPacketSize(MQTTPublishInfo_t * pPublishInfo,
+MQTTStatus_t MQTT_GetPublishPacketSize(MQTTPublishInfo_t * pPublishInfo,
                                         size_t * pRemainingLength,
                                         size_t * pPacketSize ,
                                         uint32_t maxPacketSize, 
@@ -1871,6 +1871,9 @@ uint8_t* encodeString(uint8_t* pDestination,
  */
 uint8_t* encodeRemainingLength(uint8_t* pDestination,
     size_t length);
+
+MQTTStatus_t validatePublishProperties(uint16_t serverTopicAliasMax, MqttPropBuilder_t* propBuilder);
+MQTTStatus_t validateSubscribeProperties(uint8_t isSubscriptionIdAvailable, MqttPropBuilder_t* propBuilder); 
 
 /* *INDENT-OFF* */
 #ifdef __cplusplus

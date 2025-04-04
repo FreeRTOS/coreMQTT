@@ -948,7 +948,7 @@ static MQTTStatus_t decodeAuthInfo( const MQTTConnectProperties_t * pConnackProp
  *
  * @return #MQTTSuccess, #MQTTProtocolError and #MQTTMalformedPacket
  **/
-static MQTTStatus_t deserializeConnackV5( MQTTConnectProperties_t * pConnackProperties,
+static MQTTStatus_t deserializeConnack( MQTTConnectProperties_t * pConnackProperties,
                                               size_t length,
                                               const uint8_t * const * pIndex );
 
@@ -1556,7 +1556,7 @@ static MQTTStatus_t decodeAuthInfo( const MQTTConnectProperties_t * pConnackProp
     return status;
 }
 
-static MQTTStatus_t deserializeConnackV5( MQTTConnectProperties_t * pConnackProperties,
+static MQTTStatus_t deserializeConnack( MQTTConnectProperties_t * pConnackProperties,
                                             size_t length,
                                             const uint8_t * const * pIndex )
 {
@@ -3332,7 +3332,7 @@ MQTTStatus_t MQTT_ProcessIncomingPacketTypeAndLength( const uint8_t * pBuffer,
 }
 
 
-MQTTStatus_t MQTTV5_GetConnectPacketSize( const MQTTConnectInfo_t * pConnectInfo,
+MQTTStatus_t MQTT_GetConnectPacketSize( const MQTTConnectInfo_t * pConnectInfo,
                                             MQTTPublishInfo_t * pWillInfo,
                                             size_t propLen,
                                             size_t willPropLen , 
@@ -3437,7 +3437,7 @@ MQTTStatus_t MQTTV5_GetConnectPacketSize( const MQTTConnectInfo_t * pConnectInfo
     return status;
 }
 
-MQTTStatus_t MQTTV5_DeserializeConnack( MQTTConnectProperties_t * pConnackProperties,
+MQTTStatus_t MQTT_DeserializeConnack( MQTTConnectProperties_t * pConnackProperties,
                                         const MQTTPacketInfo_t * pIncomingPacket,
                                         bool * pSessionPresent )
 {
@@ -3477,15 +3477,14 @@ MQTTStatus_t MQTTV5_DeserializeConnack( MQTTConnectProperties_t * pConnackProper
         /*Deserialize the connack properties.*/
         else
         {
-            status = deserializeConnackV5( pConnackProperties, propertyLength, &pVariableHeader );
+            status = deserializeConnack( pConnackProperties, propertyLength, &pVariableHeader );
         }
     }
 
     return status;
 }
 
-MQTTStatus_t MQTTV5_ValidatePublishParams( const MQTTPublishInfo_t * pPublishInfo,
-                                            uint16_t topicAliasMax,
+MQTTStatus_t MQTT_ValidatePublishParams( const MQTTPublishInfo_t * pPublishInfo,
                                             uint8_t retainAvailable,
                                             uint8_t maxQos )
 {
@@ -3517,7 +3516,66 @@ MQTTStatus_t MQTTV5_ValidatePublishParams( const MQTTPublishInfo_t * pPublishInf
     return status;
 }
 
-MQTTStatus_t MQTTV5_GetPublishPacketSize( MQTTPublishInfo_t * pPublishInfo,
+MQTTStatus_t validatePublishProperties(uint16_t serverTopicAliasMax, MqttPropBuilder_t* propBuilder)
+{
+    MQTTStatus_t status = MQTTSuccess;
+    size_t propertyLength = propBuilder->currentIndex;
+    const uint8_t* pLocalIndex = propBuilder->pBuffer;
+    bool repeatProperty = false;
+    uint16_t topicAlias;
+    if (status == MQTTSuccess)
+    {
+        while ((propertyLength > 0U) && (status == MQTTSuccess))
+        {
+            uint8_t packetId = *pLocalIndex;
+            pLocalIndex = &pLocalIndex[1];
+            propertyLength -= sizeof(uint8_t);
+            switch (packetId)
+            {
+            case MQTT_TOPIC_ALIAS_ID:
+                decodeuint16_t(&topicAlias, &propertyLength, &repeatProperty, &pLocalIndex);
+                if (serverTopicAliasMax < topicAlias)
+                {
+                    LogError(("Protocol Error : Topic Alias greater then Topic Alias Max"));
+                    status = MQTTBadParameter;
+                }
+                break;
+            }
+        }
+    }
+    return status;
+}
+
+MQTTStatus_t validateSubscribeProperties(uint8_t isSubscriptionIdAvailable, MqttPropBuilder_t* propBuilder)
+{
+    MQTTStatus_t status = MQTTSuccess;
+    size_t propertyLength = propBuilder->currentIndex;
+    const uint8_t* pLocalIndex = propBuilder->pBuffer;
+
+    if (status == MQTTSuccess)
+    {
+        while ((propertyLength > 0U) && (status == MQTTSuccess))
+        {
+            uint8_t packetId = *pLocalIndex;
+            pLocalIndex = &pLocalIndex[1];
+            propertyLength -= sizeof(uint8_t);
+
+            switch (packetId)
+            {
+            case MQTT_SUBSCRIPTION_ID_ID:
+                if (isSubscriptionIdAvailable == 0)
+                {
+                    LogError(("Protocol Error : Subscription Id not allowed"));
+                    status = MQTTBadParameter;
+                }
+                break;
+            }
+        }
+    }
+    return status;
+}
+
+MQTTStatus_t MQTT_GetPublishPacketSize( MQTTPublishInfo_t * pPublishInfo,
                                             size_t * pRemainingLength,
                                             size_t * pPacketSize,
                                             uint32_t maxPacketSize, size_t publishPropertyLength)
