@@ -1589,11 +1589,11 @@ static MQTTStatus_t deserializeConnack( MQTTConnectProperties_t * pConnackProper
     /*Decode all the properties received, validate and store them in pConnackProperties.*/
     while( ( propertyLength > 0U ) && ( status == MQTTSuccess ) )
     {
-        uint8_t packetId = *pVariableHeader;
+        uint8_t propertyId = *pVariableHeader;
         pVariableHeader = &pVariableHeader[ 1 ];
         propertyLength -= sizeof( uint8_t );
 
-        switch( packetId )
+        switch( propertyId )
         {
             case MQTT_SESSION_EXPIRY_ID:
                 status = decodeuint32_t( &pConnackProperties->sessionExpiry, &propertyLength, &sessionExpiry, &pVariableHeader );
@@ -1658,7 +1658,7 @@ static MQTTStatus_t deserializeConnack( MQTTConnectProperties_t * pConnackProper
             case MQTT_AUTH_METHOD_ID:
             case MQTT_AUTH_DATA_ID:
 
-                status = decodeAuthInfo( pConnackProperties, &authMethod, &authData, &propertyLength, &pVariableHeader, packetId );
+                status = decodeAuthInfo( pConnackProperties, &authMethod, &authData, &propertyLength, &pVariableHeader, propertyId);
                 break;
 
             /*Protocol error to include any other property id.*/
@@ -1910,12 +1910,12 @@ static MQTTStatus_t decodeAckProperties( MQTTAckInfo_t * pAckInfo,
         while( ( propertyLength > 0U ) && ( status == MQTTSuccess ) )
         {
             /*Decode the property id.*/
-            uint8_t packetId = *pLocalIndex;
+            uint8_t propertyId = *pLocalIndex;
             bool reasonString = false;
             pLocalIndex = &pLocalIndex[ 1 ];
             propertyLength -= sizeof( uint8_t );
 
-            switch( packetId )
+            switch(propertyId)
             {
                 case MQTT_REASON_STRING_ID:
                     status = decodeutf_8( &pAckInfo->pReasonString, &pAckInfo->reasonStringLength, &propertyLength, &reasonString, &pLocalIndex );
@@ -2901,11 +2901,11 @@ MQTTStatus_t updateContextWithConnectProps(MqttPropBuilder_t* pPropBuilder, MQTT
 
     while ((propertyLength > 0U) && (status == MQTTSuccess))
     {
-        uint8_t packetId = *pIndex;
+        uint8_t propertyId = *pIndex;
         pIndex = &pIndex[1];
         propertyLength--;
 
-        switch (packetId)
+        switch (propertyId)
         {
         case MQTT_MAX_PACKET_SIZE_ID:
             status = decodeuint32_t(&pConnectProperties->maxPacketSize, &propertyLength, &maxPacket, &pIndex);
@@ -2922,7 +2922,7 @@ MQTTStatus_t updateContextWithConnectProps(MqttPropBuilder_t* pPropBuilder, MQTT
         case MQTT_AUTH_METHOD_ID:
         case MQTT_AUTH_DATA_ID:
 
-            status = decodeAuthInfo(pConnectProperties, &authMethod, &authData, &propertyLength, &pIndex, packetId);
+            status = decodeAuthInfo(pConnectProperties, &authMethod, &authData, &propertyLength, &pIndex, propertyId);
             break;
 
         }
@@ -3548,10 +3548,10 @@ MQTTStatus_t validatePublishProperties(uint16_t serverTopicAliasMax, MqttPropBui
     {
         while ((propertyLength > 0U) && (status == MQTTSuccess))
         {
-            uint8_t packetId = *pLocalIndex;
+            uint8_t propertyId = *pLocalIndex;
             pLocalIndex = &pLocalIndex[1];
             propertyLength -= sizeof(uint8_t);
-            switch (packetId)
+            switch (propertyId)
             {
             case MQTT_TOPIC_ALIAS_ID:
                 decodeuint16_t(topicAlias, &propertyLength, &repeatProperty, &pLocalIndex);
@@ -3577,11 +3577,11 @@ MQTTStatus_t validateSubscribeProperties(uint8_t isSubscriptionIdAvailable, Mqtt
     {
         while ((propertyLength > 0U) && (status == MQTTSuccess))
         {
-            uint8_t packetId = *pLocalIndex;
+            uint8_t propertyId = *pLocalIndex;
             pLocalIndex = &pLocalIndex[1];
             propertyLength -= sizeof(uint8_t);
 
-            switch (packetId)
+            switch (propertyId)
             {
             case MQTT_SUBSCRIPTION_ID_ID:
                 if (isSubscriptionIdAvailable == 0)

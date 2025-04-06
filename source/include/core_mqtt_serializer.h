@@ -344,11 +344,6 @@ typedef struct MQTTConnectProperties
     bool  requestProblemInfo;
 
      /**
-     * @brief Length of the connect properties.
-     */
-    size_t propertyLength;
-
-     /**
      * @brief  Pointer to the incoming authentication information.
      */
     MQTTAuthInfo_t *pOutgoingAuth;

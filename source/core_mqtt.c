@@ -2757,11 +2757,6 @@ static MQTTStatus_t sendPublishWithoutCopy( MQTTContext_t * pContext,
         ioVectorLength++;
     }
 
-    ///* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-182 */
-    ///* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-108 */
-    ///* coverity[misra_c_2012_rule_18_2_violation] */
-    ///* coverity[misra_c_2012_rule_10_8_violation] */
-
     /* Publish packets are allowed to contain no payload. */
     if( pPublishInfo->payloadLength > 0U )
     {
@@ -2907,38 +2902,36 @@ static MQTTStatus_t sendConnectWithoutCopy( MQTTContext_t * pContext,
         iterator = &iterator[ vectorsAdded ];
         ioVectorLength += vectorsAdded;
 
-
-        size_t willPropsLen = 0; 
-
-        if (willPropsBuilder != NULL)
+        if (pWillInfo != NULL)
         {
-            willPropsLen = willPropsBuilder->currentIndex;
-        }
+            size_t willPropsLen = 0;
+
+            if (willPropsBuilder != NULL)
+            {
+                willPropsLen = willPropsBuilder->currentIndex;
+            }
 
 
-        uint8_t willPropertyLength[4];
-        pIndex = willPropertyLength;
-        pIndex = encodeRemainingLength(pIndex, willPropsLen);
-        iterator->iov_base = willPropertyLength;
-        iterator->iov_len = (size_t)(pIndex - willPropertyLength);
-        totalMessageLength += iterator->iov_len;
-        iterator++;
-        ioVectorLength++;
-
-        if (willPropsBuilder != NULL)
-        {
-            /*Serialize the will properties*/
-
-            iterator->iov_base = willPropsBuilder->pBuffer;
-            iterator->iov_len = willPropsBuilder->currentIndex;
+            uint8_t willPropertyLength[4];
+            pIndex = willPropertyLength;
+            pIndex = encodeRemainingLength(pIndex, willPropsLen);
+            iterator->iov_base = willPropertyLength;
+            iterator->iov_len = (size_t)(pIndex - willPropertyLength);
             totalMessageLength += iterator->iov_len;
             iterator++;
             ioVectorLength++;
-        }
 
+            if (willPropsBuilder != NULL)
+            {
+                /*Serialize the will properties*/
 
-        if( pWillInfo != NULL )
-        {
+                iterator->iov_base = willPropsBuilder->pBuffer;
+                iterator->iov_len = willPropsBuilder->currentIndex;
+                totalMessageLength += iterator->iov_len;
+                iterator++;
+                ioVectorLength++;
+            }
+
             /* Serialize the topic. */
             vectorsAdded = addEncodedStringToVector( serializedTopicLength,
                                                      pWillInfo->pTopicName,
@@ -3531,7 +3524,7 @@ MQTTStatus_t MQTT_Publish( MQTTContext_t * pContext,
     size_t packetSize = 0UL;
     MQTTPublishState_t publishStatus = MQTTStateNull;
     bool stateUpdateHookExecuted = false;
-    uint16_t topicAlias;
+    uint16_t topicAlias = 0U;
 
     /* Maximum number of bytes required by the 'fixed' part of the PUBLISH
      * packet header according to the MQTT specifications.
@@ -4170,10 +4163,10 @@ bool MQTT_AckGetNextProp(uint8_t** pCurrIndex,
     bool userVal = false;
     while ((propertyLength > 0U) && (status == MQTTSuccess))
     {
-        uint8_t packetId = *pIndex;
+        uint8_t propertyId = *pIndex;
         pIndex = &pIndex[1];
         propertyLength -= sizeof(uint8_t);
-        if (packetId == MQTT_USER_PROPERTY_ID)
+        if (propertyId == MQTT_USER_PROPERTY_ID)
         {
             userPropFlag = true;
             status = decodeutf_8(pUserPropKey, pUserPropKeyLen, &propertyLength, &userKey, &pIndex);
@@ -4213,20 +4206,17 @@ bool MQTT_ConnackGetNextProp(uint8_t** pCurrIndex,
     bool userVal = false;
     while ((propertyLength > 0U) && (status == MQTTSuccess))
     {
-        uint8_t packetId = *pIndex;
+        uint8_t propertyId = *pIndex;
         pIndex = &pIndex[1];
         propertyLength -= sizeof(uint8_t);
-        if (packetId == MQTT_USER_PROPERTY_ID)
+        if (propertyId == MQTT_USER_PROPERTY_ID)
         {
             userPropFlag = true;
-#if ( MQTT_USER_PROPERTY_ENABLED )
             status = decodeutf_8(pUserPropKey, pUserPropKeyLen, &propertyLength, &userKey, &pIndex);
             status = decodeutf_8(pUserPropVal, pUserPropValLen, &propertyLength, &userVal, &pIndex);
             // update currIndex to pIndex essentially. 
             *pCurrIndex = pIndex;
-#else
-            status = decodeAndDiscard(&propertyLength, &pIndex);
-#endif 
+
             break;
         }
     }
@@ -4262,10 +4252,10 @@ bool MQTT_IncomingPubGetNextProp(uint8_t** pCurrIndex,
     bool userVal = false;
     while ((propertyLength > 0U) && (status == MQTTSuccess))
     {
-        uint8_t packetId = *pIndex;
+        uint8_t propertyId = *pIndex;
         pIndex = &pIndex[1];
         propertyLength -= sizeof(uint8_t);
-        if (packetId == MQTT_USER_PROPERTY_ID)
+        if (propertyId == MQTT_USER_PROPERTY_ID)
         {
             userPropFlag = true;
 
