@@ -3531,6 +3531,7 @@ MQTTStatus_t MQTT_Publish( MQTTContext_t * pContext,
     size_t packetSize = 0UL;
     MQTTPublishState_t publishStatus = MQTTStateNull;
     bool stateUpdateHookExecuted = false;
+    uint16_t topicAlias;
 
     /* Maximum number of bytes required by the 'fixed' part of the PUBLISH
      * packet header according to the MQTT specifications.
@@ -3556,7 +3557,7 @@ MQTTStatus_t MQTT_Publish( MQTTContext_t * pContext,
 
     if ( (status == MQTTSuccess) && (pPropertyBuilder!= NULL))
     {
-        status = validatePublishProperties(pContext->connectProperties.serverTopicAliasMax, pPropertyBuilder);
+        status = validatePublishProperties(pContext->connectProperties.serverTopicAliasMax, pPropertyBuilder, &topicAlias);
     }
 
     if( status == MQTTSuccess )
@@ -3565,7 +3566,9 @@ MQTTStatus_t MQTT_Publish( MQTTContext_t * pContext,
 
         status = MQTT_ValidatePublishParams( pPublishInfo,
                                             pContext->connectProperties.retainAvailable,
-                                            pContext->connectProperties.serverMaxQos );
+                                            pContext->connectProperties.serverMaxQos, 
+                                            topicAlias,
+                                            pContext->connectProperties.serverMaxPacketSize);
 
         if( status == MQTTSuccess )
         {

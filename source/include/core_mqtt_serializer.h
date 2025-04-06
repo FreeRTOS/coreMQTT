@@ -1327,7 +1327,7 @@ MQTTStatus_t MQTT_GetConnectPacketSize(const MQTTConnectInfo_t* pConnectInfo,
  * @endcode
  */
 /* @[declare_mqttv5_validatepublishparams] */
-MQTTStatus_t MQTT_ValidatePublishParams(const MQTTPublishInfo_t* pPublishInfo, uint8_t retainAvailable, uint8_t maxQos);
+MQTTStatus_t MQTT_ValidatePublishParams(const MQTTPublishInfo_t* pPublishInfo, uint8_t retainAvailable, uint8_t maxQos,uint16_t topicAlias,  uint32_t maxPacketSize);
 /* @[declare_mqttv5_validatepublishparams] */
 
 
@@ -1503,10 +1503,10 @@ MQTTStatus_t MQTTV5_DeserializeSuback(MQTTAckInfo_t* pSubackProperties,
  * @cond DOXYGEN_IGNORE
  * Doxygen should ignore this definition, this function is private.
  */
-uint8_t * MQTTV5_SerializeAckFixed(uint8_t * pIndex,
-                                uint8_t packetType,
-                                uint16_t packetId,
-                                size_t remainingLength);
+uint8_t* MQTTV5_SerializeAckFixed(uint8_t* pIndex,
+    uint8_t packetType,
+    uint16_t packetId,
+    size_t remainingLength);
 /** @endcond */
 
 /**
@@ -1860,7 +1860,7 @@ uint8_t* encodeString(uint8_t* pDestination,
     uint16_t sourceLength);
 
 
-MQTTStatus_t validatePublishProperties(uint16_t serverTopicAliasMax, MqttPropBuilder_t* propBuilder);
+MQTTStatus_t validatePublishProperties(uint16_t serverTopicAliasMax, MqttPropBuilder_t* propBuilder, uint16_t *topicAliasMax);
 MQTTStatus_t validateSubscribeProperties(uint8_t isSubscriptionIdAvailable, MqttPropBuilder_t* propBuilder); 
 
 /* *INDENT-OFF* */

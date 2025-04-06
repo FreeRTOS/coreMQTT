@@ -965,7 +965,7 @@ static MQTTStatus_t deserializeConnack( MQTTConnectProperties_t * pConnackProper
  * @return MQTTBadParameter if the packet would exceed the size allowed by the
  * MQTT spec; true otherwise.
  */
-static MQTTStatus_t calculatePublishPacketSizeV5( MQTTPublishInfo_t * pPublishInfo,
+static MQTTStatus_t calculatePublishPacketSize( MQTTPublishInfo_t * pPublishInfo,
                                                       size_t * pRemainingLength,
                                                       size_t * pPacketSize,
                                                       uint32_t maxPacketSize, size_t proplen);
@@ -1696,7 +1696,7 @@ static MQTTStatus_t deserializeConnack( MQTTConnectProperties_t * pConnackProper
     return status;
 }
 
-static MQTTStatus_t calculatePublishPacketSizeV5( MQTTPublishInfo_t * pPublishInfo,
+static MQTTStatus_t calculatePublishPacketSize( MQTTPublishInfo_t * pPublishInfo,
                                                     size_t * pRemainingLength,
                                                     size_t * pPacketSize,
                                                     uint32_t maxPacketSize, size_t publishPropertyLength)
@@ -3486,7 +3486,9 @@ MQTTStatus_t MQTT_DeserializeConnack( MQTTConnectProperties_t * pConnackProperti
 
 MQTTStatus_t MQTT_ValidatePublishParams( const MQTTPublishInfo_t * pPublishInfo,
                                             uint8_t retainAvailable,
-                                            uint8_t maxQos )
+                                            uint8_t maxQos, 
+                                            uint16_t topicAlias,
+                                            uint32_t maxPacketSize)
 {
     MQTTStatus_t status;
 
@@ -3508,6 +3510,26 @@ MQTTStatus_t MQTT_ValidatePublishParams( const MQTTPublishInfo_t * pPublishInfo,
                     ( unsigned short ) pPublishInfo->qos ) );
         status = MQTTBadParameter;
     }
+    else if ((topicAlias == 0U) && (pPublishInfo->topicNameLength == 0U))
+    {
+        LogError(("Invalid topic name for PUBLISH: pTopicName=%p, "
+            "topicNameLength=%hu.",
+            (void*)pPublishInfo->pTopicName,
+            (unsigned short)pPublishInfo->topicNameLength));
+        status = MQTTBadParameter;
+    }
+    else if ((pPublishInfo->pTopicName == NULL) && (pPublishInfo->topicNameLength != 0U))
+    {
+        LogError(("Invalid topic name for PUBLISH: pTopicName=%p, "
+            "topicNameLength=%hu.",
+            (void*)pPublishInfo->pTopicName,
+            (unsigned short)pPublishInfo->topicNameLength));
+        status = MQTTBadParameter;
+    }
+    else if (maxPacketSize == 0U)
+    {
+        status = MQTTBadParameter;
+    }
     else
     {
         status = MQTTSuccess;
@@ -3516,13 +3538,12 @@ MQTTStatus_t MQTT_ValidatePublishParams( const MQTTPublishInfo_t * pPublishInfo,
     return status;
 }
 
-MQTTStatus_t validatePublishProperties(uint16_t serverTopicAliasMax, MqttPropBuilder_t* propBuilder)
+MQTTStatus_t validatePublishProperties(uint16_t serverTopicAliasMax, MqttPropBuilder_t* propBuilder, uint16_t *topicAlias)
 {
     MQTTStatus_t status = MQTTSuccess;
     size_t propertyLength = propBuilder->currentIndex;
     const uint8_t* pLocalIndex = propBuilder->pBuffer;
     bool repeatProperty = false;
-    uint16_t topicAlias;
     if (status == MQTTSuccess)
     {
         while ((propertyLength > 0U) && (status == MQTTSuccess))
@@ -3533,8 +3554,8 @@ MQTTStatus_t validatePublishProperties(uint16_t serverTopicAliasMax, MqttPropBui
             switch (packetId)
             {
             case MQTT_TOPIC_ALIAS_ID:
-                decodeuint16_t(&topicAlias, &propertyLength, &repeatProperty, &pLocalIndex);
-                if (serverTopicAliasMax < topicAlias)
+                decodeuint16_t(topicAlias, &propertyLength, &repeatProperty, &pLocalIndex);
+                if (serverTopicAliasMax < *topicAlias)
                 {
                     LogError(("Protocol Error : Topic Alias greater then Topic Alias Max"));
                     status = MQTTBadParameter;
@@ -3578,7 +3599,8 @@ MQTTStatus_t validateSubscribeProperties(uint8_t isSubscriptionIdAvailable, Mqtt
 MQTTStatus_t MQTT_GetPublishPacketSize( MQTTPublishInfo_t * pPublishInfo,
                                             size_t * pRemainingLength,
                                             size_t * pPacketSize,
-                                            uint32_t maxPacketSize, size_t publishPropertyLength)
+                                            uint32_t maxPacketSize,
+                                            size_t publishPropertyLength)
 {
     MQTTStatus_t status = MQTTSuccess;
 
@@ -3591,29 +3613,9 @@ MQTTStatus_t MQTT_GetPublishPacketSize( MQTTPublishInfo_t * pPublishInfo,
                     ( void * ) pPacketSize ) );
         status = MQTTBadParameter;
     }
-    else if( ( pPublishInfo->pTopicName == NULL ) && ( pPublishInfo->topicNameLength != 0U ) )
-    {
-        LogError( ( "Invalid topic name for PUBLISH: pTopicName=%p, "
-                    "topicNameLength=%hu.",
-                    ( void * ) pPublishInfo->pTopicName,
-                    ( unsigned short ) pPublishInfo->topicNameLength ) );
-        status = MQTTBadParameter;
-    }
-    else if( ( pPublishInfo->topicAlias == 0U ) && ( pPublishInfo->topicNameLength == 0U ) )
-    {
-        LogError( ( "Invalid topic name for PUBLISH: pTopicName=%p, "
-                    "topicNameLength=%hu.",
-                    ( void * ) pPublishInfo->pTopicName,
-                    ( unsigned short ) pPublishInfo->topicNameLength ) );
-        status = MQTTBadParameter;
-    }
-    else if( maxPacketSize == 0U )
-    {
-        status = MQTTBadParameter;
-    }
     else
     {
-        status = calculatePublishPacketSizeV5( pPublishInfo, pRemainingLength, pPacketSize, maxPacketSize , publishPropertyLength);
+        status = calculatePublishPacketSize( pPublishInfo, pRemainingLength, pPacketSize, maxPacketSize , publishPropertyLength);
     }
 
     return status;
@@ -3678,6 +3680,7 @@ static MQTTStatus_t readSubackStatusV5(size_t statusCount, const uint8_t* pStatu
     if (status == MQTTSuccess)
     {
         ackInfo->reasonCode = pStatusStart;
+        ackInfo->reasonCodeLength = statusCount; 
     }
     return status;
 }
