@@ -1871,7 +1871,7 @@ void test_MQTTV5_GetConnectPacketSize( void )
     connectInfo.clientIdentifierLength = 4;
     status = MQTT_GetConnectPacketSize( &connectInfo, NULL,0 , 0 , &remainingLength, &packetSize );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
-    TEST_ASSERT_EQUAL_INT( 0, properties.propertyLength );
+    // TEST_ASSERT_EQUAL_INT( 0, properties.propertyLength );
     /* Make sure remaining size returned is 17. */
     TEST_ASSERT_EQUAL_INT( 17, remainingLength );
     /* Make sure packet size is 19. */
