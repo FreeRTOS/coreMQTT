@@ -31,6 +31,7 @@
 
 #include "core_mqtt.h"
 #include "core_mqtt_state.h"
+#include "core_mqtt_utils.h"
 
 /* Include config defaults header to get default values of configs. */
 #include "core_mqtt_config_defaults.h"
@@ -579,8 +580,8 @@ static bool matchEndWildcardsSpecialCases( const char * pTopicFilter,
  *
  * @return The location of the byte following the encoded value.
  */
-static uint8_t* encodeRemainingLength(uint8_t* pDestination,
-                                      size_t length);
+// static uint8_t* encodeRemainingLength(uint8_t* pDestination,
+//                                       size_t length);
 
 /**
  * @brief Attempt to match topic name with a topic filter starting with a wildcard.
@@ -935,36 +936,36 @@ static size_t addEncodedStringToVector( uint8_t serializedLength[ CORE_MQTT_SERI
     return vectorsAdded;
 }
 
-static uint8_t* encodeRemainingLength(uint8_t* pDestination,
-    size_t length)
-{
-    uint8_t lengthByte;
-    uint8_t* pLengthEnd = NULL;
-    size_t remainingLength = length;
+// static uint8_t* encodeRemainingLength(uint8_t* pDestination,
+//     size_t length)
+// {
+//     uint8_t lengthByte;
+//     uint8_t* pLengthEnd = NULL;
+//     size_t remainingLength = length;
 
-    assert(pDestination != NULL);
+//     assert(pDestination != NULL);
 
-    pLengthEnd = pDestination;
+//     pLengthEnd = pDestination;
 
-    /* This algorithm is copied from the MQTT v3.1.1 spec. */
-    do
-    {
-        lengthByte = (uint8_t)(remainingLength % 128U);
-        remainingLength = remainingLength / 128U;
+//     /* This algorithm is copied from the MQTT v3.1.1 spec. */
+//     do
+//     {
+//         lengthByte = (uint8_t)(remainingLength % 128U);
+//         remainingLength = remainingLength / 128U;
 
-        /* Set the high bit of this byte, indicating that there's more data. */
-        if (remainingLength > 0U)
-        {
-            UINT8_SET_BIT(lengthByte, 7);
-        }
+//         /* Set the high bit of this byte, indicating that there's more data. */
+//         if (remainingLength > 0U)
+//         {
+//             UINT8_SET_BIT(lengthByte, 7);
+//         }
 
-        /* Output a single encoded byte. */
-        *pLengthEnd = lengthByte;
-        pLengthEnd++;
-    } while (remainingLength > 0U);
+//         /* Output a single encoded byte. */
+//         *pLengthEnd = lengthByte;
+//         pLengthEnd++;
+//     } while (remainingLength > 0U);
 
-    return pLengthEnd;
-}
+//     return pLengthEnd;
+// }
 
 static bool matchEndWildcardsSpecialCases( const char * pTopicFilter,
                                            uint16_t topicFilterLength,

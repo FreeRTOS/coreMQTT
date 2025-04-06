@@ -30,6 +30,7 @@
 #include <assert.h>
 
 #include "core_mqtt_serializer.h"
+#include "core_mqtt_utils.h"
 
 
 /**
@@ -695,8 +696,8 @@ static MQTTStatus_t calculateSubscriptionPacketSize(MQTTSubscribeInfo_t* pSubscr
  *
  * @return The location of the byte following the encoded value.
  */
-static uint8_t * encodeRemainingLength( uint8_t * pDestination,
-                                size_t length );
+// static uint8_t * encodeRemainingLength( uint8_t * pDestination,
+//                                 size_t length );
 
 /**
  * @brief Retrieve the size of the remaining length if it were to be encoded.
@@ -2178,36 +2179,36 @@ static size_t remainingLengthEncodedSize( size_t length )
 
 /*-----------------------------------------------------------*/
 
-static uint8_t * encodeRemainingLength( uint8_t * pDestination,
-                                size_t length )
-{
-    uint8_t lengthByte;
-    uint8_t * pLengthEnd = NULL;
-    size_t remainingLength = length;
+// static uint8_t * encodeRemainingLength( uint8_t * pDestination,
+//                                 size_t length )
+// {
+//     uint8_t lengthByte;
+//     uint8_t * pLengthEnd = NULL;
+//     size_t remainingLength = length;
 
-    assert( pDestination != NULL );
+//     assert( pDestination != NULL );
 
-    pLengthEnd = pDestination;
+//     pLengthEnd = pDestination;
 
-    /* This algorithm is copied from the MQTT v3.1.1 spec. */
-    do
-    {
-        lengthByte = ( uint8_t ) ( remainingLength % 128U );
-        remainingLength = remainingLength / 128U;
+//     /* This algorithm is copied from the MQTT v3.1.1 spec. */
+//     do
+//     {
+//         lengthByte = ( uint8_t ) ( remainingLength % 128U );
+//         remainingLength = remainingLength / 128U;
 
-        /* Set the high bit of this byte, indicating that there's more data. */
-        if( remainingLength > 0U )
-        {
-            UINT8_SET_BIT( lengthByte, 7 );
-        }
+//         /* Set the high bit of this byte, indicating that there's more data. */
+//         if( remainingLength > 0U )
+//         {
+//             UINT8_SET_BIT( lengthByte, 7 );
+//         }
 
-        /* Output a single encoded byte. */
-        *pLengthEnd = lengthByte;
-        pLengthEnd++;
-    } while( remainingLength > 0U );
+//         /* Output a single encoded byte. */
+//         *pLengthEnd = lengthByte;
+//         pLengthEnd++;
+//     } while( remainingLength > 0U );
 
-    return pLengthEnd;
-}
+//     return pLengthEnd;
+// }
 
 /*-----------------------------------------------------------*/
 
