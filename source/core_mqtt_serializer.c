@@ -2739,9 +2739,6 @@ static MQTTStatus_t deserializePublish( const MQTTPacketInfo_t * pIncomingPacket
             LogDebug( ( "Packet identifier %hu.",
             ( unsigned short ) *pPacketId ) );
 
-            /* Advance pointer two bytes to start of payload as in the QoS 0 case. */
-            pPacketIdentifierHigh = &pPacketIdentifierHigh[ sizeof( uint16_t ) ];
-
             /* Packet identifier cannot be 0. */
             if( *pPacketId == 0U )
             {
@@ -2759,6 +2756,8 @@ static MQTTStatus_t deserializePublish( const MQTTPacketInfo_t * pIncomingPacket
     {
         pPublishInfo->startOfProps = pIndex; 
         status = deserializePublishProperties( pPublishInfo , pIndex);
+        pIndex = &pIndex[remainingLengthEncodedSize(pPublishInfo->propertyLength)]; 
+        pIndex = &pIndex[pPublishInfo->propertyLength]; 
     }
     if( status == MQTTSuccess )
     {
@@ -2773,10 +2772,12 @@ static MQTTStatus_t deserializePublish( const MQTTPacketInfo_t * pIncomingPacket
         }
 
         /* Set payload if it exists. */
-        pPublishInfo->pPayload = ( pPublishInfo->payloadLength != 0U ) ? pPacketIdentifierHigh : NULL;
+
+        pPublishInfo->pPayload = ( pPublishInfo->payloadLength != 0U ) ? pIndex : NULL;
 
         LogDebug( ( "Payload length %lu.",
         ( unsigned long ) pPublishInfo->payloadLength ) );
+
     }
 
     return status;
@@ -3179,7 +3180,7 @@ MQTTStatus_t MQTT_DeserializePublish( const MQTTPacketInfo_t * pIncomingPacket,
 
 /*-----------------------------------------------------------*/
 
-MQTTStatus_t MQTT_DeserializeAck( const MQTTPacketInfo_t * pIncomingPacket,
+MQTTStatus_t MQTT_DeserializePing( const MQTTPacketInfo_t * pIncomingPacket,
                                   uint16_t * pPacketId,
                                   bool * pSessionPresent )
 {
@@ -3850,7 +3851,8 @@ MQTTStatus_t MQTTV5_DeserializeAck( const MQTTPacketInfo_t * pIncomingPacket,
 uint8_t * MQTTV5_SerializeAckFixed( uint8_t * pIndex,
                                     uint8_t packetType,
                                     uint16_t packetId,
-                                    size_t remainingLength)
+                                    size_t remainingLength, 
+                                    uint8_t reasonCode)
 {
     uint8_t * pIndexLocal = pIndex;
 
@@ -3864,14 +3866,13 @@ uint8_t * MQTTV5_SerializeAckFixed( uint8_t * pIndex,
     pIndexLocal[ 1 ] = UINT16_LOW_BYTE( packetId );
     pIndexLocal = &pIndexLocal[ 2 ];
     /*We are only sending the ack back if the reason code is success.*/
-    *pIndexLocal = MQTT_REASON_SUCCESS;
+    *pIndexLocal = reasonCode;
     pIndexLocal++;
     return pIndexLocal;
 }
 
 
-MQTTStatus_t MQTTV5_GetAckPacketSize(MQTTAckInfo_t* pAckInfo,
-    size_t* pRemainingLength,
+MQTTStatus_t MQTTV5_GetAckPacketSize(size_t* pRemainingLength,
     size_t* pPacketSize,
     uint32_t maxPacketSize, 
     size_t ackPropertyLength)
@@ -3884,7 +3885,7 @@ MQTTStatus_t MQTTV5_GetAckPacketSize(MQTTAckInfo_t* pAckInfo,
     propertyLength = ackPropertyLength ; 
 
     /*Validate the parameters.*/
-    if ((pAckInfo == NULL) || (pRemainingLength == NULL) || (pPacketSize == NULL))
+    if ((pRemainingLength == NULL) || (pPacketSize == NULL))
     {
         status = MQTTBadParameter;
     }

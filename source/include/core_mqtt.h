@@ -99,7 +99,8 @@ typedef uint32_t (* MQTTGetCurrentTimeFunc_t )( void );
  */
 typedef void (* MQTTEventCallback_t )( struct MQTTContext * pContext,
                                        struct MQTTPacketInfo * pPacketInfo,
-                                       struct MQTTDeserializedInfo * pDeserializedInfo );
+                                       struct MQTTDeserializedInfo * pDeserializedInfo, 
+                                       enum MQTTPublishFailReasonCode * pReasonCode);
 
 /**
  * @ingroup mqtt_enum_types

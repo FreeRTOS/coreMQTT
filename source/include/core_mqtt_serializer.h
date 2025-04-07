@@ -128,6 +128,22 @@ typedef enum MQTTQoS
     MQTTQoS2 = 2  /**< Delivery exactly once. */
 } MQTTQoS_t;
 
+
+typedef enum MQTTPublishFailReasonCode
+{
+    MQTTPublishSuccess = 0 ,
+    MQTTNoMatchingSubscribers = 0x10 , 
+    MQTTUnspecifiedError = 0x80 , 
+    MQTTImplementationError = 0x83 , 
+    MQTTNotAuthorized = 0x87, 
+    MQTTTopicNameInvalid = 0x90 , 
+    MQTTPacketIdInUse = 0x91,
+    MQTTPacketIdNotFound = 0x92 ,
+    MQTTQuotaExceeded = 0x97 , 
+    MQTTPayloadFormatInvalid = 0x99 
+
+}MQTTPublishFailReasonCode_t;
+
 #define MQTT_SUBSCRIBE_QOS1                    ( 0 ) /**< @brief MQTT SUBSCRIBE QoS1 flag. */
 #define MQTT_SUBSCRIBE_QOS2                    ( 1 ) /**< @brief MQTT SUBSCRIBE QoS2 flag. */
 #define MQTT_SUBSCRIBE_NO_LOCAL                ( 2 ) /**< @brief MQTT SUBSCRIBE no local flag. */
@@ -978,7 +994,7 @@ MQTTStatus_t MQTT_DeserializePublish( const MQTTPacketInfo_t * pIncomingPacket,
  * @endcode
  */
 /* @[declare_mqtt_deserializeack] */
-MQTTStatus_t MQTT_DeserializeAck( const MQTTPacketInfo_t * pIncomingPacket,
+MQTTStatus_t MQTT_DeserializePing( const MQTTPacketInfo_t * pIncomingPacket,
                                   uint16_t * pPacketId,
                                   bool * pSessionPresent );
 /* @[declare_mqtt_deserializeack] */
@@ -1501,7 +1517,8 @@ MQTTStatus_t MQTTV5_DeserializeSuback(MQTTAckInfo_t* pSubackProperties,
 uint8_t* MQTTV5_SerializeAckFixed(uint8_t* pIndex,
     uint8_t packetType,
     uint16_t packetId,
-    size_t remainingLength);
+    size_t remainingLength,
+    uint8_t reasonCode); 
 /** @endcond */
 
 /**
@@ -1548,10 +1565,9 @@ uint8_t* MQTTV5_SerializeAckFixed(uint8_t* pIndex,
  * status = MQTTV5_GetAckPacketSize(&disconnectInfo,&remainingLength,&packetSize,maxPacketSize);
  *
  */
-MQTTStatus_t MQTTV5_GetAckPacketSize(MQTTAckInfo_t* pAckInfo,
-    size_t* pRemainingLength,
+MQTTStatus_t MQTTV5_GetAckPacketSize(size_t* pRemainingLength,
     size_t* pPacketSize,
-    uint32_t maxPacketSize, 
+    uint32_t maxPacketSize,
     size_t ackPropertyLength); 
 /*
  * assert( status == MQTTSuccess );
