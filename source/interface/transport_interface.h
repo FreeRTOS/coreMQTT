@@ -200,9 +200,9 @@ typedef struct NetworkContext NetworkContext_t;
  * implementation does NOT block.
  * coreMQTT will continue to call the transport interface if it receives
  * a partial packet until it accumulates enough data to get the complete
- * MQTT packet. 
- * A non‐blocking implementation is also essential so that the library's inbuilt 
- * keep‐alive mechanism can work properly, given the user chooses to use 
+ * MQTT packet.
+ * A non‐blocking implementation is also essential so that the library's inbuilt
+ * keep‐alive mechanism can work properly, given the user chooses to use
  * that over their own keep alive mechanism.
  *
  * @param[in] pNetworkContext Implementation-defined network context.
