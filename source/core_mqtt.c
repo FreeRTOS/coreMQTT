@@ -1775,7 +1775,7 @@ static MQTTStatus_t handleKeepAlive( MQTTContext_t * pContext )
     }
 
     /* If keep alive interval is 0, it is disabled. */
-    if( pContext->waitingForPingResp == true )
+    if( pContext->waitingForPingResp == true )  
     {
         /* Has time expired? */
         if( calculateElapsedTime( now, pContext->pingReqSendTimeMs ) >
