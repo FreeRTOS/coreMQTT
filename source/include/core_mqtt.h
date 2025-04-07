@@ -1001,8 +1001,8 @@ const char * MQTT_Status_strerror( MQTTStatus_t status );
  */
 /* @[declare_mqttv5_disconnect] */
 MQTTStatus_t MQTT_Disconnect(MQTTContext_t* pContext,
-    MQTTAckInfo_t* pDisconnectInfo,
-    MqttPropBuilder_t* pPropertyBuilder); 
+    MqttPropBuilder_t* pPropertyBuilder,
+    MQTTDisconnectReasonCode_t reasonCode); 
 /* @[declare_mqttv5_disconnect] */
 
 bool MQTT_AckGetNextProp(uint8_t** pCurrIndex,

@@ -660,9 +660,9 @@ static MQTTStatus_t sendPublishAcksWithProperty(MQTTContext_t* pContext,
  */
 
 static MQTTStatus_t sendDisconnectWithoutCopy(MQTTContext_t* pContext,
-    const MQTTAckInfo_t* pDisconnectInfo,
-    size_t remainingLength,
-    MqttPropBuilder_t* pPropertyBuilder); 
+                                        MQTTDisconnectReasonCode_t reasonCode,
+                                        size_t remainingLength,
+                                        MqttPropBuilder_t* pPropertyBuilder); 
 
 
 /*
@@ -812,9 +812,9 @@ static MQTTStatus_t sendPublishAcksWithProperty( MQTTContext_t * pContext,
 
 
 static MQTTStatus_t sendDisconnectWithoutCopy( MQTTContext_t * pContext,
-                                                    const MQTTAckInfo_t * pDisconnectInfo,
-                                                    size_t remainingLength,
-                                                    MqttPropBuilder_t* pPropertyBuilder)
+                                                MQTTDisconnectReasonCode_t reasonCode,
+                                                size_t remainingLength,
+                                                MqttPropBuilder_t* pPropertyBuilder)
 {
     int32_t bytesSentOrError;
     size_t vectorsAdded = 0U;
@@ -841,10 +841,9 @@ static MQTTStatus_t sendDisconnectWithoutCopy( MQTTContext_t * pContext,
     uint8_t * pIndex = fixedHeader;
     TransportOutVector_t * iterator = pIoVector;
     assert( pContext != NULL );
-    assert( pDisconnectInfo != NULL );
 
     /* Only for fixed size fields. */
-    pIndex = MQTT_SerializeDisconnectFixed( pIndex, pDisconnectInfo, remainingLength);
+    pIndex = MQTT_SerializeDisconnectFixed( pIndex, reasonCode, remainingLength);
     iterator->iov_base = fixedHeader;
     /* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-182 */
     /* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-108 */
@@ -879,7 +878,6 @@ static MQTTStatus_t sendDisconnectWithoutCopy( MQTTContext_t * pContext,
         ioVectorLength++;
     }
 
-
     bytesSentOrError = sendMessageVector( pContext, pIoVector, ioVectorLength );
 
     if( bytesSentOrError != ( int32_t ) totalMessageLength )
@@ -890,8 +888,6 @@ static MQTTStatus_t sendDisconnectWithoutCopy( MQTTContext_t * pContext,
 
     return status;
 }
-
-
 /*-----------------------------------------------------------*/
 
 static size_t addEncodedStringToVector( uint8_t serializedLength[ CORE_MQTT_SERIALIZED_LENGTH_FIELD_BYTES ],
@@ -1775,7 +1771,7 @@ static MQTTStatus_t handleKeepAlive( MQTTContext_t * pContext )
     }
 
     /* If keep alive interval is 0, it is disabled. */
-    if( pContext->waitingForPingResp == true )  
+    if( pContext->waitingForPingResp == true )
     {
         /* Has time expired? */
         if( calculateElapsedTime( now, pContext->pingReqSendTimeMs ) >
@@ -1927,7 +1923,7 @@ MQTTStatus_t handleIncomingPublish( MQTTContext_t * pContext,
 
 
         /* Send PUBREL or PUBCOMP if necessary. */
-        if (pContext->ackPropsBuffer.pBuffer == NULL )
+        if (pContext->ackPropsBuffer.pBuffer == NULL && (reasonCode == MQTTPublishSuccess))
         {
             status = sendPublishAcks(pContext,
                 packetIdentifier,
@@ -2059,11 +2055,11 @@ static MQTTStatus_t handlePublishAcks( MQTTContext_t * pContext,
         appCallback( pContext, pIncomingPacket, &deserializedInfo, &reasonCode);
 
         /* Send PUBREL or PUBCOMP if necessary. */
-        if(pContext->ackPropsBuffer.pBuffer == NULL)
+        if(pContext->ackPropsBuffer.pBuffer == NULL && (reasonCode == MQTTPublishSuccess)) 
         {
             status = sendPublishAcks( pContext,
-                                        packetIdentifier,
-                                        publishRecordState );
+                                    packetIdentifier,
+                                    publishRecordState );
         }
         else
         {
@@ -4056,17 +4052,17 @@ const char * MQTT_Status_strerror( MQTTStatus_t status )
 }
 
 MQTTStatus_t MQTT_Disconnect( MQTTContext_t * pContext,
-                                MQTTAckInfo_t * pDisconnectInfo,
-                                MqttPropBuilder_t* pPropertyBuilder)
+                              MqttPropBuilder_t* pPropertyBuilder, 
+                              MQTTDisconnectReasonCode_t reasonCode)
 {
     size_t packetSize = 0U;
     size_t remainingLength = 0U;
     MQTTStatus_t status = MQTTSuccess;
 
     /* Validate arguments. */
-    if( ( pContext == NULL ) || ( pDisconnectInfo == NULL ))
+    if( ( pContext == NULL ))
     {
-        LogError( ( "pContext, pDisconnectInfo and connect properties cannot be NULL." ) );
+        LogError( ( "pContext cannot be NULL." ) );
         status = MQTTBadParameter;
     }
     size_t disconnectPropLen = 0;
@@ -4078,7 +4074,7 @@ MQTTStatus_t MQTT_Disconnect( MQTTContext_t * pContext,
     if( status == MQTTSuccess )
     {
         /* Get MQTT DISCONNECT packet size. */
-        status = MQTT_GetDisconnectPacketSize( pDisconnectInfo, &remainingLength, &packetSize, pContext->connectProperties.serverMaxPacketSize, disconnectPropLen);
+        status = MQTT_GetDisconnectPacketSize(&remainingLength, &packetSize, pContext->connectProperties.serverMaxPacketSize, disconnectPropLen, reasonCode);
         LogDebug( ( "MQTT DISCONNECT packet size is %lu.",
                     ( unsigned long ) packetSize ) );
     }
@@ -4088,7 +4084,7 @@ MQTTStatus_t MQTT_Disconnect( MQTTContext_t * pContext,
         /* Take the mutex because the below call should not be interrupted. */
         MQTT_PRE_SEND_HOOK( pContext );
 
-        status = sendDisconnectWithoutCopy( pContext, pDisconnectInfo, remainingLength, pPropertyBuilder);
+        status = sendDisconnectWithoutCopy( pContext, reasonCode, remainingLength, pPropertyBuilder);
 
         /* Give the mutex away. */
         MQTT_POST_SEND_HOOK( pContext );

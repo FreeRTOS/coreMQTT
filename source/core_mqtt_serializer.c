@@ -687,19 +687,6 @@ static MQTTStatus_t calculateSubscriptionPacketSize(MQTTSubscribeInfo_t* pSubscr
 
 
 /**
- * @brief Encodes the remaining length of the packet using the variable length
- * encoding scheme provided in the MQTT v3.1.1 specification.
- *
- * @param[out] pDestination The destination buffer to store the encoded remaining
- * length.
- * @param[in] length The remaining length to encode.
- *
- * @return The location of the byte following the encoded value.
- */
-// static uint8_t * encodeRemainingLength( uint8_t * pDestination,
-//                                 size_t length );
-
-/**
  * @brief Retrieve the size of the remaining length if it were to be encoded.
  *
  * @param[in] length The remaining length to be encoded.
@@ -3918,11 +3905,11 @@ MQTTStatus_t MQTTV5_GetAckPacketSize(size_t* pRemainingLength,
     return status;
 }
 
-MQTTStatus_t MQTT_GetDisconnectPacketSize( MQTTAckInfo_t * pDisconnectInfo,
-                                                size_t * pRemainingLength,
-                                                size_t * pPacketSize,
-                                                uint32_t maxPacketSize,
-                                                size_t disconnectPropLen)
+MQTTStatus_t MQTT_GetDisconnectPacketSize(  size_t * pRemainingLength,
+                                            size_t * pPacketSize,
+                                            uint32_t maxPacketSize,
+                                            size_t disconnectPropLen, 
+                                            MQTTDisconnectReasonCode_t reasonCode )
 {
     MQTTStatus_t status = MQTTSuccess;
     size_t length = 0U;
@@ -3930,11 +3917,10 @@ MQTTStatus_t MQTT_GetDisconnectPacketSize( MQTTAckInfo_t * pDisconnectInfo,
     size_t propertyLength = 0U;
 
     /*Validate the arguments.*/
-    if( ( pDisconnectInfo == NULL ) || ( pRemainingLength == NULL ) || ( pPacketSize == NULL ) )
+    if(( pRemainingLength == NULL ) || ( pPacketSize == NULL ) )
     {
-        LogError( ( "Argument cannot be NULL: pDisconnectInfo=%p, "
+        LogError( ( "Argument cannot be NULL:"
                     "pRemainingLength=%p, pPacketSize=%p.",
-                    ( void * ) pDisconnectInfo,
                     ( void * ) pRemainingLength,
                     ( void * ) pPacketSize ) );
         status = MQTTBadParameter;
@@ -3944,12 +3930,7 @@ MQTTStatus_t MQTT_GetDisconnectPacketSize( MQTTAckInfo_t * pDisconnectInfo,
         LogError( ( "Max packet size cannot be zero." ) );
         status = MQTTBadParameter;
     }
-    else if (pDisconnectInfo->reasonCode == NULL)
-    {
-        /*Do nothing*/
-
-    }
-    else if(validateDisconnectResponse( *pDisconnectInfo->reasonCode, false ) != MQTTSuccess )
+    else if(validateDisconnectResponse( reasonCode, false ) != MQTTSuccess )
     {
         LogError( ( "Invalid reason code." ) );
         status = MQTTBadParameter;
@@ -3968,7 +3949,6 @@ MQTTStatus_t MQTT_GetDisconnectPacketSize( MQTTAckInfo_t * pDisconnectInfo,
         if( ( propertyLength + 4U ) < MQTT_MAX_REMAINING_LENGTH )
         {
             /*We have successfully calculated the property length.*/
-            pDisconnectInfo->propertyLength = propertyLength;
             length += remainingLengthEncodedSize( propertyLength ) + propertyLength;
             *pRemainingLength = length;
         }
@@ -3997,12 +3977,10 @@ MQTTStatus_t MQTT_GetDisconnectPacketSize( MQTTAckInfo_t * pDisconnectInfo,
 }
 
 uint8_t * MQTT_SerializeDisconnectFixed( uint8_t * pIndex,
-                                            const MQTTAckInfo_t * pDisconnectInfo,
-                                            size_t remainingLength)
+                                        MQTTDisconnectReasonCode_t reasonCode,
+                                        size_t remainingLength)
 {
     uint8_t * pIndexLocal = pIndex;
-
-    assert( pDisconnectInfo != NULL );
     assert( pIndex != NULL );
     /* The first byte in the publish ack packet is the control packet type. */
     *pIndexLocal = MQTT_PACKET_TYPE_DISCONNECT;
@@ -4010,11 +3988,9 @@ uint8_t * MQTT_SerializeDisconnectFixed( uint8_t * pIndex,
     /*After the packet type fixed header has remaining length.*/
     pIndexLocal = encodeRemainingLength( pIndexLocal, remainingLength );
     /*Encode the reason code.*/
-    if (pDisconnectInfo->reasonCode != NULL)
-    {
-        *pIndexLocal = *pDisconnectInfo->reasonCode;
-        pIndexLocal++;
-    }
+    *pIndexLocal = reasonCode;
+    pIndexLocal++;
+
     return pIndexLocal;
 }
 
@@ -4492,31 +4468,6 @@ uint8_t * MQTT_SerializeDisconnectFixed( uint8_t * pIndex,
             pPropertyBuilder->currentIndex += (size_t)(pIndex - (pPropertyBuilder->pBuffer + pPropertyBuilder->currentIndex));
         }
         return status ;
-    }
-
-    MQTTStatus_t MQTTPropAdd_PubSubscriptionId(MqttPropBuilder_t* pPropertyBuilder, size_t subscriptionId)
-    {
-        MQTTStatus_t status = MQTTSuccess;
-        uint8_t* pIndex = pPropertyBuilder->pBuffer + pPropertyBuilder->currentIndex;
-        /*
-        * No field set is used as Multiple Subscription Identifiers 
-        * will be included if the publication is the result of a match to more than one subscription
-        * according to MQTT v5 spec
-        */
-        if (subscriptionId == 0)
-        {
-            LogError(("Subscription Id cannot 0 for subscribe properties : Protocol Error "));
-            status = MQTTBadParameter;
-        }
-        if (status == MQTTSuccess)
-        {
-            *pIndex = MQTT_SUBSCRIPTION_ID_ID;
-            pIndex++;
-            pIndex = encodeRemainingLength(pIndex, subscriptionId);
-        }
-
-        pPropertyBuilder->currentIndex += (size_t)(pIndex - (pPropertyBuilder->pBuffer + pPropertyBuilder->currentIndex));
-        return status;
     }
 
     MQTTStatus_t MQTTPropAdd_PubContentType(MqttPropBuilder_t* pPropertyBuilder,

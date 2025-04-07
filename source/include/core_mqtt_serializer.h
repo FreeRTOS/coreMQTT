@@ -128,7 +128,12 @@ typedef enum MQTTQoS
     MQTTQoS2 = 2  /**< Delivery exactly once. */
 } MQTTQoS_t;
 
-
+/**
+ * @ingroup mqtt_enum_types
+ * @brief MQTT PUBLISH packet failure reason codes.
+ *
+ * These values are defined in the MQTT 5.0 specification.
+ */
 typedef enum MQTTPublishFailReasonCode
 {
     MQTTPublishSuccess = 0 ,
@@ -143,6 +148,33 @@ typedef enum MQTTPublishFailReasonCode
     MQTTPayloadFormatInvalid = 0x99 
 
 }MQTTPublishFailReasonCode_t;
+/**
+ * @ingroup mqtt_enum_types
+ * @brief MQTT DISCONNECT reason codes.
+ *
+ * These values are defined in the MQTT 5.0 specification.
+ */
+typedef enum MQTTDisconnectReasonCode
+{
+    MQTTNormalDisconnection = 0x00 , 
+    MQTTDisconnectWithWill = 0x04 , 
+    MQTTDisconnectUnspecifiedError = 0x80, 
+    MQTTDisconnectMalformedPacket = 0x81, 
+    MQTTDisconnectProtocolError = 0x82, 
+    MQTTDisconnectImplementationError = 0x83, 
+    MQTTDisconnectTopicFilterInvalid = 0x8F, 
+    MQTTDisconnectTopicNameInvalid = 0x90,
+    MQTTDisconnectReceiveMaxExceeded = 0x93 , 
+    MQTTDisconnectTopicAliasInvalid = 0x94,
+    MQTTDisconnectPacketTooLarge = 0x95,
+    MQTTDisconnectMessageRateTooHigh = 0x96,
+    MQTTDisconnectQuotaExceeded = 0x97,
+    MQTTDisconnectAdministrativeAction = 0x98, 
+    MQTTDisconnectPayloadFormatInvalid = 0x99,
+    MQTTDisconnectRetainNotSupported = 0x9A,
+    MQTTDisconnectQoSNotSupported = 0x9B
+
+}MQTTDisconnectReasonCode_t;
 
 #define MQTT_SUBSCRIBE_QOS1                    ( 0 ) /**< @brief MQTT SUBSCRIBE QoS1 flag. */
 #define MQTT_SUBSCRIBE_QOS2                    ( 1 ) /**< @brief MQTT SUBSCRIBE QoS2 flag. */
@@ -1631,11 +1663,11 @@ MQTTStatus_t MQTTV5_SerializePubAckWithProperty( const MQTTAckInfo_t *pAckInfo,
  * @endcode
  */
 /* @[declare_mqttv5_getdisconnectpacketsize] */
-MQTTStatus_t MQTT_GetDisconnectPacketSize(MQTTAckInfo_t* pDisconnectInfo,
-    size_t* pRemainingLength,
+MQTTStatus_t MQTT_GetDisconnectPacketSize(size_t* pRemainingLength,
     size_t* pPacketSize,
     uint32_t maxPacketSize,
-    size_t disconnectPropLen); 
+    size_t disconnectPropLen,
+    MQTTDisconnectReasonCode_t reasonCode); 
 /* @[declare_mqttv5_getdisconnectpacketsize] */
 
 
@@ -1661,7 +1693,7 @@ MQTTStatus_t MQTT_GetDisconnectPacketSize(MQTTAckInfo_t* pDisconnectInfo,
  * Doxygen should ignore this definition, this function is private.
  */
 uint8_t * MQTT_SerializeDisconnectFixed(uint8_t * pIndex,
-                                        const MQTTAckInfo_t * pDisconnectInfo,
+                                        MQTTDisconnectReasonCode_t reasonCode,
                                         size_t remainingLength);
 /** @endcond */
 
@@ -1825,9 +1857,6 @@ MQTTStatus_t MQTTPropAdd_PubResponseTopic( MqttPropBuilder_t* pPropertyBuilder,
 MQTTStatus_t MQTTPropAdd_PubCorrelationData(MqttPropBuilder_t* pPropertyBuilder,
                                             const void* pCorrelationData,
                                             uint16_t correlationLength); 
-
-MQTTStatus_t MQTTPropAdd_PubSubscriptionId(MqttPropBuilder_t* pPropertyBuilder, size_t subscriptionId); 
-
 MQTTStatus_t MQTTPropAdd_PubContentType(MqttPropBuilder_t* pPropBuilder,
     const char* contentType,
     uint16_t contentTypeLength);
