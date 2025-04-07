@@ -185,7 +185,7 @@ As the timer is supposed to be a millisecond timer returning a 32-bit value, it 
 </div><div class="memdoc">
 
 <p>Transport interface for receiving data on the network. </p>
-<dl class="section note"><dt>Note</dt><dd>It is HIGHLY RECOMMENDED that the transport receive implementation does NOT block. coreMQTT will continue to call the transport interface if it receives a partial packet until it accumulates enough data to get the complete MQTT packet.</dd></dl>
+<dl class="section note"><dt>Note</dt><dd>It is HIGHLY RECOMMENDED that the transport receive implementation does NOT block. coreMQTT will continue to call the transport interface if it receives a partial packet until it accumulates enough data to get the complete MQTT packet. A non‐blocking implementation is also essential so that the library's inbuilt keep‐alive mechanism can work properly, given the user chooses to use that over their own keep alive mechanism.</dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">pNetworkContext</td><td>Implementation-defined network context. </td></tr>
