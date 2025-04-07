@@ -55,6 +55,8 @@ struct NetworkContext {
 };
 @endcode
 
+Please note that it is HIGHLY RECOMMENDED that the transport receive implementation does NOT block.
+
 @section mqtt_porting_time Time Function
 @brief The MQTT library relies on a function to generate millisecond timestamps, for the
 purpose of calculating durations and timeouts, as well as maintaining the keep-alive mechanism
