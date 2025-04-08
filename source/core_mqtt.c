@@ -1919,8 +1919,11 @@ MQTTStatus_t handleIncomingPublish( MQTTContext_t * pContext,
          * before sending acks. */
 
         MQTTPublishFailReasonCode_t reasonCode = MQTTPublishSuccess; 
-        pContext->appCallback(pContext, pIncomingPacket, &deserializedInfo, &reasonCode);
 
+        if (duplicatePublish == false)
+        {
+            pContext->appCallback(pContext, pIncomingPacket, &deserializedInfo, &reasonCode);
+        }
 
         /* Send PUBREL or PUBCOMP if necessary. */
         if (pContext->ackPropsBuffer.pBuffer == NULL && (reasonCode == MQTTPublishSuccess))
