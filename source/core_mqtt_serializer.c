@@ -1259,7 +1259,7 @@ static MQTTStatus_t validateConnackParams( const MQTTPacketInfo_t * pIncomingPac
 
         if( status == MQTTSuccess )
         {
-            if( pRemainingData[ 1 ] != 0u )
+            if( pRemainingData[ 1 ] != 0U )
             {
                 status = logConnackResponseV5( pRemainingData[ 1 ] );
             }
@@ -3435,13 +3435,15 @@ MQTTStatus_t MQTT_DeserializeConnack( MQTTConnectProperties_t * pConnackProperti
     size_t remainingLengthSize;
     const uint8_t * pVariableHeader = NULL;
 
+    //status = validateConnackParams(pIncomingPacket, pSessionPresent);
+
     /*Validate the arguments*/
     if( pConnackProperties == NULL )
     {
         status = MQTTBadParameter;
     }
         
-    status = validateConnackParams( pIncomingPacket, pSessionPresent );
+    /*status = validateConnackParams( pIncomingPacket, pSessionPresent );*/
 
     if( status == MQTTSuccess )
     {
@@ -3469,6 +3471,7 @@ MQTTStatus_t MQTT_DeserializeConnack( MQTTConnectProperties_t * pConnackProperti
             status = deserializeConnack( pConnackProperties, propertyLength, &pVariableHeader );
         }
     }
+    status = validateConnackParams(pIncomingPacket, pSessionPresent);
 
     return status;
 }
@@ -3561,6 +3564,8 @@ MQTTStatus_t validateSubscribeProperties(uint8_t isSubscriptionIdAvailable, Mqtt
     MQTTStatus_t status = MQTTSuccess;
     size_t propertyLength = propBuilder->currentIndex;
     const uint8_t* pLocalIndex = propBuilder->pBuffer;
+    bool subId = false;
+    uint8_t isSubIdAvailable;
 
     if (status == MQTTSuccess)
     {
@@ -3573,6 +3578,7 @@ MQTTStatus_t validateSubscribeProperties(uint8_t isSubscriptionIdAvailable, Mqtt
             switch (propertyId)
             {
             case MQTT_SUBSCRIPTION_ID_ID:
+                status = decodeuint8_t(&isSubIdAvailable, &propertyLength, &subId, &pLocalIndex);
                 if (isSubscriptionIdAvailable == 0)
                 {
                     LogError(("Protocol Error : Subscription Id not allowed"));
@@ -3584,6 +3590,7 @@ MQTTStatus_t validateSubscribeProperties(uint8_t isSubscriptionIdAvailable, Mqtt
     }
     return status;
 }
+
 
 MQTTStatus_t MQTT_GetPublishPacketSize( MQTTPublishInfo_t * pPublishInfo,
                                             size_t * pRemainingLength,
