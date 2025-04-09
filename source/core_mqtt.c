@@ -3117,7 +3117,7 @@ static MQTTStatus_t receiveConnack( const MQTTContext_t * pContext,
     if (status == MQTTSuccess)
     {
         deserializedInfo.deserializationResult = status; 
-        //pContext->appCallback(pContext, pIncomingPacket ,&deserializedInfo, NULL);
+        pContext->appCallback(pContext, pIncomingPacket ,&deserializedInfo, NULL);
     }
 
     return status;

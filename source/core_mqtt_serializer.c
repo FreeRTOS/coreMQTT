@@ -3471,7 +3471,10 @@ MQTTStatus_t MQTT_DeserializeConnack( MQTTConnectProperties_t * pConnackProperti
             status = deserializeConnack( pConnackProperties, propertyLength, &pVariableHeader );
         }
     }
-    status = validateConnackParams(pIncomingPacket, pSessionPresent);
+    if (status == MQTTSuccess)
+    {
+        status = validateConnackParams(pIncomingPacket, pSessionPresent);
+    }
 
     return status;
 }
@@ -3578,7 +3581,6 @@ MQTTStatus_t validateSubscribeProperties(uint8_t isSubscriptionIdAvailable, Mqtt
             switch (propertyId)
             {
             case MQTT_SUBSCRIPTION_ID_ID:
-                status = decodeuint8_t(&isSubIdAvailable, &propertyLength, &subId, &pLocalIndex);
                 if (isSubscriptionIdAvailable == 0)
                 {
                     LogError(("Protocol Error : Subscription Id not allowed"));
