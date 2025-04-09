@@ -3435,7 +3435,7 @@ MQTTStatus_t MQTT_DeserializeConnack( MQTTConnectProperties_t * pConnackProperti
     size_t remainingLengthSize;
     const uint8_t * pVariableHeader = NULL;
 
-    //status = validateConnackParams(pIncomingPacket, pSessionPresent);
+    status = validateConnackParams(pIncomingPacket, pSessionPresent);
 
     /*Validate the arguments*/
     if( pConnackProperties == NULL )
@@ -3471,11 +3471,6 @@ MQTTStatus_t MQTT_DeserializeConnack( MQTTConnectProperties_t * pConnackProperti
             status = deserializeConnack( pConnackProperties, propertyLength, &pVariableHeader );
         }
     }
-    if (status == MQTTSuccess)
-    {
-        status = validateConnackParams(pIncomingPacket, pSessionPresent);
-    }
-
     return status;
 }
 
