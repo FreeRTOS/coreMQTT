@@ -4113,12 +4113,22 @@ uint8_t * MQTT_SerializeDisconnectFixed( uint8_t * pIndex,
             LogError(("Subscription Id cannot 0 for subscribe properties : Protocol Error "));
             status = MQTTBadParameter;
         }
+        else if ((pPropertyBuilder == NULL))
+        {
+            LogError(("Arguments cannot be NULL : pPropertyBuilder=%p.", (void*)pPropertyBuilder));
+            status = MQTTBadParameter;
+        }
+        else if (pPropertyBuilder->pBuffer == NULL)
+        {
+            LogError(("Arguments cannot be NULL : pPropertyBuilder->pBuffer=%p.", (void*)pPropertyBuilder->pBuffer));
+            status = MQTTBadParameter;
+        }
         else if (UINT32_CHECK_BIT(pPropertyBuilder->fieldSet , MQTT_SUBSCRIPTION_ID_POS))
         {
             LogError(("Subscription Id already set"));
             status = MQTTBadParameter;
         }
-        else if (pPropertyBuilder->currentIndex + 5 > pPropertyBuilder->bufferLength)
+        else if (pPropertyBuilder->currentIndex + 1 + remainingLengthEncodedSize(subscriptionId) > pPropertyBuilder->bufferLength)
         {
             LogError(("Buffer too small to add subscription id"));
             status = MQTTBadParameter;
@@ -4140,37 +4150,79 @@ uint8_t * MQTT_SerializeDisconnectFixed( uint8_t * pIndex,
     MQTTStatus_t MQTTPropAdd_UserProps(MqttPropBuilder_t* pPropertyBuilder, MQTTUserProperties_t* pUserProperties)
     {
         MQTTStatus_t status = MQTTSuccess;
-        uint8_t* start = pPropertyBuilder->pBuffer + pPropertyBuilder->currentIndex;
-        uint8_t* pIndex = pPropertyBuilder->pBuffer + pPropertyBuilder->currentIndex;
-        uint32_t i = 0;
-        uint32_t size = pUserProperties->count;
-        const MQTTUserProperty_t* userProperty = pUserProperties->userProperty; /*Pointer to the array of user props*/
-
-        for (; i < size; i++)
+        if ((pPropertyBuilder == NULL))
         {
-            *pIndex = MQTT_USER_PROPERTY_ID;
-            pIndex++;
-
-            /*Encoding key*/
-            pIndex = encodeString(pIndex, userProperty[i].pKey, userProperty[i].keyLength);
-            pIndex = encodeString(pIndex, userProperty[i].pValue, userProperty[i].valueLength);
+            LogError(("Arguments cannot be NULL : pPropertyBuilder=%p.", (void*)pPropertyBuilder));
+            status = MQTTBadParameter;
         }
-        pPropertyBuilder->currentIndex += (size_t)(pIndex - start);
+        else if (pPropertyBuilder->pBuffer == NULL)
+        {
+            LogError(("Arguments cannot be NULL : pPropertyBuilder->pBuffer=%p.", (void*)pPropertyBuilder->pBuffer));
+            status = MQTTBadParameter;
+        }
+        else if (pUserProperties == NULL)
+        {
+            LogError(("Arguments cannot be NULL : pUserProperties=%p.", (void*)pUserProperties));
+            status = MQTTBadParameter;
+        }
+        else if (pUserProperties->count == 0)
+        {
+            LogError(("User Properties count cannot be 0"));
+            status = MQTTBadParameter;
+        }
+        else if (pUserProperties->userProperty == NULL)
+        {
+            LogError(("Arguments cannot be NULL : pUserProperties->userProperty=%p.", (void*)pUserProperties->userProperty));
+        }
+        else if (pUserProperties->userProperty->pKey == NULL || pUserProperties->userProperty->pValue == NULL || pUserProperties->userProperty->keyLength == 0U || pUserProperties->userProperty->valueLength == 0U)
+        {
+            LogError(("Arguments cannot be NULL : pUserProperties->userProperty->pKey=%p," , " pUserProperties->userProperty->pValue=%p", "Key Length = %u" , "Value Length = %u" , (void*)pUserProperties->userProperty->pKey, (void*)pUserProperties->userProperty->pValue, pUserProperties->userProperty->keyLength , pUserProperties->userProperty->valueLength));
+            status = MQTTBadParameter;
+        }
+        else
+        {
+            uint8_t* start = pPropertyBuilder->pBuffer + pPropertyBuilder->currentIndex;
+            uint8_t* pIndex = pPropertyBuilder->pBuffer + pPropertyBuilder->currentIndex;
+            uint32_t i = 0;
+            uint32_t size = pUserProperties->count;
+            const MQTTUserProperty_t* userProperty = pUserProperties->userProperty; /*Pointer to the array of user props*/
+
+            for (; i < size; i++)
+            {
+                *pIndex = MQTT_USER_PROPERTY_ID;
+                pIndex++;
+
+                /*Encoding key*/
+                pIndex = encodeString(pIndex, userProperty[i].pKey, userProperty[i].keyLength);
+                pIndex = encodeString(pIndex, userProperty[i].pValue, userProperty[i].valueLength);
+            }
+            pPropertyBuilder->currentIndex += (size_t)(pIndex - start);
+        }
         return status;
     }
 
     MQTTStatus_t MQTTPropAdd_ConnSessionExpiry(MqttPropBuilder_t* pPropertyBuilder, uint32_t sessionExpiry)
     {
-        uint8_t* pIndex = pPropertyBuilder->pBuffer + pPropertyBuilder->currentIndex;
+        uint8_t* pIndex;
         MQTTStatus_t status = MQTTSuccess;
-
-        if (UINT32_CHECK_BIT(pPropertyBuilder->fieldSet, MQTT_SESSION_EXPIRY_INTERVAL_POS))
+        if ((pPropertyBuilder == NULL))
+        {
+            LogError(("Arguments cannot be NULL : pPropertyBuilder=%p.", (void*)pPropertyBuilder));
+            status = MQTTBadParameter;
+        }
+        else if (pPropertyBuilder->pBuffer == NULL)
+        {
+            LogError(("Arguments cannot be NULL : pPropertyBuilder->pBuffer=%p.", (void*)pPropertyBuilder->pBuffer));
+            status = MQTTBadParameter;
+        }
+        else if (UINT32_CHECK_BIT(pPropertyBuilder->fieldSet, MQTT_SESSION_EXPIRY_INTERVAL_POS))
         {
             LogError(("Connect Session Expiry Already Set"));
             status = MQTTBadParameter;
         }
         else
         {
+            pIndex = pPropertyBuilder->pBuffer + pPropertyBuilder->currentIndex;
             *pIndex = MQTT_SESSION_EXPIRY_ID;
             pIndex++;
             pIndex[0] = UINT32_BYTE3(sessionExpiry);
@@ -4187,7 +4239,17 @@ uint8_t * MQTT_SerializeDisconnectFixed( uint8_t * pIndex,
     MQTTStatus_t MQTTPropAdd_ConnReceiveMax(MqttPropBuilder_t* pPropertyBuilder, uint16_t receiveMax)
     {
         MQTTStatus_t status = MQTTSuccess;
-        if ((receiveMax == 0) || (UINT32_CHECK_BIT(pPropertyBuilder->fieldSet, MQTT_RECEIVE_MAXIMUM_POS)))
+        if ((pPropertyBuilder == NULL))
+        {
+            LogError(("Arguments cannot be NULL : pPropertyBuilder=%p.", (void*)pPropertyBuilder));
+            status = MQTTBadParameter;
+        }
+        else if (pPropertyBuilder->pBuffer == NULL)
+        {
+            LogError(("Arguments cannot be NULL : pPropertyBuilder->pBuffer=%p.", (void*)pPropertyBuilder->pBuffer));
+            status = MQTTBadParameter;
+        }
+        else if ((receiveMax == 0) || (UINT32_CHECK_BIT(pPropertyBuilder->fieldSet, MQTT_RECEIVE_MAXIMUM_POS)))
         {
             LogError(("Invalid arguments passed to MQTTPropAdd_ConnReceiveMax."));
             status = MQTTBadParameter;
@@ -4210,7 +4272,17 @@ uint8_t * MQTT_SerializeDisconnectFixed( uint8_t * pIndex,
     {
         MQTTStatus_t status = MQTTSuccess;
         uint8_t* pIndex;
-        if ((maxPacketSize == 0) || (UINT32_CHECK_BIT(pPropertyBuilder->fieldSet, MQTT_MAX_PACKET_SIZE_POS)))
+        if ((pPropertyBuilder == NULL))
+        {
+            LogError(("Arguments cannot be NULL : pPropertyBuilder=%p.", (void*)pPropertyBuilder));
+            status = MQTTBadParameter;
+        }
+        else if (pPropertyBuilder->pBuffer == NULL)
+        {
+            LogError(("Arguments cannot be NULL : pPropertyBuilder->pBuffer=%p.", (void*)pPropertyBuilder->pBuffer));
+            status = MQTTBadParameter;
+        }
+        else if ((maxPacketSize == 0) || (UINT32_CHECK_BIT(pPropertyBuilder->fieldSet, MQTT_MAX_PACKET_SIZE_POS)))
         {
             LogError(("Max packet size already set"));
             status = MQTTBadParameter;
@@ -4235,7 +4307,17 @@ uint8_t * MQTT_SerializeDisconnectFixed( uint8_t * pIndex,
     {
         uint8_t* pIndex;
         MQTTStatus_t status = MQTTSuccess; 
-        if (UINT32_CHECK_BIT(pPropertyBuilder->fieldSet, MQTT_TOPIC_ALIAS_MAX_POS))
+        if ((pPropertyBuilder == NULL))
+        {
+            LogError(("Arguments cannot be NULL : pPropertyBuilder=%p.", (void*)pPropertyBuilder));
+            status = MQTTBadParameter;
+        }
+        else if (pPropertyBuilder->pBuffer == NULL)
+        {
+            LogError(("Arguments cannot be NULL : pPropertyBuilder->pBuffer=%p.", (void*)pPropertyBuilder->pBuffer));
+            status = MQTTBadParameter;
+        }
+        else if (UINT32_CHECK_BIT(pPropertyBuilder->fieldSet, MQTT_TOPIC_ALIAS_MAX_POS))
         {
             LogError(("Topic Alias Maximum already set. "));
             status = MQTTBadParameter;
@@ -4258,7 +4340,17 @@ uint8_t * MQTT_SerializeDisconnectFixed( uint8_t * pIndex,
     {
         uint8_t* pIndex; 
         MQTTStatus_t status = MQTTSuccess;
-        if (UINT32_CHECK_BIT(pPropertyBuilder->fieldSet, MQTT_REQUEST_RESPONSE_INFO_POS))
+        if ((pPropertyBuilder == NULL))
+        {
+            LogError(("Arguments cannot be NULL : pPropertyBuilder=%p.", (void*)pPropertyBuilder));
+            status = MQTTBadParameter;
+        }
+        else if (pPropertyBuilder->pBuffer == NULL)
+        {
+            LogError(("Arguments cannot be NULL : pPropertyBuilder->pBuffer=%p.", (void*)pPropertyBuilder->pBuffer));
+            status = MQTTBadParameter;
+        }
+        else if (UINT32_CHECK_BIT(pPropertyBuilder->fieldSet, MQTT_REQUEST_RESPONSE_INFO_POS))
         {
             LogError(("Request Response Info already set."));
             status = MQTTBadParameter;
@@ -4280,7 +4372,17 @@ uint8_t * MQTT_SerializeDisconnectFixed( uint8_t * pIndex,
     {
         uint8_t* pIndex;
         MQTTStatus_t status = MQTTSuccess;
-        if (UINT32_CHECK_BIT(pPropertyBuilder->fieldSet, MQTT_REQUEST_PROBLEM_INFO_POS))
+        if ((pPropertyBuilder == NULL))
+        {
+            LogError(("Arguments cannot be NULL : pPropertyBuilder=%p.", (void*)pPropertyBuilder));
+            status = MQTTBadParameter;
+        }
+        else if (pPropertyBuilder->pBuffer == NULL)
+        {
+            LogError(("Arguments cannot be NULL : pPropertyBuilder->pBuffer=%p.", (void*)pPropertyBuilder->pBuffer));
+            status = MQTTBadParameter;
+        }
+        else if (UINT32_CHECK_BIT(pPropertyBuilder->fieldSet, MQTT_REQUEST_PROBLEM_INFO_POS))
         {
             LogError(("Request Problem Info already set."));
             status =  MQTTBadParameter;
@@ -4304,8 +4406,17 @@ uint8_t * MQTT_SerializeDisconnectFixed( uint8_t * pIndex,
     {
         uint8_t* pIndex;
         MQTTStatus_t status = MQTTSuccess; 
-
-        if (UINT32_CHECK_BIT(pPropertyBuilder->fieldSet, MQTT_AUTHENTICATION_METHOD_POS))
+        if ((pPropertyBuilder == NULL) || (authMethod == NULL) || (authMethodLength == 0U))
+        {
+            LogError(("Arguments cannot be NULL : pPropertyBuilder=%p,","authMethod = %p" , "authMethodLength = %u" , (void*)pPropertyBuilder , (void*)authMethod , authMethodLength));
+            status = MQTTBadParameter;
+        }
+        else if (pPropertyBuilder->pBuffer == NULL)
+        {
+            LogError(("Arguments cannot be NULL : pPropertyBuilder->pBuffer=%p.", (void*)pPropertyBuilder->pBuffer));
+            status = MQTTBadParameter;
+        }
+        else if (UINT32_CHECK_BIT(pPropertyBuilder->fieldSet, MQTT_AUTHENTICATION_METHOD_POS))
         {
             LogError(("Auth Method already set."));
             status = MQTTBadParameter;
@@ -4329,8 +4440,17 @@ uint8_t * MQTT_SerializeDisconnectFixed( uint8_t * pIndex,
     {
         uint8_t* pIndex;
         MQTTStatus_t status = MQTTSuccess; 
-
-        if ((UINT32_CHECK_BIT(pPropertyBuilder->fieldSet, MQTT_AUTHENTICATION_DATA_POS)) || ( UINT32_CHECK_BIT(pPropertyBuilder->fieldSet, MQTT_AUTHENTICATION_METHOD_POS) == 0) )
+        if ((pPropertyBuilder == NULL) || (authData == NULL) || (authDataLength == 0U))
+        {
+            LogError(("Arguments cannot be NULL : pPropertyBuilder=%p,", "authMethod = %p", "authMethodLength = %u", (void*)pPropertyBuilder, (void*)authData, authDataLength));
+            status = MQTTBadParameter;
+        }
+        else if (pPropertyBuilder->pBuffer == NULL)
+        {
+            LogError(("Arguments cannot be NULL : pPropertyBuilder->pBuffer=%p.", (void*)pPropertyBuilder->pBuffer));
+            status = MQTTBadParameter;
+        }
+        else if ((UINT32_CHECK_BIT(pPropertyBuilder->fieldSet, MQTT_AUTHENTICATION_DATA_POS)) || ( UINT32_CHECK_BIT(pPropertyBuilder->fieldSet, MQTT_AUTHENTICATION_METHOD_POS) == 0) )
         {
             LogError(("Invalid Auth data"));
             status = MQTTBadParameter;
@@ -4351,8 +4471,17 @@ uint8_t * MQTT_SerializeDisconnectFixed( uint8_t * pIndex,
     {
         uint8_t* pIndex;
         MQTTStatus_t status = MQTTSuccess;
-
-        if ((UINT32_CHECK_BIT(pPropertyBuilder->fieldSet, MQTT_PAYLOAD_FORMAT_INDICATOR_POS)))
+        if ((pPropertyBuilder == NULL))
+        {
+            LogError(("Arguments cannot be NULL : pPropertyBuilder=%p.", (void*)pPropertyBuilder));
+            status = MQTTBadParameter;
+        }
+        else if (pPropertyBuilder->pBuffer == NULL)
+        {
+            LogError(("Arguments cannot be NULL : pPropertyBuilder->pBuffer=%p.", (void*)pPropertyBuilder->pBuffer));
+            status = MQTTBadParameter;
+        }
+        else if ((UINT32_CHECK_BIT(pPropertyBuilder->fieldSet, MQTT_PAYLOAD_FORMAT_INDICATOR_POS)))
         {
             LogError(("Payload Format already set"));
             status = MQTTBadParameter;
@@ -4374,8 +4503,17 @@ uint8_t * MQTT_SerializeDisconnectFixed( uint8_t * pIndex,
     {
         uint8_t* pIndex;
         MQTTStatus_t status = MQTTSuccess;
-
-        if ((UINT32_CHECK_BIT(pPropertyBuilder->fieldSet, MQTT_MESSAGE_EXPIRY_INTERVAL_POS)))
+        if ((pPropertyBuilder == NULL))
+        {
+            LogError(("Arguments cannot be NULL : pPropertyBuilder=%p.", (void*)pPropertyBuilder));
+            status = MQTTBadParameter;
+        }
+        else if (pPropertyBuilder->pBuffer == NULL)
+        {
+            LogError(("Arguments cannot be NULL : pPropertyBuilder->pBuffer=%p.", (void*)pPropertyBuilder->pBuffer));
+            status = MQTTBadParameter;
+        }
+        else if ((UINT32_CHECK_BIT(pPropertyBuilder->fieldSet, MQTT_MESSAGE_EXPIRY_INTERVAL_POS)))
         {
             LogError(("Message Expiry Interval already set"));
             status = MQTTBadParameter;
@@ -4401,11 +4539,25 @@ uint8_t * MQTT_SerializeDisconnectFixed( uint8_t * pIndex,
     {
         uint8_t* pIndex;
         MQTTStatus_t status = MQTTSuccess;
-
-        if ((UINT32_CHECK_BIT(pPropertyBuilder->fieldSet, MQTT_PUBLISH_TOPIC_ALIAS_POS)) || (topicAlias == 0U))
+        if ((pPropertyBuilder == NULL))
         {
-            LogError(("Invalid Topic Alias"));
+            LogError(("Arguments cannot be NULL : pPropertyBuilder=%p.", (void*)pPropertyBuilder));
             status = MQTTBadParameter;
+        }
+        else if (pPropertyBuilder->pBuffer == NULL)
+        {
+            LogError(("Arguments cannot be NULL : pPropertyBuilder->pBuffer=%p.", (void*)pPropertyBuilder->pBuffer));
+            status = MQTTBadParameter;
+        }
+        else if (UINT32_CHECK_BIT(pPropertyBuilder->fieldSet, MQTT_PUBLISH_TOPIC_ALIAS_POS))
+        {
+            LogError(("TopicAlias already present"));
+            status = MQTTBadParameter;
+        }
+        else if (topicAlias == 0U)
+        {
+            LogError(("Topic Alias cannot be 0"));
+            status = MQTTBadParameter; 
         }
         else
         {
@@ -4427,8 +4579,27 @@ uint8_t * MQTT_SerializeDisconnectFixed( uint8_t * pIndex,
     {
         uint8_t* pIndex;
         MQTTStatus_t status = MQTTSuccess;
-
-        if ((UINT32_CHECK_BIT(pPropertyBuilder->fieldSet, MQTT_PUBLISH_RESPONSE_TOPIC_POS)))
+        if ((pPropertyBuilder == NULL))
+        {
+            LogError(("Arguments cannot be NULL : pPropertyBuilder=%p.", (void*)pPropertyBuilder));
+            status = MQTTBadParameter;
+        }
+        else if (pPropertyBuilder->pBuffer == NULL)
+        {
+            LogError(("Arguments cannot be NULL : pPropertyBuilder->pBuffer=%p.", (void*)pPropertyBuilder->pBuffer));
+            status = MQTTBadParameter;
+        }
+        else if (responseTopic == NULL)
+        {
+            LogError(("Arguments cannot be NULL : responseTopic=%p.", (void*)responseTopic));
+            status = MQTTBadParameter;
+        }
+        else if (responseTopicLength == 0U)
+        {
+            LogError(("Response Topic Length cannot be 0"));
+            status = MQTTBadParameter;
+        }
+        else if ((UINT32_CHECK_BIT(pPropertyBuilder->fieldSet, MQTT_PUBLISH_RESPONSE_TOPIC_POS)))
         {
             LogError(("Response Topic already set"));
             status = MQTTBadParameter;
@@ -4457,7 +4628,27 @@ uint8_t * MQTT_SerializeDisconnectFixed( uint8_t * pIndex,
     {
         uint8_t* pIndex;
         MQTTStatus_t status = MQTTSuccess;
-        if (UINT32_CHECK_BIT(pPropertyBuilder->fieldSet, MQTT_PUBLISH_CORRELATION_DATA_POS))
+        if ((pPropertyBuilder == NULL))
+        {
+            LogError(("Arguments cannot be NULL : pPropertyBuilder=%p.", (void*)pPropertyBuilder));
+            status = MQTTBadParameter;
+        }
+        else if (pPropertyBuilder->pBuffer == NULL)
+        {
+            LogError(("Arguments cannot be NULL : pPropertyBuilder->pBuffer=%p.", (void*)pPropertyBuilder->pBuffer));
+            status = MQTTBadParameter;
+        }
+        else if (pCorrelationData == NULL)
+        {
+            LogError(("Arguments cannot be NULL : pCorrelationData=%p.", (void*)pCorrelationData));
+            status = MQTTBadParameter;
+        }
+        else if (correlationLength == 0U)
+        {
+            LogError(("Correlation Data Length cannot be 0"));
+            status = MQTTBadParameter;
+        }
+        else if (UINT32_CHECK_BIT(pPropertyBuilder->fieldSet, MQTT_PUBLISH_CORRELATION_DATA_POS))
         {
             LogError(("Correlation Data already set"));
             status = MQTTBadParameter;
@@ -4480,7 +4671,27 @@ uint8_t * MQTT_SerializeDisconnectFixed( uint8_t * pIndex,
     {
         uint8_t* pIndex;
         MQTTStatus_t status = MQTTSuccess;
-        if (UINT32_CHECK_BIT(pPropertyBuilder->fieldSet, MQTT_PUBLISH_CONTENT_TYPE_POS))
+        if ((pPropertyBuilder == NULL))
+        {
+            LogError(("Arguments cannot be NULL : pPropertyBuilder=%p.", (void*)pPropertyBuilder));
+            status = MQTTBadParameter;
+        }
+        else if (pPropertyBuilder->pBuffer == NULL)
+        {
+            LogError(("Arguments cannot be NULL : pPropertyBuilder->pBuffer=%p.", (void*)pPropertyBuilder->pBuffer));
+            status = MQTTBadParameter;
+        }
+        else if (contentType == NULL)
+        {
+            LogError(("Arguments cannot be NULL : contentType=%p.", (void*)contentType));
+            status = MQTTBadParameter;
+        }
+        else if (contentTypeLength == 0U)
+        {
+            LogError(("Content Type Length cannot be 0"));
+            status = MQTTBadParameter;
+        }
+        else if (UINT32_CHECK_BIT(pPropertyBuilder->fieldSet, MQTT_PUBLISH_CONTENT_TYPE_POS))
         {
             LogError(("Content type already set"));
             status = MQTTBadParameter;
@@ -4504,7 +4715,27 @@ uint8_t * MQTT_SerializeDisconnectFixed( uint8_t * pIndex,
     {
         uint8_t* pIndex;
         MQTTStatus_t status = MQTTSuccess;
-        if (UINT32_CHECK_BIT(pPropertyBuilder->fieldSet, MQTT_REASON_STRING_POS))
+        if ((pPropertyBuilder == NULL))
+        {
+            LogError(("Arguments cannot be NULL : pPropertyBuilder=%p.", (void*)pPropertyBuilder));
+            status = MQTTBadParameter;
+        }
+        else if (pPropertyBuilder->pBuffer == NULL)
+        {
+            LogError(("Arguments cannot be NULL : pPropertyBuilder->pBuffer=%p.", (void*)pPropertyBuilder->pBuffer));
+            status = MQTTBadParameter;
+        }
+        else if (pReasonString == NULL)
+        {
+            LogError(("Arguments cannot be NULL : pReasonString=%p.", (void*)pReasonString));
+            status = MQTTBadParameter;
+        }
+        else if (reasonStringLength == 0U)
+        {
+            LogError(("Reason String Length cannot be 0"));
+            status = MQTTBadParameter;
+        }
+        else if (UINT32_CHECK_BIT(pPropertyBuilder->fieldSet, MQTT_REASON_STRING_POS))
         {
             LogError(("Reason String already set"));
             status = MQTTBadParameter;

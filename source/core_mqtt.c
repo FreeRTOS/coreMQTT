@@ -4113,9 +4113,9 @@ MQTTStatus_t MQTTPropAdd_PubAckReasonString(MQTTContext_t* pContext, const char*
 
     uint8_t* pIndex;
     MQTTStatus_t status = MQTTSuccess;
-    if (pContext->ackPropsBuffer.pBuffer == NULL)
+    if ((pContext == NULL) || (reasonString == NULL) || (reasonStringLen == 0U) )
     {
-        LogError(("Set ackPropsBuffer to send properties. "));
+        LogError(("Arguments cannot be NULL : pContext = %p.", "reasonString=%p,", "reason string length = %u.", (void*)pContext , (void*)reasonString , reasonStringLen)) ;
         status = MQTTBadParameter;
     }
     else if (UINT32_CHECK_BIT(pContext->ackPropsBuffer.fieldSet, MQTT_REASON_STRING_POS))
@@ -4145,38 +4145,48 @@ bool MQTT_AckGetNextProp(uint8_t** pCurrIndex,
 {
     MQTTStatus_t status = MQTTSuccess;
     uint8_t* pIndex;
-    size_t propertyLength = deserializedInfo->pAckInfo->propertyLength;
+    size_t propertyLength; 
     bool userPropFlag = false;
     bool userKey = false;
     bool userVal = false;
 
-    if (propertyLength == 0U)
+    if(deserializedInfo == NULL )
     {
-        LogError(("No properties in the incoming publish"));
-        status = MQTTBadParameter;
+        LogError(("Argument cannor be NULL : deserializedInfo = %p", (void*)deserializedInfo));
+        status = MQTTBadParameter; 
     }
-    else
+
+    if (status == MQTTSuccess)
     {
-        if (*pCurrIndex == NULL)
+        propertyLength = deserializedInfo->pAckInfo->propertyLength;
+        if (propertyLength == 0U)
         {
-            pIndex = deserializedInfo->pAckInfo->startOfAckProps;
+            LogError(("No properties in the incoming publish"));
+            status = MQTTBadParameter;
         }
-        else {
-            pIndex = *pCurrIndex;
-        }
-        while ((propertyLength > 0U) && (status == MQTTSuccess))
+        else
         {
-            uint8_t propertyId = *pIndex;
-            pIndex = &pIndex[1];
-            propertyLength -= sizeof(uint8_t);
-            if (propertyId == MQTT_USER_PROPERTY_ID)
+            if (*pCurrIndex == NULL)
             {
-                userPropFlag = true;
-                status = decodeutf_8(pUserPropKey, pUserPropKeyLen, &propertyLength, &userKey, &pIndex);
-                status = decodeutf_8(pUserPropVal, pUserPropValLen, &propertyLength, &userVal, &pIndex);
-                // update currIndex to pIndex essentially. 
-                *pCurrIndex = pIndex;
-                break;
+                pIndex = deserializedInfo->pAckInfo->startOfAckProps;
+            }
+            else {
+                pIndex = *pCurrIndex;
+            }
+            while ((propertyLength > 0U) && (status == MQTTSuccess))
+            {
+                uint8_t propertyId = *pIndex;
+                pIndex = &pIndex[1];
+                propertyLength -= sizeof(uint8_t);
+                if (propertyId == MQTT_USER_PROPERTY_ID)
+                {
+                    userPropFlag = true;
+                    status = decodeutf_8(pUserPropKey, pUserPropKeyLen, &propertyLength, &userKey, &pIndex);
+                    status = decodeutf_8(pUserPropVal, pUserPropValLen, &propertyLength, &userVal, &pIndex);
+                    // update currIndex to pIndex essentially. 
+                    *pCurrIndex = pIndex;
+                    break;
+                }
             }
         }
     }
@@ -4197,39 +4207,49 @@ bool MQTT_ConnackGetNextProp(uint8_t** pCurrIndex,
 {
     MQTTStatus_t status = MQTTSuccess;
     uint8_t* pIndex;
-    size_t propertyLength = pContext->connectProperties.connackPropLen;
+    size_t propertyLength;
     bool userPropFlag = false;
     bool userKey = false;
     bool userVal = false;
 
-    if (propertyLength == 0U)
+    if (pContext == NULL)
     {
-        LogError(("No properties in the incoming publish"));
+        LogError(("Argument cannot be NULL : pContext = %p", (void*)pContext));
         status = MQTTBadParameter;
     }
-    else
-    {
-        if (*pCurrIndex == NULL)
-        {
-            pIndex = pContext->connectProperties.startOfConnackProps;
-        }
-        else {
-            pIndex = *pCurrIndex;
-        }
-        while ((propertyLength > 0U) && (status == MQTTSuccess))
-        {
-            uint8_t propertyId = *pIndex;
-            pIndex = &pIndex[1];
-            propertyLength -= sizeof(uint8_t);
-            if (propertyId == MQTT_USER_PROPERTY_ID)
-            {
-                userPropFlag = true;
-                status = decodeutf_8(pUserPropKey, pUserPropKeyLen, &propertyLength, &userKey, &pIndex);
-                status = decodeutf_8(pUserPropVal, pUserPropValLen, &propertyLength, &userVal, &pIndex);
-                // update currIndex to pIndex essentially. 
-                *pCurrIndex = pIndex;
 
-                break;
+    if (status == MQTTSuccess)
+    {
+        propertyLength = pContext->connectProperties.connackPropLen;
+        if (propertyLength == 0U)
+        {
+            LogError(("No properties in the incoming publish"));
+            status = MQTTBadParameter;
+        }
+        else
+        {
+            if (*pCurrIndex == NULL)
+            {
+                pIndex = pContext->connectProperties.startOfConnackProps;
+            }
+            else {
+                pIndex = *pCurrIndex;
+            }
+            while ((propertyLength > 0U) && (status == MQTTSuccess))
+            {
+                uint8_t propertyId = *pIndex;
+                pIndex = &pIndex[1];
+                propertyLength -= sizeof(uint8_t);
+                if (propertyId == MQTT_USER_PROPERTY_ID)
+                {
+                    userPropFlag = true;
+                    status = decodeutf_8(pUserPropKey, pUserPropKeyLen, &propertyLength, &userKey, &pIndex);
+                    status = decodeutf_8(pUserPropVal, pUserPropValLen, &propertyLength, &userVal, &pIndex);
+                    // update currIndex to pIndex essentially. 
+                    *pCurrIndex = pIndex;
+
+                    break;
+                }
             }
         }
     }
@@ -4257,35 +4277,54 @@ bool MQTT_IncomingPubGetNextProp(uint8_t** pCurrIndex,
     bool userVal = false;
     size_t propertyLength = pPublishInfo->propertyLength;
 
-    if (propertyLength == 0U)
+    if (deserializedInfo == NULL)
     {
-        LogError(("No properties in the incoming publish"));
+        LogError(("Argument cannor be NULL : deserializedInfo = %p", (void*)deserializedInfo));
+        status = MQTTBadParameter;
+    }
+    else if (pPublishInfo == NULL)
+    {
+        LogError(("Argument cannor be NULL : pPublishInfo = %p", (void*)pPublishInfo));
         status = MQTTBadParameter;
     }
     else
     {
-        if (*pCurrIndex == NULL)
+        /* Do nothing */
+    }
+
+    if (status == MQTTSuccess)
+    {
+        propertyLength = pPublishInfo->propertyLength;
+        if (propertyLength == 0U)
         {
-            pIndex = pPublishInfo->startOfProps;
+            LogError(("No properties in the incoming publish"));
+            status = MQTTBadParameter;
         }
-        else {
-            pIndex = *pCurrIndex;
-        }
-        while ((propertyLength > 0U) && (status == MQTTSuccess))
+        else
         {
-            uint8_t propertyId = *pIndex;
-            pIndex = &pIndex[1];
-            propertyLength -= sizeof(uint8_t);
-            if (propertyId == MQTT_USER_PROPERTY_ID)
+            if (*pCurrIndex == NULL)
             {
-                userPropFlag = true;
+                pIndex = pPublishInfo->startOfProps;
+            }
+            else {
+                pIndex = *pCurrIndex;
+            }
+            while ((propertyLength > 0U) && (status == MQTTSuccess))
+            {
+                uint8_t propertyId = *pIndex;
+                pIndex = &pIndex[1];
+                propertyLength -= sizeof(uint8_t);
+                if (propertyId == MQTT_USER_PROPERTY_ID)
+                {
+                    userPropFlag = true;
 
-                status = decodeutf_8(pUserPropKey, pUserPropKeyLen, &propertyLength, &userKey, &pIndex);
-                status = decodeutf_8(pUserPropVal, pUserPropValLen, &propertyLength, &userVal, &pIndex);
-                // update currIndex to pIndex essentially. 
-                *pCurrIndex = pIndex;
+                    status = decodeutf_8(pUserPropKey, pUserPropKeyLen, &propertyLength, &userKey, &pIndex);
+                    status = decodeutf_8(pUserPropVal, pUserPropValLen, &propertyLength, &userVal, &pIndex);
+                    // update currIndex to pIndex essentially. 
+                    *pCurrIndex = pIndex;
 
-                break;
+                    break;
+                }
             }
         }
     }
