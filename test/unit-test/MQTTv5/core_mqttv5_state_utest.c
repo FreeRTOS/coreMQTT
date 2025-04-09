@@ -94,7 +94,8 @@ static uint32_t getTime( void )
  */
 static void eventCallback( MQTTContext_t * pContext,
                            MQTTPacketInfo_t * pPacketInfo,
-                           MQTTDeserializedInfo_t * pDeserializedInfo )
+                           MQTTDeserializedInfo_t * pDeserializedInfo, 
+                           MQTTPublishFailReasonCode_t * pReasonCode)
 {
     ( void ) pContext;
     ( void ) pPacketInfo;

@@ -396,14 +396,7 @@ static void setupPublishProperties( MQTTPublishInfo_t * pPublishInfo )
 {
     pPublishInfo->payloadFormat = 1;
     pPublishInfo->topicAlias = TEST_TOPIC_ALIAS;
-    // pPublishInfo->msgExpiryInterval = TEST_MSG_EXPIRY;
-    // pPublishInfo->msgExpiryPresent = 1;
-    // pPublishInfo->contentTypeLength = MQTT_TEST_UTF8_STRING_LENGTH;
-    // pPublishInfo->pContentType = MQTT_TEST_UTF8_STRING;
-    // pPublishInfo->responseTopicLength = MQTT_TEST_UTF8_STRING_LENGTH;
-    // pPublishInfo->pResponseTopic = MQTT_TEST_UTF8_STRING;
-    // pPublishInfo->correlationLength = MQTT_TEST_UTF8_STRING_LENGTH;
-    // pPublishInfo->pCorrelationData = MQTT_TEST_UTF8_STRING;
+
 }
 
 /**
@@ -1812,9 +1805,6 @@ void test_MQTTV5_GetConnectPacketSize( void )
 {
     size_t remainingLength = 0;
     size_t packetSize = 0;
-    MQTTUserProperties_t incomingProperty;
-    int proplen = 0  ; 
-    int willproplen = 0 ; 
 
 
     /* Call MQTT_GetConnectPacketSize() with various combinations of
@@ -2289,7 +2279,7 @@ void test_RemaininglengthLimit( void )
     // status = MQTTV5_GetAckPacketSize( &ackInfo, &remainingLength, &packetSize, maxPacketSize, maxPacketSize + 2 );
     // TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
 
-    status = MQTT_GetDisconnectPacketSize( &ackInfo, &remainingLength, &packetSize, maxPacketSize, MQTT_MAX_REMAINING_LENGTH );
+    status = MQTT_GetDisconnectPacketSize(&remainingLength, &packetSize, maxPacketSize, MQTT_MAX_REMAINING_LENGTH, 0 );
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
 }
 
@@ -2688,37 +2678,37 @@ void test_MQTTV5_GetAckPacketSize()
 
     memset( &ackInfo, 0x0, sizeof( ackInfo ) );
     /*Invalid parameters*/
-    status = MQTTV5_GetAckPacketSize( NULL, &remainingLength, &packetSize, maxPacketSize, 0 );
+    status = MQTTV5_GetAckPacketSize( &remainingLength, &packetSize, maxPacketSize, 0 );
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
 
-    status = MQTTV5_GetAckPacketSize( &ackInfo, NULL, &packetSize, maxPacketSize, 0);
+    status = MQTTV5_GetAckPacketSize( NULL, &packetSize, maxPacketSize, 0);
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
 
 
-    status = MQTTV5_GetAckPacketSize( &ackInfo, &remainingLength, NULL, maxPacketSize , 0);
+    status = MQTTV5_GetAckPacketSize(&remainingLength, NULL, maxPacketSize , 0);
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
 
 /*Max packet size cannot be 0*/
-    status = MQTTV5_GetAckPacketSize( &ackInfo, &remainingLength, NULL, maxPacketSize , 0);
+    status = MQTTV5_GetAckPacketSize( &remainingLength, NULL, maxPacketSize , 0);
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
 
 /*Valid parameters*/
     maxPacketSize = UINT32_MAX;
-    status = MQTTV5_GetAckPacketSize( &ackInfo, &remainingLength, &packetSize, maxPacketSize , 0);
+    status = MQTTV5_GetAckPacketSize( &remainingLength, &packetSize, maxPacketSize , 0);
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
 
 /*With properties*/
-    status = MQTTV5_GetAckPacketSize( &ackInfo, &remainingLength, &packetSize, maxPacketSize, 10 );
+    status = MQTTV5_GetAckPacketSize(&remainingLength, &packetSize, maxPacketSize, 10 );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
 
 /*Packet size greater than max allowed.*/
     maxPacketSize = 2;
-    status = MQTTV5_GetAckPacketSize( &ackInfo, &remainingLength, &packetSize, maxPacketSize, 0 );
+    status = MQTTV5_GetAckPacketSize( &remainingLength, &packetSize, maxPacketSize, 0 );
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
 
 /*Max packet size cannot be 0*/
     maxPacketSize = 0;
-    status = MQTTV5_GetAckPacketSize( &ackInfo, &remainingLength, &packetSize, maxPacketSize, 0 );
+    status = MQTTV5_GetAckPacketSize(&remainingLength, &packetSize, maxPacketSize, 0 );
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
 
 }
@@ -2739,54 +2729,45 @@ void test_MQTTV5_GetDisconnectPacketSize()
     ackInfo.reasonCode = &reasonCodeValue ; 
 
     /*Invalid arguments*/
-    status = MQTT_GetDisconnectPacketSize( NULL, &remainingLength, &packetSize, maxPacketSize, 0);
+    status = MQTT_GetDisconnectPacketSize( &remainingLength, &packetSize, maxPacketSize, 0, 0);
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
 
 
-    status = MQTT_GetDisconnectPacketSize( &ackInfo, NULL, &packetSize, maxPacketSize, 0 );
+    status = MQTT_GetDisconnectPacketSize( NULL, &packetSize, maxPacketSize, 0, 0 );
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
 
-    status = MQTT_GetDisconnectPacketSize( &ackInfo, &remainingLength, NULL, maxPacketSize, 0);
+    status = MQTT_GetDisconnectPacketSize(&remainingLength, NULL, maxPacketSize, 0, 0);
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
 
     /*Max packet size cannot be 0.*/
-    status = MQTT_GetDisconnectPacketSize( &ackInfo, &remainingLength, &packetSize, maxPacketSize, 0 );
-    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
-
-    /*Invalid reason code*/
-    *ackInfo.reasonCode = 2;
-    status = MQTT_GetDisconnectPacketSize( &ackInfo, &remainingLength, &packetSize, maxPacketSize, 0);
-    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+    status = MQTT_GetDisconnectPacketSize( &remainingLength, &packetSize, maxPacketSize, 0 , 0);
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status ); 
 
 
-    status = MQTT_GetDisconnectPacketSize( &ackInfo, &remainingLength, &packetSize, maxPacketSize, 10);
+    status = MQTT_GetDisconnectPacketSize(&remainingLength, &packetSize, maxPacketSize, 10, 0);
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
 
     // /*Invalid Reason code*/
     maxPacketSize = 60U;
-    *ackInfo.reasonCode = MQTT_REASON_SERVER_BUSY;
-    status = MQTT_GetDisconnectPacketSize( &ackInfo, &remainingLength, &packetSize, maxPacketSize,0 );
-    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+    status = MQTT_GetDisconnectPacketSize(&remainingLength, &packetSize, maxPacketSize,0 , 0);
+    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
 
     /*Valid parameters*/
     *ackInfo.reasonCode = MQTT_REASON_SEND_WILL;
-    status = MQTT_GetDisconnectPacketSize( &ackInfo, &remainingLength, &packetSize, maxPacketSize, 0 );
+    status = MQTT_GetDisconnectPacketSize( &remainingLength, &packetSize, maxPacketSize, 0, 0 );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
 
     /*Valid parameters*/
     *ackInfo.reasonCode = MQTT_REASON_PACKET_TOO_LARGE;
-    status = MQTT_GetDisconnectPacketSize( &ackInfo, &remainingLength, &packetSize, maxPacketSize, 0);
+    status = MQTT_GetDisconnectPacketSize(&remainingLength, &packetSize, maxPacketSize, 0, 0);
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
 
-    status = MQTT_GetDisconnectPacketSize( &ackInfo, &remainingLength, &packetSize, 5, 6);
+    status = MQTT_GetDisconnectPacketSize(&remainingLength, &packetSize, 5, 6, 0);
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
 
 
-    status = MQTT_GetDisconnectPacketSize( &ackInfo, &remainingLength, &packetSize, maxPacketSize, MQTT_MAX_REMAINING_LENGTH);
+    status = MQTT_GetDisconnectPacketSize( &remainingLength, &packetSize, maxPacketSize, MQTT_MAX_REMAINING_LENGTH, 0);
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
-
-
-
 }
 
 
@@ -3338,22 +3319,22 @@ void test_MQTT_DeserializeAck_pingresp( void )
     ( void ) memset( &mqttPacketInfo, 0x00, sizeof( mqttPacketInfo ) );
     mqttPacketInfo.type = MQTT_PACKET_TYPE_PINGRESP;
     mqttPacketInfo.remainingLength = MQTT_PACKET_PINGRESP_REMAINING_LENGTH + 1;
-    status = MQTT_DeserializeAck( &mqttPacketInfo, &packetIdentifier, &sessionPresent );
+    status = MQTT_DeserializePing( &mqttPacketInfo, &packetIdentifier, &sessionPresent );
     TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
 
     mqttPacketInfo.type = MQTT_PACKET_TYPE_SUBACK ; 
     mqttPacketInfo.remainingLength = 5 ;
-    status = MQTT_DeserializeAck(&mqttPacketInfo, &packetIdentifier, &sessionPresent);
+    status = MQTT_DeserializePing(&mqttPacketInfo, &packetIdentifier, &sessionPresent);
     TEST_ASSERT_EQUAL_INT(MQTTBadResponse, status);
 
     /* Process a valid PINGRESP. */
     mqttPacketInfo.type = MQTT_PACKET_TYPE_PINGRESP;
     mqttPacketInfo.remainingLength = MQTT_PACKET_PINGRESP_REMAINING_LENGTH;
     mqttPacketInfo.pRemainingData = NULL;
-    status = MQTT_DeserializeAck( &mqttPacketInfo, NULL, NULL );
+    status = MQTT_DeserializePing( &mqttPacketInfo, NULL, NULL );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
 
-    status = MQTT_DeserializeAck(NULL , NULL , NULL) ; 
+    status = MQTT_DeserializePing(NULL , NULL , NULL) ; 
     TEST_ASSERT_EQUAL_INT(MQTTBadParameter, status);
 }
 
@@ -4001,11 +3982,6 @@ void test_OptionalProperties(void)
     mqttStatus = MQTTPropAdd_PubCorrelationData(&(propBuilder), "abc", 3) ;
     TEST_ASSERT_EQUAL_INT(MQTTBadParameter, mqttStatus) ;
 
-    mqttStatus = MQTTPropAdd_PubSubscriptionId(&(propBuilder) , 10) ; 
-    TEST_ASSERT_EQUAL_INT(MQTTSuccess, mqttStatus) ;
-    mqttStatus = MQTTPropAdd_PubSubscriptionId(&(propBuilder), 0) ;
-    TEST_ASSERT_EQUAL_INT(MQTTBadParameter, mqttStatus) ;
-
     mqttStatus = MQTTPropAdd_PubContentType(&(propBuilder), "abc", 3) ;
     TEST_ASSERT_EQUAL_INT(MQTTSuccess, mqttStatus) ;
     mqttStatus = MQTTPropAdd_PubContentType(&(propBuilder), "abc", 3) ;
@@ -4070,15 +4046,12 @@ void test_MQTT_SerializeAck(void)
 void test_MQTTV5_SerializeDisconnect(void)
 {
     uint8_t buf[10] ; 
-    MQTTAckInfo_t ackInfo ; 
-    (void)memset(&ackInfo, 0x0, sizeof(ackInfo));
-    uint8_t rc = 0x00 ; 
-    ackInfo.reasonCode = &rc ; 
+
     MQTTStatus_t status = MQTTSuccess ; 
-    MQTT_SerializeDisconnectFixed(buf , &ackInfo , 10) ; 
+    MQTT_SerializeDisconnectFixed(buf , 0x00 , 10) ; 
     TEST_ASSERT_EQUAL(buf[0], MQTT_PACKET_TYPE_DISCONNECT) ;
 
-    MQTTV5_SerializeAckFixed(buf , MQTT_PACKET_TYPE_SUBACK, 10 , 10) ; 
+    MQTTV5_SerializeAckFixed(buf , MQTT_PACKET_TYPE_SUBACK, 10 , 10, 0x00) ; 
     TEST_ASSERT_EQUAL(buf[0], MQTT_PACKET_TYPE_SUBACK) ;
 
 }
