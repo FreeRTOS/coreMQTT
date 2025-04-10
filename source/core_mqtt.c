@@ -1816,6 +1816,7 @@ MQTTStatus_t handleIncomingPublish( MQTTContext_t * pContext,
     (void)memset(&publishInfo, 0x0, sizeof(publishInfo));
     MQTTDeserializedInfo_t deserializedInfo;
     bool duplicatePublish = false;
+    MqttPropBuilder_t propBuffer = { 0 };
 
 
     assert( pContext != NULL );
@@ -1823,7 +1824,7 @@ MQTTStatus_t handleIncomingPublish( MQTTContext_t * pContext,
     assert( pContext->appCallback != NULL );
 
 
-    status = MQTT_DeserializePublish( pIncomingPacket, &packetIdentifier, &publishInfo );
+    status = MQTT_DeserializePublish( pIncomingPacket, &packetIdentifier, &publishInfo, &propBuffer );
     LogInfo( ( "De-serialized incoming PUBLISH packet: DeserializerResult=%s.",
                MQTT_Status_strerror( status ) ) );
 
@@ -1922,7 +1923,7 @@ MQTTStatus_t handleIncomingPublish( MQTTContext_t * pContext,
 
         if (duplicatePublish == false)
         {
-            pContext->appCallback(pContext, pIncomingPacket, &deserializedInfo, &reasonCode);
+            pContext->appCallback(pContext, pIncomingPacket, &deserializedInfo, &reasonCode, &pContext->ackPropsBuffer, &propBuffer);
         }
 
         /* Send PUBREL or PUBCOMP if necessary. */
@@ -1978,7 +1979,7 @@ MQTTStatus_t handleSuback( MQTTContext_t * pContext,
 
         /* Invoke application callback to hand the buffer over to application before sending acks. */
 
-        appCallback( pContext, pIncomingPacket, &deserializedInfo, NULL );
+        appCallback( pContext, pIncomingPacket, &deserializedInfo, NULL, NULL, NULL );
     }
 
 
@@ -1994,6 +1995,7 @@ static MQTTStatus_t handlePublishAcks( MQTTContext_t * pContext,
     MQTTPubAckType_t ackType;
     MQTTEventCallback_t appCallback;
     MQTTDeserializedInfo_t deserializedInfo;
+    MqttPropBuilder_t propBuffer; 
 
 
     MQTTAckInfo_t ackInfo;
@@ -2013,7 +2015,7 @@ static MQTTStatus_t handlePublishAcks( MQTTContext_t * pContext,
 
     ackType = getAckFromPacketType( pIncomingPacket->type );
 
-    status = MQTTV5_DeserializeAck( pIncomingPacket, &packetIdentifier, &ackInfo, pContext->connectProperties.requestProblemInfo, pContext->connectProperties.maxPacketSize );
+    status = MQTTV5_DeserializeAck( pIncomingPacket, &packetIdentifier, &ackInfo, pContext->connectProperties.requestProblemInfo, pContext->connectProperties.maxPacketSize, &propBuffer );
 
     LogInfo( ( "Ack packet deserialized with result: %s.",
                MQTT_Status_strerror( status ) ) );
@@ -2058,7 +2060,7 @@ static MQTTStatus_t handlePublishAcks( MQTTContext_t * pContext,
 
         MQTTPublishFailReasonCode_t reasonCode = MQTTPublishSuccess; 
 
-        appCallback( pContext, pIncomingPacket, &deserializedInfo, &reasonCode);
+        appCallback( pContext, pIncomingPacket, &deserializedInfo, &reasonCode, &pContext->ackPropsBuffer, &propBuffer);
 
         /* Send PUBREL or PUBCOMP if necessary. */
         if(pContext->ackPropsBuffer.pBuffer == NULL && (reasonCode == MQTTPublishSuccess)) 
@@ -2071,7 +2073,7 @@ static MQTTStatus_t handlePublishAcks( MQTTContext_t * pContext,
         {
             MQTT_PRE_SEND_HOOK( pContext );
 
-            status = sendPublishAcksWithProperty( pContext, packetIdentifier, publishRecordState, reasonCode );
+            status = sendPublishAcksWithProperty( pContext, packetIdentifier, publishRecordState, reasonCode);
 
             MQTT_POST_SEND_HOOK( pContext );
         }
@@ -2151,7 +2153,7 @@ static MQTTStatus_t handleIncomingAck( MQTTContext_t * pContext,
         deserializedInfo.packetIdentifier = packetIdentifier;
         deserializedInfo.deserializationResult = status;
         deserializedInfo.pPublishInfo = NULL;
-        appCallback( pContext, pIncomingPacket, &deserializedInfo , NULL);
+        appCallback( pContext, pIncomingPacket, &deserializedInfo , NULL, NULL , NULL);
         /* In case a SUBACK indicated refusal, reset the status to continue the loop. */
         status = MQTTSuccess;
     }
@@ -2272,11 +2274,11 @@ static MQTTStatus_t receiveSingleIteration( MQTTContext_t * pContext,
         else if( ( incomingPacket.type == MQTT_PACKET_TYPE_DISCONNECT ) )
         {
             assert( pContext->pDisconnectInfo != NULL );
-            status = MQTTV5_DeserializeDisconnect( &incomingPacket,
-                                                    pContext->pDisconnectInfo,
-                                                    &pContext->connectProperties.pServerRef,
-                                                    &pContext->connectProperties.serverRefLength,
-                                                    pContext->connectProperties.maxPacketSize );
+            //status = MQTTV5_DeserializeDisconnect( &incomingPacket,
+            //                                        pContext->pDisconnectInfo,
+            //                                        &pContext->connectProperties.pServerRef,
+            //                                        &pContext->connectProperties.serverRefLength,
+            //                                        pContext->connectProperties.maxPacketSize );
 
             if( status == MQTTSuccess )
             {
@@ -3004,6 +3006,7 @@ static MQTTStatus_t receiveConnack( const MQTTContext_t * pContext,
     bool breakFromLoop = false;
     uint16_t loopCount = 0U;
     MQTTDeserializedInfo_t deserializedInfo; 
+    MqttPropBuilder_t propBuffer; 
     
 
     assert( pContext != NULL );
@@ -3088,7 +3091,7 @@ static MQTTStatus_t receiveConnack( const MQTTContext_t * pContext,
         pIncomingPacket->pRemainingData = pContext->networkBuffer.pBuffer;
 
         /* Deserialize CONNACK. */
-        status = MQTT_DeserializeConnack( &pContext->connectProperties, pIncomingPacket, pSessionPresent );
+        status = MQTT_DeserializeConnack( &pContext->connectProperties, pIncomingPacket, pSessionPresent, &propBuffer);
 
     }
 
@@ -3117,7 +3120,7 @@ static MQTTStatus_t receiveConnack( const MQTTContext_t * pContext,
     if (status == MQTTSuccess)
     {
         deserializedInfo.deserializationResult = status; 
-        pContext->appCallback(pContext, pIncomingPacket ,&deserializedInfo, NULL);
+        pContext->appCallback(pContext, pIncomingPacket ,&deserializedInfo, NULL, &pContext->ackPropsBuffer , &propBuffer);
     }
 
     return status;
@@ -4118,6 +4121,16 @@ MQTTStatus_t MQTTPropAdd_PubAckReasonString(MQTTContext_t* pContext, const char*
         LogError(("Arguments cannot be NULL : pContext = %p.", "reasonString=%p,", "reason string length = %u.", (void*)pContext , (void*)reasonString , reasonStringLen)) ;
         status = MQTTBadParameter;
     }
+    else if (pContext->ackPropsBuffer.pBuffer == NULL)
+    {
+        LogError(("Arguments cannot be NULL : pContext->ackPropsBuffer.pBuffer = %p.", (void*)pContext->ackPropsBuffer.pBuffer));
+        status = MQTTBadParameter;
+    }
+    else if (pContext->ackPropsBuffer.currentIndex + reasonStringLen + 2U > pContext->ackPropsBuffer.bufferLength)
+    {
+        LogError(("Not enough space in the buffer to add the property"));
+        status = MQTTNoMemory;
+    }
     else if (UINT32_CHECK_BIT(pContext->ackPropsBuffer.fieldSet, MQTT_REASON_STRING_POS))
     {
         LogError(("Reason String already set"));
@@ -4132,6 +4145,60 @@ MQTTStatus_t MQTTPropAdd_PubAckReasonString(MQTTContext_t* pContext, const char*
         pIndex = encodeString(pIndex, reasonString, reasonStringLen);
         pContext->ackPropsBuffer.fieldSet = UINT32_SET_BIT(pContext->ackPropsBuffer.fieldSet, MQTT_REASON_STRING_POS);
         pContext->ackPropsBuffer.currentIndex += (size_t)(pIndex - (pContext->ackPropsBuffer.pBuffer + pContext->ackPropsBuffer.currentIndex));
+    }
+    return status;
+}
+
+MQTTStatus_t MQTTPropAdd_PubAckUserProps(MQTTContext_t* pContext, MQTTUserProperties_t* pUserProperties)
+{
+    MQTTStatus_t status = MQTTSuccess;
+    if ((pContext == NULL))
+    {
+        LogError(("Arguments cannot be NULL : pContext=%p.", (void*)pContext));
+        status = MQTTBadParameter;
+    }
+    else if (pContext->ackPropsBuffer.pBuffer == NULL)
+    {
+        LogError(("Arguments cannot be NULL : pContext->ackPropsBuffer.pBuffer = %p.", (void*)pContext->ackPropsBuffer.pBuffer));
+        status = MQTTBadParameter;
+    }
+    else if (pUserProperties == NULL)
+    {
+        LogError(("Arguments cannot be NULL : pUserProperties=%p.", (void*)pUserProperties));
+        status = MQTTBadParameter;
+    }
+    else if (pUserProperties->count == 0)
+    {
+        LogError(("User Properties count cannot be 0"));
+        status = MQTTBadParameter;
+    }
+    else if (pUserProperties->userProperty == NULL)
+    {
+        LogError(("Arguments cannot be NULL : pUserProperties->userProperty=%p.", (void*)pUserProperties->userProperty));
+    }
+    else if (pUserProperties->userProperty->pKey == NULL || pUserProperties->userProperty->pValue == NULL || pUserProperties->userProperty->keyLength == 0U || pUserProperties->userProperty->valueLength == 0U)
+    {
+        LogError(("Arguments cannot be NULL : pUserProperties->userProperty->pKey=%p,", " pUserProperties->userProperty->pValue=%p", "Key Length = %u", "Value Length = %u", (void*)pUserProperties->userProperty->pKey, (void*)pUserProperties->userProperty->pValue, pUserProperties->userProperty->keyLength, pUserProperties->userProperty->valueLength));
+        status = MQTTBadParameter;
+    }
+    else
+    {
+        uint8_t* start = pContext->ackPropsBuffer.pBuffer + pContext->ackPropsBuffer.currentIndex;
+        uint8_t* pIndex = pContext->ackPropsBuffer.pBuffer + pContext->ackPropsBuffer.currentIndex;
+        uint32_t i = 0;
+        uint32_t size = pUserProperties->count;
+        const MQTTUserProperty_t* userProperty = pUserProperties->userProperty; /*Pointer to the array of user props*/
+
+        for (; i < size; i++)
+        {
+            *pIndex = MQTT_USER_PROPERTY_ID;
+            pIndex++;
+
+            /*Encoding key*/
+            pIndex = encodeString(pIndex, userProperty[i].pKey, userProperty[i].keyLength);
+            pIndex = encodeString(pIndex, userProperty[i].pValue, userProperty[i].valueLength);
+        }
+        pContext->ackPropsBuffer.currentIndex += (size_t)(pIndex - start);
     }
     return status;
 }
@@ -4183,7 +4250,6 @@ bool MQTT_AckGetNextProp(uint8_t** pCurrIndex,
                     userPropFlag = true;
                     status = decodeutf_8(pUserPropKey, pUserPropKeyLen, &propertyLength, &userKey, &pIndex);
                     status = decodeutf_8(pUserPropVal, pUserPropValLen, &propertyLength, &userVal, &pIndex);
-                    // update currIndex to pIndex essentially. 
                     *pCurrIndex = pIndex;
                     break;
                 }
@@ -4335,9 +4401,4 @@ bool MQTT_IncomingPubGetNextProp(uint8_t** pCurrIndex,
     }
     return userPropFlag;
 }
-
-
-/*-----------------------------------------------------------*/
-
-
 

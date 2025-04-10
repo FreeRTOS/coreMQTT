@@ -100,7 +100,9 @@ typedef uint32_t (* MQTTGetCurrentTimeFunc_t )( void );
 typedef void (* MQTTEventCallback_t )( struct MQTTContext * pContext,
                                        struct MQTTPacketInfo * pPacketInfo,
                                        struct MQTTDeserializedInfo * pDeserializedInfo, 
-                                       enum MQTTPublishFailReasonCode * pReasonCode);
+                                       enum MQTTPublishFailReasonCode * pReasonCode,
+                                       struct MqttPropBuilder_t* sendPropsBuffer,
+                                       struct MqttPropBuilder_t* getPropsBuffer);
 
 /**
  * @ingroup mqtt_enum_types
@@ -1027,6 +1029,8 @@ bool MQTT_IncomingPubGetNextProp(uint8_t** pCurrIndex,
     const char** pUserPropVal,
     uint16_t* pUserPropValLen,
     MQTTDeserializedInfo_t* deserializedInfo); 
+
+MQTTStatus_t MQTTPropAdd_PubAckUserProps(MQTTContext_t* pContext, MQTTUserProperties_t* pUserProperties); 
 
 
 

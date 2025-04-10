@@ -10,6 +10,8 @@
 #define UINT8_SET_BIT( x, position )      ( ( x ) = ( uint8_t ) ( ( x ) | ( 0x01U << ( position ) ) ) )
 
 
+
+
 uint8_t* encodeRemainingLength(uint8_t* pDestination,
     size_t length)
 {
