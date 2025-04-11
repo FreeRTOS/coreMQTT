@@ -1827,7 +1827,7 @@ MQTTStatus_t MQTTPropAdd_SubscribeId(MqttPropBuilder_t* pPropertyBuilder, size_t
 /*
 * API call for sending User Properties
 */
-MQTTStatus_t MQTTPropAdd_UserProps(MqttPropBuilder_t* pPropertyBuilder, MQTTUserProperties_t* pUserProperties); 
+MQTTStatus_t MQTTPropAdd_UserProp(MqttPropBuilder_t* pPropertyBuilder, MQTTUserProperty_t* pUserProperty); 
 
 MQTTStatus_t MQTTPropAdd_ConnSessionExpiry(MqttPropBuilder_t* pPropertyBuilder, uint32_t sessionExpiry);
 
@@ -1869,7 +1869,7 @@ MQTTStatus_t MQTTPropAdd_PubContentType(MqttPropBuilder_t* pPropBuilder,
     const char* contentType,
     uint16_t contentTypeLength);
 
-MQTTStatus_t MQTTPropAdd_DisconnReasonString(MqttPropBuilder_t* pPropertyBuilder,
+MQTTStatus_t MQTTPropAdd_ReasonString(MqttPropBuilder_t* pPropertyBuilder,
     const char* pReasonString,
     uint16_t reasonStringLength); 
 
@@ -1911,35 +1911,34 @@ uint8_t* encodeString(uint8_t* pDestination,
 MQTTStatus_t validatePublishProperties(uint16_t serverTopicAliasMax, MqttPropBuilder_t* propBuilder, uint16_t *topicAliasMax);
 MQTTStatus_t validateSubscribeProperties(uint8_t isSubscriptionIdAvailable, MqttPropBuilder_t* propBuilder); 
 
-MQTTStatus_t MQTTPropGet_PubTopicAlias(uint8_t** startOfProp, uint16_t* topicAlias, size_t* propertyLength); 
+MQTTStatus_t MQTTPropGet_PubTopicAlias(MqttPropBuilder_t* propBuilder, uint16_t* topicAlias);
 
-MQTTStatus_t MQTTPropGet_PubPayloadFormatIndicator(uint8_t** startOfProp, uint8_t* payloadFormat, size_t* propertyLength); 
+MQTTStatus_t MQTTPropGet_PubPayloadFormatIndicator(MqttPropBuilder_t* propBuilder, uint8_t* payloadFormat);
 
-MQTTStatus_t MQTTPropGet_PubResponseTopic(uint8_t** startOfProp, const char** responseTopic, uint16_t* responseTopicLength, size_t* propertyLength);
+MQTTStatus_t MQTTPropGet_PubResponseTopic(MqttPropBuilder_t* propBuilder, const char** responseTopic, uint16_t* responseTopicLength);
 
-MQTTStatus_t MQTTPropGet_PubCorrelationData(uint8_t** startOfProp, const void** correlationData, uint16_t* correlationLength, size_t* propertyLength);
+MQTTStatus_t MQTTPropGet_PubCorrelationData(MqttPropBuilder_t* propBuilder, const void** correlationData, uint16_t* correlationLength);
 
-MQTTStatus_t MQTTPropGet_PubMessageExpiryInterval(uint8_t** startOfProp, uint32_t* msgExpiryInterval, size_t* propertyLength);
+MQTTStatus_t MQTTPropGet_PubMessageExpiryInterval(MqttPropBuilder_t* propBuilder, uint32_t* msgExpiryInterval);
 
-MQTTStatus_t MQTTPropGet_PubContentType(uint8_t** startOfProp, const char** pContentType, uint16_t* contentTypeLength, size_t* propertyLength);
+MQTTStatus_t MQTTPropGet_PubContentType(MqttPropBuilder_t* propBuilder, const char** pContentType, uint16_t* contentTypeLength);
 
-MQTTStatus_t MQTTPropGet_PubSubscriptionId(uint8_t** startOfProp, size_t* subscriptionId, size_t* propertyLength);
+MQTTStatus_t MQTTPropGet_PubSubscriptionId(MqttPropBuilder_t* propBuilder, size_t* subscriptionId);
 
-MQTTStatus_t MQTTPropGet_UserProp(uint8_t** startOfProp,
+MQTTStatus_t MQTTPropGet_UserProp(MqttPropBuilder_t* propBuilder,
     const char** pUserPropKey,
     uint16_t* pUserPropKeyLen,
     const char** pUserPropVal,
-    uint16_t* pUserPropValLen,
-    size_t* propertyLength);
+    uint16_t* pUserPropValLen);
 
-MQTTStatus_t MQTTPropGet_ReasonString(uint8_t** startOfProp, const char** pReasonString, uint16_t* reasonStringLength, size_t* propertyLength);
+MQTTStatus_t MQTTPropGet_ReasonString(MqttPropBuilder_t* propBuilder, const char** pReasonString, uint16_t* reasonStringLength);
 
-MQTTStatus_t MQTTPropGet_DisconnectServerRef(uint8_t** startOfProp, const char** pServerRef, uint16_t* serverRefLength, size_t* propertyLength); 
-MQTTStatus_t MQTTPropGet_ConnSessionExpiry(uint8_t** startOfProp, uint32_t* sessionExpiry, size_t* propertyLength); 
-MQTTStatus_t MQTTPropGet_ConnTopicAliasMax(uint8_t** startOfProp, uint16_t* topicAliasMax, size_t* propertyLength); 
+MQTTStatus_t MQTTPropGet_DisconnectServerRef(MqttPropBuilder_t* propBuilder, const char** pServerRef, uint16_t* serverRefLength);
+MQTTStatus_t MQTTPropGet_ConnSessionExpiry(MqttPropBuilder_t* propBuilder, uint32_t* sessionExpiry);
+MQTTStatus_t MQTTPropGet_ConnTopicAliasMax(MqttPropBuilder_t* propBuffer, uint16_t* topicAliasMax); 
 
 
-MQTTStatus_t MQTT_IncomingGetNextProp(MqttPropBuilder_t* propBuffer, uint8_t* propertyId, uint8_t** startOfProp); 
+MQTTStatus_t MQTT_IncomingGetNextProp(MqttPropBuilder_t* propBuffer, uint8_t* propertyId); 
 
 /* *INDENT-OFF* */
 #ifdef __cplusplus

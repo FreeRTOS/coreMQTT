@@ -3006,7 +3006,7 @@ static MQTTStatus_t receiveConnack( const MQTTContext_t * pContext,
     bool breakFromLoop = false;
     uint16_t loopCount = 0U;
     MQTTDeserializedInfo_t deserializedInfo; 
-    MqttPropBuilder_t propBuffer; 
+    MqttPropBuilder_t propBuffer = { 0 } ;
     
 
     assert( pContext != NULL );
@@ -4111,97 +4111,6 @@ MQTTStatus_t MQTT_Disconnect( MQTTContext_t * pContext,
     return status;
 }
 
-MQTTStatus_t MQTTPropAdd_PubAckReasonString(MQTTContext_t* pContext, const char* reasonString, uint16_t reasonStringLen)
-{
-
-    uint8_t* pIndex;
-    MQTTStatus_t status = MQTTSuccess;
-    if ((pContext == NULL) || (reasonString == NULL) || (reasonStringLen == 0U) )
-    {
-        LogError(("Arguments cannot be NULL : pContext = %p.", "reasonString=%p,", "reason string length = %u.", (void*)pContext , (void*)reasonString , reasonStringLen)) ;
-        status = MQTTBadParameter;
-    }
-    else if (pContext->ackPropsBuffer.pBuffer == NULL)
-    {
-        LogError(("Arguments cannot be NULL : pContext->ackPropsBuffer.pBuffer = %p.", (void*)pContext->ackPropsBuffer.pBuffer));
-        status = MQTTBadParameter;
-    }
-    else if (pContext->ackPropsBuffer.currentIndex + reasonStringLen + 2U > pContext->ackPropsBuffer.bufferLength)
-    {
-        LogError(("Not enough space in the buffer to add the property"));
-        status = MQTTNoMemory;
-    }
-    else if (UINT32_CHECK_BIT(pContext->ackPropsBuffer.fieldSet, MQTT_REASON_STRING_POS))
-    {
-        LogError(("Reason String already set"));
-        status = MQTTBadParameter;
-    }
-    
-    else
-    {
-        pIndex = pContext->ackPropsBuffer.pBuffer + pContext->ackPropsBuffer.currentIndex;
-        *pIndex = MQTT_REASON_STRING_ID;
-        pIndex++;
-        pIndex = encodeString(pIndex, reasonString, reasonStringLen);
-        pContext->ackPropsBuffer.fieldSet = UINT32_SET_BIT(pContext->ackPropsBuffer.fieldSet, MQTT_REASON_STRING_POS);
-        pContext->ackPropsBuffer.currentIndex += (size_t)(pIndex - (pContext->ackPropsBuffer.pBuffer + pContext->ackPropsBuffer.currentIndex));
-    }
-    return status;
-}
-
-MQTTStatus_t MQTTPropAdd_PubAckUserProps(MQTTContext_t* pContext, MQTTUserProperties_t* pUserProperties)
-{
-    MQTTStatus_t status = MQTTSuccess;
-    if ((pContext == NULL))
-    {
-        LogError(("Arguments cannot be NULL : pContext=%p.", (void*)pContext));
-        status = MQTTBadParameter;
-    }
-    else if (pContext->ackPropsBuffer.pBuffer == NULL)
-    {
-        LogError(("Arguments cannot be NULL : pContext->ackPropsBuffer.pBuffer = %p.", (void*)pContext->ackPropsBuffer.pBuffer));
-        status = MQTTBadParameter;
-    }
-    else if (pUserProperties == NULL)
-    {
-        LogError(("Arguments cannot be NULL : pUserProperties=%p.", (void*)pUserProperties));
-        status = MQTTBadParameter;
-    }
-    else if (pUserProperties->count == 0)
-    {
-        LogError(("User Properties count cannot be 0"));
-        status = MQTTBadParameter;
-    }
-    else if (pUserProperties->userProperty == NULL)
-    {
-        LogError(("Arguments cannot be NULL : pUserProperties->userProperty=%p.", (void*)pUserProperties->userProperty));
-    }
-    else if (pUserProperties->userProperty->pKey == NULL || pUserProperties->userProperty->pValue == NULL || pUserProperties->userProperty->keyLength == 0U || pUserProperties->userProperty->valueLength == 0U)
-    {
-        LogError(("Arguments cannot be NULL : pUserProperties->userProperty->pKey=%p,", " pUserProperties->userProperty->pValue=%p", "Key Length = %u", "Value Length = %u", (void*)pUserProperties->userProperty->pKey, (void*)pUserProperties->userProperty->pValue, pUserProperties->userProperty->keyLength, pUserProperties->userProperty->valueLength));
-        status = MQTTBadParameter;
-    }
-    else
-    {
-        uint8_t* start = pContext->ackPropsBuffer.pBuffer + pContext->ackPropsBuffer.currentIndex;
-        uint8_t* pIndex = pContext->ackPropsBuffer.pBuffer + pContext->ackPropsBuffer.currentIndex;
-        uint32_t i = 0;
-        uint32_t size = pUserProperties->count;
-        const MQTTUserProperty_t* userProperty = pUserProperties->userProperty; /*Pointer to the array of user props*/
-
-        for (; i < size; i++)
-        {
-            *pIndex = MQTT_USER_PROPERTY_ID;
-            pIndex++;
-
-            /*Encoding key*/
-            pIndex = encodeString(pIndex, userProperty[i].pKey, userProperty[i].keyLength);
-            pIndex = encodeString(pIndex, userProperty[i].pValue, userProperty[i].valueLength);
-        }
-        pContext->ackPropsBuffer.currentIndex += (size_t)(pIndex - start);
-    }
-    return status;
-}
 
 bool MQTT_AckGetNextProp(uint8_t** pCurrIndex,
     const char** pUserPropKey,

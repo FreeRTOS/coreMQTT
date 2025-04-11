@@ -4132,7 +4132,7 @@ uint8_t * MQTT_SerializeDisconnectFixed( uint8_t * pIndex,
 * API call for sending User Properties 
 */
 
-    MQTTStatus_t MQTTPropAdd_UserProps(MqttPropBuilder_t* pPropertyBuilder, MQTTUserProperties_t* pUserProperties)
+    MQTTStatus_t MQTTPropAdd_UserProp(MqttPropBuilder_t* pPropertyBuilder, MQTTUserProperty_t *userProperty)
     {
         MQTTStatus_t status = MQTTSuccess;
         if ((pPropertyBuilder == NULL))
@@ -4145,42 +4145,27 @@ uint8_t * MQTT_SerializeDisconnectFixed( uint8_t * pIndex,
             LogError(("Arguments cannot be NULL : pPropertyBuilder->pBuffer=%p.", (void*)pPropertyBuilder->pBuffer));
             status = MQTTBadParameter;
         }
-        else if (pUserProperties == NULL)
+        else if (userProperty == NULL)
         {
-            LogError(("Arguments cannot be NULL : pUserProperties=%p.", (void*)pUserProperties));
-            status = MQTTBadParameter;
+            LogError(("Arguments cannot be NULL : userProperty=%p.", (void*)userProperty));
         }
-        else if (pUserProperties->count == 0)
+        else if (userProperty->pKey == NULL || userProperty->pValue == NULL || userProperty->keyLength == 0U || userProperty->valueLength == 0U)
         {
-            LogError(("User Properties count cannot be 0"));
-            status = MQTTBadParameter;
-        }
-        else if (pUserProperties->userProperty == NULL)
-        {
-            LogError(("Arguments cannot be NULL : pUserProperties->userProperty=%p.", (void*)pUserProperties->userProperty));
-        }
-        else if (pUserProperties->userProperty->pKey == NULL || pUserProperties->userProperty->pValue == NULL || pUserProperties->userProperty->keyLength == 0U || pUserProperties->userProperty->valueLength == 0U)
-        {
-            LogError(("Arguments cannot be NULL : pUserProperties->userProperty->pKey=%p," , " pUserProperties->userProperty->pValue=%p", "Key Length = %u" , "Value Length = %u" , (void*)pUserProperties->userProperty->pKey, (void*)pUserProperties->userProperty->pValue, pUserProperties->userProperty->keyLength , pUserProperties->userProperty->valueLength));
+            LogError(("Arguments cannot be NULL : pUserProperties->userProperty->pKey=%p," , " pUserProperties->userProperty->pValue=%p", "Key Length = %u" , "Value Length = %u" , (void*)userProperty->pKey, (void*)userProperty->pValue, userProperty->keyLength , userProperty->valueLength));
             status = MQTTBadParameter;
         }
         else
         {
             uint8_t* start = pPropertyBuilder->pBuffer + pPropertyBuilder->currentIndex;
             uint8_t* pIndex = pPropertyBuilder->pBuffer + pPropertyBuilder->currentIndex;
-            uint32_t i = 0;
-            uint32_t size = pUserProperties->count;
-            const MQTTUserProperty_t* userProperty = pUserProperties->userProperty; /*Pointer to the array of user props*/
 
-            for (; i < size; i++)
-            {
-                *pIndex = MQTT_USER_PROPERTY_ID;
-                pIndex++;
+            *pIndex = MQTT_USER_PROPERTY_ID;
+            pIndex++;
 
-                /*Encoding key*/
-                pIndex = encodeString(pIndex, userProperty[i].pKey, userProperty[i].keyLength);
-                pIndex = encodeString(pIndex, userProperty[i].pValue, userProperty[i].valueLength);
-            }
+            /*Encoding key*/
+            pIndex = encodeString(pIndex, userProperty->pKey, userProperty->keyLength);
+            pIndex = encodeString(pIndex, userProperty->pValue, userProperty->valueLength);
+
             pPropertyBuilder->currentIndex += (size_t)(pIndex - start);
         }
         return status;
@@ -4694,7 +4679,7 @@ uint8_t * MQTT_SerializeDisconnectFixed( uint8_t * pIndex,
         return status;
     }
 
-    MQTTStatus_t MQTTPropAdd_DisconnReasonString(MqttPropBuilder_t* pPropertyBuilder,
+    MQTTStatus_t MQTTPropAdd_ReasonString(MqttPropBuilder_t* pPropertyBuilder,
         const char* pReasonString,
         uint16_t reasonStringLength)
     {
@@ -4743,180 +4728,301 @@ uint8_t * MQTT_SerializeDisconnectFixed( uint8_t * pIndex,
     */
 
 
-    MQTTStatus_t MQTTPropGet_PubTopicAlias(uint8_t** startOfProp, uint16_t* topicAlias, size_t *propertyLength)
+    MQTTStatus_t MQTTPropGet_PubTopicAlias(MqttPropBuilder_t *propBuffer, uint16_t* topicAlias)
     {
         MQTTStatus_t status = MQTTSuccess; 
         bool propFlag = false; 
-        status = decodeuint16_t(topicAlias, propertyLength,&propFlag, startOfProp); 
+        uint8_t* startOfProp = propBuffer->pBuffer + propBuffer->currentIndex;
+        size_t propertyLength = propBuffer->bufferLength - propBuffer->currentIndex;
+        status = decodeuint16_t(topicAlias, &propertyLength,&propFlag, &startOfProp); 
+        if (status == MQTTSuccess)
+        {
+            propBuffer->currentIndex = (size_t)(startOfProp - propBuffer->pBuffer);
+        }
         return status; 
     }
 
-    MQTTStatus_t MQTTPropGet_PubPayloadFormatIndicator(uint8_t** startOfProp, uint8_t* payloadFormat, size_t *propertyLength)
+    MQTTStatus_t MQTTPropGet_PubPayloadFormatIndicator(MqttPropBuilder_t* propBuffer, uint8_t* payloadFormat)
     {
         MQTTStatus_t status = MQTTSuccess;
         bool propFlag = false;
-        status = decodeuint8_t(payloadFormat, propertyLength,&propFlag, startOfProp); 
+        uint8_t* startOfProp = propBuffer->pBuffer + propBuffer->currentIndex;
+        size_t propertyLength = propBuffer->bufferLength - propBuffer->currentIndex;
+        status = decodeuint8_t(payloadFormat, &propertyLength,&propFlag, &startOfProp); 
+        if (status == MQTTSuccess)
+        {
+            propBuffer->currentIndex = (size_t)(startOfProp - propBuffer->pBuffer);
+        }
         return status; 
     }
 
-    MQTTStatus_t MQTTPropGet_PubResponseTopic(uint8_t** startOfProp, const char** responseTopic, uint16_t* responseTopicLength, size_t* propertyLength)
+    MQTTStatus_t MQTTPropGet_PubResponseTopic(MqttPropBuilder_t* propBuffer, const char** responseTopic, uint16_t* responseTopicLength)
     {
         MQTTStatus_t status = MQTTSuccess;
         bool propFlag = false;
-        status = decodeutf_8(responseTopic, responseTopicLength,propertyLength , &propFlag, startOfProp);
+        uint8_t* startOfProp = propBuffer->pBuffer + propBuffer->currentIndex;
+        size_t propertyLength = propBuffer->bufferLength - propBuffer->currentIndex;
+        status = decodeutf_8(responseTopic, responseTopicLength,&propertyLength , &propFlag, &startOfProp);
+        if (status == MQTTSuccess)
+        {
+            propBuffer->currentIndex = (size_t)(startOfProp - propBuffer->pBuffer);
+        }
         return status; 
     }
 
-    MQTTStatus_t MQTTPropGet_PubCorrelationData(uint8_t** startOfProp, const void** correlationData, uint16_t* correlationLength, size_t *propertyLength)
+    MQTTStatus_t MQTTPropGet_PubCorrelationData(MqttPropBuilder_t* propBuffer, const void** correlationData, uint16_t* correlationLength)
     {
         MQTTStatus_t status = MQTTSuccess;
         bool propFlag = false;
-        status = decodeutf_8(correlationData, correlationLength, propertyLength, &propFlag ,startOfProp);
+        uint8_t* startOfProp = propBuffer->pBuffer + propBuffer->currentIndex;
+        size_t propertyLength = propBuffer->bufferLength - propBuffer->currentIndex;
+        status = decodeutf_8(correlationData, correlationLength, &propertyLength, &propFlag ,&startOfProp);
+        if (status == MQTTSuccess)
+        {
+            propBuffer->currentIndex = (size_t)(startOfProp - propBuffer->pBuffer);
+        }
         return status; 
     }
 
-    MQTTStatus_t MQTTPropGet_PubMessageExpiryInterval(uint8_t** startOfProp, uint32_t* msgExpiryInterval, size_t* propertyLength)
+    MQTTStatus_t MQTTPropGet_PubMessageExpiryInterval(MqttPropBuilder_t* propBuffer, uint32_t* msgExpiryInterval)
     {
         MQTTStatus_t status = MQTTSuccess;
         bool propFlag = false;
-        status = decodeuint32_t(msgExpiryInterval, propertyLength, &propFlag ,startOfProp);
+        uint8_t* startOfProp = propBuffer->pBuffer + propBuffer->currentIndex;
+        size_t propertyLength = propBuffer->bufferLength - propBuffer->currentIndex;
+        status = decodeuint32_t(msgExpiryInterval, &propertyLength, &propFlag ,&startOfProp);
+        if (status == MQTTSuccess)
+        {
+            propBuffer->currentIndex = (size_t)(startOfProp - propBuffer->pBuffer);
+        }
         return status; 
     }
 
-    MQTTStatus_t MQTTPropGet_PubContentType( uint8_t** startOfProp, const char** pContentType, uint16_t* contentTypeLength, size_t* propertyLength)
+    MQTTStatus_t MQTTPropGet_PubContentType(MqttPropBuilder_t* propBuffer, const char** pContentType, uint16_t* contentTypeLength)
     {
         MQTTStatus_t status = MQTTSuccess;
         bool propFlag = false;
-        status = decodeutf_8(pContentType, contentTypeLength, propertyLength, &propFlag, startOfProp);
+        uint8_t* startOfProp = propBuffer->pBuffer + propBuffer->currentIndex;
+        size_t propertyLength = propBuffer->bufferLength - propBuffer->currentIndex;
+        status = decodeutf_8(pContentType, contentTypeLength, &propertyLength, &propFlag, &startOfProp);
+        if (status == MQTTSuccess)
+        {
+            propBuffer->currentIndex = (size_t)(startOfProp - propBuffer->pBuffer);
+        }
         return status; 
     }
 
-    MQTTStatus_t MQTTPropGet_PubSubscriptionId(uint8_t** startOfProp, size_t* subscriptionId, size_t* propertyLength)
+    MQTTStatus_t MQTTPropGet_PubSubscriptionId(MqttPropBuilder_t* propBuffer, size_t* subscriptionId)
     {
         MQTTStatus_t status = MQTTSuccess;
+        uint8_t* startOfProp = propBuffer->pBuffer + propBuffer->currentIndex;
+        size_t propertyLength = propBuffer->bufferLength - propBuffer->currentIndex;
         status = decodeVariableLength(startOfProp, subscriptionId); 
+        if (status == MQTTSuccess)
+        {
+            propBuffer->currentIndex = (size_t)(startOfProp - propBuffer->pBuffer);
+        }
         return status; 
     }
 
-    MQTTStatus_t MQTTPropGet_ConnSessionExpiry(uint8_t **startOfProp, uint32_t *sessionExpiry, size_t *propertyLength)
+    MQTTStatus_t MQTTPropGet_ConnSessionExpiry(MqttPropBuilder_t* propBuffer, uint32_t *sessionExpiry)
     {
         MQTTStatus_t status = MQTTSuccess; 
         bool propFlag = false; 
-        status = decodeuint32_t(sessionExpiry, propertyLength, &propFlag, startOfProp); 
+        uint8_t* startOfProp = propBuffer->pBuffer + propBuffer->currentIndex;
+        size_t propertyLength = propBuffer->bufferLength - propBuffer->currentIndex;
+        status = decodeuint32_t(sessionExpiry, &propertyLength, &propFlag, &startOfProp); 
+        if (status == MQTTSuccess)
+        {
+            propBuffer->currentIndex = (size_t)(startOfProp - propBuffer->pBuffer);
+        }
         return status; 
     }
 
-    MQTTStatus_t MQTTPropGet_ConnTopicAliasMax(uint8_t** startOfProp, uint16_t* topicAliasMax, size_t* propertyLength)
+    MQTTStatus_t MQTTPropGet_ConnTopicAliasMax(MqttPropBuilder_t *propBuffer , uint16_t* topicAliasMax)
     {
         MQTTStatus_t status = MQTTSuccess; 
         bool propFlag = false; 
-        status = decodeuint16_t(topicAliasMax, propertyLength, &propFlag, startOfProp); 
+        uint8_t *startOfProp = propBuffer->pBuffer + propBuffer->currentIndex; 
+        size_t propertyLength = propBuffer->bufferLength - propBuffer->currentIndex;
+        status = decodeuint16_t(topicAliasMax, &propertyLength, &propFlag, &startOfProp);
+        if (status == MQTTSuccess)
+        {
+            propBuffer->currentIndex = (size_t)(startOfProp - propBuffer->pBuffer); 
+        }
+        else
+        {
+            LogError(("Failed to decode topic alias max"));
+        }
         return status; 
     }
 
-    MQTTStatus_t MQTTPropGet_ConnReceiveMax(uint8_t** startOfProp, uint16_t* receiveMax, size_t* propertyLength)
+    MQTTStatus_t MQTTPropGet_ConnReceiveMax(MqttPropBuilder_t* propBuffer, uint16_t* receiveMax)
     {
         MQTTStatus_t status = MQTTSuccess; 
         bool propFlag = false; 
-        status = decodeuint16_t(receiveMax, propertyLength, &propFlag, startOfProp); 
+        uint8_t* startOfProp = propBuffer->pBuffer + propBuffer->currentIndex;
+        size_t propertyLength = propBuffer->bufferLength - propBuffer->currentIndex;
+        status = decodeuint16_t(receiveMax, &propertyLength, &propFlag, &startOfProp); 
+        if (status == MQTTSuccess)
+        {
+            propBuffer->currentIndex = (size_t)(startOfProp - propBuffer->pBuffer);
+        }
         return status; 
     }
 
-    MQTTStatus_t MQTTPropGet_ConnMaxQos(uint8_t** startOfProp, uint8_t* maxQos, size_t* propertyLength)
+    MQTTStatus_t MQTTPropGet_ConnMaxQos(MqttPropBuilder_t* propBuffer, uint8_t* maxQos)
     {
         MQTTStatus_t status = MQTTSuccess; 
         bool propFlag = false; 
-        status = decodeuint8_t(maxQos, propertyLength, &propFlag, startOfProp); 
+        uint8_t* startOfProp = propBuffer->pBuffer + propBuffer->currentIndex;
+        size_t propertyLength = propBuffer->bufferLength - propBuffer->currentIndex;
+        status = decodeuint8_t(maxQos, &propertyLength, &propFlag, &startOfProp); 
+        if (status == MQTTSuccess)
+        {
+            propBuffer->currentIndex = (size_t)(startOfProp - propBuffer->pBuffer);
+        }
         return status; 
     }
 
-    MQTTStatus_t MQTTPropGet_ConnRetainAvailable(uint8_t** startOfProp, uint8_t* retainAvailable, size_t* propertyLength)
+    MQTTStatus_t MQTTPropGet_ConnRetainAvailable(MqttPropBuilder_t* propBuffer, uint8_t* retainAvailable)
     {
         MQTTStatus_t status = MQTTSuccess; 
         bool propFlag = false; 
-        status = decodeuint8_t(retainAvailable, propertyLength, &propFlag, startOfProp); 
+        uint8_t* startOfProp = propBuffer->pBuffer + propBuffer->currentIndex;
+        size_t propertyLength = propBuffer->bufferLength - propBuffer->currentIndex;
+        status = decodeuint8_t(retainAvailable, &propertyLength, &propFlag, &startOfProp);
+        if (status == MQTTSuccess)
+        {
+            propBuffer->currentIndex = (size_t)(startOfProp - propBuffer->pBuffer);
+        }
         return status; 
     }
 
-    MQTTStatus_t MQTTPropGet_ConnMaxPacketSize(uint8_t** startOfProp, uint32_t* maxPacketSize, size_t* propertyLength)
+    MQTTStatus_t MQTTPropGet_ConnMaxPacketSize(MqttPropBuilder_t* propBuffer, uint32_t* maxPacketSize)
     {
         MQTTStatus_t status = MQTTSuccess; 
         bool propFlag = false; 
-        status = decodeuint32_t(maxPacketSize, propertyLength,&propFlag, startOfProp); 
+        uint8_t* startOfProp = propBuffer->pBuffer + propBuffer->currentIndex;
+        size_t propertyLength = propBuffer->bufferLength - propBuffer->currentIndex;
+        status = decodeuint32_t(maxPacketSize, &propertyLength,&propFlag, &startOfProp); 
+        if (status == MQTTSuccess)
+        {
+            propBuffer->currentIndex = (size_t)(startOfProp - propBuffer->pBuffer);
+        }
         return status; 
     }
 
-    MQTTStatus_t MQTTPropGet_ConnClientId(uint8_t** startOfProp, const char** pClientId, uint16_t* clientIdLength, size_t* propertyLength)
+    MQTTStatus_t MQTTPropGet_ConnClientId(MqttPropBuilder_t* propBuffer, const char** pClientId, uint16_t* clientIdLength)
     {
         MQTTStatus_t status = MQTTSuccess;
         bool propFlag = false;
-        status = decodeutf_8(pClientId, clientIdLength, propertyLength, &propFlag, startOfProp);
+        uint8_t* startOfProp = propBuffer->pBuffer + propBuffer->currentIndex;
+        size_t propertyLength = propBuffer->bufferLength - propBuffer->currentIndex;
+        status = decodeutf_8(pClientId, clientIdLength, &propertyLength, &propFlag, &startOfProp);
+        if (status == MQTTSuccess)
+        {
+            propBuffer->currentIndex = (size_t)(startOfProp - propBuffer->pBuffer);
+        }
         return status;
     }
 
-    MQTTStatus_t MQTTPropGet_ConnWildcard(uint8_t** startOfProp, uint8_t* isWildCardAvailable, size_t* propertyLength)
+    MQTTStatus_t MQTTPropGet_ConnWildcard(MqttPropBuilder_t* propBuffer, uint8_t* isWildCardAvailable)
     {
         MQTTStatus_t status = MQTTSuccess;
         bool propFlag = false;
-        status = decodeuint8_t(isWildCardAvailable, propertyLength, &propFlag, startOfProp);
+        uint8_t* startOfProp = propBuffer->pBuffer + propBuffer->currentIndex;
+        size_t propertyLength = propBuffer->bufferLength - propBuffer->currentIndex;
+        status = decodeuint8_t(isWildCardAvailable, &propertyLength, &propFlag, &startOfProp);
+        if (status == MQTTSuccess)
+        {
+            propBuffer->currentIndex = (size_t)(startOfProp - propBuffer->pBuffer);
+        }
         return status;
     }
 
-    MQTTStatus_t MQTTPropGet_ConnSubId(uint8_t** startOfProp, uint8_t* isSubIdAvailable, size_t* propertyLength)
+    MQTTStatus_t MQTTPropGet_ConnSubId(MqttPropBuilder_t* propBuffer, uint8_t* isSubIdAvailable)
     {
         MQTTStatus_t status = MQTTSuccess;
         bool propFlag = false;
-        status = decodeuint8_t(isSubIdAvailable, propertyLength, &propFlag, startOfProp);
+        uint8_t* startOfProp = propBuffer->pBuffer + propBuffer->currentIndex;
+        size_t propertyLength = propBuffer->bufferLength - propBuffer->currentIndex;
+        status = decodeuint8_t(isSubIdAvailable, &propertyLength, &propFlag, &startOfProp);
+        if (status == MQTTSuccess)
+        {
+            propBuffer->currentIndex = (size_t)(startOfProp - propBuffer->pBuffer);
+        }
         return status;
     }
 
 
-    MQTTStatus_t MQTTPropGet_UserProp(uint8_t** startOfProp,
+    MQTTStatus_t MQTTPropGet_UserProp(MqttPropBuilder_t* propBuffer,
         const char** pUserPropKey,
         uint16_t* pUserPropKeyLen,
         const char** pUserPropVal,
-        uint16_t* pUserPropValLen,
-        size_t *propertyLength)
+        uint16_t* pUserPropValLen)
     {
         MQTTStatus_t status = MQTTSuccess;
         bool propFlag = false;
-        status = decodeutf_8(pUserPropKey, pUserPropKeyLen, propertyLength, &propFlag, startOfProp);
+        uint8_t* startOfProp = propBuffer->pBuffer + propBuffer->currentIndex;
+        size_t propertyLength = propBuffer->bufferLength - propBuffer->currentIndex;
+        status = decodeutf_8(pUserPropKey, pUserPropKeyLen, &propertyLength, &propFlag, &startOfProp);
         propFlag = false;
         if (status == MQTTSuccess)
         {
-            status = decodeutf_8(pUserPropVal, pUserPropValLen, propertyLength, &propFlag, startOfProp);
+            status = decodeutf_8(pUserPropVal, pUserPropValLen, &propertyLength, &propFlag, &startOfProp);
+        }
+        if (status == MQTTSuccess)
+        {
+            propBuffer->currentIndex = (size_t)(startOfProp - propBuffer->pBuffer);
         }
         return status; 
     }
 
 
-    MQTTStatus_t MQTTPropGet_ReasonString(uint8_t** startOfProp, const char** pReasonString, uint16_t* reasonStringLength, size_t *propertyLength)
+    MQTTStatus_t MQTTPropGet_ReasonString(MqttPropBuilder_t* propBuffer, const char** pReasonString, uint16_t* reasonStringLength)
     {
         MQTTStatus_t status = MQTTSuccess;
         bool propFlag = false;
-        status = decodeutf_8(pReasonString, reasonStringLength,propertyLength, &propFlag, startOfProp);
+        uint8_t* startOfProp = propBuffer->pBuffer + propBuffer->currentIndex;
+        size_t propertyLength = propBuffer->bufferLength - propBuffer->currentIndex;
+        status = decodeutf_8(pReasonString, reasonStringLength,&propertyLength, &propFlag, &startOfProp);
+        if (status == MQTTSuccess)
+        {
+            propBuffer->currentIndex = (size_t)(startOfProp - propBuffer->pBuffer);
+        }
         return status; 
     }
     
-    MQTTStatus_t MQTTPropGet_DisconnectServerRef(uint8_t** startOfProp, const char** pServerRef, uint16_t* serverRefLength, size_t* propertyLength)
+    MQTTStatus_t MQTTPropGet_DisconnectServerRef(MqttPropBuilder_t* propBuffer, const char** pServerRef, uint16_t* serverRefLength)
     {
         MQTTStatus_t status = MQTTSuccess;
         bool propFlag = false;
-        status = decodeutf_8(pServerRef, serverRefLength, propertyLength, &propFlag, startOfProp);
+        uint8_t* startOfProp = propBuffer->pBuffer + propBuffer->currentIndex;
+        size_t propertyLength = propBuffer->bufferLength - propBuffer->currentIndex;
+        status = decodeutf_8(pServerRef, serverRefLength, &propertyLength, &propFlag, &startOfProp);
+        if (status == MQTTSuccess)
+        {
+            propBuffer->currentIndex = (size_t)(startOfProp - propBuffer->pBuffer);
+        }
         return status; 
     }
 
-    MQTTStatus_t MQTT_IncomingGetNextProp(MqttPropBuilder_t* propBuffer, uint8_t* propertyId, uint8_t** startOfProp)
+    MQTTStatus_t MQTT_IncomingGetNextProp(MqttPropBuilder_t* propBuffer, uint8_t* propertyId)
     {
         MQTTStatus_t status = MQTTSuccess;
 
-        if (*startOfProp == NULL)
+        if (propBuffer->currentIndex < propBuffer->bufferLength)
         {
-            *startOfProp = propBuffer->pBuffer;
+            *propertyId = *(propBuffer->pBuffer + propBuffer->currentIndex);
+            propBuffer->currentIndex += 1;
         }
- 
-        *propertyId = **startOfProp;
-        *startOfProp = *startOfProp + 1; 
+        else
+        {
+            status = MQTTBadParameter;
+            LogError(("Invalid property buffer"));
+        }
+
 
         return status;
     }

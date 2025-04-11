@@ -1014,7 +1014,6 @@ bool MQTT_AckGetNextProp(uint8_t** pCurrIndex,
     uint16_t* pUserPropValLen,
     MQTTDeserializedInfo_t* deserializedInfo); 
 
-MQTTStatus_t MQTTPropAdd_PubAckReasonString(MQTTContext_t* pContext, const char* reasonString, uint16_t reasonStringLen); 
 
 bool MQTT_ConnackGetNextProp(uint8_t** pCurrIndex,
     const char** pUserPropKey,
@@ -1030,7 +1029,6 @@ bool MQTT_IncomingPubGetNextProp(uint8_t** pCurrIndex,
     uint16_t* pUserPropValLen,
     MQTTDeserializedInfo_t* deserializedInfo); 
 
-MQTTStatus_t MQTTPropAdd_PubAckUserProps(MQTTContext_t* pContext, MQTTUserProperties_t* pUserProperties); 
 
 
 
