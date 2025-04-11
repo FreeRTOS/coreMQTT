@@ -705,14 +705,21 @@ static MQTTStatus_t sendPublishAcksWithProperty( MQTTContext_t * pContext,
     uint8_t propertyLengthBuf[4]; 
 
     /* Maximum number of bytes required by the fixed size properties and header.
-        * MQTT Control Byte      0 + 1 = 1
-        * Remaining length (max)   + 4 = 5
-        * Packet Identifier        + 2 = 7
-        * Reason Code              + 1 = 8 */
+     * MQTT Control Byte      0 + 1 = 1
+     * Remaining length (max)   + 4 = 5
+     * Packet Identifier        + 2 = 7
+     * Reason Code              + 1 = 8 
+     */
     uint8_t pubAckHeader[ 8 ];
     size_t remainingLength = 0U;
     size_t packetSize = 0U;
-    /*  The maximum vectors required to encode and send a publish ack. */
+    
+    /* The maximum vectors required to encode and send a publish ack. 
+     * Ack Header           0 + 1 = 1
+     * Property Length        + 1 = 2
+     * Properties             + 1 = 3
+     */
+
     TransportOutVector_t pIoVector[3];
 
     uint8_t * pIndex = pubAckHeader;
