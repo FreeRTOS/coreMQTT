@@ -644,7 +644,7 @@ static bool matchTopicFilter( const char * pTopicName,
 static MQTTStatus_t sendPublishAcksWithProperty(MQTTContext_t* pContext,
     uint16_t packetId,
     MQTTPublishState_t publishState,
-    MQTTPublishFailReasonCode_t reasonCode); 
+    MQTTSuccessFailReasonCode_t reasonCode); 
 
 /**
  * @brief Send acks for received QoS 1/2 publishes with properties.
@@ -691,7 +691,7 @@ MQTTStatus_t MQTTV5_InitConnect(MQTTConnectProperties_t* pConnectProperties);
 static MQTTStatus_t sendPublishAcksWithProperty( MQTTContext_t * pContext,
                                                     uint16_t packetId,
                                                     MQTTPublishState_t publishState,
-                                                    MQTTPublishFailReasonCode_t reasonCode)
+                                                    MQTTSuccessFailReasonCode_t reasonCode)
 {
     int32_t bytesSentOrError;
     size_t vectorsAdded = 0U;
@@ -1926,7 +1926,7 @@ MQTTStatus_t handleIncomingPublish( MQTTContext_t * pContext,
         /* Invoke application callback to hand the buffer over to application
          * before sending acks. */
 
-        MQTTPublishFailReasonCode_t reasonCode = MQTTPublishSuccess; 
+        MQTTSuccessFailReasonCode_t reasonCode = MQTTReasonSuccess; 
 
         if (duplicatePublish == false)
         {
@@ -1934,7 +1934,7 @@ MQTTStatus_t handleIncomingPublish( MQTTContext_t * pContext,
         }
 
         /* Send PUBREL or PUBCOMP if necessary. */
-        if (pContext->ackPropsBuffer.pBuffer == NULL && (reasonCode == MQTTPublishSuccess))
+        if (pContext->ackPropsBuffer.pBuffer == NULL && (reasonCode == MQTTReasonSuccess))
         {
             status = sendPublishAcks(pContext,
                 packetIdentifier,
@@ -1961,9 +1961,10 @@ MQTTStatus_t handleSuback( MQTTContext_t * pContext,
     uint16_t packetIdentifier;
     MQTTEventCallback_t appCallback;
     MQTTDeserializedInfo_t deserializedInfo;
+    MqttPropBuilder_t propBuffer = { 0 };
 
-    MQTTAckInfo_t ackInfo;
-    ( void ) memset( &ackInfo, 0x0, sizeof( ackInfo ) );
+    MQTTReasonCodeInfo_t ackInfo;
+    (void)memset(&ackInfo, 0x0, sizeof(ackInfo));
 
 
     assert( pContext != NULL );
@@ -1972,7 +1973,7 @@ MQTTStatus_t handleSuback( MQTTContext_t * pContext,
 
     appCallback = pContext->appCallback;
 
-    status = MQTTV5_DeserializeSuback( &ackInfo, pIncomingPacket, &packetIdentifier);
+    status = MQTTV5_DeserializeSuback( &ackInfo, pIncomingPacket, &packetIdentifier, &propBuffer);
 
     LogInfo( ( "Ack packet deserialized with result: %s.",
                MQTT_Status_strerror( status ) ) );
@@ -1982,13 +1983,40 @@ MQTTStatus_t handleSuback( MQTTContext_t * pContext,
         deserializedInfo.packetIdentifier = packetIdentifier;
         deserializedInfo.deserializationResult = status;
         deserializedInfo.pPublishInfo = NULL; 
-        deserializedInfo.pAckInfo = &ackInfo;
+        deserializedInfo.pReasonCode = &ackInfo;
 
-        /* Invoke application callback to hand the buffer over to application before sending acks. */
+        /* Invoke application callback to hand the buffer over to application */
 
-        appCallback( pContext, pIncomingPacket, &deserializedInfo, NULL, NULL, NULL );
+        appCallback( pContext, pIncomingPacket, &deserializedInfo, NULL, &pContext->ackPropsBuffer, &propBuffer );
     }
 
+
+    return status;
+}
+
+static handleIncomingDisconnect(MQTTContext_t* pContext, MQTTPacketInfo_t* pIncomingPacket)
+{
+    MQTTStatus_t status = MQTTSuccess;
+    const uint8_t* pIndex = NULL;
+    size_t propertyLength = 0U;
+    MQTTDeserializedInfo_t deserializedInfo = { 0 };
+    MqttPropBuilder_t propBuffer = { 0 };
+
+    MQTTReasonCodeInfo_t reasonCode = { 0 } ;
+    MQTTSuccessFailReasonCode_t reasonCodeVal; 
+    reasonCode.reasonCode = &reasonCodeVal; 
+
+    assert(pContext != NULL);
+    assert(pContext->appCallback != NULL);
+    assert(pIncomingPacket != NULL);
+
+    status = MQTTV5_DeserializeDisconnect(pIncomingPacket, pContext->connectProperties.maxPacketSize, &reasonCode, &propBuffer);
+
+    if (status == MQTTSuccess)
+    {
+        deserializedInfo.pReasonCode = &reasonCode; 
+        pContext->appCallback(pContext, pIncomingPacket, &deserializedInfo, NULL, &pContext->ackPropsBuffer, &propBuffer);
+    }
 
     return status;
 }
@@ -2002,17 +2030,11 @@ static MQTTStatus_t handlePublishAcks( MQTTContext_t * pContext,
     MQTTPubAckType_t ackType;
     MQTTEventCallback_t appCallback;
     MQTTDeserializedInfo_t deserializedInfo;
-    MqttPropBuilder_t propBuffer; 
+    MqttPropBuilder_t propBuffer = { 0 };
 
 
-    MQTTAckInfo_t ackInfo;
-    MQTTAckInfo_t nextAckInfo;
-    ( void ) memset( &ackInfo, 0x0, sizeof( ackInfo ) );
-    ( void ) memset( &nextAckInfo, 0x0, sizeof( nextAckInfo ) );
-
-    uint8_t rc; 
-    ackInfo.reasonCode = &rc; 
-
+    MQTTReasonCodeInfo_t incomingReasonCode;
+    ( void ) memset( &incomingReasonCode, 0x0, sizeof(incomingReasonCode) );
 
     assert( pContext != NULL );
     assert( pIncomingPacket != NULL );
@@ -2022,7 +2044,7 @@ static MQTTStatus_t handlePublishAcks( MQTTContext_t * pContext,
 
     ackType = getAckFromPacketType( pIncomingPacket->type );
 
-    status = MQTTV5_DeserializeAck( pIncomingPacket, &packetIdentifier, &ackInfo, pContext->connectProperties.requestProblemInfo, pContext->connectProperties.maxPacketSize, &propBuffer );
+    status = MQTTV5_DeserializeAck( pIncomingPacket, &packetIdentifier, &incomingReasonCode, pContext->connectProperties.requestProblemInfo, pContext->connectProperties.maxPacketSize, &propBuffer );
 
     LogInfo( ( "Ack packet deserialized with result: %s.",
                MQTT_Status_strerror( status ) ) );
@@ -2059,18 +2081,18 @@ static MQTTStatus_t handlePublishAcks( MQTTContext_t * pContext,
         deserializedInfo.packetIdentifier = packetIdentifier;
         deserializedInfo.deserializationResult = status;
         deserializedInfo.pPublishInfo = NULL;
-        deserializedInfo.pAckInfo = &ackInfo;
-        deserializedInfo.pNextAckInfo = &nextAckInfo;
+        deserializedInfo.pReasonCode = &incomingReasonCode;
+
 
         /* Invoke application callback to hand the buffer over to application
             * before sending acks. */
 
-        MQTTPublishFailReasonCode_t reasonCode = MQTTPublishSuccess; 
+        MQTTSuccessFailReasonCode_t reasonCode = MQTTReasonSuccess; 
 
         appCallback( pContext, pIncomingPacket, &deserializedInfo, &reasonCode, &pContext->ackPropsBuffer, &propBuffer);
 
         /* Send PUBREL or PUBCOMP if necessary. */
-        if(pContext->ackPropsBuffer.pBuffer == NULL && (reasonCode == MQTTPublishSuccess)) 
+        if(pContext->ackPropsBuffer.pBuffer == NULL && (reasonCode == MQTTReasonSuccess))
         {
             status = sendPublishAcks( pContext,
                                     packetIdentifier,
@@ -2091,7 +2113,6 @@ static MQTTStatus_t handlePublishAcks( MQTTContext_t * pContext,
 }
 
 /*-----------------------------------------------------------*/
-
 static MQTTStatus_t handleIncomingAck( MQTTContext_t * pContext,
                                        MQTTPacketInfo_t * pIncomingPacket,
                                        bool manageKeepAlive )
@@ -2160,7 +2181,7 @@ static MQTTStatus_t handleIncomingAck( MQTTContext_t * pContext,
         deserializedInfo.packetIdentifier = packetIdentifier;
         deserializedInfo.deserializationResult = status;
         deserializedInfo.pPublishInfo = NULL;
-        appCallback( pContext, pIncomingPacket, &deserializedInfo , NULL, NULL , NULL);
+        appCallback( pContext, pIncomingPacket, &deserializedInfo , NULL, &pContext->ackPropsBuffer , NULL);
         /* In case a SUBACK indicated refusal, reset the status to continue the loop. */
         status = MQTTSuccess;
     }
@@ -2280,12 +2301,7 @@ static MQTTStatus_t receiveSingleIteration( MQTTContext_t * pContext,
 
         else if( ( incomingPacket.type == MQTT_PACKET_TYPE_DISCONNECT ) )
         {
-            assert( pContext->pDisconnectInfo != NULL );
-            //status = MQTTV5_DeserializeDisconnect( &incomingPacket,
-            //                                        pContext->pDisconnectInfo,
-            //                                        &pContext->connectProperties.pServerRef,
-            //                                        &pContext->connectProperties.serverRefLength,
-            //                                        pContext->connectProperties.maxPacketSize );
+            status = handleIncomingDisconnect(pContext, &incomingPacket); 
 
             if( status == MQTTSuccess )
             {
@@ -4119,202 +4135,5 @@ MQTTStatus_t MQTT_Disconnect( MQTTContext_t * pContext,
 }
 
 
-bool MQTT_AckGetNextProp(uint8_t** pCurrIndex,
-    const char** pUserPropKey,
-    uint16_t* pUserPropKeyLen,
-    const char** pUserPropVal,
-    uint16_t* pUserPropValLen,
-    MQTTDeserializedInfo_t* deserializedInfo)
-{
-    MQTTStatus_t status = MQTTSuccess;
-    uint8_t* pIndex;
-    size_t propertyLength; 
-    bool userPropFlag = false;
-    bool userKey = false;
-    bool userVal = false;
 
-    if(deserializedInfo == NULL )
-    {
-        LogError(("Argument cannor be NULL : deserializedInfo = %p", (void*)deserializedInfo));
-        status = MQTTBadParameter; 
-    }
-
-    if (status == MQTTSuccess)
-    {
-        propertyLength = deserializedInfo->pAckInfo->propertyLength;
-        if (propertyLength == 0U)
-        {
-            LogError(("No properties in the incoming publish"));
-            status = MQTTBadParameter;
-        }
-        else
-        {
-            if (*pCurrIndex == NULL)
-            {
-                pIndex = deserializedInfo->pAckInfo->startOfAckProps;
-            }
-            else {
-                pIndex = *pCurrIndex;
-            }
-            while ((propertyLength > 0U) && (status == MQTTSuccess))
-            {
-                uint8_t propertyId = *pIndex;
-                pIndex = &pIndex[1];
-                propertyLength -= sizeof(uint8_t);
-                if (propertyId == MQTT_USER_PROPERTY_ID)
-                {
-                    userPropFlag = true;
-                    status = decodeutf_8(pUserPropKey, pUserPropKeyLen, &propertyLength, &userKey, &pIndex);
-                    status = decodeutf_8(pUserPropVal, pUserPropValLen, &propertyLength, &userVal, &pIndex);
-                    *pCurrIndex = pIndex;
-                    break;
-                }
-            }
-        }
-    }
-    if (status != MQTTSuccess)
-    {
-        LogError(("Failed to decode user property : %d", status));
-        userPropFlag = false;
-    }
-    return userPropFlag;
-}
-
-bool MQTT_ConnackGetNextProp(uint8_t** pCurrIndex,
-    const char** pUserPropKey,
-    uint16_t* pUserPropKeyLen,
-    const char** pUserPropVal,
-    uint16_t* pUserPropValLen,
-    MQTTContext_t* pContext)
-{
-    MQTTStatus_t status = MQTTSuccess;
-    uint8_t* pIndex;
-    size_t propertyLength;
-    bool userPropFlag = false;
-    bool userKey = false;
-    bool userVal = false;
-
-    if (pContext == NULL)
-    {
-        LogError(("Argument cannot be NULL : pContext = %p", (void*)pContext));
-        status = MQTTBadParameter;
-    }
-
-    if (status == MQTTSuccess)
-    {
-        propertyLength = pContext->connectProperties.connackPropLen;
-        if (propertyLength == 0U)
-        {
-            LogError(("No properties in the incoming publish"));
-            status = MQTTBadParameter;
-        }
-        else
-        {
-            if (*pCurrIndex == NULL)
-            {
-                pIndex = pContext->connectProperties.startOfConnackProps;
-            }
-            else {
-                pIndex = *pCurrIndex;
-            }
-            while ((propertyLength > 0U) && (status == MQTTSuccess))
-            {
-                uint8_t propertyId = *pIndex;
-                pIndex = &pIndex[1];
-                propertyLength -= sizeof(uint8_t);
-                if (propertyId == MQTT_USER_PROPERTY_ID)
-                {
-                    userPropFlag = true;
-                    status = decodeutf_8(pUserPropKey, pUserPropKeyLen, &propertyLength, &userKey, &pIndex);
-                    status = decodeutf_8(pUserPropVal, pUserPropValLen, &propertyLength, &userVal, &pIndex);
-                    // update currIndex to pIndex essentially. 
-                    *pCurrIndex = pIndex;
-
-                    break;
-                }
-            }
-        }
-    }
-    if (status != MQTTSuccess)
-    {
-        LogError(("Failed to decode user property : %d", status));
-        userPropFlag = false;
-    }
-    return userPropFlag;
-}
-
-
-bool MQTT_IncomingPubGetNextProp(uint8_t** pCurrIndex,
-    const char** pUserPropKey,
-    uint16_t* pUserPropKeyLen,
-    const char** pUserPropVal,
-    uint16_t* pUserPropValLen,
-    MQTTDeserializedInfo_t* deserializedInfo)
-{
-    MQTTStatus_t status = MQTTSuccess;
-    MQTTPublishInfo_t* pPublishInfo = deserializedInfo->pPublishInfo;
-    uint8_t* pIndex;
-    bool userPropFlag = false;
-    bool userKey = false;
-    bool userVal = false;
-    size_t propertyLength = pPublishInfo->propertyLength;
-
-    if (deserializedInfo == NULL)
-    {
-        LogError(("Argument cannor be NULL : deserializedInfo = %p", (void*)deserializedInfo));
-        status = MQTTBadParameter;
-    }
-    else if (pPublishInfo == NULL)
-    {
-        LogError(("Argument cannor be NULL : pPublishInfo = %p", (void*)pPublishInfo));
-        status = MQTTBadParameter;
-    }
-    else
-    {
-        /* Do nothing */
-    }
-
-    if (status == MQTTSuccess)
-    {
-        propertyLength = pPublishInfo->propertyLength;
-        if (propertyLength == 0U)
-        {
-            LogError(("No properties in the incoming publish"));
-            status = MQTTBadParameter;
-        }
-        else
-        {
-            if (*pCurrIndex == NULL)
-            {
-                pIndex = pPublishInfo->startOfProps;
-            }
-            else {
-                pIndex = *pCurrIndex;
-            }
-            while ((propertyLength > 0U) && (status == MQTTSuccess))
-            {
-                uint8_t propertyId = *pIndex;
-                pIndex = &pIndex[1];
-                propertyLength -= sizeof(uint8_t);
-                if (propertyId == MQTT_USER_PROPERTY_ID)
-                {
-                    userPropFlag = true;
-
-                    status = decodeutf_8(pUserPropKey, pUserPropKeyLen, &propertyLength, &userKey, &pIndex);
-                    status = decodeutf_8(pUserPropVal, pUserPropValLen, &propertyLength, &userVal, &pIndex);
-                    // update currIndex to pIndex essentially. 
-                    *pCurrIndex = pIndex;
-
-                    break;
-                }
-            }
-        }
-    }
-    if (status != MQTTSuccess)
-    {
-        LogError(("Failed to decode user property : %d", status));
-        userPropFlag = false;
-    }
-    return userPropFlag;
-}
 

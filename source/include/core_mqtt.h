@@ -100,9 +100,9 @@ typedef uint32_t (* MQTTGetCurrentTimeFunc_t )( void );
 typedef void (* MQTTEventCallback_t )( struct MQTTContext * pContext,
                                        struct MQTTPacketInfo * pPacketInfo,
                                        struct MQTTDeserializedInfo * pDeserializedInfo, 
-                                       enum MQTTPublishFailReasonCode * pReasonCode,
-                                       struct MqttPropBuilder_t* sendPropsBuffer,
-                                       struct MqttPropBuilder_t* getPropsBuffer);
+                                       enum MQTTSuccessFailReasonCode * pReasonCode,
+                                       struct MqttPropBuilder* sendPropsBuffer,
+                                       struct MqttPropBuilder* getPropsBuffer);
 
 /**
  * @ingroup mqtt_enum_types
@@ -261,7 +261,7 @@ typedef struct MQTTContext
     /**
     * @brief To store disconnect information.
     */
-    MQTTAckInfo_t * pDisconnectInfo;
+    MQTTReasonCodeInfo_t * pDisconnectInfo;
 
 
 } MQTTContext_t;
@@ -280,8 +280,7 @@ typedef struct MQTTDeserializedInfo
     uint16_t packetIdentifier;          /**< @brief Packet ID of deserialized packet. */
     MQTTPublishInfo_t * pPublishInfo;   /**< @brief Pointer to deserialized publish info. */
     MQTTStatus_t deserializationResult; /**< @brief Return code of deserialization. */
-    MQTTAckInfo_t * pAckInfo;       /**< @brief Pointer to deserialized ack info. */
-    MQTTAckInfo_t * pNextAckInfo;   /**< @brief Pointer to next ack info to send. */
+    MQTTReasonCodeInfo_t * pReasonCode;       /**< @brief Pointer to deserialized ack info. */
 
 } MQTTDeserializedInfo_t;
 
@@ -1006,30 +1005,6 @@ MQTTStatus_t MQTT_Disconnect(MQTTContext_t* pContext,
     MqttPropBuilder_t* pPropertyBuilder,
     MQTTDisconnectReasonCode_t reasonCode); 
 /* @[declare_mqttv5_disconnect] */
-
-bool MQTT_AckGetNextProp(uint8_t** pCurrIndex,
-    const char** pUserPropKey,
-    uint16_t* pUserPropKeyLen,
-    const char** pUserPropVal,
-    uint16_t* pUserPropValLen,
-    MQTTDeserializedInfo_t* deserializedInfo); 
-
-
-bool MQTT_ConnackGetNextProp(uint8_t** pCurrIndex,
-    const char** pUserPropKey,
-    uint16_t* pUserPropKeyLen,
-    const char** pUserPropVal,
-    uint16_t* pUserPropValLen,
-    MQTTContext_t* pContext); 
-
-bool MQTT_IncomingPubGetNextProp(uint8_t** pCurrIndex,
-    const char** pUserPropKey,
-    uint16_t* pUserPropKeyLen,
-    const char** pUserPropVal,
-    uint16_t* pUserPropValLen,
-    MQTTDeserializedInfo_t* deserializedInfo); 
-
-
 
 
 /* *INDENT-OFF* */
