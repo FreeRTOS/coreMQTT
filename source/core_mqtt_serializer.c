@@ -772,13 +772,15 @@ static MQTTStatus_t processPublishFlags( uint8_t publishFlags,
  * @param[out] pPacketId Packet identifier of the PUBLISH.
  * @param[out] pPublishInfo Pointer to #MQTTPublishInfo_t where output is
  * written.
+ * @param[out] propBuffer Pointer to the property buffer.
  *
  * @return #MQTTSuccess if PUBLISH is valid; #MQTTBadResponse
  * if the PUBLISH packet doesn't follow MQTT spec.
  */
-static MQTTStatus_t deserializePublish( const MQTTPacketInfo_t * pIncomingPacket,
-                                        uint16_t * pPacketId,
-                                        MQTTPublishInfo_t * pPublishInfo );
+static MQTTStatus_t deserializePublish(const MQTTPacketInfo_t* pIncomingPacket,
+    uint16_t* pPacketId,
+    MQTTPublishInfo_t* pPublishInfo,
+    MqttPropBuilder_t* propBuffer);
 
 /**
  * @brief Deserialize a PINGRESP packet.
@@ -1971,7 +1973,7 @@ static MQTTStatus_t deserializeSimpleAckV5( const MQTTPacketInfo_t * pAck,
     if( ( status == MQTTSuccess ) && ( pAck->remainingLength > 2U ) )
     {
 
-        *pReasonCode->reasonCode = *pIndex; 
+        pReasonCode->reasonCode = pIndex; 
         pReasonCode->reasonCodeLength = 1U;
         pIndex++;
     }
@@ -3758,9 +3760,9 @@ MQTTStatus_t MQTTV5_DeserializeAck( const MQTTPacketInfo_t * pIncomingPacket,
 {
     MQTTStatus_t status = MQTTSuccess;
 
-    if( pIncomingPacket == NULL )
+    if( pIncomingPacket == NULL || (pReasonCode == NULL))
     {
-        LogError( ( "pIncomingPacket cannot be NULL." ) );
+        LogError( ( "pIncomingPacket , pReasonCode cannot be NULL." ) );
         status = MQTTBadParameter;
     }
 
@@ -4021,16 +4023,17 @@ uint8_t * MQTT_SerializeDisconnectFixed( uint8_t * pIndex,
         }
         else if (pPacket->remainingLength == 0U)
         {
-            pIndex = pPacket->pRemainingData; 
-            *pDisconnectInfo->reasonCode = MQTTReasonSuccess; 
+            /*pIndex = pPacket->pRemainingData; 
+            pDisconnectInfo->reasonCode = MQTTReasonSuccess; 
             pDisconnectInfo->reasonCodeLength = 1U; 
-            pIndex++; 
+            pIndex++; */
+            /*Do nothing*/
         }
         else
         {
             /* Extract the reason code */
             pIndex = pPacket->pRemainingData;
-            *pDisconnectInfo->reasonCode = *pIndex;
+            pDisconnectInfo->reasonCode = pIndex;
             pDisconnectInfo->reasonCodeLength = 1U; 
             pIndex++;
             /*Validate the reason code.*/
@@ -4747,26 +4750,63 @@ uint8_t * MQTT_SerializeDisconnectFixed( uint8_t * pIndex,
     {
         MQTTStatus_t status = MQTTSuccess; 
         bool propFlag = false; 
-        uint8_t* startOfProp = propBuffer->pBuffer + propBuffer->currentIndex;
-        size_t propertyLength = propBuffer->bufferLength - propBuffer->currentIndex;
-        status = decodeuint16_t(topicAlias, &propertyLength,&propFlag, &startOfProp); 
-        if (status == MQTTSuccess)
+        if ((propBuffer == NULL))
         {
-            propBuffer->currentIndex = (size_t)(startOfProp - propBuffer->pBuffer);
+            LogError(("Arguments cannot be NULL : pPropertyBuilder=%p.", (void*)propBuffer));
+            status = MQTTBadParameter;
+        }
+        else if (propBuffer->pBuffer == NULL)
+        {
+            LogError(("Arguments cannot be NULL : pPropertyBuilder->pBuffer=%p.", (void*)propBuffer->pBuffer));
+            status = MQTTBadParameter;
+        }
+        else if (topicAlias == NULL)
+        {
+            LogError(("Arguments cannot be NULL : topicAlias=%p.", (void*)topicAlias));
+            status = MQTTBadParameter;
+        }
+        else
+        {
+            uint8_t* startOfProp = propBuffer->pBuffer + propBuffer->currentIndex;
+            size_t propertyLength = propBuffer->bufferLength - propBuffer->currentIndex;
+            status = decodeuint16_t(topicAlias, &propertyLength, &propFlag, &startOfProp);
+            if (status == MQTTSuccess)
+            {
+                propBuffer->currentIndex = (size_t)(startOfProp - propBuffer->pBuffer);
+            }
         }
         return status; 
     }
 
     MQTTStatus_t MQTTPropGet_PubPayloadFormatIndicator(MqttPropBuilder_t* propBuffer, uint8_t* payloadFormat)
     {
+
         MQTTStatus_t status = MQTTSuccess;
         bool propFlag = false;
-        uint8_t* startOfProp = propBuffer->pBuffer + propBuffer->currentIndex;
-        size_t propertyLength = propBuffer->bufferLength - propBuffer->currentIndex;
-        status = decodeuint8_t(payloadFormat, &propertyLength,&propFlag, &startOfProp); 
-        if (status == MQTTSuccess)
+        if ((propBuffer == NULL))
         {
-            propBuffer->currentIndex = (size_t)(startOfProp - propBuffer->pBuffer);
+            LogError(("Arguments cannot be NULL : pPropertyBuilder=%p.", (void*)propBuffer));
+            status = MQTTBadParameter;
+        }
+        else if (propBuffer->pBuffer == NULL)
+        {
+            LogError(("Arguments cannot be NULL : pPropertyBuilder->pBuffer=%p.", (void*)propBuffer->pBuffer));
+            status = MQTTBadParameter;
+        }
+        else if (payloadFormat == NULL)
+        {
+            LogError(("Arguments cannot be NULL : payloadFormat=%p.", (void*)payloadFormat));
+            status = MQTTBadParameter;
+        }
+        else
+        {
+            uint8_t* startOfProp = propBuffer->pBuffer + propBuffer->currentIndex;
+            size_t propertyLength = propBuffer->bufferLength - propBuffer->currentIndex;
+            status = decodeuint8_t(payloadFormat, &propertyLength, &propFlag, &startOfProp);
+            if (status == MQTTSuccess)
+            {
+                propBuffer->currentIndex = (size_t)(startOfProp - propBuffer->pBuffer);
+            }
         }
         return status; 
     }
@@ -4775,12 +4815,30 @@ uint8_t * MQTT_SerializeDisconnectFixed( uint8_t * pIndex,
     {
         MQTTStatus_t status = MQTTSuccess;
         bool propFlag = false;
-        uint8_t* startOfProp = propBuffer->pBuffer + propBuffer->currentIndex;
-        size_t propertyLength = propBuffer->bufferLength - propBuffer->currentIndex;
-        status = decodeutf_8(responseTopic, responseTopicLength,&propertyLength , &propFlag, &startOfProp);
-        if (status == MQTTSuccess)
+        if ((propBuffer == NULL))
         {
-            propBuffer->currentIndex = (size_t)(startOfProp - propBuffer->pBuffer);
+            LogError(("Arguments cannot be NULL : pPropertyBuilder=%p.", (void*)propBuffer));
+            status = MQTTBadParameter;
+        }
+        else if (propBuffer->pBuffer == NULL)
+        {
+            LogError(("Arguments cannot be NULL : pPropertyBuilder->pBuffer=%p.", (void*)propBuffer->pBuffer));
+            status = MQTTBadParameter;
+        }
+        else if (responseTopic == NULL || responseTopicLength == NULL)
+        {
+            LogError(("Arguments cannot be NULL : responseTopic=%p, responseTopicLength = %p", (void*)responseTopic , (void*)responseTopicLength));
+            status = MQTTBadParameter;
+        }
+        else
+        {
+            uint8_t* startOfProp = propBuffer->pBuffer + propBuffer->currentIndex;
+            size_t propertyLength = propBuffer->bufferLength - propBuffer->currentIndex;
+            status = decodeutf_8(responseTopic, responseTopicLength, &propertyLength, &propFlag, &startOfProp);
+            if (status == MQTTSuccess)
+            {
+                propBuffer->currentIndex = (size_t)(startOfProp - propBuffer->pBuffer);
+            }
         }
         return status; 
     }
@@ -4789,12 +4847,30 @@ uint8_t * MQTT_SerializeDisconnectFixed( uint8_t * pIndex,
     {
         MQTTStatus_t status = MQTTSuccess;
         bool propFlag = false;
-        uint8_t* startOfProp = propBuffer->pBuffer + propBuffer->currentIndex;
-        size_t propertyLength = propBuffer->bufferLength - propBuffer->currentIndex;
-        status = decodeBinaryData(correlationData, correlationLength, &propertyLength, &propFlag ,&startOfProp);
-        if (status == MQTTSuccess)
+        if ((propBuffer == NULL))
         {
-            propBuffer->currentIndex = (size_t)(startOfProp - propBuffer->pBuffer);
+            LogError(("Arguments cannot be NULL : pPropertyBuilder=%p.", (void*)propBuffer));
+            status = MQTTBadParameter;
+        }
+        else if (propBuffer->pBuffer == NULL)
+        {
+            LogError(("Arguments cannot be NULL : pPropertyBuilder->pBuffer=%p.", (void*)propBuffer->pBuffer));
+            status = MQTTBadParameter;
+        }
+        else if (correlationData == NULL || correlationLength == NULL)
+        {
+            LogError(("Arguments cannot be NULL : responseTopic=%p, responseTopicLength = %p", (void*)correlationData, (void*)correlationLength));
+            status = MQTTBadParameter;
+        }
+        else
+        {
+            uint8_t* startOfProp = propBuffer->pBuffer + propBuffer->currentIndex;
+            size_t propertyLength = propBuffer->bufferLength - propBuffer->currentIndex;
+            status = decodeBinaryData(correlationData, correlationLength, &propertyLength, &propFlag, &startOfProp);
+            if (status == MQTTSuccess)
+            {
+                propBuffer->currentIndex = (size_t)(startOfProp - propBuffer->pBuffer);
+            }
         }
         return status; 
     }
@@ -4803,12 +4879,30 @@ uint8_t * MQTT_SerializeDisconnectFixed( uint8_t * pIndex,
     {
         MQTTStatus_t status = MQTTSuccess;
         bool propFlag = false;
-        uint8_t* startOfProp = propBuffer->pBuffer + propBuffer->currentIndex;
-        size_t propertyLength = propBuffer->bufferLength - propBuffer->currentIndex;
-        status = decodeuint32_t(msgExpiryInterval, &propertyLength, &propFlag ,&startOfProp);
-        if (status == MQTTSuccess)
+        if ((propBuffer == NULL))
         {
-            propBuffer->currentIndex = (size_t)(startOfProp - propBuffer->pBuffer);
+            LogError(("Arguments cannot be NULL : pPropertyBuilder=%p.", (void*)propBuffer));
+            status = MQTTBadParameter;
+        }
+        else if (propBuffer->pBuffer == NULL)
+        {
+            LogError(("Arguments cannot be NULL : pPropertyBuilder->pBuffer=%p.", (void*)propBuffer->pBuffer));
+            status = MQTTBadParameter;
+        }
+        else if(msgExpiryInterval == NULL)
+        {
+            LogError(("Arguments cannot be NULL : msgExpiryInterval=%p.", (void*)msgExpiryInterval));
+            status = MQTTBadParameter;
+        }
+        else
+        {
+            uint8_t* startOfProp = propBuffer->pBuffer + propBuffer->currentIndex;
+            size_t propertyLength = propBuffer->bufferLength - propBuffer->currentIndex;
+            status = decodeuint32_t(msgExpiryInterval, &propertyLength, &propFlag, &startOfProp);
+            if (status == MQTTSuccess)
+            {
+                propBuffer->currentIndex = (size_t)(startOfProp - propBuffer->pBuffer);
+            }
         }
         return status; 
     }
@@ -4817,12 +4911,30 @@ uint8_t * MQTT_SerializeDisconnectFixed( uint8_t * pIndex,
     {
         MQTTStatus_t status = MQTTSuccess;
         bool propFlag = false;
-        uint8_t* startOfProp = propBuffer->pBuffer + propBuffer->currentIndex;
-        size_t propertyLength = propBuffer->bufferLength - propBuffer->currentIndex;
-        status = decodeutf_8(pContentType, contentTypeLength, &propertyLength, &propFlag, &startOfProp);
-        if (status == MQTTSuccess)
+        if ((propBuffer == NULL))
         {
-            propBuffer->currentIndex = (size_t)(startOfProp - propBuffer->pBuffer);
+            LogError(("Arguments cannot be NULL : pPropertyBuilder=%p.", (void*)propBuffer));
+            status = MQTTBadParameter;
+        }
+        else if (propBuffer->pBuffer == NULL)
+        {
+            LogError(("Arguments cannot be NULL : pPropertyBuilder->pBuffer=%p.", (void*)propBuffer->pBuffer));
+            status = MQTTBadParameter;
+        }
+        else if (pContentType == NULL || contentTypeLength == NULL)
+        {
+            LogError(("Arguments cannot be NULL : pContentType=%p, contentTypeLength = %p", (void*)pContentType, (void*)contentTypeLength));
+            status = MQTTBadParameter;
+        }
+        else
+        {
+            uint8_t* startOfProp = propBuffer->pBuffer + propBuffer->currentIndex;
+            size_t propertyLength = propBuffer->bufferLength - propBuffer->currentIndex;
+            status = decodeutf_8(pContentType, contentTypeLength, &propertyLength, &propFlag, &startOfProp);
+            if (status == MQTTSuccess)
+            {
+                propBuffer->currentIndex = (size_t)(startOfProp - propBuffer->pBuffer);
+            }
         }
         return status; 
     }
@@ -4830,12 +4942,30 @@ uint8_t * MQTT_SerializeDisconnectFixed( uint8_t * pIndex,
     MQTTStatus_t MQTTPropGet_PubSubscriptionId(MqttPropBuilder_t* propBuffer, size_t* subscriptionId)
     {
         MQTTStatus_t status = MQTTSuccess;
-        uint8_t* startOfProp = propBuffer->pBuffer + propBuffer->currentIndex;
-        size_t propertyLength = propBuffer->bufferLength - propBuffer->currentIndex;
-        status = decodeVariableLength(startOfProp, subscriptionId); 
-        if (status == MQTTSuccess)
+        if ((propBuffer == NULL))
         {
-            propBuffer->currentIndex = (size_t)(startOfProp - propBuffer->pBuffer);
+            LogError(("Arguments cannot be NULL : pPropertyBuilder=%p.", (void*)propBuffer));
+            status = MQTTBadParameter;
+        }
+        else if (propBuffer->pBuffer == NULL)
+        {
+            LogError(("Arguments cannot be NULL : pPropertyBuilder->pBuffer=%p.", (void*)propBuffer->pBuffer));
+            status = MQTTBadParameter;
+        }
+        else if (subscriptionId == NULL)
+        {
+            LogError(("Arguments cannot be NULL : subscriptionId=%p.", (void*)subscriptionId));
+            status = MQTTBadParameter;
+        }
+        else
+        {
+            uint8_t* startOfProp = propBuffer->pBuffer + propBuffer->currentIndex;
+            size_t propertyLength = propBuffer->bufferLength - propBuffer->currentIndex;
+            status = decodeVariableLength(startOfProp, subscriptionId);
+            if (status == MQTTSuccess)
+            {
+                propBuffer->currentIndex = (size_t)(startOfProp - propBuffer->pBuffer);
+            }
         }
         return status; 
     }
@@ -4844,12 +4974,30 @@ uint8_t * MQTT_SerializeDisconnectFixed( uint8_t * pIndex,
     {
         MQTTStatus_t status = MQTTSuccess; 
         bool propFlag = false; 
-        uint8_t* startOfProp = propBuffer->pBuffer + propBuffer->currentIndex;
-        size_t propertyLength = propBuffer->bufferLength - propBuffer->currentIndex;
-        status = decodeuint32_t(sessionExpiry, &propertyLength, &propFlag, &startOfProp); 
-        if (status == MQTTSuccess)
+        if ((propBuffer == NULL))
         {
-            propBuffer->currentIndex = (size_t)(startOfProp - propBuffer->pBuffer);
+            LogError(("Arguments cannot be NULL : pPropertyBuilder=%p.", (void*)propBuffer));
+            status = MQTTBadParameter;
+        }
+        else if (propBuffer->pBuffer == NULL)
+        {
+            LogError(("Arguments cannot be NULL : pPropertyBuilder->pBuffer=%p.", (void*)propBuffer->pBuffer));
+            status = MQTTBadParameter;
+        }
+        else if (sessionExpiry == NULL)
+        {
+            LogError(("Arguments cannot be NULL : sessionExpiry=%p.", (void*)sessionExpiry));
+            status = MQTTBadParameter;
+        }
+        else
+        {
+            uint8_t* startOfProp = propBuffer->pBuffer + propBuffer->currentIndex;
+            size_t propertyLength = propBuffer->bufferLength - propBuffer->currentIndex;
+            status = decodeuint32_t(sessionExpiry, &propertyLength, &propFlag, &startOfProp);
+            if (status == MQTTSuccess)
+            {
+                propBuffer->currentIndex = (size_t)(startOfProp - propBuffer->pBuffer);
+            }
         }
         return status; 
     }
@@ -4857,17 +5005,35 @@ uint8_t * MQTT_SerializeDisconnectFixed( uint8_t * pIndex,
     MQTTStatus_t MQTTPropGet_ConnTopicAliasMax(MqttPropBuilder_t *propBuffer , uint16_t* topicAliasMax)
     {
         MQTTStatus_t status = MQTTSuccess; 
-        bool propFlag = false; 
-        uint8_t *startOfProp = propBuffer->pBuffer + propBuffer->currentIndex; 
-        size_t propertyLength = propBuffer->bufferLength - propBuffer->currentIndex;
-        status = decodeuint16_t(topicAliasMax, &propertyLength, &propFlag, &startOfProp);
-        if (status == MQTTSuccess)
+        bool propFlag = false;
+        if ((propBuffer == NULL))
         {
-            propBuffer->currentIndex = (size_t)(startOfProp - propBuffer->pBuffer); 
+            LogError(("Arguments cannot be NULL : pPropertyBuilder=%p.", (void*)propBuffer));
+            status = MQTTBadParameter;
+        }
+        else if (propBuffer->pBuffer == NULL)
+        {
+            LogError(("Arguments cannot be NULL : pPropertyBuilder->pBuffer=%p.", (void*)propBuffer->pBuffer));
+            status = MQTTBadParameter;
+        }
+        else if (topicAliasMax == NULL)
+        {
+            LogError(("Arguments cannot be NULL : topicAliasMax=%p.", (void*)topicAliasMax));
+            status = MQTTBadParameter;
         }
         else
         {
-            LogError(("Failed to decode topic alias max"));
+            uint8_t* startOfProp = propBuffer->pBuffer + propBuffer->currentIndex;
+            size_t propertyLength = propBuffer->bufferLength - propBuffer->currentIndex;
+            status = decodeuint16_t(topicAliasMax, &propertyLength, &propFlag, &startOfProp);
+            if (status == MQTTSuccess)
+            {
+                propBuffer->currentIndex = (size_t)(startOfProp - propBuffer->pBuffer);
+            }
+            else
+            {
+                LogError(("Failed to decode topic alias max"));
+            }
         }
         return status; 
     }
@@ -4876,12 +5042,30 @@ uint8_t * MQTT_SerializeDisconnectFixed( uint8_t * pIndex,
     {
         MQTTStatus_t status = MQTTSuccess; 
         bool propFlag = false; 
-        uint8_t* startOfProp = propBuffer->pBuffer + propBuffer->currentIndex;
-        size_t propertyLength = propBuffer->bufferLength - propBuffer->currentIndex;
-        status = decodeuint16_t(receiveMax, &propertyLength, &propFlag, &startOfProp); 
-        if (status == MQTTSuccess)
+        if ((propBuffer == NULL))
         {
-            propBuffer->currentIndex = (size_t)(startOfProp - propBuffer->pBuffer);
+            LogError(("Arguments cannot be NULL : pPropertyBuilder=%p.", (void*)propBuffer));
+            status = MQTTBadParameter;
+        }
+        else if (propBuffer->pBuffer == NULL)
+        {
+            LogError(("Arguments cannot be NULL : pPropertyBuilder->pBuffer=%p.", (void*)propBuffer->pBuffer));
+            status = MQTTBadParameter;
+        }
+        else if (receiveMax == NULL)
+        {
+            LogError(("Arguments cannot be NULL : receiveMax=%p.", (void*)receiveMax));
+            status = MQTTBadParameter;
+        }
+        else
+        {
+            uint8_t* startOfProp = propBuffer->pBuffer + propBuffer->currentIndex;
+            size_t propertyLength = propBuffer->bufferLength - propBuffer->currentIndex;
+            status = decodeuint16_t(receiveMax, &propertyLength, &propFlag, &startOfProp);
+            if (status == MQTTSuccess)
+            {
+                propBuffer->currentIndex = (size_t)(startOfProp - propBuffer->pBuffer);
+            }
         }
         return status; 
     }
@@ -4890,12 +5074,30 @@ uint8_t * MQTT_SerializeDisconnectFixed( uint8_t * pIndex,
     {
         MQTTStatus_t status = MQTTSuccess; 
         bool propFlag = false; 
-        uint8_t* startOfProp = propBuffer->pBuffer + propBuffer->currentIndex;
-        size_t propertyLength = propBuffer->bufferLength - propBuffer->currentIndex;
-        status = decodeuint8_t(maxQos, &propertyLength, &propFlag, &startOfProp); 
-        if (status == MQTTSuccess)
+        if ((propBuffer == NULL))
         {
-            propBuffer->currentIndex = (size_t)(startOfProp - propBuffer->pBuffer);
+            LogError(("Arguments cannot be NULL : pPropertyBuilder=%p.", (void*)propBuffer));
+            status = MQTTBadParameter;
+        }
+        else if (propBuffer->pBuffer == NULL)
+        {
+            LogError(("Arguments cannot be NULL : pPropertyBuilder->pBuffer=%p.", (void*)propBuffer->pBuffer));
+            status = MQTTBadParameter;
+        }
+        else if (maxQos == NULL)
+        {
+            LogError(("Arguments cannot be NULL : maxQos=%p.", (void*)maxQos));
+            status = MQTTBadParameter;
+        }
+        else
+        {
+            uint8_t* startOfProp = propBuffer->pBuffer + propBuffer->currentIndex;
+            size_t propertyLength = propBuffer->bufferLength - propBuffer->currentIndex;
+            status = decodeuint8_t(maxQos, &propertyLength, &propFlag, &startOfProp);
+            if (status == MQTTSuccess)
+            {
+                propBuffer->currentIndex = (size_t)(startOfProp - propBuffer->pBuffer);
+            }
         }
         return status; 
     }
@@ -4904,12 +5106,30 @@ uint8_t * MQTT_SerializeDisconnectFixed( uint8_t * pIndex,
     {
         MQTTStatus_t status = MQTTSuccess; 
         bool propFlag = false; 
-        uint8_t* startOfProp = propBuffer->pBuffer + propBuffer->currentIndex;
-        size_t propertyLength = propBuffer->bufferLength - propBuffer->currentIndex;
-        status = decodeuint8_t(retainAvailable, &propertyLength, &propFlag, &startOfProp);
-        if (status == MQTTSuccess)
+        if ((propBuffer == NULL))
         {
-            propBuffer->currentIndex = (size_t)(startOfProp - propBuffer->pBuffer);
+            LogError(("Arguments cannot be NULL : pPropertyBuilder=%p.", (void*)propBuffer));
+            status = MQTTBadParameter;
+        }
+        else if (propBuffer->pBuffer == NULL)
+        {
+            LogError(("Arguments cannot be NULL : pPropertyBuilder->pBuffer=%p.", (void*)propBuffer->pBuffer));
+            status = MQTTBadParameter;
+        }
+        else if (retainAvailable == NULL)
+        {
+            LogError(("Arguments cannot be NULL : retainAvailable=%p.", (void*)retainAvailable));
+            status = MQTTBadParameter;
+        }
+        else
+        {
+            uint8_t* startOfProp = propBuffer->pBuffer + propBuffer->currentIndex;
+            size_t propertyLength = propBuffer->bufferLength - propBuffer->currentIndex;
+            status = decodeuint8_t(retainAvailable, &propertyLength, &propFlag, &startOfProp);
+            if (status == MQTTSuccess)
+            {
+                propBuffer->currentIndex = (size_t)(startOfProp - propBuffer->pBuffer);
+            }
         }
         return status; 
     }
@@ -4918,12 +5138,30 @@ uint8_t * MQTT_SerializeDisconnectFixed( uint8_t * pIndex,
     {
         MQTTStatus_t status = MQTTSuccess; 
         bool propFlag = false; 
-        uint8_t* startOfProp = propBuffer->pBuffer + propBuffer->currentIndex;
-        size_t propertyLength = propBuffer->bufferLength - propBuffer->currentIndex;
-        status = decodeuint32_t(maxPacketSize, &propertyLength,&propFlag, &startOfProp); 
-        if (status == MQTTSuccess)
+        if ((propBuffer == NULL))
         {
-            propBuffer->currentIndex = (size_t)(startOfProp - propBuffer->pBuffer);
+            LogError(("Arguments cannot be NULL : pPropertyBuilder=%p.", (void*)propBuffer));
+            status = MQTTBadParameter;
+        }
+        else if (propBuffer->pBuffer == NULL)
+        {
+            LogError(("Arguments cannot be NULL : pPropertyBuilder->pBuffer=%p.", (void*)propBuffer->pBuffer));
+            status = MQTTBadParameter;
+        }
+        else if (maxPacketSize == NULL)
+        {
+            LogError(("Arguments cannot be NULL : maxPacketSize=%p.", (void*)maxPacketSize));
+            status = MQTTBadParameter;
+        }
+        else
+        {
+            uint8_t* startOfProp = propBuffer->pBuffer + propBuffer->currentIndex;
+            size_t propertyLength = propBuffer->bufferLength - propBuffer->currentIndex;
+            status = decodeuint32_t(maxPacketSize, &propertyLength, &propFlag, &startOfProp);
+            if (status == MQTTSuccess)
+            {
+                propBuffer->currentIndex = (size_t)(startOfProp - propBuffer->pBuffer);
+            }
         }
         return status; 
     }
@@ -4932,12 +5170,30 @@ uint8_t * MQTT_SerializeDisconnectFixed( uint8_t * pIndex,
     {
         MQTTStatus_t status = MQTTSuccess;
         bool propFlag = false;
-        uint8_t* startOfProp = propBuffer->pBuffer + propBuffer->currentIndex;
-        size_t propertyLength = propBuffer->bufferLength - propBuffer->currentIndex;
-        status = decodeutf_8(pClientId, clientIdLength, &propertyLength, &propFlag, &startOfProp);
-        if (status == MQTTSuccess)
+        if ((propBuffer == NULL))
         {
-            propBuffer->currentIndex = (size_t)(startOfProp - propBuffer->pBuffer);
+            LogError(("Arguments cannot be NULL : pPropertyBuilder=%p.", (void*)propBuffer));
+            status = MQTTBadParameter;
+        }
+        else if (propBuffer->pBuffer == NULL)
+        {
+            LogError(("Arguments cannot be NULL : pPropertyBuilder->pBuffer=%p.", (void*)propBuffer->pBuffer));
+            status = MQTTBadParameter;
+        }
+        else if (pClientId == NULL || clientIdLength == NULL)
+        {
+            LogError(("Arguments cannot be NULL : pClientId=%p, clientIdLength = %p", (void*)pClientId, (void*)clientIdLength));
+            status = MQTTBadParameter;
+        }
+        else
+        {
+            uint8_t* startOfProp = propBuffer->pBuffer + propBuffer->currentIndex;
+            size_t propertyLength = propBuffer->bufferLength - propBuffer->currentIndex;
+            status = decodeutf_8(pClientId, clientIdLength, &propertyLength, &propFlag, &startOfProp);
+            if (status == MQTTSuccess)
+            {
+                propBuffer->currentIndex = (size_t)(startOfProp - propBuffer->pBuffer);
+            }
         }
         return status;
     }
@@ -4946,12 +5202,30 @@ uint8_t * MQTT_SerializeDisconnectFixed( uint8_t * pIndex,
     {
         MQTTStatus_t status = MQTTSuccess;
         bool propFlag = false;
-        uint8_t* startOfProp = propBuffer->pBuffer + propBuffer->currentIndex;
-        size_t propertyLength = propBuffer->bufferLength - propBuffer->currentIndex;
-        status = decodeuint8_t(isWildCardAvailable, &propertyLength, &propFlag, &startOfProp);
-        if (status == MQTTSuccess)
+        if ((propBuffer == NULL))
         {
-            propBuffer->currentIndex = (size_t)(startOfProp - propBuffer->pBuffer);
+            LogError(("Arguments cannot be NULL : pPropertyBuilder=%p.", (void*)propBuffer));
+            status = MQTTBadParameter;
+        }
+        else if (propBuffer->pBuffer == NULL)
+        {
+            LogError(("Arguments cannot be NULL : pPropertyBuilder->pBuffer=%p.", (void*)propBuffer->pBuffer));
+            status = MQTTBadParameter;
+        }
+        else if (isWildCardAvailable == NULL)
+        {
+            LogError(("Arguments cannot be NULL : isWildCardAvailable=%p.", (void*)isWildCardAvailable));
+            status = MQTTBadParameter;
+        }
+        else
+        {
+            uint8_t* startOfProp = propBuffer->pBuffer + propBuffer->currentIndex;
+            size_t propertyLength = propBuffer->bufferLength - propBuffer->currentIndex;
+            status = decodeuint8_t(isWildCardAvailable, &propertyLength, &propFlag, &startOfProp);
+            if (status == MQTTSuccess)
+            {
+                propBuffer->currentIndex = (size_t)(startOfProp - propBuffer->pBuffer);
+            }
         }
         return status;
     }
@@ -4960,12 +5234,30 @@ uint8_t * MQTT_SerializeDisconnectFixed( uint8_t * pIndex,
     {
         MQTTStatus_t status = MQTTSuccess;
         bool propFlag = false;
-        uint8_t* startOfProp = propBuffer->pBuffer + propBuffer->currentIndex;
-        size_t propertyLength = propBuffer->bufferLength - propBuffer->currentIndex;
-        status = decodeuint8_t(isSubIdAvailable, &propertyLength, &propFlag, &startOfProp);
-        if (status == MQTTSuccess)
+        if ((propBuffer == NULL))
         {
-            propBuffer->currentIndex = (size_t)(startOfProp - propBuffer->pBuffer);
+            LogError(("Arguments cannot be NULL : pPropertyBuilder=%p.", (void*)propBuffer));
+            status = MQTTBadParameter;
+        }
+        else if (propBuffer->pBuffer == NULL)
+        {
+            LogError(("Arguments cannot be NULL : pPropertyBuilder->pBuffer=%p.", (void*)propBuffer->pBuffer));
+            status = MQTTBadParameter;
+        }
+        else if (isSubIdAvailable == NULL)
+        {
+            LogError(("Arguments cannot be NULL : isSubIdAvailable=%p.", (void*)isSubIdAvailable));
+            status = MQTTBadParameter;
+        }
+        else
+        {
+            uint8_t* startOfProp = propBuffer->pBuffer + propBuffer->currentIndex;
+            size_t propertyLength = propBuffer->bufferLength - propBuffer->currentIndex;
+            status = decodeuint8_t(isSubIdAvailable, &propertyLength, &propFlag, &startOfProp);
+            if (status == MQTTSuccess)
+            {
+                propBuffer->currentIndex = (size_t)(startOfProp - propBuffer->pBuffer);
+            }
         }
         return status;
     }
@@ -4979,17 +5271,35 @@ uint8_t * MQTT_SerializeDisconnectFixed( uint8_t * pIndex,
     {
         MQTTStatus_t status = MQTTSuccess;
         bool propFlag = false;
-        uint8_t* startOfProp = propBuffer->pBuffer + propBuffer->currentIndex;
-        size_t propertyLength = propBuffer->bufferLength - propBuffer->currentIndex;
-        status = decodeutf_8(pUserPropKey, pUserPropKeyLen, &propertyLength, &propFlag, &startOfProp);
-        propFlag = false;
-        if (status == MQTTSuccess)
+        if ((propBuffer == NULL))
         {
-            status = decodeutf_8(pUserPropVal, pUserPropValLen, &propertyLength, &propFlag, &startOfProp);
+            LogError(("Arguments cannot be NULL : pPropertyBuilder=%p.", (void*)propBuffer));
+            status = MQTTBadParameter;
         }
-        if (status == MQTTSuccess)
+        else if (propBuffer->pBuffer == NULL)
         {
-            propBuffer->currentIndex = (size_t)(startOfProp - propBuffer->pBuffer);
+            LogError(("Arguments cannot be NULL : pPropertyBuilder->pBuffer=%p.", (void*)propBuffer->pBuffer));
+            status = MQTTBadParameter;
+        }
+        else if (pUserPropKey == NULL || pUserPropKeyLen == NULL || pUserPropVal==NULL || pUserPropValLen== NULL)
+        {
+            LogError(("Arguments cannot be NULL : pUserPropKey = %p , pUserPropKeyLen = %p , pUserPropVal = %p , pUserPropValLen = %p", (void *)pUserPropKey, (void*)pUserPropKeyLen , (void*)pUserPropVal , (void*) pUserPropValLen));
+            status = MQTTBadParameter;
+        }
+        else
+        {
+            uint8_t* startOfProp = propBuffer->pBuffer + propBuffer->currentIndex;
+            size_t propertyLength = propBuffer->bufferLength - propBuffer->currentIndex;
+            status = decodeutf_8(pUserPropKey, pUserPropKeyLen, &propertyLength, &propFlag, &startOfProp);
+            propFlag = false;
+            if (status == MQTTSuccess)
+            {
+                status = decodeutf_8(pUserPropVal, pUserPropValLen, &propertyLength, &propFlag, &startOfProp);
+            }
+            if (status == MQTTSuccess)
+            {
+                propBuffer->currentIndex = (size_t)(startOfProp - propBuffer->pBuffer);
+            }
         }
         return status; 
     }
@@ -4999,12 +5309,30 @@ uint8_t * MQTT_SerializeDisconnectFixed( uint8_t * pIndex,
     {
         MQTTStatus_t status = MQTTSuccess;
         bool propFlag = false;
-        uint8_t* startOfProp = propBuffer->pBuffer + propBuffer->currentIndex;
-        size_t propertyLength = propBuffer->bufferLength - propBuffer->currentIndex;
-        status = decodeutf_8(pReasonString, reasonStringLength,&propertyLength, &propFlag, &startOfProp);
-        if (status == MQTTSuccess)
+        if ((propBuffer == NULL))
         {
-            propBuffer->currentIndex = (size_t)(startOfProp - propBuffer->pBuffer);
+            LogError(("Arguments cannot be NULL : pPropertyBuilder=%p.", (void*)propBuffer));
+            status = MQTTBadParameter;
+        }
+        else if (propBuffer->pBuffer == NULL)
+        {
+            LogError(("Arguments cannot be NULL : pPropertyBuilder->pBuffer=%p.", (void*)propBuffer->pBuffer));
+            status = MQTTBadParameter;
+        }
+        else if (pReasonString == NULL || reasonStringLength == NULL)
+        {
+            LogError(("Arguments cannot be NULL : pReasonString=%p, reasonStringLength = %p", (void*)pReasonString, (void*)reasonStringLength));
+            status = MQTTBadParameter;
+        }
+        else
+        {
+            uint8_t* startOfProp = propBuffer->pBuffer + propBuffer->currentIndex;
+            size_t propertyLength = propBuffer->bufferLength - propBuffer->currentIndex;
+            status = decodeutf_8(pReasonString, reasonStringLength, &propertyLength, &propFlag, &startOfProp);
+            if (status == MQTTSuccess)
+            {
+                propBuffer->currentIndex = (size_t)(startOfProp - propBuffer->pBuffer);
+            }
         }
         return status; 
     }
@@ -5013,12 +5341,30 @@ uint8_t * MQTT_SerializeDisconnectFixed( uint8_t * pIndex,
     {
         MQTTStatus_t status = MQTTSuccess;
         bool propFlag = false;
-        uint8_t* startOfProp = propBuffer->pBuffer + propBuffer->currentIndex;
-        size_t propertyLength = propBuffer->bufferLength - propBuffer->currentIndex;
-        status = decodeutf_8(pServerRef, serverRefLength, &propertyLength, &propFlag, &startOfProp);
-        if (status == MQTTSuccess)
+        if ((propBuffer == NULL))
         {
-            propBuffer->currentIndex = (size_t)(startOfProp - propBuffer->pBuffer);
+            LogError(("Arguments cannot be NULL : pPropertyBuilder=%p.", (void*)propBuffer));
+            status = MQTTBadParameter;
+        }
+        else if (propBuffer->pBuffer == NULL)
+        {
+            LogError(("Arguments cannot be NULL : pPropertyBuilder->pBuffer=%p.", (void*)propBuffer->pBuffer));
+            status = MQTTBadParameter;
+        }
+        else if (pServerRef == NULL || serverRefLength == NULL)
+        {
+            LogError(("Arguments cannot be NULL : pServerRef=%p, reasonStringLength = %p", (void*)pServerRef, (void*)serverRefLength));
+            status = MQTTBadParameter;
+        }
+        else
+        {
+            uint8_t* startOfProp = propBuffer->pBuffer + propBuffer->currentIndex;
+            size_t propertyLength = propBuffer->bufferLength - propBuffer->currentIndex;
+            status = decodeutf_8(pServerRef, serverRefLength, &propertyLength, &propFlag, &startOfProp);
+            if (status == MQTTSuccess)
+            {
+                propBuffer->currentIndex = (size_t)(startOfProp - propBuffer->pBuffer);
+            }
         }
         return status; 
     }
@@ -5026,18 +5372,29 @@ uint8_t * MQTT_SerializeDisconnectFixed( uint8_t * pIndex,
     MQTTStatus_t MQTT_IncomingGetNextProp(MqttPropBuilder_t* propBuffer, uint8_t* propertyId)
     {
         MQTTStatus_t status = MQTTSuccess;
-
-        if (propBuffer->currentIndex < propBuffer->bufferLength)
+        if ((propBuffer == NULL))
         {
-            *propertyId = *(propBuffer->pBuffer + propBuffer->currentIndex);
-            propBuffer->currentIndex += 1;
-        }
-        else
-        {
+            LogError(("Arguments cannot be NULL : pPropertyBuilder=%p.", (void*)propBuffer));
             status = MQTTBadParameter;
-            LogError(("Invalid property buffer"));
         }
-
+        else if (propBuffer->pBuffer == NULL)
+        {
+            LogError(("Arguments cannot be NULL : pPropertyBuilder->pBuffer=%p.", (void*)propBuffer->pBuffer));
+            status = MQTTBadParameter;
+        }
+        else 
+        {
+            if (propBuffer->currentIndex < propBuffer->bufferLength)
+            {
+                *propertyId = *(propBuffer->pBuffer + propBuffer->currentIndex);
+                propBuffer->currentIndex += 1;
+            }
+            else
+            {
+                status = MQTTBadParameter;
+                LogError(("Invalid property buffer"));
+            }
+        }
 
         return status;
     }

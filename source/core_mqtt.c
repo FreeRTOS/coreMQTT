@@ -39,40 +39,40 @@
 #ifndef MQTT_PRE_SEND_HOOK
 
 /**
- * @brief Hook called before a 'send' operation is executed.
- */
+* @brief Hook called before a 'send' operation is executed.
+*/
     #define MQTT_PRE_SEND_HOOK( pContext )
 #endif /* !MQTT_PRE_SEND_HOOK */
 
 #ifndef MQTT_POST_SEND_HOOK
 
 /**
- * @brief Hook called after the 'send' operation is complete.
- */
+* @brief Hook called after the 'send' operation is complete.
+*/
     #define MQTT_POST_SEND_HOOK( pContext )
 #endif /* !MQTT_POST_SEND_HOOK */
 
 #ifndef MQTT_PRE_STATE_UPDATE_HOOK
 
 /**
- * @brief Hook called just before an update to the MQTT state is made.
- */
+* @brief Hook called just before an update to the MQTT state is made.
+*/
     #define MQTT_PRE_STATE_UPDATE_HOOK( pContext )
 #endif /* !MQTT_PRE_STATE_UPDATE_HOOK */
 
 #ifndef MQTT_POST_STATE_UPDATE_HOOK
 
 /**
- * @brief Hook called just after an update to the MQTT state has
- * been made.
- */
+* @brief Hook called just after an update to the MQTT state has
+* been made.
+*/
     #define MQTT_POST_STATE_UPDATE_HOOK( pContext )
 #endif /* !MQTT_POST_STATE_UPDATE_HOOK */
 
 /**
- * @brief Bytes required to encode any string length in an MQTT packet header.
- * Length is always encoded in two bytes according to the MQTT specification.
- */
+* @brief Bytes required to encode any string length in an MQTT packet header.
+* Length is always encoded in two bytes according to the MQTT specification.
+*/
 #define CORE_MQTT_SERIALIZED_LENGTH_FIELD_BYTES          ( 2U )
 
 /**
@@ -95,19 +95,19 @@
 */
 #define UINT32_SET_BIT( x, position )      ( ( x ) = ( uint32_t ) ( ( x ) | ( 0x01U << ( position ) ) ) )
 /**
- * @brief Macro for checking if a bit is set in a 4-byte unsigned int.
- *
- * @param[in] x The unsigned int to check.
- * @param[in] position Which bit to check.
- */
+* @brief Macro for checking if a bit is set in a 4-byte unsigned int.
+*
+* @param[in] x The unsigned int to check.
+* @param[in] position Which bit to check.
+*/
 #define UINT32_CHECK_BIT( x, position )    ( ( ( x ) & ( 0x01U << ( position ) ) ) == ( 0x01U << ( position ) ) )
 
 /**
- * @brief Number of vectors required to encode one topic filter in a subscribe
- * request. Three vectors are required as there are three fields in the
- * subscribe request namely:
- * 1. Topic filter length; 2. Topic filter; and 3. QoS in this order.
- */
+* @brief Number of vectors required to encode one topic filter in a subscribe
+* request. Three vectors are required as there are three fields in the
+* subscribe request namely:
+* 1. Topic filter length; 2. Topic filter; and 3. QoS in this order.
+*/
 #define CORE_MQTT_SUBSCRIBE_PER_TOPIC_VECTOR_LENGTH      ( 3U )
 
 /**
@@ -158,6 +158,35 @@
  * @brief Per the MQTT spec, the max packet size  can be of  max remaining length + 5 bytes
  */
 #define MQTT_MAX_PACKET_SIZE             ( 268435460U )
+
+/**
+* @brief Macro for decoding a 2-byte unsigned int from a sequence of bytes.
+*
+* @param[in] ptr A uint8_t* that points to the high byte.
+*/
+#define UINT16_DECODE( ptr )                            \
+    ( uint16_t ) ( ( ( ( uint16_t ) ptr[ 0 ] ) << 8 ) | \
+                   ( ( uint16_t ) ptr[ 1 ] ) )
+
+/**
+* @brief Macro for decoding a 4-byte unsigned int from a sequence of bytes.
+*
+* @param[in] ptr A uint8_t* that points to the high byte.
+*/
+#define UINT32_DECODE( ptr )                         \
+    ( uint32_t ) ( ( ( ( uint32_t ) ptr[ 0 ] ) << 24 ) | \
+                   ( ( ( uint32_t ) ptr[ 1 ] ) << 16 ) | \
+                   ( ( ( uint32_t ) ptr[ 2 ] ) << 8 ) |  \
+                   ( ( uint32_t ) ptr[ 3 ] ) )
+/**
+* @brief Topic alias id.
+*/
+#define MQTT_TOPIC_ALIAS_ID         ( 0x23 )
+
+/**
+* @brief Utf 8 encoded string has 2 byte length field and 1 byte property id.
+*/
+#define MQTT_UTF8_LENGTH_SIZE            ( 3U )
 
 
 typedef enum MQTTSubscriptionType
@@ -416,35 +445,6 @@ static MQTTStatus_t handlePublishAcks( MQTTContext_t * pContext,
 static MQTTStatus_t handleIncomingAck( MQTTContext_t * pContext,
                                        MQTTPacketInfo_t * pIncomingPacket,
                                        bool manageKeepAlive );
-
-/**
- * @brief Macro for decoding a 2-byte unsigned int from a sequence of bytes.
- *
- * @param[in] ptr A uint8_t* that points to the high byte.
- */
-#define UINT16_DECODE( ptr )                            \
-    ( uint16_t ) ( ( ( ( uint16_t ) ptr[ 0 ] ) << 8 ) | \
-                   ( ( uint16_t ) ptr[ 1 ] ) )
-
-/**
-* @brief Macro for decoding a 4-byte unsigned int from a sequence of bytes.
-*
-* @param[in] ptr A uint8_t* that points to the high byte.
-*/
-#define UINT32_DECODE( ptr )                         \
-    ( uint32_t ) ( ( ( ( uint32_t ) ptr[ 0 ] ) << 24 ) | \
-                   ( ( ( uint32_t ) ptr[ 1 ] ) << 16 ) | \
-                   ( ( ( uint32_t ) ptr[ 2 ] ) << 8 ) |  \
-                   ( ( uint32_t ) ptr[ 3 ] ) )
-/**
- * @brief Topic alias id.
- */
-#define MQTT_TOPIC_ALIAS_ID         ( 0x23 )
-
-/**
- * @brief Utf 8 encoded string has 2 byte length field and 1 byte property id.
- */
-#define MQTT_UTF8_LENGTH_SIZE            ( 3U )
 
 /**
  * @brief Run a single iteration of the receive loop.
@@ -935,36 +935,6 @@ static size_t addEncodedStringToVector( uint8_t serializedLength[ CORE_MQTT_SERI
     return vectorsAdded;
 }
 
-// static uint8_t* encodeRemainingLength(uint8_t* pDestination,
-//     size_t length)
-// {
-//     uint8_t lengthByte;
-//     uint8_t* pLengthEnd = NULL;
-//     size_t remainingLength = length;
-
-//     assert(pDestination != NULL);
-
-//     pLengthEnd = pDestination;
-
-//     /* This algorithm is copied from the MQTT v3.1.1 spec. */
-//     do
-//     {
-//         lengthByte = (uint8_t)(remainingLength % 128U);
-//         remainingLength = remainingLength / 128U;
-
-//         /* Set the high bit of this byte, indicating that there's more data. */
-//         if (remainingLength > 0U)
-//         {
-//             UINT8_SET_BIT(lengthByte, 7);
-//         }
-
-//         /* Output a single encoded byte. */
-//         *pLengthEnd = lengthByte;
-//         pLengthEnd++;
-//     } while (remainingLength > 0U);
-
-//     return pLengthEnd;
-// }
 
 static bool matchEndWildcardsSpecialCases( const char * pTopicFilter,
                                            uint16_t topicFilterLength,
@@ -1813,7 +1783,7 @@ static MQTTStatus_t handleKeepAlive( MQTTContext_t * pContext )
 
 /*-----------------------------------------------------------*/
 
-MQTTStatus_t handleIncomingPublish( MQTTContext_t * pContext,
+static MQTTStatus_t handleIncomingPublish( MQTTContext_t * pContext,
                                     MQTTPacketInfo_t * pIncomingPacket )
 {
     MQTTStatus_t status = MQTTBadParameter;
@@ -2001,10 +1971,8 @@ static handleIncomingDisconnect(MQTTContext_t* pContext, MQTTPacketInfo_t* pInco
     size_t propertyLength = 0U;
     MQTTDeserializedInfo_t deserializedInfo = { 0 };
     MqttPropBuilder_t propBuffer = { 0 };
-
     MQTTReasonCodeInfo_t reasonCode = { 0 } ;
-    MQTTSuccessFailReasonCode_t reasonCodeVal; 
-    reasonCode.reasonCode = &reasonCodeVal; 
+
 
     assert(pContext != NULL);
     assert(pContext->appCallback != NULL);
@@ -2035,6 +2003,9 @@ static MQTTStatus_t handlePublishAcks( MQTTContext_t * pContext,
 
     MQTTReasonCodeInfo_t incomingReasonCode;
     ( void ) memset( &incomingReasonCode, 0x0, sizeof(incomingReasonCode) );
+
+    //MQTTSuccessFailReasonCode_t reasonCodeVal; 
+    //incomingReasonCode.reasonCode = reasonCodeVal; 
 
     assert( pContext != NULL );
     assert( pIncomingPacket != NULL );
@@ -4089,6 +4060,7 @@ MQTTStatus_t MQTT_Disconnect( MQTTContext_t * pContext,
     size_t packetSize = 0U;
     size_t remainingLength = 0U;
     MQTTStatus_t status = MQTTSuccess;
+    size_t disconnectPropLen = 0;
 
     /* Validate arguments. */
     if( ( pContext == NULL ))
@@ -4096,7 +4068,8 @@ MQTTStatus_t MQTT_Disconnect( MQTTContext_t * pContext,
         LogError( ( "pContext cannot be NULL." ) );
         status = MQTTBadParameter;
     }
-    size_t disconnectPropLen = 0;
+
+
     if (pPropertyBuilder != NULL)
     {
         disconnectPropLen = pPropertyBuilder->currentIndex;

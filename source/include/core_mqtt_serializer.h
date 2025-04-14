@@ -82,7 +82,6 @@ struct MQTTPacketInfo;
 struct MQTTSubscribeProperties ; 
 struct MQTTConnectProperties;
 struct MQTTUserProperty;
-struct MQTTUserProperties;
 struct MQTTAuthInfo;
 /**
  * @ingroup mqtt_enum_types
@@ -501,7 +500,7 @@ typedef struct MQTTConnectProperties
  */
 typedef struct MQTTReasonCodeInfo
 {
-    uint8_t * reasonCode;
+    MQTTSuccessFailReasonCode_t * reasonCode;
     size_t reasonCodeLength ; 
 
 } MQTTReasonCodeInfo_t;
