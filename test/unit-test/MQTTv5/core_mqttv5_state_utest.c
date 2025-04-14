@@ -95,11 +95,15 @@ static uint32_t getTime( void )
 static void eventCallback( MQTTContext_t * pContext,
                            MQTTPacketInfo_t * pPacketInfo,
                            MQTTDeserializedInfo_t * pDeserializedInfo, 
-                           MQTTPublishFailReasonCode_t * pReasonCode)
+                           MQTTSuccessFailReasonCode_t * pReasonCode,
+                           MqttPropBuilder_t * sendPropsBuffer, 
+                           MqttPropBuilder_t * getPropsBuffer)
 {
     ( void ) pContext;
     ( void ) pPacketInfo;
     ( void ) pDeserializedInfo;
+    ( void ) sendPropsBuffer ; 
+    ( void ) getPropsBuffer ; 
 }
 
 static void resetPublishRecords( MQTTContext_t * pMqttContext )
