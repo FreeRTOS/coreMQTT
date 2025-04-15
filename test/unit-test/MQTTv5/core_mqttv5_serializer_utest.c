@@ -262,6 +262,8 @@ struct NetworkContext
 
 #define CORE_MQTT_ID_SIZE                      ( 1U )
 #define MQTT_REMAINING_LENGTH_INVALID          ( ( size_t ) 268435456 )
+#define MQTT_SUBSCRIPTION_ID_ID                     ( 0x0B )
+#define MQTT_TOPIC_ALIAS_ID         ( 0x23 )
 
 static uint8_t remainingLengthBuffer[ MQTT_REMAINING_BUFFER_MAX_LENGTH ] = { 0 };
 
@@ -1809,1243 +1811,1338 @@ void test_MQTTV5_GetDisconnectPacketSize()
 
 
 
-// void test_MQTTV5_DeserializeDisconnect()
-// {
-//     MQTTAckInfo_t disconnectInfo;
-//     const char * pServerRef;
-//     uint16_t serverRefLength;
-//     size_t dummy;
-//     int32_t maxPacketSize = 0U;
-//     uint8_t buffer[ 100 ] = { 0 };
-//     uint8_t * pIndex = buffer;
+void test_MQTTV5_DeserializeDisconnect()
+{
+    MQTTReasonCodeInfo_t disconnectInfo;
+    const char * pServerRef;
+    uint16_t serverRefLength;
+    size_t dummy;
+    int32_t maxPacketSize = 0U;
+    uint8_t buffer[ 100 ] = { 0 };
+    uint8_t * pIndex = buffer;
+    MqttPropBuilder_t propBuffer = {0} ; 
 
-//     memset( &disconnectInfo, 0x0, sizeof( disconnectInfo ) );
-//     uint8_t rc ; 
-//     disconnectInfo.reasonCode = &rc ; 
+    memset( &disconnectInfo, 0x0, sizeof( disconnectInfo ) );
+    /*Invalid parameters*/
+    status = MQTTV5_DeserializeDisconnect( NULL, maxPacketSize, &disconnectInfo, &propBuffer );
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
 
+    /*Remaining data not initialized.*/
+    status = MQTTV5_DeserializeDisconnect( &packetInfo, maxPacketSize, &disconnectInfo, &propBuffer );
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
 
-//     /*Invalid parameters*/
-//     status = MQTTV5_DeserializeDisconnect( NULL, &disconnectInfo, &pServerRef, &serverRefLength, maxPacketSize );
-//     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+    packetInfo.pRemainingData = buffer;
+    status = MQTTV5_DeserializeDisconnect( &packetInfo, maxPacketSize, NULL , &propBuffer );
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
 
-//     /*Remaining data not initialized.*/
-//     status = MQTTV5_DeserializeDisconnect( &packetInfo, &disconnectInfo, &pServerRef, &serverRefLength, maxPacketSize );
-//     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+    /*Max packet size cannot be 0.*/
+    status = MQTTV5_DeserializeDisconnect( &packetInfo, maxPacketSize , &disconnectInfo, &propBuffer);
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+    maxPacketSize = 100;
 
-//     packetInfo.pRemainingData = buffer;
-//     status = MQTTV5_DeserializeDisconnect( &packetInfo, NULL, &pServerRef, &serverRefLength, maxPacketSize );
-//     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+    /*Remaining length cannot be 0*/
+    status = MQTTV5_DeserializeDisconnect( &packetInfo,maxPacketSize, &disconnectInfo,&propBuffer );
+    TEST_ASSERT_EQUAL_INT( MQTTMalformedPacket, status );
 
-//     status = MQTTV5_DeserializeDisconnect( &packetInfo, &disconnectInfo, NULL, &serverRefLength, maxPacketSize );
-//     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
-
-//     status = MQTTV5_DeserializeDisconnect( &packetInfo, &disconnectInfo, &pServerRef, NULL, maxPacketSize );
-//     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
-
-//     /*Max packet size cannot be 0.*/
-//     status = MQTTV5_DeserializeDisconnect( &packetInfo, &disconnectInfo, &pServerRef, &serverRefLength, maxPacketSize );
-//     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
-//     maxPacketSize = 100;
-
-//     /*Remaining length cannot be 0*/
-//     status = MQTTV5_DeserializeDisconnect( &packetInfo, &disconnectInfo, &pServerRef, &serverRefLength, maxPacketSize );
-//     TEST_ASSERT_EQUAL_INT( MQTTMalformedPacket, status );
-
-//     /*Remaining Length invalid. */
-//     packetInfo.remainingLength = 200;
-//     status = MQTTV5_DeserializeDisconnect( &packetInfo, &disconnectInfo, &pServerRef, &serverRefLength, maxPacketSize );
-//     TEST_ASSERT_EQUAL_INT( MQTTProtocolError, status );
+    /*Remaining Length invalid. */
+    packetInfo.remainingLength = 200;
+    status = MQTTV5_DeserializeDisconnect( &packetInfo,maxPacketSize, &disconnectInfo, &propBuffer );
+    TEST_ASSERT_EQUAL_INT( MQTTProtocolError, status );
 
 
-//     /*Invalid reason code.*/
-//     buffer[ 0 ] = MQTT_REASON_SEND_WILL;
-//     status = MQTTV5_DeserializeDisconnect( &packetInfo, &disconnectInfo, &pServerRef, &serverRefLength, maxPacketSize );
-//     TEST_ASSERT_EQUAL_INT( MQTTProtocolError, status );
+    /*Invalid reason code.*/
+    buffer[ 0 ] = MQTTReasonDisconnectWithWill;
+    status = MQTTV5_DeserializeDisconnect( &packetInfo,maxPacketSize, &disconnectInfo, &propBuffer );
+    TEST_ASSERT_EQUAL_INT( MQTTProtocolError, status );
 
-//     packetInfo.remainingLength = 1;
-//     buffer[ 0 ] = MQTT_REASON_NOT_AUTHORIZED;
-//     status = MQTTV5_DeserializeDisconnect( &packetInfo, &disconnectInfo, &pServerRef, &serverRefLength, maxPacketSize );
-//     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
+    packetInfo.remainingLength = 1;
+    buffer[ 0 ] = MQTTNotAuthorized;
+    status = MQTTV5_DeserializeDisconnect( &packetInfo, maxPacketSize, &disconnectInfo, &propBuffer  );
+    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
 
-//     /*Property length is 0.*/
-//     packetInfo.remainingLength = 2;
-//     pIndex = &buffer[ 1 ];
-//     dummy = encodeRemainingLength( pIndex, 0 );
-//     status = MQTTV5_DeserializeDisconnect( &packetInfo, &disconnectInfo, &pServerRef, &serverRefLength, maxPacketSize );
-//     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
+    /*Property length is 0.*/
+    packetInfo.remainingLength = 2;
+    pIndex = &buffer[ 1 ];
+    dummy = encodeRemainingLength( pIndex, 0 );
+    status = MQTTV5_DeserializeDisconnect( &packetInfo, maxPacketSize, &disconnectInfo, &propBuffer);
+    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
 
-//     /*With properties*/
-//     pIndex = &buffer[ 1 ];
-//     packetInfo.remainingLength = 29;
-//     dummy = encodeRemainingLength( pIndex, 27 );
-//     pIndex++;
-//     pIndex = serializeutf_8( pIndex, MQTT_REASON_STRING_ID );
-//     pIndex = serializeutf_8pair( pIndex );
-//     pIndex = serializeutf_8( pIndex, MQTT_SERVER_REF_ID );
-//     status = MQTTV5_DeserializeDisconnect( &packetInfo, &disconnectInfo, &pServerRef, &serverRefLength, maxPacketSize );
-//     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
+    /*With properties*/
+    pIndex = &buffer[ 1 ];
+    packetInfo.remainingLength = 29;
+    dummy = encodeRemainingLength( pIndex, 27 );
+    pIndex++;
+    pIndex = serializeutf_8( pIndex, MQTT_REASON_STRING_ID );
+    pIndex = serializeutf_8pair( pIndex );
+    pIndex = serializeutf_8( pIndex, MQTT_SERVER_REF_ID );
+    status = MQTTV5_DeserializeDisconnect( &packetInfo,maxPacketSize,&disconnectInfo, &propBuffer);
+    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
 
-//     /*Invalid property id.*/
-//     pIndex = &buffer[ 1 ];
-//     packetInfo.remainingLength = 9;
-//     dummy = encodeRemainingLength( pIndex, 7 );
-//     pIndex++;
-//     pIndex = serializeutf_8( pIndex, MQTT_SESSION_EXPIRY_ID );
-//     status = MQTTV5_DeserializeDisconnect( &packetInfo, &disconnectInfo, &pServerRef, &serverRefLength, maxPacketSize );
-//     TEST_ASSERT_EQUAL_INT( MQTTProtocolError, status );
-//     TEST_ASSERT_EQUAL_INT( 1, dummy );
+    /*Invalid property id.*/
+    pIndex = &buffer[ 1 ];
+    packetInfo.remainingLength = 9;
+    dummy = encodeRemainingLength( pIndex, 7 );
+    pIndex++;
+    pIndex = serializeutf_8( pIndex, MQTT_SESSION_EXPIRY_ID );
+    status = MQTTV5_DeserializeDisconnect( &packetInfo, maxPacketSize,&disconnectInfo, &propBuffer);
+    TEST_ASSERT_EQUAL_INT( MQTTProtocolError, status );
+    TEST_ASSERT_EQUAL_INT( 1, dummy );
 
-//     /*Invalid property length.*/
-//     pIndex = &buffer[ 1 ];
-//     packetInfo.remainingLength = 9;
-//     dummy = encodeRemainingLength( pIndex, 4 );
-//     status = MQTTV5_DeserializeDisconnect( &packetInfo, &disconnectInfo, &pServerRef, &serverRefLength, maxPacketSize );
-//     TEST_ASSERT_EQUAL_INT( MQTTMalformedPacket, status );
+    /*Invalid property length.*/
+    pIndex = &buffer[ 1 ];
+    packetInfo.remainingLength = 9;
+    dummy = encodeRemainingLength( pIndex, 4 );
+    status = MQTTV5_DeserializeDisconnect( &packetInfo, maxPacketSize, &disconnectInfo, &propBuffer );
+    TEST_ASSERT_EQUAL_INT( MQTTMalformedPacket, status );
 
-//     buffer[ 1 ] = 0x81;
-//     buffer[ 2 ] = 0x00;
-//     status = MQTTV5_DeserializeDisconnect( &packetInfo, &disconnectInfo, &pServerRef, &serverRefLength, maxPacketSize );
-//     TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
-// }
+    buffer[ 1 ] = 0x81;
+    buffer[ 2 ] = 0x00;
+    status = MQTTV5_DeserializeDisconnect( &packetInfo, maxPacketSize, &disconnectInfo, &propBuffer);
+    TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
+}
 
-// void test_MQTT_GetIncomingPacketTypeAndLength( void )
-// {
-//     MQTTPacketInfo_t mqttPacket;
-//     NetworkContext_t networkContext;
-//     uint8_t buffer[ 10 ];
-//     uint8_t * bufPtr = buffer;
+void test_MQTT_GetIncomingPacketTypeAndLength( void )
+{
+    MQTTPacketInfo_t mqttPacket;
+    NetworkContext_t networkContext;
+    uint8_t buffer[ 10 ];
+    uint8_t * bufPtr = buffer;
 
-//     /* Dummy network context - pointer to pointer to a buffer. */
-//     networkContext.buffer = &bufPtr;
-//     /* Check when network receive fails. */
-//     memset( buffer, 0x00, 10 );
-//     /* Branch coverage for Disconnect. */
-//     bufPtr = buffer;
-//     buffer[ 0 ] = MQTT_PACKET_TYPE_DISCONNECT;
-//     status = MQTT_GetIncomingPacketTypeAndLength( mockReceive, &networkContext, &mqttPacket );
-//     TEST_ASSERT_EQUAL( MQTTSuccess, status );
-// }
+    /* Dummy network context - pointer to pointer to a buffer. */
+    networkContext.buffer = &bufPtr;
+    /* Check when network receive fails. */
+    memset( buffer, 0x00, 10 );
+    /* Branch coverage for Disconnect. */
+    bufPtr = buffer;
+    buffer[ 0 ] = MQTT_PACKET_TYPE_DISCONNECT;
+    status = MQTT_GetIncomingPacketTypeAndLength( mockReceive, &networkContext, &mqttPacket );
+    TEST_ASSERT_EQUAL( MQTTSuccess, status );
+}
 
-// void test_MQTTV5_GetSubscribePacketSize( void )
-// {
-//     MQTTStatus_t status = MQTTSuccess;
-//     MQTTSubscribeInfo_t subscribeInfo;
-//     size_t remainingLength = 0;
-//     size_t packetSize = 0;
+void test_MQTTV5_GetSubscribePacketSize( void )
+{
+    MQTTStatus_t status = MQTTSuccess;
+    MQTTSubscribeInfo_t subscribeInfo;
+    size_t remainingLength = 0;
+    size_t packetSize = 0;
 
-//     /** Verify Parameters */
+    /** Verify Parameters */
 
-//     /** NULL parameters */
-//     status = MQTT_GetSubscribePacketSize(NULL, 1, &remainingLength, &packetSize, 0); 
-//     TEST_ASSERT_EQUAL_INT(MQTTBadParameter, status);
+    /** NULL parameters */
+    status = MQTT_GetSubscribePacketSize(NULL, 1, &remainingLength, &packetSize, 0); 
+    TEST_ASSERT_EQUAL_INT(MQTTBadParameter, status);
 
-//     status = MQTT_GetSubscribePacketSize(&subscribeInfo , 0, &remainingLength, &packetSize, 0); 
-//     TEST_ASSERT_EQUAL_INT(MQTTBadParameter, status);
+    status = MQTT_GetSubscribePacketSize(&subscribeInfo , 0, &remainingLength, &packetSize, 0); 
+    TEST_ASSERT_EQUAL_INT(MQTTBadParameter, status);
 
-//     /** Empty Empty Subscription List Fails */
+    /** Empty Empty Subscription List Fails */
 
-//     memset( &subscribeInfo, 0x0, sizeof( subscribeInfo ) );
-//     status = MQTT_GetSubscribePacketSize(&subscribeInfo , 0, &remainingLength, &packetSize, 0); 
-//     TEST_ASSERT_EQUAL_INT(MQTTBadParameter, status);
+    memset( &subscribeInfo, 0x0, sizeof( subscribeInfo ) );
+    status = MQTT_GetSubscribePacketSize(&subscribeInfo , 0, &remainingLength, &packetSize, 0); 
+    TEST_ASSERT_EQUAL_INT(MQTTBadParameter, status);
 
-//     status = MQTT_GetSubscribePacketSize(&subscribeInfo , 1, &remainingLength, &packetSize, 0); 
-//     TEST_ASSERT_EQUAL_INT(MQTTBadParameter, status);
+    status = MQTT_GetSubscribePacketSize(&subscribeInfo , 1, &remainingLength, &packetSize, 0); 
+    TEST_ASSERT_EQUAL_INT(MQTTBadParameter, status);
 
-//     /** NULL topic filter , non zero length */
+    /** NULL topic filter , non zero length */
 
-//     subscribeInfo.topicFilterLength = 1;
-//     status = MQTT_GetSubscribePacketSize(&subscribeInfo , 1, &remainingLength, &packetSize, 0); 
-//     TEST_ASSERT_EQUAL_INT(MQTTBadParameter, status);
+    subscribeInfo.topicFilterLength = 1;
+    status = MQTT_GetSubscribePacketSize(&subscribeInfo , 1, &remainingLength, &packetSize, 0); 
+    TEST_ASSERT_EQUAL_INT(MQTTBadParameter, status);
 
-//     /**Topic Filter Length == 0 , Topic Filter not null */
+    /**Topic Filter Length == 0 , Topic Filter not null */
 
-//     subscribeInfo.topicFilterLength = 0 ; 
-//     subscribeInfo.pTopicFilter = "example/topic" ; 
-//     status = MQTT_GetSubscribePacketSize(&subscribeInfo , 1, &remainingLength, &packetSize, 0); 
-//     TEST_ASSERT_EQUAL_INT(MQTTBadParameter, status);
-// }
+    subscribeInfo.topicFilterLength = 0 ; 
+    subscribeInfo.pTopicFilter = "example/topic" ; 
+    status = MQTT_GetSubscribePacketSize(&subscribeInfo , 1, &remainingLength, &packetSize, 0); 
+    TEST_ASSERT_EQUAL_INT(MQTTBadParameter, status);
+}
 
-// void test_MQTTV5_GetSubscribePacketSize_HappyPath(void){
-//     MQTTStatus_t status = MQTTSuccess;
-//     MQTTSubscribeInfo_t subscribeInfo;
-//     size_t remainingLength = 0;
-//     size_t packetSize = 0;
-//     subscribeInfo.pTopicFilter = TEST_TOPIC_NAME ; 
-//     subscribeInfo.topicFilterLength = TEST_TOPIC_NAME_LENGTH ;
-//     subscribeInfo.qos = MQTTQoS0 ;
-//     subscribeInfo.noLocalOption = 0 ; 
-//     subscribeInfo.retainAsPublishedOption = 0 ; 
-//     subscribeInfo.retainHandlingOption = 1 ;
+void test_MQTTV5_GetSubscribePacketSize_HappyPath(void){
+    MQTTStatus_t status = MQTTSuccess;
+    MQTTSubscribeInfo_t subscribeInfo;
+    size_t remainingLength = 0;
+    size_t packetSize = 0;
+    subscribeInfo.pTopicFilter = TEST_TOPIC_NAME ; 
+    subscribeInfo.topicFilterLength = TEST_TOPIC_NAME_LENGTH ;
+    subscribeInfo.qos = MQTTQoS0 ;
+    subscribeInfo.noLocalOption = 0 ; 
+    subscribeInfo.retainAsPublishedOption = 0 ; 
+    subscribeInfo.retainHandlingOption = 1 ;
 
-//     status = MQTT_GetSubscribePacketSize(&subscribeInfo, 1, &remainingLength, &packetSize, 2);
-//     TEST_ASSERT_EQUAL_INT(MQTTSuccess, status);
-//     TEST_ASSERT_EQUAL_UINT32(19U, remainingLength);
-//     TEST_ASSERT_EQUAL_UINT32(21U, packetSize);
-// }
+    status = MQTT_GetSubscribePacketSize(&subscribeInfo, 1, &remainingLength, &packetSize, 2);
+    TEST_ASSERT_EQUAL_INT(MQTTSuccess, status);
+    TEST_ASSERT_EQUAL_UINT32(19U, remainingLength);
+    TEST_ASSERT_EQUAL_UINT32(21U, packetSize);
+}
 
-// /** Subscribe Packet size with multiple subscriptions and User Properties */
-// void test_MQTTV5_GetSubscribePacketSize_MultipleSubscriptions(void){
-//     MQTTStatus_t status = MQTTSuccess;
-//     MQTTSubscribeInfo_t subscribeInfo[2];
-//     size_t remainingLength = 0;
-//     size_t packetSize = 0;
+/** Subscribe Packet size with multiple subscriptions and User Properties */
+void test_MQTTV5_GetSubscribePacketSize_MultipleSubscriptions(void){
+    MQTTStatus_t status = MQTTSuccess;
+    MQTTSubscribeInfo_t subscribeInfo[2];
+    size_t remainingLength = 0;
+    size_t packetSize = 0;
 
-//     subscribeInfo[0].pTopicFilter = TEST_TOPIC_NAME ;
-//     subscribeInfo[0].topicFilterLength = TEST_TOPIC_NAME_LENGTH ;
-//     subscribeInfo[0].qos = MQTTQoS0 ;
-//     subscribeInfo[0].noLocalOption = 0 ;
-//     subscribeInfo[0].retainAsPublishedOption = 0 ;
-//     subscribeInfo[0].retainHandlingOption = 1 ;
+    subscribeInfo[0].pTopicFilter = TEST_TOPIC_NAME ;
+    subscribeInfo[0].topicFilterLength = TEST_TOPIC_NAME_LENGTH ;
+    subscribeInfo[0].qos = MQTTQoS0 ;
+    subscribeInfo[0].noLocalOption = 0 ;
+    subscribeInfo[0].retainAsPublishedOption = 0 ;
+    subscribeInfo[0].retainHandlingOption = 1 ;
 
-//     subscribeInfo[1].pTopicFilter = TEST_TOPIC_NAME ;
-//     subscribeInfo[1].topicFilterLength = TEST_TOPIC_NAME_LENGTH ;
-//     subscribeInfo[1].qos = MQTTQoS0 ;
-//     subscribeInfo[1].noLocalOption = 0 ;
-//     subscribeInfo[1].retainAsPublishedOption = 0 ;
-//     subscribeInfo[1].retainHandlingOption = 1 ;
+    subscribeInfo[1].pTopicFilter = TEST_TOPIC_NAME ;
+    subscribeInfo[1].topicFilterLength = TEST_TOPIC_NAME_LENGTH ;
+    subscribeInfo[1].qos = MQTTQoS0 ;
+    subscribeInfo[1].noLocalOption = 0 ;
+    subscribeInfo[1].retainAsPublishedOption = 0 ;
+    subscribeInfo[1].retainHandlingOption = 1 ;
 
-//     status = MQTT_GetSubscribePacketSize(subscribeInfo, 2, &remainingLength, &packetSize, 0);
-//     TEST_ASSERT_EQUAL_INT(MQTTSuccess, status);
-// }
+    status = MQTT_GetSubscribePacketSize(subscribeInfo, 2, &remainingLength, &packetSize, 0);
+    TEST_ASSERT_EQUAL_INT(MQTTSuccess, status);
+}
 
-// void test_calculateSubscriptionPacketSizeV5(void)
-// {
-//     size_t subscriptionCount = 1;
-//     size_t remainingLength = 0;
-//     size_t packetSize = 0;
-//     MQTTStatus_t status = MQTTSuccess;
-//     MQTTSubscribeInfo_t fourThousandSubscriptions[ 4096 ] = { 0 };
-//     int i;
-//     for( i = 0; i < 4096; i++ )
-//     {
-//         fourThousandSubscriptions[ i ].topicFilterLength = UINT16_MAX;
+void test_calculateSubscriptionPacketSizeV5(void)
+{
+    size_t subscriptionCount = 1;
+    size_t remainingLength = 0;
+    size_t packetSize = 0;
+    MQTTStatus_t status = MQTTSuccess;
+    MQTTSubscribeInfo_t fourThousandSubscriptions[ 4096 ] = { 0 };
+    int i;
+    for( i = 0; i < 4096; i++ )
+    {
+        fourThousandSubscriptions[ i ].topicFilterLength = UINT16_MAX;
 
-//         /* We need to set this to avoid an early bad parameter, however we do
-//          * not need a 65535 byte buffer as the packet will not be serialized. */
-//         fourThousandSubscriptions[ i ].pTopicFilter = "";
-//     }
+        /* We need to set this to avoid an early bad parameter, however we do
+         * not need a 65535 byte buffer as the packet will not be serialized. */
+        fourThousandSubscriptions[ i ].pTopicFilter = "";
+    }
 
-//     subscriptionCount = sizeof( fourThousandSubscriptions ) / sizeof( fourThousandSubscriptions[ 0 ] );
-//     status = MQTT_GetSubscribePacketSize( fourThousandSubscriptions,
-//                                           subscriptionCount,
-//                                           &remainingLength,
-//                                           &packetSize, 0);
-//     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
-// }
+    subscriptionCount = sizeof( fourThousandSubscriptions ) / sizeof( fourThousandSubscriptions[ 0 ] );
+    status = MQTT_GetSubscribePacketSize( fourThousandSubscriptions,
+                                          subscriptionCount,
+                                          &remainingLength,
+                                          &packetSize, 0);
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+}
 
-// void test_MQTTV5_suback(void)
-// {
-//     MQTTStatus_t status;
+void test_MQTTV5_suback(void)
+{
+    MQTTStatus_t status;
     
-//     uint8_t packetBuffer[23] = {
-//         0x90,       // Fixed header: SUBACK type (0x90)
-//         0x14,       // Remaining Length = 20 bytes
-//         0x00, 0x01, // Packet Identifier = 1
-//         0x11,       // Property Length = 17 bytes
-//         0x1F,       // Property ID = 0x1F (Reason String)
-//         0x00, 0x03, // UTF-8 string length = 3
-//         0x61, 0x62, 0x63, // The string "abc"
-//         0x26, 0x00, 0x03, 0x61, 0x62, 0x63, 0x00 , 0x03 , 0x61, 0x62, 0x63,
-//         0x00        // Payload: Reason code = 0x00 (Success)
-//     };
-
-//     MQTTPacketInfo_t subackPacket;
-//     memset(&subackPacket, 0, sizeof(subackPacket));
-//     subackPacket.type = MQTT_PACKET_TYPE_SUBACK; // Should be defined as 0x90
-//     subackPacket.remainingLength = 21;           // From the fixed header (0x0A)
-//     subackPacket.headerLength = 2;               // Fixed header size in this example
-//     subackPacket.pRemainingData = &packetBuffer[2];
-//     uint16_t packetIdentifier = 0;
-//     MQTTAckInfo_t subackProperties;
-//     memset(&subackProperties, 0, sizeof(subackProperties));
-//     status = MQTTV5_DeserializeSuback(&subackProperties ,&subackPacket ,  &packetIdentifier);
-//     TEST_ASSERT_EQUAL_INT(MQTTSuccess, status);
-
-//     packetBuffer[11] = 0x00 ; 
-//     status = MQTTV5_DeserializeSuback(&subackProperties ,&subackPacket ,  &packetIdentifier);
-//     TEST_ASSERT_EQUAL_INT(MQTTProtocolError, status);
-
-
-// }
-
-// void test_MQTTV5_GetUnsubscribePacketSize_Path(void){
-//     MQTTStatus_t status = MQTTSuccess;
-//     MQTTSubscribeInfo_t subscribeInfo = {0};
-//     size_t remainingLength = 0;
-//     size_t packetSize = 0;
-
-//     status = MQTT_GetUnsubscribePacketSize(NULL, 1, &remainingLength, &packetSize, 0);
-//     TEST_ASSERT_EQUAL_INT(MQTTBadParameter, status);
-
-//     subscribeInfo.pTopicFilter = TEST_TOPIC_NAME ; 
-//     subscribeInfo.topicFilterLength = TEST_TOPIC_NAME_LENGTH ;
-
-
-//     status = MQTT_GetUnsubscribePacketSize(&subscribeInfo, 1, &remainingLength, &packetSize, 0);
-//     TEST_ASSERT_EQUAL_INT(MQTTSuccess, status);
-//     TEST_ASSERT_EQUAL_UINT32(16U, remainingLength);
-//     TEST_ASSERT_EQUAL_UINT32(18U, packetSize);
-
-//     status = MQTT_GetUnsubscribePacketSize(&subscribeInfo, 0, &remainingLength, &packetSize, 0);
-//     TEST_ASSERT_EQUAL_INT(MQTTBadParameter, status);
-
-// }
-// void test_MQTTV5_DeserializeSuback( void )
-// {
-//     MQTTPacketInfo_t mqttPacketInfo;
-//     uint16_t packetIdentifier;
-//     MQTTStatus_t status = MQTTSuccess;
-//     uint8_t buffer[ 14 ] = { 0 };
-
-//     /* Bad remaining length. */
-//     mqttPacketInfo.type = MQTT_PACKET_TYPE_SUBACK;
-//     mqttPacketInfo.pRemainingData = buffer;
-//     mqttPacketInfo.remainingLength = 14;
-//     /* Set packet identifier. */
-//     buffer[ 0 ] = 0;
-//     buffer[ 1 ] = 1;
-//     buffer[2] = 0 ; 
-//     buffer[3] = 0x01 ; 
-//     buffer[4] = 0x02 ;
-//     buffer[5] = 0x80 ;
-//     buffer[6] = 0x83 ;
-//     buffer[7] = 0x87 ;
-//     buffer[8] = 0x8F ; 
-//     buffer[9] = 0x91 ; 
-//     buffer[10] = 0x97 ; 
-//     buffer[11] = 0x9E ; 
-//     buffer[12] = 0xA1 ; 
-//     buffer[13] = 0xA2 ; 
-
-//     MQTTAckInfo_t subackProperties;
-//     memset(&subackProperties, 0, sizeof(subackProperties));
-//     status = MQTTV5_DeserializeSuback(&subackProperties ,&mqttPacketInfo ,  &packetIdentifier);
-//     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
-
-//     buffer[13] = 0xA4 ; 
-//     status = MQTTV5_DeserializeSuback(&subackProperties ,&mqttPacketInfo ,  &packetIdentifier);
-//     TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
-
-// }
-
-
-// void test_incoming_publish1V5(void)
-// {
-//     MQTTPacketInfo_t mqttPacketInfo;
-//     uint16_t packetIdentifier = 1 ;
-//     MQTTStatus_t status = MQTTSuccess;
-//     uint8_t buffer[47] = { 0 };
-
-//     mqttPacketInfo.type = MQTT_PACKET_TYPE_PUBLISH;
-//     mqttPacketInfo.pRemainingData = buffer;
-//     mqttPacketInfo.remainingLength = 47;
-
-//     buffer[0] = 0x00 ; 
-//     buffer[1] = 0x03 ; 
-//     buffer[2] = 0x61 ; 
-//     buffer[3] = 0x62 ; 
-//     buffer[4] = 0x63 ; 
-//     buffer[5] = 0x29 ; 
-//     buffer[6] = 0x01 ;
-//     buffer[7] = 0x01 ; 
-//     buffer[8] = 0x26 ; 
-//     buffer[9] = 0x00 ; 
-//     buffer[10] = 0x03 ; 
-//     buffer[11] = 0x61 ; 
-//     buffer[12] = 0x62 ;
-//     buffer[13] = 0x63 ; 
-//     buffer[14] = 0x00 ; 
-//     buffer[15] = 0x03 ; 
-//     buffer[16] = 0x61 ; 
-//     buffer[17] = 0x62 ;
-//     buffer[18] = 0x63 ; 
-//     buffer[19] = 0x09 ; 
-//     buffer[20] = 0x00 ; 
-//     buffer[21] = 0x03; 
-//     buffer[22] = 't' ; 
-//     buffer[23] = 'e' ;
-//     buffer[24] = 's' ;
-//     buffer[25] = 0x23 ; 
-//     buffer[26] = 0x00 ; 
-//     buffer[27] = 0x01 ; 
-//     buffer[28] = 0x08 ; 
-//     buffer[29] = 0x00 ; 
-//     buffer[30] = 0x03 ; 
-//     buffer[31] = 't' ;
-//     buffer[32] = 'e' ;
-//     buffer[33] = 's' ; 
-//     buffer[34] = 0x02 ; 
-//     buffer[35] = 0x00 ; 
-//     buffer[36] = 0x00 ; 
-//     buffer[37] = 0x00 ; 
-//     buffer[38] = 0xB ; 
-//     buffer[39] = 0x03 ; 
-//     buffer[40] = 0x00 ; 
-//     buffer[41] = 0x03 ; 
-//     buffer[42] = 't' ;
-//     buffer[43] = 'e' ;
-//     buffer[44] = 's' ;
-//     buffer[45] = 0x0B ; 
-//     buffer[46] = 0x01 ; 
-
-
-//     MQTTPublishInfo_t publishIn ; 
-//     (void)memset(&publishIn, 0x0, sizeof(publishIn));
-
-//     status = MQTT_DeserializePublish(&mqttPacketInfo ,&packetIdentifier, &publishIn); 
-//     TEST_ASSERT_EQUAL_INT(MQTTSuccess, status);
-
-//     buffer[8] = 100 ; 
-//     status = MQTT_DeserializePublish(&mqttPacketInfo ,&packetIdentifier, &publishIn); 
-//     TEST_ASSERT_EQUAL_INT(MQTTProtocolError, status);
-
-// }
-// void test_incoming_publish_withPacketId(void)
-// {
-//     MQTTPacketInfo_t mqttPacketInfo;
-//     uint16_t packetIdentifier = 1 ;
-//     MQTTStatus_t status = MQTTSuccess;
-//     uint8_t buffer[8] = { 0 };
-
-//     mqttPacketInfo.type = MQTT_PACKET_TYPE_PUBLISH | 0x2;
-//     mqttPacketInfo.pRemainingData = buffer;
-//     mqttPacketInfo.remainingLength = 8;
-
-//     buffer[0] = 0x00 ; 
-//     buffer[1] = 0x03 ; 
-//     buffer[2] = 0x61 ; 
-//     buffer[3] = 0x62 ; 
-//     buffer[4] = 0x63 ; 
-//     buffer[5] = 0x00 ; 
-//     buffer[6] = 0x01 ; 
-//     buffer[7] = 0x00 ; 
-
-//     MQTTPublishInfo_t publishIn ; 
-//     (void)memset(&publishIn, 0x0, sizeof(publishIn));
-
-//     status = MQTT_DeserializePublish(&mqttPacketInfo ,&packetIdentifier, &publishIn); 
-//     TEST_ASSERT_EQUAL_INT(MQTTSuccess, status);
-
-//     buffer[6] = 0x00 ; 
-//     status = MQTT_DeserializePublish(&mqttPacketInfo ,&packetIdentifier, &publishIn); 
-//     TEST_ASSERT_EQUAL_INT(MQTTBadResponse, status);
-
-
-// }
-
-// void test_Invalid_IncomingPublish(void)
-// {
-//     MQTTPacketInfo_t mqttPacketInfo;
-//     uint16_t packetIdentifier = 1 ;
-//     MQTTStatus_t status = MQTTSuccess;
-//     uint8_t buffer[3] = { 0 };
-
-//     mqttPacketInfo.type = MQTT_PACKET_TYPE_PUBLISH;
-//     mqttPacketInfo.pRemainingData = buffer;
-//     mqttPacketInfo.remainingLength = 3;
-
-//     buffer[0] = 0x00 ;
-//     buffer[1] = 0x01 ;
-//     buffer[2] = 0x61 ;
-
-
-//     MQTTPublishInfo_t publishIn ;
-//     (void)memset(&publishIn, 0x0, sizeof(publishIn));
-//     status = MQTT_DeserializePublish(&mqttPacketInfo, &packetIdentifier, &publishIn);
-//     TEST_ASSERT_EQUAL_INT(MQTTBadResponse, status);
-
-//     mqttPacketInfo.type = MQTT_PACKET_TYPE_PUBLISH | 0x02 ; 
-//     status = MQTT_DeserializePublish(&mqttPacketInfo, &packetIdentifier, &publishIn);
-//     TEST_ASSERT_EQUAL_INT(MQTTBadResponse, status);
-
-// }
-
-// /**
-//  * @brief Tests that MQTT_GetPingreqPacketSize works as intended.
-//  */
-// void test_MQTT_GetPingreqPacketSize( void )
-// {
-//     MQTTStatus_t status;
-//     size_t packetSize;
-
-//     /* Verify parameters. */
-//     status = MQTT_GetPingreqPacketSize( NULL );
-//     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
-
-//     /* Good case succeeds. A PINGREQ is 2 bytes. */
-//     status = MQTT_GetPingreqPacketSize( &packetSize );
-//     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
-//     TEST_ASSERT_EQUAL_INT( 2, packetSize );
-// }
-
-// /**
-//  * @brief Tests that MQTT_SerializePingreq works as intended.
-//  */
-// void test_MQTT_SerializePingreq( void )
-// {
-//     uint8_t buffer[ 10 + 2 * BUFFER_PADDING_LENGTH ];
-//     MQTTFixedBuffer_t fixedBuffer = { .pBuffer = &buffer[ BUFFER_PADDING_LENGTH ] };
-//     uint8_t expectedPacket[ 2 ] = { MQTT_PACKET_TYPE_PINGREQ, 0 };
-//     MQTTStatus_t status = MQTTSuccess;
-
-//     /* Buffer size less than ping request fails. */
-//     fixedBuffer.size = 1;
-//     status = MQTT_SerializePingreq( &fixedBuffer );
-//     TEST_ASSERT_EQUAL_INT( MQTTNoMemory, status );
-
-//     /* NULL buffer fails. */
-//     status = MQTT_SerializePingreq( NULL );
-//     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
-
-//     /* Verify a NULL buffer in the fixed buffer struct fails */
-//     fixedBuffer.pBuffer = NULL;
-//     status = MQTT_SerializePingreq( &fixedBuffer );
-//     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
-
-//     /* Restore the fixed buffer. */
-//     fixedBuffer.pBuffer = &buffer[ BUFFER_PADDING_LENGTH ];
-
-//     /* Good case succeeds. */
-//     fixedBuffer.size = 2;
-//     padAndResetBuffer( buffer, sizeof( buffer ) );
-//     status = MQTT_SerializePingreq( &fixedBuffer );
-//     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
-//     checkBufferOverflow( buffer, sizeof( buffer ) );
-//     TEST_ASSERT_EQUAL_MEMORY( expectedPacket, &buffer[ BUFFER_PADDING_LENGTH ], 2 );
-// }
-
-// /**
-//  * @brief Tests that MQTT_DeserializeAck works as intended with a PINGRESP.
-//  */
-// void test_MQTT_DeserializeAck_pingresp( void )
-// {
-//     MQTTPacketInfo_t mqttPacketInfo;
-//     uint16_t packetIdentifier;
-//     bool sessionPresent;
-//     MQTTStatus_t status = MQTTSuccess;
-
-//     /* Bad remaining length. */
-//     ( void ) memset( &mqttPacketInfo, 0x00, sizeof( mqttPacketInfo ) );
-//     mqttPacketInfo.type = MQTT_PACKET_TYPE_PINGRESP;
-//     mqttPacketInfo.remainingLength = MQTT_PACKET_PINGRESP_REMAINING_LENGTH + 1;
-//     status = MQTT_DeserializePing( &mqttPacketInfo, &packetIdentifier, &sessionPresent );
-//     TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
-
-//     mqttPacketInfo.type = MQTT_PACKET_TYPE_SUBACK ; 
-//     mqttPacketInfo.remainingLength = 5 ;
-//     status = MQTT_DeserializePing(&mqttPacketInfo, &packetIdentifier, &sessionPresent);
-//     TEST_ASSERT_EQUAL_INT(MQTTBadResponse, status);
-
-//     /* Process a valid PINGRESP. */
-//     mqttPacketInfo.type = MQTT_PACKET_TYPE_PINGRESP;
-//     mqttPacketInfo.remainingLength = MQTT_PACKET_PINGRESP_REMAINING_LENGTH;
-//     mqttPacketInfo.pRemainingData = NULL;
-//     status = MQTT_DeserializePing( &mqttPacketInfo, NULL, NULL );
-//     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
-
-//     status = MQTT_DeserializePing(NULL , NULL , NULL) ; 
-//     TEST_ASSERT_EQUAL_INT(MQTTBadParameter, status);
-// }
-
-// /**
-//  * @brief Tests that MQTT_GetIncomingPacketTypeAndLength works as intended.
-//  */
-// void test_MQTT_GetIncomingPacketTypeAndLength1( void )
-// {
-//     MQTTStatus_t status = MQTTSuccess;
-//     MQTTPacketInfo_t mqttPacket;
-//     NetworkContext_t networkContext;
-//     uint8_t buffer[ 10 ];
-//     uint8_t * bufPtr = buffer;
-
-//     /* Dummy network context - pointer to pointer to a buffer. */
-//     networkContext.buffer = &bufPtr;
-
-//     /* Test a NULL pIncomingPacket parameter. */
-//     status = MQTT_GetIncomingPacketTypeAndLength( mockReceive, &networkContext, NULL );
-//     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
-
-//     /* Test a typical happy path case for a CONN ACK packet. */
-//     buffer[ 0 ] = 0x20; /* CONN ACK */
-//     buffer[ 1 ] = 0x02; /* Remaining length. */
-
-//     status = MQTT_GetIncomingPacketTypeAndLength( mockReceive, &networkContext, &mqttPacket );
-//     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
-//     TEST_ASSERT_EQUAL_INT( 0x20, mqttPacket.type );
-//     TEST_ASSERT_EQUAL_INT( 0x02, mqttPacket.remainingLength );
-
-//     /* Remaining length of 128. MQTT uses 7 bits for data and 1 continuation
-//      * bit in each byte. Since 128 is 8 bits, it needs 2 bytes. */
-//     bufPtr = buffer;
-//     buffer[ 0 ] = MQTT_PACKET_TYPE_PUBLISH;
-//     buffer[ 1 ] = 0x80; /* LSB: CB=1, value=0x00 */
-//     buffer[ 2 ] = 0x01; /* MSB: CB=0, value=0x01 */
-//     status = MQTT_GetIncomingPacketTypeAndLength( mockReceive, &networkContext, &mqttPacket );
-//     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
-//     TEST_ASSERT_EQUAL_INT( MQTT_PACKET_TYPE_PUBLISH, mqttPacket.type );
-//     TEST_ASSERT_EQUAL_INT( 128, mqttPacket.remainingLength );
-
-//     /* Remaining length of 16384. MQTT uses 7 bits for data and 1 continuation
-//      * bit in each byte. Since 16384 is 15 bits, it needs 3 bytes. */
-//     bufPtr = buffer;
-//     buffer[ 0 ] = MQTT_PACKET_TYPE_PUBLISH;
-//     buffer[ 1 ] = 0x80; /* LSB   : CB=1, value=0x00 */
-//     buffer[ 2 ] = 0x80; /* Byte 1: CB=1, value=0x00 */
-//     buffer[ 3 ] = 0x01; /* MSB   : CB=0, value=0x01 */
-//     status = MQTT_GetIncomingPacketTypeAndLength( mockReceive, &networkContext, &mqttPacket );
-//     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
-//     TEST_ASSERT_EQUAL_INT( MQTT_PACKET_TYPE_PUBLISH, mqttPacket.type );
-//     TEST_ASSERT_EQUAL_INT( 16384, mqttPacket.remainingLength );
-
-//     /* Test with incorrect packet type. */
-//     bufPtr = buffer;
-//     buffer[ 0 ] = 0x10; /* INVALID */
-//     status = MQTT_GetIncomingPacketTypeAndLength( mockReceive, &networkContext, &mqttPacket );
-//     TEST_ASSERT_EQUAL( MQTTBadResponse, status );
-
-//     /* Test with disconnect packet type. */
-//     bufPtr = buffer;
-//     buffer[ 0 ] = MQTT_PACKET_TYPE_DISCONNECT;
-//     status = MQTT_GetIncomingPacketTypeAndLength( mockReceive, &networkContext, &mqttPacket );
-//     TEST_ASSERT_EQUAL( MQTTSuccess, status );
-
-//     /* Test with invalid remaining length. */
-//     bufPtr = buffer;
-//     buffer[ 0 ] = 0x20; /* CONN ACK */
-
-//     /* To generate invalid remaining length response,
-//      * four bytes need to have MSB (or continuation bit, 0x80) set */
-//     buffer[ 1 ] = 0xFF;
-//     buffer[ 2 ] = 0xFF;
-//     buffer[ 3 ] = 0xFF;
-//     buffer[ 4 ] = 0xFF;
-//     status = MQTT_GetIncomingPacketTypeAndLength( mockReceive, &networkContext, &mqttPacket );
-//     TEST_ASSERT_EQUAL( MQTTBadResponse, status );
-
-//     /* Check with an encoding that does not conform to the MQTT spec. */
-//     bufPtr = buffer;
-//     buffer[ 1 ] = 0x80;
-//     buffer[ 2 ] = 0x80;
-//     buffer[ 3 ] = 0x80;
-//     buffer[ 4 ] = 0x00;
-//     status = MQTT_GetIncomingPacketTypeAndLength( mockReceive, &networkContext, &mqttPacket );
-//     TEST_ASSERT_EQUAL( MQTTBadResponse, status );
-
-//     /* Check when network receive fails. */
-//     memset( buffer, 0x00, 10 );
-//     bufPtr = buffer;
-//     status = MQTT_GetIncomingPacketTypeAndLength( mockReceiveFailure, &networkContext, &mqttPacket );
-//     TEST_ASSERT_EQUAL( MQTTRecvFailed, status );
-
-//     /* Test if no data is available. */
-//     bufPtr = buffer;
-//     status = MQTT_GetIncomingPacketTypeAndLength( mockReceiveNoData, &networkContext, &mqttPacket );
-//     TEST_ASSERT_EQUAL( MQTTNoDataAvailable, status );
-
-//     /* Branch coverage for PUBREL. */
-//     bufPtr = buffer;
-//     buffer[ 0 ] = MQTT_PACKET_TYPE_PUBREL & 0xF0U;
-//     status = MQTT_GetIncomingPacketTypeAndLength( mockReceive, &networkContext, &mqttPacket );
-//     TEST_ASSERT_EQUAL( MQTTBadResponse, status );
-
-//     /* Receive type then fail. */
-//     bufPtr = buffer;
-//     buffer[ 0 ] = MQTT_PACKET_TYPE_PUBREL;
-//     status = MQTT_GetIncomingPacketTypeAndLength( mockReceiveSucceedThenFail, &networkContext, &mqttPacket );
-//     TEST_ASSERT_EQUAL( MQTTBadResponse, status );
-// }
-
-// /**
-//  * @brief Tests that MQTT_SerializePublishHeaderWithoutTopic works as intended.
-//  */
-// void test_MQTT_SerializePublishHeaderWithoutTopic_AllNULL( void )
-// {
-//     MQTTPublishInfo_t publishInfo;
-//     size_t remainingLength = 0;
-//     uint8_t buffer[ 7 ];
-//     MQTTStatus_t status = MQTTSuccess;
-//     size_t headerSize = 0;
-
-//     /* Verify bad parameters fail. */
-//     memset( &publishInfo, 0x00, sizeof( publishInfo ) );
-
-//     status = MQTT_SerializePublishHeaderWithoutTopic( &publishInfo,
-//                                                       remainingLength,
-//                                                       buffer,
-//                                                       &headerSize );
-
-//     TEST_ASSERT_EQUAL( MQTTSuccess, status );
-//     TEST_ASSERT_EQUAL( headerSize, 4U );
-//     /* No flag should be set. Except publish flag. */
-//     TEST_ASSERT_EQUAL( buffer[ 0 ], 0x30 );
-//     /* The encoded length must be 0. */
-//     TEST_ASSERT_EQUAL( buffer[ 1 ], 0U );
-//     /* The topic name length should be 0 too. */
-//     TEST_ASSERT_EQUAL( buffer[ 2 ], 0U );
-//     TEST_ASSERT_EQUAL( buffer[ 3 ], 0U );
-// }
-
-// /* ========================================================================== */
-
-// /**
-//  * @brief Tests that MQTT_SerializePublishHeaderWithoutTopic works as intended.
-//  */
-// void test_MQTT_SerializePublishHeaderWithoutTopic_QoS1( void )
-// {
-//     MQTTPublishInfo_t publishInfo;
-//     size_t remainingLength = 0;
-//     uint8_t buffer[ 7 ];
-//     MQTTStatus_t status = MQTTSuccess;
-//     size_t headerSize = 0;
-
-//     /* Verify bad parameters fail. */
-//     memset( &publishInfo, 0x00, sizeof( publishInfo ) );
-
-//     publishInfo.qos = MQTTQoS1;
-
-//     status = MQTT_SerializePublishHeaderWithoutTopic( &publishInfo,
-//                                                       remainingLength,
-//                                                       buffer,
-//                                                       &headerSize );
-
-//     TEST_ASSERT_EQUAL( MQTTSuccess, status );
-//     TEST_ASSERT_EQUAL( headerSize, 4U );
-//     /* No flag should be set except QoS1 and publish flag. */
-//     TEST_ASSERT_EQUAL( buffer[ 0 ], ( 1U << 1 ) | 0x30 );
-//     /* The encoded length must be 0. */
-//     TEST_ASSERT_EQUAL( buffer[ 1 ], 0U );
-//     /* The topic name length should be 0 too. */
-//     TEST_ASSERT_EQUAL( buffer[ 2 ], 0U );
-//     TEST_ASSERT_EQUAL( buffer[ 3 ], 0U );
-// }
-
-// /**
-//  * @brief Tests that MQTT_SerializePublishHeaderWithoutTopic works as intended.
-//  */
-// void test_MQTT_SerializePublishHeaderWithoutTopic_QoS2( void )
-// {
-//     MQTTPublishInfo_t publishInfo;
-//     size_t remainingLength = 0;
-//     uint8_t buffer[ 7 ];
-//     MQTTStatus_t status = MQTTSuccess;
-//     size_t headerSize = 0;
-
-//     /* Verify bad parameters fail. */
-//     memset( &publishInfo, 0x00, sizeof( publishInfo ) );
-
-//     publishInfo.qos = MQTTQoS2;
-
-//     status = MQTT_SerializePublishHeaderWithoutTopic( &publishInfo,
-//                                                       remainingLength,
-//                                                       buffer,
-//                                                       &headerSize );
-
-//     TEST_ASSERT_EQUAL( MQTTSuccess, status );
-//     TEST_ASSERT_EQUAL( headerSize, 4U );
-//     /* No flag should be set except QoS2. */
-//     TEST_ASSERT_EQUAL( buffer[ 0 ], ( 1U << 2 ) | 0x30 );
-//     /* The encoded length must be 0. */
-//     TEST_ASSERT_EQUAL( buffer[ 1 ], 0U );
-//     /* The topic name length should be 0 too. */
-//     TEST_ASSERT_EQUAL( buffer[ 2 ], 0U );
-//     TEST_ASSERT_EQUAL( buffer[ 3 ], 0U );
-// }
-
-// /**
-//  * @brief Tests that MQTT_SerializePublishHeaderWithoutTopic works as intended.
-//  */
-// void test_MQTT_SerializePublishHeaderWithoutTopic_retain( void )
-// {
-//     MQTTPublishInfo_t publishInfo;
-//     size_t remainingLength = 0;
-//     uint8_t buffer[ 7 ];
-//     MQTTStatus_t status = MQTTSuccess;
-//     size_t headerSize = 0;
-
-//     /* Verify bad parameters fail. */
-//     memset( &publishInfo, 0x00, sizeof( publishInfo ) );
-
-//     publishInfo.retain = true;
-
-//     status = MQTT_SerializePublishHeaderWithoutTopic( &publishInfo,
-//                                                       remainingLength,
-//                                                       buffer,
-//                                                       &headerSize );
-
-//     TEST_ASSERT_EQUAL( MQTTSuccess, status );
-//     TEST_ASSERT_EQUAL( headerSize, 4U );
-//     /* No flag should be set except retain flag. */
-//     TEST_ASSERT_EQUAL( buffer[ 0 ], ( 1U << 0 ) | 0x30 );
-//     /* The encoded length must be 0. */
-//     TEST_ASSERT_EQUAL( buffer[ 1 ], 0U );
-//     /* The topic name length should be 0 too. */
-//     TEST_ASSERT_EQUAL( buffer[ 2 ], 0U );
-//     TEST_ASSERT_EQUAL( buffer[ 3 ], 0U );
-// }
-
-// /**
-//  * @brief Tests that MQTT_SerializePublishHeaderWithoutTopic works as intended.
-//  */
-// void test_MQTT_SerializePublishHeaderWithoutTopic_Duplicate( void )
-// {
-//     MQTTPublishInfo_t publishInfo;
-//     size_t remainingLength = 0;
-//     uint8_t buffer[ 7 ];
-//     MQTTStatus_t status = MQTTSuccess;
-//     size_t headerSize = 0;
-
-//     /* Verify bad parameters fail. */
-//     memset( &publishInfo, 0x00, sizeof( publishInfo ) );
-
-//     publishInfo.dup = true;
-
-//     status = MQTT_SerializePublishHeaderWithoutTopic( &publishInfo,
-//                                                       remainingLength,
-//                                                       buffer,
-//                                                       &headerSize );
-
-//     TEST_ASSERT_EQUAL( MQTTSuccess, status );
-//     TEST_ASSERT_EQUAL( headerSize, 4U );
-//     /* No flag should be set except dup. */
-//     TEST_ASSERT_EQUAL( buffer[ 0 ], ( 1U << 3 ) | 0x30 );
-//     /* The encoded length must be 0. */
-//     TEST_ASSERT_EQUAL( buffer[ 1 ], 0U );
-//     /* The topic name length should be 0 too. */
-//     TEST_ASSERT_EQUAL( buffer[ 2 ], 0U );
-//     TEST_ASSERT_EQUAL( buffer[ 3 ], 0U );
-// }
-// /**
-//  * @brief Tests that MQTT_SerializePublishHeaderWithoutTopic works as intended.
-//  */
-// void test_MQTT_SerializePublishHeaderWithoutTopic_VariousFlagsSetTopicLength( void )
-// {
-//     MQTTPublishInfo_t publishInfo;
-//     size_t remainingLength = 0;
-//     uint8_t buffer[ 7 ];
-//     MQTTStatus_t status = MQTTSuccess;
-//     size_t headerSize = 0;
-
-//     /* Verify bad parameters fail. */
-//     memset( &publishInfo, 0x00, sizeof( publishInfo ) );
-
-//     publishInfo.qos = MQTTQoS2;
-//     publishInfo.dup = true;
-//     publishInfo.retain = true;
-//     publishInfo.topicNameLength = 20;
-
-//     status = MQTT_SerializePublishHeaderWithoutTopic( &publishInfo,
-//                                                       remainingLength,
-//                                                       buffer,
-//                                                       &headerSize );
-
-//     TEST_ASSERT_EQUAL( MQTTSuccess, status );
-//     TEST_ASSERT_EQUAL( headerSize, 4U );
-//     /* No flag should be set except QoS2/dup/retain. */
-//     TEST_ASSERT_EQUAL( buffer[ 0 ], ( 1U << 2 ) | ( 1U << 3 ) | ( 1U << 0 ) | 0x30 );
-//     /* The encoded length must be 0. */
-//     TEST_ASSERT_EQUAL( buffer[ 1 ], 0U );
-//     /* The topic name length should be 0 too. */
-//     TEST_ASSERT_EQUAL( buffer[ 2 ], 0U );
-//     TEST_ASSERT_EQUAL( buffer[ 3 ], 20U );
-// }
-// void test_MQTT_ProcessIncomingPacketTypeAndLength_PacketNULL( void )
-// {
-//     uint8_t pBuffer[ 100 ] = { 0 };
-//     size_t index = 0;
-//     MQTTStatus_t status;
-
-//     status = MQTT_ProcessIncomingPacketTypeAndLength( pBuffer, &index, NULL );
-
-//     TEST_ASSERT_EQUAL( MQTTBadParameter, status );
-// }
-
-// void test_MQTT_ProcessIncomingPacketTypeAndLength_BufferNULL( void )
-// {
-//     MQTTPacketInfo_t packetInfo;
-//     size_t index = 0;
-//     MQTTStatus_t status;
-
-//     status = MQTT_ProcessIncomingPacketTypeAndLength( NULL, &index, &packetInfo );
-
-//     TEST_ASSERT_EQUAL( MQTTBadParameter, status );
-// }
-
-// void test_MQTT_ProcessIncomingPacketTypeAndLength_IndexNULL( void )
-// {
-//     MQTTPacketInfo_t packetInfo;
-//     uint8_t pBuffer[ 100 ] = { 0 };
-//     MQTTStatus_t status;
-
-//     status = MQTT_ProcessIncomingPacketTypeAndLength( pBuffer, NULL, &packetInfo );
-
-//     TEST_ASSERT_EQUAL( MQTTBadParameter, status );
-// }
-
-// void test_MQTT_ProcessIncomingPacketTypeAndLength_NoData( void )
-// {
-//     MQTTPacketInfo_t packetInfo;
-//     uint8_t pBuffer[ 100 ] = { 0 };
-//     size_t index = 0;
-//     MQTTStatus_t status;
-
-//     status = MQTT_ProcessIncomingPacketTypeAndLength( pBuffer, &index, &packetInfo );
-
-//     TEST_ASSERT_EQUAL( MQTTNoDataAvailable, status );
-// }
-
-// void test_MQTT_ProcessIncomingPacketTypeAndLength_InvalidData( void )
-// {
-//     MQTTPacketInfo_t packetInfo;
-//     uint8_t pBuffer[ 100 ];
-//     size_t index = 2;
-//     MQTTStatus_t status;
-
-//     memset( &packetInfo, 0, sizeof( MQTTPacketInfo_t ) );
-//     memset( pBuffer, 0, 100 );
-
-//     pBuffer[ 0 ] = 0xF0;
-
-//     status = MQTT_ProcessIncomingPacketTypeAndLength( pBuffer, &index, &packetInfo );
-
-//     TEST_ASSERT_EQUAL( MQTTBadResponse, status );
-// }
-
-// void test_MQTT_ProcessIncomingPacketTypeAndLength_ValidDataOneByte( void )
-// {
-//     MQTTPacketInfo_t packetInfo;
-//     uint8_t pBuffer[ 100 ];
-//     size_t index = 1;
-//     MQTTStatus_t status;
-
-//     memset( &packetInfo, 0, sizeof( MQTTPacketInfo_t ) );
-//     memset( pBuffer, 0, 100 );
-
-//     pBuffer[ 0 ] = MQTT_PACKET_TYPE_PUBLISH;
-
-//     status = MQTT_ProcessIncomingPacketTypeAndLength( pBuffer, &index, &packetInfo );
-
-//     TEST_ASSERT_EQUAL( MQTTNeedMoreBytes, status );
-// }
-
-// void test_MQTT_ProcessIncomingPacketTypeAndLength_ValidDataTwoBytes( void )
-// {
-//     MQTTPacketInfo_t packetInfo;
-//     uint8_t pBuffer[ 100 ];
-//     size_t index = 2;
-//     MQTTStatus_t status;
-
-//     memset( &packetInfo, 0, sizeof( MQTTPacketInfo_t ) );
-//     memset( pBuffer, 0, 100 );
-
-//     pBuffer[ 0 ] = MQTT_PACKET_TYPE_PUBLISH;
-//     /* 2nd byte is the length. */
-//     pBuffer[ 1 ] = 10;
-
-//     status = MQTT_ProcessIncomingPacketTypeAndLength( pBuffer, &index, &packetInfo );
-
-//     TEST_ASSERT_EQUAL( MQTTSuccess, status );
-//     TEST_ASSERT_EQUAL( packetInfo.remainingLength, 10U );
-//     TEST_ASSERT_EQUAL( packetInfo.headerLength, 2U );
-// }
-
-// void test_MQTT_ProcessIncomingPacketTypeAndLength_InvalidLength( void )
-// {
-//     MQTTPacketInfo_t packetInfo;
-//     uint8_t pBuffer[ 100 ];
-//     size_t index = 6;
-//     MQTTStatus_t status;
-
-//     memset( &packetInfo, 0, sizeof( MQTTPacketInfo_t ) );
-//     memset( pBuffer, 0, 100 );
-
-//     pBuffer[ 0 ] = MQTT_PACKET_TYPE_PUBLISH;
-//     /* 2nd byte onward is the length. */
-//     pBuffer[ 1 ] = 0xFF;
-//     pBuffer[ 2 ] = 0xFF;
-//     pBuffer[ 3 ] = 0xFF;
-//     /* This byte doesn't terminate the length. */
-//     pBuffer[ 4 ] = 0xFF;
-//     pBuffer[ 5 ] = 0xFF;
-
-//     status = MQTT_ProcessIncomingPacketTypeAndLength( pBuffer, &index, &packetInfo );
-
-//     TEST_ASSERT_EQUAL( MQTTBadResponse, status );
-// }
-
-// void test_MQTT_ProcessIncomingPacketTypeAndLength_NonConformingLength( void )
-// {
-//     MQTTPacketInfo_t packetInfo;
-//     uint8_t pBuffer[ 100 ];
-//     size_t index = 6;
-//     MQTTStatus_t status;
-
-//     memset( &packetInfo, 0, sizeof( MQTTPacketInfo_t ) );
-//     memset( pBuffer, 0, 100 );
-
-//     pBuffer[ 0 ] = MQTT_PACKET_TYPE_PUBLISH;
-//     /* 2nd byte onward is the length. */
-//     pBuffer[ 1 ] = 0x80;
-//     pBuffer[ 2 ] = 0x80;
-//     pBuffer[ 3 ] = 0x80;
-//     /* This byte doesn't terminate the length. */
-//     pBuffer[ 4 ] = 0x00;
-
-//     status = MQTT_ProcessIncomingPacketTypeAndLength( pBuffer, &index, &packetInfo );
-
-//     TEST_ASSERT_EQUAL( MQTTBadResponse, status );
-// }
-
-// /**
-//  * @brief Tests that MQTT_DeserializePublish works as intended.
-//  */
-// void test_MQTT_DeserializePublish( void )
-// {
-//     MQTTPacketInfo_t mqttPacketInfo;
-//     MQTTPublishInfo_t publishInfo;
-//     MQTTStatus_t status = MQTTSuccess;
-//     uint8_t buffer[ 100 ];
-//     size_t bufferSize = sizeof( buffer );
-//     MQTTFixedBuffer_t fixedBuffer = { 0 };
-//     size_t packetSize = bufferSize;
-
-//     size_t remainingLength = 0;
-//     uint16_t packetIdentifier;
-
-//     fixedBuffer.pBuffer = buffer;
-//     fixedBuffer.size = bufferSize;
-
-//     const uint16_t PACKET_ID = 1;
-
-//     memset( &mqttPacketInfo, 0x00, sizeof( mqttPacketInfo ) );
-
-//     /* Verify parameters. */
-//     status = MQTT_DeserializePublish( NULL, &packetIdentifier, &publishInfo );
-//     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
-//     status = MQTT_DeserializePublish( &mqttPacketInfo, NULL, &publishInfo );
-//     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
-//     status = MQTT_DeserializePublish( &mqttPacketInfo, &packetIdentifier, NULL );
-//     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
-
-//     mqttPacketInfo.type = MQTT_PACKET_TYPE_PUBLISH;
-//     status = MQTT_DeserializePublish( &mqttPacketInfo, &packetIdentifier, &publishInfo );
-//     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
-
-//     /* Bad Packet Type. */
-//     mqttPacketInfo.type = 0x01;
-//     mqttPacketInfo.pRemainingData = buffer;
-//     status = MQTT_DeserializePublish( &mqttPacketInfo, &packetIdentifier, &publishInfo );
-//     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
-
-//     /* Incorrect flags. */
-//     mqttPacketInfo.type = MQTT_PACKET_TYPE_PUBLISH | 0xf;
-//     status = MQTT_DeserializePublish( &mqttPacketInfo, &packetIdentifier, &publishInfo );
-//     TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
-
-//     /* QoS 0 bad remaining length. */
-//     mqttPacketInfo.type = MQTT_PACKET_TYPE_PUBLISH;
-//     mqttPacketInfo.remainingLength = 0;
-//     status = MQTT_DeserializePublish( &mqttPacketInfo, &packetIdentifier, &publishInfo );
-//     TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
-
-//     /* QoS 1 bad remaining length. */
-//     mqttPacketInfo.type = MQTT_PACKET_TYPE_PUBLISH | 0x2;
-//     mqttPacketInfo.remainingLength = 0;
-//     status = MQTT_DeserializePublish( &mqttPacketInfo, &packetIdentifier, &publishInfo );
-//     TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
-
-//     /* QoS 1 invalid packet identifier. */
-//     mqttPacketInfo.remainingLength = 5;
-//     buffer[ 0 ] = 0;
-//     buffer[ 1 ] = 1;
-//     buffer[ 2 ] = ( uint8_t ) 'a';
-//     buffer[ 3 ] = 0;
-//     buffer[ 4 ] = 0;
-//     status = MQTT_DeserializePublish( &mqttPacketInfo, &packetIdentifier, &publishInfo );
-//     TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
-// }
-// void test_serializeHeaders(void)
-// {
-//     uint8_t buffer[4] ; 
-
-//     MQTT_SerializeSubscribeHeader(3, buffer, 1) ; 
-//     TEST_ASSERT_EQUAL(buffer[0], MQTT_PACKET_TYPE_SUBSCRIBE);
-//     MQTT_SerializeUnsubscribeHeader(3, buffer, 1) ; 
-//     TEST_ASSERT_EQUAL(buffer[0], MQTT_PACKET_TYPE_UNSUBSCRIBE);
-//     uint8_t buf[22] ; 
-//     MQTTConnectInfo_t pConnectInfo ;  
-//     pConnectInfo.cleanSession = true ; 
-//     pConnectInfo.pUserName = "abc" ; 
-//     pConnectInfo.pPassword = "def" ; 
-//     pConnectInfo.keepAliveSeconds = 100 ; 
-//     MQTTPublishInfo_t pWillInfo ; 
-//     pWillInfo.qos = MQTTQoS1 ; 
-//     pWillInfo.retain = true ; 
-//     MQTT_SerializeConnectFixedHeader(buf,&pConnectInfo , &pWillInfo, 20 ) ; 
-//     pWillInfo.qos = MQTTQoS2 ; 
-//     MQTT_SerializeConnectFixedHeader(buf,&pConnectInfo , &pWillInfo, 20 ) ; 
-// }
-
-// void test_OptionalProperties(void)
-// {
-//     MQTTStatus_t mqttStatus = MQTTSuccess ; 
-//     MqttPropBuilder_t propBuilder;
-//     uint8_t buf[100];
-//     size_t bufLength = sizeof(buf);
-//     mqttStatus = MqttPropertyBuilder_Init(&(propBuilder), buf, bufLength); 
-//     TEST_ASSERT_EQUAL_INT(mqttStatus , MQTTSuccess) ; 
-//     mqttStatus = MQTTPropAdd_SubscribeId(&propBuilder, 2) ; 
-//     TEST_ASSERT_EQUAL_INT(mqttStatus , MQTTSuccess) ; 
-//     mqttStatus = MQTTPropAdd_SubscribeId(&propBuilder, 2) ; 
-//     TEST_ASSERT_EQUAL_INT(mqttStatus , MQTTBadParameter) ; 
-//     mqttStatus = MQTTPropAdd_SubscribeId(&propBuilder, 0) ;
-//     TEST_ASSERT_EQUAL_INT(mqttStatus, MQTTBadParameter) ;
-
-//     MqttPropBuilder_t propBuilder1;
-//     uint8_t buf1[1] ; 
-//     mqttStatus = MqttPropertyBuilder_Init(&(propBuilder1), buf1, 1);
-//     mqttStatus = MQTTPropAdd_SubscribeId(&propBuilder1, 10) ;
-//     TEST_ASSERT_EQUAL_INT(MQTTBadParameter, mqttStatus) ;
-
-//     MQTTUserProperty_t userProperty ; 
-//     memset(&userProperty, 0x0, sizeof(userProperty));
-//     userProperty.pKey = "abc" ; 
-//     userProperty.pValue = "def" ;
-//     userProperty.keyLength = 3 ;
-//     userProperty.valueLength = 3 ; 
-//     mqttStatus = MQTTPropAdd_UserProp(&(propBuilder) , &userProperty ) ; 
-//     TEST_ASSERT_EQUAL_INT(MQTTSuccess, mqttStatus) ;
-
-//     mqttStatus = MQTTPropAdd_ConnSessionExpiry(&propBuilder, 10) ; 
-//     TEST_ASSERT_EQUAL_INT(MQTTSuccess, mqttStatus) ;
-//     mqttStatus = MQTTPropAdd_ConnSessionExpiry(&propBuilder, 10) ;
-//     TEST_ASSERT_EQUAL_INT(MQTTBadParameter, mqttStatus) ;
-
-//     mqttStatus = MQTTPropAdd_ConnReceiveMax(&(propBuilder) , 10) ; 
-//     TEST_ASSERT_EQUAL_INT(MQTTSuccess, mqttStatus) ;
-//     mqttStatus = MQTTPropAdd_ConnReceiveMax(&(propBuilder) , 10) ; 
-//     TEST_ASSERT_EQUAL_INT(MQTTBadParameter, mqttStatus) ;
-
-//     mqttStatus = MQTTPropAdd_ConnMaxPacketSize(&propBuilder , 10) ; 
-//     TEST_ASSERT_EQUAL_INT(MQTTSuccess, mqttStatus) ;
-//     mqttStatus = MQTTPropAdd_ConnMaxPacketSize(&propBuilder, 10) ;
-//     TEST_ASSERT_EQUAL_INT(mqttStatus , MQTTBadParameter) ;
-
-//     mqttStatus = MQTTPropAdd_ConnTopicAliasMax(&propBuilder, 10) ; 
-//     TEST_ASSERT_EQUAL_INT(MQTTSuccess, mqttStatus) ;
-//     mqttStatus = MQTTPropAdd_ConnTopicAliasMax(&propBuilder, 10) ;
-//     TEST_ASSERT_EQUAL_INT(MQTTBadParameter, mqttStatus) ;
-
-//     mqttStatus = MQTTPropAdd_ConnRequestRespInfo(&propBuilder , 1) ; 
-//     TEST_ASSERT_EQUAL_INT(MQTTSuccess, mqttStatus) ;
-//     mqttStatus = MQTTPropAdd_ConnRequestRespInfo(&propBuilder, 1) ;
-//     TEST_ASSERT_EQUAL_INT(MQTTBadParameter, mqttStatus) ;
-
-//     mqttStatus = MQTTPropAdd_ConnRequestProbInfo(&propBuilder , 1 ) ; 
-//     TEST_ASSERT_EQUAL_INT(MQTTSuccess, mqttStatus) ;
-//     mqttStatus = MQTTPropAdd_ConnRequestProbInfo(&propBuilder, 1) ;
-//     TEST_ASSERT_EQUAL_INT(MQTTBadParameter, mqttStatus) ;
-
-//     mqttStatus = MQTTPropAdd_ConnAuthMethod(&propBuilder, "abc", 3) ;
-//     TEST_ASSERT_EQUAL_INT(MQTTSuccess, mqttStatus) ;
-//     mqttStatus = MQTTPropAdd_ConnAuthMethod(&propBuilder, "abc", 3) ;
-//     TEST_ASSERT_EQUAL_INT(MQTTBadParameter, mqttStatus) ;
-
-//     mqttStatus = MQTTPropAdd_ConnAuthData(&propBuilder, "abc", 3) ;
-//     TEST_ASSERT_EQUAL_INT(MQTTSuccess, mqttStatus) ;
-//     mqttStatus = MQTTPropAdd_ConnAuthData(&propBuilder, "abc", 3) ;
-//     TEST_ASSERT_EQUAL_INT(MQTTBadParameter, mqttStatus) ;
-
-//     mqttStatus = MQTTPropAdd_PubPayloadFormat(&propBuilder , 1) ; 
-//     TEST_ASSERT_EQUAL_INT(MQTTSuccess, mqttStatus) ;
-//     mqttStatus = MQTTPropAdd_PubPayloadFormat(&propBuilder, 1) ;
-//     TEST_ASSERT_EQUAL_INT(MQTTBadParameter, mqttStatus) ;
-
-//     mqttStatus = MQTTPropAdd_PubMessageExpiry(&propBuilder , 10) ; 
-//     TEST_ASSERT_EQUAL_INT(MQTTSuccess, mqttStatus) ;
-//     mqttStatus = MQTTPropAdd_PubMessageExpiry(&propBuilder, 10) ;
-//     TEST_ASSERT_EQUAL_INT(MQTTBadParameter, mqttStatus) ;
-
-//     mqttStatus = MQTTPropAdd_PubTopicAlias(&propBuilder, 10) ;
-//     TEST_ASSERT_EQUAL_INT(MQTTSuccess, mqttStatus) ;
-//     mqttStatus = MQTTPropAdd_PubTopicAlias(&propBuilder, 10) ;
-//     TEST_ASSERT_EQUAL_INT(MQTTBadParameter, mqttStatus) ;
-
-//     mqttStatus = MQTTPropAdd_PubResponseTopic(&propBuilder, "abc", 3) ; 
-//     TEST_ASSERT_EQUAL_INT(MQTTSuccess, mqttStatus) ;
-//     mqttStatus = MQTTPropAdd_PubResponseTopic(&propBuilder, "abc", 3) ;
-//     TEST_ASSERT_EQUAL_INT(MQTTBadParameter, mqttStatus) ;
-
-//     MqttPropBuilder_t propBuilder2;
-//     uint8_t buf2[500];
-//     mqttStatus = MqttPropertyBuilder_Init(&(propBuilder2), buf2, 50);
-//     mqttStatus = MQTTPropAdd_PubResponseTopic(&propBuilder2, "abc/#/def", 3) ; 
-//     TEST_ASSERT_EQUAL_INT(MQTTBadParameter, mqttStatus) ;
-
-//     mqttStatus = MQTTPropAdd_PubCorrelationData(&(propBuilder) , "abc" , 3) ; 
-//     TEST_ASSERT_EQUAL_INT(MQTTSuccess, mqttStatus) ;
-//     mqttStatus = MQTTPropAdd_PubCorrelationData(&(propBuilder), "abc", 3) ;
-//     TEST_ASSERT_EQUAL_INT(MQTTBadParameter, mqttStatus) ;
-
-//     mqttStatus = MQTTPropAdd_PubContentType(&(propBuilder), "abc", 3) ;
-//     TEST_ASSERT_EQUAL_INT(MQTTSuccess, mqttStatus) ;
-//     mqttStatus = MQTTPropAdd_PubContentType(&(propBuilder), "abc", 3) ;
-//     TEST_ASSERT_EQUAL_INT(MQTTBadParameter, mqttStatus) ;
-
-//     mqttStatus = MQTTPropAdd_DisconnReasonString(&(propBuilder), "abc", 3); 
-//     TEST_ASSERT_EQUAL_INT(MQTTSuccess, mqttStatus) ;
-//     mqttStatus = MQTTPropAdd_DisconnReasonString(&(propBuilder), "abc", 3);
-//     TEST_ASSERT_EQUAL_INT(MQTTBadParameter, mqttStatus) ;
-// }
-
-// void test_updateContextWithConnectProps(void)
-// {
-//     MQTTStatus_t mqttStatus = MQTTSuccess ; 
-//     MqttPropBuilder_t propBuilder;
-//     uint8_t buffer[50];
-//     size_t bufLength = sizeof(buffer);
-//     mqttStatus = MqttPropertyBuilder_Init(&(propBuilder), buffer, bufLength);
-//     uint8_t *pIndex = buffer ; 
-//     pIndex = serializeuint_16(pIndex, MQTT_RECEIVE_MAX_ID ) ; 
-//     pIndex = serializeuint_32(pIndex , MQTT_SESSION_EXPIRY_ID) ; 
-//     pIndex = serializeuint_16(pIndex, MQTT_TOPIC_ALIAS_MAX_ID) ; 
-//     pIndex = serializeuint_32(pIndex, MQTT_MAX_PACKET_SIZE_ID) ; 
-//     propBuilder.currentIndex = 16 ; 
-//     MQTTConnectProperties_t connectProps  ; 
-//     mqttStatus = updateContextWithConnectProps(&propBuilder , &connectProps) ;
-//     TEST_ASSERT_EQUAL_INT(mqttStatus, MQTTSuccess) ;
-// }
-
-// void test_MQTT_SerializeAck(void)
-// {
-//     MQTTFixedBuffer_t fixedBuffer ; 
-//     uint8_t buf[50] ; 
-//     fixedBuffer.pBuffer = buf ; 
-//     fixedBuffer.size = sizeof(buf) ;
-
-//     MQTTStatus_t status = MQTTSuccess ; 
-//     status = MQTT_SerializeAck(&fixedBuffer, MQTT_PACKET_TYPE_PUBACK , 100) ; 
-//     TEST_ASSERT_EQUAL_INT(status, MQTTSuccess) ;
-
-//     status = MQTT_SerializeAck(&fixedBuffer, MQTT_PACKET_TYPE_PUBACK , 0) ; 
-//     TEST_ASSERT_EQUAL_INT(status, MQTTBadParameter) ;
-
-
-//     status = MQTT_SerializeAck(&fixedBuffer, MQTT_PACKET_TYPE_SUBACK, 100) ;
-//     TEST_ASSERT_EQUAL_INT(status, MQTTBadParameter) ;
-
-//     status = MQTT_SerializeAck(NULL, MQTT_PACKET_TYPE_PUBACK , 100) ; 
-//     TEST_ASSERT_EQUAL_INT(status, MQTTBadParameter) ;
-
-//     fixedBuffer.pBuffer = NULL ; 
-//     status = MQTT_SerializeAck(&fixedBuffer, MQTT_PACKET_TYPE_PUBACK , 100) ; 
-//     TEST_ASSERT_EQUAL_INT(status,MQTTBadParameter ) ;
-
-//     fixedBuffer.pBuffer = buf ;
-//     fixedBuffer.size = 1 ; 
-//     status = MQTT_SerializeAck(&fixedBuffer, MQTT_PACKET_TYPE_PUBACK , 100) ; 
-//     TEST_ASSERT_EQUAL_INT(status,MQTTNoMemory ) ;
-
-// }
+    uint8_t packetBuffer[23] = {
+        0x90,       // Fixed header: SUBACK type (0x90)
+        0x14,       // Remaining Length = 20 bytes
+        0x00, 0x01, // Packet Identifier = 1
+        0x11,       // Property Length = 17 bytes
+        0x1F,       // Property ID = 0x1F (Reason String)
+        0x00, 0x03, // UTF-8 string length = 3
+        0x61, 0x62, 0x63, // The string "abc"
+        0x26, 0x00, 0x03, 0x61, 0x62, 0x63, 0x00 , 0x03 , 0x61, 0x62, 0x63,
+        0x00        // Payload: Reason code = 0x00 (Success)
+    };
+
+    MQTTPacketInfo_t subackPacket;
+    memset(&subackPacket, 0, sizeof(subackPacket));
+    subackPacket.type = MQTT_PACKET_TYPE_SUBACK; // Should be defined as 0x90
+    subackPacket.remainingLength = 21;           // From the fixed header (0x0A)
+    subackPacket.headerLength = 2;               // Fixed header size in this example
+    subackPacket.pRemainingData = &packetBuffer[2];
+    uint16_t packetIdentifier = 0;
+    MQTTReasonCodeInfo_t subackReasonCodes;
+    MqttPropBuilder_t propBuffer = {0} ; 
+    status = MQTTV5_DeserializeSuback(&subackReasonCodes ,&subackPacket ,  &packetIdentifier, &propBuffer );
+    TEST_ASSERT_EQUAL_INT(MQTTSuccess, status);
+
+    packetBuffer[11] = 0x00 ; 
+    status = MQTTV5_DeserializeSuback(&subackReasonCodes ,&subackPacket ,  &packetIdentifier, &propBuffer);
+    TEST_ASSERT_EQUAL_INT(MQTTProtocolError, status);
+}
+
+void test_MQTTV5_GetUnsubscribePacketSize_Path(void){
+    MQTTStatus_t status = MQTTSuccess;
+    MQTTSubscribeInfo_t subscribeInfo = {0};
+    size_t remainingLength = 0;
+    size_t packetSize = 0;
+
+    status = MQTT_GetUnsubscribePacketSize(NULL, 1, &remainingLength, &packetSize, 0);
+    TEST_ASSERT_EQUAL_INT(MQTTBadParameter, status);
+
+    subscribeInfo.pTopicFilter = TEST_TOPIC_NAME ; 
+    subscribeInfo.topicFilterLength = TEST_TOPIC_NAME_LENGTH ;
+
+
+    status = MQTT_GetUnsubscribePacketSize(&subscribeInfo, 1, &remainingLength, &packetSize, 0);
+    TEST_ASSERT_EQUAL_INT(MQTTSuccess, status);
+    TEST_ASSERT_EQUAL_UINT32(16U, remainingLength);
+    TEST_ASSERT_EQUAL_UINT32(18U, packetSize);
+
+    status = MQTT_GetUnsubscribePacketSize(&subscribeInfo, 0, &remainingLength, &packetSize, 0);
+    TEST_ASSERT_EQUAL_INT(MQTTBadParameter, status);
+
+}
+void test_MQTTV5_DeserializeSuback( void )
+{
+    MQTTPacketInfo_t mqttPacketInfo;
+    uint16_t packetIdentifier;
+    MQTTStatus_t status = MQTTSuccess;
+    MqttPropBuilder_t propBuffer = {0} ; 
+    uint8_t buffer[ 14 ] = { 0 };
+
+    /* Bad remaining length. */
+    mqttPacketInfo.type = MQTT_PACKET_TYPE_SUBACK;
+    mqttPacketInfo.pRemainingData = buffer;
+    mqttPacketInfo.remainingLength = 14;
+    /* Set packet identifier. */
+    buffer[ 0 ] = 0;
+    buffer[ 1 ] = 1;
+    buffer[2] = 0 ; 
+    buffer[3] = 0x01 ; 
+    buffer[4] = 0x02 ;
+    buffer[5] = 0x80 ;
+    buffer[6] = 0x83 ;
+    buffer[7] = 0x87 ;
+    buffer[8] = 0x8F ; 
+    buffer[9] = 0x91 ; 
+    buffer[10] = 0x97 ; 
+    buffer[11] = 0x9E ; 
+    buffer[12] = 0xA1 ; 
+    buffer[13] = 0xA2 ; 
+
+    MQTTReasonCodeInfo_t subackReasonCodes;
+
+    status = MQTTV5_DeserializeSuback(&subackReasonCodes ,&mqttPacketInfo ,  &packetIdentifier, &propBuffer);
+    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
+
+    buffer[13] = 0xA4 ; 
+    status = MQTTV5_DeserializeSuback(&subackReasonCodes ,&mqttPacketInfo ,  &packetIdentifier, &propBuffer);
+    TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
+
+}
+
+
+void test_incoming_publish1V5(void)
+{
+    MQTTPacketInfo_t mqttPacketInfo;
+    uint16_t packetIdentifier = 1 ;
+    MQTTStatus_t status = MQTTSuccess;
+    MqttPropBuilder_t propBuffer = {0} ; 
+    uint8_t buffer[47] = { 0 };
+
+    mqttPacketInfo.type = MQTT_PACKET_TYPE_PUBLISH;
+    mqttPacketInfo.pRemainingData = buffer;
+    mqttPacketInfo.remainingLength = 47;
+
+    buffer[0] = 0x00 ; 
+    buffer[1] = 0x03 ; 
+    buffer[2] = 0x61 ; 
+    buffer[3] = 0x62 ; 
+    buffer[4] = 0x63 ; 
+    buffer[5] = 0x29 ; 
+    buffer[6] = 0x01 ;
+    buffer[7] = 0x01 ; 
+    buffer[8] = 0x26 ; 
+    buffer[9] = 0x00 ; 
+    buffer[10] = 0x03 ; 
+    buffer[11] = 0x61 ; 
+    buffer[12] = 0x62 ;
+    buffer[13] = 0x63 ; 
+    buffer[14] = 0x00 ; 
+    buffer[15] = 0x03 ; 
+    buffer[16] = 0x61 ; 
+    buffer[17] = 0x62 ;
+    buffer[18] = 0x63 ; 
+    buffer[19] = 0x09 ; 
+    buffer[20] = 0x00 ; 
+    buffer[21] = 0x03; 
+    buffer[22] = 't' ; 
+    buffer[23] = 'e' ;
+    buffer[24] = 's' ;
+    buffer[25] = 0x23 ; 
+    buffer[26] = 0x00 ; 
+    buffer[27] = 0x01 ; 
+    buffer[28] = 0x08 ; 
+    buffer[29] = 0x00 ; 
+    buffer[30] = 0x03 ; 
+    buffer[31] = 't' ;
+    buffer[32] = 'e' ;
+    buffer[33] = 's' ; 
+    buffer[34] = 0x02 ; 
+    buffer[35] = 0x00 ; 
+    buffer[36] = 0x00 ; 
+    buffer[37] = 0x00 ; 
+    buffer[38] = 0xB ; 
+    buffer[39] = 0x03 ; 
+    buffer[40] = 0x00 ; 
+    buffer[41] = 0x03 ; 
+    buffer[42] = 't' ;
+    buffer[43] = 'e' ;
+    buffer[44] = 's' ;
+    buffer[45] = 0x0B ; 
+    buffer[46] = 0x01 ; 
+
+
+    MQTTPublishInfo_t publishIn ; 
+    (void)memset(&publishIn, 0x0, sizeof(publishIn));
+
+    status = MQTT_DeserializePublish(&mqttPacketInfo ,&packetIdentifier, &publishIn, &propBuffer); 
+    TEST_ASSERT_EQUAL_INT(MQTTSuccess, status);
+
+    buffer[8] = 100 ; 
+    status = MQTT_DeserializePublish(&mqttPacketInfo ,&packetIdentifier, &publishIn, &propBuffer); 
+    TEST_ASSERT_EQUAL_INT(MQTTProtocolError, status);
+
+}
+void test_incoming_publish_withPacketId(void)
+{
+    MQTTPacketInfo_t mqttPacketInfo;
+    uint16_t packetIdentifier = 1 ;
+    MQTTStatus_t status = MQTTSuccess;
+    uint8_t buffer[8] = { 0 };
+    MqttPropBuilder_t propBuffer = {0} ; 
+
+    mqttPacketInfo.type = MQTT_PACKET_TYPE_PUBLISH | 0x2;
+    mqttPacketInfo.pRemainingData = buffer;
+    mqttPacketInfo.remainingLength = 8;
+
+    buffer[0] = 0x00 ; 
+    buffer[1] = 0x03 ; 
+    buffer[2] = 0x61 ; 
+    buffer[3] = 0x62 ; 
+    buffer[4] = 0x63 ; 
+    buffer[5] = 0x00 ; 
+    buffer[6] = 0x01 ; 
+    buffer[7] = 0x00 ; 
+
+    MQTTPublishInfo_t publishIn ; 
+    (void)memset(&publishIn, 0x0, sizeof(publishIn));
+
+    status = MQTT_DeserializePublish(&mqttPacketInfo ,&packetIdentifier, &publishIn, &propBuffer); 
+    TEST_ASSERT_EQUAL_INT(MQTTSuccess, status);
+
+    buffer[6] = 0x00 ; 
+    status = MQTT_DeserializePublish(&mqttPacketInfo ,&packetIdentifier, &publishIn, &propBuffer); 
+    TEST_ASSERT_EQUAL_INT(MQTTBadResponse, status);
+
+
+}
+
+void test_Invalid_IncomingPublish(void)
+{
+    MQTTPacketInfo_t mqttPacketInfo;
+    uint16_t packetIdentifier = 1 ;
+    MQTTStatus_t status = MQTTSuccess;
+    uint8_t buffer[3] = { 0 };
+    MqttPropBuilder_t propBuffer = {0} ; 
+
+    mqttPacketInfo.type = MQTT_PACKET_TYPE_PUBLISH;
+    mqttPacketInfo.pRemainingData = buffer;
+    mqttPacketInfo.remainingLength = 3;
+
+    buffer[0] = 0x00 ;
+    buffer[1] = 0x01 ;
+    buffer[2] = 0x61 ;
+
+
+    MQTTPublishInfo_t publishIn ;
+    (void)memset(&publishIn, 0x0, sizeof(publishIn));
+    status = MQTT_DeserializePublish(&mqttPacketInfo, &packetIdentifier, &publishIn, &propBuffer);
+    TEST_ASSERT_EQUAL_INT(MQTTBadResponse, status);
+
+    mqttPacketInfo.type = MQTT_PACKET_TYPE_PUBLISH | 0x02 ; 
+    status = MQTT_DeserializePublish(&mqttPacketInfo, &packetIdentifier, &publishIn, &propBuffer);
+    TEST_ASSERT_EQUAL_INT(MQTTBadResponse, status);
+
+}
+
+/**
+ * @brief Tests that MQTT_GetPingreqPacketSize works as intended.
+ */
+void test_MQTT_GetPingreqPacketSize( void )
+{
+    MQTTStatus_t status;
+    size_t packetSize;
+
+    /* Verify parameters. */
+    status = MQTT_GetPingreqPacketSize( NULL );
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+
+    /* Good case succeeds. A PINGREQ is 2 bytes. */
+    status = MQTT_GetPingreqPacketSize( &packetSize );
+    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
+    TEST_ASSERT_EQUAL_INT( 2, packetSize );
+}
+
+/**
+ * @brief Tests that MQTT_SerializePingreq works as intended.
+ */
+void test_MQTT_SerializePingreq( void )
+{
+    uint8_t buffer[ 10 + 2 * BUFFER_PADDING_LENGTH ];
+    MQTTFixedBuffer_t fixedBuffer = { .pBuffer = &buffer[ BUFFER_PADDING_LENGTH ] };
+    uint8_t expectedPacket[ 2 ] = { MQTT_PACKET_TYPE_PINGREQ, 0 };
+    MQTTStatus_t status = MQTTSuccess;
+
+    /* Buffer size less than ping request fails. */
+    fixedBuffer.size = 1;
+    status = MQTT_SerializePingreq( &fixedBuffer );
+    TEST_ASSERT_EQUAL_INT( MQTTNoMemory, status );
+
+    /* NULL buffer fails. */
+    status = MQTT_SerializePingreq( NULL );
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+
+    /* Verify a NULL buffer in the fixed buffer struct fails */
+    fixedBuffer.pBuffer = NULL;
+    status = MQTT_SerializePingreq( &fixedBuffer );
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+
+    /* Restore the fixed buffer. */
+    fixedBuffer.pBuffer = &buffer[ BUFFER_PADDING_LENGTH ];
+
+    /* Good case succeeds. */
+    fixedBuffer.size = 2;
+    padAndResetBuffer( buffer, sizeof( buffer ) );
+    status = MQTT_SerializePingreq( &fixedBuffer );
+    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
+    checkBufferOverflow( buffer, sizeof( buffer ) );
+    TEST_ASSERT_EQUAL_MEMORY( expectedPacket, &buffer[ BUFFER_PADDING_LENGTH ], 2 );
+}
+
+/**
+ * @brief Tests that MQTT_DeserializeAck works as intended with a PINGRESP.
+ */
+void test_MQTT_DeserializeAck_pingresp( void )
+{
+    MQTTPacketInfo_t mqttPacketInfo;
+    uint16_t packetIdentifier;
+    bool sessionPresent;
+    MQTTStatus_t status = MQTTSuccess;
+
+    /* Bad remaining length. */
+    ( void ) memset( &mqttPacketInfo, 0x00, sizeof( mqttPacketInfo ) );
+    mqttPacketInfo.type = MQTT_PACKET_TYPE_PINGRESP;
+    mqttPacketInfo.remainingLength = MQTT_PACKET_PINGRESP_REMAINING_LENGTH + 1;
+    status = MQTT_DeserializePing( &mqttPacketInfo, &packetIdentifier, &sessionPresent );
+    TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
+
+    mqttPacketInfo.type = MQTT_PACKET_TYPE_SUBACK ; 
+    mqttPacketInfo.remainingLength = 5 ;
+    status = MQTT_DeserializePing(&mqttPacketInfo, &packetIdentifier, &sessionPresent);
+    TEST_ASSERT_EQUAL_INT(MQTTBadResponse, status);
+
+    /* Process a valid PINGRESP. */
+    mqttPacketInfo.type = MQTT_PACKET_TYPE_PINGRESP;
+    mqttPacketInfo.remainingLength = MQTT_PACKET_PINGRESP_REMAINING_LENGTH;
+    mqttPacketInfo.pRemainingData = NULL;
+    status = MQTT_DeserializePing( &mqttPacketInfo, NULL, NULL );
+    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
+
+    status = MQTT_DeserializePing(NULL , NULL , NULL) ; 
+    TEST_ASSERT_EQUAL_INT(MQTTBadParameter, status);
+}
+
+/**
+ * @brief Tests that MQTT_GetIncomingPacketTypeAndLength works as intended.
+ */
+void test_MQTT_GetIncomingPacketTypeAndLength1( void )
+{
+    MQTTStatus_t status = MQTTSuccess;
+    MQTTPacketInfo_t mqttPacket;
+    NetworkContext_t networkContext;
+    uint8_t buffer[ 10 ];
+    uint8_t * bufPtr = buffer;
+
+    /* Dummy network context - pointer to pointer to a buffer. */
+    networkContext.buffer = &bufPtr;
+
+    /* Test a NULL pIncomingPacket parameter. */
+    status = MQTT_GetIncomingPacketTypeAndLength( mockReceive, &networkContext, NULL );
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+
+    /* Test a typical happy path case for a CONN ACK packet. */
+    buffer[ 0 ] = 0x20; /* CONN ACK */
+    buffer[ 1 ] = 0x02; /* Remaining length. */
+
+    status = MQTT_GetIncomingPacketTypeAndLength( mockReceive, &networkContext, &mqttPacket );
+    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
+    TEST_ASSERT_EQUAL_INT( 0x20, mqttPacket.type );
+    TEST_ASSERT_EQUAL_INT( 0x02, mqttPacket.remainingLength );
+
+    /* Remaining length of 128. MQTT uses 7 bits for data and 1 continuation
+     * bit in each byte. Since 128 is 8 bits, it needs 2 bytes. */
+    bufPtr = buffer;
+    buffer[ 0 ] = MQTT_PACKET_TYPE_PUBLISH;
+    buffer[ 1 ] = 0x80; /* LSB: CB=1, value=0x00 */
+    buffer[ 2 ] = 0x01; /* MSB: CB=0, value=0x01 */
+    status = MQTT_GetIncomingPacketTypeAndLength( mockReceive, &networkContext, &mqttPacket );
+    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
+    TEST_ASSERT_EQUAL_INT( MQTT_PACKET_TYPE_PUBLISH, mqttPacket.type );
+    TEST_ASSERT_EQUAL_INT( 128, mqttPacket.remainingLength );
+
+    /* Remaining length of 16384. MQTT uses 7 bits for data and 1 continuation
+     * bit in each byte. Since 16384 is 15 bits, it needs 3 bytes. */
+    bufPtr = buffer;
+    buffer[ 0 ] = MQTT_PACKET_TYPE_PUBLISH;
+    buffer[ 1 ] = 0x80; /* LSB   : CB=1, value=0x00 */
+    buffer[ 2 ] = 0x80; /* Byte 1: CB=1, value=0x00 */
+    buffer[ 3 ] = 0x01; /* MSB   : CB=0, value=0x01 */
+    status = MQTT_GetIncomingPacketTypeAndLength( mockReceive, &networkContext, &mqttPacket );
+    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
+    TEST_ASSERT_EQUAL_INT( MQTT_PACKET_TYPE_PUBLISH, mqttPacket.type );
+    TEST_ASSERT_EQUAL_INT( 16384, mqttPacket.remainingLength );
+
+    /* Test with incorrect packet type. */
+    bufPtr = buffer;
+    buffer[ 0 ] = 0x10; /* INVALID */
+    status = MQTT_GetIncomingPacketTypeAndLength( mockReceive, &networkContext, &mqttPacket );
+    TEST_ASSERT_EQUAL( MQTTBadResponse, status );
+
+    /* Test with disconnect packet type. */
+    bufPtr = buffer;
+    buffer[ 0 ] = MQTT_PACKET_TYPE_DISCONNECT;
+    status = MQTT_GetIncomingPacketTypeAndLength( mockReceive, &networkContext, &mqttPacket );
+    TEST_ASSERT_EQUAL( MQTTSuccess, status );
+
+    /* Test with invalid remaining length. */
+    bufPtr = buffer;
+    buffer[ 0 ] = 0x20; /* CONN ACK */
+
+    /* To generate invalid remaining length response,
+     * four bytes need to have MSB (or continuation bit, 0x80) set */
+    buffer[ 1 ] = 0xFF;
+    buffer[ 2 ] = 0xFF;
+    buffer[ 3 ] = 0xFF;
+    buffer[ 4 ] = 0xFF;
+    status = MQTT_GetIncomingPacketTypeAndLength( mockReceive, &networkContext, &mqttPacket );
+    TEST_ASSERT_EQUAL( MQTTBadResponse, status );
+
+    /* Check with an encoding that does not conform to the MQTT spec. */
+    bufPtr = buffer;
+    buffer[ 1 ] = 0x80;
+    buffer[ 2 ] = 0x80;
+    buffer[ 3 ] = 0x80;
+    buffer[ 4 ] = 0x00;
+    status = MQTT_GetIncomingPacketTypeAndLength( mockReceive, &networkContext, &mqttPacket );
+    TEST_ASSERT_EQUAL( MQTTBadResponse, status );
+
+    /* Check when network receive fails. */
+    memset( buffer, 0x00, 10 );
+    bufPtr = buffer;
+    status = MQTT_GetIncomingPacketTypeAndLength( mockReceiveFailure, &networkContext, &mqttPacket );
+    TEST_ASSERT_EQUAL( MQTTRecvFailed, status );
+
+    /* Test if no data is available. */
+    bufPtr = buffer;
+    status = MQTT_GetIncomingPacketTypeAndLength( mockReceiveNoData, &networkContext, &mqttPacket );
+    TEST_ASSERT_EQUAL( MQTTNoDataAvailable, status );
+
+    /* Branch coverage for PUBREL. */
+    bufPtr = buffer;
+    buffer[ 0 ] = MQTT_PACKET_TYPE_PUBREL & 0xF0U;
+    status = MQTT_GetIncomingPacketTypeAndLength( mockReceive, &networkContext, &mqttPacket );
+    TEST_ASSERT_EQUAL( MQTTBadResponse, status );
+
+    /* Receive type then fail. */
+    bufPtr = buffer;
+    buffer[ 0 ] = MQTT_PACKET_TYPE_PUBREL;
+    status = MQTT_GetIncomingPacketTypeAndLength( mockReceiveSucceedThenFail, &networkContext, &mqttPacket );
+    TEST_ASSERT_EQUAL( MQTTBadResponse, status );
+}
+
+/**
+ * @brief Tests that MQTT_SerializePublishHeaderWithoutTopic works as intended.
+ */
+void test_MQTT_SerializePublishHeaderWithoutTopic_AllNULL( void )
+{
+    MQTTPublishInfo_t publishInfo;
+    size_t remainingLength = 0;
+    uint8_t buffer[ 7 ];
+    MQTTStatus_t status = MQTTSuccess;
+    size_t headerSize = 0;
+
+    /* Verify bad parameters fail. */
+    memset( &publishInfo, 0x00, sizeof( publishInfo ) );
+
+    status = MQTT_SerializePublishHeaderWithoutTopic( &publishInfo,
+                                                      remainingLength,
+                                                      buffer,
+                                                      &headerSize );
+
+    TEST_ASSERT_EQUAL( MQTTSuccess, status );
+    TEST_ASSERT_EQUAL( headerSize, 4U );
+    /* No flag should be set. Except publish flag. */
+    TEST_ASSERT_EQUAL( buffer[ 0 ], 0x30 );
+    /* The encoded length must be 0. */
+    TEST_ASSERT_EQUAL( buffer[ 1 ], 0U );
+    /* The topic name length should be 0 too. */
+    TEST_ASSERT_EQUAL( buffer[ 2 ], 0U );
+    TEST_ASSERT_EQUAL( buffer[ 3 ], 0U );
+}
+
+/* ========================================================================== */
+
+/**
+ * @brief Tests that MQTT_SerializePublishHeaderWithoutTopic works as intended.
+ */
+void test_MQTT_SerializePublishHeaderWithoutTopic_QoS1( void )
+{
+    MQTTPublishInfo_t publishInfo;
+    size_t remainingLength = 0;
+    uint8_t buffer[ 7 ];
+    MQTTStatus_t status = MQTTSuccess;
+    size_t headerSize = 0;
+
+    /* Verify bad parameters fail. */
+    memset( &publishInfo, 0x00, sizeof( publishInfo ) );
+
+    publishInfo.qos = MQTTQoS1;
+
+    status = MQTT_SerializePublishHeaderWithoutTopic( &publishInfo,
+                                                      remainingLength,
+                                                      buffer,
+                                                      &headerSize );
+
+    TEST_ASSERT_EQUAL( MQTTSuccess, status );
+    TEST_ASSERT_EQUAL( headerSize, 4U );
+    /* No flag should be set except QoS1 and publish flag. */
+    TEST_ASSERT_EQUAL( buffer[ 0 ], ( 1U << 1 ) | 0x30 );
+    /* The encoded length must be 0. */
+    TEST_ASSERT_EQUAL( buffer[ 1 ], 0U );
+    /* The topic name length should be 0 too. */
+    TEST_ASSERT_EQUAL( buffer[ 2 ], 0U );
+    TEST_ASSERT_EQUAL( buffer[ 3 ], 0U );
+}
+
+/**
+ * @brief Tests that MQTT_SerializePublishHeaderWithoutTopic works as intended.
+ */
+void test_MQTT_SerializePublishHeaderWithoutTopic_QoS2( void )
+{
+    MQTTPublishInfo_t publishInfo;
+    size_t remainingLength = 0;
+    uint8_t buffer[ 7 ];
+    MQTTStatus_t status = MQTTSuccess;
+    size_t headerSize = 0;
+
+    /* Verify bad parameters fail. */
+    memset( &publishInfo, 0x00, sizeof( publishInfo ) );
+
+    publishInfo.qos = MQTTQoS2;
+
+    status = MQTT_SerializePublishHeaderWithoutTopic( &publishInfo,
+                                                      remainingLength,
+                                                      buffer,
+                                                      &headerSize );
+
+    TEST_ASSERT_EQUAL( MQTTSuccess, status );
+    TEST_ASSERT_EQUAL( headerSize, 4U );
+    /* No flag should be set except QoS2. */
+    TEST_ASSERT_EQUAL( buffer[ 0 ], ( 1U << 2 ) | 0x30 );
+    /* The encoded length must be 0. */
+    TEST_ASSERT_EQUAL( buffer[ 1 ], 0U );
+    /* The topic name length should be 0 too. */
+    TEST_ASSERT_EQUAL( buffer[ 2 ], 0U );
+    TEST_ASSERT_EQUAL( buffer[ 3 ], 0U );
+}
+
+/**
+ * @brief Tests that MQTT_SerializePublishHeaderWithoutTopic works as intended.
+ */
+void test_MQTT_SerializePublishHeaderWithoutTopic_retain( void )
+{
+    MQTTPublishInfo_t publishInfo;
+    size_t remainingLength = 0;
+    uint8_t buffer[ 7 ];
+    MQTTStatus_t status = MQTTSuccess;
+    size_t headerSize = 0;
+
+    /* Verify bad parameters fail. */
+    memset( &publishInfo, 0x00, sizeof( publishInfo ) );
+
+    publishInfo.retain = true;
+
+    status = MQTT_SerializePublishHeaderWithoutTopic( &publishInfo,
+                                                      remainingLength,
+                                                      buffer,
+                                                      &headerSize );
+
+    TEST_ASSERT_EQUAL( MQTTSuccess, status );
+    TEST_ASSERT_EQUAL( headerSize, 4U );
+    /* No flag should be set except retain flag. */
+    TEST_ASSERT_EQUAL( buffer[ 0 ], ( 1U << 0 ) | 0x30 );
+    /* The encoded length must be 0. */
+    TEST_ASSERT_EQUAL( buffer[ 1 ], 0U );
+    /* The topic name length should be 0 too. */
+    TEST_ASSERT_EQUAL( buffer[ 2 ], 0U );
+    TEST_ASSERT_EQUAL( buffer[ 3 ], 0U );
+}
+
+/**
+ * @brief Tests that MQTT_SerializePublishHeaderWithoutTopic works as intended.
+ */
+void test_MQTT_SerializePublishHeaderWithoutTopic_Duplicate( void )
+{
+    MQTTPublishInfo_t publishInfo;
+    size_t remainingLength = 0;
+    uint8_t buffer[ 7 ];
+    MQTTStatus_t status = MQTTSuccess;
+    size_t headerSize = 0;
+
+    /* Verify bad parameters fail. */
+    memset( &publishInfo, 0x00, sizeof( publishInfo ) );
+
+    publishInfo.dup = true;
+
+    status = MQTT_SerializePublishHeaderWithoutTopic( &publishInfo,
+                                                      remainingLength,
+                                                      buffer,
+                                                      &headerSize );
+
+    TEST_ASSERT_EQUAL( MQTTSuccess, status );
+    TEST_ASSERT_EQUAL( headerSize, 4U );
+    /* No flag should be set except dup. */
+    TEST_ASSERT_EQUAL( buffer[ 0 ], ( 1U << 3 ) | 0x30 );
+    /* The encoded length must be 0. */
+    TEST_ASSERT_EQUAL( buffer[ 1 ], 0U );
+    /* The topic name length should be 0 too. */
+    TEST_ASSERT_EQUAL( buffer[ 2 ], 0U );
+    TEST_ASSERT_EQUAL( buffer[ 3 ], 0U );
+}
+/**
+ * @brief Tests that MQTT_SerializePublishHeaderWithoutTopic works as intended.
+ */
+void test_MQTT_SerializePublishHeaderWithoutTopic_VariousFlagsSetTopicLength( void )
+{
+    MQTTPublishInfo_t publishInfo;
+    size_t remainingLength = 0;
+    uint8_t buffer[ 7 ];
+    MQTTStatus_t status = MQTTSuccess;
+    size_t headerSize = 0;
+
+    /* Verify bad parameters fail. */
+    memset( &publishInfo, 0x00, sizeof( publishInfo ) );
+
+    publishInfo.qos = MQTTQoS2;
+    publishInfo.dup = true;
+    publishInfo.retain = true;
+    publishInfo.topicNameLength = 20;
+
+    status = MQTT_SerializePublishHeaderWithoutTopic( &publishInfo,
+                                                      remainingLength,
+                                                      buffer,
+                                                      &headerSize );
+
+    TEST_ASSERT_EQUAL( MQTTSuccess, status );
+    TEST_ASSERT_EQUAL( headerSize, 4U );
+    /* No flag should be set except QoS2/dup/retain. */
+    TEST_ASSERT_EQUAL( buffer[ 0 ], ( 1U << 2 ) | ( 1U << 3 ) | ( 1U << 0 ) | 0x30 );
+    /* The encoded length must be 0. */
+    TEST_ASSERT_EQUAL( buffer[ 1 ], 0U );
+    /* The topic name length should be 0 too. */
+    TEST_ASSERT_EQUAL( buffer[ 2 ], 0U );
+    TEST_ASSERT_EQUAL( buffer[ 3 ], 20U );
+}
+void test_MQTT_ProcessIncomingPacketTypeAndLength_PacketNULL( void )
+{
+    uint8_t pBuffer[ 100 ] = { 0 };
+    size_t index = 0;
+    MQTTStatus_t status;
+
+    status = MQTT_ProcessIncomingPacketTypeAndLength( pBuffer, &index, NULL );
+
+    TEST_ASSERT_EQUAL( MQTTBadParameter, status );
+}
+
+void test_MQTT_ProcessIncomingPacketTypeAndLength_BufferNULL( void )
+{
+    MQTTPacketInfo_t packetInfo;
+    size_t index = 0;
+    MQTTStatus_t status;
+
+    status = MQTT_ProcessIncomingPacketTypeAndLength( NULL, &index, &packetInfo );
+
+    TEST_ASSERT_EQUAL( MQTTBadParameter, status );
+}
+
+void test_MQTT_ProcessIncomingPacketTypeAndLength_IndexNULL( void )
+{
+    MQTTPacketInfo_t packetInfo;
+    uint8_t pBuffer[ 100 ] = { 0 };
+    MQTTStatus_t status;
+
+    status = MQTT_ProcessIncomingPacketTypeAndLength( pBuffer, NULL, &packetInfo );
+
+    TEST_ASSERT_EQUAL( MQTTBadParameter, status );
+}
+
+void test_MQTT_ProcessIncomingPacketTypeAndLength_NoData( void )
+{
+    MQTTPacketInfo_t packetInfo;
+    uint8_t pBuffer[ 100 ] = { 0 };
+    size_t index = 0;
+    MQTTStatus_t status;
+
+    status = MQTT_ProcessIncomingPacketTypeAndLength( pBuffer, &index, &packetInfo );
+
+    TEST_ASSERT_EQUAL( MQTTNoDataAvailable, status );
+}
+
+void test_MQTT_ProcessIncomingPacketTypeAndLength_InvalidData( void )
+{
+    MQTTPacketInfo_t packetInfo;
+    uint8_t pBuffer[ 100 ];
+    size_t index = 2;
+    MQTTStatus_t status;
+
+    memset( &packetInfo, 0, sizeof( MQTTPacketInfo_t ) );
+    memset( pBuffer, 0, 100 );
+
+    pBuffer[ 0 ] = 0xF0;
+
+    status = MQTT_ProcessIncomingPacketTypeAndLength( pBuffer, &index, &packetInfo );
+
+    TEST_ASSERT_EQUAL( MQTTBadResponse, status );
+}
+
+void test_MQTT_ProcessIncomingPacketTypeAndLength_ValidDataOneByte( void )
+{
+    MQTTPacketInfo_t packetInfo;
+    uint8_t pBuffer[ 100 ];
+    size_t index = 1;
+    MQTTStatus_t status;
+
+    memset( &packetInfo, 0, sizeof( MQTTPacketInfo_t ) );
+    memset( pBuffer, 0, 100 );
+
+    pBuffer[ 0 ] = MQTT_PACKET_TYPE_PUBLISH;
+
+    status = MQTT_ProcessIncomingPacketTypeAndLength( pBuffer, &index, &packetInfo );
+
+    TEST_ASSERT_EQUAL( MQTTNeedMoreBytes, status );
+}
+
+void test_MQTT_ProcessIncomingPacketTypeAndLength_ValidDataTwoBytes( void )
+{
+    MQTTPacketInfo_t packetInfo;
+    uint8_t pBuffer[ 100 ];
+    size_t index = 2;
+    MQTTStatus_t status;
+
+    memset( &packetInfo, 0, sizeof( MQTTPacketInfo_t ) );
+    memset( pBuffer, 0, 100 );
+
+    pBuffer[ 0 ] = MQTT_PACKET_TYPE_PUBLISH;
+    /* 2nd byte is the length. */
+    pBuffer[ 1 ] = 10;
+
+    status = MQTT_ProcessIncomingPacketTypeAndLength( pBuffer, &index, &packetInfo );
+
+    TEST_ASSERT_EQUAL( MQTTSuccess, status );
+    TEST_ASSERT_EQUAL( packetInfo.remainingLength, 10U );
+    TEST_ASSERT_EQUAL( packetInfo.headerLength, 2U );
+}
+
+void test_MQTT_ProcessIncomingPacketTypeAndLength_InvalidLength( void )
+{
+    MQTTPacketInfo_t packetInfo;
+    uint8_t pBuffer[ 100 ];
+    size_t index = 6;
+    MQTTStatus_t status;
+
+    memset( &packetInfo, 0, sizeof( MQTTPacketInfo_t ) );
+    memset( pBuffer, 0, 100 );
+
+    pBuffer[ 0 ] = MQTT_PACKET_TYPE_PUBLISH;
+    /* 2nd byte onward is the length. */
+    pBuffer[ 1 ] = 0xFF;
+    pBuffer[ 2 ] = 0xFF;
+    pBuffer[ 3 ] = 0xFF;
+    /* This byte doesn't terminate the length. */
+    pBuffer[ 4 ] = 0xFF;
+    pBuffer[ 5 ] = 0xFF;
+
+    status = MQTT_ProcessIncomingPacketTypeAndLength( pBuffer, &index, &packetInfo );
+
+    TEST_ASSERT_EQUAL( MQTTBadResponse, status );
+}
+
+void test_MQTT_ProcessIncomingPacketTypeAndLength_NonConformingLength( void )
+{
+    MQTTPacketInfo_t packetInfo;
+    uint8_t pBuffer[ 100 ];
+    size_t index = 6;
+    MQTTStatus_t status;
+
+    memset( &packetInfo, 0, sizeof( MQTTPacketInfo_t ) );
+    memset( pBuffer, 0, 100 );
+
+    pBuffer[ 0 ] = MQTT_PACKET_TYPE_PUBLISH;
+    /* 2nd byte onward is the length. */
+    pBuffer[ 1 ] = 0x80;
+    pBuffer[ 2 ] = 0x80;
+    pBuffer[ 3 ] = 0x80;
+    /* This byte doesn't terminate the length. */
+    pBuffer[ 4 ] = 0x00;
+
+    status = MQTT_ProcessIncomingPacketTypeAndLength( pBuffer, &index, &packetInfo );
+
+    TEST_ASSERT_EQUAL( MQTTBadResponse, status );
+}
+
+/**
+ * @brief Tests that MQTT_DeserializePublish works as intended.
+ */
+void test_MQTT_DeserializePublish( void )
+{
+    MQTTPacketInfo_t mqttPacketInfo;
+    MQTTPublishInfo_t publishInfo;
+    MQTTStatus_t status = MQTTSuccess;
+    uint8_t buffer[ 100 ];
+    size_t bufferSize = sizeof( buffer );
+    MQTTFixedBuffer_t fixedBuffer = { 0 };
+    size_t packetSize = bufferSize;
+    MqttPropBuilder_t propBuffer = {0} ; 
+
+    size_t remainingLength = 0;
+    uint16_t packetIdentifier;
+
+    fixedBuffer.pBuffer = buffer;
+    fixedBuffer.size = bufferSize;
+
+    const uint16_t PACKET_ID = 1;
+
+    memset( &mqttPacketInfo, 0x00, sizeof( mqttPacketInfo ) );
+
+    /* Verify parameters. */
+    status = MQTT_DeserializePublish( NULL, &packetIdentifier, &publishInfo, &propBuffer );
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+    status = MQTT_DeserializePublish( &mqttPacketInfo, NULL, &publishInfo , &propBuffer);
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+    status = MQTT_DeserializePublish( &mqttPacketInfo, &packetIdentifier, NULL, &propBuffer );
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+
+    mqttPacketInfo.type = MQTT_PACKET_TYPE_PUBLISH;
+    status = MQTT_DeserializePublish( &mqttPacketInfo, &packetIdentifier, &publishInfo, &propBuffer );
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+
+    /* Bad Packet Type. */
+    mqttPacketInfo.type = 0x01;
+    mqttPacketInfo.pRemainingData = buffer;
+    status = MQTT_DeserializePublish( &mqttPacketInfo, &packetIdentifier, &publishInfo, &propBuffer );
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+
+    /* Incorrect flags. */
+    mqttPacketInfo.type = MQTT_PACKET_TYPE_PUBLISH | 0xf;
+    status = MQTT_DeserializePublish( &mqttPacketInfo, &packetIdentifier, &publishInfo, &propBuffer );
+    TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
+
+    /* QoS 0 bad remaining length. */
+    mqttPacketInfo.type = MQTT_PACKET_TYPE_PUBLISH;
+    mqttPacketInfo.remainingLength = 0;
+    status = MQTT_DeserializePublish( &mqttPacketInfo, &packetIdentifier, &publishInfo, &propBuffer );
+    TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
+
+    /* QoS 1 bad remaining length. */
+    mqttPacketInfo.type = MQTT_PACKET_TYPE_PUBLISH | 0x2;
+    mqttPacketInfo.remainingLength = 0;
+    status = MQTT_DeserializePublish( &mqttPacketInfo, &packetIdentifier, &publishInfo, &propBuffer);
+    TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
+
+    /* QoS 1 invalid packet identifier. */
+    mqttPacketInfo.remainingLength = 5;
+    buffer[ 0 ] = 0;
+    buffer[ 1 ] = 1;
+    buffer[ 2 ] = ( uint8_t ) 'a';
+    buffer[ 3 ] = 0;
+    buffer[ 4 ] = 0;
+    status = MQTT_DeserializePublish( &mqttPacketInfo, &packetIdentifier, &publishInfo, &propBuffer );
+    TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
+}
+void test_serializeHeaders(void)
+{
+    uint8_t buffer[4] ; 
+
+    MQTT_SerializeSubscribeHeader(3, buffer, 1) ; 
+    TEST_ASSERT_EQUAL(buffer[0], MQTT_PACKET_TYPE_SUBSCRIBE);
+    MQTT_SerializeUnsubscribeHeader(3, buffer, 1) ; 
+    TEST_ASSERT_EQUAL(buffer[0], MQTT_PACKET_TYPE_UNSUBSCRIBE);
+    uint8_t buf[22] ; 
+    MQTTConnectInfo_t pConnectInfo ;  
+    pConnectInfo.cleanSession = true ; 
+    pConnectInfo.pUserName = "abc" ; 
+    pConnectInfo.pPassword = "def" ; 
+    pConnectInfo.keepAliveSeconds = 100 ; 
+    MQTTPublishInfo_t pWillInfo ; 
+    pWillInfo.qos = MQTTQoS1 ; 
+    pWillInfo.retain = true ; 
+    MQTT_SerializeConnectFixedHeader(buf,&pConnectInfo , &pWillInfo, 20 ) ; 
+    pWillInfo.qos = MQTTQoS2 ; 
+    MQTT_SerializeConnectFixedHeader(buf,&pConnectInfo , &pWillInfo, 20 ) ; 
+}
+
+void test_OptionalProperties(void)
+{
+    MQTTStatus_t mqttStatus = MQTTSuccess ; 
+    MqttPropBuilder_t propBuilder;
+    MqttPropBuilder_t prop1 ; 
+    prop1.pBuffer = NULL ; 
+    uint8_t buf[100];
+    size_t bufLength = sizeof(buf);
+    mqttStatus = MqttPropertyBuilder_Init(&(propBuilder), buf, bufLength); 
+    TEST_ASSERT_EQUAL_INT(mqttStatus , MQTTSuccess) ; 
+    mqttStatus = MQTTPropAdd_SubscribeId(&propBuilder, 2) ; 
+    TEST_ASSERT_EQUAL_INT(mqttStatus , MQTTSuccess) ; 
+    mqttStatus = MQTTPropAdd_SubscribeId(&propBuilder, 2) ; 
+    TEST_ASSERT_EQUAL_INT(mqttStatus , MQTTBadParameter) ; 
+    mqttStatus = MQTTPropAdd_SubscribeId(&propBuilder, 0) ;
+    TEST_ASSERT_EQUAL_INT(mqttStatus, MQTTBadParameter) ;
+
+    mqttStatus = MQTTPropAdd_SubscribeId(NULL, 1) ;
+    TEST_ASSERT_EQUAL_INT(mqttStatus, MQTTBadParameter) ;
+
+    mqttStatus = MQTTPropAdd_SubscribeId(&prop1, 2) ; 
+    TEST_ASSERT_EQUAL_INT(mqttStatus , MQTTBadParameter) ; 
+
+    MqttPropBuilder_t propBuilder1;
+    uint8_t buf1[1] ; 
+    mqttStatus = MqttPropertyBuilder_Init(&(propBuilder1), buf1, 1);
+    mqttStatus = MQTTPropAdd_SubscribeId(&propBuilder1, 10) ;
+    TEST_ASSERT_EQUAL_INT(MQTTBadParameter, mqttStatus) ;
+
+    MQTTUserProperty_t userProperty ; 
+    memset(&userProperty, 0x0, sizeof(userProperty));
+    userProperty.pKey = "abc" ; 
+    userProperty.pValue = "def" ;
+    userProperty.keyLength = 3 ;
+    userProperty.valueLength = 3 ; 
+    mqttStatus = MQTTPropAdd_UserProp(&(propBuilder) , &userProperty ) ; 
+    TEST_ASSERT_EQUAL_INT(MQTTSuccess, mqttStatus) ;
+
+    mqttStatus = MQTTPropAdd_UserProp(NULL , &userProperty ) ; 
+    TEST_ASSERT_EQUAL_INT(MQTTBadParameter, mqttStatus) ;
+    mqttStatus = MQTTPropAdd_UserProp(&(propBuilder) , NULL ) ; 
+    TEST_ASSERT_EQUAL_INT(MQTTBadParameter, mqttStatus) ;
+    mqttStatus = MQTTPropAdd_UserProp(&prop1, &userProperty) ;
+    TEST_ASSERT_EQUAL_INT(MQTTBadParameter, mqttStatus); 
+
+    userProperty.pKey = NULL , userProperty.pValue = NULL ; 
+    mqttStatus = MQTTPropAdd_UserProp(&propBuilder, &userProperty) ;
+    TEST_ASSERT_EQUAL_INT(MQTTBadParameter , mqttStatus); 
+
+    mqttStatus = MQTTPropAdd_ConnSessionExpiry(NULL, 10) ; 
+    TEST_ASSERT_EQUAL_INT(MQTTBadParameter, mqttStatus) ;
+
+    mqttStatus = MQTTPropAdd_ConnSessionExpiry(&prop1, 10) ; 
+    TEST_ASSERT_EQUAL_INT(MQTTBadParameter, mqttStatus) ;
+
+    mqttStatus = MQTTPropAdd_ConnSessionExpiry(&propBuilder, 10) ; 
+    TEST_ASSERT_EQUAL_INT(MQTTSuccess, mqttStatus) ;
+    mqttStatus = MQTTPropAdd_ConnSessionExpiry(&propBuilder, 10) ;
+    TEST_ASSERT_EQUAL_INT(MQTTBadParameter, mqttStatus) ;
+
+    mqttStatus = MQTTPropAdd_ConnReceiveMax(NULL, 10) ; 
+    TEST_ASSERT_EQUAL_INT(MQTTBadParameter, mqttStatus) ;
+
+    mqttStatus = MQTTPropAdd_ConnReceiveMax(&prop1, 10) ; 
+    TEST_ASSERT_EQUAL_INT(MQTTBadParameter, mqttStatus) ;
+
+    mqttStatus = MQTTPropAdd_ConnReceiveMax(&(propBuilder) , 10) ; 
+    TEST_ASSERT_EQUAL_INT(MQTTSuccess, mqttStatus) ;
+    mqttStatus = MQTTPropAdd_ConnReceiveMax(&(propBuilder) , 10) ; 
+    TEST_ASSERT_EQUAL_INT(MQTTBadParameter, mqttStatus) ;
+
+    mqttStatus = MQTTPropAdd_ConnMaxPacketSize(NULL, 10) ;
+    TEST_ASSERT_EQUAL_INT(MQTTBadParameter, mqttStatus) ;
+    mqttStatus = MQTTPropAdd_ConnMaxPacketSize(&prop1, 10) ;
+    TEST_ASSERT_EQUAL_INT(MQTTBadParameter, mqttStatus) ;
+    mqttStatus = MQTTPropAdd_ConnMaxPacketSize(&propBuilder , 10) ; 
+    TEST_ASSERT_EQUAL_INT(MQTTSuccess, mqttStatus) ;
+    mqttStatus = MQTTPropAdd_ConnMaxPacketSize(&propBuilder, 10) ;
+    TEST_ASSERT_EQUAL_INT(mqttStatus , MQTTBadParameter) ;
+
+    mqttStatus = MQTTPropAdd_ConnTopicAliasMax(NULL, 10) ; 
+    TEST_ASSERT_EQUAL_INT(MQTTBadParameter, mqttStatus) ;
+    mqttStatus = MQTTPropAdd_ConnTopicAliasMax(&prop1, 10) ; 
+    TEST_ASSERT_EQUAL_INT(MQTTBadParameter, mqttStatus) ;
+    mqttStatus = MQTTPropAdd_ConnTopicAliasMax(&propBuilder, 10) ; 
+    TEST_ASSERT_EQUAL_INT(MQTTSuccess, mqttStatus) ;
+    mqttStatus = MQTTPropAdd_ConnTopicAliasMax(&propBuilder, 10) ;
+    TEST_ASSERT_EQUAL_INT(MQTTBadParameter, mqttStatus) ;
+
+    mqttStatus = MQTTPropAdd_ConnRequestRespInfo(NULL, 1) ;
+    TEST_ASSERT_EQUAL_INT(MQTTBadParameter, mqttStatus) ;
+    mqttStatus = MQTTPropAdd_ConnRequestRespInfo(&prop1, 1) ;
+    TEST_ASSERT_EQUAL_INT(MQTTBadParameter, mqttStatus) ;
+    mqttStatus = MQTTPropAdd_ConnRequestRespInfo(&propBuilder , 1) ; 
+    TEST_ASSERT_EQUAL_INT(MQTTSuccess, mqttStatus) ;
+    mqttStatus = MQTTPropAdd_ConnRequestRespInfo(&propBuilder, 1) ;
+    TEST_ASSERT_EQUAL_INT(MQTTBadParameter, mqttStatus) ;
+
+    mqttStatus = MQTTPropAdd_ConnRequestProbInfo(NULL, 1) ;
+    TEST_ASSERT_EQUAL_INT(MQTTBadParameter, mqttStatus) ;
+    mqttStatus = MQTTPropAdd_ConnRequestProbInfo(&prop1, 1) ;
+    TEST_ASSERT_EQUAL_INT(MQTTBadParameter, mqttStatus) ;
+    mqttStatus = MQTTPropAdd_ConnRequestProbInfo(&propBuilder , 1 ) ; 
+    TEST_ASSERT_EQUAL_INT(MQTTSuccess, mqttStatus) ;
+    mqttStatus = MQTTPropAdd_ConnRequestProbInfo(&propBuilder, 1) ;
+    TEST_ASSERT_EQUAL_INT(MQTTBadParameter, mqttStatus) ;
+
+    mqttStatus = MQTTPropAdd_ConnAuthMethod(NULL, "abc", 3) ;
+    TEST_ASSERT_EQUAL_INT(MQTTBadParameter, mqttStatus) ;
+    mqttStatus = MQTTPropAdd_ConnAuthMethod(&prop1, "abc", 3) ;
+    TEST_ASSERT_EQUAL_INT(MQTTBadParameter, mqttStatus) ;
+    mqttStatus = MQTTPropAdd_ConnAuthMethod(&propBuilder, "abc", 3) ;
+    TEST_ASSERT_EQUAL_INT(MQTTSuccess, mqttStatus) ;
+    mqttStatus = MQTTPropAdd_ConnAuthMethod(&propBuilder, "abc", 3) ;
+    TEST_ASSERT_EQUAL_INT(MQTTBadParameter, mqttStatus) ;
+
+    mqttStatus = MQTTPropAdd_ConnAuthData(NULL, "abc", 3) ;
+    TEST_ASSERT_EQUAL_INT(MQTTBadParameter, mqttStatus) ;
+    mqttStatus = MQTTPropAdd_ConnAuthData(&prop1, "abc", 3) ;
+    TEST_ASSERT_EQUAL_INT(MQTTBadParameter, mqttStatus) ;
+    mqttStatus = MQTTPropAdd_ConnAuthData(&propBuilder, "abc", 3) ;
+    TEST_ASSERT_EQUAL_INT(MQTTSuccess, mqttStatus) ;
+    mqttStatus = MQTTPropAdd_ConnAuthData(&propBuilder, "abc", 3) ;
+    TEST_ASSERT_EQUAL_INT(MQTTBadParameter, mqttStatus) ;
+
+    mqttStatus = MQTTPropAdd_PubPayloadFormat(NULL, 1) ;
+    TEST_ASSERT_EQUAL_INT(MQTTBadParameter, mqttStatus) ;
+    mqttStatus = MQTTPropAdd_PubPayloadFormat(&prop1, 1) ;
+    TEST_ASSERT_EQUAL_INT(MQTTBadParameter, mqttStatus) ;
+    mqttStatus = MQTTPropAdd_PubPayloadFormat(&propBuilder , 1) ; 
+    TEST_ASSERT_EQUAL_INT(MQTTSuccess, mqttStatus) ;
+    mqttStatus = MQTTPropAdd_PubPayloadFormat(&propBuilder, 1) ;
+    TEST_ASSERT_EQUAL_INT(MQTTBadParameter, mqttStatus) ;
+
+    mqttStatus = MQTTPropAdd_PubMessageExpiry(NULL, 10) ;
+    TEST_ASSERT_EQUAL_INT(MQTTBadParameter, mqttStatus) ;
+    mqttStatus = MQTTPropAdd_PubMessageExpiry(&prop1, 10) ;
+    TEST_ASSERT_EQUAL_INT(MQTTBadParameter, mqttStatus) ;
+    mqttStatus = MQTTPropAdd_PubMessageExpiry(&propBuilder , 10) ; 
+    TEST_ASSERT_EQUAL_INT(MQTTSuccess, mqttStatus) ;
+    mqttStatus = MQTTPropAdd_PubMessageExpiry(&propBuilder, 10) ;
+    TEST_ASSERT_EQUAL_INT(MQTTBadParameter, mqttStatus) ;
+
+    mqttStatus = MQTTPropAdd_PubTopicAlias(NULL, 10) ;
+    TEST_ASSERT_EQUAL_INT(MQTTBadParameter, mqttStatus) ;
+    mqttStatus = MQTTPropAdd_PubTopicAlias(&prop1, 10) ;
+    TEST_ASSERT_EQUAL_INT(MQTTBadParameter, mqttStatus) ;
+    mqttStatus = MQTTPropAdd_PubTopicAlias(&propBuilder, 0) ;
+    TEST_ASSERT_EQUAL_INT(MQTTBadParameter, mqttStatus) ;
+    mqttStatus = MQTTPropAdd_PubTopicAlias(&propBuilder, 10) ;
+    TEST_ASSERT_EQUAL_INT(MQTTSuccess, mqttStatus) ;
+    mqttStatus = MQTTPropAdd_PubTopicAlias(&propBuilder, 10) ;
+    TEST_ASSERT_EQUAL_INT(MQTTBadParameter, mqttStatus) ;
+
+    mqttStatus = MQTTPropAdd_PubResponseTopic(NULL, "abc", 3) ;
+    TEST_ASSERT_EQUAL_INT(MQTTBadParameter, mqttStatus) ;
+    mqttStatus = MQTTPropAdd_PubResponseTopic(&prop1, "abc", 3) ;
+    TEST_ASSERT_EQUAL_INT(MQTTBadParameter, mqttStatus) ;
+    mqttStatus = MQTTPropAdd_PubResponseTopic(&propBuilder, NULL, 3) ;
+    TEST_ASSERT_EQUAL_INT(MQTTBadParameter, mqttStatus) ;
+    mqttStatus = MQTTPropAdd_PubResponseTopic(&propBuilder, "abc", 0) ;
+    TEST_ASSERT_EQUAL_INT(MQTTBadParameter, mqttStatus) ;
+    mqttStatus = MQTTPropAdd_PubResponseTopic(&propBuilder, "abc", 3) ; 
+    TEST_ASSERT_EQUAL_INT(MQTTSuccess, mqttStatus) ;
+    mqttStatus = MQTTPropAdd_PubResponseTopic(&propBuilder, "abc", 3) ;
+    TEST_ASSERT_EQUAL_INT(MQTTBadParameter, mqttStatus) ;
+
+    MqttPropBuilder_t propBuilder2;
+    uint8_t buf2[500];
+    mqttStatus = MqttPropertyBuilder_Init(&(propBuilder2), buf2, 50);
+    mqttStatus = MQTTPropAdd_PubResponseTopic(&propBuilder2, "abc/#/def", 3) ; 
+    TEST_ASSERT_EQUAL_INT(MQTTBadParameter, mqttStatus) ;
+
+    mqttStatus = MQTTPropAdd_PubCorrelationData(NULL, "abc", 3) ;
+    TEST_ASSERT_EQUAL_INT(MQTTBadParameter, mqttStatus) ;
+    mqttStatus = MQTTPropAdd_PubCorrelationData(&(prop1), "abc", 3) ;
+    TEST_ASSERT_EQUAL_INT(MQTTBadParameter, mqttStatus) ;
+    mqttStatus = MQTTPropAdd_PubCorrelationData(&(propBuilder), NULL, 3) ;
+    TEST_ASSERT_EQUAL_INT(MQTTBadParameter, mqttStatus) ;
+    mqttStatus = MQTTPropAdd_PubCorrelationData(&(propBuilder), "abc", 0) ;
+    TEST_ASSERT_EQUAL_INT(MQTTBadParameter, mqttStatus) ;
+    mqttStatus = MQTTPropAdd_PubCorrelationData(&(propBuilder) , "abc" , 3) ; 
+    TEST_ASSERT_EQUAL_INT(MQTTSuccess, mqttStatus) ;
+    mqttStatus = MQTTPropAdd_PubCorrelationData(&(propBuilder), "abc", 3) ;
+    TEST_ASSERT_EQUAL_INT(MQTTBadParameter, mqttStatus) ;
+
+    mqttStatus = MQTTPropAdd_PubContentType(NULL, "abc", 3) ;
+    TEST_ASSERT_EQUAL_INT(MQTTBadParameter, mqttStatus) ;
+    mqttStatus = MQTTPropAdd_PubContentType(&(prop1), "abc", 3) ;
+    TEST_ASSERT_EQUAL_INT(MQTTBadParameter, mqttStatus) ;
+    mqttStatus = MQTTPropAdd_PubContentType(&(propBuilder), NULL, 3) ;
+    TEST_ASSERT_EQUAL_INT(MQTTBadParameter, mqttStatus) ;
+    mqttStatus = MQTTPropAdd_PubContentType(&(propBuilder), "abc", 0) ;
+    TEST_ASSERT_EQUAL_INT(MQTTBadParameter, mqttStatus) ;
+    mqttStatus = MQTTPropAdd_PubContentType(&(propBuilder), "abc", 3) ;
+    TEST_ASSERT_EQUAL_INT(MQTTSuccess, mqttStatus) ;
+    mqttStatus = MQTTPropAdd_PubContentType(&(propBuilder), "abc", 3) ;
+    TEST_ASSERT_EQUAL_INT(MQTTBadParameter, mqttStatus) ;
+
+    mqttStatus = MQTTPropAdd_ReasonString(NULL, "abc", 3);
+    TEST_ASSERT_EQUAL_INT(MQTTBadParameter, mqttStatus) ;
+    mqttStatus = MQTTPropAdd_ReasonString(&(prop1), "abc", 3);
+    TEST_ASSERT_EQUAL_INT(MQTTBadParameter, mqttStatus) ;
+    mqttStatus = MQTTPropAdd_ReasonString(&(propBuilder), NULL, 3);
+    TEST_ASSERT_EQUAL_INT(MQTTBadParameter, mqttStatus) ;
+    mqttStatus = MQTTPropAdd_ReasonString(&(propBuilder), "abc", 0);
+    TEST_ASSERT_EQUAL_INT(MQTTBadParameter, mqttStatus) ;
+    mqttStatus = MQTTPropAdd_ReasonString(&(propBuilder), "abc", 3); 
+    TEST_ASSERT_EQUAL_INT(MQTTSuccess, mqttStatus) ;
+    mqttStatus = MQTTPropAdd_ReasonString(&(propBuilder), "abc", 3);
+    TEST_ASSERT_EQUAL_INT(MQTTBadParameter, mqttStatus) ;
+}
+
+void test_updateContextWithConnectProps(void)
+{
+    MQTTStatus_t mqttStatus = MQTTSuccess ; 
+    MqttPropBuilder_t propBuilder;
+    uint8_t buffer[50];
+    size_t bufLength = sizeof(buffer);
+    mqttStatus = MqttPropertyBuilder_Init(&(propBuilder), buffer, bufLength);
+    uint8_t *pIndex = buffer ; 
+    pIndex = serializeuint_16(pIndex, MQTT_RECEIVE_MAX_ID ) ; 
+    pIndex = serializeuint_32(pIndex , MQTT_SESSION_EXPIRY_ID) ; 
+    pIndex = serializeuint_16(pIndex, MQTT_TOPIC_ALIAS_MAX_ID) ; 
+    pIndex = serializeuint_32(pIndex, MQTT_MAX_PACKET_SIZE_ID) ; 
+    propBuilder.currentIndex = 16 ; 
+    MQTTConnectProperties_t connectProps  ; 
+    mqttStatus = updateContextWithConnectProps(&propBuilder , &connectProps) ;
+    TEST_ASSERT_EQUAL_INT(mqttStatus, MQTTSuccess) ;
+}
+
+void test_MQTT_SerializeAck(void)
+{
+    MQTTFixedBuffer_t fixedBuffer ; 
+    uint8_t buf[50] ; 
+    fixedBuffer.pBuffer = buf ; 
+    fixedBuffer.size = sizeof(buf) ;
+
+    MQTTStatus_t status = MQTTSuccess ; 
+    status = MQTT_SerializeAck(&fixedBuffer, MQTT_PACKET_TYPE_PUBACK , 100) ; 
+    TEST_ASSERT_EQUAL_INT(status, MQTTSuccess) ;
+
+    status = MQTT_SerializeAck(&fixedBuffer, MQTT_PACKET_TYPE_PUBACK , 0) ; 
+    TEST_ASSERT_EQUAL_INT(status, MQTTBadParameter) ;
+
+
+    status = MQTT_SerializeAck(&fixedBuffer, MQTT_PACKET_TYPE_SUBACK, 100) ;
+    TEST_ASSERT_EQUAL_INT(status, MQTTBadParameter) ;
+
+    status = MQTT_SerializeAck(NULL, MQTT_PACKET_TYPE_PUBACK , 100) ; 
+    TEST_ASSERT_EQUAL_INT(status, MQTTBadParameter) ;
+
+    fixedBuffer.pBuffer = NULL ; 
+    status = MQTT_SerializeAck(&fixedBuffer, MQTT_PACKET_TYPE_PUBACK , 100) ; 
+    TEST_ASSERT_EQUAL_INT(status,MQTTBadParameter ) ;
+
+    fixedBuffer.pBuffer = buf ;
+    fixedBuffer.size = 1 ; 
+    status = MQTT_SerializeAck(&fixedBuffer, MQTT_PACKET_TYPE_PUBACK , 100) ; 
+    TEST_ASSERT_EQUAL_INT(status,MQTTNoMemory ) ;
+
+}
 
 // void test_MQTTV5_SerializeDisconnect(void)
 // {
@@ -3059,3 +3156,421 @@ void test_MQTTV5_GetDisconnectPacketSize()
 //     TEST_ASSERT_EQUAL(buf[0], MQTT_PACKET_TYPE_SUBACK) ;
 
 // }
+
+void test_validatePublishProperties(void)
+{
+    MQTTStatus_t status = MQTTSuccess ; 
+    uint16_t serverTopicAliasMax ; 
+    uint16_t topicAlias ; 
+    MqttPropBuilder_t propBuilder;
+    uint8_t buffer[50];
+    size_t bufLength = sizeof(buffer);
+    status = MqttPropertyBuilder_Init(&(propBuilder), buffer, bufLength);
+    uint8_t *pIndex = buffer ; 
+    pIndex = serializeuint_16(pIndex, 0x23) ;
+    pIndex = serializeuint_16(pIndex, 0x23) ;
+    propBuilder.currentIndex = 3 ; 
+    
+    /*Invalid Topic Alias*/
+    serverTopicAliasMax = 2 ; 
+    status = validatePublishProperties(serverTopicAliasMax, &propBuilder, &topicAlias) ; 
+    TEST_ASSERT_EQUAL_INT(status, MQTTBadParameter) ; 
+
+    /*More than 1 property received*/
+    propBuilder.currentIndex = 6 ; 
+    status = validatePublishProperties(serverTopicAliasMax, &propBuilder, &topicAlias) ; 
+    TEST_ASSERT_EQUAL_INT(status, MQTTBadParameter) ; 
+
+}
+
+void test_validateSubscribeProperties(void)
+{
+    uint8_t isSubIdAvailable = 0 ; 
+    MQTTStatus_t status = MQTTSuccess ; 
+    MqttPropBuilder_t propBuilder;
+    uint8_t buffer[50];
+    size_t bufLength = sizeof(buffer);
+    status = MqttPropertyBuilder_Init(&(propBuilder), buffer, bufLength);
+    uint8_t *pIndex = buffer ; 
+    *pIndex = MQTT_SUBSCRIPTION_ID_ID ; 
+    pIndex ++ ; 
+    *pIndex = 2 ; 
+    propBuilder.currentIndex = 2 ; 
+    status = validateSubscribeProperties(isSubIdAvailable, &propBuilder) ; 
+    TEST_ASSERT_EQUAL_INT(MQTTBadParameter, status) ; 
+
+}
+
+// void test_getProps(void)
+// {
+//     MQTTStatus_t status = MQTTSuccess ; 
+//     MqttPropBuilder_t propBuffer ; 
+//     MqttPropBuilder_t propBuffer1 ; 
+//     propBuffer1.pBuffer = NULL ; 
+//     uint8_t buffer[500] ; 
+//     size_t bufLength = 62 ; 
+//     status = MqttPropertyBuilder_Init(&(propBuffer), buffer , bufLength) ; 
+//     uint8_t *pIndex = buffer ; 
+    // pIndex = serializeuint_16(pIndex , MQTT_TOPIC_ALIAS_ID); 
+    // pIndex = serializeuint_8(pIndex , MQTT_PAYLOAD_FORMAT_ID) ; 
+    // pIndex = serializeutf_8(pIndex , MQTT_RESPONSE_TOPIC_ID) ; 
+    // pIndex = serializeutf_8(pIndex , MQTT_CORRELATION_DATA_ID) ; 
+    // pIndex = serializeuint_32(pIndex , MQTT_MSG_EXPIRY_ID); 
+    // pIndex = serializeutf_8(pIndex, MQTT_CONTENT_TYPE_ID) ;
+    // pIndex = serializeuint_8(pIndex , MQTT_SUBSCRIPTION_ID_ID); 
+    // pIndex = serializeuint_32(pIndex , MQTT_SESSION_EXPIRY_ID); 
+    // pIndex = serializeuint_16(pIndex , MQTT_TOPIC_ALIAS_MAX_ID); 
+    // pIndex = serializeuint_16(pIndex, MQTT_RECEIVE_MAX_ID); 
+    // pIndex = serializeuint_8(pIndex , MQTT_MAX_QOS_ID); 
+    // pIndex = serializeuint_8(pIndex, MQTT_RETAIN_AVAILABLE_ID ); 
+    // pIndex = serializeuint_32(pIndex , MQTT_MAX_PACKET_SIZE_ID); 
+    // pIndex = serializeutf_8(pIndex, MQTT_ASSIGNED_CLIENT_ID); 
+    // pIndex = serializeuint_8(pIndex, MQTT_WILDCARD_ID); 
+    // pIndex = serializeuint_8(pIndex, MQTT_SUB_AVAILABLE_ID);
+
+
+
+    
+
+//     uint16_t topicAlias ; 
+//     uint8_t payloadFormat ; 
+//     const char *pResponseTopic ; 
+//     uint16_t responseTopicLength ; 
+//     const void *correlationData ; 
+//     uint16_t correlationLength ; 
+//     uint32_t messageExpiry ;
+//     uint8_t propertyId ; 
+//     const char *pContentType ; 
+//     uint16_t contentTypeLength ; 
+
+//     status = MQTT_IncomingGetNextProp(NULL, &propertyId ); 
+//     TEST_ASSERT_EQUAL_INT(status, MQTTBadParameter); 
+
+//     status = MQTT_IncomingGetNextProp(&propBuffer1, &propertyId ); 
+//     TEST_ASSERT_EQUAL_INT(status, MQTTBadParameter); 
+    
+//     status = MQTT_IncomingGetNextProp(&propBuffer, &propertyId ); 
+
+//     while(status == MQTTSuccess)
+//     {
+//         switch (propertyId)
+//         {
+//             case(MQTT_TOPIC_ALIAS_ID):
+//             {
+//                 status = MQTTPropGet_PubTopicAlias(NULL, &topicAlias);
+//                 TEST_ASSERT_EQUAL_INT(status, MQTTBadParameter); 
+
+//                 status = MQTTPropGet_PubTopicAlias(&propBuffer1 , &topicAlias) ; 
+//                 TEST_ASSERT_EQUAL_INT(status, MQTTBadParameter); 
+
+//                 status = MQTTPropGet_PubTopicAlias(&propBuffer, NULL);
+//                 TEST_ASSERT_EQUAL_INT(status , MQTTBadParameter) ; 
+
+//                 status = MQTTPropGet_PubTopicAlias(&propBuffer, &topicAlias);
+
+//                 TEST_ASSERT_EQUAL_INT(status , MQTTSuccess) ; 
+//                 break; 
+//             }
+//             case(MQTT_PAYLOAD_FORMAT_ID):
+//             {
+//                 status = MQTTPropGet_PubPayloadFormatIndicator(NULL, &payloadFormat);
+//                 TEST_ASSERT_EQUAL_INT(status, MQTTBadParameter); 
+
+//                 status = MQTTPropGet_PubPayloadFormatIndicator(&propBuffer1, &payloadFormat);
+//                 TEST_ASSERT_EQUAL_INT(status, MQTTBadParameter); 
+
+//                 status = MQTTPropGet_PubPayloadFormatIndicator(&propBuffer, NULL);
+//                 TEST_ASSERT_EQUAL_INT(status, MQTTBadParameter); 
+
+//                 status = MQTTPropGet_PubPayloadFormatIndicator(&propBuffer, &payloadFormat);
+//                 TEST_ASSERT_EQUAL_INT(status , MQTTSuccess) ; 
+
+//                 break; 
+//             }
+//             case(MQTT_RESPONSE_TOPIC_ID):
+//             {
+//                 status = MQTTPropGet_PubResponseTopic(NULL,&pResponseTopic, &responseTopicLength);
+//                 TEST_ASSERT_EQUAL_INT(status, MQTTBadParameter); 
+
+//                 status = MQTTPropGet_PubResponseTopic(&propBuffer1,&pResponseTopic, &responseTopicLength);
+//                 TEST_ASSERT_EQUAL_INT(status, MQTTBadParameter); 
+
+//                 status = MQTTPropGet_PubResponseTopic(&propBuffer,NULL, &responseTopicLength);
+//                 TEST_ASSERT_EQUAL_INT(status, MQTTBadParameter); 
+
+//                 status = MQTTPropGet_PubResponseTopic(&propBuffer,&pResponseTopic, NULL);
+//                 TEST_ASSERT_EQUAL_INT(status, MQTTBadParameter); 
+
+//                 status = MQTTPropGet_PubResponseTopic(&propBuffer,&pResponseTopic, &responseTopicLength);
+//                 TEST_ASSERT_EQUAL_INT(status , MQTTSuccess) ; 
+
+//                 break; 
+//             }
+//             case(MQTT_CORRELATION_DATA_ID):
+//             {
+//                 status = MQTTPropGet_PubCorrelationData(NULL, &correlationData, &correlationLength);
+//                 TEST_ASSERT_EQUAL_INT(status, MQTTBadParameter); 
+
+//                 status = MQTTPropGet_PubCorrelationData(&propBuffer1, &correlationData, &correlationLength);
+//                 TEST_ASSERT_EQUAL_INT(status, MQTTBadParameter); 
+
+//                 status = MQTTPropGet_PubCorrelationData(&propBuffer, NULL, &correlationLength);
+//                 TEST_ASSERT_EQUAL_INT(status, MQTTBadParameter); 
+
+//                 status = MQTTPropGet_PubCorrelationData(&propBuffer, &correlationData, NULL);
+//                 TEST_ASSERT_EQUAL_INT(status, MQTTBadParameter); 
+//                 status = MQTTPropGet_PubCorrelationData(&propBuffer, &correlationData, &correlationLength);
+
+//                 TEST_ASSERT_EQUAL_INT(status, MQTTSuccess); 
+//                 break; 
+//             }
+//             case(MQTT_MSG_EXPIRY_ID):
+//             {
+//                 status = MQTTPropGet_PubMessageExpiryInterval(NULL, &messageExpiry);
+//                 TEST_ASSERT_EQUAL_INT(status, MQTTBadParameter); 
+
+//                 status = MQTTPropGet_PubMessageExpiryInterval(&propBuffer1, &messageExpiry);
+//                 TEST_ASSERT_EQUAL_INT(status, MQTTBadParameter); 
+
+//                 status = MQTTPropGet_PubMessageExpiryInterval(&propBuffer, NULL);
+//                 TEST_ASSERT_EQUAL_INT(status, MQTTBadParameter); 
+
+//                 status = MQTTPropGet_PubMessageExpiryInterval(&propBuffer, &messageExpiry);
+//                 TEST_ASSERT_EQUAL_INT(MQTTSuccess, status);
+//                 break;
+//             }
+//             case(MQTT_CONTENT_TYPE_ID):
+//                 status = MQTTPropGet_PubContentType(&propBuffer , &pContentType, &contentTypeLength); 
+//                 TEST_ASSERT_EQUAL_INT(MQTTSuccess, status);
+//             // case(MQTT_USER_PROPERTY_ID):
+//             // {
+//             //     status = MQTTPropGet_UserProp(&propBuffer,, &pUserPropKey, &userPropKeyLen, &pUserPropVal, &userPropKeyVal);
+//             //     break;
+//             // }
+//         }
+//         status = MQTT_IncomingGetNextProp(&propBuffer, &propertyId ); 
+//     }
+
+// }
+void test_getProps(void)
+{
+    MQTTStatus_t status = MQTTSuccess;
+    MqttPropBuilder_t propBuffer;
+    MqttPropBuilder_t propBuffer1;
+    propBuffer1.pBuffer = NULL;
+    uint8_t buffer[500];
+    size_t bufLength = 95; 
+    status = MqttPropertyBuilder_Init(&propBuffer, buffer, bufLength);
+
+    // 77 , 82 
+
+    uint8_t *pIndex = buffer;
+    pIndex = serializeuint_16(pIndex , MQTT_TOPIC_ALIAS_ID); 
+    pIndex = serializeuint_8(pIndex , MQTT_PAYLOAD_FORMAT_ID) ; 
+    pIndex = serializeutf_8(pIndex , MQTT_RESPONSE_TOPIC_ID) ; 
+    pIndex = serializeutf_8(pIndex , MQTT_CORRELATION_DATA_ID) ; 
+    pIndex = serializeuint_32(pIndex , MQTT_MSG_EXPIRY_ID); 
+    pIndex = serializeutf_8(pIndex, MQTT_CONTENT_TYPE_ID) ;
+    *pIndex = MQTT_SUBSCRIPTION_ID_ID; 
+    pIndex ++ ; 
+    *pIndex = 2 ; 
+    pIndex++ ; 
+    pIndex = serializeuint_32(pIndex , MQTT_SESSION_EXPIRY_ID); 
+    pIndex = serializeuint_16(pIndex , MQTT_TOPIC_ALIAS_MAX_ID); 
+    pIndex = serializeuint_16(pIndex, MQTT_RECEIVE_MAX_ID); 
+    pIndex = serializeuint_8(pIndex , MQTT_MAX_QOS_ID); 
+    pIndex = serializeuint_8(pIndex, MQTT_RETAIN_AVAILABLE_ID ); 
+    pIndex = serializeuint_32(pIndex , MQTT_MAX_PACKET_SIZE_ID); 
+    pIndex = serializeutf_8(pIndex, MQTT_ASSIGNED_CLIENT_ID); 
+    pIndex = serializeuint_8(pIndex, MQTT_WILDCARD_ID); 
+    pIndex = serializeuint_8(pIndex, MQTT_SUB_AVAILABLE_ID);
+    pIndex = serializeutf_8pair(pIndex) ; 
+    pIndex = serializeutf_8(pIndex , MQTT_REASON_STRING_ID); 
+    pIndex = serializeutf_8(pIndex , MQTT_SERVER_REF_ID); 
+
+    uint16_t topicAlias;
+    uint8_t payloadFormat;
+    const char *pResponseTopic;
+    uint16_t responseTopicLength;
+    const void *correlationData;
+    uint16_t correlationLength;
+    uint32_t messageExpiry;
+    const char *pContentType;
+    uint16_t contentTypeLength;
+    uint32_t subscriptionId;
+    uint32_t sessionExpiry;
+    uint16_t aliasMax;
+    uint16_t receiveMax;
+    uint8_t maxQoS;
+    uint8_t retainAvailable;
+    uint32_t maxPacketSize;
+    const char *pClientId;
+    uint16_t clientIdLength;
+    uint8_t wildcard;
+    uint8_t subAvailable;
+    uint8_t propertyId;
+    const char* pUserPropKey;
+    uint16_t pUserPropKeyLen;
+    const char*  pUserPropVal;
+    uint16_t pUserPropValLen;
+    const char*  pReasonString;
+    uint16_t reasonStringLength;
+
+
+    status = MQTT_IncomingGetNextProp(NULL, &propertyId);
+    TEST_ASSERT_EQUAL_INT(status, MQTTBadParameter);
+
+    status = MQTT_IncomingGetNextProp(&propBuffer1, &propertyId);
+    TEST_ASSERT_EQUAL_INT(status, MQTTBadParameter);
+
+    status = MQTT_IncomingGetNextProp(&propBuffer, &propertyId);
+
+    while (status == MQTTSuccess)
+    {
+        switch (propertyId)
+        {
+            case MQTT_TOPIC_ALIAS_ID:
+                TEST_ASSERT_EQUAL_INT(MQTTBadParameter, MQTTPropGet_PubTopicAlias(NULL, &topicAlias));
+                TEST_ASSERT_EQUAL_INT(MQTTBadParameter, MQTTPropGet_PubTopicAlias(&propBuffer1, &topicAlias));
+                TEST_ASSERT_EQUAL_INT(MQTTBadParameter, MQTTPropGet_PubTopicAlias(&propBuffer, NULL));
+                TEST_ASSERT_EQUAL_INT(MQTTSuccess, MQTTPropGet_PubTopicAlias(&propBuffer, &topicAlias));
+                break;
+
+            case MQTT_PAYLOAD_FORMAT_ID:
+                TEST_ASSERT_EQUAL_INT(MQTTBadParameter, MQTTPropGet_PubPayloadFormatIndicator(NULL, &payloadFormat));
+                TEST_ASSERT_EQUAL_INT(MQTTBadParameter, MQTTPropGet_PubPayloadFormatIndicator(&propBuffer1, &payloadFormat));
+                TEST_ASSERT_EQUAL_INT(MQTTBadParameter, MQTTPropGet_PubPayloadFormatIndicator(&propBuffer, NULL));
+                TEST_ASSERT_EQUAL_INT(MQTTSuccess, MQTTPropGet_PubPayloadFormatIndicator(&propBuffer, &payloadFormat));
+                break;
+
+            case MQTT_RESPONSE_TOPIC_ID:
+                TEST_ASSERT_EQUAL_INT(MQTTBadParameter, MQTTPropGet_PubResponseTopic(NULL, &pResponseTopic, &responseTopicLength));
+                TEST_ASSERT_EQUAL_INT(MQTTBadParameter, MQTTPropGet_PubResponseTopic(&propBuffer1, &pResponseTopic, &responseTopicLength));
+                TEST_ASSERT_EQUAL_INT(MQTTBadParameter, MQTTPropGet_PubResponseTopic(&propBuffer, NULL, &responseTopicLength));
+                TEST_ASSERT_EQUAL_INT(MQTTBadParameter, MQTTPropGet_PubResponseTopic(&propBuffer, &pResponseTopic, NULL));
+                TEST_ASSERT_EQUAL_INT(MQTTSuccess, MQTTPropGet_PubResponseTopic(&propBuffer, &pResponseTopic, &responseTopicLength));
+                break;
+
+            case MQTT_CORRELATION_DATA_ID:
+                TEST_ASSERT_EQUAL_INT(MQTTBadParameter, MQTTPropGet_PubCorrelationData(NULL, &correlationData, &correlationLength));
+                TEST_ASSERT_EQUAL_INT(MQTTBadParameter, MQTTPropGet_PubCorrelationData(&propBuffer1, &correlationData, &correlationLength));
+                TEST_ASSERT_EQUAL_INT(MQTTBadParameter, MQTTPropGet_PubCorrelationData(&propBuffer, NULL, &correlationLength));
+                TEST_ASSERT_EQUAL_INT(MQTTBadParameter, MQTTPropGet_PubCorrelationData(&propBuffer, &correlationData, NULL));
+                TEST_ASSERT_EQUAL_INT(MQTTSuccess, MQTTPropGet_PubCorrelationData(&propBuffer, &correlationData, &correlationLength));
+                break;
+
+            case MQTT_MSG_EXPIRY_ID:
+                TEST_ASSERT_EQUAL_INT(MQTTBadParameter, MQTTPropGet_PubMessageExpiryInterval(NULL, &messageExpiry));
+                TEST_ASSERT_EQUAL_INT(MQTTBadParameter, MQTTPropGet_PubMessageExpiryInterval(&propBuffer1, &messageExpiry));
+                TEST_ASSERT_EQUAL_INT(MQTTBadParameter, MQTTPropGet_PubMessageExpiryInterval(&propBuffer, NULL));
+                TEST_ASSERT_EQUAL_INT(MQTTSuccess, MQTTPropGet_PubMessageExpiryInterval(&propBuffer, &messageExpiry));
+                break;
+
+            case MQTT_CONTENT_TYPE_ID:
+                TEST_ASSERT_EQUAL_INT(MQTTBadParameter, MQTTPropGet_PubContentType(NULL, &pContentType, &contentTypeLength));
+                TEST_ASSERT_EQUAL_INT(MQTTBadParameter, MQTTPropGet_PubContentType(&propBuffer1, &pContentType, &contentTypeLength));
+                TEST_ASSERT_EQUAL_INT(MQTTBadParameter, MQTTPropGet_PubContentType(&propBuffer, NULL, &contentTypeLength));
+                TEST_ASSERT_EQUAL_INT(MQTTBadParameter, MQTTPropGet_PubContentType(&propBuffer, &pContentType, NULL));
+                TEST_ASSERT_EQUAL_INT(MQTTSuccess, MQTTPropGet_PubContentType(&propBuffer, &pContentType, &contentTypeLength));
+                break;
+
+            case MQTT_SUBSCRIPTION_ID_ID:
+                TEST_ASSERT_EQUAL_INT(MQTTBadParameter, MQTTPropGet_PubSubscriptionId(NULL, &subscriptionId));
+                TEST_ASSERT_EQUAL_INT(MQTTBadParameter, MQTTPropGet_PubSubscriptionId(&propBuffer1, &subscriptionId));
+                TEST_ASSERT_EQUAL_INT(MQTTBadParameter, MQTTPropGet_PubSubscriptionId(&propBuffer, NULL));
+                TEST_ASSERT_EQUAL_INT(MQTTSuccess, MQTTPropGet_PubSubscriptionId(&propBuffer, &subscriptionId));
+                break;
+
+            case MQTT_SESSION_EXPIRY_ID:
+                TEST_ASSERT_EQUAL_INT(MQTTBadParameter, MQTTPropGet_ConnSessionExpiry(NULL, &sessionExpiry));
+                TEST_ASSERT_EQUAL_INT(MQTTBadParameter, MQTTPropGet_ConnSessionExpiry(&propBuffer1, &sessionExpiry));
+                TEST_ASSERT_EQUAL_INT(MQTTBadParameter, MQTTPropGet_ConnSessionExpiry(&propBuffer, NULL));
+                TEST_ASSERT_EQUAL_INT(MQTTSuccess, MQTTPropGet_ConnSessionExpiry(&propBuffer, &sessionExpiry));
+                break;
+
+            case MQTT_TOPIC_ALIAS_MAX_ID:
+                TEST_ASSERT_EQUAL_INT(MQTTBadParameter, MQTTPropGet_ConnTopicAliasMax(NULL, &aliasMax));
+                TEST_ASSERT_EQUAL_INT(MQTTBadParameter, MQTTPropGet_ConnTopicAliasMax(&propBuffer1, &aliasMax));
+                TEST_ASSERT_EQUAL_INT(MQTTBadParameter, MQTTPropGet_ConnTopicAliasMax(&propBuffer, NULL));
+                TEST_ASSERT_EQUAL_INT(MQTTSuccess, MQTTPropGet_ConnTopicAliasMax(&propBuffer, &aliasMax));
+                break;
+
+            case MQTT_RECEIVE_MAX_ID:
+                TEST_ASSERT_EQUAL_INT(MQTTBadParameter, MQTTPropGet_ConnReceiveMax(NULL, &receiveMax));
+                TEST_ASSERT_EQUAL_INT(MQTTBadParameter, MQTTPropGet_ConnReceiveMax(&propBuffer1, &receiveMax));
+                TEST_ASSERT_EQUAL_INT(MQTTBadParameter, MQTTPropGet_ConnReceiveMax(&propBuffer, NULL));
+                TEST_ASSERT_EQUAL_INT(MQTTSuccess, MQTTPropGet_ConnReceiveMax(&propBuffer, &receiveMax));
+                break;
+
+            case MQTT_MAX_QOS_ID:
+                TEST_ASSERT_EQUAL_INT(MQTTBadParameter, MQTTPropGet_ConnMaxQos(NULL, &maxQoS));
+                TEST_ASSERT_EQUAL_INT(MQTTBadParameter, MQTTPropGet_ConnMaxQos(&propBuffer1, &maxQoS));
+                TEST_ASSERT_EQUAL_INT(MQTTBadParameter, MQTTPropGet_ConnMaxQos(&propBuffer, NULL));
+                TEST_ASSERT_EQUAL_INT(MQTTSuccess, MQTTPropGet_ConnMaxQos(&propBuffer, &maxQoS));
+                break;
+
+            case MQTT_RETAIN_AVAILABLE_ID:
+                TEST_ASSERT_EQUAL_INT(MQTTBadParameter, MQTTPropGet_ConnRetainAvailable(NULL, &retainAvailable));
+                TEST_ASSERT_EQUAL_INT(MQTTBadParameter, MQTTPropGet_ConnRetainAvailable(&propBuffer1, &retainAvailable));
+                TEST_ASSERT_EQUAL_INT(MQTTBadParameter, MQTTPropGet_ConnRetainAvailable(&propBuffer, NULL));
+                TEST_ASSERT_EQUAL_INT(MQTTSuccess, MQTTPropGet_ConnRetainAvailable(&propBuffer, &retainAvailable));
+                break;
+
+            case MQTT_MAX_PACKET_SIZE_ID:
+                TEST_ASSERT_EQUAL_INT(MQTTBadParameter, MQTTPropGet_ConnMaxPacketSize(NULL, &maxPacketSize));
+                TEST_ASSERT_EQUAL_INT(MQTTBadParameter, MQTTPropGet_ConnMaxPacketSize(&propBuffer1, &maxPacketSize));
+                TEST_ASSERT_EQUAL_INT(MQTTBadParameter, MQTTPropGet_ConnMaxPacketSize(&propBuffer, NULL));
+                TEST_ASSERT_EQUAL_INT(MQTTSuccess, MQTTPropGet_ConnMaxPacketSize(&propBuffer, &maxPacketSize));
+                break;
+
+            case MQTT_ASSIGNED_CLIENT_ID:
+                TEST_ASSERT_EQUAL_INT(MQTTBadParameter, MQTTPropGet_ConnClientId(NULL, &pClientId, &clientIdLength));
+                TEST_ASSERT_EQUAL_INT(MQTTBadParameter, MQTTPropGet_ConnClientId(&propBuffer1, &pClientId, &clientIdLength));
+                TEST_ASSERT_EQUAL_INT(MQTTBadParameter, MQTTPropGet_ConnClientId(&propBuffer, NULL, &clientIdLength));
+                TEST_ASSERT_EQUAL_INT(MQTTBadParameter, MQTTPropGet_ConnClientId(&propBuffer, &pClientId, NULL));
+                TEST_ASSERT_EQUAL_INT(MQTTSuccess, MQTTPropGet_ConnClientId(&propBuffer, &pClientId, &clientIdLength));
+                break;
+
+            case MQTT_WILDCARD_ID:
+                TEST_ASSERT_EQUAL_INT(MQTTBadParameter, MQTTPropGet_ConnWildcard(NULL, &wildcard));
+                TEST_ASSERT_EQUAL_INT(MQTTBadParameter, MQTTPropGet_ConnWildcard(&propBuffer1, &wildcard));
+                TEST_ASSERT_EQUAL_INT(MQTTBadParameter, MQTTPropGet_ConnWildcard(&propBuffer, NULL));
+                TEST_ASSERT_EQUAL_INT(MQTTSuccess, MQTTPropGet_ConnWildcard(&propBuffer, &wildcard));
+                break;
+
+            case MQTT_SUB_AVAILABLE_ID:
+                TEST_ASSERT_EQUAL_INT(MQTTBadParameter, MQTTPropGet_ConnSubId(NULL, &subAvailable));
+                TEST_ASSERT_EQUAL_INT(MQTTBadParameter, MQTTPropGet_ConnSubId(&propBuffer1, &subAvailable));
+                TEST_ASSERT_EQUAL_INT(MQTTBadParameter, MQTTPropGet_ConnSubId(&propBuffer, NULL));
+                TEST_ASSERT_EQUAL_INT(MQTTSuccess, MQTTPropGet_ConnSubId(&propBuffer, &subAvailable));
+                break;
+            case MQTT_USER_PROPERTY_ID:
+                TEST_ASSERT_EQUAL_INT(MQTTBadParameter, MQTTPropGet_UserProp(NULL, &pUserPropKey, &pUserPropKeyLen,&pUserPropVal, &pUserPropValLen));
+                TEST_ASSERT_EQUAL_INT(MQTTBadParameter, MQTTPropGet_UserProp(&propBuffer1, &pUserPropKey, &pUserPropKeyLen,&pUserPropVal, &pUserPropValLen));
+                TEST_ASSERT_EQUAL_INT(MQTTBadParameter, MQTTPropGet_UserProp(&propBuffer,NULL, &pUserPropKeyLen,&pUserPropVal, &pUserPropValLen));
+                TEST_ASSERT_EQUAL_INT(MQTTBadParameter, MQTTPropGet_UserProp(&propBuffer,&pUserPropKey, NULL ,&pUserPropVal, &pUserPropValLen));
+                TEST_ASSERT_EQUAL_INT(MQTTBadParameter, MQTTPropGet_UserProp(&propBuffer, &pUserPropKey, &pUserPropKeyLen,NULL, &pUserPropValLen));
+                TEST_ASSERT_EQUAL_INT(MQTTBadParameter, MQTTPropGet_UserProp(&propBuffer, &pUserPropKey, &pUserPropKeyLen, &pUserPropVal, NULL));
+                TEST_ASSERT_EQUAL_INT(MQTTSuccess, MQTTPropGet_UserProp(&propBuffer, &pUserPropKey, &pUserPropKeyLen, &pUserPropVal, &pUserPropValLen));
+                break ; 
+            case MQTT_REASON_STRING_ID:
+                TEST_ASSERT_EQUAL_INT(MQTTBadParameter, MQTTPropGet_ReasonString(NULL, &pReasonString, &reasonStringLength));
+                TEST_ASSERT_EQUAL_INT(MQTTBadParameter, MQTTPropGet_ReasonString(&propBuffer1, &pReasonString, &reasonStringLength));
+                TEST_ASSERT_EQUAL_INT(MQTTBadParameter, MQTTPropGet_ReasonString(&propBuffer, NULL, &reasonStringLength));
+                TEST_ASSERT_EQUAL_INT(MQTTBadParameter, MQTTPropGet_ReasonString(&propBuffer, &pReasonString, NULL));
+                TEST_ASSERT_EQUAL_INT(MQTTSuccess, MQTTPropGet_ReasonString(&propBuffer, &pReasonString, &reasonStringLength));
+                break ; 
+            case MQTT_SERVER_REF_ID:
+            TEST_ASSERT_EQUAL_INT(MQTTBadParameter, MQTTPropGet_DisconnectServerRef(NULL, &pReasonString, &reasonStringLength));
+            TEST_ASSERT_EQUAL_INT(MQTTBadParameter, MQTTPropGet_DisconnectServerRef(&propBuffer1, &pReasonString, &reasonStringLength));
+            TEST_ASSERT_EQUAL_INT(MQTTBadParameter, MQTTPropGet_DisconnectServerRef(&propBuffer, NULL, &reasonStringLength));
+            TEST_ASSERT_EQUAL_INT(MQTTBadParameter, MQTTPropGet_DisconnectServerRef(&propBuffer, &pReasonString, NULL));
+            TEST_ASSERT_EQUAL_INT(MQTTSuccess, MQTTPropGet_DisconnectServerRef(&propBuffer, &pReasonString, &reasonStringLength));
+            break ; 
+            default:
+                break;
+        }
+
+        status = MQTT_IncomingGetNextProp(&propBuffer, &propertyId);
+    }
+}
