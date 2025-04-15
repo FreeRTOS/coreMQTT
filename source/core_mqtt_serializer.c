@@ -658,6 +658,8 @@ typedef enum MQTTSubscriptionType
     MQTT_UNSUBSCRIBE /**< @brief The type is a UNSUBSCRIBE packet. */
 } MQTTSubscriptionType_t;
 
+
+
 /*-----------------------------------------------------------*/
 
 /**
@@ -3515,11 +3517,12 @@ MQTTStatus_t MQTT_ValidatePublishParams( const MQTTPublishInfo_t * pPublishInfo,
     return status;
 }
 
-MQTTStatus_t validatePublishProperties(uint16_t serverTopicAliasMax, MqttPropBuilder_t* propBuilder, uint16_t *topicAlias)
+MQTTStatus_t validatePublishProperties(uint16_t serverTopicAliasMax, MqttPropBuilder_t* propBuilder, uint16_t* topicAlias)
 {
     MQTTStatus_t status = MQTTSuccess;
     size_t propertyLength = propBuilder->currentIndex;
     const uint8_t* pLocalIndex = propBuilder->pBuffer;
+    bool topicAliasBool = false;
     if (status == MQTTSuccess)
     {
         while ((propertyLength > 0U) && (status == MQTTSuccess))
@@ -3527,14 +3530,13 @@ MQTTStatus_t validatePublishProperties(uint16_t serverTopicAliasMax, MqttPropBui
             uint8_t propertyId = *pLocalIndex;
             pLocalIndex = &pLocalIndex[1];
             propertyLength -= sizeof(uint8_t);
-            bool topicAliasBool = false; 
-            switch (propertyId)
+            if (propertyId == MQTT_TOPIC_ALIAS_ID)
             {
-            case MQTT_TOPIC_ALIAS_ID:
-                decodeuint16_t(topicAlias, &propertyLength,&topicAliasBool, &pLocalIndex);
+                decodeuint16_t(topicAlias, &propertyLength, &topicAliasBool, &pLocalIndex);
+
                 if (serverTopicAliasMax < *topicAlias)
                 {
-                    LogError(("Protocol Error : Topic Alias greater then Topic Alias Max"));
+                    LogError(("Protocol Error: Topic Alias greater than Topic Alias Max"));
                     status = MQTTBadParameter;
                 }
                 break;
@@ -3543,14 +3545,11 @@ MQTTStatus_t validatePublishProperties(uint16_t serverTopicAliasMax, MqttPropBui
     }
     return status;
 }
-
 MQTTStatus_t validateSubscribeProperties(uint8_t isSubscriptionIdAvailable, MqttPropBuilder_t* propBuilder)
 {
     MQTTStatus_t status = MQTTSuccess;
     size_t propertyLength = propBuilder->currentIndex;
     const uint8_t* pLocalIndex = propBuilder->pBuffer;
-    bool subId = false;
-    uint8_t isSubIdAvailable;
 
     if (status == MQTTSuccess)
     {
@@ -3559,17 +3558,16 @@ MQTTStatus_t validateSubscribeProperties(uint8_t isSubscriptionIdAvailable, Mqtt
             uint8_t propertyId = *pLocalIndex;
             pLocalIndex = &pLocalIndex[1];
             propertyLength -= sizeof(uint8_t);
-
-            switch (propertyId)
+            if (propertyId == MQTT_SUBSCRIPTION_ID_ID)
             {
-            case MQTT_SUBSCRIPTION_ID_ID:
                 if (isSubscriptionIdAvailable == 0)
                 {
-                    LogError(("Protocol Error : Subscription Id not allowed"));
+                    LogError(("Protocol Error: Topic Alias greater than Topic Alias Max"));
                     status = MQTTBadParameter;
                 }
                 break;
             }
+
         }
     }
     return status;
@@ -3990,7 +3988,7 @@ uint8_t * MQTT_SerializeDisconnectFixed( uint8_t * pIndex,
 }
 
 
-    MQTTStatus_t MQTTV5_DeserializeDisconnect( MQTTPacketInfo_t * pPacket,
+    MQTTStatus_t MQTTV5_DeserializeDisconnect( const MQTTPacketInfo_t * pPacket,
                                                uint32_t maxPacketSize,
                                                MQTTReasonCodeInfo_t* pDisconnectInfo, 
                                                MqttPropBuilder_t *propBuffer)
@@ -4110,7 +4108,7 @@ uint8_t * MQTT_SerializeDisconnectFixed( uint8_t * pIndex,
     MQTTStatus_t MQTTPropAdd_SubscribeId(MqttPropBuilder_t* pPropertyBuilder, size_t subscriptionId)
     {
         MQTTStatus_t status = MQTTSuccess;
-        uint8_t* pIndex = pPropertyBuilder->pBuffer + pPropertyBuilder->currentIndex;
+        uint8_t* pIndex; 
         if (subscriptionId == 0)
         {
             LogError(("Subscription Id cannot 0 for subscribe properties : Protocol Error "));
@@ -4137,6 +4135,7 @@ uint8_t * MQTT_SerializeDisconnectFixed( uint8_t * pIndex,
             status = MQTTBadParameter;
         }
         else {
+            pIndex = pPropertyBuilder->pBuffer + pPropertyBuilder->currentIndex;
             *pIndex = MQTT_SUBSCRIPTION_ID_ID;
             pIndex++;
             pIndex = encodeRemainingLength(pIndex, subscriptionId);
@@ -4166,6 +4165,7 @@ uint8_t * MQTT_SerializeDisconnectFixed( uint8_t * pIndex,
         else if (userProperty == NULL)
         {
             LogError(("Arguments cannot be NULL : userProperty=%p.", (void*)userProperty));
+            status = MQTTBadParameter;
         }
         else if (userProperty->pKey == NULL || userProperty->pValue == NULL || userProperty->keyLength == 0U || userProperty->valueLength == 0U)
         {
@@ -5029,10 +5029,6 @@ uint8_t * MQTT_SerializeDisconnectFixed( uint8_t * pIndex,
             if (status == MQTTSuccess)
             {
                 propBuffer->currentIndex = (size_t)(startOfProp - propBuffer->pBuffer);
-            }
-            else
-            {
-                LogError(("Failed to decode topic alias max"));
             }
         }
         return status; 

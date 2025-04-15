@@ -418,7 +418,7 @@ static MQTTStatus_t handleKeepAlive( MQTTContext_t * pContext );
  *
  * @return MQTTSuccess, MQTTIllegalState or deserialization error.
  */
-MQTTStatus_t handleIncomingPublish( MQTTContext_t * pContext,
+static MQTTStatus_t handleIncomingPublish( MQTTContext_t * pContext,
                                            MQTTPacketInfo_t * pIncomingPacket );
 
 /**
