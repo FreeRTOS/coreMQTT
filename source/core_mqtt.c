@@ -1770,7 +1770,7 @@ static MQTTStatus_t handleIncomingPublish( MQTTContext_t * pContext,
             publishRecordState = MQTT_CalculateStatePublish( MQTT_RECEIVE,
                                                              publishInfo.qos );
 
-            LogDebug( ( "Incoming publish packet with packet id %hu already exists.",
+            LogDebug(("Incoming publish packet with packet id %hu already exists.", F
                         ( unsigned short ) packetIdentifier ) );
 
             if( publishInfo.dup == false )
@@ -2527,7 +2527,7 @@ MQTTStatus_t MQTT_Subscribe( MQTTContext_t * pContext,
                                                 subscriptionCount,
                                                 &remainingLength,
                                                 &packetSize,
-                                                subscribePropLen);
+                                                subscribePropLen, pContext->connectProperties.serverMaxPacketSize);
         LogError( ( "SUBSCRIBE packet size is %lu and remaining length is %lu.",
                     ( unsigned long ) packetSize,
                     ( unsigned long ) remainingLength ) );
@@ -3652,6 +3652,7 @@ MQTTStatus_t MQTT_Unsubscribe( MQTTContext_t * pContext,
                                                 subscriptionCount,
                                                 &remainingLength,
                                                 &packetSize, 
+                                                pContext->connectProperties.serverMaxPacketSize, 
                                                 proplen);
         LogInfo( ( "UNSUBSCRIBE packet size is %lu and remaining length is %lu.",
                     ( unsigned long ) packetSize,

@@ -754,7 +754,8 @@ MQTTStatus_t MQTT_GetSubscribePacketSize(MQTTSubscribeInfo_t* pSubscriptionList,
     size_t subscriptionCount,
     size_t* pRemainingLength,
     size_t* pPacketSize,
-    size_t propLen); 
+    size_t propLen,
+    uint32_t maxPacketSize); 
 
 
 /* @[declare_mqtt_getsubscribepacketsize] */
@@ -811,7 +812,8 @@ MQTTStatus_t MQTT_GetUnsubscribePacketSize(const MQTTSubscribeInfo_t* pSubscript
                                             size_t subscriptionCount,
                                             size_t* pRemainingLength,
                                             size_t* pPacketSize,
-                                            size_t propLen);
+                                            uint32_t maxPacketSize,
+                                            size_t propLen); 
 
 
 /**
