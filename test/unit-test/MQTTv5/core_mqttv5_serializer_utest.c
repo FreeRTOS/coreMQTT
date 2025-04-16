@@ -3144,18 +3144,18 @@ void test_MQTT_SerializeAck(void)
 
 }
 
-// void test_MQTTV5_SerializeDisconnect(void)
-// {
-//     uint8_t buf[10] ; 
+void test_MQTTV5_SerializeDisconnect(void)
+{
+    uint8_t buf[10] ; 
 
-//     MQTTStatus_t status = MQTTSuccess ; 
-//     MQTT_SerializeDisconnectFixed(buf , 0x00 , 10) ; 
-//     TEST_ASSERT_EQUAL(buf[0], MQTT_PACKET_TYPE_DISCONNECT) ;
+    MQTTStatus_t status = MQTTSuccess ; 
+    MQTT_SerializeDisconnectFixed(buf , 0x00 , 10) ; 
+    TEST_ASSERT_EQUAL(buf[0], MQTT_PACKET_TYPE_DISCONNECT) ;
 
-//     MQTTV5_SerializeAckFixed(buf , MQTT_PACKET_TYPE_SUBACK, 10 , 10, 0x00) ; 
-//     TEST_ASSERT_EQUAL(buf[0], MQTT_PACKET_TYPE_SUBACK) ;
+    MQTTV5_SerializeAckFixed(buf , MQTT_PACKET_TYPE_SUBACK, 10 , 10, 0x00) ; 
+    TEST_ASSERT_EQUAL(buf[0], MQTT_PACKET_TYPE_SUBACK) ;
 
-// }
+}
 
 void test_validatePublishProperties(void)
 {
@@ -3201,157 +3201,6 @@ void test_validateSubscribeProperties(void)
 
 }
 
-// void test_getProps(void)
-// {
-//     MQTTStatus_t status = MQTTSuccess ; 
-//     MqttPropBuilder_t propBuffer ; 
-//     MqttPropBuilder_t propBuffer1 ; 
-//     propBuffer1.pBuffer = NULL ; 
-//     uint8_t buffer[500] ; 
-//     size_t bufLength = 62 ; 
-//     status = MqttPropertyBuilder_Init(&(propBuffer), buffer , bufLength) ; 
-//     uint8_t *pIndex = buffer ; 
-    // pIndex = serializeuint_16(pIndex , MQTT_TOPIC_ALIAS_ID); 
-    // pIndex = serializeuint_8(pIndex , MQTT_PAYLOAD_FORMAT_ID) ; 
-    // pIndex = serializeutf_8(pIndex , MQTT_RESPONSE_TOPIC_ID) ; 
-    // pIndex = serializeutf_8(pIndex , MQTT_CORRELATION_DATA_ID) ; 
-    // pIndex = serializeuint_32(pIndex , MQTT_MSG_EXPIRY_ID); 
-    // pIndex = serializeutf_8(pIndex, MQTT_CONTENT_TYPE_ID) ;
-    // pIndex = serializeuint_8(pIndex , MQTT_SUBSCRIPTION_ID_ID); 
-    // pIndex = serializeuint_32(pIndex , MQTT_SESSION_EXPIRY_ID); 
-    // pIndex = serializeuint_16(pIndex , MQTT_TOPIC_ALIAS_MAX_ID); 
-    // pIndex = serializeuint_16(pIndex, MQTT_RECEIVE_MAX_ID); 
-    // pIndex = serializeuint_8(pIndex , MQTT_MAX_QOS_ID); 
-    // pIndex = serializeuint_8(pIndex, MQTT_RETAIN_AVAILABLE_ID ); 
-    // pIndex = serializeuint_32(pIndex , MQTT_MAX_PACKET_SIZE_ID); 
-    // pIndex = serializeutf_8(pIndex, MQTT_ASSIGNED_CLIENT_ID); 
-    // pIndex = serializeuint_8(pIndex, MQTT_WILDCARD_ID); 
-    // pIndex = serializeuint_8(pIndex, MQTT_SUB_AVAILABLE_ID);
-
-
-
-    
-
-//     uint16_t topicAlias ; 
-//     uint8_t payloadFormat ; 
-//     const char *pResponseTopic ; 
-//     uint16_t responseTopicLength ; 
-//     const void *correlationData ; 
-//     uint16_t correlationLength ; 
-//     uint32_t messageExpiry ;
-//     uint8_t propertyId ; 
-//     const char *pContentType ; 
-//     uint16_t contentTypeLength ; 
-
-//     status = MQTT_IncomingGetNextProp(NULL, &propertyId ); 
-//     TEST_ASSERT_EQUAL_INT(status, MQTTBadParameter); 
-
-//     status = MQTT_IncomingGetNextProp(&propBuffer1, &propertyId ); 
-//     TEST_ASSERT_EQUAL_INT(status, MQTTBadParameter); 
-    
-//     status = MQTT_IncomingGetNextProp(&propBuffer, &propertyId ); 
-
-//     while(status == MQTTSuccess)
-//     {
-//         switch (propertyId)
-//         {
-//             case(MQTT_TOPIC_ALIAS_ID):
-//             {
-//                 status = MQTTPropGet_PubTopicAlias(NULL, &topicAlias);
-//                 TEST_ASSERT_EQUAL_INT(status, MQTTBadParameter); 
-
-//                 status = MQTTPropGet_PubTopicAlias(&propBuffer1 , &topicAlias) ; 
-//                 TEST_ASSERT_EQUAL_INT(status, MQTTBadParameter); 
-
-//                 status = MQTTPropGet_PubTopicAlias(&propBuffer, NULL);
-//                 TEST_ASSERT_EQUAL_INT(status , MQTTBadParameter) ; 
-
-//                 status = MQTTPropGet_PubTopicAlias(&propBuffer, &topicAlias);
-
-//                 TEST_ASSERT_EQUAL_INT(status , MQTTSuccess) ; 
-//                 break; 
-//             }
-//             case(MQTT_PAYLOAD_FORMAT_ID):
-//             {
-//                 status = MQTTPropGet_PubPayloadFormatIndicator(NULL, &payloadFormat);
-//                 TEST_ASSERT_EQUAL_INT(status, MQTTBadParameter); 
-
-//                 status = MQTTPropGet_PubPayloadFormatIndicator(&propBuffer1, &payloadFormat);
-//                 TEST_ASSERT_EQUAL_INT(status, MQTTBadParameter); 
-
-//                 status = MQTTPropGet_PubPayloadFormatIndicator(&propBuffer, NULL);
-//                 TEST_ASSERT_EQUAL_INT(status, MQTTBadParameter); 
-
-//                 status = MQTTPropGet_PubPayloadFormatIndicator(&propBuffer, &payloadFormat);
-//                 TEST_ASSERT_EQUAL_INT(status , MQTTSuccess) ; 
-
-//                 break; 
-//             }
-//             case(MQTT_RESPONSE_TOPIC_ID):
-//             {
-//                 status = MQTTPropGet_PubResponseTopic(NULL,&pResponseTopic, &responseTopicLength);
-//                 TEST_ASSERT_EQUAL_INT(status, MQTTBadParameter); 
-
-//                 status = MQTTPropGet_PubResponseTopic(&propBuffer1,&pResponseTopic, &responseTopicLength);
-//                 TEST_ASSERT_EQUAL_INT(status, MQTTBadParameter); 
-
-//                 status = MQTTPropGet_PubResponseTopic(&propBuffer,NULL, &responseTopicLength);
-//                 TEST_ASSERT_EQUAL_INT(status, MQTTBadParameter); 
-
-//                 status = MQTTPropGet_PubResponseTopic(&propBuffer,&pResponseTopic, NULL);
-//                 TEST_ASSERT_EQUAL_INT(status, MQTTBadParameter); 
-
-//                 status = MQTTPropGet_PubResponseTopic(&propBuffer,&pResponseTopic, &responseTopicLength);
-//                 TEST_ASSERT_EQUAL_INT(status , MQTTSuccess) ; 
-
-//                 break; 
-//             }
-//             case(MQTT_CORRELATION_DATA_ID):
-//             {
-//                 status = MQTTPropGet_PubCorrelationData(NULL, &correlationData, &correlationLength);
-//                 TEST_ASSERT_EQUAL_INT(status, MQTTBadParameter); 
-
-//                 status = MQTTPropGet_PubCorrelationData(&propBuffer1, &correlationData, &correlationLength);
-//                 TEST_ASSERT_EQUAL_INT(status, MQTTBadParameter); 
-
-//                 status = MQTTPropGet_PubCorrelationData(&propBuffer, NULL, &correlationLength);
-//                 TEST_ASSERT_EQUAL_INT(status, MQTTBadParameter); 
-
-//                 status = MQTTPropGet_PubCorrelationData(&propBuffer, &correlationData, NULL);
-//                 TEST_ASSERT_EQUAL_INT(status, MQTTBadParameter); 
-//                 status = MQTTPropGet_PubCorrelationData(&propBuffer, &correlationData, &correlationLength);
-
-//                 TEST_ASSERT_EQUAL_INT(status, MQTTSuccess); 
-//                 break; 
-//             }
-//             case(MQTT_MSG_EXPIRY_ID):
-//             {
-//                 status = MQTTPropGet_PubMessageExpiryInterval(NULL, &messageExpiry);
-//                 TEST_ASSERT_EQUAL_INT(status, MQTTBadParameter); 
-
-//                 status = MQTTPropGet_PubMessageExpiryInterval(&propBuffer1, &messageExpiry);
-//                 TEST_ASSERT_EQUAL_INT(status, MQTTBadParameter); 
-
-//                 status = MQTTPropGet_PubMessageExpiryInterval(&propBuffer, NULL);
-//                 TEST_ASSERT_EQUAL_INT(status, MQTTBadParameter); 
-
-//                 status = MQTTPropGet_PubMessageExpiryInterval(&propBuffer, &messageExpiry);
-//                 TEST_ASSERT_EQUAL_INT(MQTTSuccess, status);
-//                 break;
-//             }
-//             case(MQTT_CONTENT_TYPE_ID):
-//                 status = MQTTPropGet_PubContentType(&propBuffer , &pContentType, &contentTypeLength); 
-//                 TEST_ASSERT_EQUAL_INT(MQTTSuccess, status);
-//             // case(MQTT_USER_PROPERTY_ID):
-//             // {
-//             //     status = MQTTPropGet_UserProp(&propBuffer,, &pUserPropKey, &userPropKeyLen, &pUserPropVal, &userPropKeyVal);
-//             //     break;
-//             // }
-//         }
-//         status = MQTT_IncomingGetNextProp(&propBuffer, &propertyId ); 
-//     }
-
-// }
 void test_getProps(void)
 {
     MQTTStatus_t status = MQTTSuccess;
