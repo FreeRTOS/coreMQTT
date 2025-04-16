@@ -3427,14 +3427,14 @@ MQTTStatus_t MQTT_DeserializeConnack( MQTTConnectProperties_t * pConnackProperti
     status = validateConnackParams(pIncomingPacket, pSessionPresent);
 
     /*Validate the arguments*/
-    if( pConnackProperties == NULL )
+    if( pConnackProperties == NULL)
     {
         status = MQTTBadParameter;
     }
         
     /*status = validateConnackParams( pIncomingPacket, pSessionPresent );*/
 
-    if( status == MQTTSuccess )
+    if( status == MQTTSuccess || status == MQTTServerRefused )
     {
         pVariableHeader = pIncomingPacket->pRemainingData;
         pVariableHeader = &pVariableHeader[ 2 ];
@@ -3443,7 +3443,7 @@ MQTTStatus_t MQTT_DeserializeConnack( MQTTConnectProperties_t * pConnackProperti
     }
 
     /*Validate the packet size if max packet size is set*/
-    if( status == MQTTSuccess )
+    if( status == MQTTSuccess || status == MQTTServerRefused )
     {
         if( ( pIncomingPacket->remainingLength + remainingLengthSize + 1U ) > ( pConnackProperties->maxPacketSize ) )
         {
@@ -3902,7 +3902,7 @@ MQTTStatus_t MQTT_GetDisconnectPacketSize(  size_t * pRemainingLength,
                                             size_t * pPacketSize,
                                             uint32_t maxPacketSize,
                                             size_t disconnectPropLen, 
-                                            MQTTDisconnectReasonCode_t reasonCode )
+                                            MQTTSuccessFailReasonCode_t reasonCode )
 {
     MQTTStatus_t status = MQTTSuccess;
     size_t length = 0U;
@@ -3970,7 +3970,7 @@ MQTTStatus_t MQTT_GetDisconnectPacketSize(  size_t * pRemainingLength,
 }
 
 uint8_t * MQTT_SerializeDisconnectFixed( uint8_t * pIndex,
-                                        MQTTDisconnectReasonCode_t reasonCode,
+                                        MQTTSuccessFailReasonCode_t reasonCode,
                                         size_t remainingLength)
 {
     uint8_t * pIndexLocal = pIndex;

@@ -267,7 +267,14 @@ typedef struct MQTTContext
 } MQTTContext_t;
 
 
-MQTTStatus_t MqttPropertyBuilder_Init(MqttPropBuilder_t* pPropertyBuilder, uint8_t *buffer, size_t length); 
+/*
+* @brief Initialize the property builder.
+*
+* @param[out] pPropertyBuilder Property builder to initialize.
+* @param[in] buffer Buffer to store the properties.
+* @param[in] length Length of the buffer.
+*/
+MQTTStatus_t MqttPropertyBuilder_Init(MqttPropBuilder_t* pPropertyBuilder, uint8_t* buffer, size_t length);
 
 /**
  * @ingroup mqtt_struct_types
@@ -358,12 +365,11 @@ typedef struct MQTTDeserializedInfo
  * @endcode
  */
 /* @[declare_mqtt_init] */
-MQTTStatus_t MQTT_Init( MQTTContext_t * pContext,
-                        const TransportInterface_t * pTransportInterface,
+MQTTStatus_t MQTT_Init(MQTTContext_t* pContext,
+                        const TransportInterface_t* pTransportInterface,
                         MQTTGetCurrentTimeFunc_t getTimeFunction,
                         MQTTEventCallback_t userCallback,
-                        const MQTTFixedBuffer_t * pNetworkBuffer, 
-                        const MqttPropBuilder_t * pAckPropsBuffer);
+                        const MQTTFixedBuffer_t* pNetworkBuffer); 
 /* @[declare_mqtt_init] */
 
 /**
@@ -432,11 +438,13 @@ MQTTStatus_t MQTT_Init( MQTTContext_t * pContext,
  * @endcode
  */
 /* @[declare_mqtt_initstatefulqos] */
-MQTTStatus_t MQTT_InitStatefulQoS( MQTTContext_t * pContext,
-                                   MQTTPubAckInfo_t * pOutgoingPublishRecords,
-                                   size_t outgoingPublishCount,
-                                   MQTTPubAckInfo_t * pIncomingPublishRecords,
-                                   size_t incomingPublishCount );
+MQTTStatus_t MQTT_InitStatefulQoS(MQTTContext_t* pContext,
+    MQTTPubAckInfo_t* pOutgoingPublishRecords,
+    size_t outgoingPublishCount,
+    MQTTPubAckInfo_t* pIncomingPublishRecords,
+    size_t incomingPublishCount,
+    uint8_t* pBuffer,
+    size_t bufferLength);
 /* @[declare_mqtt_initstatefulqos] */
 
 /**
@@ -1003,7 +1011,7 @@ const char * MQTT_Status_strerror( MQTTStatus_t status );
 /* @[declare_mqttv5_disconnect] */
 MQTTStatus_t MQTT_Disconnect(MQTTContext_t* pContext,
     MqttPropBuilder_t* pPropertyBuilder,
-    MQTTDisconnectReasonCode_t reasonCode); 
+    MQTTSuccessFailReasonCode_t reasonCode); 
 /* @[declare_mqttv5_disconnect] */
 
 

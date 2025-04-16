@@ -81,28 +81,6 @@
 #define UINT8_SET_BIT( x, position )      ( ( x ) = ( uint8_t ) ( ( x ) | ( 0x01U << ( position ) ) ) )
 
 /**
- * @brief Get the high byte of a 16-bit unsigned integer.
- */
-#define UINT16_HIGH_BYTE( x )             ( ( uint8_t ) ( ( x ) >> 8 ) )
-
-/**
-* @brief Get the low byte of a 16-bit unsigned integer.
-*/
-#define UINT16_LOW_BYTE( x )              ( ( uint8_t ) ( ( x ) & 0x00ffU ) )
-
-/**
-* @brief Set a bit in an 32-bit unsigned integer.
-*/
-#define UINT32_SET_BIT( x, position )      ( ( x ) = ( uint32_t ) ( ( x ) | ( 0x01U << ( position ) ) ) )
-/**
-* @brief Macro for checking if a bit is set in a 4-byte unsigned int.
-*
-* @param[in] x The unsigned int to check.
-* @param[in] position Which bit to check.
-*/
-#define UINT32_CHECK_BIT( x, position )    ( ( ( x ) & ( 0x01U << ( position ) ) ) == ( 0x01U << ( position ) ) )
-
-/**
 * @brief Number of vectors required to encode one topic filter in a subscribe
 * request. Three vectors are required as there are three fields in the
 * subscribe request namely:
@@ -118,75 +96,10 @@
  */
 #define CORE_MQTT_UNSUBSCRIBE_PER_TOPIC_VECTOR_LENGTH    ( 2U )
 
-
-/**
- * @brief Correlation Data id.
- */
-    #define MQTT_REASON_STRING_ID       ( 0x1F )
-
-/**
-* @brief Session expiry id.
-*/
-    #define MQTT_SESSION_EXPIRY_ID      ( 0x11 )
-
-/**
-* @brief User property id.
-*/
-    #define MQTT_USER_PROPERTY_ID       ( 0x26 )
-
-/**
-* @brief  Size of the property id.
-*/
-    #define CORE_MQTT_ID_SIZE    ( 1U )
-
-
-/* Position of the reason string in the field set*/
-
-    #define MQTT_REASON_STRING_POS          ( 18 )
-
-/**
-* @ingroup mqtt_constants
-* @brief The size of MQTT PUBACK, PUBREC, PUBREL, and PUBCOMP packets with reason code, packet id.
-*/
-#define MQTT_PUBLISH_ACK_PACKET_SIZE_WITH_REASON    ( 3UL )
-/*
- * @brief Identifier of the subscription ID
- */ 
-#define MQTT_SUBSCRIPTION_ID_ID                     ( 0x0B )
-
 /**
  * @brief Per the MQTT spec, the max packet size  can be of  max remaining length + 5 bytes
  */
 #define MQTT_MAX_PACKET_SIZE             ( 268435460U )
-
-/**
-* @brief Macro for decoding a 2-byte unsigned int from a sequence of bytes.
-*
-* @param[in] ptr A uint8_t* that points to the high byte.
-*/
-#define UINT16_DECODE( ptr )                            \
-    ( uint16_t ) ( ( ( ( uint16_t ) ptr[ 0 ] ) << 8 ) | \
-                   ( ( uint16_t ) ptr[ 1 ] ) )
-
-/**
-* @brief Macro for decoding a 4-byte unsigned int from a sequence of bytes.
-*
-* @param[in] ptr A uint8_t* that points to the high byte.
-*/
-#define UINT32_DECODE( ptr )                         \
-    ( uint32_t ) ( ( ( ( uint32_t ) ptr[ 0 ] ) << 24 ) | \
-                   ( ( ( uint32_t ) ptr[ 1 ] ) << 16 ) | \
-                   ( ( ( uint32_t ) ptr[ 2 ] ) << 8 ) |  \
-                   ( ( uint32_t ) ptr[ 3 ] ) )
-/**
-* @brief Topic alias id.
-*/
-#define MQTT_TOPIC_ALIAS_ID         ( 0x23 )
-
-/**
-* @brief Utf 8 encoded string has 2 byte length field and 1 byte property id.
-*/
-#define MQTT_UTF8_LENGTH_SIZE            ( 3U )
 
 
 typedef enum MQTTSubscriptionType
@@ -660,19 +573,10 @@ static MQTTStatus_t sendPublishAcksWithProperty(MQTTContext_t* pContext,
  */
 
 static MQTTStatus_t sendDisconnectWithoutCopy(MQTTContext_t* pContext,
-                                        MQTTDisconnectReasonCode_t reasonCode,
+                                        MQTTSuccessFailReasonCode_t reasonCode,
                                         size_t remainingLength,
                                         MqttPropBuilder_t* pPropertyBuilder); 
 
-
-/*
-* @brief Initialize the property builder.
-* 
-* @param[out] pPropertyBuilder Property builder to initialize.
-* @param[in] buffer Buffer to store the properties.
-* @param[in] length Length of the buffer.
-*/
-MQTTStatus_t MqttPropertyBuilder_Init(MqttPropBuilder_t* pPropertyBuilder, uint8_t* buffer, size_t length); 
 
 /**
  * @brief Initialize an MQTTConnectProperties_t.
@@ -684,7 +588,7 @@ MQTTStatus_t MqttPropertyBuilder_Init(MqttPropBuilder_t* pPropertyBuilder, uint8
  * @return #MQTTBadParameter if invalid parameters are passed;
  * #MQTTSuccess otherwise
  */
-MQTTStatus_t MQTTV5_InitConnect(MQTTConnectProperties_t* pConnectProperties);
+static MQTTStatus_t MQTTV5_InitConnect(MQTTConnectProperties_t* pConnectProperties);
 
 /*-----------------------------------------------------------*/
 
@@ -750,7 +654,7 @@ static MQTTStatus_t sendPublishAcksWithProperty( MQTTContext_t * pContext,
         iterator++;
         ioVectorLength++;
 
-        if (pContext->ackPropsBuffer.pBuffer != NULL)
+        if ((pContext->ackPropsBuffer.pBuffer != NULL) && (propertyLength != 0U))
         {
             /* Encode the property length. */
             pIndex = propertyLengthBuf;
@@ -809,17 +713,13 @@ static MQTTStatus_t sendPublishAcksWithProperty( MQTTContext_t * pContext,
             }
         }
     }
-    else
-    {
-        status = MQTTBadParameter;
-    }
 
     return status;
 }
 
 
 static MQTTStatus_t sendDisconnectWithoutCopy( MQTTContext_t * pContext,
-                                                MQTTDisconnectReasonCode_t reasonCode,
+                                                MQTTSuccessFailReasonCode_t reasonCode,
                                                 size_t remainingLength,
                                                 MqttPropBuilder_t* pPropertyBuilder)
 {
@@ -1896,7 +1796,7 @@ static MQTTStatus_t handleIncomingPublish( MQTTContext_t * pContext,
         /* Invoke application callback to hand the buffer over to application
          * before sending acks. */
 
-        MQTTSuccessFailReasonCode_t reasonCode = MQTTReasonSuccess; 
+        MQTTSuccessFailReasonCode_t reasonCode = MQTT_REASON_PUBREC_SUCCESS; 
 
         if (duplicatePublish == false)
         {
@@ -1904,7 +1804,7 @@ static MQTTStatus_t handleIncomingPublish( MQTTContext_t * pContext,
         }
 
         /* Send PUBREL or PUBCOMP if necessary. */
-        if (pContext->ackPropsBuffer.pBuffer == NULL && (reasonCode == MQTTReasonSuccess))
+        if (pContext->ackPropsBuffer.pBuffer == NULL && (reasonCode == MQTT_REASON_PUBREC_SUCCESS))
         {
             status = sendPublishAcks(pContext,
                 packetIdentifier,
@@ -2058,12 +1958,12 @@ static MQTTStatus_t handlePublishAcks( MQTTContext_t * pContext,
         /* Invoke application callback to hand the buffer over to application
             * before sending acks. */
 
-        MQTTSuccessFailReasonCode_t reasonCode = MQTTReasonSuccess; 
+        MQTTSuccessFailReasonCode_t reasonCode = MQTT_REASON_PUBREC_SUCCESS; 
 
         appCallback( pContext, pIncomingPacket, &deserializedInfo, &reasonCode, &pContext->ackPropsBuffer, &propBuffer);
 
         /* Send PUBREL or PUBCOMP if necessary. */
-        if(pContext->ackPropsBuffer.pBuffer == NULL && (reasonCode == MQTTReasonSuccess))
+        if(pContext->ackPropsBuffer.pBuffer == NULL && (reasonCode == MQTT_REASON_PUBREC_SUCCESS))
         {
             status = sendPublishAcks( pContext,
                                     packetIdentifier,
@@ -2321,12 +2221,13 @@ static MQTTStatus_t receiveSingleIteration( MQTTContext_t * pContext,
 /*-----------------------------------------------------------*/
 
 static MQTTStatus_t sendSubscribeWithoutCopy( MQTTContext_t * pContext,
-                                              MQTTSubscribeInfo_t * pSubscriptionList,
-                                              MqttPropBuilder_t * pPropertyBuilder, 
+                                              MQTTSubscribeInfo_t * pSubscriptionList, 
                                               size_t subscriptionCount,   
                                               uint16_t packetId,
                                               size_t remainingLength, 
-                                              MQTTSubscriptionType_t subscriptionType){
+                                              MQTTSubscriptionType_t subscriptionType,
+                                              MqttPropBuilder_t* pPropertyBuilder)
+{
     MQTTStatus_t status = MQTTSuccess;
     uint8_t * pIndex;
     /**
@@ -2637,11 +2538,11 @@ MQTTStatus_t MQTT_Subscribe( MQTTContext_t * pContext,
         /* Send MQTT SUBSCRIBE packet. */
         status = sendSubscribeWithoutCopy( pContext,
                                             pSubscriptionList,
-                                            pPropertyBuilder, 
                                             subscriptionCount,
                                             packetId,
                                             remainingLength, 
-                                            MQTT_SUBSCRIBE );
+                                            MQTT_SUBSCRIBE,
+                                            pPropertyBuilder);
 
         MQTT_POST_STATE_UPDATE_HOOK( pContext );
     }
@@ -2874,14 +2775,6 @@ static MQTTStatus_t sendConnectWithoutCopy( MQTTContext_t * pContext,
             status = updateContextWithConnectProps(pPropertyBuilder, &pContext->connectProperties);
         }
 
-        /* The header gets sent first. */
-        // iterator->iov_base = connectPacketHeader;
-        // /* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-182 */
-        // /* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-108 */
-        // /* coverity[misra_c_2012_rule_18_2_violation] */
-        // /* coverity[misra_c_2012_rule_10_8_violation] */
-
-
         /* Serialize the client ID. */
         vectorsAdded = addEncodedStringToVector( serializedClientIDLength,
                                                  pConnectInfo->pClientIdentifier,
@@ -3111,7 +3004,7 @@ static MQTTStatus_t receiveConnack( const MQTTContext_t * pContext,
                     MQTT_Status_strerror( status ) ) );
     }
 
-    if (status == MQTTSuccess)
+    if (status == MQTTSuccess || status == MQTTServerRefused)
     {
         deserializedInfo.deserializationResult = status; 
         pContext->appCallback(pContext, pIncomingPacket ,&deserializedInfo, NULL, &pContext->ackPropsBuffer , &propBuffer);
@@ -3221,8 +3114,7 @@ MQTTStatus_t MQTT_Init( MQTTContext_t * pContext,
                         const TransportInterface_t * pTransportInterface,
                         MQTTGetCurrentTimeFunc_t getTimeFunction,
                         MQTTEventCallback_t userCallback,
-                        const MQTTFixedBuffer_t * pNetworkBuffer,
-                        const MqttPropBuilder_t* pAckPropsBuffer)
+                        const MQTTFixedBuffer_t * pNetworkBuffer)
 {
     MQTTStatus_t status = MQTTSuccess;
     MQTTConnectProperties_t connectProperties; 
@@ -3268,15 +3160,6 @@ MQTTStatus_t MQTT_Init( MQTTContext_t * pContext,
         pContext->getTime = getTimeFunction;
         pContext->appCallback = userCallback;
         pContext->networkBuffer = *pNetworkBuffer;
-        if (pAckPropsBuffer != NULL)
-        {
-            pContext->ackPropsBuffer = *pAckPropsBuffer;
-        }
-        else
-        {
-            pContext->ackPropsBuffer.pBuffer = NULL;
-            pContext->ackPropsBuffer.bufferLength = 0;
-        }
 
         /* Zero is not a valid packet ID per MQTT spec. Start from 1. */
         pContext->nextPacketId = 1;
@@ -3319,7 +3202,9 @@ MQTTStatus_t MQTT_InitStatefulQoS( MQTTContext_t * pContext,
                                    MQTTPubAckInfo_t * pOutgoingPublishRecords,
                                    size_t outgoingPublishCount,
                                    MQTTPubAckInfo_t * pIncomingPublishRecords,
-                                   size_t incomingPublishCount )
+                                   size_t incomingPublishCount, 
+                                   uint8_t * pBuffer , 
+                                   size_t bufferLength)
 {
     MQTTStatus_t status = MQTTSuccess;
 
@@ -3365,6 +3250,19 @@ MQTTStatus_t MQTT_InitStatefulQoS( MQTTContext_t * pContext,
         pContext->incomingPublishRecords = pIncomingPublishRecords;
         pContext->outgoingPublishRecordMaxCount = outgoingPublishCount;
         pContext->outgoingPublishRecords = pOutgoingPublishRecords;
+
+        if (pBuffer != NULL && bufferLength != 0U)
+        {
+            MqttPropBuilder_t ackPropsBuffer; 
+            MqttPropertyBuilder_Init(&ackPropsBuffer, pBuffer, bufferLength); 
+
+            pContext->ackPropsBuffer = ackPropsBuffer; 
+        }
+        else
+        {
+            pContext->ackPropsBuffer.pBuffer = NULL; 
+            pContext->ackPropsBuffer.bufferLength = 0; 
+        }
     }
 
     return status;
@@ -3415,6 +3313,8 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
     size_t remainingLength = 0UL, packetSize = 0UL;
     MQTTStatus_t status = MQTTSuccess;
     MQTTPacketInfo_t incomingPacket = { 0 };
+    size_t propertyLength = 0U; 
+    size_t willPropertyLength = 0U; 
 
     incomingPacket.type = ( uint8_t ) 0;
 
@@ -3428,16 +3328,14 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
         status = MQTTBadParameter;
     }
 
-    size_t proplen = 0; 
     if (pPropertyBuilder != NULL)
     {
-        proplen = pPropertyBuilder->currentIndex;
+        propertyLength = pPropertyBuilder->currentIndex;
     }
 
-    size_t willPropLen = 0; 
     if (willPropsBuilder != NULL)
     {
-        willPropLen = willPropsBuilder->currentIndex;
+        willPropertyLength = willPropsBuilder->currentIndex;
     }
 
     if( status == MQTTSuccess )
@@ -3445,8 +3343,8 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
     /* Get MQTT connect packet size and remaining length. */
         status = MQTT_GetConnectPacketSize( pConnectInfo,
                                                 pWillInfo,
-                                                proplen,
-                                                willPropLen,    
+                                                propertyLength,
+                                                willPropertyLength,
                                                 &remainingLength,
                                                 &packetSize );
         LogDebug( ( "CONNECT packet size is %lu and remaining length is %lu.",
@@ -3673,7 +3571,7 @@ MQTTStatus_t MQTT_Ping( MQTTContext_t * pContext )
 
         if( status == MQTTSuccess )
         {
-            //assert( packetSize == localBuffer.size );
+            assert( packetSize == localBuffer.size );
             LogDebug( ( "MQTT PINGREQ packet size is %lu.",
                         ( unsigned long ) packetSize ) );
         }
@@ -3767,10 +3665,11 @@ MQTTStatus_t MQTT_Unsubscribe( MQTTContext_t * pContext,
 
         status = sendSubscribeWithoutCopy( pContext,
                                              pSubscriptionList,
-                                             pPropertyBuilder,
                                              subscriptionCount,
                                              packetId,
-                                             remainingLength, MQTT_UNSUBSCRIBE );
+                                             remainingLength, 
+                                             MQTT_UNSUBSCRIBE,
+                                             pPropertyBuilder);
 
         /* Give the mutex away. */
         MQTT_POST_SEND_HOOK( pContext );
@@ -4055,7 +3954,7 @@ const char * MQTT_Status_strerror( MQTTStatus_t status )
 
 MQTTStatus_t MQTT_Disconnect( MQTTContext_t * pContext,
                               MqttPropBuilder_t* pPropertyBuilder, 
-                              MQTTDisconnectReasonCode_t reasonCode)
+                              MQTTSuccessFailReasonCode_t reasonCode)
 {
     size_t packetSize = 0U;
     size_t remainingLength = 0U;

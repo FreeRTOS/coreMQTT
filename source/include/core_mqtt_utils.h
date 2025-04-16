@@ -135,6 +135,8 @@
    */
 #define MQTT_SERVER_REF_ID       ( 0x1C )
 
+#define MQTT_SUBSCRIPTION_ID_ID                     ( 0x0B )
+
 
 
 uint8_t* encodeRemainingLength(uint8_t* pDestination,
