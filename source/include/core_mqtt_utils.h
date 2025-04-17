@@ -1,143 +1,112 @@
-/*CONNECT PROPERTIES*/
+/*
+ * coreMQTT <DEVELOPMENT BRANCH>
+ * Copyright (C) 2022 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
+ *
+ * SPDX-License-Identifier: MIT
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of
+ * this software and associated documentation files (the "Software"), to deal in
+ * the Software without restriction, including without limitation the rights to
+ * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+ * the Software, and to permit persons to whom the Software is furnished to do so,
+ * subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+ * FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+ * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+ * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+ /**
+  * @file core_mqtt_utils.h
+  * @brief utility function used in other files. 
+  */
+/**
+* @brief Set a bit in an 8-bit unsigned integer.
+*/
+#define UINT8_SET_BIT( x, position )      ( ( x ) = ( uint8_t ) ( ( x ) | ( 0x01U << ( position ) ) ) )
 
-   /**
-   * @brief Session expiry id.
-   */
-#define MQTT_SESSION_EXPIRY_ID      ( 0x11 )
+/**
+* @brief Macro for checking if a bit is set in a 1-byte unsigned int.
+*
+* @param[in] x The unsigned int to check.
+* @param[in] position Which bit to check.
+*/
+#define UINT8_CHECK_BIT( x, position )    ( ( ( x ) & ( 0x01U << ( position ) ) ) == ( 0x01U << ( position ) ) )
+/**
+* @brief Set a bit in an 32-bit unsigned integer.
+*/
+#define UINT32_SET_BIT( x, position )      ( ( x ) = ( uint32_t ) ( ( x ) | ( 0x01U << ( position ) ) ) )
+/**
+* @brief Macro for checking if a bit is set in a 4-byte unsigned int.
+*
+* @param[in] x The unsigned int to check.
+* @param[in] position Which bit to check.
+*/
+#define UINT32_CHECK_BIT( x, position )    ( ( ( x ) & ( 0x01U << ( position ) ) ) == ( 0x01U << ( position ) ) )
+/**
+* @brief Get the high byte of a 16-bit unsigned integer.
+*/
+#define UINT16_HIGH_BYTE( x )             ( ( uint8_t ) ( ( x ) >> 8 ) )
 
-   /**
-   * @brief Receive maximum id.
-   */
-#define MQTT_RECEIVE_MAX_ID         ( 0x21 )
+/**
+* @brief Get the low byte of a 16-bit unsigned integer.
+*/
+#define UINT16_LOW_BYTE( x )              ( ( uint8_t ) ( ( x ) & 0x00ffU ) )
 
-   /**
-   * @brief Maximum packet size  id.
-   */
-#define MQTT_MAX_PACKET_SIZE_ID     ( 0x27 )
+/**
+* @brief Macro for decoding a 2-byte unsigned int from a sequence of bytes.
+*
+* @param[in] ptr A uint8_t* that points to the high byte.
+*/
+#define UINT16_DECODE( ptr )                            \
+( uint16_t ) ( ( ( ( uint16_t ) ptr[ 0 ] ) << 8 ) | \
+( ( uint16_t ) ptr[ 1 ] ) )
 
-   /**
-   * @brief Topic alias size id.
-   */
-#define MQTT_TOPIC_ALIAS_MAX_ID     ( 0x22 )
+/**
+* @brief Get the 4th byte of a 32-bit unsigned integer.
+*/
+#define UINT32_BYTE3( x )    ( ( uint8_t ) ( ( x ) >> 24 ) )
 
-   /**
-   * @brief Request response id.
-   */
-#define MQTT_REQUEST_RESPONSE_ID    ( 0x19 )
+/**
+* @brief Get the 3rd byte of a 32-bit unsigned integer.
+*/
+#define UINT32_BYTE2( x )    ( ( uint8_t ) ( ( x ) >> 16 ) )
 
-   /**
-   * @brief Request problem id.
-   */
-#define MQTT_REQUEST_PROBLEM_ID     ( 0x17 )
+/**
+* @brief Get the 2nd byte of a 32-bit unsigned integer.
+*/
+#define UINT32_BYTE1( x )    ( ( uint8_t ) ( ( x ) >> 8 ) )
 
-   /**
-   * @brief User property id.
-   */
-#define MQTT_USER_PROPERTY_ID       ( 0x26 )
+/**
+* @brief Get the 1st byte of a 32-bit unsigned integer.
+*/
+#define UINT32_BYTE0( x )    ( ( uint8_t ) ( ( x ) & 0x000000FFU ) )
 
-   /**
-   * @brief Authentication method id.
-   */
-#define MQTT_AUTH_METHOD_ID         ( 0x15 )
+/**
+* @brief Macro for decoding a 4-byte unsigned int from a sequence of bytes.
+*
+* @param[in] ptr A uint8_t* that points to the high byte.
+*/
+#define UINT32_DECODE( ptr )                         \
+( uint32_t ) ( ( ( ( uint32_t ) ptr[ 0 ] ) << 24 ) | \
+( ( ( uint32_t ) ptr[ 1 ] ) << 16 ) | \
+( ( ( uint32_t ) ptr[ 2 ] ) << 8 ) |  \
+( ( uint32_t ) ptr[ 3 ] ) )
 
-   /**
-   * @brief  Authentication data id.
-   */
-#define MQTT_AUTH_DATA_ID           ( 0x16 )
-
-   /*Publish PROPERTIES*/
-
-   /**
-   * @brief Will delay id.
-   */
-#define MQTT_WILL_DELAY_ID          ( 0x18 )
-
-   /**
-   * @brief Payload format id.
-   */
-#define MQTT_PAYLOAD_FORMAT_ID      ( 0x01 )
-
-   /**
-   * @brief Message Expiry id.
-   */
-#define MQTT_MSG_EXPIRY_ID          ( 0x02 )
-
-   /**
-   * @brief Content type id.
-   */
-#define MQTT_CONTENT_TYPE_ID        ( 0x03 )
-
-   /**
-   * @brief Response topic id.
-   */
-#define MQTT_RESPONSE_TOPIC_ID      ( 0x08 )
-
-   /**
-   * @brief Correlation data id.
-   */
-#define MQTT_CORRELATION_DATA_ID    ( 0x09 )
-
-   /**
-   * @brief Topic alias id.
-   */
-#define MQTT_TOPIC_ALIAS_ID         ( 0x23 )
-
-   /*CONNACK PROPERTIES*/
-
-   /**
-   * @brief Max qos id.
-   */
-#define MQTT_MAX_QOS_ID              ( 0x24 )
-
-   /**
-   * @brief Retain available id.
-   */
-#define MQTT_RETAIN_AVAILABLE_ID     ( 0x25 )
-
-   /**
-   * @brief Assigned client identifier id.
-   */
-#define MQTT_ASSIGNED_CLIENT_ID      ( 0x12 )
-
-   /**
-   * @brief Reason string id.
-   */
-#define MQTT_REASON_STRING_ID        ( 0x1F )
-
-   /**
-   * @brief Wildcard available id.
-   */
-#define MQTT_WILDCARD_ID             ( 0x28 )
-
-   /**
-   * @brief Subscription available id.
-   */
-#define MQTT_SUB_AVAILABLE_ID        ( 0x29 )
-
-   /**
-   * @brief Shared subscription id.
-   */
-#define MQTT_SHARED_SUB_ID           ( 0x2A )
-
-   /**
-   * @brief Server keep alive id.
-   */
-#define MQTT_SERVER_KEEP_ALIVE_ID    ( 0x13 )
-
-   /**
-   * @brief Response information id.
-   */
-
-#define MQTT_RESPONSE_INFO_ID    ( 0x1A )
-
-   /**
-   * @brief Server reference  id.
-   */
-#define MQTT_SERVER_REF_ID       ( 0x1C )
-
-#define MQTT_SUBSCRIPTION_ID_ID                     ( 0x0B )
-
-
-
+/**
+ * @brief Encodes the remaining length of the packet using the variable length
+ * encoding scheme provided in the MQTT v3.1.1 specification.
+ *
+ * @param[out] pDestination The destination buffer to store the encoded remaining
+ * length.
+ * @param[in] length The remaining length to encode.
+ *
+ * @return The location of the byte following the encoded value.
+ */
 uint8_t* encodeRemainingLength(uint8_t* pDestination,
     size_t length) ; 

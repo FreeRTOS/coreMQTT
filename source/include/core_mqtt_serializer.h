@@ -103,14 +103,7 @@ typedef enum MQTTStatus
     MQTTNeedMoreBytes,     /**< MQTT_ProcessLoop/MQTT_ReceiveLoop has received
                           incomplete data; it should be called again (probably after
                           a delay). */
-    /*MQTTStatusConnected,            < MQTT connection is established with the broker. */
-    /*MQTTStatusNotConnected,         < MQTT connection is not established with the broker. */
-    /*MQTTStatusDisconnectPending,    < Transport Interface has failed and MQTT connection needs to be closed. */
-    /*MQTTPublishStoreFailed,         < User provided API to store a copy of outgoing publish for retransmission  purposes,
-                                    has failed. */
-    /*MQTTPublishRetrieveFailed,      < User provided API to retrieve the copy of a publish while reconnecting
-                                    with an unclean session has failed. */
-
+    MQTTEndOfProperties, 
     MQTTMalformedPacket=0x81,/**A malformed packet was received from the server. */
     MQTTProtocolError=0x82 /**A packet with protocol error was received from the server. */
 
@@ -256,6 +249,149 @@ typedef enum MQTTSuccessFailReasonCode
 #define MQTT_SUBSCRIBE_RETAIN_HANDLING1        ( 4 ) /**<@brief MQTT SUBSCRIBE Retain Handling Option 1 */
 #define MQTT_SUBSCRIBE_RETAIN_HANDLING2        ( 5 ) /**<@brief Retain Handling Option 2   -> in core_mqtt_serializer.c */
 
+/*CONNECT PROPERTIES*/
+
+/**
+* @brief Session expiry id.
+*/
+#define MQTT_SESSION_EXPIRY_ID      ( 0x11 )
+
+/**
+* @brief Receive maximum id.
+*/
+#define MQTT_RECEIVE_MAX_ID         ( 0x21 )
+
+/**
+* @brief Maximum packet size  id.
+*/
+#define MQTT_MAX_PACKET_SIZE_ID     ( 0x27 )
+
+/**
+* @brief Topic alias size id.
+*/
+#define MQTT_TOPIC_ALIAS_MAX_ID     ( 0x22 )
+
+/**
+* @brief Request response id.
+*/
+#define MQTT_REQUEST_RESPONSE_ID    ( 0x19 )
+
+/**
+* @brief Request problem id.
+*/
+#define MQTT_REQUEST_PROBLEM_ID     ( 0x17 )
+
+/**
+* @brief User property id.
+*/
+#define MQTT_USER_PROPERTY_ID       ( 0x26 )
+
+/**
+* @brief Authentication method id.
+*/
+#define MQTT_AUTH_METHOD_ID         ( 0x15 )
+
+/**
+* @brief  Authentication data id.
+*/
+#define MQTT_AUTH_DATA_ID           ( 0x16 )
+
+/*Publish PROPERTIES*/
+
+/**
+* @brief Will delay id.
+*/
+#define MQTT_WILL_DELAY_ID          ( 0x18 )
+
+/**
+* @brief Payload format id.
+*/
+#define MQTT_PAYLOAD_FORMAT_ID      ( 0x01 )
+
+/**
+* @brief Message Expiry id.
+*/
+#define MQTT_MSG_EXPIRY_ID          ( 0x02 )
+
+/**
+* @brief Content type id.
+*/
+#define MQTT_CONTENT_TYPE_ID        ( 0x03 )
+
+/**
+* @brief Response topic id.
+*/
+#define MQTT_RESPONSE_TOPIC_ID      ( 0x08 )
+
+/**
+* @brief Correlation data id.
+*/
+#define MQTT_CORRELATION_DATA_ID    ( 0x09 )
+
+/**
+* @brief Topic alias id.
+*/
+#define MQTT_TOPIC_ALIAS_ID         ( 0x23 )
+
+/*CONNACK PROPERTIES*/
+
+/**
+* @brief Max qos id.
+*/
+#define MQTT_MAX_QOS_ID              ( 0x24 )
+
+/**
+* @brief Retain available id.
+*/
+#define MQTT_RETAIN_AVAILABLE_ID     ( 0x25 )
+
+/**
+* @brief Assigned client identifier id.
+*/
+#define MQTT_ASSIGNED_CLIENT_ID      ( 0x12 )
+
+/**
+* @brief Reason string id.
+*/
+#define MQTT_REASON_STRING_ID        ( 0x1F )
+
+/**
+* @brief Wildcard available id.
+*/
+#define MQTT_WILDCARD_ID             ( 0x28 )
+
+/**
+* @brief Subscription available id.
+*/
+#define MQTT_SUB_AVAILABLE_ID        ( 0x29 )
+
+/**
+* @brief Shared subscription id.
+*/
+#define MQTT_SHARED_SUB_ID           ( 0x2A )
+
+/**
+* @brief Server keep alive id.
+*/
+#define MQTT_SERVER_KEEP_ALIVE_ID    ( 0x13 )
+
+/**
+* @brief Response information id.
+*/
+
+#define MQTT_RESPONSE_INFO_ID    ( 0x1A )
+
+/**
+* @brief Server reference  id.
+*/
+#define MQTT_SERVER_REF_ID       ( 0x1C )
+
+/**
+* @brief Subscription ID id
+*/
+#define MQTT_SUBSCRIPTION_ID_ID          ( 0x0B )
+
+
 /**
  * @ingroup mqtt_struct_types
  * @brief Buffer passed to MQTT library.
@@ -356,8 +492,6 @@ typedef struct MQTTSubscribeInfo
 
 } MQTTSubscribeInfo_t;
 
-
-
    /**
  * @ingroup mqtt_struct_types
  * @brief Struct to hold authentication method and authentication data.
@@ -385,34 +519,34 @@ typedef struct MQTTAuthInfo
 } MQTTAuthInfo_t;
 
 
-   /**
- * @ingroup mqtt_struct_types
- * @brief Struct to hold user property.
- */
+/**
+* @ingroup mqtt_struct_types
+* @brief Struct to hold user property.
+*/
 typedef struct MQTTUserProperty
 {
-    /**
-     * @brief key.
-     */
-    const char* pKey;
-    /**
-     * @brief Length of the key.
-     */
-    uint16_t keyLength;
-    /**
-     * @brief value.
-     */
-    const char* pValue;
-    /**
-     * @brief Length of the value.
-     */
-    uint16_t valueLength;
+/**
+* @brief key.
+*/
+const char* pKey;
+/**
+* @brief Length of the key.
+*/
+uint16_t keyLength;
+/**
+* @brief value.
+*/
+const char* pValue;
+/**
+* @brief Length of the value.
+*/
+uint16_t valueLength;
 } MQTTUserProperty_t;
 
-   /**
- * @ingroup mqtt_struct_types
- * @brief Struct to hold connect and connack properties.
- */
+/**
+* @ingroup mqtt_struct_types
+* @brief Struct to hold connect and connack properties.
+*/
 typedef struct MQTTConnectProperties
 {
      /**
@@ -546,7 +680,7 @@ typedef struct MQTTConnectProperties
 
  /**
  * @ingroup mqtt_struct_types
- * @brief Struct to hold acknowledgment properties.
+ * @brief Struct to hold reason codes.
  */
 typedef struct MQTTReasonCodeInfo
 {
@@ -1015,7 +1149,8 @@ MQTTStatus_t MQTT_SerializePingreq( const MQTTFixedBuffer_t * pFixedBuffer );
 MQTTStatus_t MQTT_DeserializePublish(const MQTTPacketInfo_t* pIncomingPacket,
     uint16_t* pPacketId,
     MQTTPublishInfo_t* pPublishInfo,
-    MqttPropBuilder_t* propBuffer); 
+    MqttPropBuilder_t* propBuffer,
+    uint32_t maxPacketSize); 
 /* @[declare_mqtt_deserializepublish] */
 
 /**
@@ -1219,27 +1354,6 @@ uint8_t * MQTT_SerializeUnsubscribeHeader( size_t remainingLength,
                                            uint8_t * pIndex,
                                            uint16_t packetId );
 /** @endcond */
-
-/**
- * @fn uint8_t * MQTTV5_SerializeConnectProperties(uint8_t * pIndex,const MQTTConnectProperties_t * pConnectProperties);
- * @brief Serialize the connect properties of the connect packet header.
- *
- * @param[out] pIndex Pointer to the buffer where the header is to
- * be serialized.
- * @param[in] pConnectProperties The connect properties information.
- *
- * @return A pointer to the end of the encoded string.
- */
-
-/**
- * @cond DOXYGEN_IGNORE
- * Doxygen should ignore this definition, this function is private.
- */
-uint8_t * MQTTV5_SerializeConnectProperties( uint8_t * pIndex,
-                                           const MQTTConnectProperties_t * pConnectProperties);
-/** @endcond */
-
-
 /**
  * @brief Deserialize an MQTT CONNACK packet.
  *
@@ -1498,7 +1612,7 @@ MQTTStatus_t MQTT_GetPublishPacketSize(MQTTPublishInfo_t * pPublishInfo,
  * receiveIncomingPacket( &incomingPacket );
  *
  * // Deserialize ack information if the incoming packet is a publish ack.
- *    status = MQTTV5_DeserializeAck(&incomingPacket,
+ *    status = MQTT_DeserializePublishAck(&incomingPacket,
                                             &packetId,
                                             &ackInfo,
                                             requestProblem,
@@ -1510,19 +1624,20 @@ MQTTStatus_t MQTT_GetPublishPacketSize(MQTTPublishInfo_t * pPublishInfo,
  * }
  * @endcode
  */
-/* @[declare_mqttv5_deserializeack] */
-MQTTStatus_t MQTTV5_DeserializeAck(const MQTTPacketInfo_t* pIncomingPacket,
+/* @[declare_MQTT_DeserializePublishAck] */
+MQTTStatus_t MQTT_DeserializePublishAck(const MQTTPacketInfo_t* pIncomingPacket,
                                     uint16_t* pPacketId,
                                     MQTTReasonCodeInfo_t* pAckInfo,
                                     bool requestProblem,
                                     uint32_t maxPacketSize,
                                     MqttPropBuilder_t* propBuffer); 
 
-/* @[declare_mqttv5_deserializeack] */
-MQTTStatus_t MQTTV5_DeserializeSuback(MQTTReasonCodeInfo_t* subackReasonCodes,
+/* @[declare_MQTT_DeserializePublishAck] */
+MQTTStatus_t MQTT_DeserializeSuback(MQTTReasonCodeInfo_t* subackReasonCodes,
                                         const MQTTPacketInfo_t* pSuback,
                                         uint16_t* pPacketId,
-                                        MqttPropBuilder_t* propBuffer); 
+                                        MqttPropBuilder_t* propBuffer,
+                                        uint32_t maxPacketSize); 
 /**
  * @brief Get the size of an MQTT DISCONNECT packet.
  *
@@ -1545,7 +1660,7 @@ MQTTStatus_t MQTTV5_DeserializeSuback(MQTTReasonCodeInfo_t* subackReasonCodes,
  *
  * //Set the parameters.
  * // Get the size requirement for the disconnect packet.
- * status = MQTTV5_GetAckPacketSize(&disconnectInfo,&remainingLength,&packetSize,maxPacketSize);
+ * status = MQTT_GetAckPacketSize(&disconnectInfo,&remainingLength,&packetSize,maxPacketSize);
  *
  * if( status == MQTTSuccess )
  * {
@@ -1554,16 +1669,16 @@ MQTTStatus_t MQTTV5_DeserializeSuback(MQTTReasonCodeInfo_t* subackReasonCodes,
  * }
  * @endcode
  */
-/* @[declare_mqttv5_getackpacketsize] */
-// MQTTStatus_t MQTTV5_GetAckPacketSize(MQTTContext_t* pContext,
+/* @[declare_MQTT_GetAckPacketSize] */
+// MQTTStatus_t MQTT_GetAckPacketSize(MQTTContext_t* pContext,
 //    MQTTAckInfo_t* pAckInfo,
 //    size_t* pRemainingLength,
 //    size_t* pPacketSize,
 //    uint32_t maxPacketSize); 
-// /* @[declare_mqttv5_getackpacketsize] */
+// /* @[declare_MQTT_GetAckPacketSize] */
 
 /**
- * @fn uint8_t * MQTTV5_SerializeAckFixed(uint8_t * pIndex,
+ * @fn uint8_t * MQTT_SerializeAckFixed(uint8_t * pIndex,
                                 uint8_t packetType,
                                 uint16_t packetId,
                                 size_t remainingLength,
@@ -1584,7 +1699,7 @@ MQTTStatus_t MQTTV5_DeserializeSuback(MQTTReasonCodeInfo_t* subackReasonCodes,
  * @cond DOXYGEN_IGNORE
  * Doxygen should ignore this definition, this function is private.
  */
-uint8_t* MQTTV5_SerializeAckFixed(uint8_t* pIndex,
+uint8_t* MQTT_SerializeAckFixed(uint8_t* pIndex,
     uint8_t packetType,
     uint16_t packetId,
     size_t remainingLength,
@@ -1595,7 +1710,7 @@ uint8_t* MQTTV5_SerializeAckFixed(uint8_t* pIndex,
  * @brief Serialize an MQTT DISCONNECT packet into the given buffer.
  *
  * The input #MQTTFixedBuffer_t.size must be at least as large as the size
- * returned by #MQTTV5_GetAckPacketSize.
+ * returned by #MQTT_GetAckPacketSize.
  *
  * @note If reason code is success and property length is zero then #MQTT_SerializeAck can also be used.
  *
@@ -1632,10 +1747,10 @@ uint8_t* MQTTV5_SerializeAckFixed(uint8_t* pIndex,
  * uint32_t maxPacketSize;
  * //set the parameters.
  * // Get the size requirement for the ack packet.
- * status = MQTTV5_GetAckPacketSize(&disconnectInfo,&remainingLength,&packetSize,maxPacketSize);
+ * status = MQTT_GetAckPacketSize(&disconnectInfo,&remainingLength,&packetSize,maxPacketSize);
  *
  */
-MQTTStatus_t MQTTV5_GetAckPacketSize(size_t* pRemainingLength,
+MQTTStatus_t MQTT_GetAckPacketSize(size_t* pRemainingLength,
     size_t* pPacketSize,
     uint32_t maxPacketSize,
     size_t ackPropertyLength); 
@@ -1734,7 +1849,7 @@ uint8_t * MQTT_SerializeDisconnectFixed(uint8_t * pIndex,
  * // Deserialize disconnect information.
  * if( ( incomingPacket.type) == MQTT_PACKET_TYPE_DISCONNECT )
  * {
- *      status = MQTTV5_DeserializeDisconnect(&incomingPacket,
+ *      status = MQTT_DeserializeDisconnect(&incomingPacket,
                                              &disconnectInfo,
                                             maxPacketSize );
  *      if( status == MQTTSuccess )
@@ -1744,12 +1859,12 @@ uint8_t * MQTT_SerializeDisconnectFixed(uint8_t * pIndex,
  * }
  * @endcode
  */
-/* @[declare_mqttv5_deserializedisconnect] */
-MQTTStatus_t MQTTV5_DeserializeDisconnect(const MQTTPacketInfo_t* pPacket,
+/* @[declare_MQTT_DeserializeDisconnect] */
+MQTTStatus_t MQTT_DeserializeDisconnect(const MQTTPacketInfo_t* pPacket,
                                           uint32_t maxPacketSize,
                                           MQTTReasonCodeInfo_t* pDisconnectInfo,
                                           MqttPropBuilder_t* propBuffer); 
-/* @[declare_mqttv5_deserializedisconnect] */
+/* @[declare_MQTT_DeserializeDisconnect] */
 
 
 /*

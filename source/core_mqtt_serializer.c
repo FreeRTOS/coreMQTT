@@ -162,143 +162,6 @@
  */
     #define MQTT_MSG_EXPIRY_SIZE        ( 5U )
 
-/*CONNECT PROPERTIES*/
-
-/**
- * @brief Session expiry id.
- */
-    #define MQTT_SESSION_EXPIRY_ID      ( 0x11 )
-
-/**
- * @brief Receive maximum id.
- */
-    #define MQTT_RECEIVE_MAX_ID         ( 0x21 )
-
-/**
- * @brief Maximum packet size  id.
- */
-    #define MQTT_MAX_PACKET_SIZE_ID     ( 0x27 )
-
-/**
- * @brief Topic alias size id.
- */
-    #define MQTT_TOPIC_ALIAS_MAX_ID     ( 0x22 )
-
-/**
- * @brief Request response id.
- */
-    #define MQTT_REQUEST_RESPONSE_ID    ( 0x19 )
-
-/**
- * @brief Request problem id.
- */
-    #define MQTT_REQUEST_PROBLEM_ID     ( 0x17 )
-
-/**
- * @brief User property id.
- */
-    #define MQTT_USER_PROPERTY_ID       ( 0x26 )
-
-/**
- * @brief Authentication method id.
- */
-    #define MQTT_AUTH_METHOD_ID         ( 0x15 )
-
-/**
- * @brief  Authentication data id.
- */
-    #define MQTT_AUTH_DATA_ID           ( 0x16 )
-
-/*Publish PROPERTIES*/
-
-/**
- * @brief Will delay id.
- */
-    #define MQTT_WILL_DELAY_ID          ( 0x18 )
-
-/**
- * @brief Payload format id.
- */
-    #define MQTT_PAYLOAD_FORMAT_ID      ( 0x01 )
-
-/**
- * @brief Message Expiry id.
- */
-    #define MQTT_MSG_EXPIRY_ID          ( 0x02 )
-
-/**
- * @brief Content type id.
- */
-    #define MQTT_CONTENT_TYPE_ID        ( 0x03 )
-
-/**
- * @brief Response topic id.
- */
-    #define MQTT_RESPONSE_TOPIC_ID      ( 0x08 )
-
-/**
- * @brief Correlation data id.
- */
-    #define MQTT_CORRELATION_DATA_ID    ( 0x09 )
-
-/**
- * @brief Topic alias id.
- */
-    #define MQTT_TOPIC_ALIAS_ID         ( 0x23 )
-
-/*CONNACK PROPERTIES*/
-
-/**
- * @brief Max qos id.
- */
-    #define MQTT_MAX_QOS_ID              ( 0x24 )
-
-/**
- * @brief Retain available id.
- */
-    #define MQTT_RETAIN_AVAILABLE_ID     ( 0x25 )
-
-/**
- * @brief Assigned client identifier id.
- */
-    #define MQTT_ASSIGNED_CLIENT_ID      ( 0x12 )
-
-/**
- * @brief Reason string id.
- */
-    #define MQTT_REASON_STRING_ID        ( 0x1F )
-
-/**
- * @brief Wildcard available id.
- */
-    #define MQTT_WILDCARD_ID             ( 0x28 )
-
-/**
- * @brief Subscription available id.
- */
-    #define MQTT_SUB_AVAILABLE_ID        ( 0x29 )
-
-/**
- * @brief Shared subscription id.
- */
-    #define MQTT_SHARED_SUB_ID           ( 0x2A )
-
-/**
- * @brief Server keep alive id.
- */
-    #define MQTT_SERVER_KEEP_ALIVE_ID    ( 0x13 )
-
-/**
- * @brief Response information id.
- */
-
-    #define MQTT_RESPONSE_INFO_ID    ( 0x1A )
-
-/**
- * @brief Server reference  id.
- */
-    #define MQTT_SERVER_REF_ID       ( 0x1C )
-
 /**
  * @brief Size of the property id.
  */
@@ -454,6 +317,7 @@ typedef enum MQTTSubscriptionType
  * @param[out] pPacketSize The total size of the MQTT MQTT SUBSCRIBE or
  * UNSUBSCRIBE packet.
  * @param[in] propLen Length of the optional properties in MQTT_SUBSCRIBE or MQTT_UNSUBSCRIBE
+ * @param[in] maxPacketSize Maximum Packet Size allowed by the broker 
  * @param[in] subscriptionType #MQTT_SUBSCRIBE or #MQTT_UNSUBSCRIBE.
  *
  * #MQTTBadParameter if the packet would exceed the size allowed by the
@@ -462,11 +326,12 @@ typedef enum MQTTSubscriptionType
  */
 
 static MQTTStatus_t calculateSubscriptionPacketSize(MQTTSubscribeInfo_t* pSubscriptionList,
-    size_t subscriptionCount,
-    size_t* pRemainingLength,
-    size_t* pPacketSize,
-    size_t propLen,
-    MQTTSubscriptionType_t subscriptionType); 
+                                                    size_t subscriptionCount,
+                                                    size_t* pRemainingLength,
+                                                    size_t* pPacketSize,
+                                                    size_t subscribePropLen,
+                                                    uint32_t maxPacketSize,
+                                                    MQTTSubscriptionType_t subscriptionType); 
 
 
 /**
@@ -626,7 +491,7 @@ static MQTTStatus_t validateConnackParams( const MQTTPacketInfo_t * pIncomingPac
  *
  * @return MQTTServerRefused if response code is valid and MQTTProtocolError if responseCode is invalid.
  */
-static MQTTStatus_t logConnackResponseV5( uint8_t responseCode );
+static MQTTStatus_t logConnackResponse( uint8_t responseCode );
 
 /**
  * @brief Validate the length and decode a 4 byte value.
@@ -754,7 +619,7 @@ static MQTTStatus_t calculatePublishPacketSize( MQTTPublishInfo_t * pPublishInfo
  *
  * @return #MQTTSuccess, #MQTTServerRefused and #MQTTProtocolError.
  */
-static MQTTStatus_t logAckResponseV5( uint8_t reasonCode,
+static MQTTStatus_t logAckResponse( uint8_t reasonCode,
                                       uint16_t packetIdentifier );
 
 /**
@@ -766,7 +631,7 @@ static MQTTStatus_t logAckResponseV5( uint8_t reasonCode,
  *
  * @return #MQTTSuccess, #MQTTServerRefused and #MQTTProtocolError.
  */
-static MQTTStatus_t logSimpleAckResponseV5( uint8_t reasonCode,
+static MQTTStatus_t logSimpleAckResponse( uint8_t reasonCode,
                                             uint16_t packetIdentifier );
 
 /**
@@ -796,7 +661,7 @@ static MQTTStatus_t decodeAckProperties(MqttPropBuilder_t* propBuffer,
  *
  * @return #MQTTSuccess, #MQTTBadResponse, #MQTTProtocolError and  #MQTTMalformedPacket.
  */
-static MQTTStatus_t deserializeSimpleAckV5(const MQTTPacketInfo_t* pAck,
+static MQTTStatus_t deserializeSimpleAck(const MQTTPacketInfo_t* pAck,
                                             uint16_t* pPacketIdentifier,
                                             MQTTReasonCodeInfo_t* pReasonCode,
                                             bool requestProblem,
@@ -876,7 +741,7 @@ static MQTTStatus_t decodeAndDiscard( size_t * pPropertyLength,
     return status;
 }
 
-static MQTTStatus_t logConnackResponseV5( uint8_t responseCode )
+static MQTTStatus_t logConnackResponse( uint8_t responseCode )
 {
     MQTTStatus_t status = MQTTServerRefused;
 
@@ -1041,7 +906,7 @@ static MQTTStatus_t validateConnackParams( const MQTTPacketInfo_t * pIncomingPac
         {
             if( pRemainingData[ 1 ] != 0U )
             {
-                status = logConnackResponseV5( pRemainingData[ 1 ] );
+                status = logConnackResponse( pRemainingData[ 1 ] );
             }
         }
     }
@@ -1566,7 +1431,7 @@ static MQTTStatus_t calculatePublishPacketSize( MQTTPublishInfo_t * pPublishInfo
 
 
 /* coverity[misra_c_2012_rule_2_7_violation] */
-static MQTTStatus_t logAckResponseV5( uint8_t reasonCode,
+static MQTTStatus_t logAckResponse( uint8_t reasonCode,
                                       uint16_t packetIdentifier )
 {
     MQTTStatus_t status = MQTTServerRefused;
@@ -1627,7 +1492,7 @@ static MQTTStatus_t logAckResponseV5( uint8_t reasonCode,
 }
 
 /* coverity[misra_c_2012_rule_2_7_violation] */
-static MQTTStatus_t logSimpleAckResponseV5( uint8_t reasonCode,
+static MQTTStatus_t logSimpleAckResponse( uint8_t reasonCode,
                                             uint16_t packetIdentifier )
 {
     MQTTStatus_t status = MQTTServerRefused;
@@ -1721,7 +1586,7 @@ static MQTTStatus_t decodeAckProperties(MqttPropBuilder_t* propBuffer,
     return status;
 }
 
-static MQTTStatus_t deserializeSimpleAckV5( const MQTTPacketInfo_t * pAck,
+static MQTTStatus_t deserializeSimpleAck( const MQTTPacketInfo_t * pAck,
                                             uint16_t * pPacketIdentifier,
                                             MQTTReasonCodeInfo_t * pReasonCode,
                                             bool requestProblem,
@@ -2914,7 +2779,8 @@ MQTTStatus_t MQTT_SerializePingreq( const MQTTFixedBuffer_t * pFixedBuffer )
 MQTTStatus_t MQTT_DeserializePublish( const MQTTPacketInfo_t * pIncomingPacket,
                                       uint16_t * pPacketId,
                                       MQTTPublishInfo_t * pPublishInfo,
-                                      MqttPropBuilder_t * propBuffer)
+                                      MqttPropBuilder_t * propBuffer,
+                                      uint32_t maxPacketSize)
 {
     MQTTStatus_t status = MQTTSuccess;
 
@@ -2938,6 +2804,10 @@ MQTTStatus_t MQTT_DeserializePublish( const MQTTPacketInfo_t * pIncomingPacket,
         LogError( ( "Argument cannot be NULL: "
                     "pIncomingPacket->pRemainingData is NULL." ) );
         status = MQTTBadParameter;
+    }
+    else if ((pIncomingPacket->remainingLength + variableLengthEncodedSize(pIncomingPacket->remainingLength) + 1U) > maxPacketSize)
+    {
+        status = MQTTProtocolError;
     }
     else
     {
@@ -3394,9 +3264,9 @@ MQTTStatus_t MQTT_GetPublishPacketSize( MQTTPublishInfo_t * pPublishInfo,
     return status;
 }
 
-static MQTTStatus_t readSubackStatusV5(size_t statusCount, const uint8_t* pStatusStart, MQTTReasonCodeInfo_t * ackInfo)
+static MQTTStatus_t readSubackStatus(size_t statusCount, const uint8_t* pStatusStart, MQTTReasonCodeInfo_t * ackInfo)
 {
-    MQTTStatus_t status = MQTTSuccess;
+    MQTTStatus_t status = MQTTServerRefused;
     uint8_t subscriptionStatus = 0;
     size_t i = 0;
     assert(pStatusStart != NULL);
@@ -3411,6 +3281,7 @@ static MQTTStatus_t readSubackStatusV5(size_t statusCount, const uint8_t* pStatu
             LogDebug(("Topic Filter %lu accepted, max QoS %u.",
                 (unsigned long)i,
                 (unsigned int)subscriptionStatus));
+            status = MQTTSuccess; 
             break; 
         case 0x80:
             LogWarn(("Topic Filter Refused"));
@@ -3449,7 +3320,7 @@ static MQTTStatus_t readSubackStatusV5(size_t statusCount, const uint8_t* pStatu
             break;
         }
     }
-    if (status == MQTTSuccess)
+    if (status == MQTTSuccess || status == MQTTServerRefused)
     {
         ackInfo->reasonCode = pStatusStart;
         ackInfo->reasonCodeLength = statusCount; 
@@ -3501,10 +3372,11 @@ static MQTTStatus_t deserializeSubackProperties(MqttPropBuilder_t *propBuffer, c
     }
     return status;
 }
-MQTTStatus_t MQTTV5_DeserializeSuback( MQTTReasonCodeInfo_t * subackReasonCodes,
+MQTTStatus_t MQTT_DeserializeSuback( MQTTReasonCodeInfo_t * subackReasonCodes,
                                        const MQTTPacketInfo_t* pSuback,
                                        uint16_t* pPacketId,
-                                       MqttPropBuilder_t *propBuffer)
+                                       MqttPropBuilder_t *propBuffer,
+                                       uint32_t maxPacketSize)
 {
     MQTTStatus_t status = MQTTSuccess;
 
@@ -3520,6 +3392,11 @@ MQTTStatus_t MQTTV5_DeserializeSuback( MQTTReasonCodeInfo_t * subackReasonCodes,
     {
         LogError(("Suback Packet Cannot have a remaining Length of less than 3"));
         status = MQTTBadResponse;
+    }
+    else if ((pSuback->remainingLength + variableLengthEncodedSize(pSuback->remainingLength) + 1U) > maxPacketSize)
+    {
+        LogError(("Packet size greater than max allowed by the client."));
+        status = MQTTBadParameter; 
     }
     else
     {
@@ -3540,11 +3417,13 @@ MQTTStatus_t MQTTV5_DeserializeSuback( MQTTReasonCodeInfo_t * subackReasonCodes,
     }
     if (status == MQTTSuccess)
     {
-        status = readSubackStatusV5(remainingLength - sizeof(uint16_t) - propBuffer->bufferLength - variableLengthEncodedSize(propBuffer->bufferLength), &pIndex[propBuffer->bufferLength + variableLengthEncodedSize(propBuffer->bufferLength)] , subackReasonCodes);
+        size_t statusCount = remainingLength - sizeof(uint16_t) - propBuffer->bufferLength - variableLengthEncodedSize(propBuffer->bufferLength); 
+        uint8_t* pStatusStart = &pIndex[propBuffer->bufferLength + variableLengthEncodedSize(propBuffer->bufferLength)];
+        status = readSubackStatus(statusCount, pStatusStart, subackReasonCodes);
     }
     return status;
 }
-MQTTStatus_t MQTTV5_DeserializeAck( const MQTTPacketInfo_t * pIncomingPacket,
+MQTTStatus_t MQTT_DeserializePublishAck( const MQTTPacketInfo_t * pIncomingPacket,
                                     uint16_t * pPacketId,
                                     MQTTReasonCodeInfo_t * pReasonCode,
                                     bool requestProblem,
@@ -3591,22 +3470,22 @@ MQTTStatus_t MQTTV5_DeserializeAck( const MQTTPacketInfo_t * pIncomingPacket,
         {
             case MQTT_PACKET_TYPE_PUBACK:
             case MQTT_PACKET_TYPE_PUBREC:
-                status = deserializeSimpleAckV5( pIncomingPacket, pPacketId, pReasonCode, requestProblem, propBuffer );
+                status = deserializeSimpleAck( pIncomingPacket, pPacketId, pReasonCode, requestProblem, propBuffer );
 
                 if( status == MQTTSuccess && pIncomingPacket->remainingLength > 2 )
                 {
-                    status = logAckResponseV5( *pReasonCode->reasonCode, *pPacketId);
+                    status = logAckResponse( *pReasonCode->reasonCode, *pPacketId);
                 }
 
                 break;
 
             case MQTT_PACKET_TYPE_PUBREL:
             case MQTT_PACKET_TYPE_PUBCOMP:
-                status = deserializeSimpleAckV5( pIncomingPacket, pPacketId, pReasonCode, requestProblem, propBuffer );
+                status = deserializeSimpleAck( pIncomingPacket, pPacketId, pReasonCode, requestProblem, propBuffer );
 
                 if( status == MQTTSuccess && pIncomingPacket->remainingLength > 2)
                 {
-                    status = logSimpleAckResponseV5( *pReasonCode->reasonCode, *pPacketId);
+                    status = logSimpleAckResponse( *pReasonCode->reasonCode, *pPacketId);
                 }
 
                 break;
@@ -3623,7 +3502,7 @@ MQTTStatus_t MQTTV5_DeserializeAck( const MQTTPacketInfo_t * pIncomingPacket,
     return status;
 }
 
-uint8_t * MQTTV5_SerializeAckFixed( uint8_t * pIndex,
+uint8_t * MQTT_SerializeAckFixed( uint8_t * pIndex,
                                     uint8_t packetType,
                                     uint16_t packetId,
                                     size_t remainingLength, 
@@ -3647,7 +3526,7 @@ uint8_t * MQTTV5_SerializeAckFixed( uint8_t * pIndex,
 }
 
 
-MQTTStatus_t MQTTV5_GetAckPacketSize(size_t* pRemainingLength,
+MQTTStatus_t MQTT_GetAckPacketSize(size_t* pRemainingLength,
     size_t* pPacketSize,
     uint32_t maxPacketSize, 
     size_t ackPropertyLength)
@@ -3793,7 +3672,7 @@ uint8_t * MQTT_SerializeDisconnectFixed( uint8_t * pIndex,
 }
 
 
-    MQTTStatus_t MQTTV5_DeserializeDisconnect( const MQTTPacketInfo_t * pPacket,
+    MQTTStatus_t MQTT_DeserializeDisconnect( const MQTTPacketInfo_t * pPacket,
                                                uint32_t maxPacketSize,
                                                MQTTReasonCodeInfo_t* pDisconnectInfo, 
                                                MqttPropBuilder_t *propBuffer)
@@ -5264,8 +5143,8 @@ uint8_t * MQTT_SerializeDisconnectFixed( uint8_t * pIndex,
             }
             else
             {
-                status = MQTTBadParameter;
-                LogError(("Invalid property buffer"));
+                status = MQTTEndOfProperties;
+                LogError(("End of Property Buffer."));
             }
         }
 

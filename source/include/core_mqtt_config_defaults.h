@@ -70,34 +70,6 @@
 
 /**
  * @ingroup mqtt_constants
- * @brief Version of the MQTT protocol with default value as 3.1.1
- */
-#ifndef MQTT_VERSION_5_ENABLED
-    #define MQTT_VERSION_5_ENABLED    ( true )
-
-/**
- * @ingroup mqtt_constants
- * @brief Maximum number of user properties with default value as 5.
- */
-    #ifndef MAX_USER_PROPERTY
-        #define MAX_USER_PROPERTY    ( 5U )
-    #endif
-    /*Disable the user properties if max user property is set to 0.*/
-    #if ( MAX_USER_PROPERTY == 0U )
-
-/**
- * @ingroup mqtt_constants
- * @brief Enable and disable user properties.
- */
-        #define MQTT_USER_PROPERTY_ENABLED    ( true )
-    #else
-        #define MQTT_USER_PROPERTY_ENABLED    ( true )
-    #endif
-
-#endif /* ifndef MQTT_VERSION_5_ENABLED */
-
-/**
- * @ingroup mqtt_constants
  * @brief Maximum number of vectors in subscribe and unsubscribe packet.
  */
 #ifndef MQTT_SUB_UNSUB_MAX_VECTORS

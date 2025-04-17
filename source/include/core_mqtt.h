@@ -205,6 +205,9 @@ typedef struct MQTTContext
      */
     MQTTFixedBuffer_t networkBuffer;
 
+    /**
+    * @brief The buffer used to store properties for outgoing ack packets.
+    */
     MqttPropBuilder_t ackPropsBuffer;
 
     /**
