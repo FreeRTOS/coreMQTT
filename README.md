@@ -176,13 +176,37 @@ or the following:
 1. Go to the root directory of this repository. (Make sure that the **CMock**
    submodule is cloned as described [above](#checkout-cmock-submodule))
 
-1. Run the _cmake_ command: `cmake -S test -B build`
+1. Run the _cmake_ command:
 
-1. Run this command to build the library and unit tests: `make -C build all`
+    For Linux machines:
+    ```
+    cmake -S test -B build/ \
+              -G "Unix Makefiles" \
+              -DCMAKE_BUILD_TYPE=Debug  \
+              -DBUILD_CLONE_SUBMODULES=ON \
+              -DUNITTEST=1 \
+              -DCMAKE_C_FLAGS='--coverage -Wall -Wextra -Wsign-compare -Werror -DNDEBUG -DLIBRARY_LOG_LEVEL=LOG_DEBUG'
+    ```
+    For Mac machines:
+
+    ```
+    cmake -S test -B build/ \
+              -G "Unix Makefiles" \
+              -DCMAKE_BUILD_TYPE=RelWithDebInfo  \
+              -DBUILD_CLONE_SUBMODULES=ON \
+              -DUNITTEST=1 \
+              -DCMAKE_C_FLAGS='--coverage -Wall -Wextra -Wsign-compare -Werror -DNDEBUG -DLIBRARY_LOG_LEVEL=LOG_DEBUG' \
+              -DCMAKE_C_STANDARD=99
+    ```
+
+1. Run this command to build the library and unit tests: `make -C build all`.
 
 1. The generated test executables will be present in `build/bin/tests` folder.
 
 1. Run `cd build && ctest` to execute all tests and view the test run summary.
+
+1. Run `make coverage` to generate coverage report in the `build/coverage`
+   folder.
 
 ## CBMC
 
@@ -216,7 +240,7 @@ locations below:
 |                                                       Location                                                       |
 | :------------------------------------------------------------------------------------------------------------------: |
 | [AWS IoT Device SDK for Embedded C](https://github.com/aws/aws-iot-device-sdk-embedded-C#releases-and-documentation) |
-|       [FreeRTOS.org](https://freertos.org/Documentation/api-ref/coreMQTT/docs/doxygen/output/html/index.html)        |
+|       [API Reference](https://freertos.github.io/coreMQTT/main/index.html)        |
 
 Note that the latest included version of coreMQTT may differ across
 repositories.

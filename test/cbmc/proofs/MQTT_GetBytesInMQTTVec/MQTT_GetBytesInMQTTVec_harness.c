@@ -23,20 +23,18 @@
  */
 
 /**
- * @file MQTT_SerializeAck_harness.c
- * @brief Implements the proof harness for MQTT_SerializeAck function.
+ * @file MQTT_Disconnect_harness.c
+ * @brief Implements the proof harness for MQTT_Disconnect function.
  */
 #include "core_mqtt.h"
 #include "mqtt_cbmc_state.h"
 
 void harness()
 {
-    MQTTFixedBuffer_t * pFixedBuffer;
-    uint8_t packetType;
-    uint16_t packetId;
+    MQTTVec_t * mqttVec;
+    size_t memoryRequired;
 
-    pFixedBuffer = allocateMqttFixedBuffer( NULL );
-    __CPROVER_assume( isValidMqttFixedBuffer( pFixedBuffer ) );
+    mqttVec = allocateMqttVec( NULL );
 
-    MQTT_SerializeAck( pFixedBuffer, packetType, packetId );
+    memoryRequired = MQTT_GetBytesInMQTTVec( mqttVec );
 }

@@ -89,22 +89,29 @@ struct MQTTAuthInfo;
  */
 typedef enum MQTTStatus
 {
-    MQTTSuccess = 0,      /**< Function completed successfully. */
-    MQTTBadParameter,     /**< At least one parameter was invalid. */
-    MQTTNoMemory,         /**< A provided buffer was too small. */
-    MQTTSendFailed,       /**< The transport send function failed. */
-    MQTTRecvFailed,       /**< The transport receive function failed. */
-    MQTTBadResponse,      /**< An invalid packet was received from the server. */
-    MQTTServerRefused,    /**< The server refused a CONNECT or SUBSCRIBE. */
-    MQTTNoDataAvailable,  /**< No data available from the transport interface. */
-    MQTTIllegalState,     /**< An illegal state in the state record. */
-    MQTTStateCollision,   /**< A collision with an existing state record entry. */
-    MQTTKeepAliveTimeout, /**< Timeout while waiting for PINGRESP. */
-    MQTTNeedMoreBytes,     /**< MQTT_ProcessLoop/MQTT_ReceiveLoop has received
-                          incomplete data; it should be called again (probably after
-                          a delay). */
-    MQTTEndOfProperties
+    MQTTSuccess = 0,                /**< Function completed successfully. */
+    MQTTBadParameter,               /**< At least one parameter was invalid. */
+    MQTTNoMemory,                   /**< A provided buffer was too small. */
+    MQTTSendFailed,                 /**< The transport send function failed. */
+    MQTTRecvFailed,                 /**< The transport receive function failed. */
+    MQTTBadResponse,                /**< An invalid packet was received from the server. */
+    MQTTServerRefused,              /**< The server refused a CONNECT or SUBSCRIBE. */
+    MQTTNoDataAvailable,            /**< No data available from the transport interface. */
+    MQTTIllegalState,               /**< An illegal state in the state record. */
+    MQTTStateCollision,             /**< A collision with an existing state record entry. */
+    MQTTKeepAliveTimeout,           /**< Timeout while waiting for PINGRESP. */
+    MQTTNeedMoreBytes,              /**< MQTT_ProcessLoop/MQTT_ReceiveLoop has received
+                                    incomplete data; it should be called again (probably after
+                                    a delay). */
+    MQTTEndOfProperties,
 
+    MQTTStatusConnected,            /**< MQTT connection is established with the broker. */
+    MQTTStatusNotConnected,         /**< MQTT connection is not established with the broker. */
+    MQTTStatusDisconnectPending,    /**< Transport Interface has failed and MQTT connection needs to be closed. */
+    MQTTPublishStoreFailed,         /**< User provided API to store a copy of outgoing publish for retransmission  purposes,
+                                    has failed. */
+    MQTTPublishRetrieveFailed       /**< User provided API to retrieve the copy of a publish while reconnecting
+                                    with an unclean session has failed. */
 } MQTTStatus_t;
 
 /**
@@ -1244,6 +1251,19 @@ MQTTStatus_t MQTT_ProcessIncomingPacketTypeAndLength( const uint8_t * pBuffer,
                                                       const size_t * pIndex,
                                                       MQTTPacketInfo_t * pIncomingPacket );
 /* @[declare_mqtt_processincomingpackettypeandlength] */
+
+/**
+ * @brief Update the duplicate publish flag within the given header of the publish packet.
+ *
+ * @param[in] pHeader The buffer holding the header content
+ * @param[in] set If true then the flag will be set else cleared
+ *
+ * @return #MQTTSuccess on successful setting of the duplicate flag,
+ * #MQTTBadParameter for invalid parameters
+ */
+ /* @[declare_mqtt_updateduplicatepublishflag] */
+MQTTStatus_t MQTT_UpdateDuplicatePublishFlag( uint8_t * pHeader , bool set);
+/* @[declare_mqtt_updateduplicatepublishflag] */
 
 /**
  * @fn uint8_t * MQTT_SerializeConnectFixedHeader( uint8_t * pIndex, const MQTTConnectInfo_t * pConnectInfo, const MQTTPublishInfo_t * pWillInfo, size_t remainingLength );

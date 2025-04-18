@@ -29,6 +29,15 @@
 #include "core_mqtt.h"
 #include "mqtt_cbmc_state.h"
 
+MQTTStatus_t MQTT_DeserializeAck( const MQTTPacketInfo_t * pIncomingPacket,
+                                  uint16_t * pPacketId,
+                                  bool * pSessionPresent )
+{
+    MQTTStatus_t result;
+
+    return result;
+}
+
 void harness()
 {
     MQTTContext_t * pContext;

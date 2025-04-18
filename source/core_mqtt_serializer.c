@@ -628,10 +628,6 @@ uint8_t * encodeString( uint8_t * pDestination,
 {
     uint8_t * pBuffer = NULL;
 
-    /* Typecast const char * typed source buffer to const uint8_t *.
-     * This is to use same type buffers in memcpy. */
-    const uint8_t * pSourceBuffer = ( const uint8_t * ) pSource;
-
     assert( pDestination != NULL );
 
     pBuffer = pDestination;
@@ -645,9 +641,9 @@ uint8_t * encodeString( uint8_t * pDestination,
     pBuffer++;
 
     /* Copy the string into pBuffer. */
-    if( pSourceBuffer != NULL )
+    if( pSource != NULL )
     {
-        ( void ) memcpy( pBuffer, pSourceBuffer, sourceLength );
+        ( void ) memcpy( ( void * ) pBuffer, ( const void * ) pSource, sourceLength );
     }
 
     /* Return the pointer to the end of the encoded string. */
@@ -3779,13 +3775,44 @@ MQTTStatus_t MQTTPropAdd_UserProp(MqttPropBuilder_t* pPropertyBuilder, MQTTUserP
     return status;
 }
 
+/*-----------------------------------------------------------*/
+
+MQTTStatus_t MQTT_UpdateDuplicatePublishFlag( uint8_t * pHeader,
+                                              bool set )
+{
+    MQTTStatus_t status = MQTTSuccess;
+
+    if( pHeader == NULL ) 
+    {
+        LogError( ( "Header cannot be NULL" ) ); 
+        status = MQTTBadParameter;
+    }
+    else if( ( ( *pHeader ) & 0xF0U ) != MQTT_PACKET_TYPE_PUBLISH ) 
+    {
+        LogError( ( "Header is not publish packet header" ) ); 
+        status = MQTTBadParameter;
+    }
+    else if( set == true )
+    {
+        UINT8_SET_BIT( *pHeader, MQTT_PUBLISH_FLAG_DUP );
+    }
+    else
+    {
+        UINT8_CLEAR_BIT( *pHeader, MQTT_PUBLISH_FLAG_DUP );
+    }
+
+    return status;
+}
+
+
+
 MQTTStatus_t MQTTPropAdd_ConnSessionExpiry(MqttPropBuilder_t* pPropertyBuilder, uint32_t sessionExpiry)
 {
     uint8_t* pIndex;
     MQTTStatus_t status = MQTTSuccess;
     if ((pPropertyBuilder == NULL))
     {
-        LogError(("Arguments cannot be NULL : pPropertyBuilder=%p.", (void*)pPropertyBuilder));
+        LogError(("Arguments cannot be NULL : pPropertyBuilder=%p.", (void*)pPropertyBuilder));  
         status = MQTTBadParameter;
     }
     else if (pPropertyBuilder->pBuffer == NULL)

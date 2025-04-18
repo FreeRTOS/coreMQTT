@@ -23,20 +23,30 @@
  */
 
 /**
- * @file MQTT_SerializeAck_harness.c
- * @brief Implements the proof harness for MQTT_SerializeAck function.
+ * @file MQTT_Disconnect_harness.c
+ * @brief Implements the proof harness for MQTT_Disconnect function.
  */
 #include "core_mqtt.h"
 #include "mqtt_cbmc_state.h"
 
 void harness()
 {
-    MQTTFixedBuffer_t * pFixedBuffer;
-    uint8_t packetType;
-    uint16_t packetId;
+    MQTTVec_t * mqttVec;
+    size_t memoryRequired;
+    uint8_t * memoryBuffer;
 
-    pFixedBuffer = allocateMqttFixedBuffer( NULL );
-    __CPROVER_assume( isValidMqttFixedBuffer( pFixedBuffer ) );
+    mqttVec = allocateMqttVec( NULL );
 
-    MQTT_SerializeAck( pFixedBuffer, packetType, packetId );
+    memoryRequired = MQTT_GetBytesInMQTTVec( mqttVec );
+
+    /* It is a part of the API contract that #MQTT_SerializeMQTTVec will be called with
+     * a memory buffer of size output by #MQTT_GetBytesInMQTTVec function and the
+     * #MQTTVec_t pointer given by the library as an input to the user defined
+     * #MQTTStorePacketForRetransmit callback function. Hence the memory buffer must
+     * not be NULL.
+     */
+    memoryBuffer = malloc( memoryRequired );
+    __CPROVER_assume( memoryBuffer != NULL );
+
+    MQTT_SerializeMQTTVec( memoryBuffer, mqttVec );
 }
