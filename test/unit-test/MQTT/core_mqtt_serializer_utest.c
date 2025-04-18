@@ -1878,6 +1878,12 @@ void test_MQTT_GetIncomingPacketTypeAndLength( void )
     status = MQTT_GetIncomingPacketTypeAndLength( mockReceive, &networkContext, &mqttPacket );
     TEST_ASSERT_EQUAL( MQTTBadResponse, status );
 
+    /* Test with disconnect packet type. */
+    bufPtr = buffer;
+    buffer[ 0 ] = MQTT_PACKET_TYPE_DISCONNECT;
+    status = MQTT_GetIncomingPacketTypeAndLength( mockReceive, &networkContext, &mqttPacket );
+    TEST_ASSERT_EQUAL( MQTTBadResponse, status );
+
     /* Test with invalid remaining length. */
     bufPtr = buffer;
     buffer[ 0 ] = 0x20; /* CONN ACK */
