@@ -583,6 +583,8 @@ static MQTTStatus_t deserializeSimpleAck(const MQTTPacketInfo_t* pAck,
  */
 static MQTTStatus_t validateDisconnectResponse( uint8_t reasonCode,
                                                 bool incoming );
+
+static MQTTStatus_t deserializeSubackProperties(MqttPropBuilder_t* propBuffer, const uint8_t* pIndex);
 /*-----------------------------------------------------------*/
 
 static size_t variableLengthEncodedSize( size_t length )
