@@ -43,7 +43,7 @@
  *
  * @return The location of the byte following the encoded value.
  */
-uint8_t* encodeRemainingLength(uint8_t* pDestination,
+uint8_t* encodeVariableLength(uint8_t* pDestination,
     size_t length)
 {
     uint8_t lengthByte;

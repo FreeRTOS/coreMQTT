@@ -68,26 +68,6 @@
 ( ( uint16_t ) ptr[ 1 ] ) )
 
 /**
-* @brief Get the 4th byte of a 32-bit unsigned integer.
-*/
-#define UINT32_BYTE3( x )    ( ( uint8_t ) ( ( x ) >> 24 ) )
-
-/**
-* @brief Get the 3rd byte of a 32-bit unsigned integer.
-*/
-#define UINT32_BYTE2( x )    ( ( uint8_t ) ( ( x ) >> 16 ) )
-
-/**
-* @brief Get the 2nd byte of a 32-bit unsigned integer.
-*/
-#define UINT32_BYTE1( x )    ( ( uint8_t ) ( ( x ) >> 8 ) )
-
-/**
-* @brief Get the 1st byte of a 32-bit unsigned integer.
-*/
-#define UINT32_BYTE0( x )    ( ( uint8_t ) ( ( x ) & 0x000000FFU ) )
-
-/**
 * @brief Macro for decoding a 4-byte unsigned int from a sequence of bytes.
 *
 * @param[in] ptr A uint8_t* that points to the high byte.
@@ -108,5 +88,5 @@
  *
  * @return The location of the byte following the encoded value.
  */
-uint8_t* encodeRemainingLength(uint8_t* pDestination,
-    size_t length) ; 
+uint8_t* encodeVariableLength(uint8_t* pDestination,
+                              size_t length) ; 
