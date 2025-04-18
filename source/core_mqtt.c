@@ -622,6 +622,45 @@ static handleIncomingDisconnect(MQTTContext_t* pContext, MQTTPacketInfo_t* pInco
 
 /*-----------------------------------------------------------*/
 
+static bool matchEndWildcardsSpecialCases(const char* pTopicFilter,
+    uint16_t topicFilterLength,
+    uint16_t filterIndex)
+{
+    bool matchFound = false;
+
+    assert(pTopicFilter != NULL);
+    assert(topicFilterLength != 0U);
+
+    /* Check if the topic filter has 2 remaining characters and it ends in
+     * "/#". This check handles the case to match filter "sport/#" with topic
+     * "sport". The reason is that the '#' wildcard represents the parent and
+     * any number of child levels in the topic name.*/
+    if ((topicFilterLength >= 3U) &&
+        (filterIndex == (topicFilterLength - 3U)) &&
+        (pTopicFilter[filterIndex + 1U] == '/') &&
+        (pTopicFilter[filterIndex + 2U] == '#'))
+
+    {
+        matchFound = true;
+    }
+
+    /* Check if the next character is "#" or "+" and the topic filter ends in
+     * "/#" or "/+". This check handles the cases to match:
+     *
+     * - Topic filter "sport/+" with topic "sport/".
+     * - Topic filter "sport/#" with topic "sport/".
+     */
+    if ((filterIndex == (topicFilterLength - 2U)) &&
+        (pTopicFilter[filterIndex] == '/'))
+    {
+        /* Check that the last character is a wildcard. */
+        matchFound = (pTopicFilter[filterIndex + 1U] == '+') ||
+            (pTopicFilter[filterIndex + 1U] == '#');
+    }
+
+    return matchFound;
+}
+
 static bool matchWildcards( const char * pTopicName,
                             uint16_t topicNameLength,
                             const char * pTopicFilter,

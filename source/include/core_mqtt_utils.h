@@ -78,6 +78,9 @@
 ( ( ( uint32_t ) ptr[ 2 ] ) << 8 ) |  \
 ( ( uint32_t ) ptr[ 3 ] ) )
 
+#define UINT32_GET_BYTE(x, byteNumber) \
+((uint8_t)((x) >> 8 * byteNumber))
+
 /**
  * @brief Encodes the remaining length of the packet using the variable length
  * encoding scheme provided in the MQTT v3.1.1 specification.
