@@ -103,9 +103,7 @@ typedef enum MQTTStatus
     MQTTNeedMoreBytes,     /**< MQTT_ProcessLoop/MQTT_ReceiveLoop has received
                           incomplete data; it should be called again (probably after
                           a delay). */
-    MQTTEndOfProperties, 
-    MQTTMalformedPacket=0x81,/**A malformed packet was received from the server. */
-    MQTTProtocolError=0x82 /**A packet with protocol error was received from the server. */
+    MQTTEndOfProperties
 
 } MQTTStatus_t;
 
@@ -580,11 +578,6 @@ typedef struct MQTTConnectProperties
      */
     bool  requestProblemInfo;
 
-     /**
-     * @brief  Pointer to the incoming authentication information.
-     */
-    MQTTAuthInfo_t *pOutgoingAuth;
-
     /**
      * @brief Maximum number of unacknowledged PUBLISH packets server is willing to receive.
      */
@@ -621,16 +614,6 @@ typedef struct MQTTConnectProperties
     uint16_t serverTopicAliasMax;
 
      /**
-     * @brief Reason String is a human readable string designed for diagnostics.
-     */
-    const char* pReasonString;
-
-     /**
-     * @brief Length of reason string.
-     */
-    uint16_t reasonStringLength;
-
-     /**
      * @brief Whether wildcard subscription is available.
      */
     uint8_t isWildcardAvaiable;
@@ -649,31 +632,6 @@ typedef struct MQTTConnectProperties
      * @brief Keep Alive value given by the server.
      */
     uint16_t serverKeepAlive;
-
-     /**
-     * @brief UTF-8 Encoded String which is used as the basis for creating a Response Topic.
-     */
-    const char* pResponseInfo;
-
-     /**
-     * @brief Length of the response information.
-     */
-    uint16_t responseInfoLength;
-
-     /**
-     * @brief UTF-8 Encoded String which can be used by the Client to identify another Server to use
-     */
-    const char* pServerRef;
-
-     /**
-     * @brief Length of the server reference.
-     */
-    uint16_t serverRefLength;
-
-     /**
-     * @brief  Pointer to the incoming authentication information.
-     */
-    MQTTAuthInfo_t *pIncomingAuth;
 
    
 } MQTTConnectProperties_t;
@@ -1361,7 +1319,7 @@ uint8_t * MQTT_SerializeUnsubscribeHeader( size_t remainingLength,
  * @param[in]  pIncomingPacket #MQTTPacketInfo_t containing the buffer.
  * @param[out]  pSessionPresent Whether a previous session was present.
  *
- * @return #MQTTBadParameter, #MQTTBadResponse, #MQTTSuccess, #MQTTMalformedPacket, #MQTTProtocolError, #MQTTServerRefused
+ * @return #MQTTBadParameter, #MQTTBadResponse, #MQTTSuccess, #MQTTBadResponse, #MQTTBadResponse, #MQTTServerRefused
  *
  * <b>Example</b>
  * @code{c}
@@ -1593,7 +1551,7 @@ MQTTStatus_t MQTT_GetPublishPacketSize(MQTTPublishInfo_t * pPublishInfo,
  * @param[in] requestProblem Request problem value set in the connect packet.
  * @param[in]  maxPacketSize Maximum packet size allowed by the client.
  *
- * @return #MQTTBadParameter, #MQTTBadResponse, #MQTTServerRefused, #MQTTProtocolError, #MQTTMalformedPacket  or #MQTTSuccess.
+ * @return #MQTTBadParameter, #MQTTBadResponse, #MQTTServerRefused, #MQTTBadResponse, #MQTTBadResponse  or #MQTTSuccess.
  *
  * <b>Example</b>
  * @code{c}
@@ -1832,7 +1790,7 @@ uint8_t * MQTT_SerializeDisconnectFixed(uint8_t * pIndex,
  * @param[out] pDisconnectInfo Struct containing information about the disconnect.
  * @param[in] maxPacketSize MAximum packet size allowed by the client.
  *
- * @return #MQTTBadParameter, #MQTTBadResponse, #MQTTServerRefused, #MQTTProtocolError, #MQTTMalformedPacket or #MQTTSuccess.
+ * @return #MQTTBadParameter, #MQTTBadResponse, #MQTTServerRefused, #MQTTBadResponse, #MQTTBadResponse or #MQTTSuccess.
  *
  * <b>Example</b>
  * @code{c}
@@ -1934,7 +1892,7 @@ MQTTStatus_t MQTTPropAdd_ReasonString(MqttPropBuilder_t* pPropertyBuilder,
  * @param[out] pUsed Whether the property is decoded before.
  * @param[out]  pIndex Pointer to the current index of the buffer.
  *
- * @return #MQTTSuccess, #MQTTProtocolError and #MQTTMalformedPacket
+ * @return #MQTTSuccess, #MQTTBadResponse and #MQTTBadResponse
  **/
 MQTTStatus_t decodeutf_8(const char** pProperty,
     uint16_t* pLength,
