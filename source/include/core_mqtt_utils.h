@@ -82,6 +82,11 @@
 ((uint8_t)((x) >> 8 * byteNumber))
 
 /**
+ * @brief Clear a bit in an 8-bit unsigned integer.
+ */
+#define UINT8_CLEAR_BIT( x, position )    ( ( x ) = ( uint8_t ) ( ( x ) & ( ~( 0x01U << ( position ) ) ) ) )
+
+/**
  * @brief Encodes the remaining length of the packet using the variable length
  * encoding scheme provided in the MQTT v3.1.1 specification.
  *

@@ -3122,46 +3122,6 @@ MQTTStatus_t MQTT_InitRetransmits( MQTTContext_t * pContext,
 
 /*-----------------------------------------------------------*/
 
-MQTTStatus_t MQTT_InitRetransmits( MQTTContext_t * pContext,
-                                   MQTTStorePacketForRetransmit storeFunction,
-                                   MQTTRetrievePacketForRetransmit retrieveFunction,
-                                   MQTTClearPacketForRetransmit clearFunction )
-{
-    MQTTStatus_t status = MQTTSuccess;
-
-    if( pContext == NULL )
-    {
-        LogError( ( "Argument cannot be NULL: pContext=%p\n",
-                    ( void * ) pContext ) );
-        status = MQTTBadParameter;
-    }
-    else if( storeFunction == NULL )
-    {
-        LogError( ( "Invalid parameter: storeFunction is NULL" ) );
-        status = MQTTBadParameter;
-    }
-    else if( retrieveFunction == NULL )
-    {
-        LogError( ( "Invalid parameter: retrieveFunction is NULL" ) );
-        status = MQTTBadParameter;
-    }
-    else if( clearFunction == NULL )
-    {
-        LogError( ( "Invalid parameter: clearFunction is NULL" ) );
-        status = MQTTBadParameter;
-    }
-    else
-    {
-        pContext->storeFunction = storeFunction;
-        pContext->retrieveFunction = retrieveFunction;
-        pContext->clearFunction = clearFunction;
-    }
-
-    return status;
-}
-
-/*-----------------------------------------------------------*/
-
 MQTTStatus_t MQTT_CancelCallback( const MQTTContext_t * pContext,
                                   uint16_t packetId )
 {
@@ -3808,17 +3768,6 @@ MQTTStatus_t MQTT_Disconnect( MQTTContext_t * pContext,
             LogError( ( "MQTT Connection Disconnected Successfully" ) );
 
         status = sendDisconnectWithoutCopy( pContext, reasonCode, remainingLength, pPropertyBuilder);
-
-            if( sendResult < ( int32_t ) packetSize )
-            {
-                LogError( ( "Transport send failed for DISCONNECT packet." ) );
-                status = MQTTSendFailed;
-            }
-            else
-            {
-                LogDebug( ( "Sent %ld bytes of DISCONNECT packet.",
-                            ( long int ) sendResult ) );
-            }
         }
 
         MQTT_POST_STATE_UPDATE_HOOK( pContext );
@@ -4119,40 +4068,6 @@ const char * MQTT_Status_strerror( MQTTStatus_t status )
     }
 
     return str;
-}
-
-/*-----------------------------------------------------------*/
-
-size_t MQTT_GetBytesInMQTTVec( const MQTTVec_t * pVec )
-{
-    size_t memoryRequired = 0;
-    size_t i;
-    const TransportOutVector_t * pTransportVec = pVec->pVector;
-    size_t vecLen = pVec->vectorLen;
-
-    for( i = 0; i < vecLen; i++ )
-    {
-        memoryRequired += pTransportVec[ i ].iov_len;
-    }
-
-    return memoryRequired;
-}
-
-/*-----------------------------------------------------------*/
-
-void MQTT_SerializeMQTTVec( uint8_t * pAllocatedMem,
-                            const MQTTVec_t * pVec )
-{
-    const TransportOutVector_t * pTransportVec = pVec->pVector;
-    const size_t vecLen = pVec->vectorLen;
-    size_t index = 0;
-    size_t i = 0;
-
-    for( i = 0; i < vecLen; i++ )
-    {
-        ( void ) memcpy( ( void * ) &pAllocatedMem[ index ], ( const void * ) pTransportVec[ i ].iov_base, pTransportVec[ i ].iov_len );
-        index += pTransportVec[ i ].iov_len;
-    }
 }
 
 /*-----------------------------------------------------------*/
