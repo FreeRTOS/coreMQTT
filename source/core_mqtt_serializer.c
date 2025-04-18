@@ -554,7 +554,7 @@ MQTTStatus_t decodeutf_8(const char** pProperty,
  **/
 static MQTTStatus_t deserializeConnack(MQTTConnectProperties_t* pConnackProperties,
                                         size_t length,
-                                        const uint8_t* const* pIndex,
+                                        const uint8_t * pIndex,
                                         MqttPropBuilder_t* propBuffer); 
 
 /**
@@ -1130,11 +1130,11 @@ static MQTTStatus_t decodeBinaryData(const void** pProperty,
 
 static MQTTStatus_t deserializeConnack( MQTTConnectProperties_t * pConnackProperties,
                                         size_t length,
-                                        const uint8_t * const * pIndex, 
+                                        const uint8_t * pIndex, 
                                         MqttPropBuilder_t *propBuffer)
 {
     MQTTStatus_t status = MQTTSuccess;
-    const uint8_t * pVariableHeader = *pIndex;
+    const uint8_t * pVariableHeader = pIndex;
     size_t propertyLength = length;
     bool sessionExpiry = false;
     bool serverReceiveMax = false;
@@ -3037,7 +3037,7 @@ MQTTStatus_t MQTT_DeserializeConnack( MQTTConnectProperties_t * pConnackProperti
         /*Deserialize the connack properties.*/
         else
         {
-            status = deserializeConnack( pConnackProperties, propertyLength, &pVariableHeader, propBuffer );
+            status = deserializeConnack( pConnackProperties, propertyLength, pVariableHeader, propBuffer );
         }
     }
     return status;
