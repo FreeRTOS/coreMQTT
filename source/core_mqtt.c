@@ -4497,26 +4497,24 @@ static MQTTStatus_t validateSharedSubscriptions(const MQTTContext_t* pContext, c
             LogError(("Protocol Error : noLocalOption cannot be 1 for shared subscriptions"));
             status = MQTTBadParameter;
         }
+        else if(pContext->connectProperties.isSharedAvailable == 0U)
+        {
+            LogError(("Protocol Error : Shared Subscriptions not allowed"));
+            status = MQTTBadParameter;
+        }
         else
         {
-            if (pContext->connectProperties.isSharedAvailable == 0U)
+            const char* ptr;
+            for (ptr = shareNameStart; ptr < shareNameEnd; ptr++)
             {
-                LogError(("Protocol Error : Shared Subscriptions not allowed"));
-                status = MQTTBadParameter;
-            }
-            else
-            {
-                const char* ptr;
-                for (ptr = shareNameStart; ptr < shareNameEnd; ptr++)
+                if ((*ptr == '#') || (*ptr == '+'))
                 {
-                    if ((*ptr == '#') || (*ptr == '+'))
-                    {
-                        status = MQTTBadParameter;
-                        break; // Invalid share name
-                    }
+                    status = MQTTBadParameter;
+                    break; // Invalid share name
                 }
             }
         }
+
     }
     return status ; 
 }
