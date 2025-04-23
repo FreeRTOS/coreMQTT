@@ -504,7 +504,7 @@ static MQTTStatus_t deserializeConnack(MQTTConnectProperties_t* pConnackProperti
  *
  * @return #MQTTSuccess, #MQTTServerRefused and #MQTTBadResponse.
  */
-static MQTTStatus_t logAckResponse( MQTTSuccessFailReasonCode_t reasonCode,
+static MQTTStatus_t logAckResponse( uint8_t reasonCode,
                                       uint16_t packetIdentifier );
 
 /**
@@ -516,7 +516,7 @@ static MQTTStatus_t logAckResponse( MQTTSuccessFailReasonCode_t reasonCode,
  *
  * @return #MQTTSuccess, #MQTTServerRefused and #MQTTBadResponse.
  */
-static MQTTStatus_t logSimpleAckResponse( MQTTSuccessFailReasonCode_t reasonCode,
+static MQTTStatus_t logSimpleAckResponse( uint8_t reasonCode,
                                             uint16_t packetIdentifier );
 
 /**
@@ -561,7 +561,7 @@ static MQTTStatus_t deserializeSimpleAck(const MQTTPacketInfo_t* pAck,
  *
  * @return #MQTTSuccess,#MQTTBadParameter and #MQTTBadResponse.
  */
-static MQTTStatus_t validateDisconnectResponse( MQTTSuccessFailReasonCode_t reasonCode,
+static MQTTStatus_t validateDisconnectResponse( uint8_t reasonCode,
                                                 bool incoming );
 
 static MQTTStatus_t deserializeSubackProperties(MqttPropBuilder_t* propBuffer, uint8_t* pIndex);
@@ -1324,8 +1324,7 @@ static MQTTStatus_t readSubackStatus(size_t statusCount, const uint8_t* pStatusS
     }
     if ((status == MQTTSuccess) || (status == MQTTServerRefused))
     {
-    /* coverity[misra_c_2012_rule_11_3_violation] */
-        ackInfo->reasonCode = (const MQTTSuccessFailReasonCode_t *) pStatusStart;
+        ackInfo->reasonCode = pStatusStart;
         ackInfo->reasonCodeLength = statusCount; 
     }
     return status;
@@ -1464,8 +1463,7 @@ static MQTTStatus_t deserializeSimpleAck( const MQTTPacketInfo_t * pAck,
     /* If reason code is success, server can choose to not send the reason code.*/
     if( ( status == MQTTSuccess ) && ( pAck->remainingLength > 2U ) )
     {
-        /* coverity[misra_c_2012_rule_11_3_violation] */
-        pReasonCode->reasonCode = (const MQTTSuccessFailReasonCode_t *) pIndex ;  
+        pReasonCode->reasonCode = pIndex ;  
         pReasonCode->reasonCodeLength = 1U;
         pIndex++;
     }
@@ -2674,7 +2672,7 @@ static MQTTStatus_t deserializeConnack( MQTTConnectProperties_t * pConnackProper
 
 /*-----------------------------------------------------------*/
 
-static MQTTStatus_t logAckResponse( MQTTSuccessFailReasonCode_t reasonCode,
+static MQTTStatus_t logAckResponse( uint8_t reasonCode,
                                       uint16_t packetIdentifier )
 {
     MQTTStatus_t status = MQTTServerRefused;
@@ -2737,7 +2735,7 @@ static MQTTStatus_t logAckResponse( MQTTSuccessFailReasonCode_t reasonCode,
 
 /*-----------------------------------------------------------*/
 
-static MQTTStatus_t logSimpleAckResponse( MQTTSuccessFailReasonCode_t reasonCode,
+static MQTTStatus_t logSimpleAckResponse( uint8_t reasonCode,
                                             uint16_t packetIdentifier )
 {
     MQTTStatus_t status = MQTTServerRefused;
@@ -2837,7 +2835,7 @@ static MQTTStatus_t decodeAckProperties(MqttPropBuilder_t* propBuffer,
 
 /*-----------------------------------------------------------*/
 
-static MQTTStatus_t validateDisconnectResponse( MQTTSuccessFailReasonCode_t reasonCode,
+static MQTTStatus_t validateDisconnectResponse(  uint8_t reasonCode,
                                                     bool incoming )
 {
     MQTTStatus_t status;
@@ -3605,8 +3603,7 @@ MQTTStatus_t MQTT_DeserializeDisconnect( const MQTTPacketInfo_t * pPacket,
     {
         /* Extract the reason code */
         pIndex = pPacket->pRemainingData;
-        /* coverity[misra_c_2012_rule_11_3_violation] */
-        pDisconnectInfo->reasonCode = (const MQTTSuccessFailReasonCode_t* )pIndex;
+        pDisconnectInfo->reasonCode = pIndex;
         pDisconnectInfo->reasonCodeLength = 1U; 
         pIndex++;
         /*Validate the reason code.*/

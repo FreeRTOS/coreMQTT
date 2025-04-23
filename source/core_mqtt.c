@@ -1584,7 +1584,7 @@ static MQTTStatus_t handleIncomingPublish( MQTTContext_t * pContext,
             publishRecordState = MQTT_CalculateStatePublish( MQTT_RECEIVE,
                                                              publishInfo.qos );
 
-            LogDebug(("Incoming publish packet with packet id %hu already exists.", F
+            LogDebug(("Incoming publish packet with packet id %hu already exists.",
                         ( unsigned short ) packetIdentifier ) );
 
             if( publishInfo.dup == false )
