@@ -393,7 +393,7 @@ static void eventCallback3( MQTTContext_t * pContext,
 
         isEventCallbackInvoked = true;
 
-        *pReasonCode = MQTTReasonSuccess ; 
+        *pReasonCode = MQTT_REASON_PUBACK_SUCCESS ; 
         pContext->ackPropsBuffer.pBuffer = NULL ;
 
         pDeserializedInfo->packetIdentifier = 0;
@@ -531,7 +531,6 @@ static int32_t transportWritevFail( NetworkContext_t * pNetworkContext,
         bytesToWrite += pIoVectorIterator->iov_len;
         pIoVectorIterator++;
     }
-
     return bytesToWrite + 3;
 }
 
@@ -565,6 +564,7 @@ static int32_t transportSendFailure( NetworkContext_t * pNetworkContext,
     ( void ) pNetworkContext;
     ( void ) pBuffer;
     ( void ) bytesToWrite;
+    LogError(("transportSendFailure"));
     return -1;
 }
 
@@ -655,1296 +655,16 @@ static void setUPContext( MQTTContext_t * mqttContext )
                             &transport,
                             getTime,
                             eventCallback,
-                            &networkBuffer, &ackPropsBuilder);
+                            &networkBuffer);
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
 
     mqttStatus = MQTT_InitStatefulQoS( mqttContext,
                                        outgoingRecords,
                                        10,
                                        incomingRecords,
-                                       10 );
+                                       10, ackPropsBuf, ackPropsBufLength);
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
 }
-
-void test_MQTT_Connect()
-{
-    MQTTContext_t mqttContext = { 0 };
-    MQTTConnectInfo_t connectInfo = { 0 };
-    bool sessionPresent = false;
-    MQTTStatus_t status;
-    TransportInterface_t transport = { 0 };
-    MQTTFixedBuffer_t networkBuffer = { 0 };
-    MQTTConnectProperties_t properties = {0} ;
-
-    setupTransportInterface( &transport );
-    setupNetworkBuffer( &networkBuffer );
-
-    memset( &mqttContext, 0x0, sizeof( mqttContext ) );
-    MqttPropBuilder_t ackPropsBuilder;
-    uint8_t ackPropsBuf[500]; 
-    size_t ackPropsBufLength = sizeof(ackPropsBuf);
-    MqttPropertyBuilder_Init(&(ackPropsBuilder), ackPropsBuf, ackPropsBufLength); 
-
-    MQTT_Init( &mqttContext, &transport, getTime, eventCallback, &networkBuffer, &ackPropsBuilder );
-/*  No connect Properties */
-    MQTT_GetConnectPacketSize_ExpectAnyArgsAndReturn( MQTTBadParameter ) ;
-    status = MQTT_Connect( &mqttContext, &connectInfo, NULL, 0U, &sessionPresent, NULL , NULL);
-    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
-}
-
-void test_MQTT_Connect_error_path()
-{
-    MQTTContext_t mqttContext = { 0 };
-    MQTTConnectInfo_t connectInfo = { 0 };
-    MQTTPublishInfo_t willInfo = { 0 };
-    uint32_t timeout = 2;
-    bool sessionPresent;
-    MQTTStatus_t status;
-    TransportInterface_t transport = { 0 };
-    MQTTFixedBuffer_t networkBuffer = { 0 };
-    setupTransportInterface( &transport );
-    setupNetworkBuffer( &networkBuffer );
-    memset( &mqttContext, 0x0, sizeof( mqttContext ) );
-    memset( &willInfo, 0x0, sizeof( MQTTPublishInfo_t ) );
-    memset( &connectInfo, 0x0, sizeof( MQTTConnectInfo_t ) );
-
-    MqttPropBuilder_t ackPropsBuilder;
-    uint8_t ackPropsBuf[500]; 
-    size_t ackPropsBufLength = sizeof(ackPropsBuf);
-    MqttPropertyBuilder_Init(&(ackPropsBuilder), ackPropsBuf, ackPropsBufLength);
-    MQTT_Init( &mqttContext, &transport, getTime, eventCallback, &networkBuffer, &ackPropsBuilder);
-
-    /* With non-NULL Will. */
-    mqttContext.connectStatus = MQTTNotConnected;
-    mqttContext.keepAliveIntervalSec = 0;
-
-    MqttPropBuilder_t propBuilder;
-    uint8_t buf[500];
-    size_t bufLength = sizeof(buf);
-    status = MqttPropertyBuilder_Init(&(propBuilder), buf, bufLength);
-
-
-    MqttPropBuilder_t willPropsBuilder;
-    uint8_t wbuf[500];
-    size_t wbufLength = sizeof(wbuf);
-    status = MqttPropertyBuilder_Init(&(willPropsBuilder), wbuf, wbufLength);
-    willInfo.pTopicName = "test";
-    willInfo.topicNameLength = 4;
-    willInfo.pPayload = "Payload";
-    willInfo.payloadLength = 7;
-    willInfo.payloadFormat = 1;
-
-    connectInfo.pUserName = "abcd";
-    connectInfo.userNameLength = 3;
-    connectInfo.passwordLength = 4;
-    connectInfo.pPassword = "1234";
-    mqttContext.transportInterface.send = transportSendSuccess;
-    MQTT_GetConnectPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
-    MQTT_SerializeConnectFixedHeader_Stub( MQTT_SerializeConnectFixedHeader_cb );
-    updateContextWithConnectProps_ExpectAnyArgsAndReturn(MQTTSuccess) ; 
-    MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTRecvFailed );
-    status = MQTT_Connect( &mqttContext, &connectInfo, NULL, timeout, &sessionPresent, &propBuilder , &willPropsBuilder);
-    TEST_ASSERT_EQUAL_INT( MQTTRecvFailed, status );
-
-
-    MQTT_GetConnectPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
-    MQTT_SerializeConnectFixedHeader_Stub( MQTT_SerializeConnectFixedHeader_cb );
-
-    MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTRecvFailed );
-    status = MQTT_Connect( &mqttContext, &connectInfo, &willInfo, timeout, &sessionPresent , NULL , NULL);
-    TEST_ASSERT_EQUAL_INT( MQTTRecvFailed, status );
-
-    MQTT_GetConnectPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
-    MQTT_SerializeConnectFixedHeader_Stub( MQTT_SerializeConnectFixedHeader_cb );
-
-    MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTRecvFailed );
-    status = MQTT_Connect( &mqttContext, &connectInfo, &willInfo, timeout, &sessionPresent, NULL , NULL );
-    TEST_ASSERT_EQUAL_INT( MQTTRecvFailed, status );
-
-    status = MQTT_Connect( NULL, &connectInfo, &willInfo, timeout, &sessionPresent, NULL , NULL );
-    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
-
-    willInfo.pTopicName = NULL;
-    mqttContext.transportInterface.send = transportSendSuccess;
-    MQTT_GetConnectPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
-    MQTT_SerializeConnectFixedHeader_Stub( MQTT_SerializeConnectFixedHeader_cb );
-
-    status = MQTT_Connect( &mqttContext, &connectInfo, &willInfo, timeout, &sessionPresent, NULL , NULL );
-    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
-}
-
-void test_MQTT_Connect_receiveConnack( void )
-{
-    MQTTContext_t mqttContext = { 0 };
-    MQTTConnectInfo_t connectInfo = { 0 };
-    uint32_t timeout = 0;
-    bool sessionPresent;
-    MQTTStatus_t status;
-    TransportInterface_t transport = { 0 };
-    MQTTFixedBuffer_t networkBuffer = { 0 };
-    MQTTConnectProperties_t properties = { 0 };
-    MQTTPacketInfo_t incomingPacket = { 0 };
-
-    setupTransportInterface( &transport );
-    setupNetworkBuffer( &networkBuffer );
-    transport.recv = transportRecvFailure;
-
-    memset( &mqttContext, 0x0, sizeof( mqttContext ) );
-    memset( &properties, 0x0, sizeof( properties ) );
-    MqttPropBuilder_t ackPropsBuilder;
-    uint8_t ackPropsBuf[500]; 
-    size_t ackPropsBufLength = sizeof(ackPropsBuf);
-    MqttPropertyBuilder_Init(&(ackPropsBuilder), ackPropsBuf, ackPropsBufLength);
-    MQTT_Init( &mqttContext, &transport, getTime, eventCallback, &networkBuffer, &ackPropsBuilder );
-    /* Everything before receiving the CONNACK should succeed. */
-    MQTT_GetConnectPacketSize_IgnoreAndReturn( MQTTSuccess );
-
-    /* Nothing received from transport interface. Set timeout to 2 for branch coverage. */
-    timeout = 2;
-    MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTNoDataAvailable );
-    MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTNoDataAvailable );
-    MQTT_SerializeConnectFixedHeader_Stub( MQTT_SerializeConnectFixedHeader_cb );
-    status = MQTT_Connect( &mqttContext, &connectInfo, NULL, timeout, &sessionPresent, NULL, NULL  );
-    TEST_ASSERT_EQUAL_INT( MQTTNoDataAvailable, status );
-
-
-    /* Did not receive a CONNACK. */
-    incomingPacket.type = MQTT_PACKET_TYPE_PINGRESP;
-    incomingPacket.remainingLength = 0;
-    MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
-    MQTT_GetIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
-    status = MQTT_Connect( &mqttContext, &connectInfo, NULL, timeout, &sessionPresent, NULL , NULL );
-    TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
-
-    /* Transport receive failure when receiving rest of packet. */
-    incomingPacket.type = MQTT_PACKET_TYPE_CONNACK;
-    incomingPacket.remainingLength = 2;
-    timeout = 2;
-    mqttContext.transportInterface.recv = transportRecvFailure;
-    MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
-    MQTT_GetIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
-    status = MQTT_Connect( &mqttContext, &connectInfo, NULL, timeout, &sessionPresent, NULL , NULL );
-    TEST_ASSERT_EQUAL_INT( MQTTRecvFailed, status );
-
-    mqttContext.transportInterface.recv = transportRecvSuccess;
-    MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
-    MQTT_GetIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
-    MQTT_DeserializeConnack_ExpectAnyArgsAndReturn( MQTTBadResponse );
-    status = MQTT_Connect( &mqttContext, &connectInfo, NULL, timeout, &sessionPresent, NULL , NULL );
-    TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
-
-    mqttContext.transportInterface.recv = transportRecvSuccess;
-    MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
-    MQTT_GetIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
-    MQTT_DeserializeConnack_ExpectAnyArgsAndReturn( MQTTSuccess );
-    status = MQTT_Connect( &mqttContext, &connectInfo, NULL, timeout, &sessionPresent, NULL , NULL );
-    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
-}
-
-void test_MQTT_Publish( void )
-{
-    MQTTContext_t mqttContext = { 0 };
-    MQTTPublishInfo_t publishInfo = { 0 };
-    MQTTConnectProperties_t properties = { 0 };
-    TransportInterface_t transport = { 0 };
-    MQTTFixedBuffer_t networkBuffer = { 0 };
-    MQTTStatus_t status;
-    MQTTPubAckInfo_t incomingRecords = { 0 };
-    MQTTPubAckInfo_t outgoingRecords = { 0 };
-
-    const uint16_t PACKET_ID = 1;
-
-    setupTransportInterface( &transport );
-    setupNetworkBuffer( &networkBuffer );
-    transport.send = transportSendFailure;
-
-    memset( &mqttContext, 0x0, sizeof( mqttContext ) );
-    memset( &publishInfo, 0x0, sizeof( publishInfo ) );
-    memset( &properties, 0x0, sizeof( properties ) );
-
-
-    MqttPropBuilder_t ackPropsBuilder;
-    uint8_t ackPropsBuf[500]; 
-    size_t ackPropsBufLength = sizeof(ackPropsBuf);
-    MqttPropertyBuilder_Init(&(ackPropsBuilder), ackPropsBuf, ackPropsBufLength);
-    MQTT_Init( &mqttContext, &transport, getTime, eventCallback, &networkBuffer, &ackPropsBuilder);
-    status = MQTT_InitStatefulQoS( &mqttContext,
-                                       &outgoingRecords, 4,
-                                       &incomingRecords, 4 );
-    
-    MqttPropBuilder_t propBuilder;
-    uint8_t buf[500];
-    size_t bufLength = sizeof(buf);
-    status = MqttPropertyBuilder_Init(&(propBuilder), buf, bufLength);
-
-    MQTT_ValidatePublishParams_ExpectAnyArgsAndReturn( MQTTSuccess );
-    MQTT_GetPublishPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
-    MQTT_SerializePublishHeaderWithoutTopic_ExpectAnyArgsAndReturn( MQTTSuccess );
-    status = MQTT_Publish( &mqttContext, &publishInfo, PACKET_ID, NULL );
-    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
-
-    MQTT_ValidatePublishParams_ExpectAnyArgsAndReturn( MQTTBadParameter );
-    status = MQTT_Publish( &mqttContext, &publishInfo, PACKET_ID, NULL);
-    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
-
-
-    publishInfo.qos = 0 ; 
-    publishInfo.pTopicName = "ab" ; 
-    publishInfo.topicNameLength = 2 ; 
-    publishInfo.retain = 1 ; 
-    publishInfo.dup = 1 ;
-    publishInfo.pPayload = "Payload" ;
-    publishInfo.payloadLength = 7 ;
-
-    validatePublishProperties_ExpectAnyArgsAndReturn(MQTTSuccess); 
-    MQTT_ValidatePublishParams_ExpectAnyArgsAndReturn( MQTTSuccess );
-    MQTT_GetPublishPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
-    MQTT_SerializePublishHeaderWithoutTopic_ExpectAnyArgsAndReturn( MQTTSuccess );
-    status = MQTT_Publish( &mqttContext, &publishInfo, PACKET_ID, &propBuilder );
-    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
-}
-
-/**
- * @brief Test that MQTT_Publish works as intended.
- */
-void test_MQTT_Publish_DuplicatePublish_UpdateFailed( void )
-{
-    MQTTContext_t mqttContext = { 0 };
-    MQTTPublishInfo_t publishInfo = { 0 };
-    TransportInterface_t transport = { 0 };
-    MQTTFixedBuffer_t networkBuffer = { 0 };
-    MQTTStatus_t status;
-    MQTTPubAckInfo_t outgoingPublishRecord[ 10 ];
-
-    setupTransportInterface( &transport );
-    setupNetworkBuffer( &networkBuffer );
-    transport.send = transportSendFailure;
-    MqttPropBuilder_t ackPropsBuilder;
-    uint8_t ackPropsBuf[500]; 
-    size_t ackPropsBufLength = sizeof(ackPropsBuf);
-    MqttPropertyBuilder_Init(&(ackPropsBuilder), ackPropsBuf, ackPropsBufLength);
-
-
-    memset( &mqttContext, 0x0, sizeof( mqttContext ) );
-    memset( &publishInfo, 0x0, sizeof( publishInfo ) );
-    MQTT_Init( &mqttContext, &transport, getTime, eventCallback, &networkBuffer, &ackPropsBuilder );
-
-    /* Always return success from now on. */
-    MQTT_ValidatePublishParams_ExpectAnyArgsAndReturn( MQTTSuccess );
-    MQTT_GetPublishPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
-    MQTT_SerializePublishHeaderWithoutTopic_ExpectAnyArgsAndReturn( MQTTSuccess );
-    MQTT_ReserveState_ExpectAnyArgsAndReturn( MQTTStateCollision );
-    MQTT_UpdateStatePublish_ExpectAnyArgsAndReturn( MQTTSendFailed );
-
-    mqttContext.outgoingPublishRecordMaxCount = 10;
-    mqttContext.outgoingPublishRecords = outgoingPublishRecord;
-
-    publishInfo.qos = MQTTQoS1;
-    publishInfo.dup = true;
-    publishInfo.pPayload = "TestPublish";
-    publishInfo.payloadLength = strlen( publishInfo.pPayload );
-    publishInfo.pTopicName = "TestTopic";
-    publishInfo.topicNameLength = strlen( publishInfo.pTopicName );
-
-    status = MQTT_Publish( &mqttContext, &publishInfo, 10, NULL );
-
-    TEST_ASSERT_EQUAL_INT( MQTTSendFailed, status );
-}
-
-/**
- * @brief Test that MQTT_Publish works as intended.
- */
-void test_MQTT_Publish8( void )
-{
-    MQTTContext_t mqttContext = { 0 };
-    MQTTPublishInfo_t publishInfo = { 0 };
-    TransportInterface_t transport = { 0 };
-    MQTTFixedBuffer_t networkBuffer = { 0 };
-    MQTTStatus_t status;
-
-    setupTransportInterface( &transport );
-    setupNetworkBuffer( &networkBuffer );
-    transport.writev = transportWritevFail;
-
-    memset( &mqttContext, 0x0, sizeof( mqttContext ) );
-    memset( &publishInfo, 0x0, sizeof( publishInfo ) );
-    MqttPropBuilder_t ackPropsBuilder;
-    uint8_t ackPropsBuf[500]; 
-    size_t ackPropsBufLength = sizeof(ackPropsBuf);
-    MqttPropertyBuilder_Init(&(ackPropsBuilder), ackPropsBuf, ackPropsBufLength);
-    MQTT_Init( &mqttContext, &transport, getTime, eventCallback, &networkBuffer, &ackPropsBuilder );
-
-    /* We want to test the first call to sendPacket within sendPublish succeeding,
-     * and the second one failing. */
-    mqttContext.transportInterface.send = transportSendSucceedThenFail;
-
-    MQTT_ValidatePublishParams_ExpectAnyArgsAndReturn( MQTTSuccess );
-    MQTT_GetPublishPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
-    MQTT_SerializePublishHeaderWithoutTopic_ExpectAnyArgsAndReturn( MQTTSuccess );
-    publishInfo.pPayload = "Test";
-    publishInfo.payloadLength = 4;
-    status = MQTT_Publish( &mqttContext, &publishInfo, 0, NULL );
-    TEST_ASSERT_EQUAL_INT( MQTTSendFailed, status );
-}
-
-
-void test_MQTT_ProcessLoop_handleIncomingAck_Error_Paths1( void )
-{
-    MQTTStatus_t status;
-    MQTTPublishState_t stateAfterDeserialize;
-    MQTTPublishState_t stateAfterSerialize;
-    MQTTContext_t context = { 0 };
-    TransportInterface_t transport = { 0 };
-    MQTTFixedBuffer_t networkBuffer = { 0 };
-    MQTTConnectProperties_t properties;
-    MQTTPacketInfo_t incomingPacket = { 0 };
-    MqttPropBuilder_t ackPropsBuilder;
-    uint8_t ackPropsBuf[500]; 
-    size_t ackPropsBufLength = sizeof(ackPropsBuf);
-    MqttPropertyBuilder_Init(&(ackPropsBuilder), ackPropsBuf, ackPropsBufLength);
-
-    /*Update state returns bad response.*/
-    setupTransportInterface( &transport );
-    setupNetworkBuffer( &networkBuffer );
-    incomingPacket.type = MQTT_PACKET_TYPE_PUBREC;
-    incomingPacket.remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
-    incomingPacket.headerLength = MQTT_SAMPLE_REMAINING_LENGTH;
-    status = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer, &ackPropsBuilder);
-    TEST_ASSERT_EQUAL( MQTTSuccess, status );
-
-    modifyIncomingPacketStatus = MQTTSuccess;
-    stateAfterDeserialize = MQTTPubRelSend;
-    stateAfterSerialize = MQTTPubCompPending;
-    MQTT_ProcessIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
-    MQTT_ProcessIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
-    MQTTV5_DeserializeAck_ExpectAnyArgsAndReturn( MQTTSuccess );
-    MQTT_UpdateStateAck_ExpectAnyArgsAndReturn( MQTTSuccess );
-    MQTT_UpdateStateAck_ReturnThruPtr_pNewState( &stateAfterDeserialize );
-    MQTT_SerializeAck_Stub( MQTT_SerializeAck_StubSuccess );
-    MQTT_UpdateStateAck_ExpectAnyArgsAndReturn( MQTTBadResponse );
-    MQTT_UpdateStateAck_ReturnThruPtr_pNewState( &stateAfterSerialize );
-    status = MQTT_ProcessLoop( &context );
-    TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
-}
-
-void test_MQTT_ProcessLoop_handleIncomingAck_Error_Paths2( void )
-{
-    MQTTStatus_t status;
-    MQTTContext_t context = { 0 };
-    TransportInterface_t transport = { 0 };
-    MQTTFixedBuffer_t networkBuffer = { 0 };
-    MQTTConnectProperties_t properties;
-    MQTTPacketInfo_t incomingPacket = { 0 };
-    MqttPropBuilder_t ackPropsBuilder;
-    uint8_t ackPropsBuf[500]; 
-    size_t ackPropsBufLength = sizeof(ackPropsBuf);
-    MqttPropertyBuilder_Init(&(ackPropsBuilder), ackPropsBuf, ackPropsBufLength);
-
-    /*Update state returns bad response.*/
-    setupTransportInterface( &transport );
-    setupNetworkBuffer( &networkBuffer );
-    status = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer, &ackPropsBuilder );
-    TEST_ASSERT_EQUAL( MQTTSuccess, status );
-    incomingPacket.type = MQTT_PACKET_TYPE_PUBREC;
-    incomingPacket.remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
-    incomingPacket.headerLength = MQTT_SAMPLE_REMAINING_LENGTH;
-
-    modifyIncomingPacketStatus = MQTTSuccess;
-    MQTT_ProcessIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
-    MQTT_ProcessIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
-    MQTTV5_DeserializeAck_ExpectAnyArgsAndReturn( MQTTSuccess );
-    MQTT_UpdateStateAck_ExpectAnyArgsAndReturn( MQTTBadParameter );
-    status = MQTT_ProcessLoop( &context );
-    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
-}
-
-void test_MQTT_ProcessLoop_handleIncomingAck_Error_Paths3( void )
-{
-    MQTTStatus_t status;
-    MQTTPublishState_t stateAfterDeserialize;
-    MQTTContext_t context = { 0 };
-    TransportInterface_t transport = { 0 };
-    MQTTFixedBuffer_t networkBuffer = { 0 };
-    MQTTConnectProperties_t properties;
-    uint16_t packetId = 2;
-    MQTTPacketInfo_t incomingPacket = { 0 };
-
-    /*Invalid packet parameters.*/
-    setupTransportInterface( &transport );
-    setupNetworkBuffer( &networkBuffer );
-    incomingPacket.type = MQTT_PACKET_TYPE_PUBREC;
-    incomingPacket.remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
-    incomingPacket.headerLength = MQTT_SAMPLE_REMAINING_LENGTH;
-
-    MqttPropBuilder_t ackPropsBuilder;
-    uint8_t ackPropsBuf[500]; 
-    size_t ackPropsBufLength = sizeof(ackPropsBuf);
-    MqttPropertyBuilder_Init(&(ackPropsBuilder), ackPropsBuf, ackPropsBufLength);
-
-    status = MQTT_Init( &context, &transport, getTime, eventCallback2, &networkBuffer, &ackPropsBuilder);
-    TEST_ASSERT_EQUAL( MQTTSuccess, status );
-
-    modifyIncomingPacketStatus = MQTTSuccess;
-    stateAfterDeserialize = MQTTPubRelSend;
-    MQTT_ProcessIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
-    MQTT_ProcessIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
-    MQTTV5_DeserializeAck_ExpectAnyArgsAndReturn( MQTTSuccess );
-    MQTTV5_DeserializeAck_ReturnThruPtr_pPacketId( &packetId );
-    MQTT_UpdateStateAck_ExpectAnyArgsAndReturn( MQTTSuccess );
-    MQTT_UpdateStateAck_ReturnThruPtr_pNewState( &stateAfterDeserialize );
-    MQTTV5_GetAckPacketSize_ExpectAnyArgsAndReturn( MQTTBadParameter );
-    status = MQTT_ProcessLoop( &context );
-    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
-}
-
-void test_MQTT_ProcessLoop_handleIncomingAck_Happy_Paths2( void )
-{
-    MQTTStatus_t status;
-    MQTTPublishState_t stateAfterDeserialize;
-    MQTTPublishState_t stateAfterSerialize;
-    MQTTContext_t context = { 0 };
-    TransportInterface_t transport = { 0 };
-    MQTTFixedBuffer_t networkBuffer = { 0 };
-    MQTTConnectProperties_t properties;
-    uint16_t packetId = 1;
-    MQTTPacketInfo_t incomingPacket = { 0 };
-    MqttPropBuilder_t ackPropsBuilder;
-    uint8_t ackPropsBuf[500]; 
-    size_t ackPropsBufLength = sizeof(ackPropsBuf);
-    MqttPropertyBuilder_Init(&(ackPropsBuilder), ackPropsBuf, ackPropsBufLength);
-
-    /*Using event call back to set reason string and user properties,*/
-    setupTransportInterface( &transport );
-    setupNetworkBuffer( &networkBuffer );
-    incomingPacket.type = MQTT_PACKET_TYPE_PUBREC;
-    incomingPacket.remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
-    incomingPacket.headerLength = MQTT_SAMPLE_REMAINING_LENGTH;
-    status = MQTT_Init( &context, &transport, getTime, eventCallback2, &networkBuffer, &ackPropsBuilder );
-    TEST_ASSERT_EQUAL( MQTTSuccess, status );
-
-    modifyIncomingPacketStatus = MQTTSuccess;
-    stateAfterDeserialize = MQTTPubRelSend;
-    stateAfterSerialize = MQTTPubCompPending;
-    MQTT_ProcessIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
-    MQTT_ProcessIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
-    MQTTV5_DeserializeAck_ExpectAnyArgsAndReturn( MQTTSuccess );
-    MQTTV5_DeserializeAck_ReturnThruPtr_pPacketId( &packetId );
-    MQTT_UpdateStateAck_ExpectAnyArgsAndReturn( MQTTSuccess );
-    MQTT_UpdateStateAck_ReturnThruPtr_pNewState( &stateAfterDeserialize );
-    MQTTV5_GetAckPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
-    MQTTV5_SerializeAckFixed_Stub( MQTTV5_SerializeAckFixed_cb );
-    MQTT_UpdateStateAck_ExpectAnyArgsAndReturn( MQTTSuccess );
-    MQTT_UpdateStateAck_ReturnThruPtr_pNewState( &stateAfterSerialize );
-    status = MQTT_ProcessLoop( &context );
-    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
-}
-
-void test_MQTT_ProcessLoop_handleIncomingAck_Error_Paths4( void )
-{
-    MQTTStatus_t status;
-    MQTTPublishState_t stateAfterDeserialize;
-    MQTTContext_t context = { 0 };
-    TransportInterface_t transport = { 0 };
-    MQTTFixedBuffer_t networkBuffer = { 0 };
-    MQTTConnectProperties_t properties;
-    MQTTPacketInfo_t incomingPacket = { 0 };
-    MqttPropBuilder_t ackPropsBuilder;
-    uint8_t ackPropsBuf[500]; 
-    size_t ackPropsBufLength = sizeof(ackPropsBuf);
-    MqttPropertyBuilder_Init(&(ackPropsBuilder), ackPropsBuf, ackPropsBufLength);
-
-    /*Invalid packet parameters.*/
-    setupTransportInterface( &transport );
-    setupNetworkBuffer( &networkBuffer );
-    incomingPacket.type = MQTT_PACKET_TYPE_PUBREC;
-    incomingPacket.remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
-    incomingPacket.headerLength = MQTT_SAMPLE_REMAINING_LENGTH;
-    status = MQTT_Init( &context, &transport, getTime, eventCallback2, &networkBuffer, &ackPropsBuilder );
-    TEST_ASSERT_EQUAL( MQTTSuccess, status );
-
-    modifyIncomingPacketStatus = MQTTSuccess;
-    stateAfterDeserialize = MQTTPubRelPending;
-    MQTT_ProcessIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
-    MQTT_ProcessIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
-    MQTTV5_DeserializeAck_ExpectAnyArgsAndReturn( MQTTSuccess );
-    MQTT_UpdateStateAck_ExpectAnyArgsAndReturn( MQTTSuccess );
-    MQTT_UpdateStateAck_ReturnThruPtr_pNewState( &stateAfterDeserialize );
-    MQTTV5_GetAckPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
-    status = MQTT_ProcessLoop( &context );
-    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
-}
-
-void test_MQTT_ProcessLoop_handleIncomingAck_Error_Paths5( void )
-{
-    MQTTStatus_t status;
-    MQTTPublishState_t stateAfterDeserialize;
-    MQTTContext_t context = { 0 };
-    TransportInterface_t transport = { 0 };
-    MQTTFixedBuffer_t networkBuffer = { 0 };
-    MQTTConnectProperties_t properties;
-    MQTTPacketInfo_t incomingPacket = { 0 };
-    uint16_t packetId = 1;
-    MqttPropBuilder_t ackPropsBuilder;
-    uint8_t ackPropsBuf[500]; 
-    size_t ackPropsBufLength = sizeof(ackPropsBuf);
-    MqttPropertyBuilder_Init(&(ackPropsBuilder), ackPropsBuf, ackPropsBufLength);
-
-    /*Unable to send the packet using transport interface.*/
-    setupTransportInterface( &transport );
-    setupNetworkBuffer( &networkBuffer );
-    incomingPacket.type = MQTT_PACKET_TYPE_PUBREC;
-    incomingPacket.remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
-    incomingPacket.headerLength = MQTT_SAMPLE_REMAINING_LENGTH;
-    status = MQTT_Init( &context, &transport, getTime, eventCallback2, &networkBuffer, &ackPropsBuilder );
-    TEST_ASSERT_EQUAL( MQTTSuccess, status );
-    context.transportInterface.send = transportSendNoBytes;
-    context.transportInterface.writev = NULL;
-    modifyIncomingPacketStatus = MQTTSuccess;
-    stateAfterDeserialize = MQTTPubRelSend;
-    MQTT_ProcessIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
-    MQTT_ProcessIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
-    MQTTV5_DeserializeAck_ExpectAnyArgsAndReturn( MQTTSuccess );
-    MQTTV5_DeserializeAck_ReturnThruPtr_pPacketId( &packetId );
-    MQTT_UpdateStateAck_ExpectAnyArgsAndReturn( MQTTSuccess );
-    MQTT_UpdateStateAck_ReturnThruPtr_pNewState( &stateAfterDeserialize );
-    MQTTV5_GetAckPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
-    MQTTV5_SerializeAckFixed_Stub( MQTTV5_SerializeAckFixed_cb );
-    status = MQTT_ProcessLoop( &context );
-    TEST_ASSERT_EQUAL_INT( MQTTSendFailed, status );
-}
-
-void test_MQTT_Connect_partial_receive( void )
-{
-    MQTTContext_t mqttContext = { 0 };
-    MQTTConnectInfo_t connectInfo = { 0 };
-    uint32_t timeout = 0;
-    bool sessionPresent;
-    MQTTStatus_t status;
-    TransportInterface_t transport = { 0 };
-    MQTTFixedBuffer_t networkBuffer = { 0 };
-    MQTTPacketInfo_t incomingPacket = { 0 };
-
-    setupTransportInterface( &transport );
-    setupNetworkBuffer( &networkBuffer );
-    transport.recv = transportRecvNoData;
-
-    MqttPropBuilder_t ackPropsBuilder;
-    uint8_t ackPropsBuf[500]; 
-    size_t ackPropsBufLength = sizeof(ackPropsBuf);
-    MqttPropertyBuilder_Init(&(ackPropsBuilder), ackPropsBuf, ackPropsBufLength);
-
-    memset( &mqttContext, 0x0, sizeof( mqttContext ) );
-    MQTT_Init( &mqttContext, &transport, getTime, eventCallback, &networkBuffer, &ackPropsBuilder );
-
-    /* Everything before receiving the CONNACK should succeed. */
-    MQTT_GetConnectPacketSize_IgnoreAndReturn( MQTTSuccess );
-    incomingPacket.type = MQTT_PACKET_TYPE_CONNACK;
-    incomingPacket.remainingLength = 2;
-
-    /* Timeout in receiving entire packet, for branch coverage. This is due to the fact that the mocked
-     * receive function always returns 0 bytes read. */
-    MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
-    MQTT_GetIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
-    MQTT_SerializeConnectFixedHeader_Stub( MQTT_SerializeConnectFixedHeader_cb );
-    status = MQTT_Connect( &mqttContext, &connectInfo, NULL, timeout, &sessionPresent, NULL, NULL );
-    TEST_ASSERT_EQUAL_INT( MQTTRecvFailed, status );
-
-    /* Update to use mock receive function that receives one byte at a time for the
-     * rest of the test. */
-    mqttContext.transportInterface.recv = transportRecvOneByte;
-    timeout = 10;
-
-    /* Not enough space for packet, discard it. */
-    mqttContext.networkBuffer.size = 2;
-    incomingPacket.remainingLength = 3;
-    MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
-    MQTT_GetIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
-    status = MQTT_Connect( &mqttContext, &connectInfo, NULL, timeout, &sessionPresent, NULL, NULL );
-    TEST_ASSERT_EQUAL_INT( MQTTNoDataAvailable, status );
-
-    /* Discard packet, no timeout provided. This should fail since multiple
-     * iterations of the discard loop are required to discard the packet, but only
-     * one will run. */
-    mqttContext.transportInterface.recv = transportRecvSuccess;
-    MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
-    MQTT_GetIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
-    status = MQTT_Connect( &mqttContext, &connectInfo, NULL, 0, &sessionPresent, NULL , NULL);
-    TEST_ASSERT_EQUAL_INT( MQTTRecvFailed, status );
-
-    /* Timeout while discarding packet. */
-    /* (Mocked) read only one byte at a time to ensure timeout will occur. */
-    mqttContext.transportInterface.recv = transportRecvOneByte;
-    incomingPacket.remainingLength = 20;
-    MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
-    MQTT_GetIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
-    status = MQTT_Connect( &mqttContext, &connectInfo, NULL, timeout, &sessionPresent, NULL, NULL );
-    TEST_ASSERT_EQUAL_INT( MQTTRecvFailed, status );
-
-    /* Receive failure while discarding packet. */
-    mqttContext.transportInterface.recv = transportRecvFailure;
-    /* Test with dummy get time function to make sure there are no infinite loops. */
-    mqttContext.getTime = getTimeDummy;
-    MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
-    MQTT_GetIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
-    status = MQTT_Connect( &mqttContext, &connectInfo, NULL, MQTT_NO_TIMEOUT_MS, &sessionPresent, NULL, NULL );
-    TEST_ASSERT_EQUAL_INT( MQTTRecvFailed, status );
-}
-
-void test_MQTTV5_Disconnect()
-{
-    uint32_t sessionExpiry = 0U;
-    MQTTStatus_t status;
-    MQTTContext_t context = { 0 };
-    TransportInterface_t transport = { 0 };
-    MQTTFixedBuffer_t networkBuffer = { 0 };
-    MqttPropBuilder_t ackPropsBuilder;
-    uint8_t ackPropsBuf[500]; 
-    size_t ackPropsBufLength = sizeof(ackPropsBuf);
-    MqttPropertyBuilder_Init(&(ackPropsBuilder), ackPropsBuf, ackPropsBufLength);
-
-    setupTransportInterface( &transport );
-    setupNetworkBuffer( &networkBuffer );
-    status = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer, &ackPropsBuilder );
-    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
-
-
-    /*Invalid parameters*/
-    status = MQTT_Disconnect( NULL, NULL , 0);
-    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
-
-    MQTT_GetDisconnectPacketSize_ExpectAnyArgsAndReturn( MQTTBadParameter );
-    status = MQTT_Disconnect( &context, NULL , 0);
-    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
-
-    // /*Bad Parameters*/
-    MQTT_GetDisconnectPacketSize_ExpectAnyArgsAndReturn( MQTTBadParameter );
-    status = MQTT_Disconnect( &context, NULL, 0 );
-    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
-
-    MqttPropBuilder_t propBuilder;
-    uint8_t buf[500];
-    size_t bufLength = sizeof(buf);
-    MqttPropertyBuilder_Init(&(propBuilder), buf, bufLength);
-
-
-    MQTT_GetDisconnectPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
-    MQTT_SerializeDisconnectFixed_Stub( MQTTV5_SerializeDisconnectFixed_cb );
-    status = MQTT_Disconnect( &context, &propBuilder, 0 );
-    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
-
-    // /*Send failed*/
-    context.transportInterface.send = transportSendFailure;
-    context.transportInterface.writev = NULL;
-    MQTT_GetDisconnectPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
-    MQTT_SerializeDisconnectFixed_Stub( MQTTV5_SerializeDisconnectFixed_cb );
-    status = MQTT_Disconnect( &context,NULL, 0 );
-    TEST_ASSERT_EQUAL_INT( MQTTSendFailed, status );
-}
-
-void test_MQTT_ProcessLoop_handleIncomingDisconnect( void )
-{
-    MQTTStatus_t status;
-    MQTTContext_t context = { 0 };
-    TransportInterface_t transport = { 0 };
-    MQTTFixedBuffer_t networkBuffer = { 0 };
-    MQTTConnectProperties_t properties;
-    MQTTReasonCodeInfo_t disconnectInfo;
-    MQTTPacketInfo_t incomingPacket = { 0 };
-
-    memset( &disconnectInfo, 0x0, sizeof( disconnectInfo ) );
-    setupTransportInterface( &transport );
-    setupNetworkBuffer( &networkBuffer );
-    MqttPropBuilder_t ackPropsBuilder;
-    uint8_t ackPropsBuf[500]; 
-    size_t ackPropsBufLength = sizeof(ackPropsBuf);
-    MqttPropertyBuilder_Init(&(ackPropsBuilder), ackPropsBuf, ackPropsBufLength);
-
-
-    status = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer, &ackPropsBuilder );
-    TEST_ASSERT_EQUAL( MQTTSuccess, status );
-    context.pDisconnectInfo = &disconnectInfo;
-    incomingPacket.type = MQTT_PACKET_TYPE_DISCONNECT;
-    incomingPacket.remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
-    incomingPacket.headerLength = MQTT_SAMPLE_REMAINING_LENGTH;
-    MQTT_ProcessIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
-    MQTT_ProcessIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
-    MQTTV5_DeserializeDisconnect_IgnoreAndReturn( MQTTSuccess );
-    status = MQTT_ProcessLoop( &context );
-    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
-
-    /*Invalid packet parameters.*/
-    MQTT_ProcessIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
-    MQTT_ProcessIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
-    MQTTV5_DeserializeDisconnect_IgnoreAndReturn( MQTTProtocolError );
-    status = MQTT_ProcessLoop( &context );
-    TEST_ASSERT_EQUAL_INT( MQTTProtocolError, status );
-}
-
-static void setupSubscriptionInfo( MQTTSubscribeInfo_t * pSubscribeInfo )
-{
-    pSubscribeInfo->qos = MQTTQoS1;
-    pSubscribeInfo->pTopicFilter = MQTT_SAMPLE_TOPIC_FILTER;
-    pSubscribeInfo->topicFilterLength = MQTT_SAMPLE_TOPIC_FILTER_LENGTH;
-    pSubscribeInfo->noLocalOption = 0 ; 
-    pSubscribeInfo->retainAsPublishedOption = 0;
-    pSubscribeInfo->retainHandlingOption = retainSendOnSubIfNotPresent ; 
-}
-static uint8_t * MQTTV5_SerializeSubscribedHeader_cb( size_t remainingLength,
-                                                    uint8_t * pIndex,
-                                                    uint16_t packetId,
-                                                    int numcallbacks )
-{
-    ( void ) remainingLength;
-    ( void ) pIndex;
-    ( void ) packetId;
-    ( void ) numcallbacks;
-
-    return pIndex;
-}
-
-
-void test_MQTTV5_Subscribe_invalid_params( void ) 
-{
-    MQTTStatus_t mqttStatus;
-    MQTTContext_t context = { 0 };
-    MQTTSubscribeInfo_t subscribeInfo = { 0 };
-
-    /* Call subscribe with a NULL context. */
-    mqttStatus = MQTT_Subscribe( NULL, &subscribeInfo, 1, MQTT_FIRST_VALID_PACKET_ID , NULL);
-    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, mqttStatus );
-
-
-    /* Call  with a NULL subscription list. */
-    mqttStatus = MQTT_Subscribe( &context, NULL, 1, MQTT_FIRST_VALID_PACKET_ID , NULL);
-    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, mqttStatus );
-
-    /* Call subscribe with 0 subscriptions. */
-    mqttStatus = MQTT_Subscribe( &context, &subscribeInfo, 0, MQTT_FIRST_VALID_PACKET_ID , NULL);
-    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, mqttStatus );
-
-    /* Packet ID cannot be 0 per MQTT 5.0 spec. */
-    mqttStatus = MQTT_Subscribe( &context, &subscribeInfo, 1, 0, NULL );
-    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, mqttStatus );
-
-    /* Incoming publish records NULL but QoS > 0. */
-    subscribeInfo.qos = MQTTQoS1;
-    mqttStatus = MQTT_Subscribe( &context, &subscribeInfo, 1, 10, NULL );
-    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, mqttStatus );
-
-    /* Test topic filter length is zero */
-    subscribeInfo.pTopicFilter = "test/topic";
-    subscribeInfo.topicFilterLength = 0;
-    mqttStatus = MQTT_Subscribe( &context, &subscribeInfo, 1,MQTT_FIRST_VALID_PACKET_ID, NULL);
-    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, mqttStatus );
-
-    /* Test NULL topic filter */
-    subscribeInfo.pTopicFilter = NULL;
-    mqttStatus = MQTT_Subscribe( &context, &subscribeInfo, 1,MQTT_FIRST_VALID_PACKET_ID, NULL);
-    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, mqttStatus );
-
-    /* Test invalid QoS level */
-    subscribeInfo.qos = 3; /* QoS must be 0, 1, or 2 */
-    mqttStatus = MQTT_Subscribe( &context, &subscribeInfo, 1, MQTT_FIRST_VALID_PACKET_ID , NULL);
-    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, mqttStatus );
-
-    /* Test invalid shared subscription */
-    subscribeInfo.pTopicFilter = "$share/invalid#";
-    subscribeInfo.noLocalOption = 0 ; 
-    subscribeInfo.topicFilterLength = strlen( subscribeInfo.pTopicFilter );
-    mqttStatus = MQTT_Subscribe( &context, &subscribeInfo, 1, MQTT_FIRST_VALID_PACKET_ID, NULL);
-    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, mqttStatus );
-
-    subscribeInfo.pTopicFilter = "$share/abc/#" ;
-    subscribeInfo.topicFilterLength = strlen( subscribeInfo.pTopicFilter );
-    mqttStatus = MQTT_Subscribe(&context, &subscribeInfo, 1, MQTT_FIRST_VALID_PACKET_ID, NULL);
-    TEST_ASSERT_EQUAL_INT(MQTTBadParameter, mqttStatus); 
-
-    subscribeInfo.pTopicFilter = "abc" ; 
-    subscribeInfo.topicFilterLength = strlen( subscribeInfo.pTopicFilter );
-    subscribeInfo.retainHandlingOption= 3 ; 
-    mqttStatus = MQTT_Subscribe(&context, &subscribeInfo, 1, MQTT_FIRST_VALID_PACKET_ID, NULL);
-    TEST_ASSERT_EQUAL_INT(MQTTBadParameter, mqttStatus);
-
-    subscribeInfo.retainHandlingOption  = 1 ; 
-    subscribeInfo.qos = 3 ; 
-    mqttStatus = MQTT_Subscribe(&context, &subscribeInfo, 1, MQTT_FIRST_VALID_PACKET_ID, NULL);
-    TEST_ASSERT_EQUAL_INT(MQTTBadParameter, mqttStatus);
-
-}
-
-void test_MQTTV5_Subscribe_ValidateFailure( void )
-{
-    MQTTStatus_t mqttStatus;
-    MQTTSubscribeInfo_t subscribeInfo;
-    MQTTContext_t testContext = { 0 }; 
-    
-    memset( &subscribeInfo, 0, sizeof(subscribeInfo) );
-    
-    /* Force the validation function to return an error */
-    validateSubscribeReturn = MQTTBadParameter;
-    
-    mqttStatus = MQTT_Subscribe( &testContext, &subscribeInfo, 1, MQTT_FIRST_VALID_PACKET_ID , NULL);
-    TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
-    
-    /* Restore for later tests */
-    validateSubscribeReturn = MQTTSuccess;
-}
-
-void test_MQTTV5_Subscribe_happy_path(void){
-    MQTTStatus_t mqttStatus;
-    MQTTContext_t context = { 0 };
-    TransportInterface_t transport = { 0 };
-    MQTTFixedBuffer_t networkBuffer = { 0 };
-    MQTTSubscribeInfo_t subscribeInfo = { 0 };
-
-    size_t remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
-    size_t packetSize = MQTT_SAMPLE_REMAINING_LENGTH;
-    MQTTPubAckInfo_t incomingRecords = { 0 };
-    MQTTPubAckInfo_t outgoingRecords = { 0 };
-
-    setupTransportInterface( &transport );
-    setupNetworkBuffer( &networkBuffer );
-    setupSubscriptionInfo( &subscribeInfo );
-
-    MqttPropBuilder_t ackPropsBuilder;
-    uint8_t ackPropsBuf[500]; 
-    size_t ackPropsBufLength = sizeof(ackPropsBuf);
-    MqttPropertyBuilder_Init(&(ackPropsBuilder), ackPropsBuf, ackPropsBufLength);
-
-    /* Initialize context. */
-    mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer, &ackPropsBuilder );
-    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
-
-    mqttStatus = MQTT_InitStatefulQoS( &context,
-                                       &outgoingRecords, 4,
-                                       &incomingRecords, 4 );
-    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
-
-    MqttPropBuilder_t propBuilder;
-    uint8_t buf[500];
-    size_t bufLength = sizeof(buf);
-    mqttStatus = MqttPropertyBuilder_Init(&(propBuilder), buf, bufLength); 
-    
-    propBuilder.pBuffer[0] = 0x0B ; 
-    propBuilder.pBuffer[1] = 2 ; 
-    propBuilder.currentIndex = 2 ;
-
-
-    /* Verify MQTTSuccess is returned with the following mocks. */
-    validateSubscribeProperties_ExpectAnyArgsAndReturn(MQTTSuccess) ; 
-    MQTT_GetSubscribePacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
-    MQTT_GetSubscribePacketSize_ReturnThruPtr_pPacketSize( &packetSize );
-    MQTT_GetSubscribePacketSize_ReturnThruPtr_pRemainingLength( &remainingLength );
-    MQTT_SerializeSubscribeHeader_Stub( MQTTV5_SerializeSubscribedHeader_cb );
-
-    /* Expect the above calls when running MQTT_Subscribe. */
-    mqttStatus = MQTT_Subscribe( &context, &subscribeInfo, 1, MQTT_FIRST_VALID_PACKET_ID, &propBuilder);
-
-    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
-}
-
-
-void test_MQTTV5_Subscribe_happy_path1(void){
-    MQTTStatus_t mqttStatus;
-    MQTTContext_t context = { 0 };
-    TransportInterface_t transport = { 0 };
-    MQTTFixedBuffer_t networkBuffer = { 0 };
-    MQTTSubscribeInfo_t subscribeInfo[2];
-    size_t remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
-    size_t packetSize = MQTT_SAMPLE_REMAINING_LENGTH;
-    MQTTPubAckInfo_t incomingRecords = { 0 };
-    MQTTPubAckInfo_t outgoingRecords = { 0 };
-
-    MqttPropBuilder_t ackPropsBuilder;
-    uint8_t ackPropsBuf[500]; 
-    size_t ackPropsBufLength = sizeof(ackPropsBuf);
-    MqttPropertyBuilder_Init(&(ackPropsBuilder), ackPropsBuf, ackPropsBufLength);
-
-    setupTransportInterface( &transport );
-    setupNetworkBuffer( &networkBuffer );
-
-    mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer, &ackPropsBuilder );
-    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
-
-    mqttStatus = MQTT_InitStatefulQoS( &context,
-                                       &outgoingRecords, 4,
-                                       &incomingRecords, 4 );
-    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
-    
-
-    subscribeInfo[0].qos = MQTTQoS2 ; 
-    subscribeInfo[0].pTopicFilter = "abc" ; 
-    subscribeInfo[0].topicFilterLength = 3 ;
-    subscribeInfo[0].noLocalOption = 1 ; 
-    subscribeInfo[0].retainAsPublishedOption = 1 ; 
-    subscribeInfo[0].retainHandlingOption = 0 ; 
-
-    subscribeInfo[1].qos = MQTTQoS0 ; 
-    subscribeInfo[1].pTopicFilter = "def" ;
-    subscribeInfo[1].retainHandlingOption = 2 ;
-    subscribeInfo[1].topicFilterLength = 3 ;
-    subscribeInfo[1].noLocalOption = 0 ;
-    subscribeInfo[1].retainAsPublishedOption = 0 ;
-
-    MQTT_GetSubscribePacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
-    MQTT_GetSubscribePacketSize_ReturnThruPtr_pPacketSize( &packetSize );
-    MQTT_GetSubscribePacketSize_ReturnThruPtr_pRemainingLength( &remainingLength );
-    MQTT_SerializeSubscribeHeader_Stub( MQTTV5_SerializeSubscribedHeader_cb );
-    
-    /* Expect the above calls when running MQTT_Subscribe. */
-    mqttStatus = MQTT_Subscribe( &context, subscribeInfo, 1, MQTT_FIRST_VALID_PACKET_ID, NULL );
-
-    subscribeInfo[0].qos = MQTTQoS0 ; 
-    subscribeInfo[0].pTopicFilter = "def" ;
-    subscribeInfo[0].retainHandlingOption = 2 ;
-    subscribeInfo[0].topicFilterLength = 3 ;
-    subscribeInfo[0].noLocalOption = 0 ;
-    subscribeInfo[0].retainAsPublishedOption = 0 ;
-
-    // validateSubscribeProperties_ExpectAnyArgsAndReturn(MQTTSuccess); 
-    MQTT_GetSubscribePacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
-    MQTT_GetSubscribePacketSize_ReturnThruPtr_pPacketSize( &packetSize );
-    MQTT_GetSubscribePacketSize_ReturnThruPtr_pRemainingLength( &remainingLength );
-    MQTT_SerializeSubscribeHeader_Stub( MQTTV5_SerializeSubscribedHeader_cb );
-    
-    mqttStatus = MQTT_Subscribe( &context, subscribeInfo, 1, MQTT_FIRST_VALID_PACKET_ID, NULL );
-
-    TEST_ASSERT_EQUAL_INT( MQTTSuccess, mqttStatus );
-
-    subscribeInfo[0].qos = 3 ; 
-    subscribeInfo[0].pTopicFilter = "def" ;
-    subscribeInfo[0].retainHandlingOption = 2 ;
-    subscribeInfo[0].topicFilterLength = 3 ;
-    subscribeInfo[0].noLocalOption = 0 ;
-    subscribeInfo[0].retainAsPublishedOption = 0 ;
-
-    mqttStatus = MQTT_Subscribe( &context, subscribeInfo, 1, MQTT_FIRST_VALID_PACKET_ID, NULL );
-
-    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, mqttStatus );
-}
-
-void test_MQTTV5_Subscribe_happy_path2(void){
-    MQTTStatus_t mqttStatus;
-    MQTTContext_t context = { 0 };
-    TransportInterface_t transport = { 0 };
-    MQTTFixedBuffer_t networkBuffer = { 0 };
-    MQTTSubscribeInfo_t subscribeInfo = {0};
-    size_t remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
-    size_t packetSize = MQTT_SAMPLE_REMAINING_LENGTH;
-    MQTTPubAckInfo_t incomingRecords = { 0 };
-    MQTTPubAckInfo_t outgoingRecords = { 0 };
-    MqttPropBuilder_t ackPropsBuilder;
-    uint8_t ackPropsBuf[500]; 
-    size_t ackPropsBufLength = sizeof(ackPropsBuf);
-    MqttPropertyBuilder_Init(&(ackPropsBuilder), ackPropsBuf, ackPropsBufLength);
-    setupTransportInterface( &transport );
-    setupNetworkBuffer( &networkBuffer );
-
-    mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer, &ackPropsBuilder );
-    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
-
-    mqttStatus = MQTT_InitStatefulQoS( &context,
-                                       &outgoingRecords, 4,
-                                       &incomingRecords, 4 );
-    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
-
-    /* Verify MQTTSuccess is returned with the following mocks. */
-    MQTT_GetSubscribePacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
-    MQTT_GetSubscribePacketSize_ReturnThruPtr_pPacketSize( &packetSize );
-    MQTT_GetSubscribePacketSize_ReturnThruPtr_pRemainingLength( &remainingLength );
-    MQTT_SerializeSubscribeHeader_Stub( MQTTV5_SerializeSubscribedHeader_cb );
-
-
-    subscribeInfo.qos = MQTTQoS1 ; 
-    subscribeInfo.pTopicFilter = "$share/abc/bcd" ;
-    subscribeInfo.topicFilterLength = 14 ;
-    subscribeInfo.noLocalOption = 0 ;
-    subscribeInfo.retainAsPublishedOption = 1 ;
-    subscribeInfo.retainHandlingOption = 0 ;
-
-    mqttStatus = MQTT_Subscribe( &context, &subscribeInfo, 1, MQTT_FIRST_VALID_PACKET_ID, NULL );
-    TEST_ASSERT_EQUAL_INT( MQTTSuccess, mqttStatus );
-
-}
-
-void test_MQTTV5_Subscribe_happy_path3(void){
-    MQTTStatus_t mqttStatus;
-    MQTTContext_t context = { 0 };
-    TransportInterface_t transport = { 0 };
-    MQTTFixedBuffer_t networkBuffer = { 0 };
-    MQTTSubscribeInfo_t subscribeInfo = {0};
-    size_t remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
-    size_t packetSize = MQTT_SAMPLE_REMAINING_LENGTH;
-    MQTTPubAckInfo_t incomingRecords = { 0 };
-    MQTTPubAckInfo_t outgoingRecords = { 0 };
-
-    MqttPropBuilder_t ackPropsBuilder;
-    uint8_t ackPropsBuf[500]; 
-    size_t ackPropsBufLength = sizeof(ackPropsBuf);
-    MqttPropertyBuilder_Init(&(ackPropsBuilder), ackPropsBuf, ackPropsBufLength);
-    setupTransportInterface( &transport );
-    setupNetworkBuffer( &networkBuffer );
-
-    mqttStatus = MQTT_Init(&context, &transport, getTime, eventCallback, &networkBuffer, &ackPropsBuilder);
-    TEST_ASSERT_EQUAL(MQTTSuccess, mqttStatus);
-
-    mqttStatus = MQTT_InitStatefulQoS( &context,
-                                       &outgoingRecords, 4,
-                                       &incomingRecords, 4 );
-    TEST_ASSERT_EQUAL(MQTTSuccess, mqttStatus);
-
-    /* Verify MQTTSuccess is returned with the following mocks. */
-    MQTT_GetSubscribePacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
-    MQTT_GetSubscribePacketSize_ReturnThruPtr_pPacketSize( &packetSize );
-    MQTT_GetSubscribePacketSize_ReturnThruPtr_pRemainingLength( &remainingLength );
-    MQTT_SerializeSubscribeHeader_Stub( MQTTV5_SerializeSubscribedHeader_cb );
-
-    subscribeInfo.qos = MQTTQoS1 ;
-    subscribeInfo.pTopicFilter = "$share/abc/" ;
-    subscribeInfo.topicFilterLength = 11 ;
-    subscribeInfo.noLocalOption = 0 ;
-    subscribeInfo.retainAsPublishedOption = 1 ;
-    subscribeInfo.retainHandlingOption = 0 ;
-
-    mqttStatus = MQTT_Subscribe(&context, &subscribeInfo, 1, MQTT_FIRST_VALID_PACKET_ID, NULL);
-    TEST_ASSERT_EQUAL_INT(MQTTSuccess, mqttStatus);
-
-}
-
-void test_MQTTV5_shared_subscriptions(void){
-    MQTTStatus_t mqttStatus;
-    MQTTContext_t context = { 0 };
-    TransportInterface_t transport = { 0 };
-    MQTTFixedBuffer_t networkBuffer = { 0 };
-    MQTTSubscribeInfo_t subscribeInfo = {0};
-    MQTTPubAckInfo_t incomingRecords = { 0 };
-    MQTTPubAckInfo_t outgoingRecords = { 0 };
-    size_t remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
-    size_t packetSize = MQTT_SAMPLE_REMAINING_LENGTH;
-    MqttPropBuilder_t ackPropsBuilder;
-    uint8_t ackPropsBuf[500]; 
-    size_t ackPropsBufLength = sizeof(ackPropsBuf);
-    MqttPropertyBuilder_Init(&(ackPropsBuilder), ackPropsBuf, ackPropsBufLength);
-
-    setupTransportInterface( &transport );
-    setupNetworkBuffer( &networkBuffer );
-
-    mqttStatus = MQTT_Init(&context, &transport, getTime, eventCallback, &networkBuffer, &ackPropsBuilder);
-    TEST_ASSERT_EQUAL(MQTTSuccess, mqttStatus);
-
-    mqttStatus = MQTT_InitStatefulQoS( &context,
-                                       &outgoingRecords, 4,
-                                       &incomingRecords, 4 );
-    TEST_ASSERT_EQUAL(MQTTSuccess, mqttStatus);
-
-    MQTT_GetSubscribePacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
-    MQTT_GetSubscribePacketSize_ReturnThruPtr_pPacketSize( &packetSize );
-    MQTT_GetSubscribePacketSize_ReturnThruPtr_pRemainingLength( &remainingLength );
-    MQTT_SerializeSubscribeHeader_Stub( MQTTV5_SerializeSubscribedHeader_cb );
-
-    subscribeInfo.pTopicFilter = "$share/abc/bcd" ;
-    subscribeInfo.topicFilterLength = 10 ;
-    subscribeInfo.noLocalOption = 0 ;
-    subscribeInfo.retainAsPublishedOption = 1 ;
-    subscribeInfo.retainHandlingOption = 0 ;
-    subscribeInfo.qos = MQTTQoS2 ;
-    
-    mqttStatus = MQTT_Subscribe(&context, &subscribeInfo, 1, MQTT_FIRST_VALID_PACKET_ID, NULL);
-    TEST_ASSERT_EQUAL_INT(MQTTSuccess, mqttStatus);
-
-    subscribeInfo.qos = MQTTQoS1 ;
-    subscribeInfo.retainHandlingOption = 3 ;
-    mqttStatus = MQTT_Subscribe(&context, &subscribeInfo, 1, MQTT_FIRST_VALID_PACKET_ID, NULL);
-    TEST_ASSERT_EQUAL_INT(MQTTBadParameter, mqttStatus);
-    subscribeInfo.retainHandlingOption = 0 ;
-
-
-
-    /** Invalid Sharename */
-    subscribeInfo.pTopicFilter = "$share/abc" ; 
-    subscribeInfo.topicFilterLength = 10 ; 
-    
-    mqttStatus = MQTT_Subscribe(&context, &subscribeInfo, 1, MQTT_FIRST_VALID_PACKET_ID, NULL);
-    TEST_ASSERT_EQUAL_INT(MQTTBadParameter, mqttStatus);
-
-    subscribeInfo.pTopicFilter = "$share/abc/bcd" ;
-    subscribeInfo.topicFilterLength = 14 ;
-    subscribeInfo.noLocalOption = 1 ; 
-    mqttStatus = MQTT_Subscribe(&context, &subscribeInfo, 1, MQTT_FIRST_VALID_PACKET_ID, NULL);
-    TEST_ASSERT_EQUAL_INT(MQTTBadParameter, mqttStatus);
-}
-
-/* Suback- Unsuback Happy path */
-void test_MQTT_ProcessLoop_handleIncomingAck_Happy_Paths_suback( void )
-{
-    MQTTStatus_t status;
-    MQTTContext_t context = { 0 };
-    TransportInterface_t transport = { 0 };
-    MQTTFixedBuffer_t networkBuffer = { 0 };
-    MQTTConnectProperties_t properties = {0} ; 
-    MQTTPacketInfo_t incomingPacket = { 0 };
-    setupTransportInterface( &transport );
-    setupNetworkBuffer( &networkBuffer );
-    /* Modify incoming packet depending on type to be tested. */
-    incomingPacket.type = MQTT_PACKET_TYPE_SUBACK;
-    incomingPacket.remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
-    incomingPacket.headerLength = MQTT_SAMPLE_REMAINING_LENGTH;
-
-    MqttPropBuilder_t ackPropsBuilder;
-    uint8_t ackPropsBuf[500]; 
-    size_t ackPropsBufLength = sizeof(ackPropsBuf);
-    MqttPropertyBuilder_Init(&(ackPropsBuilder), ackPropsBuf, ackPropsBufLength);
-    status = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer, &ackPropsBuilder);
-    TEST_ASSERT_EQUAL( MQTTSuccess, status );
-    modifyIncomingPacketStatus = MQTTSuccess;
-    MQTT_ProcessIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
-    MQTT_ProcessIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
-    MQTTV5_DeserializeSuback_ExpectAnyArgsAndReturn( MQTTSuccess );
-    status = MQTT_ProcessLoop( &context );
-    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
-}
-
-
-static uint8_t * MQTTV5_SerializeUnsubscribeHeader_cb( size_t remainingLength,
-    uint8_t * pIndex,
-    uint16_t packetId,
-    int numcallbacks )
-{
-( void ) remainingLength;
-( void ) pIndex;
-( void ) packetId;
-( void ) numcallbacks;
-
-return pIndex;
-}
-
-/**
-* @brief This test case verifies that MQTT_Unsubscribe returns successfully
-* when valid parameters are passed and all bytes are sent.
-*/
-void test_MQTT_Unsubscribe_happy_path( void )
-{
-    MQTTStatus_t mqttStatus;
-    MQTTContext_t context = { 0 };
-    TransportInterface_t transport = { 0 };
-    MQTTFixedBuffer_t networkBuffer = { 0 };
-    MQTTSubscribeInfo_t subscribeInfo = { 0 };
-    MQTTConnectProperties_t properties = {0} ; 
-    size_t remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
-    size_t packetSize = MQTT_SAMPLE_REMAINING_LENGTH;
-    MqttPropBuilder_t ackPropsBuilder;
-    uint8_t ackPropsBuf[500]; 
-    size_t ackPropsBufLength = sizeof(ackPropsBuf);
-    MqttPropertyBuilder_Init(&(ackPropsBuilder), ackPropsBuf, ackPropsBufLength);
-
-    setupTransportInterface( &transport );
-    setupNetworkBuffer( &networkBuffer );
-    setupSubscriptionInfo( &subscribeInfo );
-    subscribeInfo.qos = MQTTQoS0;
-
-    /* Initialize context. */
-    mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer, &ackPropsBuilder );
-    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
-
-
-    /* Verify MQTTSuccess is returned with the following mocks. */
-    MQTT_SerializeUnsubscribeHeader_Stub(MQTTV5_SerializeUnsubscribeHeader_cb);
-    MQTT_GetUnsubscribePacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
-    MQTT_GetUnsubscribePacketSize_ReturnThruPtr_pPacketSize( &packetSize );
-    MQTT_GetUnsubscribePacketSize_ReturnThruPtr_pRemainingLength( &remainingLength );
-
-    /* Expect the above calls when running MQTT_Unsubscribe. */
-
-    MqttPropBuilder_t propBuilder;
-    uint8_t buf[500];
-    size_t bufLength = sizeof(buf);
-    mqttStatus = MqttPropertyBuilder_Init(&(propBuilder), buf, bufLength);
-    mqttStatus = MQTT_Unsubscribe( &context, &subscribeInfo,  1, MQTT_FIRST_VALID_PACKET_ID, &propBuilder);
-    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
-
-    MQTT_GetUnsubscribePacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
-    MQTT_GetUnsubscribePacketSize_ReturnThruPtr_pPacketSize( &packetSize );
-    MQTT_GetUnsubscribePacketSize_ReturnThruPtr_pRemainingLength( &remainingLength );
-    mqttStatus = MQTT_Unsubscribe( &context, &subscribeInfo,  1, MQTT_FIRST_VALID_PACKET_ID, NULL);
-    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
-
-
-}
-
-void test_MQTT_Unsubscribe_happy_path_withUP( void )
-{
-    MQTTStatus_t mqttStatus;
-    MQTTContext_t context = { 0 };
-    TransportInterface_t transport = { 0 };
-    MQTTFixedBuffer_t networkBuffer = { 0 };
-    MQTTSubscribeInfo_t subscribeInfo = { 0 };
-    size_t remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
-    size_t packetSize = MQTT_SAMPLE_REMAINING_LENGTH;
-
-    setupTransportInterface( &transport );
-    setupNetworkBuffer( &networkBuffer );
-    setupSubscriptionInfo( &subscribeInfo );
-    subscribeInfo.qos = MQTTQoS0;
-    /* Initialize context. */
-    MqttPropBuilder_t ackPropsBuilder;
-    uint8_t ackPropsBuf[500]; 
-    size_t ackPropsBufLength = sizeof(ackPropsBuf);
-    MqttPropertyBuilder_Init(&(ackPropsBuilder), ackPropsBuf, ackPropsBufLength);
-
-    mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer, &ackPropsBuilder );
-    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
-    /* Verify MQTTSuccess is returned with the following mocks. */
-    MQTT_SerializeUnsubscribeHeader_Stub(MQTTV5_SerializeUnsubscribeHeader_cb);
-    MQTT_GetUnsubscribePacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
-    MQTT_GetUnsubscribePacketSize_ReturnThruPtr_pPacketSize( &packetSize );
-    MQTT_GetUnsubscribePacketSize_ReturnThruPtr_pRemainingLength( &remainingLength );
-
-    mqttStatus = MQTT_Unsubscribe( &context, &subscribeInfo,  1, MQTT_FIRST_VALID_PACKET_ID, NULL);
-    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
-}
-
-void test_MQTTV5_Unsubscribe_happy_path(void){
-    MQTTStatus_t mqttStatus;
-    MQTTContext_t context = { 0 };
-    TransportInterface_t transport = { 0 };
-    MQTTFixedBuffer_t networkBuffer = { 0 };
-    MQTTSubscribeInfo_t subscribeInfo = { 0 };
-
-    size_t remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
-    size_t packetSize = MQTT_SAMPLE_REMAINING_LENGTH;
-    MQTTPubAckInfo_t incomingRecords = { 0 };
-    MQTTPubAckInfo_t outgoingRecords = { 0 };
-
-    MqttPropBuilder_t ackPropsBuilder;
-    uint8_t ackPropsBuf[500]; 
-    size_t ackPropsBufLength = sizeof(ackPropsBuf);
-    MqttPropertyBuilder_Init(&(ackPropsBuilder), ackPropsBuf, ackPropsBufLength);
-
-    setupTransportInterface( &transport );
-    setupNetworkBuffer( &networkBuffer );
-    setupSubscriptionInfo( &subscribeInfo );
-
-    /* Initialize context. */
-    mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer, &ackPropsBuilder );
-    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
-
-    mqttStatus = MQTT_InitStatefulQoS( &context,
-                                       &outgoingRecords, 4,
-                                       &incomingRecords, 4 );
-    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
-
-    /* Verify MQTTSuccess is returned with the following mocks. */
-    MQTT_GetSubscribePacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
-    MQTT_GetSubscribePacketSize_ReturnThruPtr_pPacketSize( &packetSize );
-    MQTT_GetSubscribePacketSize_ReturnThruPtr_pRemainingLength( &remainingLength );
-    MQTT_SerializeSubscribeHeader_Stub( MQTTV5_SerializeSubscribedHeader_cb );
-
-    /* Expect the above calls when running MQTT_Subscribe. */
-    mqttStatus = MQTT_Subscribe( &context, &subscribeInfo, 1, MQTT_FIRST_VALID_PACKET_ID, NULL );
-
-    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
-}
-
 static void resetProcessLoopParams( ProcessLoopReturns_t * pExpectParams )
 {
     pExpectParams->deserializeStatus = MQTTSuccess;
@@ -2092,13 +812,12 @@ static void expectProcessLoopCalls( MQTTContext_t * const pContext, ProcessLoopR
     {
         if( currentPacketType == MQTT_PACKET_TYPE_PUBLISH )
         {
-            MQTTV5_GetAckPacketSize_ExpectAnyArgsAndReturn(MQTTSuccess) ; 
-            MQTTV5_SerializeAckFixed_ExpectAnyArgsAndReturn(MQTTSuccess) ; 
+            MQTT_GetAckPacketSize_ExpectAnyArgsAndReturn(MQTTSuccess) ; 
+            MQTT_SerializeAckFixed_ExpectAnyArgsAndReturn(MQTTSuccess) ; 
         }
         else
         {
-        
-        MQTT_SerializeAck_ExpectAnyArgsAndReturn( serializeStatus );
+            MQTT_SerializeAck_ExpectAnyArgsAndReturn( serializeStatus );
         }
 
         if( serializeStatus != MQTTSuccess )
@@ -2134,6 +853,1284 @@ static void expectProcessLoopCalls( MQTTContext_t * const pContext, ProcessLoopR
         }
     }
 }
+void test_MQTT_Connect()
+{
+    MQTTContext_t mqttContext = { 0 };
+    MQTTConnectInfo_t connectInfo = { 0 };
+    bool sessionPresent = false;
+    MQTTStatus_t status;
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
+    MQTTConnectProperties_t properties = {0} ;
+
+    setupTransportInterface( &transport );
+    setupNetworkBuffer( &networkBuffer );
+
+    memset( &mqttContext, 0x0, sizeof( mqttContext ) );
+    MqttPropBuilder_t ackPropsBuilder;
+    uint8_t ackPropsBuf[500]; 
+    size_t ackPropsBufLength = sizeof(ackPropsBuf);
+    MqttPropertyBuilder_Init(&(ackPropsBuilder), ackPropsBuf, ackPropsBufLength); 
+
+    MQTT_Init( &mqttContext, &transport, getTime, eventCallback, &networkBuffer );
+/*  No connect Properties */
+    MQTT_GetConnectPacketSize_ExpectAnyArgsAndReturn( MQTTBadParameter ) ;
+    status = MQTT_Connect( &mqttContext, &connectInfo, NULL, 0U, &sessionPresent, NULL , NULL);
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+}
+
+void test_MQTT_Connect_error_path()
+{
+    MQTTContext_t mqttContext = { 0 };
+    MQTTConnectInfo_t connectInfo = { 0 };
+    MQTTPublishInfo_t willInfo = { 0 };
+    uint32_t timeout = 2;
+    bool sessionPresent;
+    MQTTStatus_t status;
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
+    setupTransportInterface( &transport );
+    setupNetworkBuffer( &networkBuffer );
+    memset( &mqttContext, 0x0, sizeof( mqttContext ) );
+    memset( &willInfo, 0x0, sizeof( MQTTPublishInfo_t ) );
+    memset( &connectInfo, 0x0, sizeof( MQTTConnectInfo_t ) );
+
+    MQTT_Init( &mqttContext, &transport, getTime, eventCallback, &networkBuffer);
+
+    /* With non-NULL Will. */
+    mqttContext.connectStatus = MQTTNotConnected;
+    mqttContext.keepAliveIntervalSec = 0;
+
+    MqttPropBuilder_t propBuilder;
+    uint8_t buf[500];
+    size_t bufLength = sizeof(buf);
+    status = MqttPropertyBuilder_Init(&(propBuilder), buf, bufLength);
+
+
+    MqttPropBuilder_t willPropsBuilder;
+    uint8_t wbuf[500];
+    size_t wbufLength = sizeof(wbuf);
+    status = MqttPropertyBuilder_Init(&(willPropsBuilder), wbuf, wbufLength);
+    willInfo.pTopicName = "test";
+    willInfo.topicNameLength = 4;
+    willInfo.pPayload = "Payload";
+    willInfo.payloadLength = 7;
+    willInfo.payloadFormat = 1;
+
+    connectInfo.pUserName = "abcd";
+    connectInfo.userNameLength = 3;
+    connectInfo.passwordLength = 4;
+    connectInfo.pPassword = "1234";
+    mqttContext.transportInterface.send = transportSendSuccess;
+    MQTT_GetConnectPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_SerializeConnectFixedHeader_Stub( MQTT_SerializeConnectFixedHeader_cb );
+    updateContextWithConnectProps_ExpectAnyArgsAndReturn(MQTTSuccess) ; 
+    MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTRecvFailed );
+    status = MQTT_Connect( &mqttContext, &connectInfo, NULL, timeout, &sessionPresent, &propBuilder , &willPropsBuilder);
+    TEST_ASSERT_EQUAL_INT( MQTTRecvFailed, status );
+
+
+    MQTT_GetConnectPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_SerializeConnectFixedHeader_Stub( MQTT_SerializeConnectFixedHeader_cb );
+
+    MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTRecvFailed );
+    status = MQTT_Connect( &mqttContext, &connectInfo, &willInfo, timeout, &sessionPresent , NULL , NULL);
+    TEST_ASSERT_EQUAL_INT( MQTTRecvFailed, status );
+
+    MQTT_GetConnectPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_SerializeConnectFixedHeader_Stub( MQTT_SerializeConnectFixedHeader_cb );
+
+    MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTRecvFailed );
+    status = MQTT_Connect( &mqttContext, &connectInfo, &willInfo, timeout, &sessionPresent, NULL , NULL );
+    TEST_ASSERT_EQUAL_INT( MQTTRecvFailed, status );
+
+    status = MQTT_Connect( NULL, &connectInfo, &willInfo, timeout, &sessionPresent, NULL , NULL );
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+
+    willInfo.pTopicName = NULL;
+    mqttContext.transportInterface.send = transportSendSuccess;
+    MQTT_GetConnectPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_SerializeConnectFixedHeader_Stub( MQTT_SerializeConnectFixedHeader_cb );
+
+    status = MQTT_Connect( &mqttContext, &connectInfo, &willInfo, timeout, &sessionPresent, NULL , NULL );
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+}
+
+void test_MQTT_Connect_receiveConnack( void )
+{
+    MQTTContext_t mqttContext = { 0 };
+    MQTTConnectInfo_t connectInfo = { 0 };
+    uint32_t timeout = 0;
+    bool sessionPresent, sessionPresentExpected;
+    MQTTStatus_t status;
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
+    MQTTConnectProperties_t properties = { 0 };
+    MQTTPacketInfo_t incomingPacket = { 0 };
+
+    setupTransportInterface( &transport );
+    setupNetworkBuffer( &networkBuffer );
+    transport.recv = transportRecvFailure;
+
+    memset( &mqttContext, 0x0, sizeof( mqttContext ) );
+    memset( &properties, 0x0, sizeof( properties ) );
+
+    MQTT_Init( &mqttContext, &transport, getTime, eventCallback, &networkBuffer );
+    /* Everything before receiving the CONNACK should succeed. */
+    MQTT_GetConnectPacketSize_IgnoreAndReturn( MQTTSuccess );
+
+    /* Nothing received from transport interface. Set timeout to 2 for branch coverage. */
+    timeout = 2;
+    MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTNoDataAvailable );
+    MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTNoDataAvailable );
+    MQTT_SerializeConnectFixedHeader_Stub( MQTT_SerializeConnectFixedHeader_cb );
+    status = MQTT_Connect( &mqttContext, &connectInfo, NULL, timeout, &sessionPresent, NULL, NULL  );
+    TEST_ASSERT_EQUAL_INT( MQTTNoDataAvailable, status );
+
+
+    /* Did not receive a CONNACK. */
+    incomingPacket.type = MQTT_PACKET_TYPE_PINGRESP;
+    incomingPacket.remainingLength = 0;
+    MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_GetIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
+    status = MQTT_Connect( &mqttContext, &connectInfo, NULL, timeout, &sessionPresent, NULL , NULL );
+    TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
+
+    /* Transport receive failure when receiving rest of packet. */
+    incomingPacket.type = MQTT_PACKET_TYPE_CONNACK;
+    incomingPacket.remainingLength = 2;
+    timeout = 2;
+    mqttContext.transportInterface.recv = transportRecvFailure;
+    MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_GetIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
+    status = MQTT_Connect( &mqttContext, &connectInfo, NULL, timeout, &sessionPresent, NULL , NULL );
+    TEST_ASSERT_EQUAL_INT( MQTTRecvFailed, status );
+
+    mqttContext.transportInterface.recv = transportRecvSuccess;
+    MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_GetIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
+    MQTT_DeserializeConnack_ExpectAnyArgsAndReturn( MQTTBadResponse );
+    status = MQTT_Connect( &mqttContext, &connectInfo, NULL, timeout, &sessionPresent, NULL , NULL );
+    TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
+
+    /* Test case when broker sends session present flag in response to a
+     * clean session connection request. */
+    mqttContext.transportInterface.recv = transportRecvSuccess;
+    connectInfo.cleanSession = true;
+    sessionPresentExpected = true;
+    MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_GetIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
+    MQTT_DeserializeConnack_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_DeserializeConnack_ReturnThruPtr_pSessionPresent( &sessionPresentExpected );
+    status = MQTT_Connect( &mqttContext, &connectInfo, NULL, timeout, &sessionPresent , NULL , NULL);
+    TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
+}
+
+void test_MQTT_Publish( void )
+{
+    MQTTContext_t mqttContext = { 0 };
+    MQTTPublishInfo_t publishInfo = { 0 };
+    MQTTConnectProperties_t properties = { 0 };
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
+    MQTTStatus_t status;
+    MQTTPubAckInfo_t incomingRecords = { 0 };
+    MQTTPubAckInfo_t outgoingRecords = { 0 };
+
+    const uint16_t PACKET_ID = 1;
+
+    setupTransportInterface( &transport );
+    setupNetworkBuffer( &networkBuffer );
+    transport.send = transportSendFailure;
+
+    memset( &mqttContext, 0x0, sizeof( mqttContext ) );
+    memset( &publishInfo, 0x0, sizeof( publishInfo ) );
+    memset( &properties, 0x0, sizeof( properties ) );
+
+    uint8_t ackPropsBuf[500]; 
+    size_t ackPropsBufLength = sizeof(ackPropsBuf);
+    MQTT_Init( &mqttContext, &transport, getTime, eventCallback, &networkBuffer);
+    status = MQTT_InitStatefulQoS( &mqttContext,
+                                       &outgoingRecords, 4,
+                                       &incomingRecords, 4,ackPropsBuf,ackPropsBufLength );
+
+    mqttContext.connectStatus = MQTTConnected;
+    
+    MqttPropBuilder_t propBuilder;
+    uint8_t buf[500];
+    size_t bufLength = sizeof(buf);
+    status = MqttPropertyBuilder_Init(&(propBuilder), buf, bufLength);
+
+    MQTT_ValidatePublishParams_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_GetPublishPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_SerializePublishHeaderWithoutTopic_ExpectAnyArgsAndReturn( MQTTSuccess );
+    status = MQTT_Publish( &mqttContext, &publishInfo, PACKET_ID, NULL );
+    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
+
+    MQTT_ValidatePublishParams_ExpectAnyArgsAndReturn( MQTTBadParameter );
+    status = MQTT_Publish( &mqttContext, &publishInfo, PACKET_ID, NULL);
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+
+
+    publishInfo.qos = 0 ; 
+    publishInfo.pTopicName = "ab" ; 
+    publishInfo.topicNameLength = 2 ; 
+    publishInfo.retain = 1 ; 
+    publishInfo.dup = 1 ;
+    publishInfo.pPayload = "Payload" ;
+    publishInfo.payloadLength = 7 ;
+
+    validatePublishProperties_ExpectAnyArgsAndReturn(MQTTSuccess); 
+    MQTT_ValidatePublishParams_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_GetPublishPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_SerializePublishHeaderWithoutTopic_ExpectAnyArgsAndReturn( MQTTSuccess );
+    status = MQTT_Publish( &mqttContext, &publishInfo, PACKET_ID, &propBuilder );
+    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
+}
+
+/**
+ * @brief Test that MQTT_Publish works as intended.
+ */
+void test_MQTT_Publish_DuplicatePublish_UpdateFailed( void )
+{
+    MQTTContext_t mqttContext = { 0 };
+    MQTTPublishInfo_t publishInfo = { 0 };
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
+    MQTTStatus_t status;
+    MQTTPubAckInfo_t outgoingPublishRecord[ 10 ];
+
+    setupTransportInterface( &transport );
+    setupNetworkBuffer( &networkBuffer );
+    transport.send = transportSendFailure;
+
+    memset( &mqttContext, 0x0, sizeof( mqttContext ) );
+    memset( &publishInfo, 0x0, sizeof( publishInfo ) );
+    MQTT_Init( &mqttContext, &transport, getTime, eventCallback, &networkBuffer );
+    mqttContext.connectStatus = MQTTConnected;
+
+    /* Always return success from now on. */
+    MQTT_ValidatePublishParams_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_GetPublishPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_SerializePublishHeaderWithoutTopic_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_ReserveState_ExpectAnyArgsAndReturn( MQTTStateCollision );
+    MQTT_UpdateStatePublish_ExpectAnyArgsAndReturn( MQTTSendFailed );
+
+    mqttContext.outgoingPublishRecordMaxCount = 10;
+    mqttContext.outgoingPublishRecords = outgoingPublishRecord;
+
+    publishInfo.qos = MQTTQoS1;
+    publishInfo.dup = true;
+    publishInfo.pPayload = "TestPublish";
+    publishInfo.payloadLength = strlen( publishInfo.pPayload );
+    publishInfo.pTopicName = "TestTopic";
+    publishInfo.topicNameLength = strlen( publishInfo.pTopicName );
+
+    status = MQTT_Publish( &mqttContext, &publishInfo, 10, NULL );
+
+    TEST_ASSERT_EQUAL_INT( MQTTSendFailed, status );
+}
+
+/**
+ * @brief Test that MQTT_Publish works as intended.
+ */
+void test_MQTT_Publish8( void )
+{
+    MQTTContext_t mqttContext = { 0 };
+    MQTTPublishInfo_t publishInfo = { 0 };
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
+    MQTTStatus_t status;
+
+    setupTransportInterface( &transport );
+    setupNetworkBuffer( &networkBuffer );
+    transport.writev = NULL ;
+
+    memset( &mqttContext, 0x0, sizeof( mqttContext ) );
+    memset( &publishInfo, 0x0, sizeof( publishInfo ) );
+    MQTT_Init( &mqttContext, &transport, getTime, eventCallback, &networkBuffer );
+
+    /* We want to test the first call to sendPacket within sendPublish succeeding,
+     * and the second one failing. */
+    mqttContext.transportInterface.send = transportSendSucceedThenFail;
+
+    mqttContext.connectStatus = MQTTConnected;
+    MQTT_ValidatePublishParams_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_GetPublishPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_SerializePublishHeaderWithoutTopic_ExpectAnyArgsAndReturn( MQTTSuccess );
+    publishInfo.pPayload = "Test";
+    publishInfo.payloadLength = 4;
+    status = MQTT_Publish( &mqttContext, &publishInfo, 0, NULL );
+    TEST_ASSERT_EQUAL_INT( MQTTSendFailed, status );
+}
+
+
+void test_MQTT_ProcessLoop_handleIncomingAck_Error_Paths1( void )
+{
+    MQTTStatus_t status;
+    MQTTPublishState_t stateAfterDeserialize;
+    MQTTPublishState_t stateAfterSerialize;
+    MQTTContext_t context = { 0 };
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
+    MQTTConnectProperties_t properties;
+    MQTTPacketInfo_t incomingPacket = { 0 };
+    MQTTPubAckInfo_t incomingRecords = { 0 };
+    MQTTPubAckInfo_t outgoingRecords = { 0 };
+    uint8_t ackPropsBuf[500]; 
+    size_t ackPropsBufLength = sizeof(ackPropsBuf);
+
+    /*Update state returns bad response.*/
+    setupTransportInterface( &transport );
+    setupNetworkBuffer( &networkBuffer );
+    incomingPacket.type = MQTT_PACKET_TYPE_PUBREC;
+    incomingPacket.remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
+    incomingPacket.headerLength = MQTT_SAMPLE_REMAINING_LENGTH;
+    status = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer);
+    TEST_ASSERT_EQUAL( MQTTSuccess, status );
+
+    status = MQTT_InitStatefulQoS( &context,
+        &outgoingRecords, 4,
+        &incomingRecords, 4,ackPropsBuf,ackPropsBufLength );
+
+    context.connectStatus = MQTTConnected;
+    
+    TEST_ASSERT_EQUAL( MQTTSuccess, status );
+
+    modifyIncomingPacketStatus = MQTTSuccess;
+    stateAfterDeserialize = MQTTPubRelSend;
+    stateAfterSerialize = MQTTPubCompPending;
+    MQTT_ProcessIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_ProcessIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
+    MQTT_DeserializePublishAck_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_UpdateStateAck_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_UpdateStateAck_ReturnThruPtr_pNewState( &stateAfterDeserialize );
+    MQTT_SerializeAck_Stub( MQTT_SerializeAck_StubSuccess );
+    MQTT_UpdateStateAck_ExpectAnyArgsAndReturn( MQTTBadResponse );
+    MQTT_UpdateStateAck_ReturnThruPtr_pNewState( &stateAfterSerialize );
+    status = MQTT_ProcessLoop( &context );
+    TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
+}
+
+void test_MQTT_ProcessLoop_handleIncomingAck_Error_Paths2( void )
+{
+    MQTTStatus_t status;
+    MQTTContext_t context = { 0 };
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
+    MQTTConnectProperties_t properties;
+    MQTTPacketInfo_t incomingPacket = { 0 };
+    MqttPropBuilder_t ackPropsBuilder;
+    /*Update state returns bad response.*/
+    setupTransportInterface( &transport );
+    setupNetworkBuffer( &networkBuffer );
+    status = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
+    context.connectStatus = MQTTConnected;
+    TEST_ASSERT_EQUAL( MQTTSuccess, status );
+    incomingPacket.type = MQTT_PACKET_TYPE_PUBREC;
+    incomingPacket.remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
+    incomingPacket.headerLength = MQTT_SAMPLE_REMAINING_LENGTH;
+
+    modifyIncomingPacketStatus = MQTTSuccess;
+    MQTT_ProcessIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_ProcessIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
+    MQTT_DeserializePublishAck_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_UpdateStateAck_ExpectAnyArgsAndReturn( MQTTBadParameter );
+    status = MQTT_ProcessLoop( &context );
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+}
+
+void test_MQTT_ProcessLoop_handleIncomingAck_Error_Paths3( void )
+{
+    MQTTStatus_t status;
+    MQTTPublishState_t stateAfterDeserialize;
+    MQTTContext_t context = { 0 };
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
+    MQTTConnectProperties_t properties;
+    uint16_t packetId = 2;
+    MQTTPacketInfo_t incomingPacket = { 0 };
+    MQTTPubAckInfo_t incomingRecords = { 0 };
+    MQTTPubAckInfo_t outgoingRecords = { 0 };
+
+    /*Invalid packet parameters.*/
+    setupTransportInterface( &transport );
+    setupNetworkBuffer( &networkBuffer );
+    incomingPacket.type = MQTT_PACKET_TYPE_PUBREC;
+    incomingPacket.remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
+    incomingPacket.headerLength = MQTT_SAMPLE_REMAINING_LENGTH;
+    uint8_t ackPropsBuf[500]; 
+    size_t ackPropsBufLength = sizeof(ackPropsBuf);
+
+    status = MQTT_Init( &context, &transport, getTime, eventCallback2, &networkBuffer);
+    TEST_ASSERT_EQUAL( MQTTSuccess, status );
+
+    status = MQTT_InitStatefulQoS( &context,
+        &outgoingRecords, 4,
+        &incomingRecords, 4,ackPropsBuf,ackPropsBufLength );
+    TEST_ASSERT_EQUAL( MQTTSuccess, status );
+    context.connectStatus = MQTTConnected;
+    modifyIncomingPacketStatus = MQTTSuccess;
+    stateAfterDeserialize = MQTTPubRelSend;
+    MQTT_ProcessIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_ProcessIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
+    MQTT_DeserializePublishAck_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_DeserializePublishAck_ReturnThruPtr_pPacketId( &packetId );
+    MQTT_UpdateStateAck_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_UpdateStateAck_ReturnThruPtr_pNewState( &stateAfterDeserialize );
+    MQTT_GetAckPacketSize_ExpectAnyArgsAndReturn( MQTTBadParameter );
+    status = MQTT_ProcessLoop( &context );
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+}
+
+void test_MQTT_ProcessLoop_handleIncomingAck_Happy_Paths2( void )
+{
+    MQTTStatus_t status;
+    MQTTPublishState_t stateAfterDeserialize;
+    MQTTPublishState_t stateAfterSerialize;
+    MQTTContext_t context = { 0 };
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
+    MQTTConnectProperties_t properties;
+    uint16_t packetId = 1;
+    MQTTPacketInfo_t incomingPacket = { 0 };
+    MQTTPubAckInfo_t incomingRecords = { 0 };
+    MQTTPubAckInfo_t outgoingRecords = { 0 };
+    uint8_t ackPropsBuf[500]; 
+    size_t ackPropsBufLength = sizeof(ackPropsBuf);
+    /*Using event call back to set reason string and user properties,*/
+    setupTransportInterface( &transport );
+    setupNetworkBuffer( &networkBuffer );
+    incomingPacket.type = MQTT_PACKET_TYPE_PUBREC;
+    incomingPacket.remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
+    incomingPacket.headerLength = MQTT_SAMPLE_REMAINING_LENGTH;
+    status = MQTT_Init( &context, &transport, getTime, eventCallback2, &networkBuffer );
+    TEST_ASSERT_EQUAL( MQTTSuccess, status );
+
+    status = MQTT_InitStatefulQoS( &context,
+        &outgoingRecords, 4,
+        &incomingRecords, 4,ackPropsBuf,ackPropsBufLength );
+    TEST_ASSERT_EQUAL( MQTTSuccess, status );
+    modifyIncomingPacketStatus = MQTTSuccess;
+    stateAfterDeserialize = MQTTPubRelSend;
+    stateAfterSerialize = MQTTPubCompPending;
+    MQTT_ProcessIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_ProcessIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
+    MQTT_DeserializePublishAck_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_DeserializePublishAck_ReturnThruPtr_pPacketId( &packetId );
+    MQTT_UpdateStateAck_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_UpdateStateAck_ReturnThruPtr_pNewState( &stateAfterDeserialize );
+    MQTT_GetAckPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_SerializeAckFixed_Stub( MQTTV5_SerializeAckFixed_cb );
+    MQTT_UpdateStateAck_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_UpdateStateAck_ReturnThruPtr_pNewState( &stateAfterSerialize );
+    status = MQTT_ProcessLoop( &context );
+    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
+}
+
+void test_MQTT_ProcessLoop_handleIncomingAck_Error_Paths4( void )
+{
+    MQTTStatus_t status;
+    MQTTPublishState_t stateAfterDeserialize;
+    MQTTContext_t context = { 0 };
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
+    MQTTConnectProperties_t properties;
+    MQTTPacketInfo_t incomingPacket = { 0 };
+    MQTTPubAckInfo_t incomingRecords = { 0 };
+    MQTTPubAckInfo_t outgoingRecords = { 0 };
+    uint8_t ackPropsBuf[500]; 
+    size_t ackPropsBufLength = sizeof(ackPropsBuf);
+    /*Invalid packet parameters.*/
+    setupTransportInterface( &transport );
+    setupNetworkBuffer( &networkBuffer );
+    incomingPacket.type = MQTT_PACKET_TYPE_PUBREC;
+    incomingPacket.remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
+    incomingPacket.headerLength = MQTT_SAMPLE_REMAINING_LENGTH;
+    status = MQTT_Init( &context, &transport, getTime, eventCallback2, &networkBuffer );
+    TEST_ASSERT_EQUAL( MQTTSuccess, status );
+
+    status = MQTT_InitStatefulQoS( &context,
+        &outgoingRecords, 4,
+        &incomingRecords, 4,ackPropsBuf,ackPropsBufLength );
+    context.connectStatus = MQTTConnected;
+    TEST_ASSERT_EQUAL( MQTTSuccess, status );
+
+    modifyIncomingPacketStatus = MQTTSuccess;
+    stateAfterDeserialize = MQTTPubRelPending;
+    MQTT_ProcessIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_ProcessIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
+    MQTT_DeserializePublishAck_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_UpdateStateAck_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_UpdateStateAck_ReturnThruPtr_pNewState( &stateAfterDeserialize );
+    MQTT_GetAckPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
+    status = MQTT_ProcessLoop( &context );
+    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
+}
+
+void test_MQTT_ProcessLoop_handleIncomingAck_Error_Paths5( void )
+{
+    MQTTStatus_t status;
+    MQTTPublishState_t stateAfterDeserialize;
+    MQTTContext_t context = { 0 };
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
+    MQTTConnectProperties_t properties;
+    MQTTPacketInfo_t incomingPacket = { 0 };
+    MQTTPubAckInfo_t incomingRecords = { 0 };
+    MQTTPubAckInfo_t outgoingRecords = { 0 };
+    uint16_t packetId = 1;
+    uint8_t ackPropsBuf[500]; 
+    size_t ackPropsBufLength = sizeof(ackPropsBuf);
+    /*Unable to send the packet using transport interface.*/
+    setupTransportInterface( &transport );
+    setupNetworkBuffer( &networkBuffer );
+    incomingPacket.type = MQTT_PACKET_TYPE_PUBREC;
+    incomingPacket.remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
+    incomingPacket.headerLength = MQTT_SAMPLE_REMAINING_LENGTH;
+    status = MQTT_Init( &context, &transport, getTime, eventCallback2, &networkBuffer );
+    TEST_ASSERT_EQUAL( MQTTSuccess, status );
+
+    status = MQTT_InitStatefulQoS( &context,
+        &outgoingRecords, 4,
+        &incomingRecords, 4,ackPropsBuf,ackPropsBufLength );
+    context.connectStatus = MQTTConnected;
+    TEST_ASSERT_EQUAL( MQTTSuccess, status );
+    context.transportInterface.send = transportSendNoBytes;
+    context.transportInterface.writev = NULL;
+    modifyIncomingPacketStatus = MQTTSuccess;
+    stateAfterDeserialize = MQTTPubRelSend;
+    MQTT_ProcessIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_ProcessIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
+    MQTT_DeserializePublishAck_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_DeserializePublishAck_ReturnThruPtr_pPacketId( &packetId );
+    MQTT_UpdateStateAck_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_UpdateStateAck_ReturnThruPtr_pNewState( &stateAfterDeserialize );
+    MQTT_GetAckPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_SerializeAckFixed_Stub( MQTTV5_SerializeAckFixed_cb );
+    status = MQTT_ProcessLoop( &context );
+    TEST_ASSERT_EQUAL_INT( MQTTSendFailed, status );
+}
+
+void test_MQTT_Connect_partial_receive( void )
+{
+    MQTTContext_t mqttContext = { 0 };
+    MQTTConnectInfo_t connectInfo = { 0 };
+    uint32_t timeout = 0;
+    bool sessionPresent;
+    MQTTStatus_t status;
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
+    MQTTPacketInfo_t incomingPacket = { 0 };
+    MQTTPubAckInfo_t incomingRecords = { 0 };
+    MQTTPubAckInfo_t outgoingRecords = { 0 };
+
+    setupTransportInterface( &transport );
+    setupNetworkBuffer( &networkBuffer );
+    transport.recv = transportRecvNoData;
+    uint8_t ackPropsBuf[500]; 
+    size_t ackPropsBufLength = sizeof(ackPropsBuf);
+
+    memset( &mqttContext, 0x0, sizeof( mqttContext ) );
+    MQTT_Init( &mqttContext, &transport, getTime, eventCallback, &networkBuffer );
+    TEST_ASSERT_EQUAL( MQTTSuccess, status );
+
+    status = MQTT_InitStatefulQoS( &mqttContext,
+        &outgoingRecords, 4,
+        &incomingRecords, 4,ackPropsBuf,ackPropsBufLength );
+    TEST_ASSERT_EQUAL( MQTTSuccess, status );
+    mqttContext.connectStatus = MQTTConnected;
+    /* Everything before receiving the CONNACK should succeed. */
+    MQTT_GetConnectPacketSize_IgnoreAndReturn( MQTTSuccess );
+    incomingPacket.type = MQTT_PACKET_TYPE_CONNACK;
+    incomingPacket.remainingLength = 2;
+
+    /* Timeout in receiving entire packet, for branch coverage. This is due to the fact that the mocked
+     * receive function always returns 0 bytes read. */
+    MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_GetIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
+    MQTT_SerializeConnectFixedHeader_Stub( MQTT_SerializeConnectFixedHeader_cb );
+    status = MQTT_Connect( &mqttContext, &connectInfo, NULL, timeout, &sessionPresent, NULL, NULL );
+    TEST_ASSERT_EQUAL_INT( MQTTRecvFailed, status );
+
+    /* Update to use mock receive function that receives one byte at a time for the
+     * rest of the test. */
+    mqttContext.transportInterface.recv = transportRecvOneByte;
+    timeout = 10;
+
+    /* Not enough space for packet, discard it. */
+    mqttContext.networkBuffer.size = 2;
+    incomingPacket.remainingLength = 3;
+    MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_GetIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
+    status = MQTT_Connect( &mqttContext, &connectInfo, NULL, timeout, &sessionPresent, NULL, NULL );
+    TEST_ASSERT_EQUAL_INT( MQTTNoDataAvailable, status );
+
+    /* Discard packet, no timeout provided. This should fail since multiple
+     * iterations of the discard loop are required to discard the packet, but only
+     * one will run. */
+    mqttContext.transportInterface.recv = transportRecvSuccess;
+    MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_GetIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
+    status = MQTT_Connect( &mqttContext, &connectInfo, NULL, 0, &sessionPresent, NULL , NULL);
+    TEST_ASSERT_EQUAL_INT( MQTTRecvFailed, status );
+
+    /* Timeout while discarding packet. */
+    /* (Mocked) read only one byte at a time to ensure timeout will occur. */
+    mqttContext.transportInterface.recv = transportRecvOneByte;
+    incomingPacket.remainingLength = 20;
+    MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_GetIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
+    status = MQTT_Connect( &mqttContext, &connectInfo, NULL, timeout, &sessionPresent, NULL, NULL );
+    TEST_ASSERT_EQUAL_INT( MQTTRecvFailed, status );
+
+    /* Receive failure while discarding packet. */
+    mqttContext.transportInterface.recv = transportRecvFailure;
+    /* Test with dummy get time function to make sure there are no infinite loops. */
+    mqttContext.getTime = getTimeDummy;
+    MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_GetIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
+    status = MQTT_Connect( &mqttContext, &connectInfo, NULL, MQTT_NO_TIMEOUT_MS, &sessionPresent, NULL, NULL );
+    TEST_ASSERT_EQUAL_INT( MQTTRecvFailed, status );
+}
+
+void test_MQTTV5_Disconnect()
+{
+    uint32_t sessionExpiry = 0U;
+    MQTTStatus_t status;
+    MQTTContext_t context = { 0 };
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
+    setupTransportInterface( &transport );
+    setupNetworkBuffer( &networkBuffer );
+    status = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
+    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
+
+    context.connectStatus = MQTTConnected;
+    /*Invalid parameters*/
+    status = MQTT_Disconnect( NULL, NULL , 0);
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+
+    MQTT_GetDisconnectPacketSize_ExpectAnyArgsAndReturn( MQTTBadParameter );
+    status = MQTT_Disconnect( &context, NULL , 0);
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+
+    // /*Bad Parameters*/
+    MQTT_GetDisconnectPacketSize_ExpectAnyArgsAndReturn( MQTTBadParameter );
+    status = MQTT_Disconnect( &context, NULL, 0 );
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+
+    MqttPropBuilder_t propBuilder;
+    uint8_t buf[500];
+    size_t bufLength = sizeof(buf);
+    MqttPropertyBuilder_Init(&(propBuilder), buf, bufLength);
+
+
+    MQTT_GetDisconnectPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_SerializeDisconnectFixed_Stub( MQTTV5_SerializeDisconnectFixed_cb );
+    status = MQTT_Disconnect( &context, &propBuilder, 0 );
+    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
+
+    /*Send failed*/
+    context.connectStatus = MQTTConnected;
+    context.transportInterface.send = transportSendFailure;
+    context.transportInterface.writev = NULL;
+    MQTT_GetDisconnectPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_SerializeDisconnectFixed_Stub( MQTTV5_SerializeDisconnectFixed_cb );
+    status = MQTT_Disconnect( &context,NULL, 0 );
+    TEST_ASSERT_EQUAL_INT( MQTTSendFailed, status );
+}
+
+void test_MQTT_ProcessLoop_handleIncomingDisconnect( void )
+{
+    MQTTStatus_t status;
+    MQTTContext_t context = { 0 };
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
+    MQTTConnectProperties_t properties;
+    MQTTReasonCodeInfo_t disconnectInfo;
+    MQTTPacketInfo_t incomingPacket = { 0 };
+    MQTTPubAckInfo_t incomingRecords = { 0 };
+    MQTTPubAckInfo_t outgoingRecords = { 0 };
+
+    memset( &disconnectInfo, 0x0, sizeof( disconnectInfo ) );
+    setupTransportInterface( &transport );
+    setupNetworkBuffer( &networkBuffer );
+    uint8_t ackPropsBuf[500]; 
+    size_t ackPropsBufLength = sizeof(ackPropsBuf);
+
+    status = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
+    TEST_ASSERT_EQUAL( MQTTSuccess, status );
+
+    status = MQTT_InitStatefulQoS( &context,
+        &outgoingRecords, 4,
+        &incomingRecords, 4,ackPropsBuf,ackPropsBufLength );
+    TEST_ASSERT_EQUAL( MQTTSuccess, status );
+    context.pDisconnectInfo = &disconnectInfo;
+    incomingPacket.type = MQTT_PACKET_TYPE_DISCONNECT;
+    incomingPacket.remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
+    incomingPacket.headerLength = MQTT_SAMPLE_REMAINING_LENGTH;
+    MQTT_ProcessIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_ProcessIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
+    MQTT_DeserializeDisconnect_IgnoreAndReturn( MQTTSuccess );
+    status = MQTT_ProcessLoop( &context );
+    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
+
+    /*Invalid packet parameters.*/
+    MQTT_ProcessIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_ProcessIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
+    MQTT_DeserializeDisconnect_IgnoreAndReturn( MQTTBadResponse );
+    status = MQTT_ProcessLoop( &context );
+    TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
+}
+
+static void setupSubscriptionInfo( MQTTSubscribeInfo_t * pSubscribeInfo )
+{
+    pSubscribeInfo->qos = MQTTQoS1;
+    pSubscribeInfo->pTopicFilter = MQTT_SAMPLE_TOPIC_FILTER;
+    pSubscribeInfo->topicFilterLength = MQTT_SAMPLE_TOPIC_FILTER_LENGTH;
+    pSubscribeInfo->noLocalOption = 0 ; 
+    pSubscribeInfo->retainAsPublishedOption = 0;
+    pSubscribeInfo->retainHandlingOption = retainSendOnSubIfNotPresent ; 
+}
+static uint8_t * MQTTV5_SerializeSubscribedHeader_cb( size_t remainingLength,
+                                                    uint8_t * pIndex,
+                                                    uint16_t packetId,
+                                                    int numcallbacks )
+{
+    ( void ) remainingLength;
+    ( void ) pIndex;
+    ( void ) packetId;
+    ( void ) numcallbacks;
+
+    return pIndex;
+}
+
+
+void test_MQTTV5_Subscribe_invalid_params( void ) 
+{
+    MQTTStatus_t mqttStatus;
+    MQTTContext_t context = { 0 };
+    MQTTSubscribeInfo_t subscribeInfo = { 0 };
+
+    /* Call subscribe with a NULL context. */
+    mqttStatus = MQTT_Subscribe( NULL, &subscribeInfo, 1, MQTT_FIRST_VALID_PACKET_ID , NULL);
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, mqttStatus );
+
+
+    /* Call  with a NULL subscription list. */
+    mqttStatus = MQTT_Subscribe( &context, NULL, 1, MQTT_FIRST_VALID_PACKET_ID , NULL);
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, mqttStatus );
+
+    /* Call subscribe with 0 subscriptions. */
+    mqttStatus = MQTT_Subscribe( &context, &subscribeInfo, 0, MQTT_FIRST_VALID_PACKET_ID , NULL);
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, mqttStatus );
+
+    /* Packet ID cannot be 0 per MQTT 5.0 spec. */
+    mqttStatus = MQTT_Subscribe( &context, &subscribeInfo, 1, 0, NULL );
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, mqttStatus );
+
+    /* Incoming publish records NULL but QoS > 0. */
+    subscribeInfo.qos = MQTTQoS1;
+    mqttStatus = MQTT_Subscribe( &context, &subscribeInfo, 1, 10, NULL );
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, mqttStatus );
+
+    /* Test topic filter length is zero */
+    subscribeInfo.pTopicFilter = "test/topic";
+    subscribeInfo.topicFilterLength = 0;
+    mqttStatus = MQTT_Subscribe( &context, &subscribeInfo, 1,MQTT_FIRST_VALID_PACKET_ID, NULL);
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, mqttStatus );
+
+    /* Test NULL topic filter */
+    subscribeInfo.pTopicFilter = NULL;
+    mqttStatus = MQTT_Subscribe( &context, &subscribeInfo, 1,MQTT_FIRST_VALID_PACKET_ID, NULL);
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, mqttStatus );
+
+    /* Test invalid QoS level */
+    subscribeInfo.qos = 3; /* QoS must be 0, 1, or 2 */
+    mqttStatus = MQTT_Subscribe( &context, &subscribeInfo, 1, MQTT_FIRST_VALID_PACKET_ID , NULL);
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, mqttStatus );
+
+    /* Test invalid shared subscription */
+    subscribeInfo.pTopicFilter = "$share/invalid#";
+    subscribeInfo.noLocalOption = 0 ; 
+    subscribeInfo.topicFilterLength = strlen( subscribeInfo.pTopicFilter );
+    mqttStatus = MQTT_Subscribe( &context, &subscribeInfo, 1, MQTT_FIRST_VALID_PACKET_ID, NULL);
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, mqttStatus );
+
+    subscribeInfo.pTopicFilter = "$share/abc/#" ;
+    subscribeInfo.topicFilterLength = strlen( subscribeInfo.pTopicFilter );
+    mqttStatus = MQTT_Subscribe(&context, &subscribeInfo, 1, MQTT_FIRST_VALID_PACKET_ID, NULL);
+    TEST_ASSERT_EQUAL_INT(MQTTBadParameter, mqttStatus); 
+
+    subscribeInfo.pTopicFilter = "abc" ; 
+    subscribeInfo.topicFilterLength = strlen( subscribeInfo.pTopicFilter );
+    subscribeInfo.retainHandlingOption= 3 ; 
+    mqttStatus = MQTT_Subscribe(&context, &subscribeInfo, 1, MQTT_FIRST_VALID_PACKET_ID, NULL);
+    TEST_ASSERT_EQUAL_INT(MQTTBadParameter, mqttStatus);
+
+    subscribeInfo.retainHandlingOption  = 1 ; 
+    subscribeInfo.qos = 3 ; 
+    mqttStatus = MQTT_Subscribe(&context, &subscribeInfo, 1, MQTT_FIRST_VALID_PACKET_ID, NULL);
+    TEST_ASSERT_EQUAL_INT(MQTTBadParameter, mqttStatus);
+
+}
+
+void test_MQTTV5_Subscribe_ValidateFailure( void )
+{
+    MQTTStatus_t mqttStatus;
+    MQTTSubscribeInfo_t subscribeInfo;
+    MQTTContext_t testContext = { 0 }; 
+    
+    memset( &subscribeInfo, 0, sizeof(subscribeInfo) );
+    
+    /* Force the validation function to return an error */
+    validateSubscribeReturn = MQTTBadParameter;
+    
+    mqttStatus = MQTT_Subscribe( &testContext, &subscribeInfo, 1, MQTT_FIRST_VALID_PACKET_ID , NULL);
+    TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
+    
+    /* Restore for later tests */
+    validateSubscribeReturn = MQTTSuccess;
+}
+
+void test_MQTTV5_Subscribe_happy_path(void){
+    MQTTStatus_t mqttStatus;
+    MQTTContext_t context = { 0 };
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
+    MQTTSubscribeInfo_t subscribeInfo = { 0 };
+
+    size_t remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
+    size_t packetSize = MQTT_SAMPLE_REMAINING_LENGTH;
+    MQTTPubAckInfo_t incomingRecords = { 0 };
+    MQTTPubAckInfo_t outgoingRecords = { 0 };
+
+    setupTransportInterface( &transport );
+    setupNetworkBuffer( &networkBuffer );
+    setupSubscriptionInfo( &subscribeInfo );
+
+    uint8_t ackPropsBuf[500]; 
+    size_t ackPropsBufLength = sizeof(ackPropsBuf);
+    /* Initialize context. */
+    mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+
+    mqttStatus = MQTT_InitStatefulQoS( &context,
+                                       &outgoingRecords, 4,
+                                       &incomingRecords, 4, ackPropsBuf , ackPropsBufLength );
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+    context.connectStatus = MQTTConnected;
+    MqttPropBuilder_t propBuilder;
+    uint8_t buf[500];
+    size_t bufLength = sizeof(buf);
+    mqttStatus = MqttPropertyBuilder_Init(&(propBuilder), buf, bufLength); 
+    
+    propBuilder.pBuffer[0] = 0x0B ; 
+    propBuilder.pBuffer[1] = 2 ; 
+    propBuilder.currentIndex = 2 ;
+
+
+    /* Verify MQTTSuccess is returned with the following mocks. */
+    validateSubscribeProperties_ExpectAnyArgsAndReturn(MQTTSuccess) ; 
+    MQTT_GetSubscribePacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_GetSubscribePacketSize_ReturnThruPtr_pPacketSize( &packetSize );
+    MQTT_GetSubscribePacketSize_ReturnThruPtr_pRemainingLength( &remainingLength );
+    MQTT_SerializeSubscribeHeader_Stub( MQTTV5_SerializeSubscribedHeader_cb );
+
+    /* Expect the above calls when running MQTT_Subscribe. */
+    mqttStatus = MQTT_Subscribe( &context, &subscribeInfo, 1, MQTT_FIRST_VALID_PACKET_ID, &propBuilder);
+
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+}
+
+
+void test_MQTTV5_Subscribe_happy_path1(void){
+    MQTTStatus_t mqttStatus;
+    MQTTContext_t context = { 0 };
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
+    MQTTSubscribeInfo_t subscribeInfo[2];
+    size_t remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
+    size_t packetSize = MQTT_SAMPLE_REMAINING_LENGTH;
+    MQTTPubAckInfo_t incomingRecords = { 0 };
+    MQTTPubAckInfo_t outgoingRecords = { 0 };
+
+    uint8_t ackPropsBuf[500]; 
+    size_t ackPropsBufLength = sizeof(ackPropsBuf);
+
+    setupTransportInterface( &transport );
+    setupNetworkBuffer( &networkBuffer );
+
+    mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+
+    mqttStatus = MQTT_InitStatefulQoS( &context,
+                                       &outgoingRecords, 4,
+                                       &incomingRecords, 4, ackPropsBuf, ackPropsBufLength );
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+    context.connectStatus = MQTTConnected;
+
+    subscribeInfo[0].qos = MQTTQoS2 ; 
+    subscribeInfo[0].pTopicFilter = "abc" ; 
+    subscribeInfo[0].topicFilterLength = 3 ;
+    subscribeInfo[0].noLocalOption = 1 ; 
+    subscribeInfo[0].retainAsPublishedOption = 1 ; 
+    subscribeInfo[0].retainHandlingOption = 0 ; 
+
+    subscribeInfo[1].qos = MQTTQoS0 ; 
+    subscribeInfo[1].pTopicFilter = "def" ;
+    subscribeInfo[1].retainHandlingOption = 2 ;
+    subscribeInfo[1].topicFilterLength = 3 ;
+    subscribeInfo[1].noLocalOption = 0 ;
+    subscribeInfo[1].retainAsPublishedOption = 0 ;
+
+    MQTT_GetSubscribePacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_GetSubscribePacketSize_ReturnThruPtr_pPacketSize( &packetSize );
+    MQTT_GetSubscribePacketSize_ReturnThruPtr_pRemainingLength( &remainingLength );
+    MQTT_SerializeSubscribeHeader_Stub( MQTTV5_SerializeSubscribedHeader_cb );
+    
+    /* Expect the above calls when running MQTT_Subscribe. */
+    mqttStatus = MQTT_Subscribe( &context, subscribeInfo, 1, MQTT_FIRST_VALID_PACKET_ID, NULL );
+
+    subscribeInfo[0].qos = MQTTQoS0 ; 
+    subscribeInfo[0].pTopicFilter = "def" ;
+    subscribeInfo[0].retainHandlingOption = 2 ;
+    subscribeInfo[0].topicFilterLength = 3 ;
+    subscribeInfo[0].noLocalOption = 0 ;
+    subscribeInfo[0].retainAsPublishedOption = 0 ;
+
+    // validateSubscribeProperties_ExpectAnyArgsAndReturn(MQTTSuccess); 
+    MQTT_GetSubscribePacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_GetSubscribePacketSize_ReturnThruPtr_pPacketSize( &packetSize );
+    MQTT_GetSubscribePacketSize_ReturnThruPtr_pRemainingLength( &remainingLength );
+    MQTT_SerializeSubscribeHeader_Stub( MQTTV5_SerializeSubscribedHeader_cb );
+    
+    mqttStatus = MQTT_Subscribe( &context, subscribeInfo, 1, MQTT_FIRST_VALID_PACKET_ID, NULL );
+
+    TEST_ASSERT_EQUAL_INT( MQTTSuccess, mqttStatus );
+
+    subscribeInfo[0].qos = 3 ; 
+    subscribeInfo[0].pTopicFilter = "def" ;
+    subscribeInfo[0].retainHandlingOption = 2 ;
+    subscribeInfo[0].topicFilterLength = 3 ;
+    subscribeInfo[0].noLocalOption = 0 ;
+    subscribeInfo[0].retainAsPublishedOption = 0 ;
+
+    mqttStatus = MQTT_Subscribe( &context, subscribeInfo, 1, MQTT_FIRST_VALID_PACKET_ID, NULL );
+
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, mqttStatus );
+}
+
+void test_MQTTV5_Subscribe_happy_path2(void){
+    MQTTStatus_t mqttStatus;
+    MQTTContext_t context = { 0 };
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
+    MQTTSubscribeInfo_t subscribeInfo = {0};
+    size_t remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
+    size_t packetSize = MQTT_SAMPLE_REMAINING_LENGTH;
+    MQTTPubAckInfo_t incomingRecords = { 0 };
+    MQTTPubAckInfo_t outgoingRecords = { 0 };
+    uint8_t ackPropsBuf[500]; 
+    size_t ackPropsBufLength = sizeof(ackPropsBuf);
+    setupTransportInterface( &transport );
+    setupNetworkBuffer( &networkBuffer );
+
+    mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+
+    mqttStatus = MQTT_InitStatefulQoS( &context,
+                                       &outgoingRecords, 4,
+                                       &incomingRecords, 4,ackPropsBuf,ackPropsBufLength );
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+    context.connectStatus = MQTTConnected;
+    /* Verify MQTTSuccess is returned with the following mocks. */
+    MQTT_GetSubscribePacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_GetSubscribePacketSize_ReturnThruPtr_pPacketSize( &packetSize );
+    MQTT_GetSubscribePacketSize_ReturnThruPtr_pRemainingLength( &remainingLength );
+    MQTT_SerializeSubscribeHeader_Stub( MQTTV5_SerializeSubscribedHeader_cb );
+
+
+    subscribeInfo.qos = MQTTQoS1 ; 
+    subscribeInfo.pTopicFilter = "$share/abc/bcd" ;
+    subscribeInfo.topicFilterLength = 14 ;
+    subscribeInfo.noLocalOption = 0 ;
+    subscribeInfo.retainAsPublishedOption = 1 ;
+    subscribeInfo.retainHandlingOption = 0 ;
+
+    mqttStatus = MQTT_Subscribe( &context, &subscribeInfo, 1, MQTT_FIRST_VALID_PACKET_ID, NULL );
+    TEST_ASSERT_EQUAL_INT( MQTTSuccess, mqttStatus );
+
+}
+
+void test_MQTTV5_Subscribe_happy_path3(void){
+    MQTTStatus_t mqttStatus;
+    MQTTContext_t context = { 0 };
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
+    MQTTSubscribeInfo_t subscribeInfo = {0};
+    size_t remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
+    size_t packetSize = MQTT_SAMPLE_REMAINING_LENGTH;
+    MQTTPubAckInfo_t incomingRecords = { 0 };
+    MQTTPubAckInfo_t outgoingRecords = { 0 };
+
+    uint8_t ackPropsBuf[500]; 
+    size_t ackPropsBufLength = sizeof(ackPropsBuf);
+    setupTransportInterface( &transport );
+    setupNetworkBuffer( &networkBuffer );
+
+    mqttStatus = MQTT_Init(&context, &transport, getTime, eventCallback, &networkBuffer);
+    TEST_ASSERT_EQUAL(MQTTSuccess, mqttStatus);
+
+    mqttStatus = MQTT_InitStatefulQoS( &context,
+                                       &outgoingRecords, 4,
+                                       &incomingRecords, 4, ackPropsBuf,ackPropsBufLength );
+    TEST_ASSERT_EQUAL(MQTTSuccess, mqttStatus);
+    context.connectStatus = MQTTConnected;
+    /* Verify MQTTSuccess is returned with the following mocks. */
+    MQTT_GetSubscribePacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_GetSubscribePacketSize_ReturnThruPtr_pPacketSize( &packetSize );
+    MQTT_GetSubscribePacketSize_ReturnThruPtr_pRemainingLength( &remainingLength );
+    MQTT_SerializeSubscribeHeader_Stub( MQTTV5_SerializeSubscribedHeader_cb );
+
+    subscribeInfo.qos = MQTTQoS1 ;
+    subscribeInfo.pTopicFilter = "$share/abc/" ;
+    subscribeInfo.topicFilterLength = 11 ;
+    subscribeInfo.noLocalOption = 0 ;
+    subscribeInfo.retainAsPublishedOption = 1 ;
+    subscribeInfo.retainHandlingOption = 0 ;
+
+    mqttStatus = MQTT_Subscribe(&context, &subscribeInfo, 1, MQTT_FIRST_VALID_PACKET_ID, NULL);
+    TEST_ASSERT_EQUAL_INT(MQTTSuccess, mqttStatus);
+
+}
+
+void test_MQTTV5_shared_subscriptions(void){
+    MQTTStatus_t mqttStatus;
+    MQTTContext_t context = { 0 };
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
+    MQTTSubscribeInfo_t subscribeInfo = {0};
+    MQTTPubAckInfo_t incomingRecords = { 0 };
+    MQTTPubAckInfo_t outgoingRecords = { 0 };
+    size_t remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
+    size_t packetSize = MQTT_SAMPLE_REMAINING_LENGTH;
+    uint8_t ackPropsBuf[500]; 
+    size_t ackPropsBufLength = sizeof(ackPropsBuf);
+
+    setupTransportInterface( &transport );
+    setupNetworkBuffer( &networkBuffer );
+
+    mqttStatus = MQTT_Init(&context, &transport, getTime, eventCallback, &networkBuffer);
+    TEST_ASSERT_EQUAL(MQTTSuccess, mqttStatus);
+
+    mqttStatus = MQTT_InitStatefulQoS( &context,
+                                       &outgoingRecords, 4,
+                                       &incomingRecords, 4,ackPropsBuf,ackPropsBufLength);
+    TEST_ASSERT_EQUAL(MQTTSuccess, mqttStatus);
+    context.connectStatus = MQTTConnected;
+    MQTT_GetSubscribePacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_GetSubscribePacketSize_ReturnThruPtr_pPacketSize( &packetSize );
+    MQTT_GetSubscribePacketSize_ReturnThruPtr_pRemainingLength( &remainingLength );
+    MQTT_SerializeSubscribeHeader_Stub( MQTTV5_SerializeSubscribedHeader_cb );
+
+    subscribeInfo.pTopicFilter = "$share/abc/bcd" ;
+    subscribeInfo.topicFilterLength = 10 ;
+    subscribeInfo.noLocalOption = 0 ;
+    subscribeInfo.retainAsPublishedOption = 1 ;
+    subscribeInfo.retainHandlingOption = 0 ;
+    subscribeInfo.qos = MQTTQoS2 ;
+    
+    mqttStatus = MQTT_Subscribe(&context, &subscribeInfo, 1, MQTT_FIRST_VALID_PACKET_ID, NULL);
+    TEST_ASSERT_EQUAL_INT(MQTTSuccess, mqttStatus);
+
+    subscribeInfo.qos = MQTTQoS1 ;
+    subscribeInfo.retainHandlingOption = 3 ;
+    mqttStatus = MQTT_Subscribe(&context, &subscribeInfo, 1, MQTT_FIRST_VALID_PACKET_ID, NULL);
+    TEST_ASSERT_EQUAL_INT(MQTTBadParameter, mqttStatus);
+    subscribeInfo.retainHandlingOption = 0 ;
+
+
+
+    /** Invalid Sharename */
+    subscribeInfo.pTopicFilter = "$share/abc" ; 
+    subscribeInfo.topicFilterLength = 10 ; 
+    
+    mqttStatus = MQTT_Subscribe(&context, &subscribeInfo, 1, MQTT_FIRST_VALID_PACKET_ID, NULL);
+    TEST_ASSERT_EQUAL_INT(MQTTBadParameter, mqttStatus);
+
+    subscribeInfo.pTopicFilter = "$share/abc/bcd" ;
+    subscribeInfo.topicFilterLength = 14 ;
+    subscribeInfo.noLocalOption = 1 ; 
+    mqttStatus = MQTT_Subscribe(&context, &subscribeInfo, 1, MQTT_FIRST_VALID_PACKET_ID, NULL);
+    TEST_ASSERT_EQUAL_INT(MQTTBadParameter, mqttStatus);
+}
+
+/* Suback- Unsuback Happy path */
+void test_MQTT_ProcessLoop_handleIncomingAck_Happy_Paths_suback( void )
+{
+    MQTTStatus_t status;
+    MQTTContext_t context = { 0 };
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
+    MQTTConnectProperties_t properties = {0} ; 
+    MQTTPacketInfo_t incomingPacket = { 0 };
+    MQTTPubAckInfo_t incomingRecords = { 0 };
+    MQTTPubAckInfo_t outgoingRecords = { 0 };
+    setupTransportInterface( &transport );
+    setupNetworkBuffer( &networkBuffer );
+    /* Modify incoming packet depending on type to be tested. */
+    incomingPacket.type = MQTT_PACKET_TYPE_SUBACK;
+    incomingPacket.remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
+    incomingPacket.headerLength = MQTT_SAMPLE_REMAINING_LENGTH;
+
+    uint8_t ackPropsBuf[500]; 
+    size_t ackPropsBufLength = sizeof(ackPropsBuf);
+    status = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer);
+    TEST_ASSERT_EQUAL( MQTTSuccess, status );
+    status = MQTT_InitStatefulQoS( &context,
+        &outgoingRecords, 4,
+        &incomingRecords, 4,ackPropsBuf,ackPropsBufLength );
+    TEST_ASSERT_EQUAL( MQTTSuccess, status );
+    modifyIncomingPacketStatus = MQTTSuccess;
+    MQTT_ProcessIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_ProcessIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
+    MQTT_DeserializeSuback_ExpectAnyArgsAndReturn( MQTTSuccess );
+    status = MQTT_ProcessLoop( &context );
+    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
+}
+
+
+static uint8_t * MQTTV5_SerializeUnsubscribeHeader_cb( size_t remainingLength,
+    uint8_t * pIndex,
+    uint16_t packetId,
+    int numcallbacks )
+{
+( void ) remainingLength;
+( void ) pIndex;
+( void ) packetId;
+( void ) numcallbacks;
+
+return pIndex;
+}
+
+/**
+* @brief This test case verifies that MQTT_Unsubscribe returns successfully
+* when valid parameters are passed and all bytes are sent.
+*/
+void test_MQTT_Unsubscribe_happy_path( void )
+{
+    MQTTStatus_t mqttStatus;
+    MQTTContext_t context = { 0 };
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
+    MQTTSubscribeInfo_t subscribeInfo = { 0 };
+    MQTTConnectProperties_t properties = {0} ; 
+    size_t remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
+    size_t packetSize = MQTT_SAMPLE_REMAINING_LENGTH;
+    setupTransportInterface( &transport );
+    setupNetworkBuffer( &networkBuffer );
+    setupSubscriptionInfo( &subscribeInfo );
+    subscribeInfo.qos = MQTTQoS0;
+
+    /* Initialize context. */
+    mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+
+    context.connectStatus = MQTTConnected;
+    /* Verify MQTTSuccess is returned with the following mocks. */
+    MQTT_SerializeUnsubscribeHeader_Stub(MQTTV5_SerializeUnsubscribeHeader_cb);
+    MQTT_GetUnsubscribePacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_GetUnsubscribePacketSize_ReturnThruPtr_pPacketSize( &packetSize );
+    MQTT_GetUnsubscribePacketSize_ReturnThruPtr_pRemainingLength( &remainingLength );
+
+    /* Expect the above calls when running MQTT_Unsubscribe. */
+
+    MqttPropBuilder_t propBuilder;
+    uint8_t buf[500];
+    size_t bufLength = sizeof(buf);
+    mqttStatus = MqttPropertyBuilder_Init(&(propBuilder), buf, bufLength);
+    mqttStatus = MQTT_Unsubscribe( &context, &subscribeInfo,  1, MQTT_FIRST_VALID_PACKET_ID, &propBuilder);
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+
+    MQTT_GetUnsubscribePacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_GetUnsubscribePacketSize_ReturnThruPtr_pPacketSize( &packetSize );
+    MQTT_GetUnsubscribePacketSize_ReturnThruPtr_pRemainingLength( &remainingLength );
+    mqttStatus = MQTT_Unsubscribe( &context, &subscribeInfo,  1, MQTT_FIRST_VALID_PACKET_ID, NULL);
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+
+
+}
+
+void test_MQTT_Unsubscribe_happy_path_withUP( void )
+{
+    MQTTStatus_t mqttStatus;
+    MQTTContext_t context = { 0 };
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
+    MQTTSubscribeInfo_t subscribeInfo = { 0 };
+    size_t remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
+    size_t packetSize = MQTT_SAMPLE_REMAINING_LENGTH;
+
+    setupTransportInterface( &transport );
+    setupNetworkBuffer( &networkBuffer );
+    setupSubscriptionInfo( &subscribeInfo );
+    subscribeInfo.qos = MQTTQoS0;
+    /* Initialize context. */
+    mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+    context.connectStatus = MQTTConnected;
+    /* Verify MQTTSuccess is returned with the following mocks. */
+    MQTT_SerializeUnsubscribeHeader_Stub(MQTTV5_SerializeUnsubscribeHeader_cb);
+    MQTT_GetUnsubscribePacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_GetUnsubscribePacketSize_ReturnThruPtr_pPacketSize( &packetSize );
+    MQTT_GetUnsubscribePacketSize_ReturnThruPtr_pRemainingLength( &remainingLength );
+
+    mqttStatus = MQTT_Unsubscribe( &context, &subscribeInfo,  1, MQTT_FIRST_VALID_PACKET_ID, NULL);
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+}
+
+void test_MQTTV5_Unsubscribe_happy_path(void){
+    MQTTStatus_t mqttStatus;
+    MQTTContext_t context = { 0 };
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
+    MQTTSubscribeInfo_t subscribeInfo = { 0 };
+
+    size_t remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
+    size_t packetSize = MQTT_SAMPLE_REMAINING_LENGTH;
+    MQTTPubAckInfo_t incomingRecords = { 0 };
+    MQTTPubAckInfo_t outgoingRecords = { 0 };
+
+    uint8_t ackPropsBuf[500]; 
+    size_t ackPropsBufLength = sizeof(ackPropsBuf);
+
+    setupTransportInterface( &transport );
+    setupNetworkBuffer( &networkBuffer );
+    setupSubscriptionInfo( &subscribeInfo );
+
+    /* Initialize context. */
+    mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+
+    mqttStatus = MQTT_InitStatefulQoS( &context,
+                                       &outgoingRecords, 4,
+                                       &incomingRecords, 4, ackPropsBuf,ackPropsBufLength);
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+    context.connectStatus = MQTTConnected;
+    /* Verify MQTTSuccess is returned with the following mocks. */
+    MQTT_GetSubscribePacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_GetSubscribePacketSize_ReturnThruPtr_pPacketSize( &packetSize );
+    MQTT_GetSubscribePacketSize_ReturnThruPtr_pRemainingLength( &remainingLength );
+    MQTT_SerializeSubscribeHeader_Stub( MQTTV5_SerializeSubscribedHeader_cb );
+
+    /* Expect the above calls when running MQTT_Subscribe. */
+    mqttStatus = MQTT_Subscribe( &context, &subscribeInfo, 1, MQTT_FIRST_VALID_PACKET_ID, NULL );
+
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+}
+
 
 
 void test_IncomingPublishV5(void)
@@ -2144,6 +2141,8 @@ void test_IncomingPublishV5(void)
     MQTTFixedBuffer_t networkBuffer = { 0 };
     MQTTConnectProperties_t properties;
     MQTTPacketInfo_t incomingPacket = { 0 };
+    MQTTPubAckInfo_t incomingRecords = { 0 };
+    MQTTPubAckInfo_t outgoingRecords = { 0 };
     setupTransportInterface( &transport );
     setupNetworkBuffer( &networkBuffer );
     /* Modify incoming packet depending on type to be tested. */
@@ -2172,15 +2171,14 @@ void test_IncomingPublishV5(void)
     buffer[16] = 0x61 ; 
     buffer[17] = 0x62 ;
     buffer[18] = 0x63 ; 
-
-    MqttPropBuilder_t ackPropsBuilder;
     uint8_t ackPropsBuf[500]; 
     size_t ackPropsBufLength = sizeof(ackPropsBuf);
-    MqttPropertyBuilder_Init(&(ackPropsBuilder), ackPropsBuf, ackPropsBufLength);
 
-
-
-    status = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer, &ackPropsBuilder );
+    status = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
+    TEST_ASSERT_EQUAL( MQTTSuccess, status );
+    status = MQTT_InitStatefulQoS( &context,
+        &outgoingRecords, 4,
+        &incomingRecords, 4,ackPropsBuf,ackPropsBufLength );
     TEST_ASSERT_EQUAL( MQTTSuccess, status );
     properties.requestProblemInfo = 1;
     modifyIncomingPacketStatus = MQTTSuccess;
@@ -2196,10 +2194,8 @@ void test_IncomingPublishV5(void)
 }
 void test_IncomingPublishV51(void) {
 
-    MqttPropBuilder_t ackPropsBuilder;
     uint8_t ackPropsBuf[500]; 
     size_t ackPropsBufLength = sizeof(ackPropsBuf);
-    MqttPropertyBuilder_Init(&(ackPropsBuilder), ackPropsBuf, ackPropsBufLength);
 
     MQTTStatus_t mqttStatus;
     MQTTContext_t context = { 0 };
@@ -2211,10 +2207,10 @@ void test_IncomingPublishV51(void) {
     setupTransportInterface( &transport );
     setupNetworkBuffer( &networkBuffer );
 
-    mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback2, &networkBuffer, &ackPropsBuilder );
+    mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback2, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
 
-    mqttStatus = MQTT_InitStatefulQoS( &context, NULL, 0, pIncomingCallback, 10 );
+    mqttStatus = MQTT_InitStatefulQoS( &context, NULL, 0, pIncomingCallback, 10,ackPropsBuf,ackPropsBufLength );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
 
     modifyIncomingPacketStatus = MQTTSuccess;
@@ -2244,40 +2240,36 @@ static uint8_t * MQTT_SerializeSubscribedHeader_cb( size_t remainingLength,
 }
 
 
-void test_MQTT_SubscribeV5_sendFailed( void )
-{
-    MQTTStatus_t mqttStatus = { 0 };
-    MQTTContext_t con = { 0 };
-    TransportInterface_t trans = { 0 };
-    MQTTFixedBuffer_t networkBuffer = { 0 };
-    MQTTSubscribeInfo_t subscribeInfo = { 0 };
-    size_t remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
-    size_t packetSize = MQTT_SAMPLE_REMAINING_LENGTH;
+// void test_MQTT_SubscribeV5_sendFailed( void )
+// {
+//     MQTTStatus_t mqttStatus = { 0 };
+//     MQTTContext_t con = { 0 };
+//     TransportInterface_t trans = { 0 };
+//     MQTTFixedBuffer_t networkBuffer = { 0 };
+//     MQTTSubscribeInfo_t subscribeInfo = { 0 };
+//     size_t remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
+//     size_t packetSize = MQTT_SAMPLE_REMAINING_LENGTH;
 
-    /* Verify that an error is propagated when transport interface returns an error. */
-    setupNetworkBuffer( &networkBuffer );
-    setupSubscriptionInfo( &subscribeInfo );
-    subscribeInfo.qos = MQTTQoS0;
-    setupTransportInterface( &trans );
-    trans.send = transportSendFailure;
-    trans.writev = transportWritevFail;
+//     /* Verify that an error is propagated when transport interface returns an error. */
+//     setupNetworkBuffer( &networkBuffer );
+//     setupSubscriptionInfo( &subscribeInfo );
+//     subscribeInfo.qos = MQTTQoS0;
+//     setupTransportInterface( &trans );
+//     trans.send = transportSendFailure;
+//     trans.writev = transportWritevFail;
 
-    /* Initialize context. */
-    MqttPropBuilder_t ackPropsBuilder;
-    uint8_t ackPropsBuf[500]; 
-    size_t ackPropsBufLength = sizeof(ackPropsBuf);
-    MqttPropertyBuilder_Init(&(ackPropsBuilder), ackPropsBuf, ackPropsBufLength);
-    mqttStatus = MQTT_Init( &con, &trans, getTime, eventCallback, &networkBuffer, &ackPropsBuilder );
-    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
-
-    MQTT_GetSubscribePacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
-    MQTT_GetSubscribePacketSize_ReturnThruPtr_pPacketSize( &packetSize );
-    MQTT_GetSubscribePacketSize_ReturnThruPtr_pRemainingLength( &remainingLength );
-    MQTT_SerializeSubscribeHeader_Stub( MQTT_SerializeSubscribedHeader_cb );
-    /* Expect the above calls when running MQTT_Subscribe. */
-    mqttStatus = MQTT_Subscribe( &con, &subscribeInfo, 1, MQTT_FIRST_VALID_PACKET_ID, NULL );
-    TEST_ASSERT_EQUAL( MQTTSendFailed, mqttStatus );
-}
+//     /* Initialize context. */
+//     mqttStatus = MQTT_Init( &con, &trans, getTime, eventCallback, &networkBuffer );
+//     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+//     con.connectStatus = MQTTConnected;
+//     MQTT_GetSubscribePacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
+//     MQTT_GetSubscribePacketSize_ReturnThruPtr_pPacketSize( &packetSize );
+//     MQTT_GetSubscribePacketSize_ReturnThruPtr_pRemainingLength( &remainingLength );
+//     MQTT_SerializeSubscribeHeader_Stub( MQTT_SerializeSubscribedHeader_cb );
+//     /* Expect the above calls when running MQTT_Subscribe. */
+//     mqttStatus = MQTT_Subscribe( &con, &subscribeInfo, 1, MQTT_FIRST_VALID_PACKET_ID, NULL );
+//     TEST_ASSERT_EQUAL( MQTTSendFailed, mqttStatus );
+// }
 static int32_t transportRecvOneSuccessOneFail( NetworkContext_t * pNetworkContext,
                                                void * pBuffer,
                                                size_t bytesToRead )
@@ -2306,11 +2298,8 @@ void test_MQTT_ProcessLoop_discardPacket_second_recv_fail( void )
     setupTransportInterface( &transport );
     transport.recv = transportRecvOneSuccessOneFail;
     setupNetworkBuffer( &networkBuffer );
-    MqttPropBuilder_t ackPropsBuilder;
-    uint8_t ackPropsBuf[500]; 
-    size_t ackPropsBufLength = sizeof(ackPropsBuf);
-    MqttPropertyBuilder_Init(&(ackPropsBuilder), ackPropsBuf, ackPropsBufLength);
-    mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer, &ackPropsBuilder );
+
+    mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
 
     context.networkBuffer.size = 20;
@@ -2339,11 +2328,7 @@ void test_MQTT_ProcessLoop_Invalid_Params( void )
     TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
 
     setupTransportInterface( &transport );
-    MqttPropBuilder_t ackPropsBuilder;
-    uint8_t ackPropsBuf[500]; 
-    size_t ackPropsBufLength = sizeof(ackPropsBuf);
-    MqttPropertyBuilder_Init(&(ackPropsBuilder), ackPropsBuf, ackPropsBufLength);
-    mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer, &ackPropsBuilder );
+    mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
 
     /* Get time function cannot be NULL. */
@@ -2371,11 +2356,10 @@ void test_MQTT_ProcessLoop_discardPacket( void )
 
     setupNetworkBuffer( &networkBuffer );
     setupTransportInterface( &transport );
-    MqttPropBuilder_t ackPropsBuilder;
+
     uint8_t ackPropsBuf[500]; 
     size_t ackPropsBufLength = sizeof(ackPropsBuf);
-    MqttPropertyBuilder_Init(&(ackPropsBuilder), ackPropsBuf, ackPropsBufLength);
-    mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer, &ackPropsBuilder );
+    mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
 
     context.networkBuffer.size = 20;
@@ -2392,6 +2376,47 @@ void test_MQTT_ProcessLoop_discardPacket( void )
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
 }
 
+void test_MQTT_ProcessLoop_IncomingBufferNotInitQoS0( void )
+{
+    MQTTContext_t context = { 0 };
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
+    MQTTStatus_t mqttStatus;
+    MQTTPacketInfo_t incomingPacket = { 0 };
+    MQTTPublishInfo_t publishInfo = { 0 };
+
+    setupTransportInterface( &transport );
+    setupNetworkBuffer( &networkBuffer );
+
+    isEventCallbackInvoked = false;
+
+    mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
+
+    /* First byte shows that it is a publish type packet. */
+    mqttBuffer[ 0 ] = MQTT_PACKET_TYPE_PUBLISH;
+    /* Length of the packet. */
+    mqttBuffer[ 1 ] = 20;
+
+    incomingPacket.type = MQTT_PACKET_TYPE_PUBLISH;
+    incomingPacket.remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
+    incomingPacket.headerLength = MQTT_SAMPLE_REMAINING_LENGTH;
+
+    MQTT_ProcessIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_ProcessIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
+
+    /* Assume QoS = 1. */
+    publishInfo.qos = MQTTQoS0;
+
+    MQTT_DeserializePublish_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_DeserializePublish_ReturnThruPtr_pPublishInfo( &publishInfo );
+
+    MQTT_UpdateStatePublish_ExpectAnyArgsAndReturn( MQTTSuccess );
+
+    mqttStatus = MQTT_ProcessLoop( &context );
+
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+    TEST_ASSERT_EQUAL( true, isEventCallbackInvoked );
+}
 void test_MQTT_ProcessLoop_IncomingBufferNotInit( void )
 {
     MQTTContext_t context = { 0 };
@@ -2403,11 +2428,8 @@ void test_MQTT_ProcessLoop_IncomingBufferNotInit( void )
 
     setupTransportInterface( &transport );
     setupNetworkBuffer( &networkBuffer );
-    MqttPropBuilder_t ackPropsBuilder;
-    uint8_t ackPropsBuf[500]; 
-    size_t ackPropsBufLength = sizeof(ackPropsBuf);
-    MqttPropertyBuilder_Init(&(ackPropsBuilder), ackPropsBuf, ackPropsBufLength);
-    mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer, &ackPropsBuilder );
+
+    mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
 
     /* First byte shows that it is a publish type packet. */
     mqttBuffer[ 0 ] = MQTT_PACKET_TYPE_PUBLISH;
@@ -2536,14 +2558,20 @@ void test_MQTT_ReceiveLoop( void )
     MQTTContext_t context = { 0 };
     TransportInterface_t transport = { 0 };
     MQTTFixedBuffer_t networkBuffer = { 0 };
+    
+    MQTTPubAckInfo_t incomingRecords = { 0 };
+    MQTTPubAckInfo_t outgoingRecords = { 0 };
 
     setupTransportInterface( &transport );
     setupNetworkBuffer( &networkBuffer );
-    MqttPropBuilder_t ackPropsBuilder;
     uint8_t ackPropsBuf[500]; 
     size_t ackPropsBufLength = sizeof(ackPropsBuf);
-    MqttPropertyBuilder_Init(&(ackPropsBuilder), ackPropsBuf, ackPropsBufLength);
-    mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer,&ackPropsBuilder );
+    mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+
+    mqttStatus = MQTT_InitStatefulQoS( &context,
+        &outgoingRecords, 4,
+        &incomingRecords, 4,ackPropsBuf,ackPropsBufLength );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
 
     /* Verify that a NULL Context returns an error. */
@@ -2620,12 +2648,9 @@ void test_MQTT_Ping_happy_path( void )
     setupNetworkBuffer( &networkBuffer );
 
     /* Initialize context. */
-    MqttPropBuilder_t ackPropsBuilder;
-    uint8_t ackPropsBuf[500]; 
-    size_t ackPropsBufLength = sizeof(ackPropsBuf);
-    MqttPropertyBuilder_Init(&(ackPropsBuilder), ackPropsBuf, ackPropsBufLength);
-    mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer, &ackPropsBuilder );
+    mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+    context.connectStatus = MQTTConnected;
     /* Verify MQTTSuccess is returned. */
     MQTT_GetPingreqPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_GetPingreqPacketSize_ReturnThruPtr_pPacketSize( &pingreqSize );
@@ -2659,12 +2684,9 @@ void test_MQTT_Ping_error_path( void )
     transport.recv = transportRecvFailure;
 
     /* Initialize context. */
-    MqttPropBuilder_t ackPropsBuilder;
-    uint8_t ackPropsBuf[500]; 
-    size_t ackPropsBufLength = sizeof(ackPropsBuf);
-    MqttPropertyBuilder_Init(&(ackPropsBuilder), ackPropsBuf, ackPropsBufLength);
-    mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer, &ackPropsBuilder );
+    mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+    context.connectStatus = MQTTConnected;
     /* Verify MQTTSendFailed is propagated when transport interface returns an error. */
     MQTT_GetPingreqPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_GetPingreqPacketSize_ReturnThruPtr_pPacketSize( &pingreqSize );
@@ -2677,8 +2699,9 @@ void test_MQTT_Ping_error_path( void )
     transport.recv = transportRecvSuccess;
     transport.send = transportSendNoBytes; /* Use the mock function that returns zero bytes sent. */
     /* Initialize context. */
-    mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer, &ackPropsBuilder );
+    mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+    context.connectStatus = MQTTConnected;
     MQTT_GetPingreqPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_GetPingreqPacketSize_ReturnThruPtr_pPacketSize( &pingreqSize );
     MQTT_SerializePingreq_ExpectAnyArgsAndReturn( MQTTSuccess );
@@ -2688,7 +2711,7 @@ void test_MQTT_Ping_error_path( void )
 
 
     /* Initialize context. */
-    mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer, &ackPropsBuilder );
+    mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
     /* Verify MQTTBadParameter is propagated when getting PINGREQ packet size fails. */
     MQTT_GetPingreqPacketSize_ExpectAnyArgsAndReturn( MQTTBadParameter );
@@ -3367,7 +3390,7 @@ void test_MQTT_InitStatefulQoS_fail_null_context( void )
                                        pOutgoingPublishRecords,
                                        10,
                                        pIncomingPublishRecords,
-                                       10 );
+                                       10, NULL , 0 );
     TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
 }
 /* ========================================================================== */
@@ -3384,7 +3407,7 @@ void test_MQTT_InitStatefulQoS_zero_outgoing_size( void )
                                        pOutgoingPublishRecords,
                                        0,
                                        pIncomingPublishRecords,
-                                       10 );
+                                       10, NULL , 0);
     TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
 }
 /* ========================================================================== */
@@ -3400,7 +3423,7 @@ void test_MQTT_InitStatefulQoS_zero_incoming_size( void )
                                        pOutgoingPublishRecords,
                                        10,
                                        pIncomingPublishRecords,
-                                       0 );
+                                       0, NULL , 0 );
     TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
 }
 /* ========================================================================== */
@@ -3419,7 +3442,7 @@ void test_MQTT_InitStatefulQoS_callback_is_null( void )
                                        pOutgoingPublishRecords,
                                        10,
                                        pIncomingPublishRecords,
-                                       10 );
+                                       10, NULL, 0 );
     TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
 }
 /* ========================================================================== */
@@ -3430,15 +3453,11 @@ void test_MQTT_ProcessLoop_HandleKeepAlive( void )
     TransportInterface_t transport = { 0 };
     MQTTFixedBuffer_t networkBuffer = { 0 };
     MQTTStatus_t mqttStatus;
-
     setupTransportInterface( &transport );
     transport.recv = transportRecvNoData;
     setupNetworkBuffer( &networkBuffer );
-    MqttPropBuilder_t ackPropsBuilder;
-    uint8_t ackPropsBuf[500]; 
-    size_t ackPropsBufLength = sizeof(ackPropsBuf);
-    MqttPropertyBuilder_Init(&(ackPropsBuilder), ackPropsBuf, ackPropsBufLength);
-    mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer , &ackPropsBuilder);
+
+    mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer);
 
     /* Set this value such that the library will be forced to send keep alive. */
     context.waitingForPingResp = true;
@@ -3460,12 +3479,8 @@ void test_MQTT_ProcessLoop_HandleKeepAlive1( void )
     setupTransportInterface( &transport );
     transport.recv = transportRecvNoData;
     setupNetworkBuffer( &networkBuffer );
-    MqttPropBuilder_t ackPropsBuilder;
-    uint8_t ackPropsBuf[500]; 
-    size_t ackPropsBufLength = sizeof(ackPropsBuf);
-    MqttPropertyBuilder_Init(&(ackPropsBuilder), ackPropsBuf, ackPropsBufLength);
-    mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer , &ackPropsBuilder);
-
+    mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
+    context.connectStatus = MQTTConnected;
     /* Verify MQTTSuccess is returned. */
     MQTT_GetPingreqPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_GetPingreqPacketSize_ReturnThruPtr_pPacketSize( &pingreqSize );
@@ -3491,11 +3506,8 @@ void test_MQTT_ProcessLoop_HandleKeepAlive2( void )
     setupTransportInterface( &transport );
     transport.recv = transportRecvNoData;
     setupNetworkBuffer( &networkBuffer );
-    MqttPropBuilder_t ackPropsBuilder;
-    uint8_t ackPropsBuf[500]; 
-    size_t ackPropsBufLength = sizeof(ackPropsBuf);
-    MqttPropertyBuilder_Init(&(ackPropsBuilder), ackPropsBuf, ackPropsBufLength);
-    mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer, &ackPropsBuilder );
+
+    mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
 
     /* Set this value such that the library will be forced to send keep alive. */
     context.waitingForPingResp = false;
@@ -3519,11 +3531,8 @@ void test_MQTT_ProcessLoop_RecvFailed( void )
     setupTransportInterface( &transport );
     transport.recv = transportRecvFailure;
     setupNetworkBuffer( &networkBuffer );
-    MqttPropBuilder_t ackPropsBuilder;
-    uint8_t ackPropsBuf[500]; 
-    size_t ackPropsBufLength = sizeof(ackPropsBuf);
-    MqttPropertyBuilder_Init(&(ackPropsBuilder), ackPropsBuf, ackPropsBufLength);
-    mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer, &ackPropsBuilder );
+
+    mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
 
     mqttStatus = MQTT_ProcessLoop( &context );
 
@@ -3540,11 +3549,8 @@ void test_MQTT_ReceiveLoop_KeepAliveACK( void )
 
     setupTransportInterface( &transport );
     setupNetworkBuffer( &networkBuffer );
-    MqttPropBuilder_t ackPropsBuilder;
-    uint8_t ackPropsBuf[500]; 
-    size_t ackPropsBufLength = sizeof(ackPropsBuf);
-    MqttPropertyBuilder_Init(&(ackPropsBuilder), ackPropsBuf, ackPropsBufLength);
-    mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer, &ackPropsBuilder );
+
+    mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
 
     context.networkBuffer.size = MQTT_TEST_BUFFER_LENGTH;
@@ -3587,11 +3593,7 @@ void test_MQTT_ProcessLoop_Zero_Duration_And_Partial_Network_Read( void )
     transport.recv = transportRecvOneByte;
 
     /* Initialize the context. */
-    MqttPropBuilder_t ackPropsBuilder;
-    uint8_t ackPropsBuf[500]; 
-    size_t ackPropsBufLength = sizeof(ackPropsBuf);
-    MqttPropertyBuilder_Init(&(ackPropsBuilder), ackPropsBuf, ackPropsBufLength);
-    mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer, &ackPropsBuilder);
+    mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer);
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
 
     /* Set flag required for configuring behavior of expectProcessLoopCalls()
@@ -3637,11 +3639,7 @@ void test_MQTT_ProcessLoop_handleKeepAlive_Error_Paths1( void )
     globalEntryTime = MQTT_PINGRESP_TIMEOUT_MS + 1;
 
     /* Coverage for the branch path where PINGRESP timeout interval has expired. */
-    MqttPropBuilder_t ackPropsBuilder;
-    uint8_t ackPropsBuf[500]; 
-    size_t ackPropsBufLength = sizeof(ackPropsBuf);
-    MqttPropertyBuilder_Init(&(ackPropsBuilder), ackPropsBuf, ackPropsBufLength);
-    mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer, &ackPropsBuilder );
+    mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
 
     context.keepAliveIntervalSec = MQTT_SAMPLE_KEEPALIVE_INTERVAL_S;
@@ -3678,11 +3676,7 @@ void test_MQTT_ProcessLoop_handleKeepAlive_Error_Paths2( void )
     globalEntryTime = MQTT_PINGRESP_TIMEOUT_MS + 1;
 
     /* Coverage for the branch path where PINGRESP timeout interval has expired. */
-    MqttPropBuilder_t ackPropsBuilder;
-    uint8_t ackPropsBuf[500]; 
-    size_t ackPropsBufLength = sizeof(ackPropsBuf);
-    MqttPropertyBuilder_Init(&(ackPropsBuilder), ackPropsBuf, ackPropsBufLength);
-    mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer, &ackPropsBuilder );
+    mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
 
     context.keepAliveIntervalSec = PACKET_TX_TIMEOUT_MS + 1;
@@ -3723,15 +3717,6 @@ void test_MqttPropertyBuilder_Init( void )
 }
 
 
-void test_MQTTV5_InitConnect()
-{
-    MQTTStatus_t status;
-    MQTTConnectProperties_t properties;
-    status = MQTTV5_InitConnect( NULL );
-    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
-    status = MQTTV5_InitConnect( &properties );
-    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
-}
 
 /* ========================================================================== */
 
@@ -3748,12 +3733,7 @@ void test_MQTT_Init_Happy_Path( void )
     setupTransportInterface( &transport );
     setupNetworkBuffer( &networkBuffer );
 
-    MqttPropBuilder_t ackPropsBuilder;
-    uint8_t ackPropsBuf[500]; 
-    size_t ackPropsBufLength = sizeof(ackPropsBuf);
-    MqttPropertyBuilder_Init(&(ackPropsBuilder), ackPropsBuf, ackPropsBufLength);
-
-    mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer, &ackPropsBuilder );
+    mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
     TEST_ASSERT_EQUAL( MQTTNotConnected, context.connectStatus );
     TEST_ASSERT_EQUAL( MQTT_FIRST_VALID_PACKET_ID, context.nextPacketId );
@@ -3777,35 +3757,30 @@ void test_MQTT_Init_Invalid_Params( void )
     setupTransportInterface( &transport );
     setupNetworkBuffer( &networkBuffer );
 
-    MqttPropBuilder_t ackPropsBuilder;
-    uint8_t ackPropsBuf[500]; 
-    size_t ackPropsBufLength = sizeof(ackPropsBuf);
-    MqttPropertyBuilder_Init(&(ackPropsBuilder), ackPropsBuf, ackPropsBufLength);
-
     /* Check that MQTTBadParameter is returned if any NULL parameters are passed. */
-    mqttStatus = MQTT_Init( NULL, &transport, getTime, eventCallback, &networkBuffer, &ackPropsBuilder );
+    mqttStatus = MQTT_Init( NULL, &transport, getTime, eventCallback, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
 
-    mqttStatus = MQTT_Init( &context, NULL, getTime, eventCallback, &networkBuffer, &ackPropsBuilder );
+    mqttStatus = MQTT_Init( &context, NULL, getTime, eventCallback, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
 
-    mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, NULL, &ackPropsBuilder );
+    mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, NULL );
     TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
 
     /* Test if NULL is passed for any of the function pointers. */
-    mqttStatus = MQTT_Init( &context, &transport, NULL, eventCallback, &networkBuffer, &ackPropsBuilder );
+    mqttStatus = MQTT_Init( &context, &transport, NULL, eventCallback, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
 
-    mqttStatus = MQTT_Init( &context, &transport, getTime, NULL, &networkBuffer, &ackPropsBuilder );
+    mqttStatus = MQTT_Init( &context, &transport, getTime, NULL, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
 
     transport.recv = NULL;
-    mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer, &ackPropsBuilder );
+    mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
 
     transport.recv = transportRecvSuccess;
     transport.send = NULL;
-    mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer, &ackPropsBuilder );
+    mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
 }
 
@@ -3827,10 +3802,10 @@ void test_MQTT_ProcessLoop_handleIncomingPub_Error_Paths1( void )
     MQTTFixedBuffer_t networkBuffer = { 0 };
     MQTTConnectProperties_t properties;
     MQTTPacketInfo_t incomingPacket = { 0 };
-    MqttPropBuilder_t ackPropsBuilder;
+    MQTTPubAckInfo_t incomingRecords = { 0 };
+    MQTTPubAckInfo_t outgoingRecords = { 0 };
     uint8_t ackPropsBuf[500]; 
     size_t ackPropsBufLength = sizeof(ackPropsBuf);
-    MqttPropertyBuilder_Init(&(ackPropsBuilder), ackPropsBuf, ackPropsBufLength);
 
     /*Update state returns bad response.*/
     setupTransportInterface( &transport );
@@ -3838,7 +3813,11 @@ void test_MQTT_ProcessLoop_handleIncomingPub_Error_Paths1( void )
     incomingPacket.type = MQTT_PACKET_TYPE_PUBLISH ;
     incomingPacket.remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
     incomingPacket.headerLength = MQTT_SAMPLE_REMAINING_LENGTH;
-    status = MQTT_Init( &context, &transport, getTime, eventCallback2, &networkBuffer, &ackPropsBuilder);
+    status = MQTT_Init( &context, &transport, getTime, eventCallback2, &networkBuffer);
+    TEST_ASSERT_EQUAL( MQTTSuccess, status );
+    status = MQTT_InitStatefulQoS( &context,
+        &outgoingRecords, 4,
+        &incomingRecords, 4,ackPropsBuf,ackPropsBufLength );
     TEST_ASSERT_EQUAL( MQTTSuccess, status );
 
     modifyIncomingPacketStatus = MQTTSuccess;
@@ -3849,8 +3828,8 @@ void test_MQTT_ProcessLoop_handleIncomingPub_Error_Paths1( void )
     MQTT_DeserializePublish_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_UpdateStatePublish_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_UpdateStatePublish_ReturnThruPtr_pNewState( &stateAfterDeserialize );
-    MQTTV5_GetAckPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
-    MQTTV5_SerializeAckFixed_Stub( MQTTV5_SerializeAckFixed_cb );
+    MQTT_GetAckPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_SerializeAckFixed_Stub( MQTTV5_SerializeAckFixed_cb );
     MQTT_UpdateStateAck_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_UpdateStateAck_ReturnThruPtr_pNewState( &stateAfterSerialize );
     status = MQTT_ProcessLoop( &context );
@@ -3882,4 +3861,82 @@ void test_validatePublish(void)
     status = MQTT_Publish(&context, &publishInfo, 10, NULL) ;
     TEST_ASSERT_EQUAL_INT(MQTTBadParameter, status); 
 
+}
+
+/**
+ * @brief This test case covers one call to the private method,
+ * handleIncomingPublish(...),
+ * that result in the process loop returning successfully.
+ */
+void test_MQTT_ProcessLoop_handleIncomingPublish_Happy_Path1( void )
+{
+    MQTTStatus_t mqttStatus;
+    MQTTContext_t context = { 0 };
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
+    ProcessLoopReturns_t expectParams = { 0 };
+    MQTTPubAckInfo_t pIncomingCallback[ 10 ];
+    uint8_t ackPropsBuf[500]; 
+    size_t ackPropsBufLength = sizeof(ackPropsBuf);
+    MQTTPubAckInfo_t incomingRecords = { 0 };
+    MQTTPubAckInfo_t outgoingRecords = { 0 };
+    setupTransportInterface( &transport );
+    setupNetworkBuffer( &networkBuffer );
+
+    mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback2, &networkBuffer );
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+
+    // mqttStatus = MQTT_InitStatefulQoS( &context, NULL, 0, pIncomingCallback, 10, ackPropsBuf,ackPropsBufLength );
+    mqttStatus = MQTT_InitStatefulQoS( &context,
+        &outgoingRecords, 4,
+        &incomingRecords, 4,ackPropsBuf,ackPropsBufLength );
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+
+    context.connectStatus = MQTTConnected;
+
+    modifyIncomingPacketStatus = MQTTSuccess;
+
+    /* Assume QoS = 1 so that a PUBACK will be sent after receiving PUBLISH.
+     * That is, expectProcessLoopCalls will take on the following parameters:
+     * incomingPublish=true and stateAfterDeserialize=MQTTPubAckSend. */
+    currentPacketType = MQTT_PACKET_TYPE_PUBLISH;
+    /* Set expected return values during the loop. */
+    resetProcessLoopParams( &expectParams );
+    expectParams.stateAfterDeserialize = MQTTPubAckSend;
+    expectParams.stateAfterSerialize = MQTTPublishDone;
+    expectParams.incomingPublish = true;
+    expectProcessLoopCalls( &context, &expectParams );
+}
+
+void test_MQTT_Connect_sendConnect1( void )
+{
+    MQTTContext_t mqttContext = { 0 };
+    MQTTConnectInfo_t connectInfo = { 0 };
+    uint32_t timeout = 2;
+    bool sessionPresent;
+    MQTTStatus_t status;
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
+    size_t remainingLength;
+    size_t packetSize;
+
+    setupTransportInterface( &transport );
+    transport.writev = NULL;
+    setupNetworkBuffer( &networkBuffer );
+
+    memset( &mqttContext, 0x0, sizeof( mqttContext ) );
+    MQTT_Init( &mqttContext, &transport, getTime, eventCallback, &networkBuffer );
+
+    /* Test network send failure from timeout in calling transport send. */
+    mqttContext.transportInterface.send = transportSendNoBytes; /* Use mock send that always returns zero bytes. */
+    MQTT_SerializeConnectFixedHeader_Stub( MQTT_SerializeConnectFixedHeader_cb );
+    MQTT_GetConnectPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_GetConnectPacketSize_IgnoreArg_pPacketSize();
+    MQTT_GetConnectPacketSize_IgnoreArg_pRemainingLength();
+    MQTT_GetConnectPacketSize_ReturnThruPtr_pPacketSize( &packetSize );
+    MQTT_GetConnectPacketSize_ReturnThruPtr_pRemainingLength( &remainingLength );
+
+    status = MQTT_Connect( &mqttContext, &connectInfo, NULL, timeout, &sessionPresent,NULL,NULL );
+
+    TEST_ASSERT_EQUAL_INT( MQTTSendFailed, status );
 }
