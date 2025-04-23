@@ -624,6 +624,7 @@ static MQTTStatus_t handleSuback( MQTTContext_t * pContext,
  */
 static MQTTStatus_t handleIncomingDisconnect(MQTTContext_t* pContext, MQTTPacketInfo_t* pIncomingPacket);
 
+static MQTTStatus_t validateSharedSubscriptions(const MQTTContext_t* pContext, const MQTTSubscribeInfo_t *pSubscriptionList, const size_t iterator); 
 
 /*-----------------------------------------------------------*/
 
@@ -1993,9 +1994,6 @@ static MQTTStatus_t validateSubscribeUnsubscribeParams(const MQTTContext_t* pCon
 {
     MQTTStatus_t status = MQTTSuccess;
     size_t iterator;
-    bool isSharedSub = false;
-    const char* shareNameEnd;
-    const char* shareNameStart;
 
     /* Validate all the parameters. */
     if ((pContext == NULL) || (pSubscriptionList == NULL))
@@ -2059,39 +2057,7 @@ static MQTTStatus_t validateSubscribeUnsubscribeParams(const MQTTContext_t* pCon
                 }
                 else
                 {
-                    isSharedSub = ((strncmp(pSubscriptionList[iterator].pTopicFilter, "$share/", 7)) == 0);
-                    if (isSharedSub) {
-                        shareNameStart = &(pSubscriptionList[iterator].pTopicFilter[7]);
-                        shareNameEnd = strchr(shareNameStart, (int32_t)'/');
-                        if ((shareNameEnd == NULL) || (shareNameEnd == &(pSubscriptionList[iterator].pTopicFilter[7]))) {
-                            LogError(("Protocol Error : ShareName is not present , missing or empty"));
-                            status = MQTTBadParameter;
-                        }
-                        else if (pSubscriptionList[iterator].noLocalOption) {
-                            LogError(("Protocol Error : noLocalOption cannot be 1 for shared subscriptions"));
-                            status = MQTTBadParameter;
-                        }
-                        else
-                        {
-                            if (pContext->connectProperties.isSharedAvailable == 0U)
-                            {
-                                LogError(("Protocol Error : Shared Subscriptions not allowed"));
-                                status = MQTTBadParameter;
-                            }
-                            else
-                            {
-                                const char* ptr;
-                                for (ptr = shareNameStart; ptr < shareNameEnd; ptr++)
-                                {
-                                    if ((*ptr == '#') || (*ptr == '+'))
-                                    {
-                                        status = MQTTBadParameter;
-                                        break; // Invalid share name
-                                    }
-                                }
-                            }
-                        }
-                    }
+                    status = validateSharedSubscriptions(pContext, pSubscriptionList, iterator) ; 
                 }
             }
         }
@@ -4510,3 +4476,47 @@ static MQTTStatus_t sendDisconnectWithoutCopy( MQTTContext_t * pContext,
 
 
 /*-----------------------------------------------------------*/
+
+static MQTTStatus_t validateSharedSubscriptions(const MQTTContext_t* pContext, const MQTTSubscribeInfo_t *pSubscriptionList, const size_t iterator)
+{
+    MQTTStatus_t status = MQTTSuccess ; 
+    bool isSharedSub = false;
+    const char* shareNameEnd;
+    const char* shareNameStart;
+
+    isSharedSub = ((strncmp(pSubscriptionList[iterator].pTopicFilter, "$share/", 7)) == 0);
+    if (isSharedSub) 
+    {
+        shareNameStart = &(pSubscriptionList[iterator].pTopicFilter[7]);
+        shareNameEnd = strchr(shareNameStart, (int32_t)'/');
+        if ((shareNameEnd == NULL) || (shareNameEnd == &(pSubscriptionList[iterator].pTopicFilter[7]))) {
+            LogError(("Protocol Error : ShareName is not present , missing or empty"));
+            status = MQTTBadParameter;
+        }
+        else if (pSubscriptionList[iterator].noLocalOption) {
+            LogError(("Protocol Error : noLocalOption cannot be 1 for shared subscriptions"));
+            status = MQTTBadParameter;
+        }
+        else
+        {
+            if (pContext->connectProperties.isSharedAvailable == 0U)
+            {
+                LogError(("Protocol Error : Shared Subscriptions not allowed"));
+                status = MQTTBadParameter;
+            }
+            else
+            {
+                const char* ptr;
+                for (ptr = shareNameStart; ptr < shareNameEnd; ptr++)
+                {
+                    if ((*ptr == '#') || (*ptr == '+'))
+                    {
+                        status = MQTTBadParameter;
+                        break; // Invalid share name
+                    }
+                }
+            }
+        }
+    }
+    return status ; 
+}
