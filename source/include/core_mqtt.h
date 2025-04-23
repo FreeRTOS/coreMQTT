@@ -174,48 +174,7 @@ typedef void (* MQTTClearPacketForRetransmit)( struct MQTTContext * pContext,
  * @return True if the copy is successful else false.
  */
 /* @[define_mqtt_retransmitstorepacket] */
-typedef bool ( * MQTTStorePacketForRetransmit)( struct MQTTContext * pContext,
-                                                uint16_t packetId,
-                                                MQTTVec_t * pMqttVec );
-/* @[define_mqtt_retransmitstorepacket] */
 
-/**
- * @brief User defined callback used to retreive a copied publish for resend operation. Used to
- * track any publish retransmit on an unclean session connection.
- *
- * @param[in] pContext Initialised MQTT Context.
- * @param[in] packetId Copied publish packet identifier.
- * @param[out] pSerializedMqttVec Output parameter to store the pointer to the serialized MQTTVec_t
- *                  using MQTT_SerializeMQTTVec.
- * @param[out] pSerializedMqttVecLen Output parameter to return the number of bytes used to store the
- *                  MQTTVec_t. This value should be the same as the one received from MQTT_GetBytesInMQTTVec
- *                  when storing the packet.
- *
- * @return True if the retreive is successful else false.
- */
-/* @[define_mqtt_retransmitretrievepacket] */
-typedef bool ( * MQTTRetrievePacketForRetransmit)( struct MQTTContext * pContext,
-                                                   uint16_t packetId,
-                                                   uint8_t ** pSerializedMqttVec,
-                                                   size_t * pSerializedMqttVecLen );
-/* @[define_mqtt_retransmitretrievepacket] */
-
-/**
- * @brief User defined callback used to clear a particular copied publish packet. Used to
- * track any publish retransmit on an unclean session connection.
- *
- * @param[in] pContext Initialised MQTT Context.
- * @param[in] packetId Copied publish packet identifier.
- */
-/* @[define_mqtt_retransmitclearpacket] */
-typedef void (* MQTTClearPacketForRetransmit)( struct MQTTContext * pContext,
-                                               uint16_t packetId );
-/* @[define_mqtt_retransmitclearpacket] */
-
-/**
- * @ingroup mqtt_enum_types
- * @brief Values indicating if an MQTT connection exists.
- */
 typedef enum MQTTConnectionStatus
 {
     MQTTNotConnected,     /**< @brief MQTT Connection is inactive. */
@@ -796,11 +755,11 @@ MQTTStatus_t MQTT_CheckConnectStatus( const MQTTContext_t * pContext );
 /* @[declare_mqtt_connect] */
 MQTTStatus_t MQTT_Connect(MQTTContext_t* pContext,
     const MQTTConnectInfo_t* pConnectInfo,
-    MQTTPublishInfo_t* pWillInfo,
+    const MQTTPublishInfo_t* pWillInfo,
     uint32_t timeoutMs,
     bool* pSessionPresent,
-    MqttPropBuilder_t* pPropertyBuilder,
-    MqttPropBuilder_t* willPropsBuilder); 
+    const MqttPropBuilder_t* pPropertyBuilder,
+    const MqttPropBuilder_t* willPropsBuilder); 
 /* @[declare_mqtt_connect] */
 
 /**
@@ -859,16 +818,16 @@ MQTTStatus_t MQTT_Connect(MQTTContext_t* pContext,
 /* @[declare_mqtt_subscribe] */
 
 MQTTStatus_t MQTT_Subscribe( MQTTContext_t * pContext,
-    MQTTSubscribeInfo_t * pSubscriptionList,
+    const MQTTSubscribeInfo_t * pSubscriptionList,
     size_t subscriptionCount,
     uint16_t packetId, 
-    MqttPropBuilder_t * pPropertyBuilder) ; 
+    const MqttPropBuilder_t * pPropertyBuilder) ; 
 
 MQTTStatus_t MQTT_Unsubscribe( MQTTContext_t * pContext,
                                const MQTTSubscribeInfo_t * pSubscriptionList,
                                size_t subscriptionCount,
                                uint16_t packetId,
-                               MqttPropBuilder_t* pPropertyBuilder) ;
+                               const MqttPropBuilder_t* pPropertyBuilder) ;
 
 
 /* @[declare_mqtt_subscribe] */
@@ -922,9 +881,9 @@ MQTTStatus_t MQTT_Unsubscribe( MQTTContext_t * pContext,
  */
 /* @[declare_mqtt_publish] */
 MQTTStatus_t MQTT_Publish(MQTTContext_t* pContext,
-    MQTTPublishInfo_t* pPublishInfo,
+    const MQTTPublishInfo_t* pPublishInfo,
     uint16_t packetId,
-    MqttPropBuilder_t* pPropertyBuilder); 
+    const MqttPropBuilder_t* pPropertyBuilder); 
 /* @[declare_mqtt_publish] */
 
 /**
@@ -1269,7 +1228,7 @@ const char * MQTT_Status_strerror( MQTTStatus_t status );
  */
 /* @[declare_mqttv5_disconnect] */
 MQTTStatus_t MQTT_Disconnect(MQTTContext_t* pContext,
-    MqttPropBuilder_t* pPropertyBuilder,
+    const MqttPropBuilder_t* pPropertyBuilder,
     MQTTSuccessFailReasonCode_t reasonCode); 
 /* @[declare_mqttv5_disconnect] */
 

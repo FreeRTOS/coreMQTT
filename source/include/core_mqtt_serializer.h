@@ -189,9 +189,9 @@ typedef enum MQTTSuccessFailReasonCode
 
 
     /*SUBACK reason codes*/
-    MQTT_REASON_SUBACK_GRANTED_QOS_0 = 0x00,
-    MQTT_REASON_SUBACK_GRANTED_QOS_1 = 0x01,
-    MQTT_REASON_SUBACK_GRANTED_QOS_2 = 0x02,
+    MQTT_REASON_SUBACK_GRANTED_QOS0 = 0x00,
+    MQTT_REASON_SUBACK_GRANTED_QOS1 = 0x01,
+    MQTT_REASON_SUBACK_GRANTED_QOS2 = 0x02,
     MQTT_REASON_SUBACK_UNSPECIFIED_ERROR = 0x80,
     MQTT_REASON_SUBACK_IMPLEMENTATION_SPECIFIC_ERROR = 0x83,
     MQTT_REASON_SUBACK_NOT_AUTHORIZED = 0x87,
@@ -471,6 +471,16 @@ typedef enum retainHandling{
 }retainHandling_t; 
 
 
+/**
+ * @brief MQTT Subscription packet types.
+ */
+typedef enum MQTTSubscriptionType
+{
+    MQTT_TYPE_SUBSCRIBE,  /**< @brief The type is a SUBSCRIBE packet. */
+    MQTT_TYPE_UNSUBSCRIBE /**< @brief The type is a UNSUBSCRIBE packet. */
+} MQTTSubscriptionType_t;
+
+
 typedef struct MQTTSubscribeInfo
 {
     /**
@@ -604,8 +614,8 @@ typedef struct MQTTConnectProperties
      * @brief Four Byte Integer representing the Maximum Packet Size the Server is willing to accept.
      */
     uint32_t serverMaxPacketSize;
-
-     /**
+    
+    /**
      * @brief Client identifier assigned by the client.
      */
     const char* pClientIdentifier;
@@ -649,7 +659,7 @@ typedef struct MQTTConnectProperties
  */
 typedef struct MQTTReasonCodeInfo
 {
-    MQTTSuccessFailReasonCode_t * reasonCode;
+    const MQTTSuccessFailReasonCode_t * reasonCode;
     size_t reasonCodeLength ; 
 
 } MQTTReasonCodeInfo_t;
@@ -849,11 +859,11 @@ typedef struct MQTTPacketInfo
 /* @[declare_mqtt_getsubscribepacketsize] */
 
 
-MQTTStatus_t MQTT_GetSubscribePacketSize(MQTTSubscribeInfo_t* pSubscriptionList,
+MQTTStatus_t MQTT_GetSubscribePacketSize(const MQTTSubscribeInfo_t* pSubscriptionList,
     size_t subscriptionCount,
     size_t* pRemainingLength,
     size_t* pPacketSize,
-    size_t propLen,
+    size_t subscribePropLen,
     uint32_t maxPacketSize); 
 
 
@@ -1158,8 +1168,8 @@ MQTTStatus_t MQTT_DeserializePublish(const MQTTPacketInfo_t* pIncomingPacket,
  */
 /* @[declare_mqtt_deserializeack] */
 MQTTStatus_t MQTT_DeserializePing( const MQTTPacketInfo_t * pIncomingPacket,
-                                  uint16_t * pPacketId,
-                                  bool * pSessionPresent );
+                                   const uint16_t * pPacketId,
+                                   const bool * pSessionPresent );
 /* @[declare_mqtt_deserializeack] */
 
 /**
@@ -1451,7 +1461,7 @@ MQTTStatus_t MQTT_DeserializeConnack(MQTTConnectProperties_t* pConnackProperties
  */
 /* @[declare_mqttv5_getconnectpacketsize] */
 MQTTStatus_t MQTT_GetConnectPacketSize(const MQTTConnectInfo_t* pConnectInfo,
-    MQTTPublishInfo_t* pWillInfo,
+    const MQTTPublishInfo_t* pWillInfo,
     size_t propLen,
     size_t willPropLen,
     size_t* pRemainingLength,
@@ -1554,11 +1564,11 @@ MQTTStatus_t MQTT_ValidatePublishParams(const MQTTPublishInfo_t* pPublishInfo, u
  * @endcode
  */
 /* @[declare_mqttv5_getpublishpacketsize] */
-MQTTStatus_t MQTT_GetPublishPacketSize(MQTTPublishInfo_t * pPublishInfo,
+MQTTStatus_t MQTT_GetPublishPacketSize(const MQTTPublishInfo_t * pPublishInfo,
                                         size_t * pRemainingLength,
                                         size_t * pPacketSize ,
                                         uint32_t maxPacketSize, 
-                                        size_t propLen);
+                                        size_t publishPropertyLength);
 /* @[declare_mqttv5_getpublishpacketsize] */
 
 
@@ -1605,7 +1615,7 @@ MQTTStatus_t MQTT_GetPublishPacketSize(MQTTPublishInfo_t * pPublishInfo,
 /* @[declare_MQTT_DeserializePublishAck] */
 MQTTStatus_t MQTT_DeserializePublishAck(const MQTTPacketInfo_t* pIncomingPacket,
                                     uint16_t* pPacketId,
-                                    MQTTReasonCodeInfo_t* pAckInfo,
+                                    MQTTReasonCodeInfo_t* pReasonCode,
                                     bool requestProblem,
                                     uint32_t maxPacketSize,
                                     MqttPropBuilder_t* propBuffer); 
@@ -1681,7 +1691,7 @@ uint8_t* MQTT_SerializeAckFixed(uint8_t* pIndex,
     uint8_t packetType,
     uint16_t packetId,
     size_t remainingLength,
-    uint8_t reasonCode); 
+    MQTTSuccessFailReasonCode_t reasonCode); 
 /** @endcond */
 
 /**
@@ -1848,7 +1858,7 @@ MQTTStatus_t MQTT_DeserializeDisconnect(const MQTTPacketInfo_t* pPacket,
 /*
 * Updating context with connect properties sent by the user
 */
-MQTTStatus_t updateContextWithConnectProps(MqttPropBuilder_t* pPropBuilder, MQTTConnectProperties_t* pConnectProperties); 
+MQTTStatus_t updateContextWithConnectProps(const MqttPropBuilder_t* pPropBuilder, MQTTConnectProperties_t* pConnectProperties); 
 /*
 * API calls for Optional Subscribe Properties
 */
@@ -1857,7 +1867,7 @@ MQTTStatus_t MQTTPropAdd_SubscribeId(MqttPropBuilder_t* pPropertyBuilder, size_t
 /*
 * API call for sending User Properties
 */
-MQTTStatus_t MQTTPropAdd_UserProp(MqttPropBuilder_t* pPropertyBuilder, MQTTUserProperty_t* pUserProperty); 
+MQTTStatus_t MQTTPropAdd_UserProp(MqttPropBuilder_t* pPropertyBuilder, const MQTTUserProperty_t* userProperty); 
 
 MQTTStatus_t MQTTPropAdd_ConnSessionExpiry(MqttPropBuilder_t* pPropertyBuilder, uint32_t sessionExpiry);
 
@@ -1883,7 +1893,7 @@ MQTTStatus_t MQTTPropAdd_PubPayloadFormat(MqttPropBuilder_t* pPropertyBuilder, b
 
 MQTTStatus_t MQTTPropAdd_PubMessageExpiry(MqttPropBuilder_t* pPropertyBuilder, uint32_t messageExpiry); 
 
-MQTTStatus_t MQTTPropAdd_PubTopicAlias(MqttPropBuilder_t* pPropBuilder, uint16_t topicAlias);
+MQTTStatus_t MQTTPropAdd_PubTopicAlias(MqttPropBuilder_t* pPropertyBuilder, uint16_t topicAlias);
 
 
 MQTTStatus_t MQTTPropAdd_PubResponseTopic( MqttPropBuilder_t* pPropertyBuilder,
@@ -1895,7 +1905,7 @@ MQTTStatus_t MQTTPropAdd_PubCorrelationData(MqttPropBuilder_t* pPropertyBuilder,
                                             const void* pCorrelationData,
 
                                             uint16_t correlationLength); 
-MQTTStatus_t MQTTPropAdd_PubContentType(MqttPropBuilder_t* pPropBuilder,
+MQTTStatus_t MQTTPropAdd_PubContentType(MqttPropBuilder_t* pPropertyBuilder,
     const char* contentType,
     uint16_t contentTypeLength);
 
@@ -1903,66 +1913,43 @@ MQTTStatus_t MQTTPropAdd_ReasonString(MqttPropBuilder_t* pPropertyBuilder,
     const char* pReasonString,
     uint16_t reasonStringLength); 
 
-/**
- * @brief Validate the length and decode a utf 8 string.
- *
- * @param[out] pProperty To store the decoded string.
- * @param[out] pLength  Size of the decoded utf-8 string.
- * @param[out] pPropertyLength  Size of the length.
- * @param[out] pUsed Whether the property is decoded before.
- * @param[out]  pIndex Pointer to the current index of the buffer.
- *
- * @return #MQTTSuccess, #MQTTBadResponse and #MQTTBadResponse
- **/
-MQTTStatus_t decodeutf_8(const char** pProperty,
-    uint16_t* pLength,
-    size_t* pPropertyLength,
-    bool* pUsed,
-    const uint8_t** pIndex);
-
-/**
- * @brief Encode a string whose size is at maximum 16 bits in length.
- *
- * @param[out] pDestination Destination buffer for the encoding.
- * @param[in] pSource The source string to encode.
- * @param[in] sourceLength The length of the source string to encode.
- *
- * @return A pointer to the end of the encoded string.
- */
-uint8_t* encodeString(uint8_t* pDestination,
-    const char* pSource,
-    uint16_t sourceLength);
 
 
-MQTTStatus_t validatePublishProperties(uint16_t serverTopicAliasMax, MqttPropBuilder_t* propBuilder, uint16_t *topicAliasMax);
-MQTTStatus_t validateSubscribeProperties(uint8_t isSubscriptionIdAvailable, MqttPropBuilder_t* propBuilder); 
+MQTTStatus_t validatePublishProperties(uint16_t serverTopicAliasMax, const MqttPropBuilder_t* propBuilder, uint16_t *topicAlias);
+MQTTStatus_t validateSubscribeProperties(uint8_t isSubscriptionIdAvailable, const MqttPropBuilder_t* propBuilder); 
 
-MQTTStatus_t MQTTPropGet_PubTopicAlias(MqttPropBuilder_t* propBuilder, uint16_t* topicAlias);
+MQTTStatus_t MQTTPropGet_PubTopicAlias(MqttPropBuilder_t* propBuffer, uint16_t* topicAlias);
 
-MQTTStatus_t MQTTPropGet_PubPayloadFormatIndicator(MqttPropBuilder_t* propBuilder, uint8_t* payloadFormat);
+MQTTStatus_t MQTTPropGet_PubPayloadFormatIndicator(MqttPropBuilder_t* propBuffer, uint8_t* payloadFormat);
 
-MQTTStatus_t MQTTPropGet_PubResponseTopic(MqttPropBuilder_t* propBuilder, const char** responseTopic, uint16_t* responseTopicLength);
+MQTTStatus_t MQTTPropGet_PubResponseTopic(MqttPropBuilder_t* propBuffer, const char** responseTopic, uint16_t* responseTopicLength);
 
-MQTTStatus_t MQTTPropGet_PubCorrelationData(MqttPropBuilder_t* propBuilder, const void** correlationData, uint16_t* correlationLength);
+MQTTStatus_t MQTTPropGet_PubCorrelationData(MqttPropBuilder_t* propBuffer, const void** correlationData, uint16_t* correlationLength);
 
-MQTTStatus_t MQTTPropGet_PubMessageExpiryInterval(MqttPropBuilder_t* propBuilder, uint32_t* msgExpiryInterval);
+MQTTStatus_t MQTTPropGet_PubMessageExpiryInterval(MqttPropBuilder_t* propBuffer, uint32_t* msgExpiryInterval);
 
-MQTTStatus_t MQTTPropGet_PubContentType(MqttPropBuilder_t* propBuilder, const char** pContentType, uint16_t* contentTypeLength);
+MQTTStatus_t MQTTPropGet_PubContentType(MqttPropBuilder_t* propBuffer, const char** pContentType, uint16_t* contentTypeLength);
 
-MQTTStatus_t MQTTPropGet_PubSubscriptionId(MqttPropBuilder_t* propBuilder, size_t* subscriptionId);
+MQTTStatus_t MQTTPropGet_PubSubscriptionId(MqttPropBuilder_t* propBuffer, size_t* subscriptionId);
 
-MQTTStatus_t MQTTPropGet_UserProp(MqttPropBuilder_t* propBuilder,
+MQTTStatus_t MQTTPropGet_UserProp(MqttPropBuilder_t* propBuffer,
     const char** pUserPropKey,
     uint16_t* pUserPropKeyLen,
     const char** pUserPropVal,
     uint16_t* pUserPropValLen);
 
-MQTTStatus_t MQTTPropGet_ReasonString(MqttPropBuilder_t* propBuilder, const char** pReasonString, uint16_t* reasonStringLength);
+MQTTStatus_t MQTTPropGet_ReasonString(MqttPropBuilder_t* propBuffer, const char** pReasonString, uint16_t* reasonStringLength);
 
-MQTTStatus_t MQTTPropGet_DisconnectServerRef(MqttPropBuilder_t* propBuilder, const char** pServerRef, uint16_t* serverRefLength);
-MQTTStatus_t MQTTPropGet_ConnSessionExpiry(MqttPropBuilder_t* propBuilder, uint32_t* sessionExpiry);
+MQTTStatus_t MQTTPropGet_DisconnectServerRef(MqttPropBuilder_t* propBuffer, const char** pServerRef, uint16_t* serverRefLength);
+MQTTStatus_t MQTTPropGet_ConnSessionExpiry(MqttPropBuilder_t* propBuffer, uint32_t* sessionExpiry);
 MQTTStatus_t MQTTPropGet_ConnTopicAliasMax(MqttPropBuilder_t* propBuffer, uint16_t* topicAliasMax); 
-
+MQTTStatus_t MQTTPropGet_ConnReceiveMax(MqttPropBuilder_t* propBuffer, uint16_t* receiveMax);
+MQTTStatus_t MQTTPropGet_ConnMaxQos(MqttPropBuilder_t* propBuffer, uint8_t* maxQos);
+MQTTStatus_t MQTTPropGet_ConnRetainAvailable(MqttPropBuilder_t* propBuffer, uint8_t* retainAvailable);
+MQTTStatus_t MQTTPropGet_ConnMaxPacketSize(MqttPropBuilder_t* propBuffer, uint32_t* maxPacketSize);
+MQTTStatus_t MQTTPropGet_ConnClientId(MqttPropBuilder_t* propBuffer, const char** pClientId, uint16_t* clientIdLength);
+MQTTStatus_t MQTTPropGet_ConnWildcard(MqttPropBuilder_t* propBuffer, uint8_t* isWildCardAvailable);
+MQTTStatus_t MQTTPropGet_ConnSubId(MqttPropBuilder_t* propBuffer, uint8_t* isSubIdAvailable);
 
 MQTTStatus_t MQTT_IncomingGetNextProp(MqttPropBuilder_t* propBuffer, uint8_t* propertyId); 
 

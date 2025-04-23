@@ -25,6 +25,15 @@
   * @file core_mqtt_utils.h
   * @brief utility function used in other files. 
   */
+#ifndef CORE_MQTT_UTILS_H
+#define CORE_MQTT_UTILS_H
+
+/* *INDENT-OFF* */
+#ifdef __cplusplus
+    extern "C" {
+#endif
+/* *INDENT-ON* */
+
 /**
 * @brief Set a bit in an 8-bit unsigned integer.
 */
@@ -40,14 +49,16 @@
 /**
 * @brief Set a bit in an 32-bit unsigned integer.
 */
-#define UINT32_SET_BIT( x, position )      ( ( x ) = ( uint32_t ) ( ( x ) | ( 0x01U << ( position ) ) ) )
+#define UINT32_SET_BIT(x, position) \
+    ((x) = (uint32_t)((x) | ((uint32_t)0x01U << (position))))
 /**
 * @brief Macro for checking if a bit is set in a 4-byte unsigned int.
 *
 * @param[in] x The unsigned int to check.
 * @param[in] position Which bit to check.
 */
-#define UINT32_CHECK_BIT( x, position )    ( ( ( x ) & ( 0x01U << ( position ) ) ) == ( 0x01U << ( position ) ) )
+#define UINT32_CHECK_BIT(x, position) \
+    (((uint32_t)(x) & ((uint32_t)0x01U << (position))) == ((uint32_t)0x01U << (position)))
 /**
 * @brief Get the high byte of a 16-bit unsigned integer.
 */
@@ -79,7 +90,7 @@
 ( ( uint32_t ) ptr[ 3 ] ) )
 
 #define UINT32_GET_BYTE(x, byteNumber) \
-((uint8_t)((x) >> 8 * byteNumber))
+    ((uint8_t)(((uint32_t)(x) >> ((uint8_t)(byteNumber) * 8U)) & 0xFFU))
 
 /**
  * @brief Clear a bit in an 8-bit unsigned integer.
@@ -98,3 +109,13 @@
  */
 uint8_t* encodeVariableLength(uint8_t* pDestination,
                               size_t length) ; 
+
+/* *INDENT-OFF* */
+#ifdef __cplusplus
+    }
+#endif
+/* *INDENT-ON* */
+
+#endif /* ifndef CORE_MQTT_UTILS_H*/
+
+
