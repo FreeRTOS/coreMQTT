@@ -659,7 +659,7 @@ typedef struct MQTTConnectProperties
  */
 typedef struct MQTTReasonCodeInfo
 {
-    uint8_t * reasonCode;
+    const uint8_t * reasonCode;
     size_t reasonCodeLength ; 
 
 } MQTTReasonCodeInfo_t;

@@ -388,7 +388,7 @@ static MQTTStatus_t decodeAndDiscard( size_t * pPropertyLength,
  *
  * @return #MQTTSuccess if variable length and paramters are valid else #MQTTBadParameter.
  */
-static MQTTStatus_t decodeVariableLength( uint8_t * pBuffer,
+static MQTTStatus_t decodeVariableLength( const uint8_t * pBuffer,
                                               size_t * pLength );
 
 /**
@@ -1928,7 +1928,7 @@ MQTTStatus_t MQTT_GetDisconnectPacketSize(  size_t * pRemainingLength,
         LogError( ( "Max packet size cannot be zero." ) );
         status = MQTTBadParameter;
     }
-    else if(validateDisconnectResponse( reasonCode, false ) != MQTTSuccess )
+    else if(validateDisconnectResponse( (uint8_t)reasonCode, false ) != MQTTSuccess )
     {
         LogError( ( "Invalid reason code." ) );
         status = MQTTBadParameter;
@@ -2300,7 +2300,7 @@ static MQTTStatus_t validateConnackParams( const MQTTPacketInfo_t * pIncomingPac
 
 /*-----------------------------------------------------------*/
 
-static MQTTStatus_t decodeVariableLength(uint8_t* pBuffer,
+static MQTTStatus_t decodeVariableLength(const uint8_t* pBuffer,
     size_t* pLength)
 {
     size_t remainingLength = 0;
@@ -2676,8 +2676,8 @@ static MQTTStatus_t logAckResponse( uint8_t reasonCode,
                                       uint16_t packetIdentifier )
 {
     MQTTStatus_t status = MQTTServerRefused;
-
-    switch( reasonCode )
+    /* coverity[misra_c_2012_rule_10_5_violation] */
+    switch( (MQTTSuccessFailReasonCode_t) reasonCode )
     {
         case MQTT_REASON_PUBACK_SUCCESS:
             ( void ) packetIdentifier;
@@ -2739,8 +2739,8 @@ static MQTTStatus_t logSimpleAckResponse( uint8_t reasonCode,
                                             uint16_t packetIdentifier )
 {
     MQTTStatus_t status = MQTTServerRefused;
-
-    switch( reasonCode )
+    /* coverity[misra_c_2012_rule_10_5_violation] */
+    switch( (MQTTSuccessFailReasonCode_t) reasonCode )
     {
         case MQTT_REASON_PUBREL_SUCCESS:
             ( void ) packetIdentifier;
@@ -2841,7 +2841,8 @@ static MQTTStatus_t validateDisconnectResponse(  uint8_t reasonCode,
     MQTTStatus_t status;
 
     /*Validate the reason code.*/
-    switch( reasonCode )
+    /* coverity[misra_c_2012_rule_10_5_violation] */
+    switch( (MQTTSuccessFailReasonCode_t)reasonCode )
     {
         case MQTT_REASON_DISCONNECT_DISCONNECT_WITH_WILL_MESSAGE:
 
