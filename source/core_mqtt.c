@@ -629,7 +629,7 @@ static MQTTStatus_t handleSuback( MQTTContext_t * pContext,
  *
  * @return #MQTTSuccess or #MQTTBadResponse
  */
-static handleIncomingDisconnect(MQTTContext_t* pContext, MQTTPacketInfo_t* pIncomingPacket);
+static MQTTStatus_t handleIncomingDisconnect(MQTTContext_t* pContext, MQTTPacketInfo_t* pIncomingPacket);
 
 
 /*-----------------------------------------------------------*/
@@ -656,7 +656,7 @@ static bool matchEndWildcardsSpecialCases(const char* pTopicFilter,
         matchFound = true;
     }
 
-    /* Check if the next character is "#" or "+" and the topic filter ends in
+    /* Check if the next character is "#" or "+" and the topic filter ends in#define min
      * "/#" or "/+". This check handles the cases to match:
      *
      * - Topic filter "sport/+" with topic "sport/".
@@ -3280,8 +3280,8 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
     /*Updating Incoming Publish Records Max and Outgoing Publish Records Max value*/
     if (status == MQTTSuccess)
     {
-        pContext->incomingPublishRecordMaxCount = min(pContext->connectProperties.receiveMax, pContext->incomingPublishRecordMaxCount); 
-        pContext->outgoingPublishRecordMaxCount = min(pContext->connectProperties.serverReceiveMax, pContext->outgoingPublishRecordMaxCount); 
+        pContext->incomingPublishRecordMaxCount = (((pContext->connectProperties.receiveMax) < (pContext->incomingPublishRecordMaxCount)) ? (pContext->connectProperties.receiveMax) : (pContext->incomingPublishRecordMaxCount));
+        pContext->outgoingPublishRecordMaxCount = (((pContext->connectProperties.serverReceiveMax) < (pContext->outgoingPublishRecordMaxCount)) ? (pContext->connectProperties.serverReceiveMax) : (pContext->outgoingPublishRecordMaxCount));
     }
         if( ( status == MQTTSuccess ) && ( *pSessionPresent != true ) )
         {
@@ -4174,7 +4174,7 @@ static MQTTStatus_t handleSuback( MQTTContext_t * pContext,
 
 /*-----------------------------------------------------------*/
 
-static handleIncomingDisconnect(MQTTContext_t* pContext, MQTTPacketInfo_t* pIncomingPacket)
+static MQTTStatus_t handleIncomingDisconnect(MQTTContext_t* pContext, MQTTPacketInfo_t* pIncomingPacket)
 {
     MQTTStatus_t status = MQTTSuccess;
     const uint8_t* pIndex = NULL;

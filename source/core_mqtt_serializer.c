@@ -3723,7 +3723,7 @@ MQTTStatus_t MQTTPropAdd_SubscribeId(MqttPropBuilder_t* pPropertyBuilder, size_t
         pIndex++;
         pIndex = encodeVariableLength(pIndex, subscriptionId);
         pPropertyBuilder->currentIndex += (size_t)(pIndex - (pPropertyBuilder->pBuffer + pPropertyBuilder->currentIndex));
-        pPropertyBuilder->fieldSet = UINT32_SET_BIT(pPropertyBuilder->fieldSet, MQTT_SUBSCRIPTION_ID_POS);
+        UINT32_SET_BIT(pPropertyBuilder->fieldSet, MQTT_SUBSCRIPTION_ID_POS);
     }
     return status;
 }
