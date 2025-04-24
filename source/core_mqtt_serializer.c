@@ -567,6 +567,10 @@ static MQTTStatus_t validateDisconnectResponse( uint8_t reasonCode,
 static MQTTStatus_t deserializeSubackProperties(MqttPropBuilder_t* propBuffer, uint8_t* pIndex);
 
 static MQTTStatus_t deserializePublishProperties(MQTTPublishInfo_t* pPublishInfo, MqttPropBuilder_t *propBuffer,  uint8_t* pIndex);
+
+static MQTTStatus_t decodeAndDiscardutf_8(size_t* pPropertyLength,
+                                          bool* pUsed,
+                                          uint8_t** pIndex);
 /*-----------------------------------------------------------*/
 
 static size_t variableLengthEncodedSize( size_t length )
@@ -1159,16 +1163,18 @@ MQTTStatus_t MQTT_DeserializeConnack( MQTTConnectProperties_t * pConnackProperti
                                         MqttPropBuilder_t *propBuffer)
 {
     MQTTStatus_t status = MQTTSuccess;
-    size_t propertyLength;
+    size_t propertyLength = 0U;
     size_t remainingLengthSize;
     uint8_t * pVariableHeader = NULL;
-
-    status = validateConnackParams(pIncomingPacket, pSessionPresent);
 
     /*Validate the arguments*/
     if( pConnackProperties == NULL)
     {
         status = MQTTBadParameter;
+    }
+    else
+    {
+        status = validateConnackParams(pIncomingPacket, pSessionPresent);
     }
 
     if( (status == MQTTSuccess) || (status == MQTTServerRefused) )
@@ -2224,6 +2230,46 @@ static MQTTStatus_t decodeAndDiscard( size_t * pPropertyLength,
 
 /*-----------------------------------------------------------*/
 
+static MQTTStatus_t decodeAndDiscardutf_8(size_t* pPropertyLength,
+                                          bool* pUsed,
+                                          uint8_t** pIndex)
+{
+    uint8_t* pVariableHeader = *pIndex;
+    MQTTStatus_t status = MQTTSuccess;
+    uint16_t propertyLength ;
+    /*Protocol error to include the same property twice.*/
+
+    if (*pUsed == true)
+    {
+        status = MQTTBadResponse;
+    }
+    else if (*pPropertyLength < sizeof(uint16_t))
+    {
+        status = MQTTBadResponse;
+    }
+    else
+    {
+        propertyLength = UINT16_DECODE(pVariableHeader);
+        pVariableHeader = &pVariableHeader[sizeof(uint16_t)];
+        *pPropertyLength -= sizeof(uint16_t);
+
+        if (*pPropertyLength < propertyLength)
+        {
+            status = MQTTBadResponse;
+        }
+        else
+        {
+            pVariableHeader = &pVariableHeader[propertyLength];
+            *pPropertyLength -= propertyLength;
+            *pUsed = true;
+        }
+    }
+    *pIndex = pVariableHeader;
+    return status ; 
+}
+
+/*-----------------------------------------------------------*/
+
 static MQTTStatus_t validateConnackParams( const MQTTPacketInfo_t * pIncomingPacket,
                                             bool * pSessionPresent )
 {
@@ -2577,10 +2623,14 @@ static MQTTStatus_t deserializeConnack( MQTTConnectProperties_t * pConnackProper
     bool subId = false;
     bool sharedsub = false;
     bool keepAlive = false;
+    bool responseInfo = false;
+    bool serverReference = false; 
+    bool authMethod = false ; 
+    bool authData = false ; 
+    bool reasonString = false; 
 
     pVariableHeader = &pVariableHeader[ variableLengthEncodedSize( propertyLength ) ];
 
-    /* coverity[misra_c_2012_rule_11_8_violation] */
     propBuffer->pBuffer = pVariableHeader; 
     propBuffer->bufferLength = propertyLength; 
 
@@ -2614,11 +2664,14 @@ static MQTTStatus_t deserializeConnack( MQTTConnectProperties_t * pConnackProper
                 break;
 
             case MQTT_ASSIGNED_CLIENT_ID:
-                status = decodeutf_8( &pConnackProperties->pClientIdentifier, &pConnackProperties->clientIdLength, &propertyLength, &clientId, &pVariableHeader );
+                status = decodeAndDiscardutf_8(&propertyLength, &clientId, &pVariableHeader); 
                 break;
 
             case MQTT_TOPIC_ALIAS_MAX_ID:
                 status = decodeuint16_t( &pConnackProperties->serverTopicAliasMax, &propertyLength, &topicAlias, &pVariableHeader );
+                break;
+            case MQTT_REASON_STRING_ID:
+                status = decodeAndDiscardutf_8( &propertyLength, &reasonString, &pVariableHeader );
                 break;
 
             case MQTT_USER_PROPERTY_ID:
@@ -2641,6 +2694,21 @@ static MQTTStatus_t deserializeConnack( MQTTConnectProperties_t * pConnackProper
                 status = decodeuint16_t( &pConnackProperties->serverKeepAlive, &propertyLength, &keepAlive, &pVariableHeader );
                 break;
 
+            case MQTT_RESPONSE_INFO_ID:
+                status = decodeAndDiscardutf_8(&propertyLength, &responseInfo, &pVariableHeader); 
+                break ; 
+
+            case MQTT_SERVER_REF_ID:
+                status = decodeAndDiscardutf_8(&propertyLength, &serverReference, &pVariableHeader);
+                break ; 
+
+            case MQTT_AUTH_METHOD_ID:
+                status = decodeAndDiscardutf_8(&propertyLength, &authMethod, &pVariableHeader);
+                break ; 
+
+            case MQTT_AUTH_DATA_ID:
+                status = decodeAndDiscardutf_8(&propertyLength, &authData, &pVariableHeader);
+                break ; 
             /*Protocol error to include any other property id.*/
             default:
                 status = MQTTBadResponse;
@@ -2658,6 +2726,11 @@ static MQTTStatus_t deserializeConnack( MQTTConnectProperties_t * pConnackProper
 
         /*Maximum packet size cannot be 0.*/
         else if( ( maxPacket == true ) && ( pConnackProperties->serverMaxPacketSize == 0U ) )
+        {
+            status = MQTTBadResponse;
+        }
+        /*Protocol error to send response information if the client has not requested it.*/
+        else if( ( responseInfo == true ) && ( pConnackProperties->requestResponseInfo == false ) )
         {
             status = MQTTBadResponse;
         }
