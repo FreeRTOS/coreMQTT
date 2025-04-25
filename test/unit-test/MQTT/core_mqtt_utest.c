@@ -1650,7 +1650,7 @@ void test_MQTT_Connect_sendConnect2( void )
 //     status = MQTT_Connect( &mqttContext, &connectInfo, NULL, timeout, &sessionPresent );
 
 //     TEST_ASSERT_EQUAL_INT( MQTTSendFailed, status );
-// }
+}
 
 /**
  * @brief Test MQTT_Connect, except for receiving the CONNACK.
