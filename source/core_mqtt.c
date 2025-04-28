@@ -1404,6 +1404,7 @@ static MQTTStatus_t sendPublishAcks( MQTTContext_t * pContext,
                                          localBuffer.pBuffer,
                                          MQTT_PUBLISH_ACK_PACKET_SIZE );
 
+
                 if( sendResult < ( int32_t ) MQTT_PUBLISH_ACK_PACKET_SIZE )
                 {
                     status = MQTTSendFailed;
@@ -1872,7 +1873,7 @@ static MQTTStatus_t receiveSingleIteration( MQTTContext_t * pContext,
 
         status = MQTT_ProcessIncomingPacketTypeAndLength( pContext->networkBuffer.pBuffer,
                                                           &( pContext->index ),
-                                                          &incomingPacket );
+                                                          &incomingPacket );                                        
 
         totalMQTTPacketLength = incomingPacket.remainingLength + incomingPacket.headerLength;
     }
@@ -4256,32 +4257,27 @@ MQTTStatus_t MqttPropertyBuilder_Init( MqttPropBuilder_t * pPropertyBuilder,
 static MQTTStatus_t MQTT_InitConnect( MQTTConnectProperties_t * pConnectProperties )
 {
     MQTTStatus_t status = MQTTSuccess;
+    assert( pConnectProperties != NULL );
 
-    if( pConnectProperties == NULL )
-    {
-        status = MQTTBadParameter;
-    }
-    else
-    {
-        pConnectProperties->receiveMax = UINT16_MAX;
-        pConnectProperties->maxPacketSize = MQTT_MAX_PACKET_SIZE;
-        pConnectProperties->requestProblemInfo = true;
-        pConnectProperties->serverReceiveMax = UINT16_MAX;
-        pConnectProperties->serverMaxQos = 1U;
-        pConnectProperties->serverMaxPacketSize = MQTT_MAX_PACKET_SIZE;
-        pConnectProperties->isWildcardAvaiable = 1U;
-        pConnectProperties->isSubscriptionIdAvailable = 1U;
-        pConnectProperties->isSharedAvailable = 1U;
-        pConnectProperties->sessionExpiry = 0U;
-        pConnectProperties->topicAliasMax = 0U;
-        pConnectProperties->requestProblemInfo = true;
-        pConnectProperties->requestResponseInfo = false;
-        pConnectProperties->retainAvailable = 1U;
-        pConnectProperties->serverTopicAliasMax = 0U;
-        pConnectProperties->serverKeepAlive = UINT16_MAX;
-        pConnectProperties->pClientIdentifier = NULL;
-        pConnectProperties->clientIdLength = 0U;
-    }
+    pConnectProperties->receiveMax = UINT16_MAX;
+    pConnectProperties->maxPacketSize = MQTT_MAX_PACKET_SIZE;
+    pConnectProperties->requestProblemInfo = true;
+    pConnectProperties->serverReceiveMax = UINT16_MAX;
+    pConnectProperties->serverMaxQos = 1U;
+    pConnectProperties->serverMaxPacketSize = MQTT_MAX_PACKET_SIZE;
+    pConnectProperties->isWildcardAvaiable = 1U;
+    pConnectProperties->isSubscriptionIdAvailable = 1U;
+    pConnectProperties->isSharedAvailable = 1U;
+    pConnectProperties->sessionExpiry = 0U;
+    pConnectProperties->topicAliasMax = 0U;
+    pConnectProperties->requestProblemInfo = true;
+    pConnectProperties->requestResponseInfo = false;
+    pConnectProperties->retainAvailable = 1U;
+    pConnectProperties->serverTopicAliasMax = 0U;
+    pConnectProperties->serverKeepAlive = UINT16_MAX;
+    pConnectProperties->pClientIdentifier = NULL;
+    pConnectProperties->clientIdLength = 0U;
+
 
     return status;
 }

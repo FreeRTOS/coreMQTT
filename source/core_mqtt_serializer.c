@@ -2160,7 +2160,6 @@ MQTTStatus_t MQTT_ProcessIncomingPacketTypeAndLength( const uint8_t * pBuffer,
                                                       MQTTPacketInfo_t * pIncomingPacket )
 {
     MQTTStatus_t status = MQTTSuccess;
-
     if( pIncomingPacket == NULL )
     {
         LogError( ( "Invalid parameter: pIncomingPacket is NULL." ) );
