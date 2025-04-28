@@ -69,7 +69,8 @@ struct MQTTDeserializedInfo;
  * @brief An opaque structure provided by the library to the #MQTTStorePacketForRetransmit function when using #MQTTStorePacketForRetransmit.
  */
 typedef struct MQTTVec MQTTVec_t;
-struct MqttPropBuilder; 
+struct MqttPropBuilder;
+
 /**
  * @ingroup mqtt_callback_types
  * @brief Application provided function to query the time elapsed since a given
@@ -105,10 +106,10 @@ typedef uint32_t (* MQTTGetCurrentTimeFunc_t )( void );
  */
 typedef void (* MQTTEventCallback_t )( struct MQTTContext * pContext,
                                        struct MQTTPacketInfo * pPacketInfo,
-                                       struct MQTTDeserializedInfo * pDeserializedInfo, 
+                                       struct MQTTDeserializedInfo * pDeserializedInfo,
                                        enum MQTTSuccessFailReasonCode * pReasonCode,
-                                       struct MqttPropBuilder* sendPropsBuffer,
-                                       struct MqttPropBuilder* getPropsBuffer);
+                                       struct MqttPropBuilder * sendPropsBuffer,
+                                       struct MqttPropBuilder * getPropsBuffer );
 
 /**
  * @brief User defined callback used to store outgoing publishes. Used to track any publish
@@ -158,7 +159,7 @@ typedef bool ( * MQTTRetrievePacketForRetransmit)( struct MQTTContext * pContext
  */
 /* @[define_mqtt_retransmitclearpacket] */
 typedef void (* MQTTClearPacketForRetransmit)( struct MQTTContext * pContext,
-                                               uint16_t packetId );  
+                                               uint16_t packetId );
 /* @[define_mqtt_retransmitclearpacket] */
 
 /**
@@ -274,8 +275,8 @@ typedef struct MQTTContext
     MQTTFixedBuffer_t networkBuffer;
 
     /**
-    * @brief The buffer used to store properties for outgoing ack packets.
-    */
+     * @brief The buffer used to store properties for outgoing ack packets.
+     */
     MqttPropBuilder_t ackPropsBuffer;
 
     /**
@@ -325,13 +326,13 @@ typedef struct MQTTContext
     bool waitingForPingResp;       /**< @brief If the library is currently awaiting a PINGRESP. */
 
     /**
-    * @brief Connect and Connack Properties.
-    */
+     * @brief Connect and Connack Properties.
+     */
     MQTTConnectProperties_t connectProperties;
 
     /**
-    * @brief To store disconnect information.
-    */
+     * @brief To store disconnect information.
+     */
     MQTTReasonCodeInfo_t * pDisconnectInfo;
 
 
@@ -354,13 +355,15 @@ typedef struct MQTTContext
 
 
 /*
-* @brief Initialize the property builder.
-*
-* @param[out] pPropertyBuilder Property builder to initialize.
-* @param[in] buffer Buffer to store the properties.
-* @param[in] length Length of the buffer.
-*/
-MQTTStatus_t MqttPropertyBuilder_Init(MqttPropBuilder_t* pPropertyBuilder, uint8_t* buffer, size_t length);
+ * @brief Initialize the property builder.
+ *
+ * @param[out] pPropertyBuilder Property builder to initialize.
+ * @param[in] buffer Buffer to store the properties.
+ * @param[in] length Length of the buffer.
+ */
+MQTTStatus_t MqttPropertyBuilder_Init( MqttPropBuilder_t * pPropertyBuilder,
+                                       uint8_t * buffer,
+                                       size_t length );
 
 /**
  * @ingroup mqtt_struct_types
@@ -373,8 +376,7 @@ typedef struct MQTTDeserializedInfo
     uint16_t packetIdentifier;          /**< @brief Packet ID of deserialized packet. */
     MQTTPublishInfo_t * pPublishInfo;   /**< @brief Pointer to deserialized publish info. */
     MQTTStatus_t deserializationResult; /**< @brief Return code of deserialization. */
-    MQTTReasonCodeInfo_t * pReasonCode;       /**< @brief Pointer to deserialized ack info. */
-
+    MQTTReasonCodeInfo_t * pReasonCode; /**< @brief Pointer to deserialized ack info. */
 } MQTTDeserializedInfo_t;
 
 /**
@@ -451,11 +453,11 @@ typedef struct MQTTDeserializedInfo
  * @endcode
  */
 /* @[declare_mqtt_init] */
-MQTTStatus_t MQTT_Init(MQTTContext_t* pContext,
-                        const TransportInterface_t* pTransportInterface,
+MQTTStatus_t MQTT_Init( MQTTContext_t * pContext,
+                        const TransportInterface_t * pTransportInterface,
                         MQTTGetCurrentTimeFunc_t getTimeFunction,
                         MQTTEventCallback_t userCallback,
-                        const MQTTFixedBuffer_t* pNetworkBuffer); 
+                        const MQTTFixedBuffer_t * pNetworkBuffer );
 /* @[declare_mqtt_init] */
 
 /**
@@ -524,13 +526,13 @@ MQTTStatus_t MQTT_Init(MQTTContext_t* pContext,
  * @endcode
  */
 /* @[declare_mqtt_initstatefulqos] */
-MQTTStatus_t MQTT_InitStatefulQoS(MQTTContext_t* pContext,
-    MQTTPubAckInfo_t* pOutgoingPublishRecords,
-    size_t outgoingPublishCount,
-    MQTTPubAckInfo_t* pIncomingPublishRecords,
-    size_t incomingPublishCount,
-    uint8_t* pBuffer,
-    size_t bufferLength);
+MQTTStatus_t MQTT_InitStatefulQoS( MQTTContext_t * pContext,
+                                   MQTTPubAckInfo_t * pOutgoingPublishRecords,
+                                   size_t outgoingPublishCount,
+                                   MQTTPubAckInfo_t * pIncomingPublishRecords,
+                                   size_t incomingPublishCount,
+                                   uint8_t * pBuffer,
+                                   size_t bufferLength );
 /* @[declare_mqtt_initstatefulqos] */
 
 /**
@@ -753,13 +755,13 @@ MQTTStatus_t MQTT_CheckConnectStatus( const MQTTContext_t * pContext );
  * @endcode
  */
 /* @[declare_mqtt_connect] */
-MQTTStatus_t MQTT_Connect(MQTTContext_t* pContext,
-    const MQTTConnectInfo_t* pConnectInfo,
-    const MQTTPublishInfo_t* pWillInfo,
-    uint32_t timeoutMs,
-    bool* pSessionPresent,
-    const MqttPropBuilder_t* pPropertyBuilder,
-    const MqttPropBuilder_t* willPropsBuilder); 
+MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
+                           const MQTTConnectInfo_t * pConnectInfo,
+                           const MQTTPublishInfo_t * pWillInfo,
+                           uint32_t timeoutMs,
+                           bool * pSessionPresent,
+                           const MqttPropBuilder_t * pPropertyBuilder,
+                           const MqttPropBuilder_t * willPropsBuilder );
 /* @[declare_mqtt_connect] */
 
 /**
@@ -818,16 +820,16 @@ MQTTStatus_t MQTT_Connect(MQTTContext_t* pContext,
 /* @[declare_mqtt_subscribe] */
 
 MQTTStatus_t MQTT_Subscribe( MQTTContext_t * pContext,
-    const MQTTSubscribeInfo_t * pSubscriptionList,
-    size_t subscriptionCount,
-    uint16_t packetId, 
-    const MqttPropBuilder_t * pPropertyBuilder) ; 
+                             const MQTTSubscribeInfo_t * pSubscriptionList,
+                             size_t subscriptionCount,
+                             uint16_t packetId,
+                             const MqttPropBuilder_t * pPropertyBuilder );
 
 MQTTStatus_t MQTT_Unsubscribe( MQTTContext_t * pContext,
                                const MQTTSubscribeInfo_t * pSubscriptionList,
                                size_t subscriptionCount,
                                uint16_t packetId,
-                               const MqttPropBuilder_t* pPropertyBuilder) ;
+                               const MqttPropBuilder_t * pPropertyBuilder );
 
 
 /* @[declare_mqtt_subscribe] */
@@ -880,10 +882,10 @@ MQTTStatus_t MQTT_Unsubscribe( MQTTContext_t * pContext,
  * @endcode
  */
 /* @[declare_mqtt_publish] */
-MQTTStatus_t MQTT_Publish(MQTTContext_t* pContext,
-    const MQTTPublishInfo_t* pPublishInfo,
-    uint16_t packetId,
-    const MqttPropBuilder_t* pPropertyBuilder); 
+MQTTStatus_t MQTT_Publish( MQTTContext_t * pContext,
+                           const MQTTPublishInfo_t * pPublishInfo,
+                           uint16_t packetId,
+                           const MqttPropBuilder_t * pPropertyBuilder );
 /* @[declare_mqtt_publish] */
 
 /**
@@ -1227,9 +1229,9 @@ const char * MQTT_Status_strerror( MQTTStatus_t status );
  * #MQTTSuccess otherwise.
  */
 /* @[declare_mqttv5_disconnect] */
-MQTTStatus_t MQTT_Disconnect(MQTTContext_t* pContext,
-    const MqttPropBuilder_t* pPropertyBuilder,
-    MQTTSuccessFailReasonCode_t reasonCode); 
+MQTTStatus_t MQTT_Disconnect( MQTTContext_t * pContext,
+                              const MqttPropBuilder_t * pPropertyBuilder,
+                              MQTTSuccessFailReasonCode_t reasonCode );
 /* @[declare_mqttv5_disconnect] */
 
 
@@ -1262,10 +1264,3 @@ void MQTT_SerializeMQTTVec( uint8_t * pAllocatedMem,
 /* *INDENT-ON* */
 
 #endif /* ifndef CORE_MQTT_H */
-
-
-
-
-
-
-

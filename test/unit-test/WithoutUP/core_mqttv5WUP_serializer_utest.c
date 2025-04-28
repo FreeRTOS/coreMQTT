@@ -321,6 +321,3 @@ void test_MQTTV5_DeserializeDisconnect()
     status = MQTTV5_DeserializeDisconnect( &packetInfo, &disconnectInfo, &pServerRef, &serverRefLength, maxPacketSize );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
 }
-
-
-

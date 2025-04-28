@@ -21,10 +21,11 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
- /**
-  * @file core_mqtt_utils.c
-  * @brief Implements the utility functions in core_mqtt_utils.h.
-  */
+
+/**
+ * @file core_mqtt_utils.c
+ * @brief Implements the utility functions in core_mqtt_utils.h.
+ */
 #include <string.h>
 #include <assert.h>
 #include <stdint.h>
@@ -43,33 +44,33 @@
  *
  * @return The location of the byte following the encoded value.
  */
-uint8_t* encodeVariableLength(uint8_t* pDestination,
-    size_t length)
+uint8_t * encodeVariableLength( uint8_t * pDestination,
+                                size_t length )
 {
     uint8_t lengthByte;
-    uint8_t* pLengthEnd = NULL;
+    uint8_t * pLengthEnd = NULL;
     size_t remainingLength = length;
 
-    assert(pDestination != NULL);
+    assert( pDestination != NULL );
 
     pLengthEnd = pDestination;
 
     /* This algorithm is copied from the MQTT v3.1.1 spec. */
     do
     {
-        lengthByte = (uint8_t)(remainingLength % 128U);
+        lengthByte = ( uint8_t ) ( remainingLength % 128U );
         remainingLength = remainingLength / 128U;
 
         /* Set the high bit of this byte, indicating that there's more data. */
-        if (remainingLength > 0U)
+        if( remainingLength > 0U )
         {
-            UINT8_SET_BIT(lengthByte, 7);
+            UINT8_SET_BIT( lengthByte, 7 );
         }
 
         /* Output a single encoded byte. */
         *pLengthEnd = lengthByte;
         pLengthEnd++;
-    } while (remainingLength > 0U);
+    } while( remainingLength > 0U );
 
     return pLengthEnd;
 }
