@@ -460,10 +460,9 @@ typedef struct MQTTConnectInfo
 } MQTTConnectInfo_t;
 
 /**
- * @ingroup mqtt_struct_types
- * @brief MQTT SUBSCRIBE packet parameters.
+ * @ingroup mqtt_enum_types
+ * @brief Retain Handling types. 
  */
-
 typedef enum retainHandling{
     retainSendOnSub = 0,
     retainSendOnSubIfNotPresent = 1,
@@ -480,7 +479,10 @@ typedef enum MQTTSubscriptionType
     MQTT_TYPE_UNSUBSCRIBE /**< @brief The type is a UNSUBSCRIBE packet. */
 } MQTTSubscriptionType_t;
 
-
+/**
+ * @ingroup mqtt_struct_types
+ * @brief MQTT SUBSCRIBE packet parameters.
+ */
 typedef struct MQTTSubscribeInfo
 {
     /**
@@ -507,32 +509,6 @@ typedef struct MQTTSubscribeInfo
 
 } MQTTSubscribeInfo_t;
 
-   /**
- * @ingroup mqtt_struct_types
- * @brief Struct to hold authentication method and authentication data.
- */
-typedef struct MQTTAuthInfo
-{
-    /**
-     * @brief Authentication method used for authentication.
-     */
-    const char* pAuthMethod;
-    /**
-     * @brief Length of the authentication mathod.
-     */
-    uint16_t authMethodLength;
-    /**
-     * @brief Authentication data used for authentication.
-     */
-    const char* pAuthData;
-     /**
-     * @brief Length of the authentication data.
-     */
-    uint16_t authDataLength;
-
-    uint8_t reasonCode ;
-} MQTTAuthInfo_t;
-
 
 /**
 * @ingroup mqtt_struct_types
@@ -540,22 +516,22 @@ typedef struct MQTTAuthInfo
 */
 typedef struct MQTTUserProperty
 {
-/**
-* @brief key.
-*/
-const char* pKey;
-/**
-* @brief Length of the key.
-*/
-uint16_t keyLength;
-/**
-* @brief value.
-*/
-const char* pValue;
-/**
-* @brief Length of the value.
-*/
-uint16_t valueLength;
+    /**
+    * @brief key.
+    */
+    const char* pKey;
+    /**
+    * @brief Length of the key.
+    */
+    uint16_t keyLength;
+    /**
+    * @brief value.
+    */
+    const char* pValue;
+    /**
+    * @brief Length of the value.
+    */
+    uint16_t valueLength;
 } MQTTUserProperty_t;
 
 /**
@@ -665,15 +641,8 @@ typedef struct MQTTReasonCodeInfo
 } MQTTReasonCodeInfo_t;
 
 /**
- * @brief The generic structure used to build a 'property' section of the packet
- * into.
- * @member pBuffer pointer to the user provided buffer.
- * @member bufferLength length of the user provided buffer.
- * @member currentIndex Index of the location which is yet to be written to in the
- * buffer.
- * @member fieldsSet This is a bitmask to track which fields have already been set.
- * This allows the library to throw an error in case certain fields are included more
- * than once as it is a protocol error to include certain fields more than once.
+ * @ingroup mqtt_struct_types
+ * @brief Property builder for MQTT packets.
  */
 typedef struct MqttPropBuilder
 {
@@ -810,7 +779,7 @@ typedef struct MQTTPacketInfo
  *
  * This function must be called before #sendSubscribeWithoutCopy in order to get
  * the size of the MQTT SUBSCRIBE packet that is generated from the list of
- * #MQTTSubscribeInfo_t and optional #size_t propertyLength.
+ * #MQTTSubscribeInfo_t and optional propertyLength.
  * The remaining length returned in @p pRemainingLength and 
  * the packet size returned in @p pPacketSize are valid
  * only if this function returns #MQTTSuccess.
@@ -842,6 +811,9 @@ typedef struct MQTTPacketInfo
  *      // Each subscription needs a topic filter.
  *      subscriptionList[ i ].pTopicFilter = filters[ i ];
  *      subscriptionList[ i ].topicFilterLength = strlen( filters[ i ] );
+ *      subscriptionList[ i ].noLocalOption = false;
+ *      subscriptionList[ i ].retainAsPublishedOption = false;
+ *      subscriptionList[ i ].retainHandlingOption = retainSendOnSub;
  * }
  *
  * // Get the size requirement for the subscribe packet.
@@ -1470,12 +1442,13 @@ MQTTStatus_t MQTT_GetConnectPacketSize(const MQTTConnectInfo_t* pConnectInfo,
 /**
  * @brief Validate the publish parameters present in the given publish structure @p pPublishInfo.
  *
- * This function must be called before #MQTTV5_GetPublishPacketSize in order to validate the publish parameters.
+ * This function must be called before #MQTT_GetPublishPacketSize in order to validate the publish parameters.
  *
  * @param[in] pPublishInfo MQTT publish packet parameters.
- * @param[in] topicAliasMax Maximum topic alias allowed by the server.
  * @param[in] retainAvailable Whether server allows retain or not.
- * @param[in]  maxQos Maximum QoS supported by the server.
+ * @param[in] maxQos Maximum QoS supported by the server.
+ * @param[in] topicAliasMax  Topic alias in the PUBLISH packet.
+ * @param[in] maxPacketSize Maximum packet size allowed by the server.
  *
  * @return  #MQTTBadParameter if invalid parameters are passed;
  * #MQTTSuccess otherwise.
@@ -1493,7 +1466,7 @@ MQTTStatus_t MQTT_GetConnectPacketSize(const MQTTConnectInfo_t* pConnectInfo,
  * //Set the publish info parameters.
  *
  * //Validate the publish packet
- * status = MQTTV5_ValidatePublishParams(&publishInfo,topicAliasMax,retainAvailable,maxQos);
+ * status = MQTT_ValidatePublishParams(&publishInfo,topicAliasMax,retainAvailable,maxQos);
  *
  * if( status == MQTTSuccess )
  * {
@@ -1501,9 +1474,9 @@ MQTTStatus_t MQTT_GetConnectPacketSize(const MQTTConnectInfo_t* pConnectInfo,
  * }
  * @endcode
  */
-/* @[declare_mqttv5_validatepublishparams] */
+/* @[declare_mqtt_validatepublishparams] */
 MQTTStatus_t MQTT_ValidatePublishParams(const MQTTPublishInfo_t* pPublishInfo, uint8_t retainAvailable, uint8_t maxQos,uint16_t topicAlias,  uint32_t maxPacketSize);
-/* @[declare_mqttv5_validatepublishparams] */
+/* @[declare_mqtt_validatepublishparams] */
 
 
 /**
@@ -1665,44 +1638,6 @@ MQTTStatus_t MQTT_DeserializeSuback( MQTTReasonCodeInfo_t* subackReasonCodes,
                                      uint16_t* pPacketId,
                                      MqttPropBuilder_t* propBuffer,
                                      uint32_t maxPacketSize );
-/**
- * @brief Get the size of an MQTT DISCONNECT packet.
- *
- * @param[in] pAckInfo MQTT PUBLISH ACK packet parameters.
- * @param[out] pRemainingLength The Remaining Length of the MQTT DISCONNECT packet.
- * @param[out] pPacketSize The size of the MQTT DISCONNECT packet.
- * @param[in] maxPacketSize Maximum packet size allowed by the server.
- *
- * @return #MQTTSuccess, or #MQTTBadParameter if parameters are invalid
- *
- * <b>Example</b>
- * @code{c}
- *
- * // Variables used in this example.
- * MQTTStatus_t status;
- * MQTTAckInfo_t disconnectInfo ={0};
- * size_t remainingLength =0;
- * size_t packetSize = 0;
- * uint32_t maxPacketSize;
- *
- * //Set the parameters.
- * // Get the size requirement for the disconnect packet.
- * status = MQTT_GetAckPacketSize(&disconnectInfo,&remainingLength,&packetSize,maxPacketSize);
- *
- * if( status == MQTTSuccess )
- * {
- *      // The application should allocate or use a static #MQTTFixedBuffer_t
- *      // of size >= packetSize to serialize the ack packet.
- * }
- * @endcode
- */
-/* @[declare_MQTT_GetAckPacketSize] */
-// MQTTStatus_t MQTT_GetAckPacketSize(MQTTContext_t* pContext,
-//    MQTTAckInfo_t* pAckInfo,
-//    size_t* pRemainingLength,
-//    size_t* pPacketSize,
-//    uint32_t maxPacketSize);
-// /* @[declare_MQTT_GetAckPacketSize] */
 
 /**
  * @fn uint8_t * MQTT_SerializeAckFixed(uint8_t * pIndex,
@@ -1734,22 +1669,20 @@ uint8_t* MQTT_SerializeAckFixed(uint8_t* pIndex,
 /** @endcond */
 
 /**
- * @brief Serialize an MQTT DISCONNECT packet into the given buffer.
+ * @brief Serialize an MQTT PUBLISH ACK packet into the given buffer.
  *
  * The input #MQTTFixedBuffer_t.size must be at least as large as the size
  * returned by #MQTT_GetAckPacketSize.
  *
  * @note If reason code is success and property length is zero then #MQTT_SerializeAck can also be used.
  *
- * @param[in]  pAckInfo Struct containing information about the publish ack.
- * @param[in]  remainingLength The remaining length of the packet to be
+ * @param[out]  remainingLength The remaining length of the packet to be
  * serialized.
- * @param[out] pFixedBuffer Buffer for packet serialization.
- * @param[in] packetType Type of publish ack.
- * @param[in] packetId Packed identifier of the ack packet.
+ * @param[out]  packetSize The size of the packet to be serialized.
+ * @param[in]  maxPacketSize Maximum packet size allowed by the server.
+ * @param[in]  ackPropertyLength The length of the properties.
  *
- * @return #MQTTNoMemory if pFixedBuffer is too small to hold the MQTT packet;
- * #MQTTBadParameter if invalid parameters are passed;
+ * @return #MQTTBadParameter if invalid parameters are passed;
  * #MQTTSuccess otherwise.
  *
  * <b>Example</b>
@@ -1766,15 +1699,13 @@ uint8_t* MQTT_SerializeAckFixed(uint8_t* pIndex,
  * fixedBuffer.size = BUFFER_SIZE;
  * // Variables used in this example.
  * MQTTStatus_t status;
- * MQTTAckInfo_t disconnectInfo ={0};
  * size_t remainingLength =0;
  * size_t packetSize = 0;
- * uint8_t packetType;
- * uint8_t packedId;
+ * size_t ackPropertyLength = 0;
  * uint32_t maxPacketSize;
  * //set the parameters.
  * // Get the size requirement for the ack packet.
- * status = MQTT_GetAckPacketSize(&disconnectInfo,&remainingLength,&packetSize,maxPacketSize);
+ * status = MQTT_GetAckPacketSize(&remainingLength,&packetSize,maxPacketSize, ackPropertyLength);
  *
  */
 MQTTStatus_t MQTT_GetAckPacketSize(size_t* pRemainingLength,
@@ -1827,7 +1758,7 @@ MQTTStatus_t MQTT_GetDisconnectPacketSize(size_t* pRemainingLength,
 
 
 /**
- * @fn uint8_t * MQTTV5_SerializeDisconnectFixed(uint8_t * pIndex,
+ * @fn uint8_t * MQTT_SerializeDisconnectFixed(uint8_t * pIndex,
                                         const MQTTAckInfo_t * pDisconnectInfo,
                                         size_t remainingLength,
                                         uint32_t sessionExpiry);
@@ -1835,11 +1766,9 @@ MQTTStatus_t MQTT_GetDisconnectPacketSize(size_t* pRemainingLength,
  *
  * @param[out] pIndex Pointer to the buffer where the fixed size parameters is to
  * be serialized.
- * @param[in] pDisconnectInfo The disconnect information.
+ * @param[in] reasonCode The disconnect reason code.
  * @param[in] remainingLength The remaining length of the packet to be
  * serialized.
- * @param[in] sessionExpiry Session expiry to be serialized.
- *
  * @return A pointer to the end of the encoded string.
  */
 
@@ -1856,10 +1785,11 @@ uint8_t * MQTT_SerializeDisconnectFixed(uint8_t * pIndex,
  * @brief Deserialize an MQTT Disconnect packet.
  *
  * @param[in] pPacket #MQTTPacketInfo_t containing the buffer.
- * @param[out] pDisconnectInfo Struct containing information about the disconnect.
- * @param[in] maxPacketSize MAximum packet size allowed by the client.
+ * @param[in] maxPacketSize Maximum packet size allowed by the client.
+ * @param[out] pDisconnectInfo Struct containing disconnect reason code
+ * @param[out] propBuffer MqttPropBuilder_t to store the deserialized properties.
  *
- * @return #MQTTBadParameter, #MQTTBadResponse, #MQTTServerRefused, #MQTTBadResponse, #MQTTBadResponse or #MQTTSuccess.
+ * @return #MQTTBadParameter, #MQTTServerRefused, #MQTTBadResponse or #MQTTSuccess.
  *
  * <b>Example</b>
  * @code{c}
@@ -1867,8 +1797,9 @@ uint8_t * MQTT_SerializeDisconnectFixed(uint8_t * pIndex,
  * // Variables used in this example.
  * MQTTStatus_t status;
  * MQTTPacketInfo_t incomingPacket;
- * MQTTAckInfo_t disconnectInfo;
+ * MQTTReasonCodeInfo_t disconnectInfo;
  * uint32_t maxPacketSize;
+ * MqttPropBuilder_t propBuffer; // Assume this is initialized properly
  * // Receive an incoming packet and populate all fields. The details are out of scope
  * // for this example.
  * receiveIncomingPacket( &incomingPacket );
@@ -1877,8 +1808,9 @@ uint8_t * MQTT_SerializeDisconnectFixed(uint8_t * pIndex,
  * if( ( incomingPacket.type) == MQTT_PACKET_TYPE_DISCONNECT )
  * {
  *      status = MQTT_DeserializeDisconnect(&incomingPacket,
-                                             &disconnectInfo,
-                                            maxPacketSize );
+*                                           maxPacketSize,    
+                                            &disconnectInfo,
+                                            &propBuffer);
  *      if( status == MQTTSuccess )
  *      {
  *          // Disconnect information is available.

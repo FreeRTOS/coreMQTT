@@ -2056,7 +2056,7 @@ MQTTStatus_t MQTT_GetDisconnectPacketSize( size_t * pRemainingLength,
     MQTTStatus_t status = MQTTSuccess;
     size_t length = 0U;
     size_t packetSize = 0U;
-    size_t propertyLength = 0U;
+    size_t disconnectPropertyLength = 0U;
 
     /*Validate the arguments.*/
     if( ( pRemainingLength == NULL ) || ( pPacketSize == NULL ) )
@@ -2083,15 +2083,15 @@ MQTTStatus_t MQTT_GetDisconnectPacketSize( size_t * pRemainingLength,
         length += 1U;
     }
 
-    propertyLength += propertyLength;
+    disconnectPropertyLength += propertyLength;
 
     if( status == MQTTSuccess )
     {
         /*Validate the length.*/
-        if( ( propertyLength + variableLengthEncodedSize( propertyLength ) + 1U ) < MQTT_MAX_REMAINING_LENGTH )
+        if( ( disconnectPropertyLength + variableLengthEncodedSize( disconnectPropertyLength ) + 1U ) < MQTT_MAX_REMAINING_LENGTH )
         {
             /*We have successfully calculated the property length.*/
-            length += variableLengthEncodedSize( propertyLength ) + propertyLength;
+            length += variableLengthEncodedSize( disconnectPropertyLength ) + disconnectPropertyLength;
             *pRemainingLength = length;
         }
         else
@@ -3957,9 +3957,6 @@ MQTTStatus_t MQTT_DeserializeDisconnect( const MQTTPacketInfo_t * pPacket,
 
 /*-----------------------------------------------------------*/
 
-/*
- * API calls for Optional Subscribe Properties
- */
 MQTTStatus_t MQTTPropAdd_SubscribeId( MqttPropBuilder_t * pPropertyBuilder,
                                       size_t subscriptionId )
 {
@@ -4006,9 +4003,6 @@ MQTTStatus_t MQTTPropAdd_SubscribeId( MqttPropBuilder_t * pPropertyBuilder,
     return status;
 }
 
-/*
- * API call for sending User Properties
- */
 
 MQTTStatus_t MQTTPropAdd_UserProp( MqttPropBuilder_t * pPropertyBuilder,
                                    const MQTTUserProperty_t * userProperty )
@@ -4763,11 +4757,6 @@ MQTTStatus_t MQTTPropAdd_ReasonString( MqttPropBuilder_t * pPropertyBuilder,
 
     return status;
 }
-
-
-/*
- * Deserializing properties - Publish
- */
 
 
 MQTTStatus_t MQTTPropGet_PubTopicAlias( MqttPropBuilder_t * propBuffer,
