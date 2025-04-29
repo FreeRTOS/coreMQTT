@@ -134,7 +134,8 @@ static int32_t sendBuffer( MQTTContext_t * pContext,
  * @brief param[in] pWillInfo Last Will and Testament. Pass NULL if Last Will and
  * Testament is not used.
  * @brief param[in] remainingLength the length of the connect packet.
- *
+ * @brief param[in] pPropertyBuilder MQTT property builder.
+ * @brief param[in] pWillPropsBuilder MQTT will properties builder.
  * @note This operation may call the transport send function
  * repeatedly to send bytes over the network until either:
  * 1. The requested number of bytes @a remainingLength have been sent.
@@ -439,6 +440,7 @@ static MQTTStatus_t handleCleanSession( MQTTContext_t * pContext );
  * the encoded length of the packet; and the encoded length of the topic string.
  * @brief param[in] headerSize Size of the serialized PUBLISH header.
  * @brief param[in] packetId Packet Id of the publish packet.
+ * @brief param[in] pPropertyBuilder MQTT Publish property builder.
  *
  * @return #MQTTSendFailed if transport send during resend failed;
  * #MQTTSuccess otherwise.
@@ -488,17 +490,6 @@ static MQTTStatus_t validatePublishParams( const MQTTContext_t * pContext,
 static bool matchEndWildcardsSpecialCases( const char * pTopicFilter,
                                            uint16_t topicFilterLength,
                                            uint16_t filterIndex );
-
-/**
- * @brief Encodes the remaining length of the packet using the variable length
- * encoding scheme provided in the MQTT v3.1.1 specification.
- *
- * @param[out] pDestination The destination buffer to store the encoded remaining
- * length.
- * @param[in] length The remaining length to encode.
- *
- * @return The location of the byte following the encoded value.
- */
 
 /**
  * @brief Attempt to match topic name with a topic filter starting with a wildcard.
@@ -552,8 +543,7 @@ static bool matchTopicFilter( const char * pTopicName,
  * @param[in] pContext MQTT Connection context.
  * @param[in] packetId packet ID of original PUBLISH.
  * @param[in] publishState Current publish state in record.
- * @param[in] reasonCode Reason code
- *
+ * @param[in] reasonCode Reason code to be sent in the Publish Ack.
  *
  * @return #MQTTSuccess, #MQTTBadParameter, #MQTTIllegalState or #MQTTSendFailed.
  */
@@ -569,7 +559,7 @@ static MQTTStatus_t sendPublishAcksWithProperty( MQTTContext_t * pContext,
  * @param[in] pDisconnectInfo Reason code and properties.
  * @param[in] remainingLength Remaining length of the packet.
  * @param[in] sessionExpiry Session expiry interval.
- *
+ * @param[in] pPropertyBuilder MQTT Disconnect property builder.
  *
  *
  * @return #MQTTSuccess, #MQTTBadParameter, #MQTTIllegalState or #MQTTSendFailed.
@@ -588,8 +578,7 @@ static MQTTStatus_t sendDisconnectWithoutCopy( MQTTContext_t * pContext,
  *
  * @param[in] pConnectProperties The connect properties to initialize.
  *
- * @return #MQTTBadParameter if invalid parameters are passed;
- * #MQTTSuccess otherwise
+ * @return #MQTTSuccess
  */
 static MQTTStatus_t MQTT_InitConnect( MQTTConnectProperties_t * pConnectProperties );
 
@@ -625,9 +614,49 @@ static MQTTStatus_t handleSuback( MQTTContext_t * pContext,
 static MQTTStatus_t handleIncomingDisconnect( MQTTContext_t * pContext,
                                               MQTTPacketInfo_t * pIncomingPacket );
 
+/**
+ * @brief Validate Shared Subscriptions 
+ * 
+ * @param[in] pContext MQTT Connection context.
+ * @param[in] pSubscriptionList List of MQTT subscription info.
+ * @param[in] iterator The iterator pointing to a topic filter in pSubscriptionList.
+ *  
+ * @return #MQTTBadParameter if invalid parameters are passed;
+ *         #MQTTSuccess otherwise
+ * */                                             
 static MQTTStatus_t validateSharedSubscriptions( const MQTTContext_t * pContext,
                                                  const MQTTSubscribeInfo_t * pSubscriptionList,
                                                  const size_t iterator );
+
+
+/**
+ * @brief Send Subscribe without copying the users data into any buffer.
+ * 
+ * @brief param[in] pContext Initialized MQTT context.
+ * @brief param[in] pSubscriptionList List of MQTT subscription info.
+ * @brief param[in] subscriptionCount Number of elements in pSubscriptionList.
+ * @brief param[in] packetId Packet identifier.
+ * @brief param[in] remainingLength Remaining length of the packet.
+ * @brief param[in] subscriptionType Type of subscription.
+ * @brief param[in] pPropertyBuilder MQTT property builder.
+ * @note This operation may call the transport send function
+ * repeatedly to send bytes over the network until either:
+ * 1. The requested number of bytes @a remainingLength have been sent.
+ *                    OR
+ * 2. MQTT_SEND_TIMEOUT_MS milliseconds have gone by since entering this
+ * function.
+ *                    OR
+ * 3. There is an error in sending data over the network.
+ *
+ * @return #MQTTSendFailed or #MQTTSuccess.
+ */
+static MQTTStatus_t sendSubscribeWithoutCopy( MQTTContext_t * pContext,
+                                              const MQTTSubscribeInfo_t * pSubscriptionList,
+                                              size_t subscriptionCount,
+                                              uint16_t packetId,
+                                              size_t remainingLength,
+                                              MQTTSubscriptionType_t subscriptionType,
+                                              const MqttPropBuilder_t * pPropertyBuilder );
 
 /*-----------------------------------------------------------*/
 
@@ -4132,6 +4161,7 @@ void MQTT_SerializeMQTTVec( uint8_t * pAllocatedMem,
 
 /*-----------------------------------------------------------*/
 
+
 static MQTTStatus_t validatePublishAckReasonCode( MQTTSuccessFailReasonCode_t reasonCode )
 {
     MQTTStatus_t status = MQTTSuccess;
@@ -4562,3 +4592,5 @@ static MQTTStatus_t validateSharedSubscriptions( const MQTTContext_t * pContext,
 
     return status;
 }
+
+/*-----------------------------------------------------------*/

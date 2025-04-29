@@ -98,11 +98,15 @@ typedef uint32_t (* MQTTGetCurrentTimeFunc_t )( void );
  *
  * @note This callback will be called only if packets are deserialized with a
  * result of #MQTTSuccess or #MQTTServerRefused. The latter can be obtained
- * when deserializing a SUBACK, indicating a broker's rejection of a subscribe.
+ * when deserializing a SUBACK indicating a broker's rejection of a subscribe, 
+ * or a CONNACK indicating a broker's rejection of a connection.
  *
  * @param[in] pContext Initialized MQTT context.
  * @param[in] pPacketInfo Information on the type of incoming MQTT packet.
  * @param[in] pDeserializedInfo Deserialized information from incoming packet.
+ * @param[in] pReasonCode Reason code for the incoming packet.
+ * @param[in] sendPropsBuffer Properties to be sent in the outgoing packet.
+ * @param[in] getPropsBuffer Properties to be received in the incoming packet.
  */
 typedef void (* MQTTEventCallback_t )( struct MQTTContext * pContext,
                                        struct MQTTPacketInfo * pPacketInfo,
@@ -163,19 +167,9 @@ typedef void (* MQTTClearPacketForRetransmit)( struct MQTTContext * pContext,
 /* @[define_mqtt_retransmitclearpacket] */
 
 /**
- * @brief User defined callback used to store outgoing publishes. Used to track any publish
- * retransmit on an unclean session connection.
- *
- * @param[in] pContext Initialised MQTT Context.
- * @param[in] packetId Outgoing publish packet identifier.
- * @param[in] pMqttVec Pointer to the opaque mqtt vector structure. Users should use MQTT_GetBytesInMQTTVec
- *                and MQTT_SerializeMQTTVec functions to get the memory required and to serialize the
- *                MQTTVec_t in the provided memory respectively.
- *
- * @return True if the copy is successful else false.
+ * @ingroup mqtt_enum_types
+ * @brief Values indicating if an MQTT connection exists.
  */
-/* @[define_mqtt_retransmitstorepacket] */
-
 typedef enum MQTTConnectionStatus
 {
     MQTTNotConnected,     /**< @brief MQTT Connection is inactive. */
@@ -474,7 +468,8 @@ MQTTStatus_t MQTT_Init( MQTTContext_t * pContext,
  * publishes.
  * @param[in] incomingPublishCount Maximum number of records which can be kept in the memory
  * pointed to by @p pIncomingPublishRecords.
- *
+ * @param[in] pBuffer Pointer to memory which will be used to store properties of outgoing publish-ACKS.
+ * @param[in] bufferLength Length of the buffer pointed to by @p pBuffer.
  * @return #MQTTBadParameter if invalid parameters are passed;
  * #MQTTSuccess otherwise.
  *
@@ -519,7 +514,10 @@ MQTTStatus_t MQTT_Init( MQTTContext_t * pContext,
  * {
  *      // We do not expect any incoming publishes in this example, therefore the incoming
  *      // publish pointer is NULL and the count is zero.
- *      status = MQTT_InitStatefulQoS( &mqttContext, outgoingPublishes, outgoingPublishCount, NULL, 0 );
+ *      // The buffer is used to store properties of outgoing publish-ACKS.
+ *      uint8_t pBuffer[ 500 ];
+ *      size_t bufferLength = 500 ; 
+ *      status = MQTT_InitStatefulQoS( &mqttContext, outgoingPublishes, outgoingPublishCount, NULL, 0 , pBuffer, bufferLength );
  *
  *      // Now QoS1 and/or QoS2 publishes can be sent with this context.
  * }
@@ -672,6 +670,8 @@ MQTTStatus_t MQTT_CheckConnectStatus( const MQTTContext_t * pContext );
  * @param[in] timeoutMs Maximum time in milliseconds to wait for a CONNACK packet.
  * A zero timeout makes use of the retries for receiving CONNACK as configured with
  * #MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT.
+ * @param[in] pPropertyBuilder Properties to be sent in the outgoing packet.
+ * @param[in] willPropsBuilder Will Properties to be sent in the outgoing packet.
  * @param[out] pSessionPresent This value will be set to true if a previous session
  * was present; otherwise it will be set to false. It is only relevant if not
  * establishing a clean session.
@@ -733,7 +733,16 @@ MQTTStatus_t MQTT_CheckConnectStatus( const MQTTContext_t * pContext );
  * connectInfo.userNameLength = strlen( connectInfo.pUserName );
  * connectInfo.pPassword = "somePassword";
  * connectInfo.passwordLength = strlen( connectInfo.pPassword );
- *
+ *  // Optional properties to be sent in the CONNECT packet.
+ * MqttPropBuilder_t connectPropsBuilder;
+ * uint8_t connectPropsBuffer[ 100 ];
+ * size_t connectPropsBufferLength = sizeof( connectPropsBuffer );
+ * status = MqttPropertyBuilder_Init( &connectPropsBuilder, connectPropsBuffer, connectPropsBufferLength );
+ * 
+ *   // Set a property in the connectPropsBuilder
+ * uint32_t maxPacketSize = 100 ; 
+ * MQTTPropAdd_ConnMaxPacketSize(&connectPropsBuilder, maxPacketSize);
+ * 
  * // The last will and testament is optional, it will be published by the broker
  * // should this client disconnect without sending a DISCONNECT packet.
  * willInfo.qos = MQTTQoS0;
@@ -741,9 +750,17 @@ MQTTStatus_t MQTT_CheckConnectStatus( const MQTTContext_t * pContext );
  * willInfo.topicNameLength = strlen( willInfo.pTopicName );
  * willInfo.pPayload = "LWT Message";
  * willInfo.payloadLength = strlen( "LWT Message" );
- *
+ *  // Optional Will Properties to be sent in the CONNECT packet.
+ * MqttPropBuilder_t willPropsBuilder;
+ * uint8_t willPropsBuffer[ 100 ];
+ * size_t willPropsBufferLength = sizeof( willPropsBuffer );
+ * status = MqttPropertyBuilder_Init( &willPropsBuilder, willPropsBuffer, willPropsBufferLength );
+ * 
+ * // Set a property in the willPropsBuilder
+ * status = MQTTPropAdd_PubPayloadFormat( &willPropsBuilder, 1);
+ * 
  * // Send the connect packet. Use 100 ms as the timeout to wait for the CONNACK packet.
- * status = MQTT_Connect( pContext, &connectInfo, &willInfo, 100, &sessionPresent );
+ * status = MQTT_Connect( pContext, &connectInfo, &willInfo, 100, &sessionPresent, connectPropsBuilder, willPropsBuilder );
  *
  * if( status == MQTTSuccess )
  * {
@@ -773,7 +790,7 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
  * @param[in] subscriptionCount The number of elements in @ pSubscriptionList
  * array.
  * @param[in] packetId Packet ID generated by #MQTT_GetPacketId.
- *
+ * @param[in] pPropertyBuilder Properties to be sent in the outgoing packet.
  * @return #MQTTNoMemory if the #MQTTContext_t.networkBuffer is too small to
  * hold the MQTT packet;
  * #MQTTBadParameter if invalid parameters are passed;
@@ -803,11 +820,18 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
  *      subscriptionList[ i ].pTopicFilter = filters[ i ];
  *      subscriptionList[ i ].topicFilterLength = strlen( filters[ i ] );
  * }
- *
+ * // Optional Properties to be sent in the SUBSCRIBE packet 
+ * MqttPropBuilder_t propertyBuilder;
+ * uint8_t propertyBuffer[ 100 ];
+ * size_t propertyBufferLength = sizeof( propertyBuffer );
+ * status = MqttPropertyBuilder_Init( &propertyBuilder, propertyBuffer, propertyBufferLength );
+ * 
+ * status = MQTTPropAdd_SubscribeId(&propertyBuilder, 1); 
+ * 
  * // Obtain a new packet id for the subscription.
  * packetId = MQTT_GetPacketId( pContext );
  *
- * status = MQTT_Subscribe( pContext, &subscriptionList[ 0 ], NUMBER_OF_SUBSCRIPTIONS, packetId );
+ * status = MQTT_Subscribe( pContext, &subscriptionList[ 0 ], NUMBER_OF_SUBSCRIPTIONS, packetId, propertyBuilder );
  *
  * if( status == MQTTSuccess )
  * {
@@ -824,13 +848,6 @@ MQTTStatus_t MQTT_Subscribe( MQTTContext_t * pContext,
                              size_t subscriptionCount,
                              uint16_t packetId,
                              const MqttPropBuilder_t * pPropertyBuilder );
-
-MQTTStatus_t MQTT_Unsubscribe( MQTTContext_t * pContext,
-                               const MQTTSubscribeInfo_t * pSubscriptionList,
-                               size_t subscriptionCount,
-                               uint16_t packetId,
-                               const MqttPropBuilder_t * pPropertyBuilder );
-
 
 /* @[declare_mqtt_subscribe] */
 
@@ -868,11 +885,19 @@ MQTTStatus_t MQTT_Unsubscribe( MQTTContext_t * pContext,
  * publishInfo.topicNameLength = strlen( publishInfo.pTopicName );
  * publishInfo.pPayload = "Hello World!";
  * publishInfo.payloadLength = strlen( "Hello World!" );
- *
+ * // Optional properties to be sent in the PUBLISH packet.
+ * MqttPropBuilder_t propertyBuilder;
+ * uint8_t propertyBuffer[ 100 ];
+ * size_t propertyBufferLength = sizeof( propertyBuffer );
+ * status = MqttPropertyBuilder_Init( &propertyBuilder, propertyBuffer, propertyBufferLength );
+ * 
+ * // Set a property in the propertyBuilder
+ * status = MQTTPropAdd_PubPayloadFormat( &propertyBuilder, 1);
+ * 
  * // Packet ID is needed for QoS > 0.
  * packetId = MQTT_GetPacketId( pContext );
  *
- * status = MQTT_Publish( pContext, &publishInfo, packetId );
+ * status = MQTT_Publish( pContext, &publishInfo, packetId, &propertyBuilder );
  *
  * if( status == MQTTSuccess )
  * {
@@ -927,8 +952,119 @@ MQTTStatus_t MQTT_CancelCallback( const MQTTContext_t * pContext,
 MQTTStatus_t MQTT_Ping( MQTTContext_t * pContext );
 /* @[declare_mqtt_ping] */
 
-
-
+/**
+ * @brief Sends MQTT UNSUBSCRIBE for the given list of topic filters to
+ * the broker.
+ *
+ * @param[in] pContext Initialized MQTT context.
+ * @param[in] pSubscriptionList List of MQTT subscription info.
+ * @param[in] subscriptionCount The number of elements in pSubscriptionList.
+ * @param[in] packetId packet ID generated by #MQTT_GetPacketId.
+ * @param[in] pPropertyBuilder Properties to be sent in the outgoing packet.
+ *
+ * @return #MQTTNoMemory if the #MQTTContext_t.networkBuffer is too small to
+ * hold the MQTT packet;
+ * #MQTTBadParameter if invalid parameters are passed;
+ * #MQTTSendFailed if transport write failed;
+ * #MQTTStatusNotConnected if the connection is not established yet
+ * #MQTTStatusDisconnectPending if the user is expected to call MQTT_Disconnect
+ * before calling any other API
+ * #MQTTSuccess otherwise.
+ *
+ * <b>Example</b>
+ * @code{c}
+ *
+ * // Variables used in this example.
+ * MQTTStatus_t status;
+ * MQTTSubscribeInfo_t unsubscribeList[ NUMBER_OF_SUBSCRIPTIONS ] = { 0 };
+ * uint16_t packetId;
+ * // This context is assumed to be initialized and connected.
+ * MQTTContext_t * pContext;
+ * // This is assumed to be a list of filters we want to unsubscribe from.
+ * const char * filters[ NUMBER_OF_SUBSCRIPTIONS ];
+ *
+ * // Set information for each unsubscribe request.
+ * for( int i = 0; i < NUMBER_OF_SUBSCRIPTIONS; i++ )
+ * {
+ *      unsubscribeList[ i ].pTopicFilter = filters[ i ];
+ *      unsubscribeList[ i ].topicFilterLength = strlen( filters[ i ] );
+ *
+ *      // The QoS field of MQTT_SubscribeInfo_t is unused for unsubscribing.
+ * }
+ *
+ * // Obtain a new packet id for the unsubscribe request.
+ * packetId = MQTT_GetPacketId( pContext );
+ * // Optional properties to be sent in the UNSUBSCRIBE packet.
+ * MqttPropBuilder_t propertyBuilder;
+ * uint8_t propertyBuffer[ 100 ];
+ * size_t propertyBufferLength = sizeof( propertyBuffer );
+ * status = MqttPropertyBuilder_Init( &propertyBuilder, propertyBuffer, propertyBufferLength );
+ * 
+ * // Set a property in the propertyBuilder
+ * MQTTUserProperty_t userProperty;
+ * userProperty.pKey = "key"; 
+ * userProperty.keyLength = strlen( userProperty.pKey );
+ * userProperty.pValue = "value";
+ * *userProperty.valueLength = strlen( userProperty.pValue );
+ * 
+ * status = MQTTPropAdd_UserProp( &propertyBuilder,&userProperty);
+ * 
+ * status = MQTT_Unsubscribe( pContext, &unsubscribeList[ 0 ], NUMBER_OF_SUBSCRIPTIONS, packetId, &propertyBuilder );
+ *
+ * if( status == MQTTSuccess )
+ * {
+ *      // We must now call MQTT_ReceiveLoop() or MQTT_ProcessLoop() to receive the UNSUBACK.
+ *      // After this the broker should no longer send publishes for these topics.
+ * }
+ * @endcode
+ */
+/* @[declare_mqtt_unsubscribe] */
+MQTTStatus_t MQTT_Unsubscribe( MQTTContext_t * pContext,
+                               const MQTTSubscribeInfo_t * pSubscriptionList,
+                               size_t subscriptionCount,
+                               uint16_t packetId,
+                               const MqttPropBuilder_t * pPropertyBuilder );
+/* @[declare_mqtt_unsubscribe] */
+/**
+ * @brief Sends MQTT DISCONNECT for a given reason code
+ *
+ * @param[in] pContext Initialized and connected MQTT context.
+ * @param[in] pPropertyBuilder Properties to be sent in the outgoing packet.
+ * @param[in] reasonCode Reason code to be sent in the DISCONNECT packet.
+ * 
+ * @return #MQTTNoMemory if the #MQTTContext_t.networkBuffer is too small to
+ * hold the MQTT packet;
+ * #MQTTBadParameter if invalid parameters are passed;
+ * #MQTTSendFailed if transport send failed;
+ * #MQTTSuccess otherwise.
+ * <b> Example </b>
+ * @code{c}
+ *
+ * // Variables used in this example.
+ * MQTTStatus_t status;
+ * // This context is assumed to be initialized and connected.
+ * MQTTContext_t * pContext;
+ * // Optional properties to be sent in the DISCONNECT packet.
+ * MqttPropBuilder_t propertyBuilder;
+ * uint8_t propertyBuffer[ 100 ];
+ * size_t propertyBufferLength = sizeof( propertyBuffer );
+ * status = MqttPropertyBuilder_Init( &propertyBuilder, propertyBuffer, propertyBufferLength );
+ * 
+ * // Set a property in the propertyBuilder
+ * status = MQTTPropAdd_ReasonString( &propertyBuilder, "Disconnecting", 12);
+ * 
+ * status = MQTT_Disconnect( pContext, &propertyBuilder, MQTT_REASON_DISCONNECT_NORMAL_DISCONNECTION );
+ * 
+ * if( status == MQTTSuccess )
+ * {
+ *      // The DISCONNECT packet was sent successfully. The connection is now closed.
+ * }
+ */
+/* @[declare_mqttv5_disconnect] */
+MQTTStatus_t MQTT_Disconnect( MQTTContext_t * pContext,
+    const MqttPropBuilder_t * pPropertyBuilder,
+    MQTTSuccessFailReasonCode_t reasonCode );
+/* @[declare_mqttv5_disconnect] */
 /**
  * @brief Loop to receive packets from the transport interface. Handles keep
  * alive.
@@ -1215,25 +1351,6 @@ MQTTStatus_t MQTT_GetSubAckStatusCodes( const MQTTPacketInfo_t * pSubackPacket,
 /* @[declare_mqtt_status_strerror] */
 const char * MQTT_Status_strerror( MQTTStatus_t status );
 /* @[declare_mqtt_status_strerror] */
-
-/**
- * @brief Disconnect an MQTT session.
- *
- * @param[in] pContext Initialized and connected MQTT context.
- * @param[in] pDisconnectInfo Reason code and properties to encode
- * @param[in] sessionExpiry Session expiry interval.
- * @return #MQTTNoMemory if the #MQTTContext_t.networkBuffer is too small to
- * hold the MQTT packet;
- * #MQTTBadParameter if invalid parameters are passed;
- * #MQTTSendFailed if transport send failed;
- * #MQTTSuccess otherwise.
- */
-/* @[declare_mqttv5_disconnect] */
-MQTTStatus_t MQTT_Disconnect( MQTTContext_t * pContext,
-                              const MqttPropBuilder_t * pPropertyBuilder,
-                              MQTTSuccessFailReasonCode_t reasonCode );
-/* @[declare_mqttv5_disconnect] */
-
 
 /**
  * @brief Get the bytes in a #MQTTVec pointer which can store the whole array as a an MQTT packet when calling MQTT_SerializeMQTTVec( void * pAllocatedMem, MQTTVec_t *pVec ) function.
