@@ -2536,8 +2536,8 @@ static MQTTStatus_t handleUncleanSessionResumption( MQTTContext_t * pContext )
     MQTTStateCursor_t cursor = MQTT_STATE_CURSOR_INITIALIZER;
     uint16_t packetId = MQTT_PACKET_ID_INVALID;
     MQTTPublishState_t state = MQTTStateNull;
-    size_t totalMessageLength;
-    uint8_t * pMqttPacket;
+    size_t totalMessageLength = 0;
+    uint8_t * pMqttPacket = NULL;
 
     assert( pContext != NULL );
 
