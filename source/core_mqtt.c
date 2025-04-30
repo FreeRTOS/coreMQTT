@@ -1438,7 +1438,7 @@ static MQTTStatus_t handleKeepAlive( MQTTContext_t * pContext )
 static MQTTStatus_t handleIncomingPublish( MQTTContext_t * pContext,
                                            MQTTPacketInfo_t * pIncomingPacket )
 {
-    MQTTStatus_t status = MQTTBadParameter;
+    MQTTStatus_t status;
     MQTTPublishState_t publishRecordState = MQTTStateNull;
     uint16_t packetIdentifier = 0U;
     MQTTPublishInfo_t publishInfo;
@@ -1567,7 +1567,7 @@ static MQTTStatus_t handleIncomingPublish( MQTTContext_t * pContext,
 static MQTTStatus_t handlePublishAcks( MQTTContext_t * pContext,
                                        MQTTPacketInfo_t * pIncomingPacket )
 {
-    MQTTStatus_t status = MQTTBadResponse;
+    MQTTStatus_t status;
     MQTTPublishState_t publishRecordState = MQTTStateNull;
     uint16_t packetIdentifier;
     MQTTPubAckType_t ackType;
@@ -2390,7 +2390,6 @@ static MQTTStatus_t sendConnectWithoutCopy( MQTTContext_t * pContext,
                                                      iterator,
                                                      &totalMessageLength );
             /* Update the iterator to point to the next empty slot. */
-            iterator = &iterator[ vectorsAdded ];
             ioVectorLength += vectorsAdded;
         }
 
