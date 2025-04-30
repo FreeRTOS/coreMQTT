@@ -611,6 +611,7 @@ static bool matchWildcards( const char * pTopicName,
 {
     bool shouldStopMatching = false;
     bool locationIsValidForWildcard;
+    uint16_t nameIndex;
 
     assert( pTopicName != NULL );
     assert( topicNameLength != 0U );
@@ -619,6 +620,8 @@ static bool matchWildcards( const char * pTopicName,
     assert( pNameIndex != NULL );
     assert( pFilterIndex != NULL );
     assert( pMatch != NULL );
+
+    nameIndex = *pNameIndex;
 
     /* Wild card in a topic filter is only valid either at the starting position
      * or when it is preceded by a '/'.*/
@@ -633,16 +636,16 @@ static bool matchWildcards( const char * pTopicName,
         /* Move topic name index to the end of the current level. The end of the
          * current level is identified by the last character before the next level
          * separator '/'. */
-        while( *pNameIndex < topicNameLength )
+        while( nameIndex < topicNameLength )
         {
             /* Exit the loop if we hit the level separator. */
-            if( pTopicName[ *pNameIndex ] == '/' )
+            if( pTopicName[ nameIndex ] == '/' )
             {
                 nextLevelExistsInTopicName = true;
                 break;
             }
 
-            ( *pNameIndex )++;
+            nameIndex += 1;
         }
 
         /* Determine if the topic filter contains a child level after the current level
@@ -674,10 +677,10 @@ static bool matchWildcards( const char * pTopicName,
         else
         {
             /* If we have reached here, the the loop terminated on the
-             * ( *pNameIndex < topicNameLength) condition, which means that have
+             * ( nameIndex < topicNameLength) condition, which means that have
              * reached past the end of the topic name, and thus, we decrement the
              * index to the last character in the topic name.*/
-            ( *pNameIndex )--;
+            nameIndex -= 1;
         }
     }
 
@@ -699,6 +702,8 @@ static bool matchWildcards( const char * pTopicName,
         *pMatch = false;
         shouldStopMatching = true;
     }
+
+    *pNameIndex = nameIndex;
 
     return shouldStopMatching;
 }
