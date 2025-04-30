@@ -102,6 +102,7 @@ static void eventCallback( MQTTContext_t * pContext,
     ( void ) pContext;
     ( void ) pPacketInfo;
     ( void ) pDeserializedInfo;
+    ( void ) pReasonCode;
     ( void ) sendPropsBuffer ; 
     ( void ) getPropsBuffer ; 
 }

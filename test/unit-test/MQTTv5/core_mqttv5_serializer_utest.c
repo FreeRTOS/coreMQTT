@@ -265,12 +265,6 @@ struct NetworkContext
 #define MQTT_SUBSCRIPTION_ID_ID                ( 0x0B )
 #define MQTT_TOPIC_ALIAS_ID                    ( 0x23 )
 
-static uint8_t remainingLengthBuffer[ MQTT_REMAINING_BUFFER_MAX_LENGTH ] = { 0 };
-
-static uint8_t encodedStringBuffer[ MQTT_TEST_BUFFER_LENGTH ] = { 0 };
-
-static uint8_t mqttBuffer[ MQTT_TEST_BUFFER_LENGTH ] = { 0 };
-
 
 /* Variables common to testcases */
 MQTTConnectProperties_t properties;
@@ -311,67 +305,86 @@ int suiteTearDown( int numFailures )
 /* ========================================================================== */
 
 /**
- * @brief Initialize pNetworkBuffer using static buffer.
- *
- * @param[in] pNetworkBuffer Network buffer provided for the context.
+ * @brief Mock successful transport receive by reading data from a buffer.
  */
-static void setupNetworkBuffer( MQTTFixedBuffer_t * const pNetworkBuffer )
+int32_t mockReceive( NetworkContext_t * pNetworkContext,
+                     void * pBuffer,
+                     size_t bytesToRecv )
 {
-    pNetworkBuffer->pBuffer = mqttBuffer;
-    pNetworkBuffer->size = 2048;
+    uint8_t * returnBuffer = ( uint8_t * ) pBuffer;
+    uint8_t * mockNetwork;
+    size_t bytesRead = 0;
+
+    /* Treat network context as pointer to buffer for mocking  */
+    mockNetwork = *( pNetworkContext->buffer );
+
+    while( bytesRead++ < bytesToRecv )
+    {
+        /* Read single byte and advance buffer. */
+        *returnBuffer++ = *mockNetwork++;
+    }
+
+    /* Move stream by bytes read. */
+    *( pNetworkContext->buffer ) = mockNetwork;
+
+    return bytesToRecv;
 }
 
 /**
- * @brief Initialize pConnectInfo using test-defined macros.
- *
- * @param[in] pConnectInfo MQTT CONNECT packet parameters.
+ * @brief Mock transport receive with no data available.
  */
-static void setupConnectInfo( MQTTConnectInfo_t * const pConnectInfo )
+static int32_t mockReceiveNoData( NetworkContext_t * pNetworkContext,
+                                  void * pBuffer,
+                                  size_t bytesToRecv )
 {
-    pConnectInfo->cleanSession = true;
-    pConnectInfo->pClientIdentifier = MQTT_CLIENT_IDENTIFIER;
-    pConnectInfo->clientIdentifierLength = MQTT_CLIENT_IDENTIFIER_LEN;
-    pConnectInfo->keepAliveSeconds = 0;
-    pConnectInfo->pUserName = MQTT_TEST_USERNAME;
-    pConnectInfo->userNameLength = MQTT_TEST_USERNAME_LEN;
-    pConnectInfo->pPassword = MQTT_TEST_PASSWORD;
-    pConnectInfo->passwordLength = MQTT_TEST_PASSWORD_LEN;
+/* Suppress unused parameter warning. */
+    ( void ) pNetworkContext;
+    ( void ) pBuffer;
+    ( void ) bytesToRecv;
+
+    return 0;
 }
 
-static size_t remainingLengthEncodedSize( size_t length )
+/**
+ * @brief Mock transport receive failure.
+ */
+static int32_t mockReceiveFailure( NetworkContext_t * pNetworkContext,
+                                   void * pBuffer,
+                                   size_t bytesToRecv )
 {
-    size_t encodedSize;
+/* Suppress unused parameter warning. */
+    ( void ) pNetworkContext;
+    ( void ) pBuffer;
+    ( void ) bytesToRecv;
 
-    /* Determine how many bytes are needed to encode length.
-     * The values below are taken from the MQTT 3.1.1 spec. */
+    return -1;
+}
 
-    /* 1 byte is needed to encode lengths between 0 and 127. */
-    if( length < 128U )
+/**
+ * @brief Mock transport receive that succeeds once, then fails.
+ */
+static int32_t mockReceiveSucceedThenFail( NetworkContext_t * pNetworkContext,
+                                           void * pBuffer,
+                                           size_t bytesToRecv )
+{
+    int32_t retVal = 0;
+    static int counter = 0;
+
+    if( counter++ )
     {
-        encodedSize = 1U;
+        retVal = mockReceiveFailure( pNetworkContext, pBuffer, bytesToRecv );
+        counter = 0;
     }
-    /* 2 bytes are needed to encode lengths between 128 and 16,383. */
-    else if( length < 16384U )
-    {
-        encodedSize = 2U;
-    }
-    /* 3 bytes are needed to encode lengths between 16,384 and 2,097,151. */
-    else if( length < 2097152U )
-    {
-        encodedSize = 3U;
-    }
-    /* 4 bytes are needed to encode lengths between 2,097,152 and 268,435,455. */
     else
     {
-        encodedSize = 4U;
+        retVal = mockReceive( pNetworkContext, pBuffer, bytesToRecv );
     }
 
-    LogDebug( ( "Encoded size for length %lu is %lu bytes.",
-                ( unsigned long ) length,
-                ( unsigned long ) encodedSize ) );
-
-    return encodedSize;
+    return retVal;
 }
+
+/* ========================================================================== */
+
 
 /**
  * @brief Initialize pPublishInfo using test-defined macros.
@@ -480,59 +493,6 @@ static size_t encodeStringSize( uint8_t * pDestination,
 
 
 /**
- * @brief Mock transport receive with no data available.
- */
-static int32_t mockReceiveNoData( NetworkContext_t * pNetworkContext,
-                                  void * pBuffer,
-                                  size_t bytesToRecv )
-{
-/* Suppress unused parameter warning. */
-    ( void ) pNetworkContext;
-    ( void ) pBuffer;
-    ( void ) bytesToRecv;
-
-    return 0;
-}
-
-/**
- * @brief Mock transport receive failure.
- */
-static int32_t mockReceiveFailure( NetworkContext_t * pNetworkContext,
-                                   void * pBuffer,
-                                   size_t bytesToRecv )
-{
-/* Suppress unused parameter warning. */
-    ( void ) pNetworkContext;
-    ( void ) pBuffer;
-    ( void ) bytesToRecv;
-
-    return -1;
-}
-
-/**
- * @brief Mock transport receive that succeeds once, then fails.
- */
-static int32_t mockReceiveSucceedThenFail( NetworkContext_t * pNetworkContext,
-                                           void * pBuffer,
-                                           size_t bytesToRecv )
-{
-    int32_t retVal = 0;
-    static int counter = 0;
-
-    if( counter++ )
-    {
-        retVal = mockReceiveFailure( pNetworkContext, pBuffer, bytesToRecv );
-        counter = 0;
-    }
-    else
-    {
-        retVal = mockReceive( pNetworkContext, pBuffer, bytesToRecv );
-    }
-
-    return retVal;
-}
-
-/**
  * @brief Pad beginning and end of buffer with non-zero bytes to be used in
  * checking for under/overflow after serialization.
  *
@@ -573,39 +533,6 @@ static void checkBufferOverflow( uint8_t * pBuffer,
                                   BUFFER_PADDING_LENGTH );
 }
 
-/**
- * @brief Mock successful transport receive by reading data from a buffer.
- */
-int32_t mockReceive( NetworkContext_t * pNetworkContext,
-                     void * pBuffer,
-                     size_t bytesToRecv )
-{
-    uint8_t * returnBuffer = ( uint8_t * ) pBuffer;
-    uint8_t * mockNetwork;
-    size_t bytesRead = 0;
-
-    /* Treat network context as pointer to buffer for mocking  */
-    mockNetwork = *( pNetworkContext->buffer );
-
-    while( bytesRead++ < bytesToRecv )
-    {
-        /* Read single byte and advance buffer. */
-        *returnBuffer++ = *mockNetwork++;
-    }
-
-    /* Move stream by bytes read. */
-    *( pNetworkContext->buffer ) = mockNetwork;
-
-    return bytesToRecv;
-}
-
-
-static void setupProperties( MQTTConnectProperties_t * pProperties )
-{
-    pProperties->receiveMax = DEFAULT_RECEIVE_MAX;
-    pProperties->requestProblemInfo = DEFAULT_REQUEST_PROBLEM;
-    pProperties->maxPacketSize = MQTT_MAX_PACKET_SIZE;
-}
 
 static uint8_t * initializeDeserialize( MQTTPacketInfo_t * packetInfo,
                                         uint8_t * pIndex )
@@ -1747,8 +1674,6 @@ void test_MQTTV5_GetDisconnectPacketSize()
     size_t remainingLength;
     size_t packetSize;
     uint32_t maxPacketSize = 0U;
-    uint32_t sessionExpiry = 0U;
-    uint32_t prevSessionExpiry = 0U;
     MQTTStatus_t status;
 
     /*Invalid arguments*/
@@ -1797,8 +1722,6 @@ void test_MQTTV5_GetDisconnectPacketSize()
 void test_MQTTV5_DeserializeDisconnect()
 {
     MQTTReasonCodeInfo_t disconnectInfo;
-    const char * pServerRef;
-    uint16_t serverRefLength;
     size_t dummy;
     int32_t maxPacketSize = 0U;
     uint8_t buffer[ 100 ] = { 0 };
@@ -2313,8 +2236,8 @@ void test_MQTT_SerializePingreq( void )
 void test_MQTT_DeserializeAck_pingresp( void )
 {
     MQTTPacketInfo_t mqttPacketInfo;
-    uint16_t packetIdentifier;
-    bool sessionPresent;
+    uint16_t packetIdentifier = 1 ;
+    bool sessionPresent = 1 ;
     MQTTStatus_t status = MQTTSuccess;
 
     /* Bad remaining length. */
@@ -2798,18 +2721,10 @@ void test_MQTT_DeserializePublish( void )
     MQTTPublishInfo_t publishInfo;
     MQTTStatus_t status = MQTTSuccess;
     uint8_t buffer[ 100 ];
-    size_t bufferSize = sizeof( buffer );
-    MQTTFixedBuffer_t fixedBuffer = { 0 };
-    size_t packetSize = bufferSize;
     MqttPropBuilder_t propBuffer = { 0 };
 
-    size_t remainingLength = 0;
     uint16_t packetIdentifier;
 
-    fixedBuffer.pBuffer = buffer;
-    fixedBuffer.size = bufferSize;
-
-    const uint16_t PACKET_ID = 1;
 
     memset( &mqttPacketInfo, 0x00, sizeof( mqttPacketInfo ) );
 
@@ -2894,7 +2809,11 @@ void test_OptionalProperties( void )
     prop1.pBuffer = NULL ; 
     uint8_t buf[100];
     size_t bufLength = sizeof(buf);
-    mqttStatus = MqttPropertyBuilder_Init(&(propBuilder), buf, bufLength); 
+    propBuilder.pBuffer = buf;
+    propBuilder.bufferLength = bufLength;
+    propBuilder.currentIndex = 0 ; 
+    propBuilder.fieldSet = 0 ; 
+
     TEST_ASSERT_EQUAL_INT(MQTTSuccess, mqttStatus) ; 
     mqttStatus = MQTTPropAdd_SubscribeId(&propBuilder, 2) ; 
     TEST_ASSERT_EQUAL_INT(MQTTSuccess, mqttStatus) ; 
@@ -3049,7 +2968,10 @@ void test_OptionalProperties( void )
 
     MqttPropBuilder_t propBuilder2;
     uint8_t buf2[ 500 ];
-    mqttStatus = MqttPropertyBuilder_Init( &( propBuilder2 ), buf2, 50 );
+    propBuilder2.pBuffer = buf2;
+    propBuilder2.bufferLength = sizeof( buf2 );
+    propBuilder2.currentIndex = 0;
+    propBuilder2.fieldSet = 0;
     mqttStatus = MQTTPropAdd_PubResponseTopic( &propBuilder2, "abc/#/def", 3 );
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, mqttStatus );
 
@@ -3099,8 +3021,10 @@ void test_MQTTPropAdd_NoMemory(void)
     MqttPropBuilder_t propBuilder;
     uint8_t buf[1];
     size_t bufLength = sizeof(buf);
-    mqttStatus = MqttPropertyBuilder_Init(&(propBuilder), buf, bufLength); 
-    TEST_ASSERT_EQUAL_INT(MQTTSuccess, mqttStatus) ; 
+    propBuilder.pBuffer = buf;
+    propBuilder.bufferLength = bufLength;
+    propBuilder.currentIndex = 0 ;
+    propBuilder.fieldSet = 0 ;
 
     mqttStatus = MQTTPropAdd_ReasonString(&(propBuilder), "abc", 3);
     TEST_ASSERT_EQUAL_INT(MQTTNoMemory, mqttStatus) ;
@@ -3169,8 +3093,11 @@ void test_updateContextWithConnectProps(void)
     MqttPropBuilder_t propBuilder;
     uint8_t buffer[ 50 ];
     size_t bufLength = sizeof( buffer );
+    propBuilder.pBuffer = buffer;
+    propBuilder.bufferLength = bufLength;
+    propBuilder.currentIndex = 0;
+    propBuilder.fieldSet = 0;
 
-    mqttStatus = MqttPropertyBuilder_Init( &( propBuilder ), buffer, bufLength );
     uint8_t * pIndex = buffer;
     pIndex = serializeuint_16( pIndex, MQTT_RECEIVE_MAX_ID );
     pIndex = serializeuint_32( pIndex, MQTT_SESSION_EXPIRY_ID );
@@ -3218,8 +3145,6 @@ void test_MQTTV5_SerializeDisconnect( void )
 {
     uint8_t buf[ 10 ];
 
-    MQTTStatus_t status = MQTTSuccess;
-
     MQTT_SerializeDisconnectFixed( buf, 0x00, 10 );
     TEST_ASSERT_EQUAL( buf[ 0 ], MQTT_PACKET_TYPE_DISCONNECT );
 
@@ -3236,7 +3161,11 @@ void test_validatePublishProperties( void )
     uint8_t buffer[ 50 ];
     size_t bufLength = sizeof( buffer );
 
-    status = MqttPropertyBuilder_Init( &( propBuilder ), buffer, bufLength );
+    propBuilder.pBuffer = buffer;
+    propBuilder.bufferLength = bufLength;
+    propBuilder.currentIndex = 0;
+    propBuilder.fieldSet = 0;
+
     uint8_t * pIndex = buffer;
     pIndex = serializeuint_16( pIndex, 0x23 );
     pIndex = serializeuint_16( pIndex, 0x23 );
@@ -3261,7 +3190,11 @@ void test_validateSubscribeProperties( void )
     uint8_t buffer[ 50 ];
     size_t bufLength = sizeof( buffer );
 
-    status = MqttPropertyBuilder_Init( &( propBuilder ), buffer, bufLength );
+    propBuilder.pBuffer = buffer;
+    propBuilder.bufferLength = bufLength;
+    propBuilder.currentIndex = 0;
+    propBuilder.fieldSet = 0;
+
     uint8_t * pIndex = buffer;
     *pIndex = MQTT_SUBSCRIPTION_ID_ID;
     pIndex++;
@@ -3280,7 +3213,11 @@ void test_getProps( void )
     propBuffer1.pBuffer = NULL;
     uint8_t buffer[500];
     size_t bufLength = 100; 
-    status = MqttPropertyBuilder_Init(&propBuffer, buffer, bufLength);
+
+    propBuffer.pBuffer = buffer;
+    propBuffer.bufferLength = bufLength;
+    propBuffer.currentIndex = 0;
+    propBuffer.fieldSet = 0;
 
     /* 77 , 82 */
 
@@ -3317,7 +3254,7 @@ void test_getProps( void )
     uint32_t messageExpiry;
     const char * pContentType;
     uint16_t contentTypeLength;
-    uint32_t subscriptionId;
+    size_t subscriptionId;
     uint32_t sessionExpiry;
     uint16_t aliasMax;
     uint16_t receiveMax;
