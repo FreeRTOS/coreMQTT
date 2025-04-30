@@ -1446,6 +1446,7 @@ static MQTTStatus_t deserializePublish( const MQTTPacketInfo_t * pIncomingPacket
 
         /* Extract the packet identifier for QoS 1 or 2 PUBLISH packets. Packet
          * identifier starts immediately after the topic name. */
+        /* coverity[tainted_scalar] */
         pPacketIdentifierHigh = ( const uint8_t * ) ( &pPublishInfo->pTopicName[ pPublishInfo->topicNameLength ] );
 
         if( pPublishInfo->qos > MQTTQoS0 )

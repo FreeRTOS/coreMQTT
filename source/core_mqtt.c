@@ -680,6 +680,7 @@ static bool matchWildcards( const char * pTopicName,
              * ( nameIndex < topicNameLength) condition, which means that have
              * reached past the end of the topic name, and thus, we decrement the
              * index to the last character in the topic name.*/
+            /* coverity[integer_overflow] */
             nameIndex -= 1;
         }
     }
@@ -2940,6 +2941,7 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
                                             pWillInfo,
                                             &remainingLength,
                                             &packetSize );
+        /* coverity[sensitive_data_leak] */
         LogDebug( ( "CONNECT packet size is %lu and remaining length is %lu.",
                     ( unsigned long ) packetSize,
                     ( unsigned long ) remainingLength ) );
