@@ -2,7 +2,7 @@
 include( ${MODULE_ROOT_DIR}/mqttFilePaths.cmake )
 
 # ====================  Define your project name (edit) ========================
-set(project_name "core_mqttv5")
+set(project_name "core_mqtt")
 
 
 # =====================  Create your mock here  (edit)  ========================

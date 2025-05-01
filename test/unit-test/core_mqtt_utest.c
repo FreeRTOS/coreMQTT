@@ -2122,7 +2122,7 @@ void test_MQTT_Connect_error_path()
     uint8_t buf[ 500 ];
     size_t bufLength = sizeof( buf );
     status = MqttPropertyBuilder_Init( &( propBuilder ), buf, bufLength );
-
+    propBuilder.currentIndex = 200 ; 
 
     MqttPropBuilder_t willPropsBuilder;
     uint8_t wbuf[ 500 ];
@@ -2141,7 +2141,7 @@ void test_MQTT_Connect_error_path()
     mqttContext.transportInterface.send = transportSendSuccess;
     MQTT_GetConnectPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_SerializeConnectFixedHeader_Stub( MQTT_SerializeConnectFixedHeader_cb );
-    updateContextWithConnectProps_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_UpdateContextWithConnectProps_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTRecvFailed );
     status = MQTT_Connect( &mqttContext, &connectInfo, &willInfo, timeout, &sessionPresent, &propBuilder, &willPropsBuilder );
     TEST_ASSERT_EQUAL_INT( MQTTRecvFailed, status );
@@ -3223,7 +3223,7 @@ void test_MQTT_Publish( void )
     publishInfo.pPayload = "Payload";
     publishInfo.payloadLength = 7;
 
-    validatePublishProperties_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_ValidatePublishProperties_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_ValidatePublishParams_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_GetPublishPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_SerializePublishHeaderWithoutTopic_ExpectAnyArgsAndReturn( MQTTSuccess );
@@ -6474,7 +6474,7 @@ void test_MQTTV5_Subscribe_happy_path( void )
 
 
     /* Verify MQTTSuccess is returned with the following mocks. */
-    validateSubscribeProperties_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_ValidateSubscribeProperties_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_GetSubscribePacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_GetSubscribePacketSize_ReturnThruPtr_pPacketSize( &packetSize );
     MQTT_GetSubscribePacketSize_ReturnThruPtr_pRemainingLength( &remainingLength );
@@ -6594,8 +6594,7 @@ void test_MQTTV5_Subscribe_happy_path1( void )
     subscribeInfo[ 0 ].topicFilterLength = 3;
     subscribeInfo[ 0 ].noLocalOption = 0;
     subscribeInfo[ 0 ].retainAsPublishedOption = 0;
-
-    /* validateSubscribeProperties_ExpectAnyArgsAndReturn(MQTTSuccess); */
+    
     MQTT_GetSubscribePacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_GetSubscribePacketSize_ReturnThruPtr_pPacketSize( &packetSize );
     MQTT_GetSubscribePacketSize_ReturnThruPtr_pRemainingLength( &remainingLength );

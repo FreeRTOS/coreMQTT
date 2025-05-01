@@ -556,9 +556,8 @@ static MQTTStatus_t sendPublishAcksWithProperty( MQTTContext_t * pContext,
  * @brief Send acks for received QoS 1/2 publishes with properties.
  *
  * @param[in] pContext MQTT Connection context.
- * @param[in] pDisconnectInfo Reason code and properties.
+ * @param[in] reasonCode Reason code to be sent in the Disconnect packet.
  * @param[in] remainingLength Remaining length of the packet.
- * @param[in] sessionExpiry Session expiry interval.
  * @param[in] pPropertyBuilder MQTT Disconnect property builder.
  *
  *
@@ -574,7 +573,7 @@ static MQTTStatus_t sendDisconnectWithoutCopy( MQTTContext_t * pContext,
 /**
  * @brief Initialize an MQTTConnectProperties_t.
  *
- * This function can be called on an #MQTTConnectProperties_t to set the properties to their default value before calling MQTT_Connect or #MQTTV5_GetConnectPacketSize.
+ * @note This function initializes the connect properties to default values in the #MQTT_Init.
  *
  * @param[in] pConnectProperties The connect properties to initialize.
  *
@@ -582,7 +581,7 @@ static MQTTStatus_t sendDisconnectWithoutCopy( MQTTContext_t * pContext,
  */
 static MQTTStatus_t MQTT_InitConnect( MQTTConnectProperties_t * pConnectProperties );
 
-/*
+/**
  * @brief Validate Publish Ack Reason Code
  *
  * @param[in] reasonCode Reason Code to validate
@@ -1814,7 +1813,7 @@ static MQTTStatus_t handleIncomingAck( MQTTContext_t * pContext,
             break;
 
         case MQTT_PACKET_TYPE_PINGRESP:
-            status = MQTT_DeserializePing( pIncomingPacket, &packetIdentifier, NULL );
+            status = MQTT_DeserializePing( pIncomingPacket);
             invokeAppCallback = ( status == MQTTSuccess ) && !manageKeepAlive;
 
             if( ( status == MQTTSuccess ) && ( manageKeepAlive == true ) )
@@ -2601,7 +2600,7 @@ static MQTTStatus_t sendConnectWithoutCopy( MQTTContext_t * pContext,
          */
         if( pPropertyBuilder != NULL )
         {
-            status = updateContextWithConnectProps( pPropertyBuilder, &pContext->connectProperties );
+            status = MQTT_UpdateContextWithConnectProps( pPropertyBuilder, &pContext->connectProperties );
         }
 
         /* Serialize the client ID. */
@@ -3425,7 +3424,7 @@ MQTTStatus_t MQTT_Subscribe( MQTTContext_t * pContext,
 
     if( ( status == MQTTSuccess ) && ( pPropertyBuilder != NULL ) )
     {
-        status = validateSubscribeProperties( pContext->connectProperties.isSubscriptionIdAvailable, pPropertyBuilder );
+        status = MQTT_ValidateSubscribeProperties( pContext->connectProperties.isSubscriptionIdAvailable, pPropertyBuilder );
     }
 
     if( status == MQTTSuccess )
@@ -3509,7 +3508,7 @@ MQTTStatus_t MQTT_Publish( MQTTContext_t * pContext,
 
     if( ( status == MQTTSuccess ) && ( pPropertyBuilder != NULL ) )
     {
-        status = validatePublishProperties( pContext->connectProperties.serverTopicAliasMax, pPropertyBuilder, &topicAlias );
+        status = MQTT_ValidatePublishProperties( pContext->connectProperties.serverTopicAliasMax, pPropertyBuilder, &topicAlias );
     }
 
     if( status == MQTTSuccess )

@@ -175,26 +175,98 @@
  */
 #define MQTT_PUBLISH_ACK_PACKET_SIZE_WITH_REASON    ( 3UL )
 
-/*
- *  Position of the properties for the fieldSet
+
+
+/* Position of the properties for the fieldSet*/
+
+/**
+ * @brief Position for Subscription Identifier property
  */
 #define MQTT_SUBSCRIPTION_ID_POS                    ( 1 )
+
+/**
+ * @brief Position for Session Expiry Interval property
+ */
 #define MQTT_SESSION_EXPIRY_INTERVAL_POS            ( 2 )
+
+/**
+ * @brief Position for Receive Maximum property
+ */
 #define MQTT_RECEIVE_MAXIMUM_POS                    ( 3 )
+
+/**
+ * @brief Position for Maximum Packet Size property
+ */
 #define MQTT_MAX_PACKET_SIZE_POS                    ( 4 )
+
+/**
+ * @brief Position for Topic Alias Maximum property
+ */
 #define MQTT_TOPIC_ALIAS_MAX_POS                    ( 5 )
+
+/**
+ * @brief Position for Request Response Information property
+ */
 #define MQTT_REQUEST_RESPONSE_INFO_POS              ( 6 )
+
+/**
+ * @brief Position for Request Problem Information property
+ */
 #define MQTT_REQUEST_PROBLEM_INFO_POS               ( 7 )
+
+/**
+ * @brief Position for User Property
+ */
 #define MQTT_USER_PROPERTY_POS                      ( 8 )
+
+/**
+ * @brief Position for Authentication Method property
+ */
 #define MQTT_AUTHENTICATION_METHOD_POS              ( 9 )
+
+/**
+ * @brief Position for Authentication Data property
+ */
 #define MQTT_AUTHENTICATION_DATA_POS                ( 10 )
+
+/**
+ * @brief Position for Payload Format Indicator property
+ */
 #define MQTT_PAYLOAD_FORMAT_INDICATOR_POS           ( 11 )
+
+/**
+ * @brief Position for Message Expiry Interval property
+ */
 #define MQTT_MESSAGE_EXPIRY_INTERVAL_POS            ( 12 )
+
+/**
+ * @brief Position for Topic Alias property in PUBLISH
+ */
 #define MQTT_PUBLISH_TOPIC_ALIAS_POS                ( 13 )
+
+/**
+ * @brief Position for Response Topic property in PUBLISH
+ */
 #define MQTT_PUBLISH_RESPONSE_TOPIC_POS             ( 14 )
+
+/**
+ * @brief Position for Correlation Data property in PUBLISH
+ */
 #define MQTT_PUBLISH_CORRELATION_DATA_POS           ( 15 )
+
+/**
+ * @brief Position for Subscription Identifier property in PUBLISH
+ */
 #define MQTT_PUBLISH_SUBSCRIPTION_IDENTIFIER_POS    ( 16 )
+
+/**
+ * @brief Position for Content Type property in PUBLISH
+ */
 #define MQTT_PUBLISH_CONTENT_TYPE_POS               ( 17 )
+
+/**
+ * @brief Position for Reason String property
+ */
 #define MQTT_REASON_STRING_POS                      ( 18 )
 
 /**
@@ -241,9 +313,9 @@ static MQTTStatus_t calculatePublishPacketSize( const MQTTPublishInfo_t * pPubli
  * @param[in] subscriptionCount The number of elements in pSubscriptionList.
  * @param[out] pRemainingLength The Remaining Length of the MQTT SUBSCRIBE or
  * UNSUBSCRIBE packet.
- * @param[out] pPacketSize The total size of the MQTT MQTT SUBSCRIBE or
- * UNSUBSCRIBE packet.
- * @param[in] propLen Length of the optional properties in MQTT_SUBSCRIBE or MQTT_UNSUBSCRIBE
+ * @param[out] pPacketSize The total size of the MQTT SUBSCRIBE or
+ * MQTT UNSUBSCRIBE packet.
+ * @param[in] subscribePropLen Length of the optional properties in MQTT_SUBSCRIBE or MQTT_UNSUBSCRIBE
  * @param[in] maxPacketSize Maximum Packet Size allowed by the broker
  * @param[in] subscriptionType #MQTT_TYPE_SUBSCRIBE or #MQTT_TYPE_UNSUBSCRIBE.
  *
@@ -2991,7 +3063,6 @@ static MQTTStatus_t decodeAckProperties( MqttPropBuilder_t * propBuffer,
     MQTTStatus_t status = MQTTSuccess;
     uint8_t * pLocalIndex = pIndex;
     bool reasonString = false;
-    uint16_t reasonStringLength = 0U;
 
     /*Decode the property length*/
     status = decodeVariableLength( pLocalIndex, &propertyLength );
@@ -3027,21 +3098,7 @@ static MQTTStatus_t decodeAckProperties( MqttPropBuilder_t * propBuffer,
             switch( propertyId )
             {
                 case MQTT_REASON_STRING_ID:
-
-                    if( reasonString == true )
-                    {
-                        status = MQTTBadParameter;
-                    }
-                    else
-                    {
-                        reasonStringLength = UINT16_DECODE( pLocalIndex );
-                        pLocalIndex = &pLocalIndex[ sizeof( uint16_t ) ];
-                        propertyLength -= sizeof( uint16_t );
-                        pLocalIndex = &pLocalIndex[ reasonStringLength ];
-                        propertyLength -= reasonStringLength;
-                        reasonString = true;
-                    }
-
+                    status = decodeAndDiscardutf_8( &propertyLength, &reasonString, &pLocalIndex );
                     break;
 
                 case MQTT_USER_PROPERTY_ID:
@@ -3178,6 +3235,12 @@ static MQTTStatus_t deserializePublishProperties( MQTTPublishInfo_t * pPublishIn
     MQTTStatus_t status = MQTTSuccess;
     size_t propertyLength = 0U;
     uint8_t * pLocalIndex = pIndex;
+    bool contentType = false;
+    bool messageExpiryInterval = false;
+    bool responseTopic = false;
+    bool topicAlias = false;
+    bool payloadFormatIndicator = false;
+    bool correlationData = false;
 
     /*Decode Property Length */
 
@@ -3197,12 +3260,6 @@ static MQTTStatus_t deserializePublishProperties( MQTTPublishInfo_t * pPublishIn
         {
             /** Decode propertyId  -> reason string if or user property id*/
             uint8_t propertyId = *pLocalIndex;
-            bool contentType = false;
-            bool messageExpiryInterval = false;
-            bool responseTopic = false;
-            bool topicAlias = false;
-            bool payloadFormatIndicator = false;
-            bool correlationData = false;
             pLocalIndex = &pLocalIndex[ 1 ];
             propertyLength -= sizeof( uint8_t );
 
@@ -3370,7 +3427,7 @@ static MQTTStatus_t deserializePublish( const MQTTPacketInfo_t * pIncomingPacket
 
 /*-----------------------------------------------------------*/
 
-MQTTStatus_t updateContextWithConnectProps( const MqttPropBuilder_t * pPropBuilder,
+MQTTStatus_t MQTT_UpdateContextWithConnectProps( const MqttPropBuilder_t * pPropBuilder,
                                             MQTTConnectProperties_t * pConnectProperties )
 {
     MQTTStatus_t status = MQTTSuccess;
@@ -3437,14 +3494,9 @@ MQTTStatus_t updateContextWithConnectProps( const MqttPropBuilder_t * pPropBuild
 
 /*-----------------------------------------------------------*/
 
-MQTTStatus_t MQTT_DeserializePing( const MQTTPacketInfo_t * pIncomingPacket,
-                                   const uint16_t * pPacketId,
-                                   const bool * pSessionPresent )
+MQTTStatus_t MQTT_DeserializePing( const MQTTPacketInfo_t * pIncomingPacket)
 {
     MQTTStatus_t status = MQTTSuccess;
-
-    ( void ) pPacketId;
-    ( void ) pSessionPresent;
 
     if( pIncomingPacket == NULL )
     {
@@ -3530,7 +3582,7 @@ MQTTStatus_t MQTT_ValidatePublishParams( const MQTTPublishInfo_t * pPublishInfo,
 
 /*-----------------------------------------------------------*/
 
-MQTTStatus_t validatePublishProperties( uint16_t serverTopicAliasMax,
+MQTTStatus_t MQTT_ValidatePublishProperties( uint16_t serverTopicAliasMax,
                                         const MqttPropBuilder_t * propBuilder,
                                         uint16_t * topicAlias )
 {
@@ -3544,11 +3596,6 @@ MQTTStatus_t validatePublishProperties( uint16_t serverTopicAliasMax,
         uint8_t propertyId = *pLocalIndex;
         pLocalIndex = &pLocalIndex[ 1 ];
         propertyLength -= sizeof( uint8_t );
-
-        if( topicAliasBool == true )
-        {
-            break;
-        }
 
         switch( propertyId )
         {
@@ -3567,13 +3614,17 @@ MQTTStatus_t validatePublishProperties( uint16_t serverTopicAliasMax,
                 /*Do nothing*/
                 break;
         }
+        if( topicAliasBool == true )
+        {
+            break;
+        }
     }
 
     return status;
 }
 /*-----------------------------------------------------------*/
 
-MQTTStatus_t validateSubscribeProperties( uint8_t isSubscriptionIdAvailable,
+MQTTStatus_t MQTT_ValidateSubscribeProperties( uint8_t isSubscriptionIdAvailable,
                                           const MqttPropBuilder_t * propBuilder )
 {
     MQTTStatus_t status = MQTTSuccess;
@@ -3586,28 +3637,24 @@ MQTTStatus_t validateSubscribeProperties( uint8_t isSubscriptionIdAvailable,
         uint8_t propertyId = *pLocalIndex;
         pLocalIndex = &pLocalIndex[ 1 ];
         propertyLength -= sizeof( uint8_t );
-
-        if( subscriptionId == true )
-        {
-            break;
-        }
-
         switch( propertyId )
         {
             case MQTT_SUBSCRIPTION_ID_ID:
                 subscriptionId = true;
-
                 if( isSubscriptionIdAvailable == 0U )
                 {
                     LogError( ( "Protocol Error : Subscription Id not available" ) );
                     status = MQTTBadParameter;
                 }
-
                 break;
 
             default:
                 /*Do nothing*/
                 break;
+        }
+        if( subscriptionId == true )
+        {
+            break;
         }
     }
 
@@ -5042,7 +5089,7 @@ MQTTStatus_t MQTTPropGet_PubSubscriptionId( MqttPropBuilder_t * propBuffer,
     return status;
 }
 
-MQTTStatus_t MQTTPropGet_ConnSessionExpiry( MqttPropBuilder_t * propBuffer,
+MQTTStatus_t MQTTPropGet_SessionExpiry( MqttPropBuilder_t * propBuffer,
                                             uint32_t * sessionExpiry )
 {
     MQTTStatus_t status = MQTTSuccess;

@@ -34,16 +34,6 @@
 #include "core_mqtt_config_defaults.h"
 #include "core_mqtt_utils.h"
 
-/**
- * @brief Encodes the remaining length of the packet using the variable length
- * encoding scheme provided in the MQTT v3.1.1 specification.
- *
- * @param[out] pDestination The destination buffer to store the encoded remaining
- * length.
- * @param[in] length The remaining length to encode.
- *
- * @return The location of the byte following the encoded value.
- */
 uint8_t * encodeVariableLength( uint8_t * pDestination,
                                 size_t length )
 {

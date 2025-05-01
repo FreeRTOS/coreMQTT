@@ -1285,25 +1285,25 @@ void test_RemaininglengthLimit( void )
 
 void test_MQTTV5_ValidatePublishParams()
 {
-    uint16_t topicAliasMax = 10U;
+    uint16_t topicAlias = 10U;
     uint8_t maxQos = 0U;
     uint8_t retain = 0U;
     uint32_t maxPacketSize = 0U;
 
     /*Publish info cannot be null*/
-    status = MQTT_ValidatePublishParams( NULL, retain, maxQos, topicAliasMax, maxPacketSize );
+    status = MQTT_ValidatePublishParams( NULL, retain, maxQos, topicAlias, maxPacketSize );
     TEST_ASSERT_EQUAL( MQTTBadParameter, status );
 
     /*Retain is not allowed. */
     publishInfo.topicAlias = 2U;
     publishInfo.retain = true;
-    status = MQTT_ValidatePublishParams( &publishInfo, retain, maxQos, topicAliasMax, maxPacketSize );
+    status = MQTT_ValidatePublishParams( &publishInfo, retain, maxQos, topicAlias, maxPacketSize );
     TEST_ASSERT_EQUAL( MQTTBadParameter, status );
 
     /*Qos invalid*/
     publishInfo.retain = false;
     publishInfo.qos = 1;
-    status = MQTT_ValidatePublishParams( &publishInfo, retain, maxQos, topicAliasMax, maxPacketSize );
+    status = MQTT_ValidatePublishParams( &publishInfo, retain, maxQos, topicAlias, maxPacketSize );
     TEST_ASSERT_EQUAL( MQTTBadParameter, status );
 
     /*Valid parameters should return success*/
@@ -1314,21 +1314,41 @@ void test_MQTTV5_ValidatePublishParams()
     publishInfo.pTopicName = "abc";
     publishInfo.topicNameLength = 3;
     maxPacketSize = 10;
-    status = MQTT_ValidatePublishParams( &publishInfo, retain, maxQos, topicAliasMax, maxPacketSize );
+    status = MQTT_ValidatePublishParams( &publishInfo, retain, maxQos, topicAlias, maxPacketSize );
+    TEST_ASSERT_EQUAL( MQTTSuccess, status );
+
+    publishInfo.pTopicName = NULL;
+    publishInfo.topicNameLength = 0;
+    status = MQTT_ValidatePublishParams( &publishInfo, retain, maxQos, topicAlias, maxPacketSize );
     TEST_ASSERT_EQUAL( MQTTSuccess, status );
 
     /*Invalid topic name and topic name length*/
     publishInfo.pTopicName = NULL;
-    publishInfo.topicNameLength = 2;
-    status = MQTT_ValidatePublishParams( &publishInfo, retain, maxQos, topicAliasMax, maxPacketSize );
+    publishInfo.topicNameLength = 2 ; 
+    status = MQTT_ValidatePublishParams( &publishInfo, retain, maxQos, topicAlias, maxPacketSize );
     TEST_ASSERT_EQUAL( MQTTBadParameter, status );
 
     /*Invalid maxPacket size*/
     publishInfo.pTopicName = "abc";
     publishInfo.topicNameLength = 3;
     maxPacketSize = 0;
-    status = MQTT_ValidatePublishParams( &publishInfo, retain, maxQos, topicAliasMax, maxPacketSize );
+    status = MQTT_ValidatePublishParams( &publishInfo, retain, maxQos, topicAlias, maxPacketSize );
     TEST_ASSERT_EQUAL( MQTTBadParameter, status );
+
+    maxPacketSize = 100 ; 
+    topicAlias = 0 ; 
+    status = MQTT_ValidatePublishParams( &publishInfo, retain, maxQos, topicAlias, maxPacketSize );
+    TEST_ASSERT_EQUAL( MQTTSuccess, status );
+
+    publishInfo.topicNameLength = 0 ; 
+    status = MQTT_ValidatePublishParams( &publishInfo, retain, maxQos, topicAlias, maxPacketSize );
+    TEST_ASSERT_EQUAL( MQTTBadParameter, status );
+
+    publishInfo.pTopicName = "abc";
+    publishInfo.topicNameLength = 3;
+    publishInfo.qos = 0 ; 
+    status = MQTT_ValidatePublishParams( &publishInfo, retain, 0, topicAlias, maxPacketSize );
+    TEST_ASSERT_EQUAL( MQTTSuccess, status );
 }
 
 void test_MQTTV5_GetPublishPacketSize()
@@ -1708,6 +1728,9 @@ void test_MQTTV5_GetDisconnectPacketSize()
     status = MQTT_GetDisconnectPacketSize( &remainingLength, &packetSize, maxPacketSize, 0, MQTT_REASON_DISCONNECT_PACKET_TOO_LARGE );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
 
+    status = MQTT_GetDisconnectPacketSize( &remainingLength, &packetSize, maxPacketSize, 0, MQTT_REASON_DISCONNECT_SERVER_BUSY );
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+
     /*Max packet size lesser than packet size */
     status = MQTT_GetDisconnectPacketSize( &remainingLength, &packetSize, 5, 6, MQTT_REASON_DISCONNECT_NORMAL_DISCONNECTION );
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
@@ -1785,6 +1808,11 @@ void test_MQTTV5_DeserializeDisconnect()
     status = MQTT_DeserializeDisconnect( &packetInfo, maxPacketSize, &disconnectInfo, &propBuffer );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
 
+    buffer[0] = MQTT_REASON_DISCONNECT_DISCONNECT_WITH_WILL_MESSAGE ; 
+    status = MQTT_DeserializeDisconnect( &packetInfo, maxPacketSize, &disconnectInfo, &propBuffer );
+    TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
+
+    buffer[ 0 ] = MQTT_REASON_DISCONNECT_NORMAL_DISCONNECTION;
     /*Invalid property id.*/
     pIndex = &buffer[ 1 ];
     packetInfo.remainingLength = 9;
@@ -2042,7 +2070,8 @@ void test_incoming_publish1V5( void )
     uint16_t packetIdentifier = 1;
     MQTTStatus_t status = MQTTSuccess;
     MqttPropBuilder_t propBuffer = { 0 };
-    uint8_t buffer[ 47 ] = { 0 };
+    uint8_t buffer[ 60 ] = { 0 };
+    uint8_t * pIndex = buffer;
 
     mqttPacketInfo.type = MQTT_PACKET_TYPE_PUBLISH;
     mqttPacketInfo.pRemainingData = buffer;
@@ -2098,6 +2127,7 @@ void test_incoming_publish1V5( void )
 
 
 
+
     MQTTPublishInfo_t publishIn;
     ( void ) memset( &publishIn, 0x0, sizeof( publishIn ) );
 
@@ -2114,6 +2144,21 @@ void test_incoming_publish1V5( void )
     buffer[5] = 0x00 , buffer[6] = 0x01 , buffer[7] = 0x00;
     status = MQTT_DeserializePublish( &mqttPacketInfo, &packetIdentifier, &publishInfo, &propBuffer , 100);
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
+
+    buffer[5] = 12; 
+    pIndex = &buffer[6] ; 
+    mqttPacketInfo.remainingLength = 30 ;
+    mqttPacketInfo.type = MQTT_PACKET_TYPE_PUBLISH; 
+    pIndex = serializeutf_8( pIndex, MQTT_RESPONSE_TOPIC_ID );
+    pIndex = serializeutf_8( pIndex, MQTT_RESPONSE_TOPIC_ID );
+    status = MQTT_DeserializePublish( &mqttPacketInfo, &packetIdentifier, &publishIn, &propBuffer, 100 );
+    TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
+
+    pIndex = &buffer[6] ; 
+    pIndex = serializeutf_8( pIndex, MQTT_CORRELATION_DATA_ID );
+    pIndex = serializeutf_8( pIndex, MQTT_CORRELATION_DATA_ID );
+    status = MQTT_DeserializePublish( &mqttPacketInfo, &packetIdentifier, &publishIn, &propBuffer, 100 );
+    TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
 
 }
 
@@ -2236,30 +2281,28 @@ void test_MQTT_SerializePingreq( void )
 void test_MQTT_DeserializeAck_pingresp( void )
 {
     MQTTPacketInfo_t mqttPacketInfo;
-    uint16_t packetIdentifier = 1 ;
-    bool sessionPresent = 1 ;
     MQTTStatus_t status = MQTTSuccess;
 
     /* Bad remaining length. */
     ( void ) memset( &mqttPacketInfo, 0x00, sizeof( mqttPacketInfo ) );
     mqttPacketInfo.type = MQTT_PACKET_TYPE_PINGRESP;
     mqttPacketInfo.remainingLength = MQTT_PACKET_PINGRESP_REMAINING_LENGTH + 1;
-    status = MQTT_DeserializePing( &mqttPacketInfo, &packetIdentifier, &sessionPresent );
+    status = MQTT_DeserializePing( &mqttPacketInfo );
     TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
 
     mqttPacketInfo.type = MQTT_PACKET_TYPE_SUBACK;
     mqttPacketInfo.remainingLength = 5;
-    status = MQTT_DeserializePing( &mqttPacketInfo, &packetIdentifier, &sessionPresent );
+    status = MQTT_DeserializePing( &mqttPacketInfo);
     TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
 
     /* Process a valid PINGRESP. */
     mqttPacketInfo.type = MQTT_PACKET_TYPE_PINGRESP;
     mqttPacketInfo.remainingLength = MQTT_PACKET_PINGRESP_REMAINING_LENGTH;
     mqttPacketInfo.pRemainingData = NULL;
-    status = MQTT_DeserializePing( &mqttPacketInfo, NULL, NULL );
+    status = MQTT_DeserializePing( &mqttPacketInfo);
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
 
-    status = MQTT_DeserializePing( NULL, NULL, NULL );
+    status = MQTT_DeserializePing( NULL);
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
 }
 
@@ -3092,21 +3135,42 @@ void test_updateContextWithConnectProps(void)
     MQTTStatus_t mqttStatus = MQTTSuccess;
     MqttPropBuilder_t propBuilder;
     uint8_t buffer[ 50 ];
+    MQTTConnectProperties_t connectProps;
     size_t bufLength = sizeof( buffer );
     propBuilder.pBuffer = buffer;
     propBuilder.bufferLength = bufLength;
     propBuilder.currentIndex = 0;
     propBuilder.fieldSet = 0;
 
+    mqttStatus = MQTT_UpdateContextWithConnectProps( &propBuilder, &connectProps );
+    TEST_ASSERT_EQUAL_INT( MQTTSuccess, mqttStatus );
+
     uint8_t * pIndex = buffer;
     pIndex = serializeuint_16( pIndex, MQTT_RECEIVE_MAX_ID );
     pIndex = serializeuint_32( pIndex, MQTT_SESSION_EXPIRY_ID );
     pIndex = serializeuint_16( pIndex, MQTT_TOPIC_ALIAS_MAX_ID );
     pIndex = serializeuint_32( pIndex, MQTT_MAX_PACKET_SIZE_ID );
-    propBuilder.currentIndex = 16;
-    MQTTConnectProperties_t connectProps;
-    mqttStatus = updateContextWithConnectProps( &propBuilder, &connectProps );
-    TEST_ASSERT_EQUAL_INT( mqttStatus, MQTTSuccess );
+    pIndex = serializeutf_8( pIndex, MQTT_AUTH_METHOD_ID );
+    propBuilder.currentIndex = 17;
+    mqttStatus = MQTT_UpdateContextWithConnectProps( &propBuilder, &connectProps );
+    TEST_ASSERT_EQUAL_INT( MQTTSuccess, mqttStatus );
+
+    mqttStatus = MQTT_UpdateContextWithConnectProps( NULL, &connectProps );
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, mqttStatus );
+
+    mqttStatus = MQTT_UpdateContextWithConnectProps(&propBuilder, NULL);
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, mqttStatus );
+
+    propBuilder.pBuffer = NULL;
+    mqttStatus = MQTT_UpdateContextWithConnectProps(&propBuilder, &connectProps);
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, mqttStatus );
+
+    propBuilder.pBuffer = buffer;
+    propBuilder.currentIndex = 5 ; 
+    mqttStatus = MQTT_UpdateContextWithConnectProps(&propBuilder, &connectProps);
+    TEST_ASSERT_EQUAL_INT( MQTTBadResponse, mqttStatus );
+
+
 }
 
 void test_MQTT_SerializeAck( void )
@@ -3166,20 +3230,28 @@ void test_validatePublishProperties( void )
     propBuilder.currentIndex = 0;
     propBuilder.fieldSet = 0;
 
+    status = MQTT_ValidatePublishProperties( 1, &propBuilder, &topicAlias );
+    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
+
     uint8_t * pIndex = buffer;
     pIndex = serializeuint_16( pIndex, 0x23 );
-    pIndex = serializeuint_16( pIndex, 0x23 );
+
     propBuilder.currentIndex = 3;
 
     /*Invalid Topic Alias*/
     serverTopicAliasMax = 2;
-    status = validatePublishProperties( serverTopicAliasMax, &propBuilder, &topicAlias );
-    TEST_ASSERT_EQUAL_INT( status, MQTTBadParameter );
+    status = MQTT_ValidatePublishProperties( serverTopicAliasMax, &propBuilder, &topicAlias );
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
 
-    /*More than 1 property received*/
-    propBuilder.currentIndex = 6;
-    status = validatePublishProperties( serverTopicAliasMax, &propBuilder, &topicAlias );
-    TEST_ASSERT_EQUAL_INT( status, MQTTBadParameter );
+    serverTopicAliasMax = 300; ; 
+    status = MQTT_ValidatePublishProperties( serverTopicAliasMax, &propBuilder, &topicAlias );
+    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
+
+    pIndex = buffer;
+    pIndex = serializeutf_8(pIndex, MQTT_RESPONSE_TOPIC_ID); 
+    status = MQTT_ValidatePublishProperties( serverTopicAliasMax, &propBuilder, &topicAlias );
+    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
+
 }
 
 void test_validateSubscribeProperties( void )
@@ -3195,13 +3267,28 @@ void test_validateSubscribeProperties( void )
     propBuilder.currentIndex = 0;
     propBuilder.fieldSet = 0;
 
+    status = MQTT_ValidateSubscribeProperties( isSubIdAvailable, &propBuilder );
+    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
+
     uint8_t * pIndex = buffer;
     *pIndex = MQTT_SUBSCRIPTION_ID_ID;
     pIndex++;
     *pIndex = 2;
     propBuilder.currentIndex = 2;
-    status = validateSubscribeProperties( isSubIdAvailable, &propBuilder );
+    status = MQTT_ValidateSubscribeProperties( isSubIdAvailable, &propBuilder );
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+
+    isSubIdAvailable = 1 ; 
+    status = MQTT_ValidateSubscribeProperties( isSubIdAvailable, &propBuilder );
+    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
+
+    pIndex = buffer;
+    pIndex = serializeutf_8(pIndex, MQTT_RESPONSE_TOPIC_ID); 
+    status = MQTT_ValidateSubscribeProperties( 1, &propBuilder );
+    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
+
+
+
 }
 
 void test_getProps( void )
@@ -3306,6 +3393,11 @@ void test_getProps( void )
                 TEST_ASSERT_EQUAL_INT( MQTTBadParameter, MQTTPropGet_PubResponseTopic( &propBuffer, NULL, &responseTopicLength ) );
                 TEST_ASSERT_EQUAL_INT( MQTTBadParameter, MQTTPropGet_PubResponseTopic( &propBuffer, &pResponseTopic, NULL ) );
                 TEST_ASSERT_EQUAL_INT( MQTTSuccess, MQTTPropGet_PubResponseTopic( &propBuffer, &pResponseTopic, &responseTopicLength ) );
+                propBuffer.bufferLength = 13 ; 
+                TEST_ASSERT_EQUAL_INT( MQTTBadResponse, MQTTPropGet_PubResponseTopic( &propBuffer, &pResponseTopic, &responseTopicLength ) );
+                propBuffer.bufferLength = 16 ;
+                TEST_ASSERT_EQUAL_INT( MQTTBadResponse, MQTTPropGet_PubResponseTopic( &propBuffer, &pResponseTopic, &responseTopicLength ) );
+                propBuffer.bufferLength = 100 ;
                 break;
 
             case MQTT_CORRELATION_DATA_ID:
@@ -3344,10 +3436,10 @@ void test_getProps( void )
                 break;
 
             case MQTT_SESSION_EXPIRY_ID:
-                TEST_ASSERT_EQUAL_INT( MQTTBadParameter, MQTTPropGet_ConnSessionExpiry( NULL, &sessionExpiry ) );
-                TEST_ASSERT_EQUAL_INT( MQTTBadParameter, MQTTPropGet_ConnSessionExpiry( &propBuffer1, &sessionExpiry ) );
-                TEST_ASSERT_EQUAL_INT( MQTTBadParameter, MQTTPropGet_ConnSessionExpiry( &propBuffer, NULL ) );
-                TEST_ASSERT_EQUAL_INT( MQTTSuccess, MQTTPropGet_ConnSessionExpiry( &propBuffer, &sessionExpiry ) );
+                TEST_ASSERT_EQUAL_INT( MQTTBadParameter, MQTTPropGet_SessionExpiry( NULL, &sessionExpiry ) );
+                TEST_ASSERT_EQUAL_INT( MQTTBadParameter, MQTTPropGet_SessionExpiry( &propBuffer1, &sessionExpiry ) );
+                TEST_ASSERT_EQUAL_INT( MQTTBadParameter, MQTTPropGet_SessionExpiry( &propBuffer, NULL ) );
+                TEST_ASSERT_EQUAL_INT( MQTTSuccess, MQTTPropGet_SessionExpiry( &propBuffer, &sessionExpiry ) );
                 break;
 
             case MQTT_TOPIC_ALIAS_MAX_ID:

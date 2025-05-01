@@ -72,8 +72,5 @@
 #define MQTT_SUB_UNSUB_MAX_VECTORS              ( 6U )
 
 #define MQTT_SEND_TIMEOUT_MS                    ( 200U )
-#define MQTT_VERSION_5_ENABLED                  ( true )
-#define MAX_USER_PROPERTY                       ( 5000U )
-#define MQTT_USER_PROPERTY_ENABLED              ( true )
 
 #endif /* ifndef CORE_MQTT_CONFIG_H_ */

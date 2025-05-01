@@ -92,7 +92,12 @@
                    ( ( ( uint32_t ) ptr[ 1 ] ) << 16 ) | \
                    ( ( ( uint32_t ) ptr[ 2 ] ) << 8 ) |  \
                    ( ( uint32_t ) ptr[ 3 ] ) )
-
+/**
+ * @brief Macro to extract a specific byte from a 32-bit unsigned integer.
+ *
+ * @param[in] x The 32-bit unsigned integer to extract from.
+ * @param[in] byteNumber The byte position to extract (0-3).
+ */
 #define UINT32_GET_BYTE( x, byteNumber ) \
     ( ( uint8_t ) ( ( ( uint32_t ) ( x ) >> ( ( uint8_t ) ( byteNumber ) * 8U ) ) & 0xFFU ) )
 
