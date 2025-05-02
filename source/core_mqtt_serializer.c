@@ -3481,7 +3481,6 @@ MQTTStatus_t MQTT_UpdateContextWithConnectProps( const MqttPropBuilder_t * pProp
                 case MQTT_TOPIC_ALIAS_MAX_ID:
                     status = decodeuint16_t( &pConnectProperties->topicAliasMax, &propertyLength, &topicAlias, &pIndex );
                     break;
-
                 default:
                     /*Take no action*/
                     break;

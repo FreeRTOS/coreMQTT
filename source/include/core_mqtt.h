@@ -695,7 +695,28 @@ MQTTStatus_t MQTT_CheckConnectStatus( const MQTTContext_t * pContext );
  *    the API makes one more network receive call in an attempt to receive the remaining
  *    2 bytes. In the worst case, it can happen that the remaining 2 bytes are never
  *    received and this API will end up spending timeoutMs + transport receive timeout.
- *
+ * 
+ * @note Functions to add optional properties to the CONNECT packet are:
+ * 
+ * Connect Properties:
+ * - #MQTTPropAdd_SessionExpiry
+ * - #MQTTPropAdd_ConnReceiveMax
+ * - #MQTTPropAdd_ConnMaxPacketSize
+ * - #MQTTPropAdd_ConnTopicAliasMax
+ * - #MQTTPropAdd_ConnRequestRespInfo
+ * - #MQTTPropAdd_ConnRequestProbInfo
+ * - #MQTTPropAdd_UserProp
+ * - #MQTTPropAdd_ConnAuthMethod
+ * - #MQTTPropAdd_ConnAuthData
+ * 
+ * Will Properties:
+ * - #MQTTPropAdd_PubPayloadFormat
+ * - #MQTTPropAdd_PubMessageExpiry
+ * - #MQTTPropAdd_PubResponseTopic
+ * - #MQTTPropAdd_PubCorrelationData
+ * - #MQTTPropAdd_PubContentType
+ * - #MQTTPropAdd_UserProp
+ * 
  * <b>Example</b>
  * @code{c}
  *
@@ -787,7 +808,12 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
  * #MQTTStatusDisconnectPending if the user is expected to call MQTT_Disconnect
  * before calling any other API
  * #MQTTSuccess otherwise.
- *
+ * 
+ * @note Functions to add optional properties to the SUBSCRIBE packet are:
+ * 
+ * - #MQTTPropAdd_SubscribeId
+ * - #MQTTPropAdd_UserProp
+ * 
  * <b>Example</b>
  * @code{c}
  *
@@ -856,7 +882,17 @@ MQTTStatus_t MQTT_Subscribe( MQTTContext_t * pContext,
  * #MQTTPublishStoreFailed if the user provided callback to copy and store the
  * outgoing publish packet fails
  * #MQTTSuccess otherwise.
- *
+ * 
+ * @note Functions to add optional properties to the PUBLISH packet are:
+ * 
+ * - #MQTTPropAdd_PubPayloadFormat
+ * - #MQTTPropAdd_PubMessageExpiry
+ * - #MQTTPropAdd_PubTopicAlias
+ * - #MQTTPropAdd_PubResponseTopic
+ * - #MQTTPropAdd_PubCorrelationData
+ * - #MQTTPropAdd_PubContentType
+ * - #MQTTPropAdd_UserProp
+
  * <b>Example</b>
  * @code{c}
  *
@@ -959,6 +995,10 @@ MQTTStatus_t MQTT_Ping( MQTTContext_t * pContext );
  * before calling any other API
  * #MQTTSuccess otherwise.
  *
+ * @note Functions to add optional properties to the UNSUBSCRIBE packet are:
+ * 
+ * - #MQTTPropAdd_UserProp
+ * 
  * <b>Example</b>
  * @code{c}
  *
@@ -1026,6 +1066,12 @@ MQTTStatus_t MQTT_Unsubscribe( MQTTContext_t * pContext,
  * #MQTTBadParameter if invalid parameters are passed;
  * #MQTTSendFailed if transport send failed;
  * #MQTTSuccess otherwise.
+ * 
+ * @note Functions to add optional properties to the DISCONNECT packet are:
+ * 
+ * - #MQTTPropAdd_SessionExpiry
+ * - #MQTTPropAdd_ReasonString
+ * - #MQTTPropAdd_UserProp
  * 
  * <b>Example</b>
  * @code{c}
