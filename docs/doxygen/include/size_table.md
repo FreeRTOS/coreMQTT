@@ -8,9 +8,9 @@
         <td><b><center>With -Os Optimization</center></b></td>
     </tr>
     <tr>
-         <td>core_mqtt.c</td>
-         <td><center>6.7K</center></td>
-         <td><center>5.7K</center></td>
+        <td>core_mqtt.c</td>
+        <td><center>6.7K</center></td>
+        <td><center>5.7K</center></td>
     </tr>
     <tr>
         <td>core_mqtt_state.c</td>
