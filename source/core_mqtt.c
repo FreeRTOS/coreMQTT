@@ -657,6 +657,8 @@ static MQTTStatus_t sendSubscribeWithoutCopy( MQTTContext_t * pContext,
                                               MQTTSubscriptionType_t subscriptionType,
                                               const MqttPropBuilder_t * pPropertyBuilder );
 
+void addSubscriptionOptions(const MQTTSubscribeInfo_t pSubscriptionInfo, uint8_t *subscriptionOptionsArray, size_t currentOptionIndex); 
+
 /*-----------------------------------------------------------*/
 
 static bool matchEndWildcardsSpecialCases( const char * pTopicFilter,
@@ -2163,13 +2165,12 @@ static MQTTStatus_t sendSubscribeWithoutCopy( MQTTContext_t * pContext,
     TransportOutVector_t pIoVector[ MQTT_SUB_UNSUB_MAX_VECTORS ];
     TransportOutVector_t * pIterator;
     uint8_t serializedTopicFieldLength[ MQTT_SUB_UNSUB_MAX_VECTORS ][ CORE_MQTT_SERIALIZED_LENGTH_FIELD_BYTES ];
-    uint8_t subscriptionOptionsArray[MQTT_SUB_UNSUB_MAX_VECTORS];
+    uint8_t subscriptionOptionsArray[MQTT_SUB_UNSUB_MAX_VECTORS / CORE_MQTT_SUBSCRIBE_PER_TOPIC_VECTOR_LENGTH];
     size_t totalPacketLength = 0U;
     size_t ioVectorLength = 0U;
     size_t subscriptionsSent = 0U;
     size_t vectorsAdded = 0U;
     size_t topicFieldLengthIndex;
-    uint8_t subscriptionOptions = 0U;
     size_t perTopicVectorLength;
     size_t subscribePropLen = 0;
     size_t currentOptionIndex = 0U ; 
@@ -2267,58 +2268,7 @@ static MQTTStatus_t sendSubscribeWithoutCopy( MQTTContext_t * pContext,
 
             if( subscriptionType == MQTT_TYPE_SUBSCRIBE )
             {
-                subscriptionOptions = 0U;
-
-                if( pSubscriptionList[ subscriptionsSent ].qos == MQTTQoS1 )
-                {
-                    LogInfo( ( "Adding QoS as QoS 1 in SUBSCRIBE payload" ) );
-                    UINT8_SET_BIT( subscriptionOptions, MQTT_SUBSCRIBE_QOS1 );
-                }
-                else if( pSubscriptionList[ subscriptionsSent ].qos == MQTTQoS2 )
-                {
-                    LogInfo( ( "Adding QoS as QoS 2 in SUBSCRIBE payload" ) );
-                    UINT8_SET_BIT( subscriptionOptions, MQTT_SUBSCRIBE_QOS2 );
-                }
-                else
-                {
-                    LogInfo( ( "Adding QoS as QoS 0 in SUBSCRIBE payload" ) );
-                }
-
-                if( pSubscriptionList[ subscriptionsSent ].noLocalOption )
-                {
-                    LogInfo( ( "Adding noLocalOption in SUBSCRIBE payload" ) );
-                    UINT8_SET_BIT( subscriptionOptions, MQTT_SUBSCRIBE_NO_LOCAL );
-                }
-                else
-                {
-                    LogDebug( ( "Adding noLocalOption as 0 in SUBSCRIBE payload" ) );
-                }
-
-                if( pSubscriptionList[ subscriptionsSent ].retainAsPublishedOption )
-                {
-                    LogInfo( ( " retainAsPublishedOption in SUBSCRIBE payload" ) );
-                    UINT8_SET_BIT( subscriptionOptions, MQTT_SUBSCRIBE_RETAIN_AS_PUBLISHED );
-                }
-                else
-                {
-                    LogDebug( ( "retainAsPublishedOption as 0 in SUBSCRIBE payload" ) );
-                }
-
-                if( pSubscriptionList[ subscriptionsSent ].retainHandlingOption == retainSendOnSub )
-                {
-                    LogInfo( ( "Send Retain messages at the time of subscribe" ) );
-                }
-                else if( pSubscriptionList[ subscriptionsSent ].retainHandlingOption == retainSendOnSubIfNotPresent )
-                {
-                    LogInfo( ( "Send retained messages at subscribe only if the subscription does not currently exist" ) );
-                    UINT8_SET_BIT( subscriptionOptions, MQTT_SUBSCRIBE_RETAIN_HANDLING1 );
-                }
-                else
-                {
-                    LogInfo( ( "Do not send retained messages at subscribe" ) );
-                    UINT8_SET_BIT( subscriptionOptions, MQTT_SUBSCRIBE_RETAIN_HANDLING2 );
-                }
-                subscriptionOptionsArray[currentOptionIndex] = subscriptionOptions;
+                addSubscriptionOptions( pSubscriptionList[subscriptionsSent] , subscriptionOptionsArray, currentOptionIndex) ; 
 
                 pIterator->iov_base = &( subscriptionOptionsArray[currentOptionIndex] );
                 pIterator->iov_len = 1U;
@@ -2344,8 +2294,6 @@ static MQTTStatus_t sendSubscribeWithoutCopy( MQTTContext_t * pContext,
         ioVectorLength = 0U;
         /* Reset the packet length for the next potential loop iteration. */
         totalPacketLength = 0U;
-
-        subscriptionOptions = 0U ; 
     } 
 
     return status;
@@ -4602,6 +4550,65 @@ static MQTTStatus_t validateSharedSubscriptions( const MQTTContext_t * pContext,
     }
 
     return status;
+}
+
+/*-----------------------------------------------------------*/
+
+void addSubscriptionOptions(const MQTTSubscribeInfo_t pSubscriptionInfo, uint8_t *subscriptionOptionsArray, size_t currentOptionIndex)
+{
+    uint8_t subscriptionOptions = 0U;
+
+    if( pSubscriptionInfo.qos == MQTTQoS1 )
+    {
+        LogInfo( ( "Adding QoS as QoS 1 in SUBSCRIBE payload" ) );
+        UINT8_SET_BIT( subscriptionOptions, MQTT_SUBSCRIBE_QOS1 );
+    }
+    else if( pSubscriptionInfo.qos == MQTTQoS2 )
+    {
+        LogInfo( ( "Adding QoS as QoS 2 in SUBSCRIBE payload" ) );
+        UINT8_SET_BIT( subscriptionOptions, MQTT_SUBSCRIBE_QOS2 );
+    }
+    else
+    {
+        LogInfo( ( "Adding QoS as QoS 0 in SUBSCRIBE payload" ) );
+    }
+
+    if( pSubscriptionInfo.noLocalOption )
+    {
+        LogInfo( ( "Adding noLocalOption in SUBSCRIBE payload" ) );
+        UINT8_SET_BIT( subscriptionOptions, MQTT_SUBSCRIBE_NO_LOCAL );
+    }
+    else
+    {
+        LogDebug( ( "Adding noLocalOption as 0 in SUBSCRIBE payload" ) );
+    }
+
+    if( pSubscriptionInfo.retainAsPublishedOption )
+    {
+        LogInfo( ( " retainAsPublishedOption in SUBSCRIBE payload" ) );
+        UINT8_SET_BIT( subscriptionOptions, MQTT_SUBSCRIBE_RETAIN_AS_PUBLISHED );
+    }
+    else
+    {
+        LogDebug( ( "retainAsPublishedOption as 0 in SUBSCRIBE payload" ) );
+    }
+
+    if( pSubscriptionInfo.retainHandlingOption == retainSendOnSub )
+    {
+        LogInfo( ( "Send Retain messages at the time of subscribe" ) );
+    }
+    else if( pSubscriptionInfo.retainHandlingOption == retainSendOnSubIfNotPresent )
+    {
+        LogInfo( ( "Send retained messages at subscribe only if the subscription does not currently exist" ) );
+        UINT8_SET_BIT( subscriptionOptions, MQTT_SUBSCRIBE_RETAIN_HANDLING1 );
+    }
+    else
+    {
+        LogInfo( ( "Do not send retained messages at subscribe" ) );
+        UINT8_SET_BIT( subscriptionOptions, MQTT_SUBSCRIBE_RETAIN_HANDLING2 );
+    }
+    subscriptionOptionsArray[currentOptionIndex] = subscriptionOptions;
+
 }
 
 /*-----------------------------------------------------------*/
