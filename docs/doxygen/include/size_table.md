@@ -8,9 +8,11 @@
         <td><b><center>With -Os Optimization</center></b></td>
     </tr>
     <tr>
-        <td>core_mqtt.c</td>
-        <td><center>4.9K</center></td>
-        <td><center>4.2K</center></td>
+         <td>core_mqtt.c</td>
+         <td><center>4.9K</center></td>
+         <td><center>4.2K</center></td>
+         <td><center>6.7K</center></td>
+         <td><center>5.7K</center></td>
     </tr>
     <tr>
         <td>core_mqtt_state.c</td>
@@ -21,10 +23,14 @@
         <td>core_mqtt_serializer.c</td>
         <td><center>2.9K</center></td>
         <td><center>2.3K</center></td>
+        <td><center>8.4K</center></td>
+        <td><center>6.1K</center></td>
     </tr>
     <tr>
         <td><b>Total estimates</b></td>
         <td><b><center>9.5K</center></b></td>
         <td><b><center>7.8K</center></b></td>
+        <td><b><center>16.8K</center></b></td>
+        <td><b><center>13.1K</center></b></td>
     </tr>
 </table>
