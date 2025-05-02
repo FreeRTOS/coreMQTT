@@ -708,6 +708,7 @@ static bool matchWildcards( const char * pTopicName,
 {
     bool shouldStopMatching = false;
     bool locationIsValidForWildcard;
+    uint16_t nameIndex;
 
     assert( pTopicName != NULL );
     assert( topicNameLength != 0U );
@@ -716,6 +717,8 @@ static bool matchWildcards( const char * pTopicName,
     assert( pNameIndex != NULL );
     assert( pFilterIndex != NULL );
     assert( pMatch != NULL );
+
+    nameIndex = *pNameIndex;
 
     /* Wild card in a topic filter is only valid either at the starting position
      * or when it is preceded by a '/'.*/
@@ -730,16 +733,16 @@ static bool matchWildcards( const char * pTopicName,
         /* Move topic name index to the end of the current level. The end of the
          * current level is identified by the last character before the next level
          * separator '/'. */
-        while( *pNameIndex < topicNameLength )
+        while( nameIndex < topicNameLength )
         {
             /* Exit the loop if we hit the level separator. */
-            if( pTopicName[ *pNameIndex ] == '/' )
+            if( pTopicName[ nameIndex ] == '/' )
             {
                 nextLevelExistsInTopicName = true;
                 break;
             }
 
-            ( *pNameIndex )++;
+            nameIndex += 1;
         }
 
         /* Determine if the topic filter contains a child level after the current level
@@ -771,10 +774,11 @@ static bool matchWildcards( const char * pTopicName,
         else
         {
             /* If we have reached here, the the loop terminated on the
-             * ( *pNameIndex < topicNameLength) condition, which means that have
+             * ( nameIndex < topicNameLength) condition, which means that have
              * reached past the end of the topic name, and thus, we decrement the
              * index to the last character in the topic name.*/
-            ( *pNameIndex )--;
+            /* coverity[integer_overflow] */
+            nameIndex -= 1;
         }
     }
 
@@ -796,6 +800,8 @@ static bool matchWildcards( const char * pTopicName,
         *pMatch = false;
         shouldStopMatching = true;
     }
+
+    *pNameIndex = nameIndex;
 
     return shouldStopMatching;
 }
@@ -1529,7 +1535,7 @@ static MQTTStatus_t handleKeepAlive( MQTTContext_t * pContext )
 static MQTTStatus_t handleIncomingPublish( MQTTContext_t * pContext,
                                            MQTTPacketInfo_t * pIncomingPacket )
 {
-    MQTTStatus_t status = MQTTBadParameter;
+    MQTTStatus_t status;
     MQTTPublishState_t publishRecordState = MQTTStateNull;
     uint16_t packetIdentifier = 0U;
     MQTTPublishInfo_t publishInfo;
@@ -1674,7 +1680,7 @@ static MQTTStatus_t handleIncomingPublish( MQTTContext_t * pContext,
 static MQTTStatus_t handlePublishAcks( MQTTContext_t * pContext,
                                        MQTTPacketInfo_t * pIncomingPacket )
 {
-    MQTTStatus_t status = MQTTBadResponse;
+    MQTTStatus_t status;
     MQTTPublishState_t publishRecordState = MQTTStateNull;
     uint16_t packetIdentifier;
     MQTTPubAckType_t ackType;
@@ -2694,7 +2700,6 @@ static MQTTStatus_t sendConnectWithoutCopy( MQTTContext_t * pContext,
                                                      iterator,
                                                      &totalMessageLength );
             /* Update the iterator to point to the next empty slot. */
-            iterator = &iterator[ vectorsAdded ];
             ioVectorLength += vectorsAdded;
         }
 
@@ -2850,8 +2855,8 @@ static MQTTStatus_t handleUncleanSessionResumption( MQTTContext_t * pContext )
     MQTTStateCursor_t cursor = MQTT_STATE_CURSOR_INITIALIZER;
     uint16_t packetId = MQTT_PACKET_ID_INVALID;
     MQTTPublishState_t state = MQTTStateNull;
-    size_t totalMessageLength;
-    uint8_t * pMqttPacket;
+    size_t totalMessageLength = 0;
+    uint8_t * pMqttPacket = NULL;
 
     assert( pContext != NULL );
 
@@ -3293,6 +3298,7 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
                                             willPropertyLength,
                                             &remainingLength,
                                             &packetSize );
+        /* coverity[sensitive_data_leak] */
         LogDebug( ( "CONNECT packet size is %lu and remaining length is %lu.",
                     ( unsigned long ) packetSize,
                     ( unsigned long ) remainingLength ) );
