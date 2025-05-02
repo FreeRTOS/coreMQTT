@@ -2263,7 +2263,7 @@ static MQTTStatus_t sendSubscribeWithoutCopy( MQTTContext_t * pContext,
             pIterator = &pIterator[ vectorsAdded ];
             ioVectorLength += vectorsAdded;
 
-            /* Lastly, send the susbcription Options */
+            /* Lastly, send the Subscription Options */
 
             if( subscriptionType == MQTT_TYPE_SUBSCRIBE )
             {
