@@ -657,7 +657,43 @@ static MQTTStatus_t sendSubscribeWithoutCopy( MQTTContext_t * pContext,
                                               MQTTSubscriptionType_t subscriptionType,
                                               const MqttPropBuilder_t * pPropertyBuilder );
 
-void addSubscriptionOptions(const MQTTSubscribeInfo_t pSubscriptionInfo, uint8_t *subscriptionOptionsArray, size_t currentOptionIndex); 
+/**
+ * @brief Add subscription options to the options array
+ * 
+ * @param[in] pSubscriptionInfo MQTT subscription information.
+ * @param[out] subscriptionOptionsArray Array to store subscription options.
+ * @param[in] currentOptionIndex Current index in the options array.
+ *
+ * @note This function does not return a status as it performs a direct array update.
+ */                                             
+static void addSubscriptionOptions(const MQTTSubscribeInfo_t pSubscriptionInfo, uint8_t *subscriptionOptionsArray, size_t currentOptionIndex); 
+
+/**
+ * @brief Check if wildcard subscriptions are allowed and valid
+ * 
+ * @param[in] isWildcardAvailable Flag indicating if wildcard subscriptions are supported.
+ * @param[in] pSubscriptionList List of MQTT subscription info.
+ * @param[in] iterator The iterator pointing to a topic filter in pSubscriptionList.
+ * 
+ * @return true if wildcard subscriptions are valid or not present;
+ *         false if wildcards are used but not supported
+ */
+static bool checkWildcardSubscriptions(uint8_t isWildcardAvailable, const MQTTSubscribeInfo_t * pSubscriptionList , size_t iterator);
+
+/**
+ * @brief Validate the topic filter in a subscription
+ * 
+ * @param[in] pContext MQTT Connection context.
+ * @param[in] pSubscriptionList List of MQTT subscription info.
+ * @param[in] iterator The iterator pointing to a topic filter in pSubscriptionList.
+ * 
+ * @return Returns one of the following:
+ * - #MQTTSuccess if the topic filter is valid
+ * - #MQTTBadParameter if the topic filter is invalid or parameters are NULL
+ */
+static MQTTStatus_t validateSubscribeTopicFilter(const MQTTContext_t * pContext,
+                                               const MQTTSubscribeInfo_t * pSubscriptionList,
+                                               size_t iterator);
 
 /*-----------------------------------------------------------*/
 
@@ -2074,31 +2110,8 @@ static MQTTStatus_t validateSubscribeUnsubscribeParams( const MQTTContext_t * pC
         {
             for( iterator = 0; iterator < subscriptionCount; iterator++ )
             {
-                if( ( pSubscriptionList[ iterator ].topicFilterLength == 0U ) || ( pSubscriptionList[ iterator ].pTopicFilter == NULL ) )
-                {
-                    LogError( ( "Argument cannot be null : pTopicFilter" ) );
-                    status = MQTTBadParameter;
-                }
-                else if( pSubscriptionList[ iterator ].qos > MQTTQoS2 )
-                {
-                    LogError( ( "Protocol Error : QoS cannot be greater than 2" ) );
-                    status = MQTTBadParameter;
-                }
-                /*Say that wildcards are avaliable by default. */
-                else if( ( pContext->connectProperties.isWildcardAvaiable == 0U ) && ( ( strchr( pSubscriptionList[ iterator ].pTopicFilter, ( int32_t ) '#' ) != NULL ) || ( strchr( pSubscriptionList[ iterator ].pTopicFilter, ( int32_t ) '+' ) != NULL ) ) )
-                {
-                    LogError( ( "Protocol Error : Wildcard Subscriptions not allowed. " ) );
-                    status = MQTTBadParameter;
-                }
-                else if( pSubscriptionList[ iterator ].retainHandlingOption > retainDoNotSendonSub )
-                {
-                    LogError( ( "Protocol Error : retainHandlingOption cannot be greater than 2" ) );
-                    status = MQTTBadParameter;
-                }
-                else
-                {
-                    status = validateSharedSubscriptions( pContext, pSubscriptionList, iterator );
-                }
+                status = validateSubscribeTopicFilter(pContext, pSubscriptionList, iterator );
+                
             }
         }
     }
@@ -4554,7 +4567,7 @@ static MQTTStatus_t validateSharedSubscriptions( const MQTTContext_t * pContext,
 
 /*-----------------------------------------------------------*/
 
-void addSubscriptionOptions(const MQTTSubscribeInfo_t pSubscriptionInfo, uint8_t *subscriptionOptionsArray, size_t currentOptionIndex)
+static void addSubscriptionOptions(const MQTTSubscribeInfo_t pSubscriptionInfo, uint8_t *subscriptionOptionsArray, size_t currentOptionIndex)
 {
     uint8_t subscriptionOptions = 0U;
 
@@ -4609,6 +4622,58 @@ void addSubscriptionOptions(const MQTTSubscribeInfo_t pSubscriptionInfo, uint8_t
     }
     subscriptionOptionsArray[currentOptionIndex] = subscriptionOptions;
 
+}
+
+/*-----------------------------------------------------------*/
+
+static bool checkWildcardSubscriptions(uint8_t isWildcardAvailable, const MQTTSubscribeInfo_t * pSubscriptionList , size_t iterator)
+{
+    bool ret = false ; 
+    if(isWildcardAvailable == 0U)
+    {
+        if(( ( strchr( pSubscriptionList[ iterator ].pTopicFilter, ( int32_t ) '#' ) != NULL ) || ( strchr( pSubscriptionList[ iterator ].pTopicFilter, ( int32_t ) '+' ) != NULL ) ))
+        {
+            ret = true ;
+        }
+    }
+    return ret ; 
+
+}
+
+/*-----------------------------------------------------------*/
+
+static MQTTStatus_t validateSubscribeTopicFilter(const MQTTContext_t * pContext,
+                                          const MQTTSubscribeInfo_t * pSubscriptionList,
+                                          size_t iterator)
+{
+    MQTTStatus_t status = MQTTSuccess;
+    if( ( pSubscriptionList[ iterator ].topicFilterLength == 0U ) || ( pSubscriptionList[ iterator ].pTopicFilter == NULL ) )
+    {
+        LogError( ( "Argument cannot be null : pTopicFilter" ) );
+        status = MQTTBadParameter;
+    }
+    else if( pSubscriptionList[ iterator ].qos > MQTTQoS2 )
+    {
+        LogError( ( "Protocol Error : QoS cannot be greater than 2" ) );
+        status = MQTTBadParameter;
+    }
+    /*Say that wildcards are avaliable by default. */
+    else if( checkWildcardSubscriptions(pContext->connectProperties.isWildcardAvaiable,pSubscriptionList, iterator ) )
+    {
+        LogError( ( "Protocol Error : Wildcard Subscriptions not allowed. " ) );
+        status = MQTTBadParameter;
+    }
+    else if( pSubscriptionList[ iterator ].retainHandlingOption > retainDoNotSendonSub )
+    {
+        LogError( ( "Protocol Error : retainHandlingOption cannot be greater than 2" ) );
+        status = MQTTBadParameter;
+    }
+    else
+    {
+        status = validateSharedSubscriptions( pContext, pSubscriptionList, iterator );
+    }
+    
+    return status;
 }
 
 /*-----------------------------------------------------------*/
