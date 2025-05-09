@@ -133,118 +133,116 @@ typedef enum MQTTQoS
  */
 typedef enum MQTTSuccessFailReasonCode
 {
-    /* PUBACK reason codes*/
-    MQTT_REASON_PUBACK_SUCCESS = 0x00,
-    MQTT_REASON_PUBACK_NO_MATCHING_SUBSCRIBERS = 0x10,
-    MQTT_REASON_PUBACK_UNSPECIFIED_ERROR = 0x80,
-    MQTT_REASON_PUBACK_IMPLEMENTATION_SPECIFIC_ERROR = 0x83,
-    MQTT_REASON_PUBACK_NOT_AUTHORIZED = 0x87,
-    MQTT_REASON_PUBACK_TOPIC_NAME_INVALID = 0x90,
-    MQTT_REASON_PUBACK_PACKET_IDENTIFIER_IN_USE = 0x91,
-    MQTT_REASON_PUBACK_QUOTA_EXCEEDED = 0x97,
-    MQTT_REASON_PUBACK_PAYLOAD_FORMAT_INVALID = 0x99,
+    /* PUBACK reason codes */
+    MQTT_REASON_PUBACK_SUCCESS = 0x00,                    /**< Publish was successfully received and accepted. */
+    MQTT_REASON_PUBACK_NO_MATCHING_SUBSCRIBERS = 0x10,    /**< Publish was accepted but there are no subscribers. */
+    MQTT_REASON_PUBACK_UNSPECIFIED_ERROR = 0x80,         /**< Unspecified error occurred for the PUBACK. */
+    MQTT_REASON_PUBACK_IMPLEMENTATION_SPECIFIC_ERROR = 0x83, /**< Implementation specific error for the PUBACK. */
+    MQTT_REASON_PUBACK_NOT_AUTHORIZED = 0x87,            /**< Client is not authorized to publish. */
+    MQTT_REASON_PUBACK_TOPIC_NAME_INVALID = 0x90,        /**< Topic name is not valid. */
+    MQTT_REASON_PUBACK_PACKET_IDENTIFIER_IN_USE = 0x91,  /**< Packet identifier is already in use. */
+    MQTT_REASON_PUBACK_QUOTA_EXCEEDED = 0x97,            /**< Implementation or system quota exceeded. */
+    MQTT_REASON_PUBACK_PAYLOAD_FORMAT_INVALID = 0x99,    /**< Payload format is invalid. */
 
-    /*PUBREC reason codes*/
-    MQTT_REASON_PUBREC_SUCCESS = 0x00,
-    MQTT_REASON_PUBREC_NO_MATCHING_SUBSCRIBERS = 0x10,
-    MQTT_REASON_PUBREC_UNSPECIFIED_ERROR = 0x80,
-    MQTT_REASON_PUBREC_IMPLEMENTATION_SPECIFIC_ERROR = 0x83,
-    MQTT_REASON_PUBREC_NOT_AUTHORIZED = 0x87,
-    MQTT_REASON_PUBREC_TOPIC_NAME_INVALID = 0x90,
-    MQTT_REASON_PUBREC_PACKET_IDENTIFIER_IN_USE = 0x91,
-    MQTT_REASON_PUBREC_QUOTA_EXCEEDED = 0x97,
-    MQTT_REASON_PUBREC_PAYLOAD_FORMAT_INVALID = 0x99,
+    /* PUBREC reason codes */
+    MQTT_REASON_PUBREC_SUCCESS = 0x00,                   /**< Publish was successfully received for QoS 2. */
+    MQTT_REASON_PUBREC_NO_MATCHING_SUBSCRIBERS = 0x10,   /**< Publish received but no matching subscribers. */
+    MQTT_REASON_PUBREC_UNSPECIFIED_ERROR = 0x80,        /**< Unspecified error occurred for the PUBREC. */
+    MQTT_REASON_PUBREC_IMPLEMENTATION_SPECIFIC_ERROR = 0x83, /**< Implementation specific error for the PUBREC. */
+    MQTT_REASON_PUBREC_NOT_AUTHORIZED = 0x87,           /**< Client is not authorized to publish. */
+    MQTT_REASON_PUBREC_TOPIC_NAME_INVALID = 0x90,       /**< Topic name is not valid. */
+    MQTT_REASON_PUBREC_PACKET_IDENTIFIER_IN_USE = 0x91, /**< Packet identifier is already in use. */
+    MQTT_REASON_PUBREC_QUOTA_EXCEEDED = 0x97,           /**< Implementation or system quota exceeded. */
+    MQTT_REASON_PUBREC_PAYLOAD_FORMAT_INVALID = 0x99,   /**< Payload format is invalid. */
 
-    /*PUBREL reason codes*/
-    MQTT_REASON_PUBREL_SUCCESS = 0x00,
-    MQTT_REASON_PUBREL_PACKET_IDENTIFIER_NOT_FOUND = 0x92,
+    /* PUBREL reason codes */
+    MQTT_REASON_PUBREL_SUCCESS = 0x00,                  /**< Publish release was successful. */
+    MQTT_REASON_PUBREL_PACKET_IDENTIFIER_NOT_FOUND = 0x92, /**< Packet identifier was not found. */
 
-    /*PUBCOMP reason codes*/
-    MQTT_REASON_PUBCOMP_SUCCESS = 0x00,
-    MQTT_REASON_PUBCOMP_PACKET_IDENTIFIER_NOT_FOUND = 0x92,
+    /* PUBCOMP reason codes */
+    MQTT_REASON_PUBCOMP_SUCCESS = 0x00,                 /**< Publish complete was successful. */
+    MQTT_REASON_PUBCOMP_PACKET_IDENTIFIER_NOT_FOUND = 0x92, /**< Packet identifier was not found. */
 
     /* CONNACK reason codes */
-    MQTT_REASON_CONNACK_SUCCESS = 0x00,
-    MQTT_REASON_CONNACK_UNSPECIFIED_ERROR = 0x80,
-    MQTT_REASON_CONNACK_MALFORMED_PACKET = 0x81,
-    MQTT_REASON_CONNACK_PROTOCOL_ERROR = 0x82,
-    MQTT_REASON_CONNACK_IMPLEMENTATION_SPECIFIC_ERROR = 0x83,
-    MQTT_REASON_CONNACK_UNSUPPORTED_PROTOCOL_VERSION = 0x84,
-    MQTT_REASON_CONNACK_CLIENT_IDENTIFIER_NOT_VALID = 0x85,
-    MQTT_REASON_CONNACK_BAD_USER_NAME_OR_PASSWORD = 0x86,
-    MQTT_REASON_CONNACK_NOT_AUTHORIZED = 0x87,
-    MQTT_REASON_CONNACK_SERVER_UNAVAILABLE = 0x88,
-    MQTT_REASON_CONNACK_SERVER_BUSY = 0x89,
-    MQTT_REASON_CONNACK_BANNED = 0x8A,
-    MQTT_REASON_CONNACK_BAD_AUTHENTICATION_METHOD = 0x8C,
-    MQTT_REASON_CONNACK_TOPIC_NAME_INVALID = 0x90,
-    MQTT_REASON_CONNACK_PACKET_TOO_LARGE = 0x95,
-    MQTT_REASON_CONNACK_QUOTA_EXCEEDED = 0x97,
-    MQTT_REASON_CONNACK_PAYLOAD_FORMAT_INVALID = 0x99,
-    MQTT_REASON_CONNACK_RETAIN_NOT_SUPPORTED = 0x9A,
-    MQTT_REASON_CONNACK_QOS_NOT_SUPPORTED = 0x9B,
-    MQTT_REASON_CONNACK_USE_ANOTHER_SERVER = 0x9C,
-    MQTT_REASON_CONNACK_SERVER_MOVED = 0x9D,
-    MQTT_REASON_CONNACK_CONNECTION_RATE_EXCEEDED = 0x9F,
+    MQTT_REASON_CONNACK_SUCCESS = 0x00,                 /**< Connection accepted. */
+    MQTT_REASON_CONNACK_UNSPECIFIED_ERROR = 0x80,       /**< Unspecified error occurred during connection. */
+    MQTT_REASON_CONNACK_MALFORMED_PACKET = 0x81,        /**< Received packet was malformed. */
+    MQTT_REASON_CONNACK_PROTOCOL_ERROR = 0x82,          /**< Protocol error occurred. */
+    MQTT_REASON_CONNACK_IMPLEMENTATION_SPECIFIC_ERROR = 0x83, /**< Implementation specific error. */
+    MQTT_REASON_CONNACK_UNSUPPORTED_PROTOCOL_VERSION = 0x84, /**< Protocol version not supported. */
+    MQTT_REASON_CONNACK_CLIENT_IDENTIFIER_NOT_VALID = 0x85, /**< Client identifier is not valid. */
+    MQTT_REASON_CONNACK_BAD_USER_NAME_OR_PASSWORD = 0x86, /**< Username or password is malformed. */
+    MQTT_REASON_CONNACK_NOT_AUTHORIZED = 0x87,          /**< Client is not authorized to connect. */
+    MQTT_REASON_CONNACK_SERVER_UNAVAILABLE = 0x88,      /**< Server is unavailable. */
+    MQTT_REASON_CONNACK_SERVER_BUSY = 0x89,             /**< Server is busy. */
+    MQTT_REASON_CONNACK_BANNED = 0x8A,                  /**< Client has been banned. */
+    MQTT_REASON_CONNACK_BAD_AUTHENTICATION_METHOD = 0x8C, /**< Authentication method is not supported. */
+    MQTT_REASON_CONNACK_TOPIC_NAME_INVALID = 0x90,      /**< Topic name is invalid. */
+    MQTT_REASON_CONNACK_PACKET_TOO_LARGE = 0x95,        /**< Packet size exceeds maximum allowed. */
+    MQTT_REASON_CONNACK_QUOTA_EXCEEDED = 0x97,          /**< Implementation or system quota exceeded. */
+    MQTT_REASON_CONNACK_PAYLOAD_FORMAT_INVALID = 0x99,  /**< Payload format is invalid. */
+    MQTT_REASON_CONNACK_RETAIN_NOT_SUPPORTED = 0x9A,    /**< Retain is not supported. */
+    MQTT_REASON_CONNACK_QOS_NOT_SUPPORTED = 0x9B,       /**< QoS level is not supported. */
+    MQTT_REASON_CONNACK_USE_ANOTHER_SERVER = 0x9C,      /**< Client should temporarily use another server. */
+    MQTT_REASON_CONNACK_SERVER_MOVED = 0x9D,            /**< Client should permanently use another server. */
+    MQTT_REASON_CONNACK_CONNECTION_RATE_EXCEEDED = 0x9F, /**< Connection rate limit exceeded. */
 
+    /* SUBACK reason codes */
+    MQTT_REASON_SUBACK_GRANTED_QOS0 = 0x00,             /**< Subscription accepted with maximum QoS 0. */
+    MQTT_REASON_SUBACK_GRANTED_QOS1 = 0x01,             /**< Subscription accepted with maximum QoS 1. */
+    MQTT_REASON_SUBACK_GRANTED_QOS2 = 0x02,             /**< Subscription accepted with maximum QoS 2. */
+    MQTT_REASON_SUBACK_UNSPECIFIED_ERROR = 0x80,        /**< Unspecified error occurred for the subscription. */
+    MQTT_REASON_SUBACK_IMPLEMENTATION_SPECIFIC_ERROR = 0x83, /**< Implementation specific error. */
+    MQTT_REASON_SUBACK_NOT_AUTHORIZED = 0x87,           /**< Client is not authorized to subscribe. */
+    MQTT_REASON_SUBACK_TOPIC_FILTER_INVALID = 0x8F,     /**< Topic filter is not valid. */
+    MQTT_REASON_SUBACK_PACKET_IDENTIFIER_IN_USE = 0x91, /**< Packet identifier is already in use. */
+    MQTT_REASON_SUBACK_QUOTA_EXCEEDED = 0x97,           /**< Implementation or system quota exceeded. */
+    MQTT_REASON_SUBACK_SHARED_SUBSCRIPTIONS_NOT_SUPPORTED = 0x9E, /**< Shared subscriptions are not supported. */
+    MQTT_REASON_SUBACK_SUBSCRIPTION_IDENTIFIERS_NOT_SUPPORTED = 0xA1, /**< Subscription identifiers are not supported. */
+    MQTT_REASON_SUBACK_WILDCARD_SUBSCRIPTIONS_NOT_SUPPORTED = 0xA2, /**< Wildcard subscriptions are not supported. */
 
-    /*SUBACK reason codes*/
-    MQTT_REASON_SUBACK_GRANTED_QOS0 = 0x00,
-    MQTT_REASON_SUBACK_GRANTED_QOS1 = 0x01,
-    MQTT_REASON_SUBACK_GRANTED_QOS2 = 0x02,
-    MQTT_REASON_SUBACK_UNSPECIFIED_ERROR = 0x80,
-    MQTT_REASON_SUBACK_IMPLEMENTATION_SPECIFIC_ERROR = 0x83,
-    MQTT_REASON_SUBACK_NOT_AUTHORIZED = 0x87,
-    MQTT_REASON_SUBACK_TOPIC_FILTER_INVALID = 0x8F,
-    MQTT_REASON_SUBACK_PACKET_IDENTIFIER_IN_USE = 0x91,
-    MQTT_REASON_SUBACK_QUOTA_EXCEEDED = 0x97,
-    MQTT_REASON_SUBACK_SHARED_SUBSCRIPTIONS_NOT_SUPPORTED = 0x9E,
-    MQTT_REASON_SUBACK_SUBSCRIPTION_IDENTIFIERS_NOT_SUPPORTED = 0xA1,
-    MQTT_REASON_SUBACK_WILDCARD_SUBSCRIPTIONS_NOT_SUPPORTED = 0xA2,
+    /* UNSUBACK reason codes */
+    MQTT_REASON_UNSUBACK_SUCCESS = 0x00,                /**< Unsubscribe was successful. */
+    MQTT_REASON_UNSUBACK_NO_SUBSCRIPTION_EXISTED = 0x11, /**< No matching subscription existed. */
+    MQTT_REASON_UNSUBACK_UNSPECIFIED_ERROR = 0x80,      /**< Unspecified error occurred for the unsubscribe. */
+    MQTT_REASON_UNSUBACK_IMPLEMENTATION_SPECIFIC_ERROR = 0x83, /**< Implementation specific error. */
+    MQTT_REASON_UNSUBACK_NOT_AUTHORIZED = 0x87,         /**< Client is not authorized to unsubscribe. */
+    MQTT_REASON_UNSUBACK_TOPIC_FILTER_INVALID = 0x8F,   /**< Topic filter is not valid. */
+    MQTT_REASON_UNSUBACK_PACKET_IDENTIFIER_IN_USE = 0x91, /**< Packet identifier is already in use. */
 
-    /*UNSUBACK reason codes*/
+    /* DISCONNECT reason codes */
+    MQTT_REASON_DISCONNECT_NORMAL_DISCONNECTION = 0x00,  /**< Normal client-initiated disconnect. */
+    MQTT_REASON_DISCONNECT_DISCONNECT_WITH_WILL_MESSAGE = 0x04, /**< Client disconnecting with Will Message. */
+    MQTT_REASON_DISCONNECT_UNSPECIFIED_ERROR = 0x80,     /**< Unspecified error occurred. */
+    MQTT_REASON_DISCONNECT_MALFORMED_PACKET = 0x81,      /**< Received packet was malformed. */
+    MQTT_REASON_DISCONNECT_PROTOCOL_ERROR = 0x82,        /**< Protocol error occurred. */
+    MQTT_REASON_DISCONNECT_IMPLEMENTATION_SPECIFIC_ERROR = 0x83, /**< Implementation specific error. */
+    MQTT_REASON_DISCONNECT_NOT_AUTHORIZED = 0x87,        /**< Client is not authorized. */
+    MQTT_REASON_DISCONNECT_SERVER_BUSY = 0x89,           /**< Server is busy. */
+    MQTT_REASON_DISCONNECT_SERVER_SHUTTING_DOWN = 0x8B,  /**< Server is shutting down. */
+    MQTT_REASON_DISCONNECT_BAD_AUTHENTICATION_METHOD = 0x8C, /**< Authentication method is invalid. */
+    MQTT_REASON_DISCONNECT_KEEP_ALIVE_TIMEOUT = 0x8D,    /**< Keep alive timeout occurred. */
+    MQTT_REASON_DISCONNECT_SESSION_TAKEN_OVER = 0x8E,    /**< Another connection using same client ID. */
+    MQTT_REASON_DISCONNECT_TOPIC_FILTER_INVALID = 0x8F,  /**< Topic filter is not valid. */
+    MQTT_REASON_DISCONNECT_TOPIC_NAME_INVALID = 0x90,    /**< Topic name is not valid. */
+    MQTT_REASON_DISCONNECT_RECEIVE_MAXIMUM_EXCEEDED = 0x93, /**< Receive maximum value exceeded. */
+    MQTT_REASON_DISCONNECT_TOPIC_ALIAS_INVALID = 0x94,   /**< Topic alias is invalid. */
+    MQTT_REASON_DISCONNECT_PACKET_TOO_LARGE = 0x95,      /**< Packet size exceeds maximum allowed. */
+    MQTT_REASON_DISCONNECT_MESSAGE_RATE_TOO_HIGH = 0x96, /**< Message rate too high. */
+    MQTT_REASON_DISCONNECT_QUOTA_EXCEEDED = 0x97,        /**< Implementation or system quota exceeded. */
+    MQTT_REASON_DISCONNECT_ADMINISTRATIVE_ACTION = 0x98,  /**< Disconnected due to administrative action. */
+    MQTT_REASON_DISCONNECT_PAYLOAD_FORMAT_INVALID = 0x99, /**< Payload format is invalid. */
+    MQTT_REASON_DISCONNECT_RETAIN_NOT_SUPPORTED = 0x9A,   /**< Retain is not supported. */
+    MQTT_REASON_DISCONNECT_QOS_NOT_SUPPORTED = 0x9B,      /**< QoS level is not supported. */
+    MQTT_REASON_DISCONNECT_USE_ANOTHER_SERVER = 0x9C,     /**< Client should temporarily use another server. */
+    MQTT_REASON_DISCONNECT_SERVER_MOVED = 0x9D,           /**< Client should permanently use another server. */
+    MQTT_REASON_DISCONNECT_SHARED_SUBSCRIPTIONS_NOT_SUPPORTED = 0x9E, /**< Shared subscriptions are not supported. */
+    MQTT_REASON_DISCONNECT_CONNECTION_RATE_EXCEEDED = 0x9F, /**< Connection rate limit exceeded. */
+    MQTT_REASON_DISCONNECT_MAXIMUM_CONNECT_TIME = 0xA0,    /**< Maximum connection time authorized exceeded. */
+    MQTT_REASON_DISCONNECT_SUBSCRIPTION_IDENTIFIERS_NOT_SUPPORTED = 0xA1, /**< Subscription identifiers are not supported. */
+    MQTT_REASON_DISCONNECT_WILDCARD_SUBSCRIPTIONS_NOT_SUPPORTED = 0xA2    /**< Wildcard subscriptions are not supported. */
 
-    MQTT_REASON_UNSUBACK_SUCCESS = 0x00,
-    MQTT_REASON_UNSUBACK_NO_SUBSCRIPTION_EXISTED = 0x11,
-    MQTT_REASON_UNSUBACK_UNSPECIFIED_ERROR = 0x80,
-    MQTT_REASON_UNSUBACK_IMPLEMENTATION_SPECIFIC_ERROR = 0x83,
-    MQTT_REASON_UNSUBACK_NOT_AUTHORIZED = 0x87,
-    MQTT_REASON_UNSUBACK_TOPIC_FILTER_INVALID = 0x8F,
-    MQTT_REASON_UNSUBACK_PACKET_IDENTIFIER_IN_USE = 0x91,
-
-    /*DISCONNECT reason codes*/
-    MQTT_REASON_DISCONNECT_NORMAL_DISCONNECTION = 0x00,
-    MQTT_REASON_DISCONNECT_DISCONNECT_WITH_WILL_MESSAGE = 0x04,
-    MQTT_REASON_DISCONNECT_UNSPECIFIED_ERROR = 0x80,
-    MQTT_REASON_DISCONNECT_MALFORMED_PACKET = 0x81,
-    MQTT_REASON_DISCONNECT_PROTOCOL_ERROR = 0x82,
-    MQTT_REASON_DISCONNECT_IMPLEMENTATION_SPECIFIC_ERROR = 0x83,
-    MQTT_REASON_DISCONNECT_NOT_AUTHORIZED = 0x87,
-    MQTT_REASON_DISCONNECT_SERVER_BUSY = 0x89,
-    MQTT_REASON_DISCONNECT_SERVER_SHUTTING_DOWN = 0x8B,
-    MQTT_REASON_DISCONNECT_BAD_AUTHENTICATION_METHOD = 0x8C,
-    MQTT_REASON_DISCONNECT_KEEP_ALIVE_TIMEOUT = 0x8D,
-    MQTT_REASON_DISCONNECT_SESSION_TAKEN_OVER = 0x8E,
-    MQTT_REASON_DISCONNECT_TOPIC_FILTER_INVALID = 0x8F,
-    MQTT_REASON_DISCONNECT_TOPIC_NAME_INVALID = 0x90,
-    MQTT_REASON_DISCONNECT_RECEIVE_MAXIMUM_EXCEEDED = 0x93,
-    MQTT_REASON_DISCONNECT_TOPIC_ALIAS_INVALID = 0x94,
-    MQTT_REASON_DISCONNECT_PACKET_TOO_LARGE = 0x95,
-    MQTT_REASON_DISCONNECT_MESSAGE_RATE_TOO_HIGH = 0x96,
-    MQTT_REASON_DISCONNECT_QUOTA_EXCEEDED = 0x97,
-    MQTT_REASON_DISCONNECT_ADMINISTRATIVE_ACTION = 0x98,
-    MQTT_REASON_DISCONNECT_PAYLOAD_FORMAT_INVALID = 0x99,
-    MQTT_REASON_DISCONNECT_RETAIN_NOT_SUPPORTED = 0x9A,
-    MQTT_REASON_DISCONNECT_QOS_NOT_SUPPORTED = 0x9B,
-    MQTT_REASON_DISCONNECT_USE_ANOTHER_SERVER = 0x9C,
-    MQTT_REASON_DISCONNECT_SERVER_MOVED = 0x9D,
-    MQTT_REASON_DISCONNECT_SHARED_SUBSCRIPTIONS_NOT_SUPPORTED = 0x9E,
-    MQTT_REASON_DISCONNECT_CONNECTION_RATE_EXCEEDED = 0x9F,
-    MQTT_REASON_DISCONNECT_MAXIMUM_CONNECT_TIME = 0xA0,
-    MQTT_REASON_DISCONNECT_SUBSCRIPTION_IDENTIFIERS_NOT_SUPPORTED = 0xA1,
-    MQTT_REASON_DISCONNECT_WILDCARD_SUBSCRIPTIONS_NOT_SUPPORTED = 0xA2
-
-}MQTTSuccessFailReasonCode_t;
+} MQTTSuccessFailReasonCode_t;
 
 
 #define MQTT_SUBSCRIBE_QOS1                    ( 0 ) /**< @brief MQTT SUBSCRIBE QoS1 flag. */
@@ -414,8 +412,6 @@ typedef struct MQTTFixedBuffer
  * @ingroup mqtt_struct_types
  * @brief MQTT CONNECT packet parameters.
  */
-
-
 typedef struct MQTTConnectInfo
 {
     /**
@@ -463,14 +459,15 @@ typedef struct MQTTConnectInfo
  * @ingroup mqtt_enum_types
  * @brief Retain Handling types. 
  */
-typedef enum retainHandling{
-    retainSendOnSub = 0,
-    retainSendOnSubIfNotPresent = 1,
-    retainDoNotSendonSub = 2
-}retainHandling_t;
+typedef enum MQTTRetainHandling{
+    retainSendOnSub = 0, /**< Send retained messages at the time of subscription. */
+    retainSendOnSubIfNotPresent = 1,  /**< Send retained messages at subscription only if subscription does not currently exist. */
+    retainDoNotSendonSub = 2 /**< Do not send retained messages at the time of subscription. */
+}MQTTRetainHandling_t;
 
 
 /**
+ * @ingroup mqtt_enum_types
  * @brief MQTT Subscription packet types.
  */
 typedef enum MQTTSubscriptionType
@@ -519,7 +516,7 @@ typedef struct MQTTSubscribeInfo
      * @brief Specifies whether retained messages are sent 
      * when the subscription is established. 
      */
-    retainHandling_t retainHandlingOption;
+    MQTTRetainHandling_t retainHandlingOption;
 
 } MQTTSubscribeInfo_t;
 
@@ -1867,7 +1864,7 @@ MQTTStatus_t MQTT_DeserializeDisconnect(const MQTTPacketInfo_t* pPacket,
  * // ...
  *
  * // Update connect properties
- * status = MQTT_UpdateContextWithConnectProps(&propBuilder, &connectProperties);
+ * status = updateContextWithConnectProps(&propBuilder, &connectProperties);
  *
  * if(status == MQTTSuccess)
  * {
@@ -1876,9 +1873,8 @@ MQTTStatus_t MQTT_DeserializeDisconnect(const MQTTPacketInfo_t* pPacket,
  * @endcode
  */
 
-/* @[declare_mqtt_updatecontextwithconnectprops] */
-MQTTStatus_t MQTT_UpdateContextWithConnectProps(const MqttPropBuilder_t* pPropBuilder, MQTTConnectProperties_t* pConnectProperties);
-/* @[declare_mqtt_updatecontextwithconnectprops] */
+MQTTStatus_t updateContextWithConnectProps(const MqttPropBuilder_t* pPropBuilder, MQTTConnectProperties_t* pConnectProperties);
+
 
 /**
  * @brief Adds a Subscription Identifier property to the MQTT property builder.
@@ -2422,7 +2418,7 @@ MQTTStatus_t MQTTPropGet_ReasonString(MqttPropBuilder_t* propBuffer, const char*
  * - #MQTTBadResponse if an invalid packet is read
  */
 /* @[declare_mqttpropget_disconnectserverref] */
-MQTTStatus_t MQTTPropGet_DisconnectServerRef(MqttPropBuilder_t* propBuffer, const char** pServerRef, uint16_t* serverRefLength);
+MQTTStatus_t MQTTPropGet_ServerRef(MqttPropBuilder_t* propBuffer, const char** pServerRef, uint16_t* serverRefLength);
 /* @[declare_mqttpropget_disconnectserverref] */
 
 /**
@@ -2578,6 +2574,92 @@ MQTTStatus_t MQTTPropGet_ConnWildcard(MqttPropBuilder_t* propBuffer, uint8_t* is
 /* @[declare_mqttpropget_connsubid] */
 MQTTStatus_t MQTTPropGet_ConnSubId(MqttPropBuilder_t* propBuffer, uint8_t* isSubIdAvailable);
 /* @[declare_mqttpropget_connsubid] */
+
+
+/**
+ * @brief Get the Shared Subscriptions Available property from CONNACK properties
+ *
+ * @param[in] propBuffer The property buffer containing CONNACK properties
+ * @param[out] isSharedSubAvailable Pointer to store whether shared subscriptions are supported
+ *                                 1 if available, 0 if not available
+ *
+ * @return MQTTSuccess if property was found and retrieved successfully
+ *         MQTTBadParameter if propBuffer or isSharedSubAvailable is NULL
+ *         MQTTBadResponse if property value is invalid in buffer
+ */
+/* @[declare_mqttpropget_connsharedsubavailable] */
+MQTTStatus_t MQTTPropGet_ConnSharedSubAvailable( MqttPropBuilder_t * propBuffer,
+                                                uint8_t * isSharedSubAvailable ); 
+/* @[declare_mqttpropget_connsharedsubavailable] */
+/**
+ * @brief Get the Server Keep Alive property from CONNACK properties
+ *
+ * @param[in] propBuffer The property buffer containing CONNACK properties
+ * @param[out] serverKeepAlive Pointer to store the server-specified keep alive interval in seconds
+ *
+ * @return MQTTSuccess if property was found and retrieved successfully
+ *         MQTTBadParameter if propBuffer or serverKeepAlive is NULL
+ *         MQTTBadResponse if property value is invalid in buffer
+ */
+/* @[declare_mqttpropget_connserverkeepalive] */
+MQTTStatus_t MQTTPropGet_ConnServerKeepAlive( MqttPropBuilder_t * propBuffer,
+                                            uint16_t * serverKeepAlive ); 
+/* @[declare_mqttpropget_connserverkeepalive] */
+
+/**
+ * @brief Get the Response Information property from CONNACK properties
+ *
+ * @param[in] propBuffer The property buffer containing CONNACK properties
+ * @param[out] pResponseInfo Pointer to store the response information string
+ * @param[out] responseInfoLength Pointer to store length of response information
+ *
+ * @return MQTTSuccess if property was found and retrieved successfully
+ *         MQTTBadParameter if propBuffer, pResponseInfo, or responseInfoLength is NULL
+ *         MQTTBadResponse if property value is invalid in buffer
+ */   
+/* @[declare_mqttpropget_connresponseinfo] */                                        
+MQTTStatus_t MQTTPropGet_ConnResponseInfo( MqttPropBuilder_t * propBuffer,
+                                            const char ** pResponseInfo,
+                                            uint16_t * responseInfoLength ); 
+/* @[declare_mqttpropget_connresponseinfo] */  
+
+/**
+ * @brief Get the Authentication Method property from CONNECT/CONNACK properties
+ *
+ * @param[in] propBuffer The property buffer containing CONNECT/CONNACK properties
+ * @param[out] pAuthMethod Pointer to store the authentication method string
+ * @param[out] authMethodLength Pointer to store length of authentication method
+ *
+ * @return MQTTSuccess if property was found and retrieved successfully
+ *         MQTTBadParameter if propBuffer, pAuthMethod, or authMethodLength is NULL
+ *         MQTTBadResponse if property value is invalid in buffer
+ */ 
+
+/* @[declare_mqttpropget_connauthmethod] */                                          
+MQTTStatus_t MQTTPropGet_ConnAuthMethod(MqttPropBuilder_t * propBuffer,
+                                        const char ** pAuthMethod,
+                                        uint16_t * authMethodLength); 
+/* @[declare_mqttpropget_connauthmethod] */     
+
+/**
+ * @brief Get the Authentication Data property from CONNECT/CONNACK properties
+ *
+ * @param[in] propBuffer The property buffer containing CONNECT/CONNACK properties
+ * @param[out] pAuthData Pointer to store the authentication data
+ * @param[out] authDataLength Pointer to store length of authentication data
+ *
+ * @return MQTTSuccess if property was found and retrieved successfully
+ *         MQTTBadParameter if propBuffer, pAuthData, or authDataLength is NULL
+ *         MQTTBadResponse if property value is invalid in buffer
+ */
+
+/* @[declare_mqttpropget_connauthdata] */
+MQTTStatus_t MQTTPropGet_ConnAuthData(MqttPropBuilder_t * propBuffer,
+                                        const char ** pAuthData,
+                                        uint16_t * authDataLength); 
+
+/* @[declare_mqttpropget_connauthdata] */
+
 
 /**
  * @brief Gets the next property identifier from the incoming MQTT packet properties.

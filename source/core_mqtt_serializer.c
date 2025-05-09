@@ -2736,13 +2736,11 @@ static MQTTStatus_t decodeutf_8( const char ** pProperty,
     MQTTStatus_t status = MQTTSuccess;
 
     /*Protocol error to include the same property twice.*/
-
     if( *pUsed == true )
     {
         status = MQTTBadResponse;
     }
     /*Validate the length and decode.*/
-
     else if( *pPropertyLength < sizeof( uint16_t ) )
     {
         status = MQTTBadResponse;
@@ -2763,7 +2761,6 @@ static MQTTStatus_t decodeutf_8( const char ** pProperty,
             pVariableHeader = &pVariableHeader[ *pLength ];
             *pPropertyLength -= *pLength;
             *pUsed = true;
-            LogDebug( ( "Reason String is %s", *pProperty ) );
         }
     }
 
@@ -3427,7 +3424,7 @@ static MQTTStatus_t deserializePublish( const MQTTPacketInfo_t * pIncomingPacket
 
 /*-----------------------------------------------------------*/
 
-MQTTStatus_t MQTT_UpdateContextWithConnectProps( const MqttPropBuilder_t * pPropBuilder,
+MQTTStatus_t updateContextWithConnectProps( const MqttPropBuilder_t * pPropBuilder,
                                             MQTTConnectProperties_t * pConnectProperties )
 {
     MQTTStatus_t status = MQTTSuccess;
@@ -5541,7 +5538,7 @@ MQTTStatus_t MQTTPropGet_ReasonString( MqttPropBuilder_t * propBuffer,
     return status;
 }
 
-MQTTStatus_t MQTTPropGet_DisconnectServerRef( MqttPropBuilder_t * propBuffer,
+MQTTStatus_t MQTTPropGet_ServerRef( MqttPropBuilder_t * propBuffer,
                                               const char ** pServerRef,
                                               uint16_t * serverRefLength )
 {
@@ -5568,6 +5565,208 @@ MQTTStatus_t MQTTPropGet_DisconnectServerRef( MqttPropBuilder_t * propBuffer,
         uint8_t * startOfProp = &propBuffer->pBuffer[ propBuffer->currentIndex ];
         size_t propertyLength = propBuffer->bufferLength - propBuffer->currentIndex;
         status = decodeutf_8( pServerRef, serverRefLength, &propertyLength, &propFlag, &startOfProp );
+
+        if( status == MQTTSuccess )
+        {
+            /* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-182 */
+            /* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-108 */
+            /* coverity[misra_c_2012_rule_18_2_violation] */
+            /* coverity[misra_c_2012_rule_10_8_violation] */
+            propBuffer->currentIndex = ( size_t ) ( startOfProp - propBuffer->pBuffer );
+        }
+    }
+
+    return status;
+}
+
+MQTTStatus_t MQTTPropGet_ConnSharedSubAvailable( MqttPropBuilder_t * propBuffer,
+                                               uint8_t * isSharedSubAvailable )
+{
+    MQTTStatus_t status = MQTTSuccess;
+    bool propFlag = false;
+
+    if( ( propBuffer == NULL ) )
+    {
+        LogError( ( "Arguments cannot be NULL : pPropertyBuilder=%p.", ( void * ) propBuffer ) );
+        status = MQTTBadParameter;
+    }
+    else if( propBuffer->pBuffer == NULL )
+    {
+        LogError( ( "Arguments cannot be NULL : pPropertyBuilder->pBuffer=%p.", ( void * ) propBuffer->pBuffer ) );
+        status = MQTTBadParameter;
+    }
+    else if( isSharedSubAvailable == NULL )
+    {
+        LogError( ( "Arguments cannot be NULL : isSharedSubAvailable= %p", ( void * ) isSharedSubAvailable ) );
+        status = MQTTBadParameter;
+    }
+    else
+    {
+        uint8_t * startOfProp = &propBuffer->pBuffer[ propBuffer->currentIndex ];
+        size_t propertyLength = propBuffer->bufferLength - propBuffer->currentIndex;
+        status = decodeuint8_t( isSharedSubAvailable, &propertyLength, &propFlag, &startOfProp );
+
+        if( status == MQTTSuccess )
+        {
+            /* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-182 */
+            /* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-108 */
+            /* coverity[misra_c_2012_rule_18_2_violation] */
+            /* coverity[misra_c_2012_rule_10_8_violation] */
+            propBuffer->currentIndex = ( size_t ) ( startOfProp - propBuffer->pBuffer );
+        }
+    }
+
+    return status;
+}
+
+MQTTStatus_t MQTTPropGet_ConnServerKeepAlive( MqttPropBuilder_t * propBuffer,
+                                               uint16_t * serverKeepAlive )
+{
+    MQTTStatus_t status = MQTTSuccess;
+    bool propFlag = false;
+
+    if( ( propBuffer == NULL ) )
+    {
+        LogError( ( "Arguments cannot be NULL : pPropertyBuilder=%p.", ( void * ) propBuffer ) );
+        status = MQTTBadParameter;
+    }
+    else if( propBuffer->pBuffer == NULL )
+    {
+        LogError( ( "Arguments cannot be NULL : pPropertyBuilder->pBuffer=%p.", ( void * ) propBuffer->pBuffer ) );
+        status = MQTTBadParameter;
+    }
+    else if( serverKeepAlive == NULL )
+    {
+        LogError( ( "Arguments cannot be NULL : serverKeepAlive=%p.", ( void * ) serverKeepAlive ) );
+        status = MQTTBadParameter;
+    }
+    else
+    {
+        uint8_t * startOfProp = &propBuffer->pBuffer[ propBuffer->currentIndex ];
+        size_t propertyLength = propBuffer->bufferLength - propBuffer->currentIndex;
+        status = decodeuint16_t( serverKeepAlive, &propertyLength, &propFlag, &startOfProp );
+
+        if( status == MQTTSuccess )
+        {
+            /* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-182 */
+            /* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-108 */
+            /* coverity[misra_c_2012_rule_18_2_violation] */
+            /* coverity[misra_c_2012_rule_10_8_violation] */
+            propBuffer->currentIndex = ( size_t ) ( startOfProp - propBuffer->pBuffer );
+        }
+    }
+    return status ; 
+}
+
+MQTTStatus_t MQTTPropGet_ConnResponseInfo( MqttPropBuilder_t * propBuffer,
+                                    const char ** pResponseInfo,
+                                    uint16_t * responseInfoLength )
+{
+    MQTTStatus_t status = MQTTSuccess;
+    bool propFlag = false;
+
+    if( ( propBuffer == NULL ) )
+    {
+        LogError( ( "Arguments cannot be NULL : pPropertyBuilder=%p.", ( void * ) propBuffer ) );
+        status = MQTTBadParameter;
+    }
+    else if( propBuffer->pBuffer == NULL )
+    {
+        LogError( ( "Arguments cannot be NULL : pPropertyBuilder->pBuffer=%p.", ( void * ) propBuffer->pBuffer ) );
+        status = MQTTBadParameter;
+    }
+    else if( ( pResponseInfo == NULL ) || ( responseInfoLength == NULL ) )
+    {
+        LogError( ( "Arguments cannot be NULL : pResponseInfo=%p, responseInfoLength = %p", ( void * ) pResponseInfo, ( void * ) responseInfoLength ) );
+        status = MQTTBadParameter;
+    }
+    else
+    {
+        uint8_t * startOfProp = &propBuffer->pBuffer[ propBuffer->currentIndex ];
+        size_t propertyLength = propBuffer->bufferLength - propBuffer->currentIndex;
+        status = decodeutf_8( pResponseInfo, responseInfoLength, &propertyLength, &propFlag, &startOfProp );
+
+        if( status == MQTTSuccess )
+        {
+            /* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-182 */
+            /* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-108 */
+            /* coverity[misra_c_2012_rule_18_2_violation] */
+            /* coverity[misra_c_2012_rule_10_8_violation] */
+            propBuffer->currentIndex = ( size_t ) ( startOfProp - propBuffer->pBuffer );
+        }
+    }
+
+    return status;
+}
+
+MQTTStatus_t MQTTPropGet_ConnAuthMethod(MqttPropBuilder_t * propBuffer,
+                                        const char ** pAuthMethod,
+                                        uint16_t * authMethodLength)
+{
+    MQTTStatus_t status = MQTTSuccess;
+    bool propFlag = false;
+
+    if( ( propBuffer == NULL ) )
+    {
+        LogError( ( "Arguments cannot be NULL : pPropertyBuilder=%p.", ( void * ) propBuffer ) );
+        status = MQTTBadParameter;
+    }
+    else if( propBuffer->pBuffer == NULL )
+    {
+        LogError( ( "Arguments cannot be NULL : pPropertyBuilder->pBuffer=%p.", ( void * ) propBuffer->pBuffer ) );
+        status = MQTTBadParameter;
+    }
+    else if( ( pAuthMethod == NULL ) || ( authMethodLength == NULL ) )
+    {
+        LogError( ( "Arguments cannot be NULL : pAuthMethod=%p, authMethodLength = %p", ( void * ) pAuthMethod, ( void * ) authMethodLength ) );
+        status = MQTTBadParameter;
+    }
+    else
+    {
+        uint8_t * startOfProp = &propBuffer->pBuffer[ propBuffer->currentIndex ];
+        size_t propertyLength = propBuffer->bufferLength - propBuffer->currentIndex;
+        status = decodeutf_8( pAuthMethod, authMethodLength, &propertyLength, &propFlag, &startOfProp );
+
+        if( status == MQTTSuccess )
+        {
+            /* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-182 */
+            /* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-108 */
+            /* coverity[misra_c_2012_rule_18_2_violation] */
+            /* coverity[misra_c_2012_rule_10_8_violation] */
+            propBuffer->currentIndex = ( size_t ) ( startOfProp - propBuffer->pBuffer );
+        }
+    }
+
+    return status;
+}
+
+MQTTStatus_t MQTTPropGet_ConnAuthData(MqttPropBuilder_t * propBuffer,
+                                        const char ** pAuthData,
+                                        uint16_t * authDataLength)
+{
+    MQTTStatus_t status = MQTTSuccess;
+    bool propFlag = false;
+
+    if( ( propBuffer == NULL ) )
+    {
+        LogError( ( "Arguments cannot be NULL : pPropertyBuilder=%p.", ( void * ) propBuffer ) );
+        status = MQTTBadParameter;
+    }
+    else if( propBuffer->pBuffer == NULL )
+    {
+        LogError( ( "Arguments cannot be NULL : pPropertyBuilder->pBuffer=%p.", ( void * ) propBuffer->pBuffer ) );
+        status = MQTTBadParameter;
+    }
+    else if( ( pAuthData == NULL ) || ( authDataLength == NULL ) )
+    {
+        LogError( ( "Arguments cannot be NULL : pAuthData=%p, authDataLength = %p", ( void * ) pAuthData, ( void * ) authDataLength ) );
+        status = MQTTBadParameter;
+    }
+    else
+    {
+        uint8_t * startOfProp = &propBuffer->pBuffer[ propBuffer->currentIndex ];
+        size_t propertyLength = propBuffer->bufferLength - propBuffer->currentIndex;
+        status = decodeutf_8( pAuthData, authDataLength, &propertyLength, &propFlag, &startOfProp );
 
         if( status == MQTTSuccess )
         {

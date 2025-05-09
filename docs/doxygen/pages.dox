@@ -63,7 +63,6 @@ declared in @ref core_mqtt_serializer.h. If a user does not want to use the func
 these low-level functions can be used directly:
 
 - @ref mqtt_getconnectpacketsize_function <br>
-- @ref mqtt_updatecontextwithconnectprops_function <br>
 - @ref mqtt_getsubscribepacketsize_function <br>
 - @ref mqtt_validatesubscribeproperties_function <br>
 - @ref mqtt_getunsubscribepacketsize_function <br>
@@ -86,7 +85,7 @@ these low-level functions can be used directly:
 
 @section mqtt_sessions Sessions and State
 
-The MQTT 3.1.1 protocol allows for a client and server to maintain persistent sessions, which
+The MQTT 5.0 protocol allows for a client and server to maintain persistent sessions, which
 can be resumed after a reconnect. The elements of a session stored by this client library consist
 of the states of incomplete publishes with Quality of Service levels of 1 (at least once), or 2 (exactly once).
 These states are stored in the pointers pointed to by @ref MQTTContext_t.outgoingPublishRecords and @ref MQTTContext_t.incomingPublishRecords;
@@ -195,10 +194,8 @@ Some configuration settings are C pre-processor constants, and some are function
 @subpage mqtt_status_strerror_function <br>
 @subpage mqtt_publishtoresend_function <br><br>
 
-
 Serializer functions of the MQTT library:<br><br>
 @subpage mqtt_getconnectpacketsize_function <br>
-@subpage mqtt_updatecontextwithconnectprops_function <br>
 @subpage mqtt_getsubscribepacketsize_function <br>
 @subpage mqtt_validatesubscribeproperties_function <br>
 @subpage mqtt_getunsubscribepacketsize_function <br>
@@ -260,6 +257,11 @@ Property Get functions:<br><br>
 @subpage mqttpropget_connclientid_function <br>
 @subpage mqttpropget_connwildcard_function <br>
 @subpage mqttpropget_connsubid_function <br>
+@subpage mqttpropget_connsharedsubavailable_function <br>
+@subpage mqttpropget_connserverkeepalive_function <br>
+@subpage mqttpropget_connresponseinfo_function <br>
+@subpage mqttpropget_connauthmethod_function <br>
+@subpage mqttpropget_connauthdata_function <br>
 
 @page mqtt_init_function MQTT_Init
 @snippet core_mqtt.h declare_mqtt_init
@@ -320,10 +322,6 @@ Property Get functions:<br><br>
 @page mqtt_getconnectpacketsize_function MQTT_GetConnectPacketSize
 @snippet core_mqtt_serializer.h declare_mqtt_getconnectpacketsize
 @copydoc MQTT_GetConnectPacketSize
-
-@page mqtt_updatecontextwithconnectprops_function MQTT_UpdateContextWithConnectProps
-@snippet core_mqtt_serializer.h declare_mqtt_updatecontextwithconnectprops
-@copydoc MQTT_UpdateContextWithConnectProps
 
 @page mqtt_getsubscribepacketsize_function MQTT_GetSubscribePacketSize
 @snippet core_mqtt_serializer.h declare_mqtt_getsubscribepacketsize
@@ -505,9 +503,9 @@ Property Get functions:<br><br>
 @snippet core_mqtt_serializer.h declare_mqttpropget_reasonstring
 @copydoc MQTTPropGet_ReasonString
 
-@page mqttpropget_disconnectserverref_function MQTTPropGet_DisconnectServerRef
+@page mqttpropget_disconnectserverref_function MQTTPropGet_ServerRef
 @snippet core_mqtt_serializer.h declare_mqttpropget_disconnectserverref
-@copydoc MQTTPropGet_DisconnectServerRef
+@copydoc MQTTPropGet_ServerRef
 
 @page mqttpropget_sessionexpiry_function MQTTPropGet_SessionExpiry
 @snippet core_mqtt_serializer.h declare_mqttpropget_sessionexpiry
@@ -544,6 +542,26 @@ Property Get functions:<br><br>
 @page mqttpropget_connsubid_function MQTTPropGet_ConnSubId
 @snippet core_mqtt_serializer.h declare_mqttpropget_connsubid
 @copydoc MQTTPropGet_ConnSubId
+
+@page mqttpropget_connsharedsubavailable_function MQTTPropGet_ConnSharedSubAvailable
+@snippet core_mqtt_serializer.h declare_mqttpropget_connsharedsubavailable
+@copydoc MQTTPropGet_ConnSharedSubAvailable
+
+@page mqttpropget_connserverkeepalive_function MQTTPropGet_ConnServerKeepAlive
+@snippet core_mqtt_serializer.h declare_mqttpropget_connserverkeepalive
+@copydoc MQTTPropGet_ConnServerKeepAlive
+
+@page mqttpropget_connresponseinfo_function MQTTPropGet_ConnResponseInfo
+@snippet core_mqtt_serializer.h declare_mqttpropget_connresponseinfo
+@copydoc MQTTPropGet_ConnResponseInfo
+
+@page mqttpropget_connauthmethod_function MQTTPropGet_ConnAuthMethod
+@snippet core_mqtt_serializer.h declare_mqttpropget_connauthmethod
+@copydoc MQTTPropGet_ConnAuthMethod
+
+@page mqttpropget_connauthdata_function MQTTPropGet_ConnAuthData
+@snippet core_mqtt_serializer.h declare_mqttpropget_connauthdata
+@copydoc MQTTPropGet_ConnAuthData
 
 @page mqtt_incominggetnextprop_function MQTT_IncomingGetNextProp
 @snippet core_mqtt_serializer.h declare_mqtt_incominggetnextprop

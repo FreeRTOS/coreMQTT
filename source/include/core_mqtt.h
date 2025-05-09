@@ -94,7 +94,7 @@ typedef uint32_t (* MQTTGetCurrentTimeFunc_t )( void );
 /**
  * @ingroup mqtt_callback_types
  * @brief Application callback for receiving incoming publishes and incoming
- * acks.
+ * acks, as well as adding properties to outgoing publish acks. 
  *
  * @note This callback will be called only if packets are deserialized with a
  * result of #MQTTSuccess or #MQTTServerRefused. The latter can be obtained
@@ -107,6 +107,54 @@ typedef uint32_t (* MQTTGetCurrentTimeFunc_t )( void );
  * @param[in] pReasonCode Reason code for the incoming packet.
  * @param[in] sendPropsBuffer Properties to be sent in the outgoing packet.
  * @param[in] getPropsBuffer Properties to be received in the incoming packet.
+ * 
+ * @note Get optional properties of incoming packets by calling these functions:
+ * 
+ * 
+ * - Connack Properties:
+ *  - #MQTTPropGet_SessionExpiry
+ *  - #MQTTPropGet_ConnReceiveMax
+ *  - #MQTTPropGet_ConnMaxQos
+ *  - #MQTTPropGet_ConnRetainAvailable
+ *  - #MQTTPropGet_ConnMaxPacketSize
+ *  - #MQTTPropGet_ConnClientId
+ *  - #MQTTPropGet_ConnTopicAliasMax
+ *  - #MQTTPropGet_ReasonString
+ *  - #MQTTPropGet_UserProp
+ *  - #MQTTPropGet_ConnWildcard
+ *  - #MQTTPropGet_ConnSubId
+ *  - #MQTTPropGet_ConnSharedSubAvailable
+ *  - #MQTTPropGet_ConnServerKeepAlive
+ *  - #MQTTPropGet_ConnResponseInfo
+ *  - #MQTTPropGet_ServerRef
+ *  - #MQTTPropGet_ConnAuthMethod
+ *  - #MQTTPropGet_ConnAuthData
+ * 
+ * - Publish Properties:
+ *  - #MQTTPropGet_PubTopicAlias
+ *  - #MQTTPropGet_PubPayloadFormatIndicator
+ *  - #MQTTPropGet_PubResponseTopic
+ *  - #MQTTPropGet_PubCorrelationData
+ *  - #MQTTPropGet_PubMessageExpiryInterval
+ *  - #MQTTPropGet_PubContentType
+ *  - #MQTTPropGet_PubSubscriptionId
+ *  - #MQTTPropGet_UserProp
+ *  
+ * - Ack Properties (PUBACK, PUBREC, PUBREL, PUBCOMP, SUBACK, UNSUBACK):
+ *  - #MQTTPropGet_ReasonString
+ *  - #MQTTPropGet_UserProp
+ * 
+ * - Disconnect Properties:
+ *  - #MQTTPropGet_SessionExpiry
+ *  - #MQTTPropGet_ReasonString
+ *  - #MQTTPropGet_UserProp
+ *  - #MQTTPropGet_ServerRef
+ * 
+ * @note Add optional properties to outgoing publish ack packets by calling these functions:
+ * 
+ * - #MQTTPropAdd_UserProp
+ * - #MQTTPropAdd_ReasonString
+ * 
  */
 typedef void (* MQTTEventCallback_t )( struct MQTTContext * pContext,
                                        struct MQTTPacketInfo * pPacketInfo,
@@ -352,7 +400,6 @@ typedef struct MQTTContext
  * @brief Struct to hold deserialized packet information for an #MQTTEventCallback_t
  * callback.
  */
-
 typedef struct MQTTDeserializedInfo
 {
     uint16_t packetIdentifier;          /**< @brief Packet ID of deserialized packet. */

@@ -2567,7 +2567,7 @@ static MQTTStatus_t sendConnectWithoutCopy( MQTTContext_t * pContext,
          */
         if( pPropertyBuilder != NULL )
         {
-            status = MQTT_UpdateContextWithConnectProps( pPropertyBuilder, &pContext->connectProperties );
+            status = updateContextWithConnectProps( pPropertyBuilder, &pContext->connectProperties );
         }
 
         /* Serialize the client ID. */
@@ -4545,6 +4545,11 @@ static MQTTStatus_t validateSharedSubscriptions( const MQTTContext_t * pContext,
         else if( pContext->connectProperties.isSharedAvailable == 0U )
         {
             LogError( ( "Protocol Error : Shared Subscriptions not allowed" ) );
+            status = MQTTBadParameter;
+        }
+        else if (*(shareNameEnd + 1) == '\0')
+        {
+            LogError(("Protocol Error : Topic filter after share name is missing"));
             status = MQTTBadParameter;
         }
         else

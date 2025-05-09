@@ -3142,7 +3142,7 @@ void test_updateContextWithConnectProps(void)
     propBuilder.currentIndex = 0;
     propBuilder.fieldSet = 0;
 
-    mqttStatus = MQTT_UpdateContextWithConnectProps( &propBuilder, &connectProps );
+    mqttStatus = updateContextWithConnectProps( &propBuilder, &connectProps );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, mqttStatus );
 
     uint8_t * pIndex = buffer;
@@ -3152,22 +3152,22 @@ void test_updateContextWithConnectProps(void)
     pIndex = serializeuint_32( pIndex, MQTT_MAX_PACKET_SIZE_ID );
     pIndex = serializeutf_8( pIndex, MQTT_AUTH_METHOD_ID );
     propBuilder.currentIndex = 17;
-    mqttStatus = MQTT_UpdateContextWithConnectProps( &propBuilder, &connectProps );
+    mqttStatus = updateContextWithConnectProps( &propBuilder, &connectProps );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, mqttStatus );
 
-    mqttStatus = MQTT_UpdateContextWithConnectProps( NULL, &connectProps );
+    mqttStatus = updateContextWithConnectProps( NULL, &connectProps );
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, mqttStatus );
 
-    mqttStatus = MQTT_UpdateContextWithConnectProps(&propBuilder, NULL);
+    mqttStatus = updateContextWithConnectProps(&propBuilder, NULL);
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, mqttStatus );
 
     propBuilder.pBuffer = NULL;
-    mqttStatus = MQTT_UpdateContextWithConnectProps(&propBuilder, &connectProps);
+    mqttStatus = updateContextWithConnectProps(&propBuilder, &connectProps);
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, mqttStatus );
 
     propBuilder.pBuffer = buffer;
     propBuilder.currentIndex = 5 ; 
-    mqttStatus = MQTT_UpdateContextWithConnectProps(&propBuilder, &connectProps);
+    mqttStatus = updateContextWithConnectProps(&propBuilder, &connectProps);
     TEST_ASSERT_EQUAL_INT( MQTTBadResponse, mqttStatus );
 
 
@@ -3298,15 +3298,19 @@ void test_getProps( void )
     MqttPropBuilder_t propBuffer1;
 
     propBuffer1.pBuffer = NULL;
-    uint8_t buffer[500];
-    size_t bufLength = 100; 
+    propBuffer1.bufferLength = 0; 
+    propBuffer1.currentIndex = 0 ; 
+    propBuffer1.fieldSet = 0 ; 
+    size_t currIndex ; 
+
+
+    uint8_t buffer[500] = {0};
+    size_t bufLength = 500; 
 
     propBuffer.pBuffer = buffer;
     propBuffer.bufferLength = bufLength;
     propBuffer.currentIndex = 0;
     propBuffer.fieldSet = 0;
-
-    /* 77 , 82 */
 
     uint8_t * pIndex = buffer;
     pIndex = serializeuint_16( pIndex, MQTT_TOPIC_ALIAS_ID );
@@ -3331,6 +3335,11 @@ void test_getProps( void )
     pIndex = serializeutf_8pair( pIndex );
     pIndex = serializeutf_8( pIndex, MQTT_REASON_STRING_ID );
     pIndex = serializeutf_8( pIndex, MQTT_SERVER_REF_ID );
+    pIndex = serializeuint_8( pIndex, MQTT_SHARED_SUB_ID );
+    pIndex = serializeuint_16(pIndex, MQTT_SERVER_KEEP_ALIVE_ID);
+    pIndex = serializeutf_8(pIndex, MQTT_RESPONSE_INFO_ID);
+    pIndex = serializeutf_8(pIndex, MQTT_AUTH_METHOD_ID);
+    pIndex = serializeutf_8(pIndex, MQTT_AUTH_DATA_ID); 
 
     uint16_t topicAlias;
     uint8_t payloadFormat;
@@ -3359,6 +3368,15 @@ void test_getProps( void )
     uint16_t pUserPropValLen;
     const char * pReasonString;
     uint16_t reasonStringLength;
+    uint8_t sharedSubAvailable ; 
+    uint16_t serverKeepAlive; 
+    const char * pResponseInfo;
+    uint16_t responseInfoLength;
+    const char * pAuthMethod;
+    uint16_t authMethodLength;
+    const char * pAuthData;
+    uint16_t authDataLength;
+
 
     size_t counter = 0U ; 
     status = MQTT_IncomingGetNextProp(NULL, &propertyId);
@@ -3369,7 +3387,7 @@ void test_getProps( void )
 
     status = MQTT_IncomingGetNextProp(&propBuffer, &propertyId);
     counter ++ ; 
-    while (status == MQTTSuccess && counter<= 20)
+    while (status == MQTTSuccess)
     {
         switch( propertyId )
         {
@@ -3393,11 +3411,14 @@ void test_getProps( void )
                 TEST_ASSERT_EQUAL_INT( MQTTBadParameter, MQTTPropGet_PubResponseTopic( &propBuffer, NULL, &responseTopicLength ) );
                 TEST_ASSERT_EQUAL_INT( MQTTBadParameter, MQTTPropGet_PubResponseTopic( &propBuffer, &pResponseTopic, NULL ) );
                 TEST_ASSERT_EQUAL_INT( MQTTSuccess, MQTTPropGet_PubResponseTopic( &propBuffer, &pResponseTopic, &responseTopicLength ) );
-                propBuffer.bufferLength = 13 ; 
+                propBuffer.bufferLength = 7 ; 
+                currIndex = propBuffer.currentIndex;
+                propBuffer.currentIndex = 6 ; 
                 TEST_ASSERT_EQUAL_INT( MQTTBadResponse, MQTTPropGet_PubResponseTopic( &propBuffer, &pResponseTopic, &responseTopicLength ) );
-                propBuffer.bufferLength = 16 ;
+                propBuffer.currentIndex = 4; 
                 TEST_ASSERT_EQUAL_INT( MQTTBadResponse, MQTTPropGet_PubResponseTopic( &propBuffer, &pResponseTopic, &responseTopicLength ) );
-                propBuffer.bufferLength = 100 ;
+                propBuffer.bufferLength = 500 ;
+                propBuffer.currentIndex = currIndex ;
                 break;
 
             case MQTT_CORRELATION_DATA_ID:
@@ -3405,12 +3426,15 @@ void test_getProps( void )
                 TEST_ASSERT_EQUAL_INT( MQTTBadParameter, MQTTPropGet_PubCorrelationData( &propBuffer1, &correlationData, &correlationLength ) );
                 TEST_ASSERT_EQUAL_INT( MQTTBadParameter, MQTTPropGet_PubCorrelationData( &propBuffer, NULL, &correlationLength ) );
                 TEST_ASSERT_EQUAL_INT( MQTTBadParameter, MQTTPropGet_PubCorrelationData( &propBuffer, &correlationData, NULL ) );
-                propBuffer.bufferLength = 14 ; 
-                TEST_ASSERT_EQUAL_INT( MQTTBadResponse, MQTTPropGet_PubCorrelationData( &propBuffer, &correlationData, &correlationLength ) );
-                propBuffer.bufferLength = 18; 
-                TEST_ASSERT_EQUAL_INT( MQTTBadResponse, MQTTPropGet_PubCorrelationData( &propBuffer, &correlationData, &correlationLength ) );
-                propBuffer.bufferLength = 100 ;
                 TEST_ASSERT_EQUAL_INT( MQTTSuccess, MQTTPropGet_PubCorrelationData( &propBuffer, &correlationData, &correlationLength ) );
+                propBuffer.bufferLength = 7 ; 
+                currIndex = propBuffer.currentIndex;
+                propBuffer.currentIndex = 6 ;
+                TEST_ASSERT_EQUAL_INT( MQTTBadResponse, MQTTPropGet_PubCorrelationData( &propBuffer, &correlationData, &correlationLength ) );
+                propBuffer.currentIndex = 4; 
+                TEST_ASSERT_EQUAL_INT( MQTTBadResponse, MQTTPropGet_PubCorrelationData( &propBuffer, &correlationData, &correlationLength ) );
+                propBuffer.bufferLength = 500 ;
+                propBuffer.currentIndex = currIndex ;
                 break;
 
             case MQTT_MSG_EXPIRY_ID:
@@ -3518,18 +3542,49 @@ void test_getProps( void )
                 break;
 
             case MQTT_SERVER_REF_ID:
-                TEST_ASSERT_EQUAL_INT( MQTTBadParameter, MQTTPropGet_DisconnectServerRef( NULL, &pReasonString, &reasonStringLength ) );
-                TEST_ASSERT_EQUAL_INT( MQTTBadParameter, MQTTPropGet_DisconnectServerRef( &propBuffer1, &pReasonString, &reasonStringLength ) );
-                TEST_ASSERT_EQUAL_INT( MQTTBadParameter, MQTTPropGet_DisconnectServerRef( &propBuffer, NULL, &reasonStringLength ) );
-                TEST_ASSERT_EQUAL_INT( MQTTBadParameter, MQTTPropGet_DisconnectServerRef( &propBuffer, &pReasonString, NULL ) );
-                TEST_ASSERT_EQUAL_INT( MQTTSuccess, MQTTPropGet_DisconnectServerRef( &propBuffer, &pReasonString, &reasonStringLength ) );
+                TEST_ASSERT_EQUAL_INT( MQTTBadParameter, MQTTPropGet_ServerRef( NULL, &pReasonString, &reasonStringLength ) );
+                TEST_ASSERT_EQUAL_INT( MQTTBadParameter, MQTTPropGet_ServerRef( &propBuffer1, &pReasonString, &reasonStringLength ) );
+                TEST_ASSERT_EQUAL_INT( MQTTBadParameter, MQTTPropGet_ServerRef( &propBuffer, NULL, &reasonStringLength ) );
+                TEST_ASSERT_EQUAL_INT( MQTTBadParameter, MQTTPropGet_ServerRef( &propBuffer, &pReasonString, NULL ) );
+                TEST_ASSERT_EQUAL_INT( MQTTSuccess, MQTTPropGet_ServerRef( &propBuffer, &pReasonString, &reasonStringLength ) );
                 break;
-
+            case MQTT_SHARED_SUB_ID:
+                TEST_ASSERT_EQUAL_INT(MQTTBadParameter, MQTTPropGet_ConnSharedSubAvailable(NULL, &sharedSubAvailable));
+                TEST_ASSERT_EQUAL_INT(MQTTBadParameter, MQTTPropGet_ConnSharedSubAvailable(&propBuffer1, &sharedSubAvailable)); 
+                TEST_ASSERT_EQUAL_INT(MQTTBadParameter, MQTTPropGet_ConnSharedSubAvailable(&propBuffer, NULL));
+                TEST_ASSERT_EQUAL_INT(MQTTSuccess, MQTTPropGet_ConnSharedSubAvailable(&propBuffer, &sharedSubAvailable));
+                break; 
+            case MQTT_SERVER_KEEP_ALIVE_ID:
+                TEST_ASSERT_EQUAL_INT(MQTTBadParameter, MQTTPropGet_ConnServerKeepAlive(NULL, &serverKeepAlive));
+                TEST_ASSERT_EQUAL_INT(MQTTBadParameter, MQTTPropGet_ConnServerKeepAlive(&propBuffer1, &serverKeepAlive));
+                TEST_ASSERT_EQUAL_INT(MQTTBadParameter, MQTTPropGet_ConnServerKeepAlive(&propBuffer, NULL));
+                TEST_ASSERT_EQUAL_INT(MQTTSuccess, MQTTPropGet_ConnServerKeepAlive(&propBuffer, &serverKeepAlive));
+                break; 
+            case MQTT_RESPONSE_INFO_ID:
+                TEST_ASSERT_EQUAL_INT( MQTTBadParameter, MQTTPropGet_ConnResponseInfo( NULL, &pResponseInfo, &responseInfoLength ) );
+                TEST_ASSERT_EQUAL_INT( MQTTBadParameter, MQTTPropGet_ConnResponseInfo( &propBuffer1, &pResponseInfo, &responseInfoLength ) );
+                TEST_ASSERT_EQUAL_INT( MQTTBadParameter, MQTTPropGet_ConnResponseInfo( &propBuffer, NULL, &responseInfoLength ) );
+                TEST_ASSERT_EQUAL_INT( MQTTBadParameter, MQTTPropGet_ConnResponseInfo( &propBuffer, &pResponseInfo, NULL ) );
+                TEST_ASSERT_EQUAL_INT( MQTTSuccess, MQTTPropGet_ConnResponseInfo( &propBuffer, &pResponseInfo, &responseInfoLength ) );
+                break;
+            case MQTT_AUTH_METHOD_ID:
+                TEST_ASSERT_EQUAL_INT( MQTTBadParameter, MQTTPropGet_ConnAuthMethod( NULL, &pAuthMethod, &authMethodLength ) );
+                TEST_ASSERT_EQUAL_INT( MQTTBadParameter, MQTTPropGet_ConnAuthMethod( &propBuffer1, &pAuthMethod, &authMethodLength ) );
+                TEST_ASSERT_EQUAL_INT( MQTTBadParameter, MQTTPropGet_ConnAuthMethod( &propBuffer, NULL, &authMethodLength ) );
+                TEST_ASSERT_EQUAL_INT( MQTTBadParameter, MQTTPropGet_ConnAuthMethod( &propBuffer, &pAuthMethod, NULL ) );
+                TEST_ASSERT_EQUAL_INT( MQTTSuccess, MQTTPropGet_ConnAuthMethod( &propBuffer, &pAuthMethod, &authMethodLength ) );
+                break;
+            case MQTT_AUTH_DATA_ID:
+                TEST_ASSERT_EQUAL_INT(MQTTBadParameter, MQTTPropGet_ConnAuthData(NULL, &pAuthData, &authDataLength));
+                TEST_ASSERT_EQUAL_INT(MQTTBadParameter, MQTTPropGet_ConnAuthData(&propBuffer1, &pAuthData, &authDataLength));
+                TEST_ASSERT_EQUAL_INT(MQTTBadParameter, MQTTPropGet_ConnAuthData(&propBuffer, NULL, &authDataLength));
+                TEST_ASSERT_EQUAL_INT(MQTTBadParameter, MQTTPropGet_ConnAuthData(&propBuffer, &pAuthData, NULL));
+                TEST_ASSERT_EQUAL_INT(MQTTSuccess, MQTTPropGet_ConnAuthData(&propBuffer, &pAuthData, &authDataLength));
+                break;                
             default:
                 break;
         }
         status = MQTT_IncomingGetNextProp(&propBuffer, &propertyId);
-        counter ++ ; 
     }
     propBuffer.bufferLength = 10 ; 
     status = MQTT_IncomingGetNextProp(&propBuffer, &propertyId);
