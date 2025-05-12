@@ -784,7 +784,7 @@ static bool matchWildcards( const char * pTopicName,
                 break;
             }
 
-            nameIndex += 1;
+            nameIndex += 1U;
         }
 
         /* Determine if the topic filter contains a child level after the current level
@@ -820,7 +820,7 @@ static bool matchWildcards( const char * pTopicName,
              * reached past the end of the topic name, and thus, we decrement the
              * index to the last character in the topic name.*/
             /* coverity[integer_overflow] */
-            nameIndex -= 1;
+            nameIndex -= 1U;
         }
     }
 
@@ -4550,7 +4550,7 @@ static MQTTStatus_t validateSharedSubscriptions( const MQTTContext_t * pContext,
             LogError( ( "Protocol Error : Shared Subscriptions not allowed" ) );
             status = MQTTBadParameter;
         }
-        else if( *( shareNameEnd + 1 ) == '\0' )
+        else if( shareNameEnd[1] == '\0' )
         {
             LogError( ( "Protocol Error : Topic filter after share name is missing" ) );
             status = MQTTBadParameter;
