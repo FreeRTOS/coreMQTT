@@ -4390,7 +4390,7 @@ MQTTStatus_t MQTT_ValidateSubscribeProperties( uint8_t isSubscriptionIdAvailable
     const uint8_t * pLocalIndex = propBuilder->pBuffer;
     bool subscriptionId = false;
 
-    while( ( propertyLength > 0U ) && ( status == MQTTSuccess ) )
+    while( propertyLength > 0U )
     {
         uint8_t propertyId = *pLocalIndex;
         pLocalIndex = &pLocalIndex[ 1 ];
