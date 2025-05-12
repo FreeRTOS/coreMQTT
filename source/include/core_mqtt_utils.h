@@ -92,6 +92,7 @@
                    ( ( ( uint32_t ) ptr[ 1 ] ) << 16 ) | \
                    ( ( ( uint32_t ) ptr[ 2 ] ) << 8 ) |  \
                    ( ( uint32_t ) ptr[ 3 ] ) )
+
 /**
  * @brief Macro to extract a specific byte from a 32-bit unsigned integer.
  *

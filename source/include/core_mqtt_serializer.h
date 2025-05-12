@@ -457,7 +457,7 @@ typedef struct MQTTConnectInfo
 
 /**
  * @ingroup mqtt_enum_types
- * @brief Retain Handling types. 
+ * @brief Retain Handling types.
  */
 typedef enum MQTTRetainHandling{
     retainSendOnSub = 0, /**< Send retained messages at the time of subscription. */
@@ -500,21 +500,21 @@ typedef struct MQTTSubscribeInfo
      * @brief no local option for subscription. Include protocol error if noLocalOption = 1 in a shared subscription
      */
 
-    /** 
-     * @brief If true, Application Messages that are published to this subscription 
-     * will not be forwarded to the Client that published them. 
+    /**
+     * @brief If true, Application Messages that are published to this subscription
+     * will not be forwarded to the Client that published them.
      */
     bool noLocalOption;
 
     /**
-     *  @brief If true, Application Messages forwarded using this subscription keep the RETAIN 
-     * flag they were published with. 
+     *  @brief If true, Application Messages forwarded using this subscription keep the RETAIN
+     * flag they were published with.
      */
     bool retainAsPublishedOption;
 
-    /** 
-     * @brief Specifies whether retained messages are sent 
-     * when the subscription is established. 
+    /**
+     * @brief Specifies whether retained messages are sent
+     * when the subscription is established.
      */
     MQTTRetainHandling_t retainHandlingOption;
 
@@ -796,7 +796,7 @@ typedef struct MQTTPacketInfo
  * This function must be called before #sendSubscribeWithoutCopy in order to get
  * the size of the MQTT SUBSCRIBE packet that is generated from the list of
  * #MQTTSubscribeInfo_t and optional propertyLength.
- * The remaining length returned in @p pRemainingLength and 
+ * The remaining length returned in @p pRemainingLength and
  * the packet size returned in @p pPacketSize are valid
  * only if this function returns #MQTTSuccess.
  *
@@ -879,16 +879,16 @@ MQTTStatus_t MQTT_GetSubscribePacketSize(const MQTTSubscribeInfo_t* pSubscriptio
  * size_t remainingLength = 0, packetSize = 0;
  * size_t propertyLength = 0;
  * size_t maxPacketSize = 0;
- * 
+ *
  * // Initialize maxPacketSize. The details are out of scope for this example.
  * initializeMaxPacketSize( &maxPacketSize );
- * 
+ *
  * // Initialize the subscribe info. The details are out of scope for this example.
  * initializeSubscribeInfo( &subscriptionList[ 0 ] );
  *
  * //Initialize the property length. The details are out of scope for this example.
  * initializePropertyLength( &propertyLength );
- * 
+ *
  * // Get the size requirement for the unsubscribe packet.
  * status = MQTT_GetUnsubscribePacketSize(
  *      &subscriptionList[ 0 ], NUMBER_OF_SUBSCRIPTIONS, &remainingLength, &packetSize, maxPacketSize, propertyLength);
@@ -1075,7 +1075,7 @@ MQTTStatus_t MQTT_SerializePingreq( const MQTTFixedBuffer_t * pFixedBuffer );
  * MQTTStatus_t status;
  * MQTTPacketInfo_t incomingPacket;
  * MQTTPublishInfo_t publishInfo = { 0 };
- * MqttPropBuilder_t propBuffer ; 
+ * MqttPropBuilder_t propBuffer ;
  * uint32_t maxPacketSize;
  * uint16_t packetId;
  *
@@ -1101,7 +1101,7 @@ MQTTStatus_t MQTT_SerializePingreq( const MQTTFixedBuffer_t * pFixedBuffer );
  * // Deserialize the publish information if the incoming packet is a publish.
  * if( ( incomingPacket.type & 0xF0 ) == MQTT_PACKET_TYPE_PUBLISH )
  * {
- *      status = MQTT_DeserializePublish( &incomingPacket, &packetId, &publishInfo, &propBuffer, maxPacketSize ); 
+ *      status = MQTT_DeserializePublish( &incomingPacket, &packetId, &publishInfo, &propBuffer, maxPacketSize );
  *      if( status == MQTTSuccess )
  *      {
  *          // The deserialized publish information can now be used from `publishInfo`.
@@ -1391,7 +1391,7 @@ MQTTStatus_t MQTT_DeserializeConnack(MQTTConnectProperties_t* pConnackProperties
  *
  * This function must be called before #sendConnectWithoutCopy in order to get
  * the size of the MQTT CONNECT packet that is generated from #MQTTConnectInfo_t,
- * optional #MQTTPublishInfo_t and optional propertyLength and optional willPropertyLength. 
+ * optional #MQTTPublishInfo_t and optional propertyLength and optional willPropertyLength.
  *
  * @param[in] pConnectInfo MQTT CONNECT packet parameters.
  * @param[in] pWillInfo Last Will and Testament. Pass NULL if not used.
@@ -1411,19 +1411,19 @@ MQTTStatus_t MQTT_DeserializeConnack(MQTTConnectProperties_t* pConnackProperties
  * MQTTConnectInfo_t connectInfo = { 0 };
  * MQTTPublishInfo_t willInfo = { 0 };
  * size_t propertyLength = 0 ;
- * size_t willPropertyLength = 0 ; 
+ * size_t willPropertyLength = 0 ;
  * size_t remainingLength = 0, packetSize = 0;
  *
  * // Initialize the connection info, the details are out of scope for this example.
  * initializeConnectInfo( &connectInfo );
- * 
+ *
  * // Initialize the optional will info, the details are out of scope for this example.
  * initializeWillInfo( &willInfo );
  *
  * // Initialize connect property length and will property length, the details are out of scope for this example.
  * initializeConnectPropertiesLength( &propertyLength );
  * initializeWillPropertiesLength( &willPropertyLength );
- * 
+ *
  * // Get the size requirement for the connect packet.
  * status = MQTT_GetConnectPacketSize(
  *      &connectInfo, &willInfo, propertyLength, willPropertyLength, &remainingLength, &packetSize);
@@ -1468,8 +1468,8 @@ MQTTStatus_t MQTT_GetConnectPacketSize(const MQTTConnectInfo_t* pConnectInfo,
  * uint16_t topicAlias;
  * uint8_t retainAvailable;
  * uint8_t maxQos;
- * // Set in the CONNACK packet. 
- * uint32_t maxPacketSize ; 
+ * // Set in the CONNACK packet.
+ * uint32_t maxPacketSize ;
  *
  * //Set the publish info parameters.
  *
@@ -1483,10 +1483,10 @@ MQTTStatus_t MQTT_GetConnectPacketSize(const MQTTConnectInfo_t* pConnectInfo,
  * @endcode
  */
 /* @[declare_mqtt_validatepublishparams] */
-MQTTStatus_t MQTT_ValidatePublishParams(const MQTTPublishInfo_t* pPublishInfo, 
-                                        uint8_t retainAvailable, 
+MQTTStatus_t MQTT_ValidatePublishParams(const MQTTPublishInfo_t* pPublishInfo,
+                                        uint8_t retainAvailable,
                                         uint8_t maxQos,
-                                        uint16_t topicAlias,  
+                                        uint16_t topicAlias,
                                         uint32_t maxPacketSize);
 /* @[declare_mqtt_validatepublishparams] */
 
@@ -1520,8 +1520,8 @@ MQTTStatus_t MQTT_ValidatePublishParams(const MQTTPublishInfo_t* pPublishInfo,
  * uint8_t retainAvailable;
  * uint8_t maxQos;
  * size_t remainingLength = 0, packetSize = 0;
- * size_t propertyLength = 0 ; 
- * 
+ * size_t propertyLength = 0 ;
+ *
  * // Initialize property length. The details are out of scope for this example.
  * initializePropertyLength( &propertyLength );
  *
@@ -1574,7 +1574,7 @@ MQTTStatus_t MQTT_GetPublishPacketSize(const MQTTPublishInfo_t * pPublishInfo,
  * MQTTStatus_t status;
  * MQTTPacketInfo_t incomingPacket;
  * uint16_t packetId;
- * MQTTReasonCodeInfo_t reasonCode ; 
+ * MQTTReasonCodeInfo_t reasonCode ;
  * bool requestProblem;
  * uint32_t maxPacketSize;
  * MqttPropBuilder_t propBuffer;
@@ -1611,7 +1611,7 @@ MQTTStatus_t MQTT_DeserializePublishAck(const MQTTPacketInfo_t* pIncomingPacket,
  * @param[out] subackReasonCodes The #MQTTReasonCodeInfo_t to store reason codes for each topic filter.
  * @param[in] incomingPacket #MQTTPacketInfo_t containing the buffer.
  * @param[out] pPacketId The packet ID of obtained from the buffer.
- * @param[out] propBuffer Store MQTT properties in the buffer. 
+ * @param[out] propBuffer Store MQTT properties in the buffer.
  * @param[in] maxPacketSize Maximum packet size allowed by the client.
  *
  * @return #MQTTBadParameter, #MQTTBadResponse, #MQTTServerRefused, #MQTTBadResponse, #MQTTBadResponse  or #MQTTSuccess.
@@ -1751,10 +1751,10 @@ MQTTStatus_t MQTT_GetAckPacketSize(size_t* pRemainingLength,
  *
  * //Set property length. The details are out of scope for this example.
  * initializePropertyLength( &propertyLength );
- * 
+ *
  * //Set the parameters.
  * // Get the size requirement for the disconnect packet.
- * status = MQTTV5_GetDisconnectPacketSize(&remainingLength,&packetSize,maxPacketSize, propertyLength, reasonCode); 
+ * status = MQTTV5_GetDisconnectPacketSize(&remainingLength,&packetSize,maxPacketSize, propertyLength, reasonCode);
  *
  * if( status == MQTTSuccess )
  * {
@@ -1819,7 +1819,7 @@ uint8_t * MQTT_SerializeDisconnectFixed(uint8_t * pIndex,
  * if( ( incomingPacket.type) == MQTT_PACKET_TYPE_DISCONNECT )
  * {
  *      status = MQTT_DeserializeDisconnect(&incomingPacket,
-*                                           maxPacketSize,    
+*                                           maxPacketSize,
                                             &disconnectInfo,
                                             &propBuffer);
  *      if( status == MQTTSuccess )
@@ -2303,7 +2303,7 @@ MQTTStatus_t MQTTPropGet_PubResponseTopic(MqttPropBuilder_t* propBuffer, const c
  * @return Returns one of the following:
  * - #MQTTSuccess if the Correlation Data was successfully retrieved
  * - #MQTTBadParameter if an invalid parameter is passed
- * - #MQTTBadResponse if an invalid packet is read 
+ * - #MQTTBadResponse if an invalid packet is read
  */
 /* @[declare_mqttpropget_pubcorrelationdata] */
 MQTTStatus_t MQTTPropGet_PubCorrelationData(MqttPropBuilder_t* propBuffer, const void** correlationData, uint16_t* correlationLength);
@@ -2589,7 +2589,7 @@ MQTTStatus_t MQTTPropGet_ConnSubId(MqttPropBuilder_t* propBuffer, uint8_t* isSub
  */
 /* @[declare_mqttpropget_connsharedsubavailable] */
 MQTTStatus_t MQTTPropGet_ConnSharedSubAvailable( MqttPropBuilder_t * propBuffer,
-                                                uint8_t * isSharedSubAvailable ); 
+                                                uint8_t * isSharedSubAvailable );
 /* @[declare_mqttpropget_connsharedsubavailable] */
 /**
  * @brief Get the Server Keep Alive property from CONNACK properties
@@ -2603,7 +2603,7 @@ MQTTStatus_t MQTTPropGet_ConnSharedSubAvailable( MqttPropBuilder_t * propBuffer,
  */
 /* @[declare_mqttpropget_connserverkeepalive] */
 MQTTStatus_t MQTTPropGet_ConnServerKeepAlive( MqttPropBuilder_t * propBuffer,
-                                            uint16_t * serverKeepAlive ); 
+                                            uint16_t * serverKeepAlive );
 /* @[declare_mqttpropget_connserverkeepalive] */
 
 /**
@@ -2616,12 +2616,12 @@ MQTTStatus_t MQTTPropGet_ConnServerKeepAlive( MqttPropBuilder_t * propBuffer,
  * @return MQTTSuccess if property was found and retrieved successfully
  *         MQTTBadParameter if propBuffer, pResponseInfo, or responseInfoLength is NULL
  *         MQTTBadResponse if property value is invalid in buffer
- */   
-/* @[declare_mqttpropget_connresponseinfo] */                                        
+ */
+/* @[declare_mqttpropget_connresponseinfo] */
 MQTTStatus_t MQTTPropGet_ConnResponseInfo( MqttPropBuilder_t * propBuffer,
                                             const char ** pResponseInfo,
-                                            uint16_t * responseInfoLength ); 
-/* @[declare_mqttpropget_connresponseinfo] */  
+                                            uint16_t * responseInfoLength );
+/* @[declare_mqttpropget_connresponseinfo] */
 
 /**
  * @brief Get the Authentication Method property from CONNECT/CONNACK properties
@@ -2633,13 +2633,13 @@ MQTTStatus_t MQTTPropGet_ConnResponseInfo( MqttPropBuilder_t * propBuffer,
  * @return MQTTSuccess if property was found and retrieved successfully
  *         MQTTBadParameter if propBuffer, pAuthMethod, or authMethodLength is NULL
  *         MQTTBadResponse if property value is invalid in buffer
- */ 
+ */
 
-/* @[declare_mqttpropget_connauthmethod] */                                          
+/* @[declare_mqttpropget_connauthmethod] */
 MQTTStatus_t MQTTPropGet_ConnAuthMethod(MqttPropBuilder_t * propBuffer,
                                         const char ** pAuthMethod,
-                                        uint16_t * authMethodLength); 
-/* @[declare_mqttpropget_connauthmethod] */     
+                                        uint16_t * authMethodLength);
+/* @[declare_mqttpropget_connauthmethod] */
 
 /**
  * @brief Get the Authentication Data property from CONNECT/CONNACK properties
@@ -2656,7 +2656,7 @@ MQTTStatus_t MQTTPropGet_ConnAuthMethod(MqttPropBuilder_t * propBuffer,
 /* @[declare_mqttpropget_connauthdata] */
 MQTTStatus_t MQTTPropGet_ConnAuthData(MqttPropBuilder_t * propBuffer,
                                         const char ** pAuthData,
-                                        uint16_t * authDataLength); 
+                                        uint16_t * authDataLength);
 
 /* @[declare_mqttpropget_connauthdata] */
 
