@@ -19,7 +19,7 @@
     </tr>
     <tr>
         <td>core_mqtt_serializer.c</td>
-        <td><center>8.4K</center></td>
+        <td><center>8.7K</center></td>
         <td><center>6.1K</center></td>
     </tr>
     <tr>
