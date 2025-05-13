@@ -60,6 +60,8 @@ void harness()
     MQTTContext_t * pContext;
     MQTTConnectInfo_t * pConnectInfo;
     MQTTPublishInfo_t * pWillInfo;
+    MqttPropBuilder_t * pPropertyBuilder;
+    MqttPropBuilder_t * willPropsBuilder;
     uint32_t timeoutMs;
     size_t totalMessageLength = 0U;
     bool * pSessionPresent;
@@ -144,6 +146,30 @@ void harness()
         totalMessageLength += pWillInfo->payloadLength;
     }
 
+    pPropertyBuilder = allocateMqttPropBuilder( NULL );
+
+    if( pPropertyBuilder != NULL )
+    {
+        __CPROVER_assume( pPropertyBuilder->currentIndex >= 0 );
+        __CPROVER_assume( pPropertyBuilder->currentIndex < pPropertyBuilder->bufferLength );
+        __CPROVER_assume( pPropertyBuilder->fieldSet >= 0 );
+    }
+
+    __CPROVER_assume( isValidMqttPropBuilder( pPropertyBuilder ) );
+    
+    willPropsBuilder = allocateMqttPropBuilder( NULL );
+
+    if(willPropsBuilder!=NULL)
+    {
+        __CPROVER_assume( willPropsBuilder->currentIndex >= 0 );
+        __CPROVER_assume( willPropsBuilder->currentIndex < willPropsBuilder->bufferLength );
+        __CPROVER_assume( willPropsBuilder->fieldSet >= 0 );
+
+        totalMessageLength += willPropsBuilder->currentIndex;
+    }
+
+    __CPROVER_assume( isValidMqttPropBuilder( willPropsBuilder ) );
+
     /* 128^4 is the length imposed by the MQTT spec. */
     __CPROVER_assume( totalMessageLength <= 268435456 );
 
@@ -154,5 +180,5 @@ void harness()
      * safety can be proven in only a few iterations. */
     __CPROVER_assume( timeoutMs < MQTT_RECEIVE_TIMEOUT );
 
-    MQTT_Connect( pContext, pConnectInfo, pWillInfo, timeoutMs, pSessionPresent );
+    MQTT_Connect( pContext, pConnectInfo, pWillInfo, timeoutMs, pSessionPresent, pPropertyBuilder, willPropsBuilder );
 }

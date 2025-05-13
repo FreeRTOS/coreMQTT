@@ -32,7 +32,10 @@
 
 void EventCallbackStub( MQTTContext_t * pContext,
                         MQTTPacketInfo_t * pPacketInfo,
-                        MQTTDeserializedInfo_t * pDeserializedInfo )
+                        MQTTDeserializedInfo_t * pDeserializedInfo,
+                        enum MQTTSuccessFailReasonCode * pReasonCode,
+                        struct MqttPropBuilder* sendPropsBuffer,
+                        struct MqttPropBuilder* getPropsBuffer )
 {
     __CPROVER_assert( pContext != NULL,
                       "EventCallbackStub pContext is not NULL" );

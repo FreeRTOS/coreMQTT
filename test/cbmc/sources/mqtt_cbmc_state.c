@@ -139,6 +139,18 @@ bool isValidMqttPublishInfo( const MQTTPublishInfo_t * pPublishInfo )
     return isValid;
 }
 
+bool isValidMqttPropBuilder( const MqttPropBuilder_t * pPropBuilder )
+{
+    bool isValid = true;
+
+    if( pPropBuilder != NULL )
+    {
+        isValid = ( pPropBuilder->currentIndex == 0 ) == ( pPropBuilder->fieldSet == 0 );
+    }
+
+    return isValid;
+}
+
 MQTTConnectInfo_t * allocateMqttConnectInfo( MQTTConnectInfo_t * pConnectInfo )
 {
     if( pConnectInfo == NULL )
@@ -182,6 +194,27 @@ MQTTFixedBuffer_t * allocateMqttFixedBuffer( MQTTFixedBuffer_t * pFixedBuffer )
     }
 
     return pFixedBuffer;
+}
+
+MqttPropBuilder_t * allocateMqttPropBuilder( MqttPropBuilder_t * pPropBuilder )
+{
+    if( pPropBuilder == NULL )
+    {
+        pPropBuilder = malloc( sizeof( MqttPropBuilder_t ) );
+    }
+
+    if( pPropBuilder != NULL )
+    {
+        __CPROVER_assume( pPropBuilder->bufferLength > 0 );
+
+        /* This buffer is used to store packet properties. The property length
+           is a variable length integer and hence will have a max value of REMAINING_LENGTH_MAX */
+        __CPROVER_assume(  pPropBuilder->bufferLength < REMAINING_LENGTH_MAX );
+
+        pPropBuilder->pBuffer = malloc( pPropBuilder->bufferLength );
+    }
+
+    return pPropBuilder;
 }
 
 bool isValidMqttFixedBuffer( const MQTTFixedBuffer_t * pFixedBuffer )
