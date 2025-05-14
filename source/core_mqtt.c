@@ -135,7 +135,7 @@ static int32_t sendBuffer( MQTTContext_t * pContext,
  * Testament is not used.
  * @brief param[in] remainingLength the length of the connect packet.
  * @brief param[in] pPropertyBuilder MQTT property builder.
- * @brief param[in] pWillPropsBuilder MQTT will properties builder.
+ * @brief param[in] pWillPropertyBuilder MQTT will properties builder.
  * @note This operation may call the transport send function
  * repeatedly to send bytes over the network until either:
  * 1. The requested number of bytes @a remainingLength have been sent.
@@ -152,7 +152,7 @@ static MQTTStatus_t sendConnectWithoutCopy( MQTTContext_t * pContext,
                                             const MQTTPublishInfo_t * pWillInfo,
                                             size_t remainingLength,
                                             const MqttPropBuilder_t * pPropertyBuilder,
-                                            const MqttPropBuilder_t * willPropsBuilder );
+                                            const MqttPropBuilder_t * pWillPropertyBuilder );
 
 /**
  * @brief Sends the vector array passed through the parameters over the network.
@@ -2221,7 +2221,7 @@ static MQTTStatus_t sendSubscribeWithoutCopy( MQTTContext_t * pContext,
     /**
      * Sending Property Buffer
      */
-    if( pPropertyBuilder != NULL )
+    if( (pPropertyBuilder != NULL) && (pPropertyBuilder->pBuffer != NULL) )
     {
         subscribePropLen = pPropertyBuilder->currentIndex;
     }
@@ -2238,7 +2238,7 @@ static MQTTStatus_t sendSubscribeWithoutCopy( MQTTContext_t * pContext,
     pIterator++;
     ioVectorLength++;
 
-    if( pPropertyBuilder != NULL )
+    if( subscribePropLen > 0 )
     {
         pIterator->iov_base = pPropertyBuilder->pBuffer;
         pIterator->iov_len = pPropertyBuilder->currentIndex;
@@ -2462,7 +2462,7 @@ static MQTTStatus_t sendConnectWithoutCopy( MQTTContext_t * pContext,
                                             const MQTTPublishInfo_t * pWillInfo,
                                             size_t remainingLength,
                                             const MqttPropBuilder_t * pPropertyBuilder,
-                                            const MqttPropBuilder_t * willPropsBuilder )
+                                            const MqttPropBuilder_t * pWillPropertyBuilder )
 {
     MQTTStatus_t status = MQTTSuccess;
     TransportOutVector_t * iterator;
@@ -2534,7 +2534,7 @@ static MQTTStatus_t sendConnectWithoutCopy( MQTTContext_t * pContext,
         iterator++;
         ioVectorLength++;
 
-        if( pPropertyBuilder != NULL )
+        if( (pPropertyBuilder != NULL) && (pPropertyBuilder->pBuffer != NULL) )
         {
             connectPropLen = pPropertyBuilder->currentIndex;
         }
@@ -2551,7 +2551,7 @@ static MQTTStatus_t sendConnectWithoutCopy( MQTTContext_t * pContext,
         iterator++;
         ioVectorLength++;
 
-        if( pPropertyBuilder != NULL )
+        if( connectPropLen > 0 )
         {
             /*Serialize the will properties*/
 
@@ -2565,7 +2565,7 @@ static MQTTStatus_t sendConnectWithoutCopy( MQTTContext_t * pContext,
         /*
          * Updating Context with optional properties
          */
-        if( pPropertyBuilder != NULL )
+        if( connectPropLen > 0 )
         {
             status = updateContextWithConnectProps( pPropertyBuilder, &pContext->connectProperties );
         }
@@ -2585,9 +2585,9 @@ static MQTTStatus_t sendConnectWithoutCopy( MQTTContext_t * pContext,
         {
             size_t willPropsLen = 0;
 
-            if( willPropsBuilder != NULL )
+            if( (pWillPropertyBuilder != NULL) && (pWillPropertyBuilder->pBuffer != NULL) )
             {
-                willPropsLen = willPropsBuilder->currentIndex;
+                willPropsLen = pWillPropertyBuilder->currentIndex;
             }
 
             pIndex = willPropertyLength;
@@ -2602,12 +2602,12 @@ static MQTTStatus_t sendConnectWithoutCopy( MQTTContext_t * pContext,
             iterator++;
             ioVectorLength++;
 
-            if( willPropsBuilder != NULL )
+            if( willPropsLen > 0 )
             {
                 /*Serialize the will properties*/
 
-                iterator->iov_base = willPropsBuilder->pBuffer;
-                iterator->iov_len = willPropsBuilder->currentIndex;
+                iterator->iov_base = pWillPropertyBuilder->pBuffer;
+                iterator->iov_len = pWillPropertyBuilder->currentIndex;
                 totalMessageLength += iterator->iov_len;
                 iterator++;
                 ioVectorLength++;
@@ -3219,14 +3219,12 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
                            uint32_t timeoutMs,
                            bool * pSessionPresent,
                            const MqttPropBuilder_t * pPropertyBuilder,
-                           const MqttPropBuilder_t * willPropsBuilder )
+                           const MqttPropBuilder_t * pWillPropertyBuilder )
 {
     size_t remainingLength = 0UL, packetSize = 0UL;
     MQTTStatus_t status = MQTTSuccess;
     MQTTPacketInfo_t incomingPacket = { 0 };
     MQTTConnectionStatus_t connectStatus;
-    size_t propertyLength = 0U;
-    size_t willPropertyLength = 0U;
 
     incomingPacket.type = ( uint8_t ) 0;
 
@@ -3240,23 +3238,13 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
         status = MQTTBadParameter;
     }
 
-    if( pPropertyBuilder != NULL )
-    {
-        propertyLength = pPropertyBuilder->currentIndex;
-    }
-
-    if( willPropsBuilder != NULL )
-    {
-        willPropertyLength = willPropsBuilder->currentIndex;
-    }
-
     if( status == MQTTSuccess )
     {
         /* Get MQTT connect packet size and remaining length. */
         status = MQTT_GetConnectPacketSize( pConnectInfo,
                                             pWillInfo,
-                                            propertyLength,
-                                            willPropertyLength,
+                                            pPropertyBuilder,
+                                            pWillPropertyBuilder,
                                             &remainingLength,
                                             &packetSize );
         /* coverity[sensitive_data_leak] */
@@ -3283,7 +3271,7 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
                                              pWillInfo,
                                              remainingLength,
                                              pPropertyBuilder,
-                                             willPropsBuilder );
+                                             pWillPropertyBuilder );
         }
 
         /* Read CONNACK from transport layer. */
@@ -3375,13 +3363,7 @@ MQTTStatus_t MQTT_Subscribe( MQTTContext_t * pContext,
 {
     MQTTConnectionStatus_t connectStatus;
     size_t remainingLength = 0UL, packetSize = 0UL;
-    size_t subscribePropLen = 0;
     MQTTStatus_t status; 
-
-    if( pPropertyBuilder != NULL )
-    {
-        subscribePropLen = pPropertyBuilder->currentIndex;
-    }
 
     status = validateSubscribeUnsubscribeParams( pContext,
                                                 pSubscriptionList,
@@ -3399,9 +3381,10 @@ MQTTStatus_t MQTT_Subscribe( MQTTContext_t * pContext,
         /* Get the remaining length and packet size.*/
         status = MQTT_GetSubscribePacketSize( pSubscriptionList,
                                               subscriptionCount,
+                                              pPropertyBuilder, 
                                               &remainingLength,
                                               &packetSize,
-                                              subscribePropLen, pContext->connectProperties.serverMaxPacketSize );
+                                              pContext->connectProperties.serverMaxPacketSize );
         LogError( ( "SUBSCRIBE packet size is %lu and remaining length is %lu.",
                     ( unsigned long ) packetSize,
                     ( unsigned long ) remainingLength ) );
@@ -3466,13 +3449,6 @@ MQTTStatus_t MQTT_Publish( MQTTContext_t * pContext,
     /* Validate arguments. */
     MQTTStatus_t status = validatePublishParams( pContext, pPublishInfo, packetId );
 
-    size_t publishPropertyLength = 0;
-
-    if( pPropertyBuilder != NULL )
-    {
-        publishPropertyLength = pPropertyBuilder->currentIndex;
-    }
-
     if( ( status == MQTTSuccess ) && ( pPropertyBuilder != NULL ) )
     {
         status = MQTT_ValidatePublishProperties( pContext->connectProperties.serverTopicAliasMax, pPropertyBuilder, &topicAlias );
@@ -3491,10 +3467,10 @@ MQTTStatus_t MQTT_Publish( MQTTContext_t * pContext,
         if( status == MQTTSuccess )
         {
             status = MQTT_GetPublishPacketSize( pPublishInfo,
+                                                pPropertyBuilder,
                                                 &remainingLength,
                                                 &packetSize,
-                                                pContext->connectProperties.serverMaxPacketSize,
-                                                publishPropertyLength );
+                                                pContext->connectProperties.serverMaxPacketSize );
         }
     }
 
@@ -3682,13 +3658,7 @@ MQTTStatus_t MQTT_Unsubscribe( MQTTContext_t * pContext,
 {
     MQTTConnectionStatus_t connectStatus;
     size_t remainingLength = 0UL, packetSize = 0UL;
-    size_t proplen = 0;
     MQTTStatus_t status;
-
-    if( pPropertyBuilder != NULL )
-    {
-        proplen = pPropertyBuilder->currentIndex;
-    }
 
     /* Validate arguments. */
     status = validateSubscribeUnsubscribeParams( pContext,
@@ -3702,10 +3672,10 @@ MQTTStatus_t MQTT_Unsubscribe( MQTTContext_t * pContext,
         /* Get the remaining length and packet size.*/
         status = MQTT_GetUnsubscribePacketSize( pSubscriptionList,
                                                 subscriptionCount,
+                                                pPropertyBuilder, 
                                                 &remainingLength,
                                                 &packetSize,
-                                                pContext->connectProperties.serverMaxPacketSize,
-                                                proplen );
+                                                pContext->connectProperties.serverMaxPacketSize);
         LogInfo( ( "UNSUBSCRIBE packet size is %lu and remaining length is %lu.",
                    ( unsigned long ) packetSize,
                    ( unsigned long ) remainingLength ) );
@@ -3750,7 +3720,6 @@ MQTTStatus_t MQTT_Disconnect( MQTTContext_t * pContext,
     size_t remainingLength = 0U;
     MQTTStatus_t status = MQTTSuccess;
     MQTTConnectionStatus_t connectStatus;
-    size_t disconnectPropLen = 0;
 
     /* Validate arguments. */
     if( ( pContext == NULL ) )
@@ -3759,15 +3728,10 @@ MQTTStatus_t MQTT_Disconnect( MQTTContext_t * pContext,
         status = MQTTBadParameter;
     }
 
-    if( pPropertyBuilder != NULL )
-    {
-        disconnectPropLen = pPropertyBuilder->currentIndex;
-    }
-
     if( status == MQTTSuccess )
     {
         /* Get MQTT DISCONNECT packet size. */
-        status = MQTT_GetDisconnectPacketSize( &remainingLength, &packetSize, pContext->connectProperties.serverMaxPacketSize, disconnectPropLen, reasonCode );
+        status = MQTT_GetDisconnectPacketSize( pPropertyBuilder, &remainingLength, &packetSize, pContext->connectProperties.serverMaxPacketSize, reasonCode );
         LogDebug( ( "MQTT DISCONNECT packet size is %lu.",
                     ( unsigned long ) packetSize ) );
     }
@@ -4476,7 +4440,7 @@ static MQTTStatus_t sendDisconnectWithoutCopy( MQTTContext_t * pContext,
     iterator++;
     ioVectorLength++;
 
-    if( pPropertyBuilder != NULL )
+    if( (pPropertyBuilder != NULL) && (pPropertyBuilder->pBuffer != NULL) )
     {
         disconnectPropLen = pPropertyBuilder->currentIndex;
     }
@@ -4493,7 +4457,7 @@ static MQTTStatus_t sendDisconnectWithoutCopy( MQTTContext_t * pContext,
     iterator++;
     ioVectorLength++;
 
-    if( pPropertyBuilder != NULL )
+    if( disconnectPropLen > 0 )
     {
         iterator->iov_base = pPropertyBuilder->pBuffer;
         iterator->iov_len = pPropertyBuilder->currentIndex;

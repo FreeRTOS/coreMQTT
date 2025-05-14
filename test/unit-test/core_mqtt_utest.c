@@ -2128,6 +2128,8 @@ void test_MQTT_Connect_error_path()
     uint8_t wbuf[ 500 ];
     size_t wbufLength = sizeof( wbuf );
     status = MqttPropertyBuilder_Init( &( willPropsBuilder ), wbuf, wbufLength );
+    willPropsBuilder.currentIndex = 10 ; 
+
     willInfo.pTopicName = "test";
     willInfo.topicNameLength = 4;
     willInfo.pPayload = "Payload";
@@ -4220,7 +4222,12 @@ void test_MQTT_Disconnect4( void )
     MQTT_SerializeDisconnectFixed_Stub( MQTTV5_SerializeDisconnectFixed_cb );    /* Write a disconnect packet into the buffer. */
     mqttBuffer[ 0 ] = MQTT_PACKET_TYPE_DISCONNECT;
 
-    status = MQTT_Disconnect( &mqttContext, NULL, 0x00 );
+    MqttPropBuilder_t propBuffer; 
+    uint8_t buf[10] ;
+    MqttPropertyBuilder_Init(&propBuffer, buf, sizeof(buf)) ; 
+    propBuffer.currentIndex = 5 ; 
+
+    status = MQTT_Disconnect( &mqttContext, &propBuffer, 0x00 );
 
     TEST_ASSERT_EQUAL( MQTTSuccess, status );
     TEST_ASSERT_EQUAL( MQTTNotConnected, mqttContext.connectStatus );

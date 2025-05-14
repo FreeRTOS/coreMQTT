@@ -286,6 +286,30 @@
 /*-----------------------------------------------------------*/
 
 /**
+ * @brief Serializes MQTT PUBLISH packet into the buffer provided.
+ *
+ * This function serializes MQTT PUBLISH packet into #MQTTFixedBuffer_t.pBuffer.
+ * Copy of the payload into the buffer is done as part of the serialization
+ * only if @p serializePayload is true.
+ *
+ * @param[in] pPublishInfo Publish information containing topic, QoS, payload and other
+ * PUBLISH packet fields.
+ * @param[in] pPublishProperties MQTT v5.0 properties for the PUBLISH packet. Can be NULL
+ * if no properties are needed.
+ * @param[in] remainingLength Remaining length of the PUBLISH packet.
+ * @param[in] packetIdentifier Packet identifier of PUBLISH packet.
+ * @param[in, out] pFixedBuffer Buffer to which PUBLISH packet will be
+ * serialized.
+ * @param[in] serializePayload Copy payload to the serialized buffer
+ * only if true. Only PUBLISH header will be serialized if false.
+ */
+static void serializePublishCommon( const MQTTPublishInfo_t * pPublishInfo,
+                                    const MqttPropBuilder_t * pPublishProperties, 
+                                    size_t remainingLength,
+                                    uint16_t packetIdentifier,
+                                    const MQTTFixedBuffer_t * pFixedBuffer,
+                                    bool serializePayload );
+/**
  * @brief Calculates the packet size and remaining length of an MQTT
  * PUBLISH packet.
  *
@@ -332,6 +356,23 @@ static MQTTStatus_t calculateSubscriptionPacketSize( const MQTTSubscribeInfo_t *
                                                      uint32_t maxPacketSize,
                                                      MQTTSubscriptionType_t subscriptionType );
 
+
+/**
+ * @brief Serialize an MQTT CONNECT packet in the given buffer.
+ *
+ * @param[in] pConnectInfo MQTT CONNECT packet parameters.
+ * @param[in] pWillInfo Last Will and Testament. Pass NULL if not used.
+ * @param[in] pConnectProperties MQTT CONNECT properties.
+ * @param[in] pWillProperties MQTT Will properties.
+ * @param[in] remainingLength Remaining Length of MQTT CONNECT packet.
+ * @param[out] pFixedBuffer Buffer for packet serialization.
+ */
+static void serializeConnectPacket( const MQTTConnectInfo_t * pConnectInfo,
+                                    const MQTTPublishInfo_t * pWillInfo,
+                                    const MqttPropBuilder_t * pConnectProperties,
+                                    const MqttPropBuilder_t * pWillProperties,
+                                    size_t remainingLength,
+                                    const MQTTFixedBuffer_t * pFixedBuffer );
 
 /**
  * @brief Retrieve the size of the remaining length if it were to be encoded.
@@ -974,6 +1015,110 @@ MQTTStatus_t MQTT_SerializePublishHeaderWithoutTopic( const MQTTPublishInfo_t * 
 
 /*-----------------------------------------------------------*/
 
+static void serializePublishCommon( const MQTTPublishInfo_t * pPublishInfo,
+                                    const MqttPropBuilder_t * pPublishProperties, 
+                                    size_t remainingLength,
+                                    uint16_t packetIdentifier,
+                                    const MQTTFixedBuffer_t * pFixedBuffer,
+                                    bool serializePayload )
+{
+    uint8_t * pIndex = NULL;
+    size_t propertyLength = 0U ; 
+    /* The first byte of a PUBLISH packet contains the packet type and flags. */
+    uint8_t publishFlags = MQTT_PACKET_TYPE_PUBLISH;
+
+    assert( pPublishInfo != NULL );
+    assert( pFixedBuffer != NULL );
+    assert( pFixedBuffer->pBuffer != NULL );
+    /* Packet Id should be non zero for Qos 1 and Qos 2. */
+    assert( ( pPublishInfo->qos == MQTTQoS0 ) || ( packetIdentifier != 0U ) );
+    /* Duplicate flag should be set only for Qos 1 or Qos 2. */
+    assert( ( pPublishInfo->dup != true ) || ( pPublishInfo->qos != MQTTQoS0 ) );
+
+    /* Get the start address of the buffer. */
+    pIndex = pFixedBuffer->pBuffer;
+
+    if((pPublishProperties != NULL) && (pPublishProperties->pBuffer != NULL) )
+    {
+        propertyLength = pPublishProperties->currentIndex ; 
+    }
+
+    if( pPublishInfo->qos == MQTTQoS1 )
+    {
+        LogDebug( ( "Adding QoS as QoS1 in PUBLISH flags." ) );
+        UINT8_SET_BIT( publishFlags, MQTT_PUBLISH_FLAG_QOS1 );
+    }
+    else if( pPublishInfo->qos == MQTTQoS2 )
+    {
+        LogDebug( ( "Adding QoS as QoS2 in PUBLISH flags." ) );
+        UINT8_SET_BIT( publishFlags, MQTT_PUBLISH_FLAG_QOS2 );
+    }
+    else
+    {
+        /* Empty else MISRA 15.7 */
+    }
+
+    if( pPublishInfo->retain == true )
+    {
+        LogDebug( ( "Adding retain bit in PUBLISH flags." ) );
+        UINT8_SET_BIT( publishFlags, MQTT_PUBLISH_FLAG_RETAIN );
+    }
+
+    if( pPublishInfo->dup == true )
+    {
+        LogDebug( ( "Adding dup bit in PUBLISH flags." ) );
+        UINT8_SET_BIT( publishFlags, MQTT_PUBLISH_FLAG_DUP );
+    }
+
+    *pIndex = publishFlags;
+    pIndex++;
+
+    /* The "Remaining length" is encoded from the second byte. */
+    pIndex = encodeVariableLength( pIndex, remainingLength );
+
+    /* The topic name is placed after the "Remaining length". */
+    pIndex = encodeString( pIndex,
+                           pPublishInfo->pTopicName,
+                           pPublishInfo->topicNameLength );
+
+    /* A packet identifier is required for QoS 1 and 2 messages. */
+    if( pPublishInfo->qos > MQTTQoS0 )
+    {
+        LogDebug( ( "Adding packet Id in PUBLISH packet." ) );
+        /* Place the packet identifier into the PUBLISH packet. */
+        *pIndex = UINT16_HIGH_BYTE( packetIdentifier );
+        pIndex[ 1U ] = UINT16_LOW_BYTE( packetIdentifier );
+        pIndex = &pIndex[ 2U ];
+    }
+    /* Properties are added after packet identifier. */
+    pIndex = encodeVariableLength(pIndex, propertyLength); 
+    if(propertyLength > 0U)
+    {
+        memcpy( pIndex, pPublishProperties->pBuffer, propertyLength );
+        pIndex += propertyLength;
+    }
+    /* The payload is placed after the packet identifier.
+     * Payload is copied over only if required by the flag serializePayload.
+     * This will help reduce an unnecessary copy of the payload into the buffer.
+     */
+    if( ( pPublishInfo->payloadLength > 0U ) &&
+        ( serializePayload == true ) )
+    {
+        LogDebug( ( "Copying PUBLISH payload of length =%lu to buffer",
+                    ( unsigned long ) pPublishInfo->payloadLength ) );
+
+        ( void ) memcpy( ( void * ) pIndex, ( const void * ) pPublishInfo->pPayload, pPublishInfo->payloadLength );
+        /* Move the index to after the payload. */
+        pIndex = &pIndex[ pPublishInfo->payloadLength ];
+    }
+
+    /* Ensure that the difference between the end and beginning of the buffer
+     * is less than the buffer size. */
+    assert( ( ( size_t ) ( pIndex - pFixedBuffer->pBuffer ) ) <= pFixedBuffer->size );
+}
+
+/*-----------------------------------------------------------*/
+
 static size_t getRemainingLength( TransportRecv_t recvFunc,
                                   NetworkContext_t * pNetworkContext )
 {
@@ -1604,6 +1749,63 @@ MQTTStatus_t MQTT_DeserializeSuback( MQTTReasonCodeInfo_t * subackReasonCodes,
 
 /*-----------------------------------------------------------*/
 
+static MQTTStatus_t validateSubscriptionSerializeParams( const MQTTSubscribeInfo_t * pSubscriptionList,
+                                                         size_t subscriptionCount,
+                                                         uint16_t packetId,
+                                                         size_t remainingLength,
+                                                         const MQTTFixedBuffer_t * pFixedBuffer )
+{
+    MQTTStatus_t status = MQTTSuccess;
+    size_t packetSize = 0;
+
+    /* Validate all the parameters. */
+    if( ( pFixedBuffer == NULL ) || ( pSubscriptionList == NULL ) )
+    {
+        LogError( ( "Argument cannot be NULL: pFixedBuffer=%p, "
+                    "pSubscriptionList=%p.",
+                    ( void * ) pFixedBuffer,
+                    ( void * ) pSubscriptionList ) );
+        status = MQTTBadParameter;
+    }
+    /* A buffer must be configured for serialization. */
+    else if( pFixedBuffer->pBuffer == NULL )
+    {
+        LogError( ( "Argument cannot be NULL: pFixedBuffer->pBuffer is NULL." ) );
+        status = MQTTBadParameter;
+    }
+    else if( subscriptionCount == 0U )
+    {
+        LogError( ( "Subscription count is 0." ) );
+        status = MQTTBadParameter;
+    }
+    else if( packetId == 0U )
+    {
+        LogError( ( "Packet Id for subscription packet is 0." ) );
+        status = MQTTBadParameter;
+    }
+    else
+    {
+        /* The serialized packet size = First byte
+         * + length of encoded size of remaining length
+         * + remaining length. */
+        packetSize = 1U + variableLengthEncodedSize( remainingLength )
+                     + remainingLength;
+
+        if( packetSize > pFixedBuffer->size )
+        {
+            LogError( ( "Buffer size of %lu is not sufficient to hold "
+                        "serialized packet of size of %lu.",
+                        ( unsigned long ) pFixedBuffer->size,
+                        ( unsigned long ) packetSize ) );
+            status = MQTTNoMemory;
+        }
+    }
+
+    return status;
+}
+
+/*-----------------------------------------------------------*/
+
 MQTTStatus_t MQTT_DeserializePublish( const MQTTPacketInfo_t * pIncomingPacket,
                                       uint16_t * pPacketId,
                                       MQTTPublishInfo_t * pPublishInfo,
@@ -1806,15 +2008,102 @@ uint8_t * MQTT_SerializeConnectFixedHeader( uint8_t * pIndex,
 
 /*-----------------------------------------------------------*/
 
+static void serializeConnectPacket( const MQTTConnectInfo_t * pConnectInfo,
+                                    const MQTTPublishInfo_t * pWillInfo,
+                                    const MqttPropBuilder_t * pConnectProperties,
+                                    const MqttPropBuilder_t * pWillProperties,
+                                    size_t remainingLength,
+                                    const MQTTFixedBuffer_t * pFixedBuffer )
+{
+    uint8_t * pIndex = NULL;
+    size_t connectPropertyLength = 0U;
+    size_t willPropertyLength = 0U;
+
+    assert( pConnectInfo != NULL );
+    assert( pFixedBuffer != NULL );
+    assert( pFixedBuffer->pBuffer != NULL );
+
+    pIndex = pFixedBuffer->pBuffer;
+
+    /* Serialize the header. */
+    pIndex = MQTT_SerializeConnectFixedHeader( pIndex,
+                                               pConnectInfo,
+                                               pWillInfo,
+                                               remainingLength );
+    if( (pConnectProperties != NULL) && (pConnectProperties->pBuffer != NULL))
+    {
+        connectPropertyLength = pConnectProperties->currentIndex;
+    }
+
+    if( (pWillProperties != NULL) && (pWillProperties->pBuffer != NULL) )
+    {
+        willPropertyLength = pWillProperties->currentIndex;
+    }
+
+    /* Write the properties length into the CONNECT packet. */
+    pIndex = encodeVariableLength( pIndex, connectPropertyLength ); 
+    if( connectPropertyLength > 0 )
+    {
+        memcpy( pIndex, pConnectProperties->pBuffer, connectPropertyLength );
+        pIndex += connectPropertyLength;
+    }
+
+    /* Write the client identifier into the CONNECT packet. */
+    pIndex = encodeString( pIndex,
+                           pConnectInfo->pClientIdentifier,
+                           pConnectInfo->clientIdentifierLength );  
+
+    /* Write the will topic name and message into the CONNECT packet if provided. */
+    if( pWillInfo != NULL )
+    {
+        pIndex = encodeVariableLength(pIndex, willPropertyLength); 
+        if( willPropertyLength > 0 )
+        {
+            memcpy(pIndex, pWillProperties->pBuffer, willPropertyLength);
+            pIndex += willPropertyLength;
+        } 
+        pIndex = encodeString( pIndex,
+                               pWillInfo->pTopicName,
+                               pWillInfo->topicNameLength );
+
+        pIndex = encodeString( pIndex,
+                               pWillInfo->pPayload,
+                               ( uint16_t ) pWillInfo->payloadLength );
+    }
+
+    /* Encode the user name if provided. */
+    if( pConnectInfo->pUserName != NULL )
+    {
+        pIndex = encodeString( pIndex, pConnectInfo->pUserName, pConnectInfo->userNameLength );
+    }
+
+    /* Encode the password if provided. */
+    if( pConnectInfo->pPassword != NULL )
+    {
+        pIndex = encodeString( pIndex, pConnectInfo->pPassword, pConnectInfo->passwordLength );
+    }
+
+    LogDebug( ( "Length of serialized CONNECT packet is %lu.",
+                ( ( unsigned long ) ( pIndex - pFixedBuffer->pBuffer ) ) ) );
+
+    /* Ensure that the difference between the end and beginning of the buffer
+     * is less than the buffer size. */
+    assert( ( ( size_t ) ( pIndex - pFixedBuffer->pBuffer ) ) <= pFixedBuffer->size );
+}
+
+/*-----------------------------------------------------------*/
+
 MQTTStatus_t MQTT_GetConnectPacketSize( const MQTTConnectInfo_t * pConnectInfo,
                                         const MQTTPublishInfo_t * pWillInfo,
-                                        size_t propertyLength,
-                                        size_t willPropertyLength,
+                                        const MqttPropBuilder_t *pConnectProperties,
+                                        const MqttPropBuilder_t *pWillProperties, 
                                         size_t * pRemainingLength,
                                         size_t * pPacketSize )
 {
     MQTTStatus_t status = MQTTSuccess;
     size_t remainingLength;
+    size_t propertyLength = 0U;
+    size_t willPropertyLength = 0U; 
 
     /* The CONNECT packet will always include a 10-byte variable header without connect properties. */
     size_t connectPacketSize = MQTT_PACKET_CONNECT_HEADER_SIZE;
@@ -1849,6 +2138,16 @@ MQTTStatus_t MQTT_GetConnectPacketSize( const MQTTConnectInfo_t * pConnectInfo,
     else
     {
         /*Do Nothing*/
+    }
+
+    if( (pConnectProperties != NULL) && (pConnectProperties->pBuffer != NULL) )
+    {
+        propertyLength = pConnectProperties->currentIndex;
+    }
+
+    if( (pWillProperties != NULL) && (pWillProperties->pBuffer != NULL) )
+    {
+        willPropertyLength = pWillProperties->currentIndex;
     }
 
     if( status == MQTTSuccess )
@@ -1917,14 +2216,81 @@ MQTTStatus_t MQTT_GetConnectPacketSize( const MQTTConnectInfo_t * pConnectInfo,
 
 /*-----------------------------------------------------------*/
 
+MQTTStatus_t MQTT_SerializeConnect( const MQTTConnectInfo_t * pConnectInfo,
+                                    const MQTTPublishInfo_t * pWillInfo,
+                                    const MqttPropBuilder_t * pConnectProperties, 
+                                    const MqttPropBuilder_t * pWillProperties,
+                                    size_t remainingLength,
+                                    const MQTTFixedBuffer_t * pFixedBuffer )
+{
+    MQTTStatus_t status = MQTTSuccess;
+    size_t connectPacketSize = 0;
+
+    /* Validate arguments. */
+    if( ( pConnectInfo == NULL ) || ( pFixedBuffer == NULL ))
+    {
+        LogError( ( "Argument cannot be NULL: pConnectInfo=%p, "
+                    "pFixedBuffer=%p.",
+                    ( void * ) pConnectInfo,
+                    ( void * ) pFixedBuffer ) );
+        status = MQTTBadParameter;
+    }
+    /* A buffer must be configured for serialization. */
+    else if( pFixedBuffer->pBuffer == NULL )
+    {
+        LogError( ( "Argument cannot be NULL: pFixedBuffer->pBuffer is NULL." ) );
+        status = MQTTBadParameter;
+    }
+    else if( ( pWillInfo != NULL ) && ( pWillInfo->pTopicName == NULL ) )
+    {
+        LogError( ( "pWillInfo->pTopicName cannot be NULL if Will is present." ) );
+        status = MQTTBadParameter;
+    }
+    else
+    {
+        /* Calculate CONNECT packet size. Overflow in in this addition is not checked
+         * because it is part of the API contract to call Mqtt_GetConnectPacketSize()
+         * before this function. */
+        connectPacketSize = remainingLength + variableLengthEncodedSize( remainingLength ) + 1U;
+
+        /* Check that the full packet size fits within the given buffer. */
+        if( connectPacketSize > pFixedBuffer->size )
+        {
+            LogError( ( "Buffer size of %lu is not sufficient to hold "
+                        "serialized CONNECT packet of size of %lu.",
+                        ( unsigned long ) pFixedBuffer->size,
+                        ( unsigned long ) connectPacketSize ) );
+            status = MQTTNoMemory;
+        }
+        else
+        {
+            serializeConnectPacket( pConnectInfo,
+                                    pWillInfo,
+                                    pConnectProperties,
+                                    pWillProperties,
+                                    remainingLength,
+                                    pFixedBuffer );
+        }
+    }
+
+    return status;
+}
+
+/*-----------------------------------------------------------*/
+
 MQTTStatus_t MQTT_GetSubscribePacketSize( const MQTTSubscribeInfo_t * pSubscriptionList,
                                           size_t subscriptionCount,
+                                          const MqttPropBuilder_t * pSubscribeProperties,
                                           size_t * pRemainingLength,
                                           size_t * pPacketSize,
-                                          size_t propertyLength,
                                           uint32_t maxPacketSize )
 {
     MQTTStatus_t status = MQTTSuccess;
+    size_t propertyLength = 0U; 
+    if( (pSubscribeProperties != NULL) && (pSubscribeProperties->pBuffer != NULL) )
+    {
+        propertyLength = pSubscribeProperties->currentIndex;
+    }
 
     if( pSubscriptionList == NULL )
     {
@@ -1997,17 +2363,83 @@ uint8_t * MQTT_SerializeUnsubscribeHeader( size_t remainingLength,
     return pIterator;
 }
 
+MQTTStatus_t MQTT_SerializeSubscribe( const MQTTSubscribeInfo_t * pSubscriptionList,
+                                      size_t subscriptionCount,
+                                      const MqttPropBuilder_t * pSubscribeProperties,
+                                      uint16_t packetId,
+                                      size_t remainingLength,
+                                      const MQTTFixedBuffer_t * pFixedBuffer )
+{
+    size_t i = 0;
+    uint8_t * pIndex = NULL;
+    size_t propertyLength = 0U ; 
+    MQTTStatus_t status ; 
+
+    if( (pSubscribeProperties != NULL) && (pSubscribeProperties->pBuffer != NULL) )
+    {
+        propertyLength = pSubscribeProperties->currentIndex;
+    }
+    /* Validate all the parameters. */
+    status =
+        validateSubscriptionSerializeParams( pSubscriptionList,
+                                             subscriptionCount,
+                                             packetId,
+                                             remainingLength,
+                                             pFixedBuffer );
+
+    if( status == MQTTSuccess )
+    {
+        pIndex = pFixedBuffer->pBuffer;
+
+        pIndex = MQTT_SerializeSubscribeHeader( remainingLength,
+                                                pIndex,
+                                                packetId );
+        /*Serialize properties*/                                        
+        pIndex = encodeVariableLength(pIndex, propertyLength); 
+
+        if(propertyLength > 0U)
+        {
+            memcpy( pIndex, pSubscribeProperties->pBuffer, propertyLength );
+            pIndex += propertyLength;
+        }
+        /* Serialize each subscription topic filter and QoS. */
+        for( i = 0; i < subscriptionCount; i++ )
+        {
+            pIndex = encodeString( pIndex,
+                                   pSubscriptionList[ i ].pTopicFilter,
+                                   pSubscriptionList[ i ].topicFilterLength );
+
+            /* Place the subscription options  */
+            *pIndex = (( pSubscriptionList[ i ].qos & 0x03 ) |
+                      ( pSubscriptionList[ i ].noLocalOption ? ( 1 << 2 ) : 0 ) |
+                      ( pSubscriptionList[ i ].retainAsPublishedOption ? ( 1 << 3 ) : 0 ) |
+                      ( ( (uint8_t)(pSubscriptionList[ i ].retainHandlingOption) & 0x03 ) << 4 ));
+
+            pIndex++;
+        }
+
+        LogDebug( ( "Length of serialized SUBSCRIBE packet is %lu.",
+                    ( ( unsigned long ) ( pIndex - pFixedBuffer->pBuffer ) ) ) );
+    }
+
+    return status;
+}
+
 /*-----------------------------------------------------------*/
 
 MQTTStatus_t MQTT_GetUnsubscribePacketSize( const MQTTSubscribeInfo_t * pSubscriptionList,
                                             size_t subscriptionCount,
+                                            const MqttPropBuilder_t * pUnsubscribeProperties, 
                                             size_t * pRemainingLength,
                                             size_t * pPacketSize,
-                                            uint32_t maxPacketSize,
-                                            size_t propertyLength )
+                                            uint32_t maxPacketSize)
 {
     MQTTStatus_t status = MQTTSuccess;
-
+    size_t propertyLength = 0; 
+    if( (pUnsubscribeProperties != NULL) && (pUnsubscribeProperties->pBuffer != NULL ) )
+    {
+        propertyLength = pUnsubscribeProperties->currentIndex;
+    }
     /* Validate parameters. */
     if( ( pSubscriptionList == NULL ) || ( pRemainingLength == NULL ) ||
         ( pPacketSize == NULL ) )
@@ -2041,14 +2473,75 @@ MQTTStatus_t MQTT_GetUnsubscribePacketSize( const MQTTSubscribeInfo_t * pSubscri
 
 /*-----------------------------------------------------------*/
 
-MQTTStatus_t MQTT_GetPublishPacketSize( const MQTTPublishInfo_t * pPublishInfo,
-                                        size_t * pRemainingLength,
-                                        size_t * pPacketSize,
-                                        uint32_t maxPacketSize,
-                                        size_t propertyLength )
+MQTTStatus_t MQTT_SerializeUnsubscribe( const MQTTSubscribeInfo_t * pSubscriptionList,
+                                        size_t subscriptionCount,
+                                        const MqttPropBuilder_t * pUnsubscribeProperties, 
+                                        uint16_t packetId,
+                                        size_t remainingLength,
+                                        const MQTTFixedBuffer_t * pFixedBuffer )
 {
     MQTTStatus_t status = MQTTSuccess;
+    size_t i = 0;
+    size_t propertyLength = 0 ; 
+    uint8_t * pIndex = NULL;
 
+    if( (pUnsubscribeProperties != NULL) && (pUnsubscribeProperties->pBuffer != NULL))
+    {
+        propertyLength = pUnsubscribeProperties->currentIndex ; 
+    }
+
+    /* Validate all the parameters. */
+    status = validateSubscriptionSerializeParams( pSubscriptionList,
+                                                  subscriptionCount,
+                                                  packetId,
+                                                  remainingLength,
+                                                  pFixedBuffer );
+
+    if( status == MQTTSuccess )
+    {
+        /* Get the start of the buffer to the iterator variable. */
+        pIndex = pFixedBuffer->pBuffer;
+
+        pIndex = MQTT_SerializeUnsubscribeHeader( remainingLength, pIndex, packetId );
+
+        /*Serialize the properties */
+
+        pIndex = encodeVariableLength(pIndex , propertyLength); 
+        if(propertyLength > 0)
+        {
+            ( void ) memcpy( ( void * ) pIndex, ( const void * ) pUnsubscribeProperties->pBuffer, propertyLength );
+            pIndex += propertyLength;
+        }
+        /* Serialize each subscription topic filter. */
+        for( i = 0; i < subscriptionCount; i++ )
+        {
+            pIndex = encodeString( pIndex,
+                                   pSubscriptionList[ i ].pTopicFilter,
+                                   pSubscriptionList[ i ].topicFilterLength );
+        }
+
+        LogDebug( ( "Length of serialized UNSUBSCRIBE packet is %lu.",
+                    ( ( unsigned long ) ( pIndex - pFixedBuffer->pBuffer ) ) ) );
+    }
+
+    return status;
+}
+
+/*-----------------------------------------------------------*/
+
+MQTTStatus_t MQTT_GetPublishPacketSize( const MQTTPublishInfo_t * pPublishInfo,
+                                        const MqttPropBuilder_t * pPublishProperties, 
+                                        size_t * pRemainingLength,
+                                        size_t * pPacketSize,
+                                        uint32_t maxPacketSize)
+{
+    MQTTStatus_t status = MQTTSuccess;
+    size_t propertyLength = 0U ; 
+
+    if( (pPublishProperties != NULL) && (pPublishProperties->pBuffer != NULL))
+    {
+        propertyLength = pPublishProperties->currentIndex;
+    }
     if( ( pPublishInfo == NULL ) || ( pRemainingLength == NULL ) || ( pPacketSize == NULL ) )
     {
         LogError( ( "Argument cannot be NULL: pPublishInfo=%p, "
@@ -2061,6 +2554,178 @@ MQTTStatus_t MQTT_GetPublishPacketSize( const MQTTPublishInfo_t * pPublishInfo,
     else
     {
         status = calculatePublishPacketSize( pPublishInfo, pRemainingLength, pPacketSize, maxPacketSize, propertyLength );
+    }
+
+    return status;
+}
+
+/*-----------------------------------------------------------*/
+
+MQTTStatus_t MQTT_SerializePublish( const MQTTPublishInfo_t * pPublishInfo,
+                                    const MqttPropBuilder_t * pPublishProperties, 
+                                    uint16_t packetId,
+                                    size_t remainingLength,
+                                    const MQTTFixedBuffer_t * pFixedBuffer )
+{
+    MQTTStatus_t status = MQTTSuccess;
+    size_t packetSize = 0;
+
+    if( ( pFixedBuffer == NULL ) || ( pPublishInfo == NULL ) )
+    {
+        LogError( ( "Argument cannot be NULL: pFixedBuffer=%p, "
+                    "pPublishInfo=%p.",
+                    ( void * ) pFixedBuffer,
+                    ( void * ) pPublishInfo ) );
+        status = MQTTBadParameter;
+    }
+    /* A buffer must be configured for serialization. */
+    else if( pFixedBuffer->pBuffer == NULL )
+    {
+        LogError( ( "Argument cannot be NULL: pFixedBuffer->pBuffer is NULL." ) );
+        status = MQTTBadParameter;
+    }
+
+    /* For serializing a publish, if there exists a payload, then the buffer
+     * cannot be NULL. */
+    else if( ( pPublishInfo->payloadLength > 0U ) && ( pPublishInfo->pPayload == NULL ) )
+    {
+        LogError( ( "A nonzero payload length requires a non-NULL payload: "
+                    "payloadLength=%lu, pPayload=%p.",
+                    ( unsigned long ) pPublishInfo->payloadLength,
+                    pPublishInfo->pPayload ) );
+        status = MQTTBadParameter;
+    }
+    else if( ( pPublishInfo->pTopicName == NULL ) || ( pPublishInfo->topicNameLength == 0U ) )
+    {
+        LogError( ( "Invalid topic name for PUBLISH: pTopicName=%p, "
+                    "topicNameLength=%hu.",
+                    ( void * ) pPublishInfo->pTopicName,
+                    ( unsigned short ) pPublishInfo->topicNameLength ) );
+        status = MQTTBadParameter;
+    }
+    else if( ( pPublishInfo->qos != MQTTQoS0 ) && ( packetId == 0U ) )
+    {
+        LogError( ( "Packet ID is 0 for PUBLISH with QoS=%u.",
+                    ( unsigned int ) pPublishInfo->qos ) );
+        status = MQTTBadParameter;
+    }
+    else if( ( pPublishInfo->dup == true ) && ( pPublishInfo->qos == MQTTQoS0 ) )
+    {
+        LogError( ( "Duplicate flag is set for PUBLISH with Qos 0." ) );
+        status = MQTTBadParameter;
+    }
+    else
+    {
+        /* Length of serialized packet = First byte
+         *                                + Length of encoded remaining length
+         *                                + Remaining length. */
+        packetSize = 1U + variableLengthEncodedSize( remainingLength )
+                     + remainingLength;
+    }
+
+    if( ( status == MQTTSuccess ) && ( packetSize > pFixedBuffer->size ) )
+    {
+        LogError( ( "Buffer size of %lu is not sufficient to hold "
+                    "serialized PUBLISH packet of size of %lu.",
+                    ( unsigned long ) pFixedBuffer->size,
+                    ( unsigned long ) packetSize ) );
+        status = MQTTNoMemory;
+    }
+
+    if( status == MQTTSuccess )
+    {
+        /* Serialize publish with header and payload. */
+        serializePublishCommon( pPublishInfo,
+                                pPublishProperties,
+                                remainingLength,
+                                packetId,
+                                pFixedBuffer,
+                                true );
+    }
+
+    return status;
+}
+
+/*-----------------------------------------------------------*/
+
+MQTTStatus_t MQTT_SerializePublishHeader( const MQTTPublishInfo_t * pPublishInfo,
+                                          const MqttPropBuilder_t * pPublishProperties, 
+                                          uint16_t packetId,
+                                          size_t remainingLength,
+                                          const MQTTFixedBuffer_t * pFixedBuffer,
+                                          size_t * pHeaderSize )
+{
+    MQTTStatus_t status = MQTTSuccess;
+    size_t packetSize = 0;
+
+    if( ( pFixedBuffer == NULL ) || ( pPublishInfo == NULL ) ||
+        ( pHeaderSize == NULL ) )
+    {
+        LogError( ( "Argument cannot be NULL: pFixedBuffer=%p, "
+                    "pPublishInfo=%p, pHeaderSize=%p.",
+                    ( void * ) pFixedBuffer,
+                    ( void * ) pPublishInfo,
+                    ( void * ) pHeaderSize ) );
+        status = MQTTBadParameter;
+    }
+    /* A buffer must be configured for serialization. */
+    else if( pFixedBuffer->pBuffer == NULL )
+    {
+        LogError( ( "Argument cannot be NULL: pFixedBuffer->pBuffer is NULL." ) );
+        status = MQTTBadParameter;
+    }
+    else if( ( pPublishInfo->pTopicName == NULL ) || ( pPublishInfo->topicNameLength == 0U ) )
+    {
+        LogError( ( "Invalid topic name for publish: pTopicName=%p, "
+                    "topicNameLength=%hu.",
+                    ( void * ) pPublishInfo->pTopicName,
+                    ( unsigned short ) pPublishInfo->topicNameLength ) );
+        status = MQTTBadParameter;
+    }
+    else if( ( pPublishInfo->qos != MQTTQoS0 ) && ( packetId == 0U ) )
+    {
+        LogError( ( "Packet Id is 0 for publish with QoS=%hu.",
+                    ( unsigned short ) pPublishInfo->qos ) );
+        status = MQTTBadParameter;
+    }
+    else if( ( pPublishInfo->dup == true ) && ( pPublishInfo->qos == MQTTQoS0 ) )
+    {
+        LogError( ( "Duplicate flag is set for PUBLISH with Qos 0." ) );
+        status = MQTTBadParameter;
+    }
+    else
+    {
+        /* Length of serialized packet = First byte
+         *                               + Length of encoded remaining length
+         *                               + Remaining length
+         *                               - Payload Length.
+         */
+        packetSize = 1U + variableLengthEncodedSize( remainingLength )
+                     + remainingLength
+                     - pPublishInfo->payloadLength;
+    }
+
+    if( ( status == MQTTSuccess ) && ( packetSize > pFixedBuffer->size ) )
+    {
+        LogError( ( "Buffer size of %lu is not sufficient to hold "
+                    "serialized PUBLISH header packet of size of %lu.",
+                    ( unsigned long ) pFixedBuffer->size,
+                    ( unsigned long ) ( packetSize - pPublishInfo->payloadLength ) ) );
+        status = MQTTNoMemory;
+    }
+
+    if( status == MQTTSuccess )
+    {
+        /* Serialize publish without copying the payload. */
+        serializePublishCommon( pPublishInfo,
+                                pPublishProperties,
+                                remainingLength,
+                                packetId,
+                                pFixedBuffer,
+                                false );
+
+        /* Header size is the same as calculated packet size. */
+        *pHeaderSize = packetSize;
     }
 
     return status;
@@ -2123,17 +2788,21 @@ MQTTStatus_t MQTT_SerializeAck( const MQTTFixedBuffer_t * pFixedBuffer,
 
 /*-----------------------------------------------------------*/
 
-MQTTStatus_t MQTT_GetDisconnectPacketSize( size_t * pRemainingLength,
+MQTTStatus_t MQTT_GetDisconnectPacketSize( const MqttPropBuilder_t * pDisconnectProperties, 
+                                           size_t * pRemainingLength,
                                            size_t * pPacketSize,
                                            uint32_t maxPacketSize,
-                                           size_t propertyLength,
                                            MQTTSuccessFailReasonCode_t reasonCode )
 {
     MQTTStatus_t status = MQTTSuccess;
     size_t length = 0U;
     size_t packetSize = 0U;
-    size_t disconnectPropertyLength = 0U;
+    size_t propertyLength = 0U;
 
+    if( (pDisconnectProperties != NULL) && (pDisconnectProperties->pBuffer != NULL) )
+    {
+        propertyLength = pDisconnectProperties->currentIndex ; 
+    }
     /*Validate the arguments.*/
     if( ( pRemainingLength == NULL ) || ( pPacketSize == NULL ) )
     {
@@ -2159,15 +2828,14 @@ MQTTStatus_t MQTT_GetDisconnectPacketSize( size_t * pRemainingLength,
         length += 1U;
     }
 
-    disconnectPropertyLength += propertyLength;
 
     if( status == MQTTSuccess )
     {
         /*Validate the length.*/
-        if( ( disconnectPropertyLength + variableLengthEncodedSize( disconnectPropertyLength ) + 1U ) < MQTT_MAX_REMAINING_LENGTH )
+        if( ( propertyLength + variableLengthEncodedSize( propertyLength ) + 1U ) < MQTT_MAX_REMAINING_LENGTH )
         {
             /*We have successfully calculated the property length.*/
-            length += variableLengthEncodedSize( disconnectPropertyLength ) + disconnectPropertyLength;
+            length += variableLengthEncodedSize( propertyLength ) + propertyLength;
             *pRemainingLength = length;
         }
         else
@@ -2190,6 +2858,73 @@ MQTTStatus_t MQTT_GetDisconnectPacketSize( size_t * pRemainingLength,
         {
             *pPacketSize = packetSize;
         }
+    }
+
+    return status;
+}
+
+/*-----------------------------------------------------------*/
+
+MQTTStatus_t MQTT_SerializeDisconnect( const MqttPropBuilder_t *pDisconnectProperties, 
+                                       MQTTSuccessFailReasonCode_t reasonCode, 
+                                       size_t remainingLength, 
+                                       const MQTTFixedBuffer_t * pFixedBuffer )
+{
+    MQTTStatus_t status = MQTTSuccess;
+    uint8_t * pIndex = NULL ; 
+    size_t packetSize = 0; 
+    size_t propertyLength = 0 ; 
+
+    if((pDisconnectProperties != NULL) && (pDisconnectProperties->pBuffer != NULL))
+    {
+        propertyLength = pDisconnectProperties->currentIndex ; 
+    }
+
+    /* Validate arguments. */
+    if( pFixedBuffer == NULL )
+    {
+        LogError( ( "pFixedBuffer cannot be NULL." ) );
+        status = MQTTBadParameter;
+    }
+    else if( pFixedBuffer->pBuffer == NULL )
+    {
+        LogError( ( "pFixedBuffer->pBuffer cannot be NULL." ) );
+        status = MQTTBadParameter;
+    }
+    else
+    {
+        /* Length of serialized packet = First byte
+         *                                + Length of encoded remaining length
+         *                                + Remaining length. */
+        packetSize = 1U + variableLengthEncodedSize( remainingLength ) + remainingLength;
+    }
+
+    if( status == MQTTSuccess )
+    {
+        if( pFixedBuffer->size < packetSize )
+        {
+            LogError( ( "Buffer size of %lu is not sufficient to hold "
+                        "serialized DISCONNECT packet of size of %lu.",
+                        ( unsigned long ) pFixedBuffer->size,
+                        ( unsigned long ) packetSize ) );
+            status = MQTTNoMemory;
+        }
+    }
+
+    if( status == MQTTSuccess )
+    {
+        pIndex = pFixedBuffer->pBuffer ; 
+        pIndex = MQTT_SerializeDisconnectFixed(pIndex, 
+                                               reasonCode,
+                                               remainingLength); 
+
+        pIndex = encodeVariableLength(pIndex, propertyLength); 
+        if(propertyLength > 0)
+        {
+            memcpy(pIndex, pDisconnectProperties->pBuffer, propertyLength);
+            pIndex += propertyLength;
+        }
+
     }
 
     return status;
