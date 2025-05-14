@@ -20,8 +20,8 @@ library has also undergone both static code analysis from
 safety through the
 [CBMC automated reasoning tool](https://www.cprover.org/cbmc/).
 
--For MQTT v3.1.1(https://docs.oasis-open.org/mqtt/mqtt/v3.1.1/mqtt-v3.1.1.html), use code from tag : 
--For MQTT v5.0(https://docs.oasis-open.org/mqtt/mqtt/v5.0/mqtt-v5.0.html), use code from tag : 
+-For MQTT v3.1.1(https://docs.oasis-open.org/mqtt/mqtt/v3.1.1/mqtt-v3.1.1.html), use code from tag :
+-For MQTT v5.0(https://docs.oasis-open.org/mqtt/mqtt/v5.0/mqtt-v5.0.html), use code from tag :
 
 See memory requirements for this library
 [here](./docs/doxygen/include/size_table.md).
