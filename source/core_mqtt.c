@@ -3083,7 +3083,7 @@ MQTTStatus_t MQTT_InitStatefulQoS( MQTTContext_t * pContext,
         if( ( pBuffer != NULL ) && ( bufferLength != 0U ) )
         {
             MqttPropBuilder_t ackPropsBuffer;
-            status = MqttPropertyBuilder_Init( &ackPropsBuffer, pBuffer, bufferLength );
+            status = MQTT_PropertyBuilder_Init( &ackPropsBuffer, pBuffer, bufferLength );
 
             if( status == MQTTSuccess )
             {
@@ -4198,7 +4198,7 @@ static MQTTStatus_t handleIncomingDisconnect( MQTTContext_t * pContext,
 
 /*-----------------------------------------------------------*/
 
-MQTTStatus_t MqttPropertyBuilder_Init( MqttPropBuilder_t * pPropertyBuilder,
+MQTTStatus_t MQTT_PropertyBuilder_Init( MqttPropBuilder_t * pPropertyBuilder,
                                        uint8_t * buffer,
                                        size_t length )
 {
@@ -4206,7 +4206,7 @@ MQTTStatus_t MqttPropertyBuilder_Init( MqttPropBuilder_t * pPropertyBuilder,
 
     if( ( pPropertyBuilder == NULL ) || ( buffer == NULL ) || ( length == 0U ) )
     {
-        LogError( ( "Invalid arguments passed to MqttPropertyBuilder_Init." ) );
+        LogError( ( "Invalid arguments passed to MQTT_PropertyBuilder_Init." ) );
         status = MQTTBadParameter;
     }
 
