@@ -59,6 +59,7 @@ void harness()
 {
     MQTTContext_t * pContext;
     MQTTPublishInfo_t * pPublishInfo;
+    MqttPropBuilder_t * propBuffer;
     uint16_t packetId;
 
     pContext = allocateMqttContext( NULL );
@@ -72,5 +73,8 @@ void harness()
     pPublishInfo = allocateMqttPublishInfo( NULL );
     __CPROVER_assume( isValidMqttPublishInfo( pPublishInfo ) );
 
-    MQTT_Publish( pContext, pPublishInfo, packetId );
+    propBuffer = allocateMqttPropBuilder( NULL );
+    __CPROVER_assume( isValidMqttPropBuilder( propBuffer ) );
+
+    MQTT_Publish( pContext, pPublishInfo, packetId, propBuffer );
 }

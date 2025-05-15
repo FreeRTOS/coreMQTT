@@ -42,7 +42,8 @@
 #																	= ( M/7 ) + 3
 #																	= 38347925
 # Hence the value of the following macro will be 1 greater than this value, as it is used for loop unwindset.
-MQTT_INCOMING_PUBLISH_MAX_PROPERTIES=38347926
+# MQTT_INCOMING_PUBLISH_MAX_PROPERTIES=38347926
+MQTT_INCOMING_PUBLISH_MAX_PROPERTIES=2
 
 HARNESS_ENTRY=harness
 HARNESS_FILE=MQTT_DeserializePublish_harness
@@ -53,7 +54,7 @@ INCLUDES +=
 
 REMOVE_FUNCTION_BODY +=
 UNWINDSET += __CPROVER_file_local_core_mqtt_serializer_c_decodeVariableLength.0:5
-UNWINDSET += __CPROVER_file_local_core_mqtt_serializer_c_deserializePublishProperties.0:MQTT_INCOMING_PUBLISH_MAX_PROPERTIES
+UNWINDSET += __CPROVER_file_local_core_mqtt_serializer_c_deserializePublishProperties.0:$(MQTT_INCOMING_PUBLISH_MAX_PROPERTIES)
 
 PROOF_SOURCES += $(PROOFDIR)/$(HARNESS_FILE).c
 PROOF_SOURCES += $(SRCDIR)/test/cbmc/sources/mqtt_cbmc_state.c

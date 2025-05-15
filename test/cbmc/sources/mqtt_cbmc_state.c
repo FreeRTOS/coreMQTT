@@ -139,18 +139,6 @@ bool isValidMqttPublishInfo( const MQTTPublishInfo_t * pPublishInfo )
     return isValid;
 }
 
-bool isValidMqttPropBuilder( const MqttPropBuilder_t * pPropBuilder )
-{
-    bool isValid = true;
-
-    if( pPropBuilder != NULL )
-    {
-        isValid = ( pPropBuilder->currentIndex == 0 ) == ( pPropBuilder->fieldSet == 0 );
-    }
-
-    return isValid;
-}
-
 MQTTConnectInfo_t * allocateMqttConnectInfo( MQTTConnectInfo_t * pConnectInfo )
 {
     if( pConnectInfo == NULL )
@@ -196,8 +184,21 @@ MQTTFixedBuffer_t * allocateMqttFixedBuffer( MQTTFixedBuffer_t * pFixedBuffer )
     return pFixedBuffer;
 }
 
+bool isValidMqttFixedBuffer( const MQTTFixedBuffer_t * pFixedBuffer )
+{
+    bool isValid = true;
+
+    return isValid;
+}
+
 MqttPropBuilder_t * allocateMqttPropBuilder( MqttPropBuilder_t * pPropBuilder )
 {
+    uint8_t * buffer;
+    size_t length;
+    size_t nonDetDurrentIndex;
+    uint32_t nonDetFieldSet;
+    MQTTStatus_t status;
+
     if( pPropBuilder == NULL )
     {
         pPropBuilder = malloc( sizeof( MqttPropBuilder_t ) );
@@ -205,21 +206,42 @@ MqttPropBuilder_t * allocateMqttPropBuilder( MqttPropBuilder_t * pPropBuilder )
 
     if( pPropBuilder != NULL )
     {
-        __CPROVER_assume( pPropBuilder->bufferLength > 0 );
+        __CPROVER_assume( length > 0 );
 
         /* This buffer is used to store packet properties. The property length
            is a variable length integer and hence will have a max value of REMAINING_LENGTH_MAX */
-        __CPROVER_assume(  pPropBuilder->bufferLength < REMAINING_LENGTH_MAX );
+        __CPROVER_assume( length < REMAINING_LENGTH_MAX );
 
-        pPropBuilder->pBuffer = malloc( pPropBuilder->bufferLength );
+        buffer = malloc( length );
+
+        /* It is a part of the API contract to call MqttPropertyBuilder_Init before  */
+        status = MqttPropertyBuilder_Init( pPropBuilder, buffer, length );
+
+        __CPROVER_assume( nonDetDurrentIndex >= 0 );
+        __CPROVER_assume( nonDetDurrentIndex < length );
+
+        pPropBuilder->currentIndex = nonDetDurrentIndex;
+        pPropBuilder->fieldSet = nonDetFieldSet;
+    }
+
+    if( status != MQTTSuccess )
+    {
+        pPropBuilder = NULL;
     }
 
     return pPropBuilder;
 }
 
-bool isValidMqttFixedBuffer( const MQTTFixedBuffer_t * pFixedBuffer )
+bool isValidMqttPropBuilder( const MqttPropBuilder_t * pPropBuilder )
 {
     bool isValid = true;
+
+    if( pPropBuilder != NULL )
+    {
+        isValid = isValid && pPropBuilder->currentIndex >= 0;
+        isValid = isValid && pPropBuilder->fieldSet >= 0;
+        isValid = ( pPropBuilder->currentIndex == 0 ) == ( pPropBuilder->fieldSet == 0 );
+    }
 
     return isValid;
 }
@@ -258,6 +280,7 @@ MQTTContext_t * allocateMqttContext( MQTTContext_t * pContext )
     MQTTStatus_t status = MQTTSuccess;
     MQTTPubAckInfo_t * pOutgoingAckList;
     MQTTPubAckInfo_t * pIncomingAckList;
+    MQTTConnectionStatus_t nonDetConnectStatus;
     size_t outgoingAckListSize;
     size_t incomingAckListSize;
 
@@ -313,6 +336,10 @@ MQTTContext_t * allocateMqttContext( MQTTContext_t * pContext )
                             GetCurrentTimeStub,
                             EventCallbackStub,
                             pNetworkBuffer );
+        
+        /* This is to make sure that the API's are called with all possible 
+         * connection status values */
+        pContext->connectStatus = nonDetConnectStatus;
     }
 
     /* If the MQTTContext_t initialization failed, then set the context to NULL

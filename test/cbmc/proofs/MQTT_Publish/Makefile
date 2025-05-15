@@ -29,7 +29,7 @@ MAX_NETWORK_SEND_TRIES=3
 # Please see test/cbmc/include/core_mqtt_config.h for more
 # information.
 MQTT_STATE_ARRAY_MAX_COUNT=11
-PUBLISH_PACKET_VECTORS = 5
+PUBLISH_PACKET_VECTORS = 7
 
 DEFINES += -DMAX_NETWORK_SEND_TRIES=$(MAX_NETWORK_SEND_TRIES)
 INCLUDES +=
@@ -43,7 +43,7 @@ UNWINDSET += __CPROVER_file_local_core_mqtt_state_c_findInRecord.0:$(MQTT_STATE_
 # The encodeRemainingLength loop is unwound 5 times because encodeRemainingLength()
 # divides a size_t variable by 128 until it reaches zero to stop the loop.
 # log128(SIZE_MAX) = 4.571...
-UNWINDSET += __CPROVER_file_local_core_mqtt_serializer_c_encodeRemainingLength.0:5
+UNWINDSET += encodeVariableLength.0:5
 UNWINDSET += __CPROVER_file_local_core_mqtt_c_sendMessageVector.0:${PUBLISH_PACKET_VECTORS}
 UNWINDSET += __CPROVER_file_local_core_mqtt_c_sendMessageVector.1:${PUBLISH_PACKET_VECTORS}
 UNWINDSET += __CPROVER_file_local_core_mqtt_c_sendMessageVector.2:${PUBLISH_PACKET_VECTORS}
@@ -56,5 +56,6 @@ PROOF_SOURCES += $(SRCDIR)/test/cbmc/stubs/event_callback_stub.c
 PROJECT_SOURCES += $(SRCDIR)/source/core_mqtt.c
 PROJECT_SOURCES += $(SRCDIR)/source/core_mqtt_serializer.c
 PROJECT_SOURCES += $(SRCDIR)/source/core_mqtt_state.c
+PROJECT_SOURCES += $(SRCDIR)/source/core_mqtt_utils.c
 
 include ../Makefile.common

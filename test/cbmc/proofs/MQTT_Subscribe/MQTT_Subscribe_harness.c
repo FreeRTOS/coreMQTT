@@ -59,6 +59,7 @@ void harness()
 {
     MQTTContext_t * pContext;
     MQTTSubscribeInfo_t * pSubscriptionList;
+    MqttPropBuilder_t * propBuffer;
     size_t subscriptionCount;
     uint16_t packetId;
 
@@ -77,5 +78,8 @@ void harness()
     pSubscriptionList = allocateMqttSubscriptionList( NULL, 1U );
     __CPROVER_assume( isValidMqttSubscriptionList( pSubscriptionList, 1U ) );
 
-    MQTT_Subscribe( pContext, pSubscriptionList, subscriptionCount, packetId );
+    propBuffer = allocateMqttPropBuilder( NULL );
+    __CPROVER_assume( isValidMqttPropBuilder( propBuffer ) );
+
+    MQTT_Subscribe( pContext, pSubscriptionList, subscriptionCount, packetId, propBuffer );
 }
