@@ -793,7 +793,7 @@ MQTTStatus_t MQTT_CheckConnectStatus( const MQTTContext_t * pContext );
  * MqttPropBuilder_t connectPropsBuilder;
  * uint8_t connectPropsBuffer[ 100 ];
  * size_t connectPropsBufferLength = sizeof( connectPropsBuffer );
- * status = MqttPropertyBuilder_Init( &connectPropsBuilder, connectPropsBuffer, connectPropsBufferLength );
+ * status = MQTT_PropertyBuilder_Init( &connectPropsBuilder, connectPropsBuffer, connectPropsBufferLength );
  *
  *   // Set a property in the connectPropsBuilder
  * uint32_t maxPacketSize = 100 ;
@@ -810,7 +810,7 @@ MQTTStatus_t MQTT_CheckConnectStatus( const MQTTContext_t * pContext );
  * MqttPropBuilder_t willPropsBuilder;
  * uint8_t willPropsBuffer[ 100 ];
  * size_t willPropsBufferLength = sizeof( willPropsBuffer );
- * status = MqttPropertyBuilder_Init( &willPropsBuilder, willPropsBuffer, willPropsBufferLength );
+ * status = MQTT_PropertyBuilder_Init( &willPropsBuilder, willPropsBuffer, willPropsBufferLength );
  *
  * // Set a property in the willPropsBuilder
  * status = MQTTPropAdd_PubPayloadFormat( &willPropsBuilder, 1);
@@ -885,7 +885,7 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
  * MqttPropBuilder_t propertyBuilder;
  * uint8_t propertyBuffer[ 100 ];
  * size_t propertyBufferLength = sizeof( propertyBuffer );
- * status = MqttPropertyBuilder_Init( &propertyBuilder, propertyBuffer, propertyBufferLength );
+ * status = MQTT_PropertyBuilder_Init( &propertyBuilder, propertyBuffer, propertyBufferLength );
  *
  * status = MQTTPropAdd_SubscribeId(&propertyBuilder, 1);
  *
@@ -960,7 +960,7 @@ MQTTStatus_t MQTT_Subscribe( MQTTContext_t * pContext,
  * MqttPropBuilder_t propertyBuilder;
  * uint8_t propertyBuffer[ 100 ];
  * size_t propertyBufferLength = sizeof( propertyBuffer );
- * status = MqttPropertyBuilder_Init( &propertyBuilder, propertyBuffer, propertyBufferLength );
+ * status = MQTT_PropertyBuilder_Init( &propertyBuilder, propertyBuffer, propertyBufferLength );
  *
  * // Set a property in the propertyBuilder
  * status = MQTTPropAdd_PubPayloadFormat( &propertyBuilder, 1);
@@ -1073,7 +1073,7 @@ MQTTStatus_t MQTT_Ping( MQTTContext_t * pContext );
  * MqttPropBuilder_t propertyBuilder;
  * uint8_t propertyBuffer[ 100 ];
  * size_t propertyBufferLength = sizeof( propertyBuffer );
- * status = MqttPropertyBuilder_Init( &propertyBuilder, propertyBuffer, propertyBufferLength );
+ * status = MQTT_PropertyBuilder_Init( &propertyBuilder, propertyBuffer, propertyBufferLength );
  *
  * // Set a property in the propertyBuilder
  * MQTTUserProperty_t userProperty;
@@ -1131,7 +1131,7 @@ MQTTStatus_t MQTT_Unsubscribe( MQTTContext_t * pContext,
  * MqttPropBuilder_t propertyBuilder;
  * uint8_t propertyBuffer[ 100 ];
  * size_t propertyBufferLength = sizeof( propertyBuffer );
- * status = MqttPropertyBuilder_Init( &propertyBuilder, propertyBuffer, propertyBufferLength );
+ * status = MQTT_PropertyBuilder_Init( &propertyBuilder, propertyBuffer, propertyBufferLength );
  *
  * // Set a property in the propertyBuilder
  * status = MQTTPropAdd_ReasonString( &propertyBuilder, "Disconnecting", 12);
@@ -1470,11 +1470,11 @@ void MQTT_SerializeMQTTVec( uint8_t * pAllocatedMem,
  * - #MQTTBadParameter if invalid parameters are passed.
  * - #MQTTSuccess otherwise.
  */
-/* @[declare_mqttpropertybuilder_init] */
-MQTTStatus_t MqttPropertyBuilder_Init( MqttPropBuilder_t * pPropertyBuilder,
+/* @[declare_mqtt_propertybuilder_init] */
+MQTTStatus_t MQTT_PropertyBuilder_Init( MqttPropBuilder_t * pPropertyBuilder,
                                        uint8_t * buffer,
                                        size_t length );
-/* @[declare_mqttpropertybuilder_init] */
+/* @[declare_mqtt_propertybuilder_init] */
 
 /* *INDENT-OFF* */
 #ifdef __cplusplus

@@ -4227,7 +4227,12 @@ void test_updateContextWithConnectProps( void )
     pIndex = serializeuint_16( pIndex, MQTT_TOPIC_ALIAS_MAX_ID );
     pIndex = serializeuint_32( pIndex, MQTT_MAX_PACKET_SIZE_ID );
     pIndex = serializeutf_8( pIndex, MQTT_AUTH_METHOD_ID );
-    propBuilder.currentIndex = 17;
+    pIndex = serializeuint_8( pIndex, MQTT_REQUEST_PROBLEM_ID); 
+    pIndex = serializeuint_8( pIndex, MQTT_REQUEST_RESPONSE_ID) ; 
+    pIndex = serializeutf_8pair(pIndex) ; 
+
+    propBuilder.currentIndex = 27;
+    propBuilder.currentIndex += 13 ; 
     mqttStatus = updateContextWithConnectProps( &propBuilder, &connectProps );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, mqttStatus );
 
@@ -4245,6 +4250,14 @@ void test_updateContextWithConnectProps( void )
     propBuilder.currentIndex = 5;
     mqttStatus = updateContextWithConnectProps( &propBuilder, &connectProps );
     TEST_ASSERT_EQUAL_INT( MQTTBadResponse, mqttStatus );
+
+    propBuilder.pBuffer = pIndex ; 
+    pIndex = serializeuint_8( pIndex , MQTT_PAYLOAD_FORMAT_ID) ; 
+    propBuilder.currentIndex = 10 ; 
+    mqttStatus = updateContextWithConnectProps( &propBuilder, &connectProps );
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, mqttStatus );
+
+    
 }
 
 void test_MQTT_SerializeAck( void )
@@ -4323,6 +4336,7 @@ void test_validatePublishProperties( void )
 
     pIndex = buffer;
     pIndex = serializeutf_8( pIndex, MQTT_RESPONSE_TOPIC_ID );
+    propBuilder.currentIndex = 7; 
     status = MQTT_ValidatePublishProperties( serverTopicAliasMax, &propBuilder, &topicAlias );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
 }
@@ -4335,11 +4349,18 @@ void test_validateSubscribeProperties( void )
     uint8_t buffer[ 50 ];
     size_t bufLength = sizeof( buffer );
 
-    propBuilder.pBuffer = buffer;
+    propBuilder.pBuffer = NULL;
     propBuilder.bufferLength = bufLength;
     propBuilder.currentIndex = 0;
     propBuilder.fieldSet = 0;
 
+    status = MQTT_ValidateSubscribeProperties( isSubIdAvailable, NULL );
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+
+    status = MQTT_ValidateSubscribeProperties( isSubIdAvailable, &propBuilder );
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+
+    propBuilder.pBuffer = buffer ; 
     status = MQTT_ValidateSubscribeProperties( isSubIdAvailable, &propBuilder );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
 
@@ -4356,9 +4377,16 @@ void test_validateSubscribeProperties( void )
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
 
     pIndex = buffer;
-    pIndex = serializeutf_8( pIndex, MQTT_RESPONSE_TOPIC_ID );
+    pIndex = serializeutf_8pair(pIndex) ; 
+    propBuilder.currentIndex += 11 ; 
     status = MQTT_ValidateSubscribeProperties( 1, &propBuilder );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
+
+    pIndex = serializeuint_8(pIndex , MQTT_PAYLOAD_FORMAT_ID) ; 
+    propBuilder.currentIndex += 2 ; 
+    status = MQTT_ValidateSubscribeProperties( 1, &propBuilder );
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+
 }
 
 void test_getProps( void )
@@ -4711,3 +4739,49 @@ void test_MQTT_UpdateDuplicatePublishFlag_Happy_Path()
 }
 
 /* ========================================================================== */
+
+void test_ValidatePublishProperties(void)
+{
+    MQTTStatus_t status = MQTTSuccess ; 
+    uint16_t topicAlias ; 
+    uint16_t serverTopicAliasMax = 10 ; 
+    status = MQTT_ValidatePublishProperties(serverTopicAliasMax, NULL, &topicAlias ) ;
+    TEST_ASSERT_EQUAL(MQTTBadParameter , status) ; 
+
+    MqttPropBuilder_t propBuilder = {0} ; 
+    propBuilder.pBuffer = NULL ; 
+    status = MQTT_ValidatePublishProperties(serverTopicAliasMax, &propBuilder, &topicAlias ) ;
+    TEST_ASSERT_EQUAL(MQTTBadParameter , status) ; 
+
+    uint8_t buf[50] ;
+    propBuilder.pBuffer = buf ; 
+    status = MQTT_ValidatePublishProperties(serverTopicAliasMax, &propBuilder, NULL ) ;
+    TEST_ASSERT_EQUAL(MQTTBadParameter , status) ;
+    
+    uint8_t * pIndex = buf ; 
+    pIndex = serializeuint_8(pIndex, MQTT_PAYLOAD_FORMAT_ID) ; 
+    pIndex = serializeuint_32(pIndex, MQTT_MSG_EXPIRY_ID) ; 
+    pIndex = serializeutf_8pair(pIndex) ; 
+    propBuilder.currentIndex = 20 ; 
+    propBuilder.bufferLength = 50 ; 
+
+    status = MQTT_ValidatePublishProperties(serverTopicAliasMax, &propBuilder, &topicAlias ) ;
+    TEST_ASSERT_EQUAL(MQTTSuccess , status) ; 
+
+    pIndex = serializeuint_8(pIndex , MQTT_REQUEST_PROBLEM_ID) ; 
+    propBuilder.currentIndex += 2 ; 
+    status = MQTT_ValidatePublishProperties(serverTopicAliasMax, &propBuilder, &topicAlias ) ;
+    TEST_ASSERT_EQUAL( MQTTBadParameter , status) ; 
+
+    pIndex = buf ; 
+    propBuilder.currentIndex = 1 ; 
+    pIndex = serializeuint_8(pIndex, MQTT_PAYLOAD_FORMAT_ID); 
+    status = MQTT_ValidatePublishProperties(serverTopicAliasMax, &propBuilder, &topicAlias ); 
+    TEST_ASSERT_EQUAL( MQTTBadResponse , status) ; 
+
+    pIndex = buf ; 
+    pIndex = serializeuint_32(pIndex , MQTT_MSG_EXPIRY_ID) ; 
+    status = MQTT_ValidatePublishProperties(serverTopicAliasMax, &propBuilder, &topicAlias ); 
+    TEST_ASSERT_EQUAL( MQTTBadResponse , status) ; 
+
+}

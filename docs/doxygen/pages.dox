@@ -180,7 +180,7 @@ Some configuration settings are C pre-processor constants, and some are function
 @page mqtt_functions Functions
 @brief Primary functions of the MQTT library:<br><br>
 @subpage mqtt_init_function <br>
-@subpage mqttpropertybuilder_init_function <br>
+@subpage mqtt_propertybuilder_init_function <br>
 @subpage mqtt_connect_function <br>
 @subpage mqtt_subscribe_function <br>
 @subpage mqtt_publish_function <br>
@@ -267,9 +267,9 @@ Property Get functions:<br><br>
 @snippet core_mqtt.h declare_mqtt_init
 @copydoc MQTT_Init
 
-@page mqttpropertybuilder_init_function MqttPropertyBuilder_Init
-@snippet core_mqtt.h declare_mqttpropertybuilder_init
-@copydoc MqttPropertyBuilder_Init
+@page mqtt_propertybuilder_init_function MQTT_PropertyBuilder_Init
+@snippet core_mqtt.h declare_mqtt_propertybuilder_init
+@copydoc MQTT_PropertyBuilder_Init
 
 @page mqtt_connect_function MQTT_Connect
 @snippet core_mqtt.h declare_mqtt_connect
