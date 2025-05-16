@@ -214,8 +214,8 @@ MqttPropBuilder_t * allocateMqttPropBuilder( MqttPropBuilder_t * pPropBuilder )
 
         buffer = malloc( length );
 
-        /* It is a part of the API contract to call MqttPropertyBuilder_Init before  */
-        status = MqttPropertyBuilder_Init( pPropBuilder, buffer, length );
+        /* It is a part of the API contract to call MQTT_PropertyBuilder_Init before  */
+        status = MQTT_PropertyBuilder_Init( pPropBuilder, buffer, length );
 
         __CPROVER_assume( nonDetDurrentIndex >= 0 );
         __CPROVER_assume( nonDetDurrentIndex < length );
