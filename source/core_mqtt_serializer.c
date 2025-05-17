@@ -304,11 +304,12 @@
  * only if true. Only PUBLISH header will be serialized if false.
  */
 static void serializePublishCommon( const MQTTPublishInfo_t * pPublishInfo,
-                                    const MqttPropBuilder_t * pPublishProperties, 
+                                    const MQTTPropBuilder_t * pPublishProperties,
                                     size_t remainingLength,
                                     uint16_t packetIdentifier,
                                     const MQTTFixedBuffer_t * pFixedBuffer,
                                     bool serializePayload );
+
 /**
  * @brief Calculates the packet size and remaining length of an MQTT
  * PUBLISH packet.
@@ -369,8 +370,8 @@ static MQTTStatus_t calculateSubscriptionPacketSize( const MQTTSubscribeInfo_t *
  */
 static void serializeConnectPacket( const MQTTConnectInfo_t * pConnectInfo,
                                     const MQTTPublishInfo_t * pWillInfo,
-                                    const MqttPropBuilder_t * pConnectProperties,
-                                    const MqttPropBuilder_t * pWillProperties,
+                                    const MQTTPropBuilder_t * pConnectProperties,
+                                    const MQTTPropBuilder_t * pWillProperties,
                                     size_t remainingLength,
                                     const MQTTFixedBuffer_t * pFixedBuffer );
 
@@ -485,7 +486,7 @@ static MQTTStatus_t processPublishFlags( uint8_t publishFlags,
 static MQTTStatus_t deserializePublish( const MQTTPacketInfo_t * pIncomingPacket,
                                         uint16_t * pPacketId,
                                         MQTTPublishInfo_t * pPublishInfo,
-                                        MqttPropBuilder_t * propBuffer );
+                                        MQTTPropBuilder_t * propBuffer );
 
 /**
  * @brief Deserialize a PINGRESP packet.
@@ -510,7 +511,7 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
  **/
 static MQTTStatus_t decodeAndDiscard( size_t * pPropertyLength,
                                       uint8_t ** pIndex );
-                                                      
+
 /**
  * @brief Decodes the variable length by reading a single byte at a time.
  *
@@ -626,7 +627,7 @@ static MQTTStatus_t decodeutf_8( const char ** pProperty,
 static MQTTStatus_t deserializeConnack( MQTTConnectProperties_t * pConnackProperties,
                                         size_t length,
                                         uint8_t * pIndex,
-                                        MqttPropBuilder_t * propBuffer );
+                                        MQTTPropBuilder_t * propBuffer );
 
 
 /**
@@ -663,7 +664,7 @@ static MQTTStatus_t logSimpleAckResponse( uint8_t reasonCode,
  *
  * @return #MQTTSuccess, #MQTTBadResponse and #MQTTBadResponse
  **/
-static MQTTStatus_t decodeAckProperties( MqttPropBuilder_t * propBuffer,
+static MQTTStatus_t decodeAckProperties( MQTTPropBuilder_t * propBuffer,
                                          uint8_t * pIndex,
                                          size_t remainingLength );
 
@@ -685,7 +686,7 @@ static MQTTStatus_t deserializeSimpleAck( const MQTTPacketInfo_t * pAck,
                                           uint16_t * pPacketIdentifier,
                                           MQTTReasonCodeInfo_t * pReasonCode,
                                           bool requestProblem,
-                                          MqttPropBuilder_t * propBuffer );
+                                          MQTTPropBuilder_t * propBuffer );
 
 /**
  * @brief Prints and validates the appropriate message for the Disconnect response code if logs
@@ -706,12 +707,14 @@ static MQTTStatus_t validateDisconnectResponse( uint8_t reasonCode,
  *
  * @param[out] propBuffer Pointer to the property buffer.
  * @param[in] pIndex Pointer to the start of the properties.
+ * @param[out] pSubackPropertyLength Pointer to the length of suback properties
  *
  * @return #MQTTSuccess if SUBACK is valid; #MQTTBadResponse
  *
  */
-static MQTTStatus_t deserializeSubackProperties( MqttPropBuilder_t * propBuffer,
-                                                 uint8_t * pIndex );
+static MQTTStatus_t deserializeSubackProperties( MQTTPropBuilder_t * propBuffer,
+                                                 uint8_t * pIndex,
+                                                 size_t pSubackPropertyLength );
 
 /**
  * @brief Deserialize properties in the PUBLISH packet received from the server.
@@ -728,7 +731,7 @@ static MQTTStatus_t deserializeSubackProperties( MqttPropBuilder_t * propBuffer,
  * if the PUBLISH packet doesn't follow MQTT spec.
  */
 static MQTTStatus_t deserializePublishProperties( MQTTPublishInfo_t * pPublishInfo,
-                                                  MqttPropBuilder_t * propBuffer,
+                                                  MQTTPropBuilder_t * propBuffer,
                                                   uint8_t * pIndex );
 
 /**
@@ -748,23 +751,40 @@ static MQTTStatus_t decodeAndDiscardutf_8( size_t * pPropertyLength,
  * @brief Validate the length and decode a uint8_t
  *
  * @param[out] pPropertyLength  Size of the length.
+ * @param[out] pUsed Whether the property is decoded before.
  * @param[out] pIndex Pointer to the current index of the buffer.
  *
  * @return #MQTTSuccess, #MQTTBadResponse
  **/
 static MQTTStatus_t decodeAndDiscard_uint8( size_t * pPropertyLength,
-                                            uint8_t ** pIndex); 
+                                            bool * pUsed,
+                                            uint8_t ** pIndex );
 
 /**
  * @brief Validate the length and decode a uint32_t
  *
  * @param[out] pPropertyLength  Size of the length.
+ * @param[out] pUsed Whether the property is decoded before.
+ * @param[out] pIndex Pointer to the current index of the buffer.
+ *
+ * @return #MQTTSuccess, #MQTTBadResponse
+ **/
+static MQTTStatus_t decodeAndDiscard_uint16( size_t * pPropertyLength,
+                                             bool * pUsed,
+                                             uint8_t ** pIndex );
+
+/**
+ * @brief Validate the length and decode a uint32_t
+ *
+ * @param[out] pPropertyLength  Size of the length.
+ * @param[out] pUsed Whether the property is decoded before.
  * @param[out] pIndex Pointer to the current index of the buffer.
  *
  * @return #MQTTSuccess, #MQTTBadResponse
  **/
 static MQTTStatus_t decodeAndDiscard_uint32( size_t * pPropertyLength,
-                                             uint8_t ** pIndex);      
+                                             bool * pUsed,
+                                             uint8_t ** pIndex );
 
 /**
  * @brief Decode the status bytes of a SUBACK packet to a #MQTTStatus_t.
@@ -1040,14 +1060,14 @@ MQTTStatus_t MQTT_SerializePublishHeaderWithoutTopic( const MQTTPublishInfo_t * 
 /*-----------------------------------------------------------*/
 
 static void serializePublishCommon( const MQTTPublishInfo_t * pPublishInfo,
-                                    const MqttPropBuilder_t * pPublishProperties, 
+                                    const MQTTPropBuilder_t * pPublishProperties,
                                     size_t remainingLength,
                                     uint16_t packetIdentifier,
                                     const MQTTFixedBuffer_t * pFixedBuffer,
                                     bool serializePayload )
 {
     uint8_t * pIndex = NULL;
-    size_t propertyLength = 0U ; 
+    size_t propertyLength = 0U;
     /* The first byte of a PUBLISH packet contains the packet type and flags. */
     uint8_t publishFlags = MQTT_PACKET_TYPE_PUBLISH;
 
@@ -1062,9 +1082,9 @@ static void serializePublishCommon( const MQTTPublishInfo_t * pPublishInfo,
     /* Get the start address of the buffer. */
     pIndex = pFixedBuffer->pBuffer;
 
-    if((pPublishProperties != NULL) && (pPublishProperties->pBuffer != NULL) )
+    if( ( pPublishProperties != NULL ) && ( pPublishProperties->pBuffer != NULL ) )
     {
-        propertyLength = pPublishProperties->currentIndex ; 
+        propertyLength = pPublishProperties->currentIndex;
     }
 
     if( pPublishInfo->qos == MQTTQoS1 )
@@ -1114,13 +1134,16 @@ static void serializePublishCommon( const MQTTPublishInfo_t * pPublishInfo,
         pIndex[ 1U ] = UINT16_LOW_BYTE( packetIdentifier );
         pIndex = &pIndex[ 2U ];
     }
+
     /* Properties are added after packet identifier. */
-    pIndex = encodeVariableLength(pIndex, propertyLength); 
-    if(propertyLength > 0U)
+    pIndex = encodeVariableLength( pIndex, propertyLength );
+
+    if( propertyLength > 0U )
     {
         memcpy( pIndex, pPublishProperties->pBuffer, propertyLength );
         pIndex += propertyLength;
     }
+
     /* The payload is placed after the packet identifier.
      * Payload is copied over only if required by the flag serializePayload.
      * This will help reduce an unnecessary copy of the payload into the buffer.
@@ -1502,7 +1525,7 @@ static MQTTStatus_t logConnackResponse( uint8_t responseCode )
 MQTTStatus_t MQTT_DeserializeConnack( MQTTConnectProperties_t * pConnackProperties,
                                       const MQTTPacketInfo_t * pIncomingPacket,
                                       bool * pSessionPresent,
-                                      MqttPropBuilder_t * propBuffer )
+                                      MQTTPropBuilder_t * propBuffer )
 {
     MQTTStatus_t status = MQTTSuccess;
     size_t propertyLength = 0U;
@@ -1717,7 +1740,7 @@ static MQTTStatus_t readSubackStatus( size_t statusCount,
 MQTTStatus_t MQTT_DeserializeSuback( MQTTReasonCodeInfo_t * subackReasonCodes,
                                      const MQTTPacketInfo_t * incomingPacket,
                                      uint16_t * pPacketId,
-                                     MqttPropBuilder_t * propBuffer,
+                                     MQTTPropBuilder_t * propBuffer,
                                      uint32_t maxPacketSize )
 {
     MQTTStatus_t status = MQTTSuccess;
@@ -1725,48 +1748,56 @@ MQTTStatus_t MQTT_DeserializeSuback( MQTTReasonCodeInfo_t * subackReasonCodes,
     size_t remainingLength = 0U;
     size_t statusCount = 0U;
     const uint8_t * pStatusStart;
+    size_t propertyLength = 0U;
 
-    assert( incomingPacket != NULL );
-    assert( pPacketId != NULL );
-
-    pIndex = incomingPacket->pRemainingData;
-    remainingLength = incomingPacket->remainingLength;
-
-    pIndex = incomingPacket->pRemainingData;
-
-    if( incomingPacket->remainingLength < 3U )
+    /* Validate input parameters instead of using assert */
+    if( ( incomingPacket == NULL ) || ( pPacketId == NULL ) || ( subackReasonCodes == NULL ) )
     {
-        LogError( ( "Suback Packet Cannot have a remaining Length of less than 3" ) );
-        status = MQTTBadResponse;
-    }
-    else if( ( incomingPacket->remainingLength + variableLengthEncodedSize( incomingPacket->remainingLength ) + 1U ) > maxPacketSize )
-    {
-        LogError( ( "Packet size greater than max allowed by the client." ) );
+        LogError( ( "Null parameter passed to MQTT_DeserializeSuback." ) );
         status = MQTTBadParameter;
     }
-    else
-    {
-        *pPacketId = UINT16_DECODE( pIndex );
-        pIndex = &pIndex[ 2 ];
-        LogDebug( ( "Packet Identifier is %hu.",
-                    ( unsigned short ) *pPacketId ) );
 
-        if( *pPacketId == 0U )
+    if( status == MQTTSuccess )
+    {
+        pIndex = incomingPacket->pRemainingData;
+        remainingLength = incomingPacket->remainingLength;
+
+        pIndex = incomingPacket->pRemainingData;
+
+        if( incomingPacket->remainingLength < 3U )
         {
-            LogError( ( "Packet Id cannot be 0" ) );
+            LogError( ( "Suback Packet Cannot have a remaining Length of less than 3" ) );
             status = MQTTBadResponse;
+        }
+        else if( ( incomingPacket->remainingLength + variableLengthEncodedSize( incomingPacket->remainingLength ) + 1U ) > maxPacketSize )
+        {
+            LogError( ( "Packet size greater than max allowed by the client." ) );
+            status = MQTTBadParameter;
+        }
+        else
+        {
+            *pPacketId = UINT16_DECODE( pIndex );
+            pIndex = &pIndex[ 2 ];
+            LogDebug( ( "Packet Identifier is %hu.",
+                        ( unsigned short ) *pPacketId ) );
+
+            if( *pPacketId == 0U )
+            {
+                LogError( ( "Packet Id cannot be 0" ) );
+                status = MQTTBadResponse;
+            }
         }
     }
 
     if( ( status == MQTTSuccess ) && ( incomingPacket->remainingLength > 4U ) )
     {
-        status = deserializeSubackProperties( propBuffer, pIndex );
+        status = deserializeSubackProperties( propBuffer, pIndex, propertyLength );
     }
 
     if( status == MQTTSuccess )
     {
-        statusCount = remainingLength - sizeof( uint16_t ) - propBuffer->bufferLength - variableLengthEncodedSize( propBuffer->bufferLength );
-        pStatusStart = &pIndex[ propBuffer->bufferLength + variableLengthEncodedSize( propBuffer->bufferLength ) ];
+        statusCount = remainingLength - sizeof( uint16_t ) - propertyLength - variableLengthEncodedSize( propertyLength );
+        pStatusStart = &pIndex[ propertyLength + variableLengthEncodedSize( propertyLength ) ];
         status = readSubackStatus( statusCount, pStatusStart, subackReasonCodes );
     }
 
@@ -1835,7 +1866,7 @@ static MQTTStatus_t validateSubscriptionSerializeParams( const MQTTSubscribeInfo
 MQTTStatus_t MQTT_DeserializePublish( const MQTTPacketInfo_t * pIncomingPacket,
                                       uint16_t * pPacketId,
                                       MQTTPublishInfo_t * pPublishInfo,
-                                      MqttPropBuilder_t * propBuffer,
+                                      MQTTPropBuilder_t * propBuffer,
                                       uint32_t maxPacketSize )
 {
     MQTTStatus_t status = MQTTSuccess;
@@ -1878,7 +1909,7 @@ static MQTTStatus_t deserializeSimpleAck( const MQTTPacketInfo_t * pAck,
                                           uint16_t * pPacketIdentifier,
                                           MQTTReasonCodeInfo_t * pReasonCode,
                                           bool requestProblem,
-                                          MqttPropBuilder_t * propBuffer )
+                                          MQTTPropBuilder_t * propBuffer )
 {
     MQTTStatus_t status = MQTTSuccess;
     uint8_t * pIndex = pAck->pRemainingData;
@@ -2036,8 +2067,8 @@ uint8_t * MQTT_SerializeConnectFixedHeader( uint8_t * pIndex,
 
 static void serializeConnectPacket( const MQTTConnectInfo_t * pConnectInfo,
                                     const MQTTPublishInfo_t * pWillInfo,
-                                    const MqttPropBuilder_t * pConnectProperties,
-                                    const MqttPropBuilder_t * pWillProperties,
+                                    const MQTTPropBuilder_t * pConnectProperties,
+                                    const MQTTPropBuilder_t * pWillProperties,
                                     size_t remainingLength,
                                     const MQTTFixedBuffer_t * pFixedBuffer )
 {
@@ -2056,18 +2087,20 @@ static void serializeConnectPacket( const MQTTConnectInfo_t * pConnectInfo,
                                                pConnectInfo,
                                                pWillInfo,
                                                remainingLength );
-    if( (pConnectProperties != NULL) && (pConnectProperties->pBuffer != NULL))
+
+    if( ( pConnectProperties != NULL ) && ( pConnectProperties->pBuffer != NULL ) )
     {
         connectPropertyLength = pConnectProperties->currentIndex;
     }
 
-    if( (pWillProperties != NULL) && (pWillProperties->pBuffer != NULL) )
+    if( ( pWillProperties != NULL ) && ( pWillProperties->pBuffer != NULL ) )
     {
         willPropertyLength = pWillProperties->currentIndex;
     }
 
     /* Write the properties length into the CONNECT packet. */
-    pIndex = encodeVariableLength( pIndex, connectPropertyLength ); 
+    pIndex = encodeVariableLength( pIndex, connectPropertyLength );
+
     if( connectPropertyLength > 0 )
     {
         memcpy( pIndex, pConnectProperties->pBuffer, connectPropertyLength );
@@ -2077,17 +2110,19 @@ static void serializeConnectPacket( const MQTTConnectInfo_t * pConnectInfo,
     /* Write the client identifier into the CONNECT packet. */
     pIndex = encodeString( pIndex,
                            pConnectInfo->pClientIdentifier,
-                           pConnectInfo->clientIdentifierLength );  
+                           pConnectInfo->clientIdentifierLength );
 
     /* Write the will topic name and message into the CONNECT packet if provided. */
     if( pWillInfo != NULL )
     {
-        pIndex = encodeVariableLength(pIndex, willPropertyLength); 
+        pIndex = encodeVariableLength( pIndex, willPropertyLength );
+
         if( willPropertyLength > 0 )
         {
-            memcpy(pIndex, pWillProperties->pBuffer, willPropertyLength);
+            memcpy( pIndex, pWillProperties->pBuffer, willPropertyLength );
             pIndex += willPropertyLength;
-        } 
+        }
+
         pIndex = encodeString( pIndex,
                                pWillInfo->pTopicName,
                                pWillInfo->topicNameLength );
@@ -2121,15 +2156,15 @@ static void serializeConnectPacket( const MQTTConnectInfo_t * pConnectInfo,
 
 MQTTStatus_t MQTT_GetConnectPacketSize( const MQTTConnectInfo_t * pConnectInfo,
                                         const MQTTPublishInfo_t * pWillInfo,
-                                        const MqttPropBuilder_t *pConnectProperties,
-                                        const MqttPropBuilder_t *pWillProperties, 
+                                        const MQTTPropBuilder_t * pConnectProperties,
+                                        const MQTTPropBuilder_t * pWillProperties,
                                         size_t * pRemainingLength,
                                         size_t * pPacketSize )
 {
     MQTTStatus_t status = MQTTSuccess;
     size_t remainingLength;
     size_t propertyLength = 0U;
-    size_t willPropertyLength = 0U; 
+    size_t willPropertyLength = 0U;
 
     /* The CONNECT packet will always include a 10-byte variable header without connect properties. */
     size_t connectPacketSize = MQTT_PACKET_CONNECT_HEADER_SIZE;
@@ -2166,12 +2201,12 @@ MQTTStatus_t MQTT_GetConnectPacketSize( const MQTTConnectInfo_t * pConnectInfo,
         /*Do Nothing*/
     }
 
-    if( (pConnectProperties != NULL) && (pConnectProperties->pBuffer != NULL) )
+    if( ( pConnectProperties != NULL ) && ( pConnectProperties->pBuffer != NULL ) )
     {
         propertyLength = pConnectProperties->currentIndex;
     }
 
-    if( (pWillProperties != NULL) && (pWillProperties->pBuffer != NULL) )
+    if( ( pWillProperties != NULL ) && ( pWillProperties->pBuffer != NULL ) )
     {
         willPropertyLength = pWillProperties->currentIndex;
     }
@@ -2244,8 +2279,8 @@ MQTTStatus_t MQTT_GetConnectPacketSize( const MQTTConnectInfo_t * pConnectInfo,
 
 MQTTStatus_t MQTT_SerializeConnect( const MQTTConnectInfo_t * pConnectInfo,
                                     const MQTTPublishInfo_t * pWillInfo,
-                                    const MqttPropBuilder_t * pConnectProperties, 
-                                    const MqttPropBuilder_t * pWillProperties,
+                                    const MQTTPropBuilder_t * pConnectProperties,
+                                    const MQTTPropBuilder_t * pWillProperties,
                                     size_t remainingLength,
                                     const MQTTFixedBuffer_t * pFixedBuffer )
 {
@@ -2253,7 +2288,7 @@ MQTTStatus_t MQTT_SerializeConnect( const MQTTConnectInfo_t * pConnectInfo,
     size_t connectPacketSize = 0;
 
     /* Validate arguments. */
-    if( ( pConnectInfo == NULL ) || ( pFixedBuffer == NULL ))
+    if( ( pConnectInfo == NULL ) || ( pFixedBuffer == NULL ) )
     {
         LogError( ( "Argument cannot be NULL: pConnectInfo=%p, "
                     "pFixedBuffer=%p.",
@@ -2306,14 +2341,15 @@ MQTTStatus_t MQTT_SerializeConnect( const MQTTConnectInfo_t * pConnectInfo,
 
 MQTTStatus_t MQTT_GetSubscribePacketSize( const MQTTSubscribeInfo_t * pSubscriptionList,
                                           size_t subscriptionCount,
-                                          const MqttPropBuilder_t * pSubscribeProperties,
+                                          const MQTTPropBuilder_t * pSubscribeProperties,
                                           size_t * pRemainingLength,
                                           size_t * pPacketSize,
                                           uint32_t maxPacketSize )
 {
     MQTTStatus_t status = MQTTSuccess;
-    size_t propertyLength = 0U; 
-    if( (pSubscribeProperties != NULL) && (pSubscribeProperties->pBuffer != NULL) )
+    size_t propertyLength = 0U;
+
+    if( ( pSubscribeProperties != NULL ) && ( pSubscribeProperties->pBuffer != NULL ) )
     {
         propertyLength = pSubscribeProperties->currentIndex;
     }
@@ -2391,20 +2427,21 @@ uint8_t * MQTT_SerializeUnsubscribeHeader( size_t remainingLength,
 
 MQTTStatus_t MQTT_SerializeSubscribe( const MQTTSubscribeInfo_t * pSubscriptionList,
                                       size_t subscriptionCount,
-                                      const MqttPropBuilder_t * pSubscribeProperties,
+                                      const MQTTPropBuilder_t * pSubscribeProperties,
                                       uint16_t packetId,
                                       size_t remainingLength,
                                       const MQTTFixedBuffer_t * pFixedBuffer )
 {
     size_t i = 0;
     uint8_t * pIndex = NULL;
-    size_t propertyLength = 0U ; 
-    MQTTStatus_t status ; 
+    size_t propertyLength = 0U;
+    MQTTStatus_t status;
 
-    if( (pSubscribeProperties != NULL) && (pSubscribeProperties->pBuffer != NULL) )
+    if( ( pSubscribeProperties != NULL ) && ( pSubscribeProperties->pBuffer != NULL ) )
     {
         propertyLength = pSubscribeProperties->currentIndex;
     }
+
     /* Validate all the parameters. */
     status =
         validateSubscriptionSerializeParams( pSubscriptionList,
@@ -2420,14 +2457,15 @@ MQTTStatus_t MQTT_SerializeSubscribe( const MQTTSubscribeInfo_t * pSubscriptionL
         pIndex = MQTT_SerializeSubscribeHeader( remainingLength,
                                                 pIndex,
                                                 packetId );
-        /*Serialize properties*/                                        
-        pIndex = encodeVariableLength(pIndex, propertyLength); 
+        /*Serialize properties*/
+        pIndex = encodeVariableLength( pIndex, propertyLength );
 
-        if(propertyLength > 0U)
+        if( propertyLength > 0U )
         {
             memcpy( pIndex, pSubscribeProperties->pBuffer, propertyLength );
             pIndex += propertyLength;
         }
+
         /* Serialize each subscription topic filter and QoS. */
         for( i = 0; i < subscriptionCount; i++ )
         {
@@ -2436,10 +2474,10 @@ MQTTStatus_t MQTT_SerializeSubscribe( const MQTTSubscribeInfo_t * pSubscriptionL
                                    pSubscriptionList[ i ].topicFilterLength );
 
             /* Place the subscription options  */
-            *pIndex = (( pSubscriptionList[ i ].qos & 0x03 ) |
-                      ( pSubscriptionList[ i ].noLocalOption ? ( 1 << 2 ) : 0 ) |
-                      ( pSubscriptionList[ i ].retainAsPublishedOption ? ( 1 << 3 ) : 0 ) |
-                      ( ( (uint8_t)(pSubscriptionList[ i ].retainHandlingOption) & 0x03 ) << 4 ));
+            *pIndex = ( ( pSubscriptionList[ i ].qos & 0x03 ) |
+                        ( pSubscriptionList[ i ].noLocalOption ? ( 1 << 2 ) : 0 ) |
+                        ( pSubscriptionList[ i ].retainAsPublishedOption ? ( 1 << 3 ) : 0 ) |
+                        ( ( ( uint8_t ) ( pSubscriptionList[ i ].retainHandlingOption ) & 0x03 ) << 4 ) );
 
             pIndex++;
         }
@@ -2455,17 +2493,19 @@ MQTTStatus_t MQTT_SerializeSubscribe( const MQTTSubscribeInfo_t * pSubscriptionL
 
 MQTTStatus_t MQTT_GetUnsubscribePacketSize( const MQTTSubscribeInfo_t * pSubscriptionList,
                                             size_t subscriptionCount,
-                                            const MqttPropBuilder_t * pUnsubscribeProperties, 
+                                            const MQTTPropBuilder_t * pUnsubscribeProperties,
                                             size_t * pRemainingLength,
                                             size_t * pPacketSize,
-                                            uint32_t maxPacketSize)
+                                            uint32_t maxPacketSize )
 {
     MQTTStatus_t status = MQTTSuccess;
-    size_t propertyLength = 0; 
-    if( (pUnsubscribeProperties != NULL) && (pUnsubscribeProperties->pBuffer != NULL ) )
+    size_t propertyLength = 0;
+
+    if( ( pUnsubscribeProperties != NULL ) && ( pUnsubscribeProperties->pBuffer != NULL ) )
     {
         propertyLength = pUnsubscribeProperties->currentIndex;
     }
+
     /* Validate parameters. */
     if( ( pSubscriptionList == NULL ) || ( pRemainingLength == NULL ) ||
         ( pPacketSize == NULL ) )
@@ -2501,19 +2541,19 @@ MQTTStatus_t MQTT_GetUnsubscribePacketSize( const MQTTSubscribeInfo_t * pSubscri
 
 MQTTStatus_t MQTT_SerializeUnsubscribe( const MQTTSubscribeInfo_t * pSubscriptionList,
                                         size_t subscriptionCount,
-                                        const MqttPropBuilder_t * pUnsubscribeProperties, 
+                                        const MQTTPropBuilder_t * pUnsubscribeProperties,
                                         uint16_t packetId,
                                         size_t remainingLength,
                                         const MQTTFixedBuffer_t * pFixedBuffer )
 {
     MQTTStatus_t status = MQTTSuccess;
     size_t i = 0;
-    size_t propertyLength = 0 ; 
+    size_t propertyLength = 0;
     uint8_t * pIndex = NULL;
 
-    if( (pUnsubscribeProperties != NULL) && (pUnsubscribeProperties->pBuffer != NULL))
+    if( ( pUnsubscribeProperties != NULL ) && ( pUnsubscribeProperties->pBuffer != NULL ) )
     {
-        propertyLength = pUnsubscribeProperties->currentIndex ; 
+        propertyLength = pUnsubscribeProperties->currentIndex;
     }
 
     /* Validate all the parameters. */
@@ -2532,12 +2572,14 @@ MQTTStatus_t MQTT_SerializeUnsubscribe( const MQTTSubscribeInfo_t * pSubscriptio
 
         /*Serialize the properties */
 
-        pIndex = encodeVariableLength(pIndex , propertyLength); 
-        if(propertyLength > 0)
+        pIndex = encodeVariableLength( pIndex, propertyLength );
+
+        if( propertyLength > 0 )
         {
             ( void ) memcpy( ( void * ) pIndex, ( const void * ) pUnsubscribeProperties->pBuffer, propertyLength );
             pIndex += propertyLength;
         }
+
         /* Serialize each subscription topic filter. */
         for( i = 0; i < subscriptionCount; i++ )
         {
@@ -2556,18 +2598,19 @@ MQTTStatus_t MQTT_SerializeUnsubscribe( const MQTTSubscribeInfo_t * pSubscriptio
 /*-----------------------------------------------------------*/
 
 MQTTStatus_t MQTT_GetPublishPacketSize( const MQTTPublishInfo_t * pPublishInfo,
-                                        const MqttPropBuilder_t * pPublishProperties, 
+                                        const MQTTPropBuilder_t * pPublishProperties,
                                         size_t * pRemainingLength,
                                         size_t * pPacketSize,
-                                        uint32_t maxPacketSize)
+                                        uint32_t maxPacketSize )
 {
     MQTTStatus_t status = MQTTSuccess;
-    size_t propertyLength = 0U ; 
+    size_t propertyLength = 0U;
 
-    if( (pPublishProperties != NULL) && (pPublishProperties->pBuffer != NULL))
+    if( ( pPublishProperties != NULL ) && ( pPublishProperties->pBuffer != NULL ) )
     {
         propertyLength = pPublishProperties->currentIndex;
     }
+
     if( ( pPublishInfo == NULL ) || ( pRemainingLength == NULL ) || ( pPacketSize == NULL ) )
     {
         LogError( ( "Argument cannot be NULL: pPublishInfo=%p, "
@@ -2588,7 +2631,7 @@ MQTTStatus_t MQTT_GetPublishPacketSize( const MQTTPublishInfo_t * pPublishInfo,
 /*-----------------------------------------------------------*/
 
 MQTTStatus_t MQTT_SerializePublish( const MQTTPublishInfo_t * pPublishInfo,
-                                    const MqttPropBuilder_t * pPublishProperties, 
+                                    const MQTTPropBuilder_t * pPublishProperties,
                                     uint16_t packetId,
                                     size_t remainingLength,
                                     const MQTTFixedBuffer_t * pFixedBuffer )
@@ -2675,7 +2718,7 @@ MQTTStatus_t MQTT_SerializePublish( const MQTTPublishInfo_t * pPublishInfo,
 /*-----------------------------------------------------------*/
 
 MQTTStatus_t MQTT_SerializePublishHeader( const MQTTPublishInfo_t * pPublishInfo,
-                                          const MqttPropBuilder_t * pPublishProperties, 
+                                          const MQTTPropBuilder_t * pPublishProperties,
                                           uint16_t packetId,
                                           size_t remainingLength,
                                           const MQTTFixedBuffer_t * pFixedBuffer,
@@ -2814,7 +2857,7 @@ MQTTStatus_t MQTT_SerializeAck( const MQTTFixedBuffer_t * pFixedBuffer,
 
 /*-----------------------------------------------------------*/
 
-MQTTStatus_t MQTT_GetDisconnectPacketSize( const MqttPropBuilder_t * pDisconnectProperties, 
+MQTTStatus_t MQTT_GetDisconnectPacketSize( const MQTTPropBuilder_t * pDisconnectProperties,
                                            size_t * pRemainingLength,
                                            size_t * pPacketSize,
                                            uint32_t maxPacketSize,
@@ -2825,10 +2868,11 @@ MQTTStatus_t MQTT_GetDisconnectPacketSize( const MqttPropBuilder_t * pDisconnect
     size_t packetSize = 0U;
     size_t propertyLength = 0U;
 
-    if( (pDisconnectProperties != NULL) && (pDisconnectProperties->pBuffer != NULL) )
+    if( ( pDisconnectProperties != NULL ) && ( pDisconnectProperties->pBuffer != NULL ) )
     {
-        propertyLength = pDisconnectProperties->currentIndex ; 
+        propertyLength = pDisconnectProperties->currentIndex;
     }
+
     /*Validate the arguments.*/
     if( ( pRemainingLength == NULL ) || ( pPacketSize == NULL ) )
     {
@@ -2853,7 +2897,6 @@ MQTTStatus_t MQTT_GetDisconnectPacketSize( const MqttPropBuilder_t * pDisconnect
         /*Reason code.*/
         length += 1U;
     }
-
 
     if( status == MQTTSuccess )
     {
@@ -2891,19 +2934,19 @@ MQTTStatus_t MQTT_GetDisconnectPacketSize( const MqttPropBuilder_t * pDisconnect
 
 /*-----------------------------------------------------------*/
 
-MQTTStatus_t MQTT_SerializeDisconnect( const MqttPropBuilder_t *pDisconnectProperties, 
-                                       MQTTSuccessFailReasonCode_t reasonCode, 
-                                       size_t remainingLength, 
+MQTTStatus_t MQTT_SerializeDisconnect( const MQTTPropBuilder_t * pDisconnectProperties,
+                                       MQTTSuccessFailReasonCode_t reasonCode,
+                                       size_t remainingLength,
                                        const MQTTFixedBuffer_t * pFixedBuffer )
 {
     MQTTStatus_t status = MQTTSuccess;
-    uint8_t * pIndex = NULL ; 
-    size_t packetSize = 0; 
-    size_t propertyLength = 0 ; 
+    uint8_t * pIndex = NULL;
+    size_t packetSize = 0;
+    size_t propertyLength = 0;
 
-    if((pDisconnectProperties != NULL) && (pDisconnectProperties->pBuffer != NULL))
+    if( ( pDisconnectProperties != NULL ) && ( pDisconnectProperties->pBuffer != NULL ) )
     {
-        propertyLength = pDisconnectProperties->currentIndex ; 
+        propertyLength = pDisconnectProperties->currentIndex;
     }
 
     /* Validate arguments. */
@@ -2939,18 +2982,18 @@ MQTTStatus_t MQTT_SerializeDisconnect( const MqttPropBuilder_t *pDisconnectPrope
 
     if( status == MQTTSuccess )
     {
-        pIndex = pFixedBuffer->pBuffer ; 
-        pIndex = MQTT_SerializeDisconnectFixed(pIndex, 
-                                               reasonCode,
-                                               remainingLength); 
+        pIndex = pFixedBuffer->pBuffer;
+        pIndex = MQTT_SerializeDisconnectFixed( pIndex,
+                                                reasonCode,
+                                                remainingLength );
 
-        pIndex = encodeVariableLength(pIndex, propertyLength); 
-        if(propertyLength > 0)
+        pIndex = encodeVariableLength( pIndex, propertyLength );
+
+        if( propertyLength > 0 )
         {
-            memcpy(pIndex, pDisconnectProperties->pBuffer, propertyLength);
+            memcpy( pIndex, pDisconnectProperties->pBuffer, propertyLength );
             pIndex += propertyLength;
         }
-
     }
 
     return status;
@@ -3248,36 +3291,82 @@ static MQTTStatus_t decodeAndDiscardutf_8( size_t * pPropertyLength,
 /*-----------------------------------------------------------*/
 
 static MQTTStatus_t decodeAndDiscard_uint8( size_t * pPropertyLength,
+                                            bool * pUsed,
                                             uint8_t ** pIndex )
 {
+    MQTTStatus_t status = MQTTSuccess;
+
     if( *pPropertyLength < sizeof( uint8_t ) )
     {
-        return MQTTBadResponse;
+        status = MQTTBadResponse;
+    }
+    else if( *pUsed == true )
+    {
+        status = MQTTBadResponse;
+    }
+    else
+    {
+        /* Skip 1 byte */
+        *pIndex += sizeof( uint8_t );
+        *pPropertyLength -= sizeof( uint8_t );
+        *pUsed = true;
     }
 
-    /* Skip 1 byte */
-    *pIndex += sizeof( uint8_t );
-    *pPropertyLength -= sizeof( uint8_t );
-
-    return MQTTSuccess;
+    return status;
 }
 
+/*-----------------------------------------------------------*/
+
+static MQTTStatus_t decodeAndDiscard_uint16( size_t * pPropertyLength,
+                                             bool * pUsed,
+                                             uint8_t ** pIndex )
+{
+    MQTTStatus_t status = MQTTSuccess;
+
+    if( *pPropertyLength < sizeof( uint16_t ) )
+    {
+        status = MQTTBadResponse;
+    }
+    else if( *pUsed == true )
+    {
+        status = MQTTBadResponse;
+    }
+    else
+    {
+        /* Skip 1 byte */
+        *pIndex += sizeof( uint16_t );
+        *pPropertyLength -= sizeof( uint16_t );
+        *pUsed = true;
+    }
+
+    return status;
+}
 
 /*-----------------------------------------------------------*/
 
 static MQTTStatus_t decodeAndDiscard_uint32( size_t * pPropertyLength,
-                                            uint8_t ** pIndex )
+                                             bool * pUsed,
+                                             uint8_t ** pIndex )
 {
+    MQTTStatus_t status = MQTTSuccess;
+
     if( *pPropertyLength < sizeof( uint32_t ) )
     {
-        return MQTTBadResponse;
+        status = MQTTBadResponse;
+    }
+    else if( *pUsed == true )
+    {
+        status = MQTTBadResponse;
+    }
+    else
+    {
+        /* Skip 1 byte */
+        *pIndex += sizeof( uint32_t );
+        *pPropertyLength -= sizeof( uint32_t );
+        *pUsed = true;
     }
 
-    /* Skip 1 byte */
-    *pIndex += sizeof( uint32_t );
-    *pPropertyLength -= sizeof( uint32_t );
-
-    return MQTTSuccess;
+    return status;
 }
 
 /*-----------------------------------------------------------*/
@@ -3616,7 +3705,7 @@ static MQTTStatus_t decodeBinaryData( const void ** pProperty,
 static MQTTStatus_t deserializeConnack( MQTTConnectProperties_t * pConnackProperties,
                                         size_t length,
                                         uint8_t * pIndex,
-                                        MqttPropBuilder_t * propBuffer )
+                                        MQTTPropBuilder_t * propBuffer )
 {
     MQTTStatus_t status = MQTTSuccess;
     uint8_t * pVariableHeader = pIndex;
@@ -3849,7 +3938,7 @@ static MQTTStatus_t logSimpleAckResponse( uint8_t reasonCode,
 
 /*-----------------------------------------------------------*/
 
-static MQTTStatus_t decodeAckProperties( MqttPropBuilder_t * propBuffer,
+static MQTTStatus_t decodeAckProperties( MQTTPropBuilder_t * propBuffer,
                                          uint8_t * pIndex,
                                          size_t remainingLength )
 {
@@ -3857,6 +3946,7 @@ static MQTTStatus_t decodeAckProperties( MqttPropBuilder_t * propBuffer,
     MQTTStatus_t status = MQTTSuccess;
     uint8_t * pLocalIndex = pIndex;
     bool reasonString = false;
+    bool skipPropertyHandling = false;
 
     /*Decode the property length*/
     status = decodeVariableLength( pLocalIndex, &propertyLength );
@@ -3872,14 +3962,25 @@ static MQTTStatus_t decodeAckProperties( MqttPropBuilder_t * propBuffer,
         }
     }
 
-    if( status == MQTTSuccess )
+    if( propBuffer == NULL )
     {
-        /* coverity[misra_c_2012_rule_11_8_violation] */
+        if( propertyLength == 0 )
+        {
+            skipPropertyHandling = true;
+        }
+        else
+        {
+            status = MQTTNoMemory;
+            LogError( ( "Publish Property buffer is NULL but property length is non-zero." ) );
+        }
+    }
+    else
+    {
         propBuffer->pBuffer = pLocalIndex;
         propBuffer->bufferLength = propertyLength;
     }
 
-    if( status == MQTTSuccess )
+    if( ( status == MQTTSuccess ) && ( skipPropertyHandling == false ) )
     {
         while( ( propertyLength > 0U ) && ( status == MQTTSuccess ) )
         {
@@ -4022,36 +4123,54 @@ static uint8_t * encodeBinaryData( uint8_t * pDestination,
 /*-----------------------------------------------------------*/
 
 static MQTTStatus_t deserializePublishProperties( MQTTPublishInfo_t * pPublishInfo,
-                                                  MqttPropBuilder_t * propBuffer,
+                                                  MQTTPropBuilder_t * propBuffer,
                                                   uint8_t * pIndex )
 {
     MQTTStatus_t status = MQTTSuccess;
     size_t propertyLength = 0U;
     uint8_t * pLocalIndex = pIndex;
+    size_t subscriptionId;
     bool contentType = false;
     bool messageExpiryInterval = false;
     bool responseTopic = false;
     bool topicAlias = false;
     bool payloadFormatIndicator = false;
     bool correlationData = false;
+    bool skipPropertyHandling = false;
 
     /*Decode Property Length */
 
     status = decodeVariableLength( pLocalIndex, &propertyLength );
     pPublishInfo->propertyLength = propertyLength;
-    propBuffer->bufferLength = propertyLength;
 
-    if( status == MQTTSuccess )
+    if( propBuffer == NULL )
+    {
+        if( propertyLength == 0U )
+        {
+            skipPropertyHandling = true;
+        }
+        else
+        {
+            status = MQTTNoMemory;
+            LogError( ( "Publish Property buffer is NULL but property length is non-zero." ) );
+        }
+    }
+    else
+    {
+        /* Buffer is valid and large enough. Set its actual length. */
+        propBuffer->bufferLength = propertyLength;
+    }
+
+    if( ( status == MQTTSuccess ) && ( skipPropertyHandling == false ) )
     {
         pLocalIndex = &pLocalIndex[ variableLengthEncodedSize( propertyLength ) ];
         propBuffer->pBuffer = pLocalIndex;
     }
 
-    if( status == MQTTSuccess )
+    if( ( status == MQTTSuccess ) && ( skipPropertyHandling == false ) )
     {
         while( ( propertyLength > 0U ) && ( status == MQTTSuccess ) )
         {
-            /** Decode propertyId  -> reason string if or user property id*/
             uint8_t propertyId = *pLocalIndex;
             pLocalIndex = &pLocalIndex[ 1 ];
             propertyLength -= sizeof( uint8_t );
@@ -4059,36 +4178,36 @@ static MQTTStatus_t deserializePublishProperties( MQTTPublishInfo_t * pPublishIn
             switch( propertyId )
             {
                 case MQTT_PAYLOAD_FORMAT_ID:
-                    status = decodeuint8_t( &pPublishInfo->payloadFormat, &propertyLength, &payloadFormatIndicator, &pLocalIndex );
+                    status = decodeAndDiscard_uint8( &propertyLength, &payloadFormatIndicator, &pLocalIndex );
                     break;
 
                 case MQTT_TOPIC_ALIAS_ID:
-                    status = decodeuint16_t( &pPublishInfo->topicAlias, &propertyLength, &topicAlias, &pLocalIndex );
+                    status = decodeAndDiscard_uint16( &propertyLength, &topicAlias, &pLocalIndex );
                     break;
 
                 case MQTT_RESPONSE_TOPIC_ID:
-                    status = decodeutf_8( &pPublishInfo->pResponseTopic, &pPublishInfo->responseTopicLength, &propertyLength, &responseTopic, &pLocalIndex );
+                    status = decodeAndDiscardutf_8( &propertyLength, &responseTopic, &pLocalIndex );
                     break;
 
                 case MQTT_CORRELATION_DATA_ID:
-                    status = decodeBinaryData( &pPublishInfo->pCorrelationData, &pPublishInfo->correlationLength, &propertyLength, &correlationData, &pLocalIndex );
+                    status = decodeAndDiscardutf_8( &propertyLength, &correlationData, &pLocalIndex );
                     break;
 
                 case MQTT_MSG_EXPIRY_ID:
-                    status = decodeuint32_t( &pPublishInfo->msgExpiryInterval, &propertyLength, &messageExpiryInterval, &pLocalIndex );
+                    status = decodeAndDiscard_uint32( &propertyLength, &messageExpiryInterval, &pLocalIndex );
                     break;
 
                 case MQTT_CONTENT_TYPE_ID:
-                    status = decodeutf_8( &pPublishInfo->pContentType, &pPublishInfo->contentTypeLength, &propertyLength, &contentType, &pLocalIndex );
+                    status = decodeAndDiscardutf_8( &propertyLength, &contentType, &pLocalIndex );
                     break;
 
                 case MQTT_SUBSCRIPTION_ID_ID:
-                    status = decodeVariableLength( pLocalIndex, &pPublishInfo->subscriptionId );
+                    status = decodeVariableLength( pLocalIndex, subscriptionId );
 
                     if( status == MQTTSuccess )
                     {
-                        pLocalIndex = &pLocalIndex[ variableLengthEncodedSize( pPublishInfo->subscriptionId ) ];
-                        propertyLength -= variableLengthEncodedSize( pPublishInfo->subscriptionId );
+                        pLocalIndex = &pLocalIndex[ variableLengthEncodedSize( subscriptionId ) ];
+                        propertyLength -= variableLengthEncodedSize( subscriptionId );
                     }
 
                     break;
@@ -4112,12 +4231,13 @@ static MQTTStatus_t deserializePublishProperties( MQTTPublishInfo_t * pPublishIn
 static MQTTStatus_t deserializePublish( const MQTTPacketInfo_t * pIncomingPacket,
                                         uint16_t * pPacketId,
                                         MQTTPublishInfo_t * pPublishInfo,
-                                        MqttPropBuilder_t * propBuffer )
+                                        MQTTPropBuilder_t * propBuffer )
 {
     MQTTStatus_t status = MQTTSuccess;
     uint8_t * pVariableHeader = NULL;
     const uint8_t * pPacketIdentifierHigh = NULL;
     uint8_t * pIndex = NULL;
+    size_t propertyLength = 0;
 
     assert( pIncomingPacket != NULL );
     assert( pPacketId != NULL );
@@ -4220,7 +4340,7 @@ static MQTTStatus_t deserializePublish( const MQTTPacketInfo_t * pIncomingPacket
 
 /*-----------------------------------------------------------*/
 
-MQTTStatus_t updateContextWithConnectProps( const MqttPropBuilder_t * pPropBuilder,
+MQTTStatus_t updateContextWithConnectProps( const MQTTPropBuilder_t * pPropBuilder,
                                             MQTTConnectProperties_t * pConnectProperties )
 {
     MQTTStatus_t status = MQTTSuccess;
@@ -4255,6 +4375,7 @@ MQTTStatus_t updateContextWithConnectProps( const MqttPropBuilder_t * pPropBuild
         while( ( propertyLength > 0U ) && ( status == MQTTSuccess ) )
         {
             uint8_t propertyId = *pIndex;
+            bool used = false;
             pIndex = &pIndex[ 1 ];
             propertyLength--;
 
@@ -4275,20 +4396,23 @@ MQTTStatus_t updateContextWithConnectProps( const MqttPropBuilder_t * pPropBuild
                 case MQTT_TOPIC_ALIAS_MAX_ID:
                     status = decodeuint16_t( &pConnectProperties->topicAliasMax, &propertyLength, &topicAlias, &pIndex );
                     break;
+
                 case MQTT_REQUEST_PROBLEM_ID:
                 case MQTT_REQUEST_RESPONSE_ID:
-                    status = decodeAndDiscard_uint8(&propertyLength, &pIndex); 
-                    break ; 
+                    status = decodeAndDiscard_uint8( &propertyLength, &used, &pIndex );
+                    break;
+
                 case MQTT_AUTH_DATA_ID:
                 case MQTT_AUTH_METHOD_ID:
-                    bool auth = false ; 
-                    status = decodeAndDiscardutf_8(&propertyLength, &auth, &pIndex); 
-                    break ; 
+                    status = decodeAndDiscardutf_8( &propertyLength, &used, &pIndex );
+                    break;
+
                 case MQTT_USER_PROPERTY_ID:
-                    status = decodeAndDiscard(&propertyLength, &pIndex); 
-                    break ; 
+                    status = decodeAndDiscard( &propertyLength, &pIndex );
+                    break;
+
                 default:
-                    status = MQTTBadParameter ; 
+                    status = MQTTBadParameter;
                     break;
             }
         }
@@ -4388,21 +4512,21 @@ MQTTStatus_t MQTT_ValidatePublishParams( const MQTTPublishInfo_t * pPublishInfo,
 /*-----------------------------------------------------------*/
 
 MQTTStatus_t MQTT_ValidatePublishProperties( uint16_t serverTopicAliasMax,
-                                             const MqttPropBuilder_t * propBuilder,
+                                             const MQTTPropBuilder_t * propBuilder,
                                              uint16_t * topicAlias )
 {
     MQTTStatus_t status = MQTTSuccess;
-    size_t propertyLength ;
-    uint8_t * pLocalIndex ;
+    size_t propertyLength;
+    uint8_t * pLocalIndex;
     bool topicAliasBool = false;
-    
-    if( (propBuilder == NULL) || (propBuilder->pBuffer == NULL))
+
+    if( ( propBuilder == NULL ) || ( propBuilder->pBuffer == NULL ) )
     {
-        status = MQTTBadParameter ; 
+        status = MQTTBadParameter;
     }
-    else if(topicAlias == NULL)
+    else if( topicAlias == NULL )
     {
-        status = MQTTBadParameter ; 
+        status = MQTTBadParameter;
     }
     else
     {
@@ -4410,27 +4534,29 @@ MQTTStatus_t MQTT_ValidatePublishProperties( uint16_t serverTopicAliasMax,
         pLocalIndex = propBuilder->pBuffer;
     }
 
-
     while( ( propertyLength > 0U ) && ( status == MQTTSuccess ) )
     {
         uint8_t propertyId = *pLocalIndex;
-        bool used = false ; 
+        bool used = false;
         pLocalIndex = &pLocalIndex[ 1 ];
         propertyLength -= sizeof( uint8_t );
 
         switch( propertyId )
         {
             case MQTT_PAYLOAD_FORMAT_ID:
-                status = decodeAndDiscard_uint8(&propertyLength, &pLocalIndex);
-                break ; 
+                status = decodeAndDiscard_uint8( &propertyLength, &used, &pLocalIndex );
+                break;
+
             case MQTT_MSG_EXPIRY_ID:
-                status = decodeAndDiscard_uint32(&propertyLength, &pLocalIndex); 
-                break ; 
+                status = decodeAndDiscard_uint32( &propertyLength, &used, &pLocalIndex );
+                break;
+
             case MQTT_CONTENT_TYPE_ID:
             case MQTT_CORRELATION_DATA_ID:
             case MQTT_RESPONSE_TOPIC_ID:
-                status = decodeAndDiscardutf_8(&propertyLength, &used, &pLocalIndex ); 
-                break; 
+                status = decodeAndDiscardutf_8( &propertyLength, &used, &pLocalIndex );
+                break;
+
             case MQTT_TOPIC_ALIAS_ID:
                 status = decodeuint16_t( topicAlias, &propertyLength, &topicAliasBool, &pLocalIndex );
 
@@ -4439,12 +4565,15 @@ MQTTStatus_t MQTT_ValidatePublishProperties( uint16_t serverTopicAliasMax,
                     LogError( ( "Protocol Error: Topic Alias greater than Topic Alias Max" ) );
                     status = MQTTBadParameter;
                 }
+
                 break;
+
             case MQTT_USER_PROPERTY_ID:
-                status = decodeAndDiscard(&propertyLength, &pLocalIndex); 
-                break ; 
+                status = decodeAndDiscard( &propertyLength, &pLocalIndex );
+                break;
+
             default:
-                status = MQTTBadParameter ; 
+                status = MQTTBadParameter;
                 break;
         }
 
@@ -4459,21 +4588,23 @@ MQTTStatus_t MQTT_ValidatePublishProperties( uint16_t serverTopicAliasMax,
 /*-----------------------------------------------------------*/
 
 MQTTStatus_t MQTT_ValidateSubscribeProperties( uint8_t isSubscriptionIdAvailable,
-                                               const MqttPropBuilder_t * propBuilder )
+                                               const MQTTPropBuilder_t * propBuilder )
 {
     MQTTStatus_t status = MQTTSuccess;
-    size_t propertyLength ;
-    uint8_t * pLocalIndex ;
+    size_t propertyLength;
+    uint8_t * pLocalIndex;
     bool subscriptionId = false;
-    if( ( propBuilder == NULL ) || ( propBuilder->pBuffer == NULL) )
+
+    if( ( propBuilder == NULL ) || ( propBuilder->pBuffer == NULL ) )
     {
-        status = MQTTBadParameter ; 
+        status = MQTTBadParameter;
     }
     else
     {
         propertyLength = propBuilder->currentIndex;
         pLocalIndex = propBuilder->pBuffer;
     }
+
     while( ( propertyLength > 0U ) && ( status == MQTTSuccess ) )
     {
         uint8_t propertyId = *pLocalIndex;
@@ -4492,11 +4623,13 @@ MQTTStatus_t MQTT_ValidateSubscribeProperties( uint8_t isSubscriptionIdAvailable
                 }
 
                 break;
+
             case MQTT_USER_PROPERTY_ID:
-                status = decodeAndDiscard(&propertyLength, &pLocalIndex); 
-                break ; 
+                status = decodeAndDiscard( &propertyLength, &pLocalIndex );
+                break;
+
             default:
-                status = MQTTBadParameter ; 
+                status = MQTTBadParameter;
                 break;
         }
 
@@ -4511,8 +4644,9 @@ MQTTStatus_t MQTT_ValidateSubscribeProperties( uint8_t isSubscriptionIdAvailable
 
 /*-----------------------------------------------------------*/
 
-static MQTTStatus_t deserializeSubackProperties( MqttPropBuilder_t * propBuffer,
-                                                 uint8_t * pIndex )
+static MQTTStatus_t deserializeSubackProperties( MQTTPropBuilder_t * propBuffer,
+                                                 uint8_t * pIndex,
+                                                 size_t * pSubackPropertyLength )
 {
     MQTTStatus_t status = MQTTSuccess;
     size_t propertyLength = 0U;
@@ -4522,8 +4656,15 @@ static MQTTStatus_t deserializeSubackProperties( MqttPropBuilder_t * propBuffer,
     bool reasonString = false;
 
     status = decodeVariableLength( pLocalIndex, &propertyLength );
+    *pSubackPropertyLength = propertyLength;
 
-    if( status == MQTTSuccess )
+    if( ( propBuffer == NULL ) && ( propertyLength != 0 ) )
+    {
+        status = MQTTNoMemory;
+        LogError( ( "Publish Property buffer is NULL but property length is non-zero." ) );
+    }
+
+    if( ( status == MQTTSuccess ) && ( propBuffer != NULL ) )
     {
         pLocalIndex = &pLocalIndex[ variableLengthEncodedSize( propertyLength ) ];
         /**Validate remaining Length */
@@ -4568,7 +4709,7 @@ MQTTStatus_t MQTT_DeserializePublishAck( const MQTTPacketInfo_t * pIncomingPacke
                                          MQTTReasonCodeInfo_t * pReasonCode,
                                          bool requestProblem,
                                          uint32_t maxPacketSize,
-                                         MqttPropBuilder_t * propBuffer )
+                                         MQTTPropBuilder_t * propBuffer )
 {
     MQTTStatus_t status = MQTTSuccess;
 
@@ -4749,7 +4890,7 @@ uint8_t * MQTT_SerializeDisconnectFixed( uint8_t * pIndex,
 MQTTStatus_t MQTT_DeserializeDisconnect( const MQTTPacketInfo_t * pPacket,
                                          uint32_t maxPacketSize,
                                          MQTTReasonCodeInfo_t * pDisconnectInfo,
-                                         MqttPropBuilder_t * propBuffer )
+                                         MQTTPropBuilder_t * propBuffer )
 {
     MQTTStatus_t status = MQTTSuccess;
     uint8_t * pIndex = NULL;
@@ -4799,19 +4940,23 @@ MQTTStatus_t MQTT_DeserializeDisconnect( const MQTTPacketInfo_t * pPacket,
             /*Extract the property length.*/
             status = decodeVariableLength( pIndex, &propertyLength );
 
-            if( status == MQTTSuccess )
+            if( ( propBuffer == NULL ) && ( propertyLength != 0U ) )
+            {
+                status = MQTTNoMemory;
+                LogError( ( "Publish Property buffer is NULL but property length is non-zero." ) );
+            }
+
+            if( ( status == MQTTSuccess ) && ( propBuffer != NULL ) )
             {
                 pIndex = &pIndex[ variableLengthEncodedSize( propertyLength ) ];
-
                 propBuffer->bufferLength = propertyLength;
-                /* coverity[misra_c_2012_rule_11_8_violation] */
                 propBuffer->pBuffer = pIndex;
+            }
 
-                /*Validate the remaining length.*/
-                if( pPacket->remainingLength != ( propertyLength + variableLengthEncodedSize( propertyLength ) + 1U ) )
-                {
-                    status = MQTTBadResponse;
-                }
+            /*Validate the remaining length.*/
+            if( pPacket->remainingLength != ( propertyLength + variableLengthEncodedSize( propertyLength ) + 1U ) )
+            {
+                status = MQTTBadResponse;
             }
         }
     }
@@ -4854,7 +4999,7 @@ MQTTStatus_t MQTT_DeserializeDisconnect( const MQTTPacketInfo_t * pPacket,
 
 /*-----------------------------------------------------------*/
 
-MQTTStatus_t MQTTPropAdd_SubscribeId( MqttPropBuilder_t * pPropertyBuilder,
+MQTTStatus_t MQTTPropAdd_SubscribeId( MQTTPropBuilder_t * pPropertyBuilder,
                                       size_t subscriptionId )
 {
     MQTTStatus_t status = MQTTSuccess;
@@ -4901,7 +5046,7 @@ MQTTStatus_t MQTTPropAdd_SubscribeId( MqttPropBuilder_t * pPropertyBuilder,
 }
 
 
-MQTTStatus_t MQTTPropAdd_UserProp( MqttPropBuilder_t * pPropertyBuilder,
+MQTTStatus_t MQTTPropAdd_UserProp( MQTTPropBuilder_t * pPropertyBuilder,
                                    const MQTTUserProperty_t * userProperty )
 {
     MQTTStatus_t status = MQTTSuccess;
@@ -4981,7 +5126,7 @@ MQTTStatus_t MQTT_UpdateDuplicatePublishFlag( uint8_t * pHeader,
 
 
 
-MQTTStatus_t MQTTPropAdd_SessionExpiry( MqttPropBuilder_t * pPropertyBuilder,
+MQTTStatus_t MQTTPropAdd_SessionExpiry( MQTTPropBuilder_t * pPropertyBuilder,
                                         uint32_t sessionExpiry )
 {
     uint8_t * pIndex;
@@ -5024,7 +5169,7 @@ MQTTStatus_t MQTTPropAdd_SessionExpiry( MqttPropBuilder_t * pPropertyBuilder,
     return status;
 }
 
-MQTTStatus_t MQTTPropAdd_ConnReceiveMax( MqttPropBuilder_t * pPropertyBuilder,
+MQTTStatus_t MQTTPropAdd_ConnReceiveMax( MQTTPropBuilder_t * pPropertyBuilder,
                                          uint16_t receiveMax )
 {
     MQTTStatus_t status = MQTTSuccess;
@@ -5064,7 +5209,7 @@ MQTTStatus_t MQTTPropAdd_ConnReceiveMax( MqttPropBuilder_t * pPropertyBuilder,
     return status;
 }
 
-MQTTStatus_t MQTTPropAdd_ConnMaxPacketSize( MqttPropBuilder_t * pPropertyBuilder,
+MQTTStatus_t MQTTPropAdd_ConnMaxPacketSize( MQTTPropBuilder_t * pPropertyBuilder,
                                             uint32_t maxPacketSize )
 {
     MQTTStatus_t status = MQTTSuccess;
@@ -5107,7 +5252,7 @@ MQTTStatus_t MQTTPropAdd_ConnMaxPacketSize( MqttPropBuilder_t * pPropertyBuilder
     return status;
 }
 
-MQTTStatus_t MQTTPropAdd_ConnTopicAliasMax( MqttPropBuilder_t * pPropertyBuilder,
+MQTTStatus_t MQTTPropAdd_ConnTopicAliasMax( MQTTPropBuilder_t * pPropertyBuilder,
                                             uint16_t topicAliasMax )
 {
     uint8_t * pIndex;
@@ -5148,7 +5293,7 @@ MQTTStatus_t MQTTPropAdd_ConnTopicAliasMax( MqttPropBuilder_t * pPropertyBuilder
     return status;
 }
 
-MQTTStatus_t MQTTPropAdd_ConnRequestRespInfo( MqttPropBuilder_t * pPropertyBuilder,
+MQTTStatus_t MQTTPropAdd_ConnRequestRespInfo( MQTTPropBuilder_t * pPropertyBuilder,
                                               bool requestResponseInfo )
 {
     uint8_t * pIndex;
@@ -5188,7 +5333,7 @@ MQTTStatus_t MQTTPropAdd_ConnRequestRespInfo( MqttPropBuilder_t * pPropertyBuild
     return status;
 }
 
-MQTTStatus_t MQTTPropAdd_ConnRequestProbInfo( MqttPropBuilder_t * pPropertyBuilder,
+MQTTStatus_t MQTTPropAdd_ConnRequestProbInfo( MQTTPropBuilder_t * pPropertyBuilder,
                                               bool requestProblemInfo )
 {
     uint8_t * pIndex;
@@ -5228,7 +5373,7 @@ MQTTStatus_t MQTTPropAdd_ConnRequestProbInfo( MqttPropBuilder_t * pPropertyBuild
     return status;
 }
 
-MQTTStatus_t MQTTPropAdd_ConnAuthMethod( MqttPropBuilder_t * pPropertyBuilder,
+MQTTStatus_t MQTTPropAdd_ConnAuthMethod( MQTTPropBuilder_t * pPropertyBuilder,
                                          const char * authMethod,
                                          uint16_t authMethodLength )
 {
@@ -5271,7 +5416,7 @@ MQTTStatus_t MQTTPropAdd_ConnAuthMethod( MqttPropBuilder_t * pPropertyBuilder,
 }
 
 
-MQTTStatus_t MQTTPropAdd_ConnAuthData( MqttPropBuilder_t * pPropertyBuilder,
+MQTTStatus_t MQTTPropAdd_ConnAuthData( MQTTPropBuilder_t * pPropertyBuilder,
                                        const char * authData,
                                        uint16_t authDataLength )
 {
@@ -5313,7 +5458,7 @@ MQTTStatus_t MQTTPropAdd_ConnAuthData( MqttPropBuilder_t * pPropertyBuilder,
     return status;
 }
 
-MQTTStatus_t MQTTPropAdd_PubPayloadFormat( MqttPropBuilder_t * pPropertyBuilder,
+MQTTStatus_t MQTTPropAdd_PubPayloadFormat( MQTTPropBuilder_t * pPropertyBuilder,
                                            bool payloadFormat )
 {
     uint8_t * pIndex;
@@ -5353,7 +5498,7 @@ MQTTStatus_t MQTTPropAdd_PubPayloadFormat( MqttPropBuilder_t * pPropertyBuilder,
     return status;
 }
 
-MQTTStatus_t MQTTPropAdd_PubMessageExpiry( MqttPropBuilder_t * pPropertyBuilder,
+MQTTStatus_t MQTTPropAdd_PubMessageExpiry( MQTTPropBuilder_t * pPropertyBuilder,
                                            uint32_t messageExpiry )
 {
     uint8_t * pIndex;
@@ -5396,7 +5541,7 @@ MQTTStatus_t MQTTPropAdd_PubMessageExpiry( MqttPropBuilder_t * pPropertyBuilder,
     return status;
 }
 
-MQTTStatus_t MQTTPropAdd_PubTopicAlias( MqttPropBuilder_t * pPropertyBuilder,
+MQTTStatus_t MQTTPropAdd_PubTopicAlias( MQTTPropBuilder_t * pPropertyBuilder,
                                         uint16_t topicAlias )
 {
     uint8_t * pIndex;
@@ -5442,7 +5587,7 @@ MQTTStatus_t MQTTPropAdd_PubTopicAlias( MqttPropBuilder_t * pPropertyBuilder,
     return status;
 }
 
-MQTTStatus_t MQTTPropAdd_PubResponseTopic( MqttPropBuilder_t * pPropertyBuilder,
+MQTTStatus_t MQTTPropAdd_PubResponseTopic( MQTTPropBuilder_t * pPropertyBuilder,
                                            const char * responseTopic,
                                            uint16_t responseTopicLength )
 {
@@ -5499,7 +5644,7 @@ MQTTStatus_t MQTTPropAdd_PubResponseTopic( MqttPropBuilder_t * pPropertyBuilder,
     return status;
 }
 
-MQTTStatus_t MQTTPropAdd_PubCorrelationData( MqttPropBuilder_t * pPropertyBuilder,
+MQTTStatus_t MQTTPropAdd_PubCorrelationData( MQTTPropBuilder_t * pPropertyBuilder,
                                              const void * pCorrelationData,
                                              uint16_t correlationLength )
 {
@@ -5551,7 +5696,7 @@ MQTTStatus_t MQTTPropAdd_PubCorrelationData( MqttPropBuilder_t * pPropertyBuilde
     return status;
 }
 
-MQTTStatus_t MQTTPropAdd_PubContentType( MqttPropBuilder_t * pPropertyBuilder,
+MQTTStatus_t MQTTPropAdd_PubContentType( MQTTPropBuilder_t * pPropertyBuilder,
                                          const char * contentType,
                                          uint16_t contentTypeLength )
 {
@@ -5603,7 +5748,7 @@ MQTTStatus_t MQTTPropAdd_PubContentType( MqttPropBuilder_t * pPropertyBuilder,
     return status;
 }
 
-MQTTStatus_t MQTTPropAdd_ReasonString( MqttPropBuilder_t * pPropertyBuilder,
+MQTTStatus_t MQTTPropAdd_ReasonString( MQTTPropBuilder_t * pPropertyBuilder,
                                        const char * pReasonString,
                                        uint16_t reasonStringLength )
 {
@@ -5656,7 +5801,7 @@ MQTTStatus_t MQTTPropAdd_ReasonString( MqttPropBuilder_t * pPropertyBuilder,
 }
 
 
-MQTTStatus_t MQTTPropGet_PubTopicAlias( MqttPropBuilder_t * propBuffer,
+MQTTStatus_t MQTTPropGet_PubTopicAlias( MQTTPropBuilder_t * propBuffer,
                                         uint16_t * topicAlias )
 {
     MQTTStatus_t status = MQTTSuccess;
@@ -5696,7 +5841,7 @@ MQTTStatus_t MQTTPropGet_PubTopicAlias( MqttPropBuilder_t * propBuffer,
     return status;
 }
 
-MQTTStatus_t MQTTPropGet_PubPayloadFormatIndicator( MqttPropBuilder_t * propBuffer,
+MQTTStatus_t MQTTPropGet_PubPayloadFormatIndicator( MQTTPropBuilder_t * propBuffer,
                                                     uint8_t * payloadFormat )
 {
     MQTTStatus_t status = MQTTSuccess;
@@ -5736,7 +5881,7 @@ MQTTStatus_t MQTTPropGet_PubPayloadFormatIndicator( MqttPropBuilder_t * propBuff
     return status;
 }
 
-MQTTStatus_t MQTTPropGet_PubResponseTopic( MqttPropBuilder_t * propBuffer,
+MQTTStatus_t MQTTPropGet_PubResponseTopic( MQTTPropBuilder_t * propBuffer,
                                            const char ** responseTopic,
                                            uint16_t * responseTopicLength )
 {
@@ -5777,7 +5922,7 @@ MQTTStatus_t MQTTPropGet_PubResponseTopic( MqttPropBuilder_t * propBuffer,
     return status;
 }
 
-MQTTStatus_t MQTTPropGet_PubCorrelationData( MqttPropBuilder_t * propBuffer,
+MQTTStatus_t MQTTPropGet_PubCorrelationData( MQTTPropBuilder_t * propBuffer,
                                              const void ** correlationData,
                                              uint16_t * correlationLength )
 {
@@ -5818,7 +5963,7 @@ MQTTStatus_t MQTTPropGet_PubCorrelationData( MqttPropBuilder_t * propBuffer,
     return status;
 }
 
-MQTTStatus_t MQTTPropGet_PubMessageExpiryInterval( MqttPropBuilder_t * propBuffer,
+MQTTStatus_t MQTTPropGet_PubMessageExpiryInterval( MQTTPropBuilder_t * propBuffer,
                                                    uint32_t * msgExpiryInterval )
 {
     MQTTStatus_t status = MQTTSuccess;
@@ -5858,7 +6003,7 @@ MQTTStatus_t MQTTPropGet_PubMessageExpiryInterval( MqttPropBuilder_t * propBuffe
     return status;
 }
 
-MQTTStatus_t MQTTPropGet_PubContentType( MqttPropBuilder_t * propBuffer,
+MQTTStatus_t MQTTPropGet_PubContentType( MQTTPropBuilder_t * propBuffer,
                                          const char ** pContentType,
                                          uint16_t * contentTypeLength )
 {
@@ -5899,7 +6044,7 @@ MQTTStatus_t MQTTPropGet_PubContentType( MqttPropBuilder_t * propBuffer,
     return status;
 }
 
-MQTTStatus_t MQTTPropGet_PubSubscriptionId( MqttPropBuilder_t * propBuffer,
+MQTTStatus_t MQTTPropGet_PubSubscriptionId( MQTTPropBuilder_t * propBuffer,
                                             size_t * subscriptionId )
 {
     MQTTStatus_t status = MQTTSuccess;
@@ -5938,7 +6083,7 @@ MQTTStatus_t MQTTPropGet_PubSubscriptionId( MqttPropBuilder_t * propBuffer,
     return status;
 }
 
-MQTTStatus_t MQTTPropGet_SessionExpiry( MqttPropBuilder_t * propBuffer,
+MQTTStatus_t MQTTPropGet_SessionExpiry( MQTTPropBuilder_t * propBuffer,
                                         uint32_t * sessionExpiry )
 {
     MQTTStatus_t status = MQTTSuccess;
@@ -5978,7 +6123,7 @@ MQTTStatus_t MQTTPropGet_SessionExpiry( MqttPropBuilder_t * propBuffer,
     return status;
 }
 
-MQTTStatus_t MQTTPropGet_ConnTopicAliasMax( MqttPropBuilder_t * propBuffer,
+MQTTStatus_t MQTTPropGet_ConnTopicAliasMax( MQTTPropBuilder_t * propBuffer,
                                             uint16_t * topicAliasMax )
 {
     MQTTStatus_t status = MQTTSuccess;
@@ -6018,7 +6163,7 @@ MQTTStatus_t MQTTPropGet_ConnTopicAliasMax( MqttPropBuilder_t * propBuffer,
     return status;
 }
 
-MQTTStatus_t MQTTPropGet_ConnReceiveMax( MqttPropBuilder_t * propBuffer,
+MQTTStatus_t MQTTPropGet_ConnReceiveMax( MQTTPropBuilder_t * propBuffer,
                                          uint16_t * receiveMax )
 {
     MQTTStatus_t status = MQTTSuccess;
@@ -6058,7 +6203,7 @@ MQTTStatus_t MQTTPropGet_ConnReceiveMax( MqttPropBuilder_t * propBuffer,
     return status;
 }
 
-MQTTStatus_t MQTTPropGet_ConnMaxQos( MqttPropBuilder_t * propBuffer,
+MQTTStatus_t MQTTPropGet_ConnMaxQos( MQTTPropBuilder_t * propBuffer,
                                      uint8_t * maxQos )
 {
     MQTTStatus_t status = MQTTSuccess;
@@ -6098,7 +6243,7 @@ MQTTStatus_t MQTTPropGet_ConnMaxQos( MqttPropBuilder_t * propBuffer,
     return status;
 }
 
-MQTTStatus_t MQTTPropGet_ConnRetainAvailable( MqttPropBuilder_t * propBuffer,
+MQTTStatus_t MQTTPropGet_ConnRetainAvailable( MQTTPropBuilder_t * propBuffer,
                                               uint8_t * retainAvailable )
 {
     MQTTStatus_t status = MQTTSuccess;
@@ -6138,7 +6283,7 @@ MQTTStatus_t MQTTPropGet_ConnRetainAvailable( MqttPropBuilder_t * propBuffer,
     return status;
 }
 
-MQTTStatus_t MQTTPropGet_ConnMaxPacketSize( MqttPropBuilder_t * propBuffer,
+MQTTStatus_t MQTTPropGet_ConnMaxPacketSize( MQTTPropBuilder_t * propBuffer,
                                             uint32_t * maxPacketSize )
 {
     MQTTStatus_t status = MQTTSuccess;
@@ -6178,7 +6323,7 @@ MQTTStatus_t MQTTPropGet_ConnMaxPacketSize( MqttPropBuilder_t * propBuffer,
     return status;
 }
 
-MQTTStatus_t MQTTPropGet_ConnClientId( MqttPropBuilder_t * propBuffer,
+MQTTStatus_t MQTTPropGet_ConnClientId( MQTTPropBuilder_t * propBuffer,
                                        const char ** pClientId,
                                        uint16_t * clientIdLength )
 {
@@ -6219,7 +6364,7 @@ MQTTStatus_t MQTTPropGet_ConnClientId( MqttPropBuilder_t * propBuffer,
     return status;
 }
 
-MQTTStatus_t MQTTPropGet_ConnWildcard( MqttPropBuilder_t * propBuffer,
+MQTTStatus_t MQTTPropGet_ConnWildcard( MQTTPropBuilder_t * propBuffer,
                                        uint8_t * isWildCardAvailable )
 {
     MQTTStatus_t status = MQTTSuccess;
@@ -6259,7 +6404,7 @@ MQTTStatus_t MQTTPropGet_ConnWildcard( MqttPropBuilder_t * propBuffer,
     return status;
 }
 
-MQTTStatus_t MQTTPropGet_ConnSubId( MqttPropBuilder_t * propBuffer,
+MQTTStatus_t MQTTPropGet_ConnSubId( MQTTPropBuilder_t * propBuffer,
                                     uint8_t * isSubIdAvailable )
 {
     MQTTStatus_t status = MQTTSuccess;
@@ -6300,7 +6445,7 @@ MQTTStatus_t MQTTPropGet_ConnSubId( MqttPropBuilder_t * propBuffer,
 }
 
 
-MQTTStatus_t MQTTPropGet_UserProp( MqttPropBuilder_t * propBuffer,
+MQTTStatus_t MQTTPropGet_UserProp( MQTTPropBuilder_t * propBuffer,
                                    const char ** pUserPropKey,
                                    uint16_t * pUserPropKeyLen,
                                    const char ** pUserPropVal,
@@ -6350,7 +6495,7 @@ MQTTStatus_t MQTTPropGet_UserProp( MqttPropBuilder_t * propBuffer,
 }
 
 
-MQTTStatus_t MQTTPropGet_ReasonString( MqttPropBuilder_t * propBuffer,
+MQTTStatus_t MQTTPropGet_ReasonString( MQTTPropBuilder_t * propBuffer,
                                        const char ** pReasonString,
                                        uint16_t * reasonStringLength )
 {
@@ -6391,7 +6536,7 @@ MQTTStatus_t MQTTPropGet_ReasonString( MqttPropBuilder_t * propBuffer,
     return status;
 }
 
-MQTTStatus_t MQTTPropGet_ServerRef( MqttPropBuilder_t * propBuffer,
+MQTTStatus_t MQTTPropGet_ServerRef( MQTTPropBuilder_t * propBuffer,
                                     const char ** pServerRef,
                                     uint16_t * serverRefLength )
 {
@@ -6432,7 +6577,7 @@ MQTTStatus_t MQTTPropGet_ServerRef( MqttPropBuilder_t * propBuffer,
     return status;
 }
 
-MQTTStatus_t MQTTPropGet_ConnSharedSubAvailable( MqttPropBuilder_t * propBuffer,
+MQTTStatus_t MQTTPropGet_ConnSharedSubAvailable( MQTTPropBuilder_t * propBuffer,
                                                  uint8_t * isSharedSubAvailable )
 {
     MQTTStatus_t status = MQTTSuccess;
@@ -6472,7 +6617,7 @@ MQTTStatus_t MQTTPropGet_ConnSharedSubAvailable( MqttPropBuilder_t * propBuffer,
     return status;
 }
 
-MQTTStatus_t MQTTPropGet_ConnServerKeepAlive( MqttPropBuilder_t * propBuffer,
+MQTTStatus_t MQTTPropGet_ConnServerKeepAlive( MQTTPropBuilder_t * propBuffer,
                                               uint16_t * serverKeepAlive )
 {
     MQTTStatus_t status = MQTTSuccess;
@@ -6512,7 +6657,7 @@ MQTTStatus_t MQTTPropGet_ConnServerKeepAlive( MqttPropBuilder_t * propBuffer,
     return status;
 }
 
-MQTTStatus_t MQTTPropGet_ConnResponseInfo( MqttPropBuilder_t * propBuffer,
+MQTTStatus_t MQTTPropGet_ConnResponseInfo( MQTTPropBuilder_t * propBuffer,
                                            const char ** pResponseInfo,
                                            uint16_t * responseInfoLength )
 {
@@ -6553,7 +6698,7 @@ MQTTStatus_t MQTTPropGet_ConnResponseInfo( MqttPropBuilder_t * propBuffer,
     return status;
 }
 
-MQTTStatus_t MQTTPropGet_ConnAuthMethod( MqttPropBuilder_t * propBuffer,
+MQTTStatus_t MQTTPropGet_ConnAuthMethod( MQTTPropBuilder_t * propBuffer,
                                          const char ** pAuthMethod,
                                          uint16_t * authMethodLength )
 {
@@ -6594,7 +6739,7 @@ MQTTStatus_t MQTTPropGet_ConnAuthMethod( MqttPropBuilder_t * propBuffer,
     return status;
 }
 
-MQTTStatus_t MQTTPropGet_ConnAuthData( MqttPropBuilder_t * propBuffer,
+MQTTStatus_t MQTTPropGet_ConnAuthData( MQTTPropBuilder_t * propBuffer,
                                        const char ** pAuthData,
                                        uint16_t * authDataLength )
 {
@@ -6635,7 +6780,7 @@ MQTTStatus_t MQTTPropGet_ConnAuthData( MqttPropBuilder_t * propBuffer,
     return status;
 }
 
-MQTTStatus_t MQTT_IncomingGetNextProp( MqttPropBuilder_t * propBuffer,
+MQTTStatus_t MQTT_IncomingGetNextProp( MQTTPropBuilder_t * propBuffer,
                                        uint8_t * propertyId )
 {
     MQTTStatus_t status = MQTTSuccess;
