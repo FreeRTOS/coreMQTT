@@ -714,7 +714,7 @@ static MQTTStatus_t validateDisconnectResponse( uint8_t reasonCode,
  */
 static MQTTStatus_t deserializeSubackProperties( MQTTPropBuilder_t * propBuffer,
                                                  uint8_t * pIndex,
-                                                 size_t pSubackPropertyLength );
+                                                 size_t * pSubackPropertyLength );
 
 /**
  * @brief Deserialize properties in the PUBLISH packet received from the server.
@@ -804,7 +804,6 @@ static MQTTStatus_t readSubackStatus( size_t statusCount,
  * @param[out] pProperty To store the decoded string.
  * @param[out] pLength  Size of the decoded binary string.
  * @param[out] pPropertyLength  Size of the length.
- * @param[out] pUsed Whether the property is decoded before.
  * @param[out]  pIndex Pointer to the current index of the buffer.
  *
  * @return #MQTTSuccess, #MQTTBadResponse
@@ -812,7 +811,6 @@ static MQTTStatus_t readSubackStatus( size_t statusCount,
 static MQTTStatus_t decodeBinaryData( const void ** pProperty,
                                       uint16_t * pLength,
                                       size_t * pPropertyLength,
-                                      bool * pUsed,
                                       uint8_t ** pIndex );
 
 /**
@@ -1791,7 +1789,7 @@ MQTTStatus_t MQTT_DeserializeSuback( MQTTReasonCodeInfo_t * subackReasonCodes,
 
     if( ( status == MQTTSuccess ) && ( incomingPacket->remainingLength > 4U ) )
     {
-        status = deserializeSubackProperties( propBuffer, pIndex, propertyLength );
+        status = deserializeSubackProperties( propBuffer, pIndex, &propertyLength );
     }
 
     if( status == MQTTSuccess )
@@ -3659,21 +3657,14 @@ static MQTTStatus_t decodeutf_8( const char ** pProperty,
 static MQTTStatus_t decodeBinaryData( const void ** pProperty,
                                       uint16_t * pLength,
                                       size_t * pPropertyLength,
-                                      bool * pUsed,
                                       uint8_t ** pIndex )
 {
     uint8_t * pVariableHeader = *pIndex;
     MQTTStatus_t status = MQTTSuccess;
 
-    /*Protocol error to include the same property twice.*/
-
-    if( *pUsed == true )
-    {
-        status = MQTTBadResponse;
-    }
     /*Validate the length and decode.*/
 
-    else if( *pPropertyLength < sizeof( uint16_t ) )
+    if( *pPropertyLength < sizeof( uint16_t ) )
     {
         status = MQTTBadResponse;
     }
@@ -3692,7 +3683,6 @@ static MQTTStatus_t decodeBinaryData( const void ** pProperty,
             *pProperty = pVariableHeader;
             pVariableHeader = &pVariableHeader[ *pLength ];
             *pPropertyLength -= *pLength;
-            *pUsed = true;
         }
     }
 
@@ -3728,9 +3718,17 @@ static MQTTStatus_t deserializeConnack( MQTTConnectProperties_t * pConnackProper
     bool reasonString = false;
 
     pVariableHeader = &pVariableHeader[ variableLengthEncodedSize( propertyLength ) ];
+    if( (propBuffer == NULL) && (propertyLength != 0))
+    {
+        status = MQTTNoMemory ; 
+        LogError( ( "Publish Property buffer is NULL but property length is non-zero." ) );
+    }
 
-    propBuffer->pBuffer = pVariableHeader;
-    propBuffer->bufferLength = propertyLength;
+    if( (status == MQTTSuccess) && ( propBuffer != NULL ))
+    {
+        propBuffer->pBuffer = pVariableHeader;
+        propBuffer->bufferLength = propertyLength;
+    }
 
     /*Decode all the properties received, validate and store them in pConnackProperties.*/
     while( ( propertyLength > 0U ) && ( status == MQTTSuccess ) )
@@ -4202,7 +4200,7 @@ static MQTTStatus_t deserializePublishProperties( MQTTPublishInfo_t * pPublishIn
                     break;
 
                 case MQTT_SUBSCRIPTION_ID_ID:
-                    status = decodeVariableLength( pLocalIndex, subscriptionId );
+                    status = decodeVariableLength( pLocalIndex, &subscriptionId );
 
                     if( status == MQTTSuccess )
                     {
@@ -4237,7 +4235,6 @@ static MQTTStatus_t deserializePublish( const MQTTPacketInfo_t * pIncomingPacket
     uint8_t * pVariableHeader = NULL;
     const uint8_t * pPacketIdentifierHigh = NULL;
     uint8_t * pIndex = NULL;
-    size_t propertyLength = 0;
 
     assert( pIncomingPacket != NULL );
     assert( pPacketId != NULL );
@@ -5927,7 +5924,6 @@ MQTTStatus_t MQTTPropGet_PubCorrelationData( MQTTPropBuilder_t * propBuffer,
                                              uint16_t * correlationLength )
 {
     MQTTStatus_t status = MQTTSuccess;
-    bool propFlag = false;
 
     if( ( propBuffer == NULL ) )
     {
@@ -5948,7 +5944,7 @@ MQTTStatus_t MQTTPropGet_PubCorrelationData( MQTTPropBuilder_t * propBuffer,
     {
         uint8_t * startOfProp = &propBuffer->pBuffer[ propBuffer->currentIndex ];
         size_t propertyLength = propBuffer->bufferLength - propBuffer->currentIndex;
-        status = decodeBinaryData( correlationData, correlationLength, &propertyLength, &propFlag, &startOfProp );
+        status = decodeBinaryData( correlationData, correlationLength, &propertyLength, &startOfProp );
 
         if( status == MQTTSuccess )
         {

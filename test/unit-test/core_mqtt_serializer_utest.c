@@ -2754,6 +2754,15 @@ void test_MQTTV5_suback( void )
     packetBuffer[ 11 ] = 0x00;
     status = MQTT_DeserializeSuback( &subackReasonCodes, &subackPacket, &packetIdentifier, &propBuffer, MQTT_MAX_PACKET_SIZE );
     TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
+
+    status = MQTT_DeserializeSuback(NULL, &subackPacket, &packetIdentifier, &propBuffer, MQTT_MAX_PACKET_SIZE );
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+
+    status = MQTT_DeserializeSuback( &subackReasonCodes, NULL , &packetIdentifier, &propBuffer, MQTT_MAX_PACKET_SIZE );
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+
+    status = MQTT_DeserializeSuback( &subackReasonCodes, &subackPacket, NULL , &propBuffer, MQTT_MAX_PACKET_SIZE );
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
 }
 
 void test_MQTTV5_GetUnsubscribePacketSize_Path( void )
@@ -2926,6 +2935,25 @@ void test_incoming_publish1V5( void )
     pIndex = serializeutf_8( pIndex, MQTT_CORRELATION_DATA_ID );
     status = MQTT_DeserializePublish( &mqttPacketInfo, &packetIdentifier, &publishIn, &propBuffer, 100 );
     TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
+
+    pIndex = &buffer[ 6 ];
+    pIndex = serializeuint_8( pIndex, MQTT_PAYLOAD_FORMAT_ID );
+    pIndex = serializeuint_8( pIndex, MQTT_PAYLOAD_FORMAT_ID );
+    status = MQTT_DeserializePublish( &mqttPacketInfo, &packetIdentifier, &publishIn, &propBuffer, 100 );
+    TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
+
+    pIndex = &buffer[ 6 ];
+    pIndex = serializeuint_16( pIndex, MQTT_TOPIC_ALIAS_ID );
+    pIndex = serializeuint_16( pIndex, MQTT_TOPIC_ALIAS_ID );
+    status = MQTT_DeserializePublish( &mqttPacketInfo, &packetIdentifier, &publishIn, &propBuffer, 100 );
+    TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
+
+    pIndex = &buffer[ 6 ];
+    pIndex = serializeuint_32( pIndex, MQTT_MSG_EXPIRY_ID );
+    pIndex = serializeuint_32( pIndex, MQTT_MSG_EXPIRY_ID );
+    status = MQTT_DeserializePublish( &mqttPacketInfo, &packetIdentifier, &publishIn, &propBuffer, 100 );
+    TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
+
 }
 
 void test_incoming_publish_withPacketId( void )
