@@ -2217,6 +2217,11 @@ void test_MQTTV5_DeserializeDisconnect()
     status = MQTT_DeserializeDisconnect( &packetInfo, maxPacketSize, &disconnectInfo, &propBuffer );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
 
+
+
+    status = MQTT_DeserializeDisconnect( &packetInfo, maxPacketSize, &disconnectInfo, NULL );
+    TEST_ASSERT_EQUAL_INT( MQTTNoMemory, status );
+
     buffer[ 0 ] = MQTT_REASON_DISCONNECT_DISCONNECT_WITH_WILL_MESSAGE;
     status = MQTT_DeserializeDisconnect( &packetInfo, maxPacketSize, &disconnectInfo, &propBuffer );
     TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
@@ -2243,6 +2248,15 @@ void test_MQTTV5_DeserializeDisconnect()
     buffer[ 2 ] = 0x00;
     status = MQTT_DeserializeDisconnect( &packetInfo, maxPacketSize, &disconnectInfo, &propBuffer );
     TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
+
+    buffer[ 0 ] = MQTT_REASON_DISCONNECT_NORMAL_DISCONNECTION;
+    pIndex = &buffer[ 1 ];
+    packetInfo.remainingLength = 2;
+    dummy = encodeRemainingLength( pIndex, 0 );
+    status = MQTT_DeserializeDisconnect( &packetInfo, maxPacketSize, &disconnectInfo, NULL );
+    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
+
+
 }
 
 void test_MQTT_GetIncomingPacketTypeAndLength( void )
@@ -2819,6 +2833,15 @@ void test_MQTTV5_DeserializeSuback( void )
 
     status = MQTT_DeserializeSuback( &subackReasonCodes, &mqttPacketInfo, &packetIdentifier, &propBuffer, MQTT_MAX_PACKET_SIZE );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
+
+    buffer[2] = 11 ; 
+    status = MQTT_DeserializeSuback( &subackReasonCodes, &mqttPacketInfo, &packetIdentifier, NULL, MQTT_MAX_PACKET_SIZE );
+    TEST_ASSERT_EQUAL_INT( MQTTNoMemory, status );
+
+    buffer[2] = 0 ; 
+    status = MQTT_DeserializeSuback( &subackReasonCodes, &mqttPacketInfo, &packetIdentifier, NULL , MQTT_MAX_PACKET_SIZE );
+    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
+
 
     buffer[ 13 ] = 0xA4;
     status = MQTT_DeserializeSuback( &subackReasonCodes, &mqttPacketInfo, &packetIdentifier, &propBuffer, MQTT_MAX_PACKET_SIZE );
@@ -4803,4 +4826,50 @@ void test_ValidatePublishProperties( void )
     pIndex = serializeuint_32( pIndex, MQTT_MSG_EXPIRY_ID );
     status = MQTT_ValidatePublishProperties( serverTopicAliasMax, &propBuilder, &topicAlias );
     TEST_ASSERT_EQUAL( MQTTBadResponse, status );
+}
+
+void test_ValidateDisconnectProperties( void )
+{
+    MQTTStatus_t status = MQTTSuccess ; 
+    
+    status = MQTT_ValidateDisconnectProperties(0, NULL); 
+    TEST_ASSERT_EQUAL( MQTTSuccess , status ); 
+
+    MQTTPropBuilder_t propBuffer ; 
+    propBuffer.pBuffer = NULL ; 
+    status = MQTT_ValidateDisconnectProperties(0, &propBuffer); 
+    TEST_ASSERT_EQUAL( MQTTSuccess , status ); 
+
+    uint8_t buf[50] ; 
+    propBuffer.pBuffer = buf ;
+    propBuffer.currentIndex = 25 ;
+
+    uint8_t * pIndex = buf ; 
+    pIndex = serializeuint_32(pIndex, MQTT_SESSION_EXPIRY_ID); 
+    pIndex = serializeutf_8(pIndex, MQTT_REASON_STRING_ID); 
+    pIndex = serializeutf_8pair(pIndex); 
+    pIndex = serializeuint_16(pIndex , MQTT_TOPIC_ALIAS_ID) ; 
+ 
+    status = MQTT_ValidateDisconnectProperties(10, &propBuffer); 
+    TEST_ASSERT_EQUAL( MQTTSuccess , status );
+    
+    status = MQTT_ValidateDisconnectProperties(0, &propBuffer); 
+    TEST_ASSERT_EQUAL( MQTTBadParameter , status );
+
+    propBuffer.currentIndex = 28; 
+    status = MQTT_ValidateDisconnectProperties(10, &propBuffer); 
+    TEST_ASSERT_EQUAL( MQTTBadParameter , status );
+
+    propBuffer.currentIndex = 2 ; 
+    status = MQTT_ValidateDisconnectProperties(10, &propBuffer); 
+    TEST_ASSERT_EQUAL( MQTTBadResponse , status );
+
+    buf[0] = MQTT_SESSION_EXPIRY_ID ; 
+    buf[1] = 0 , buf[2] = 0 , buf[3] = 0 , buf[4] = 0 ;
+    propBuffer.currentIndex = 5 ; 
+    status = MQTT_ValidateDisconnectProperties(0, &propBuffer); 
+    TEST_ASSERT_EQUAL( MQTTSuccess , status );
+
+
+    
 }

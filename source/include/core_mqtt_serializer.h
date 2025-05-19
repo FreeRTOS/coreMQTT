@@ -2701,6 +2701,46 @@ MQTTStatus_t MQTT_ValidateSubscribeProperties(uint8_t isSubscriptionIdAvailable,
 /* @[declare_mqtt_validatesubscribeproperties] */
 
 /**
+ * @brief Validates the properties specified for an MQTT DISCONNECT packet.
+ *
+ * @param[in] connectSessionExpiry The session expiry interval that was specified
+ *                                in the CONNECT packet. Used to validate that the
+ *                                DISCONNECT session expiry is not non-zero while 
+ *                                connectSessionExpiry is zero.
+ * @param[in] pPropertyBuilder Pointer to the property builder structure containing subscribe properties.
+ * 
+ * @return Returns one of the following:
+ * - #MQTTSuccess , #MQTTBadParameter or #MQTTBadResponse. 
+ */
+/* @[declare_mqtt_validatedisconnectproperties] */
+MQTTStatus_t MQTT_ValidateDisconnectProperties( uint32_t connectSessionExpiry, const MQTTPropBuilder_t * pPropertyBuilder); 
+/* @[declare_mqtt_validatedisconnectproperties] */
+
+/**
+ * @brief Validates the properties specified for an MQTT DISCONNECT packet.
+ *
+ * @param[in] pPropertyBuilder Pointer to the property builder structure containing will properties.
+ * 
+ * @return Returns one of the following:
+ * - #MQTTSuccess , #MQTTBadParameter or #MQTTBadResponse. 
+ */
+/* @[declare_mqtt_validatewillproperties] */
+MQTTStatus_t MQTT_ValidateWillProperties( const MQTTPropBuilder_t * pPropertyBuilder);
+/* @[declare_mqtt_validatewillproperties] */
+
+/**
+ * @brief Validates the properties specified for an MQTT DISCONNECT packet.
+ * 
+ * @param[in] pPropertyBuilder Pointer to the property builder structure containing unsubscribe properties.
+ * 
+ * @return Returns one of the following:
+ * - #MQTTSuccess , #MQTTBadParameter or #MQTTBadResponse. 
+ */
+/* @[declare_mqtt_validateunsubscribeproperties] */
+MQTTStatus_t MQTT_ValidateUnsubscribeProperties( const MQTTPropBuilder_t * pPropertyBuilder); 
+/* @[declare_mqtt_validateunsubscribeproperties] */
+
+/**
  * @brief Gets the Topic Alias property from the MQTT property builder.
  *
  * This function retrieves the Topic Alias property from the property builder.

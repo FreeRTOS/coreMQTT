@@ -2148,6 +2148,7 @@ void test_MQTT_Connect_error_path()
     connectInfo.passwordLength = 4;
     connectInfo.pPassword = "1234";
     mqttContext.transportInterface.send = transportSendSuccess;
+    MQTT_ValidateWillProperties_ExpectAnyArgsAndReturn( MQTTSuccess ); 
     MQTT_GetConnectPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_SerializeConnectFixedHeader_Stub( MQTT_SerializeConnectFixedHeader_cb );
     updateContextWithConnectProps_ExpectAnyArgsAndReturn( MQTTSuccess );
@@ -4083,6 +4084,7 @@ void test_MQTT_Disconnect_already_disconnected( void )
     /* Send failure with network error. */
     MQTT_GetDisconnectPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_GetDisconnectPacketSize_ReturnThruPtr_pPacketSize( &disconnectSize );
+    MQTT_ValidateDisconnectProperties_ExpectAnyArgsAndReturn( MQTTSuccess ); 
     status = MQTT_Disconnect( &mqttContext, NULL, MQTT_REASON_DISCONNECT_NORMAL_DISCONNECTION );
     TEST_ASSERT_EQUAL( MQTTStatusNotConnected, status );
 }
@@ -4119,6 +4121,7 @@ void test_MQTTV5_Disconnect()
     MQTT_PropertyBuilder_Init( &( propBuilder ), buf, bufLength );
 
     MQTT_GetDisconnectPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_ValidateDisconnectProperties_ExpectAnyArgsAndReturn( MQTTSuccess ); 
     MQTT_SerializeDisconnectFixed_Stub( MQTTV5_SerializeDisconnectFixed_cb );
     status = MQTT_Disconnect( &context, &propBuilder, 0 );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
@@ -4128,6 +4131,7 @@ void test_MQTTV5_Disconnect()
     context.transportInterface.send = transportSendFailure;
     context.transportInterface.writev = NULL;
     MQTT_GetDisconnectPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_ValidateDisconnectProperties_ExpectAnyArgsAndReturn( MQTTSuccess ); 
     MQTT_SerializeDisconnectFixed_Stub( MQTTV5_SerializeDisconnectFixed_cb );
     status = MQTT_Disconnect( &context, NULL, 0 );
     TEST_ASSERT_EQUAL_INT( MQTTSendFailed, status );
@@ -4162,6 +4166,7 @@ void test_MQTT_Disconnect2( void )
     /* Send failure with network error. */
     MQTT_GetDisconnectPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_GetDisconnectPacketSize_ReturnThruPtr_pPacketSize( &disconnectSize );
+    MQTT_ValidateDisconnectProperties_ExpectAnyArgsAndReturn( MQTTSuccess ); 
     MQTT_SerializeDisconnectFixed_Stub( MQTTV5_SerializeDisconnectFixed_cb );
     status = MQTT_Disconnect( &mqttContext, NULL, 0x00 );
     TEST_ASSERT_EQUAL( MQTTSendFailed, status );
@@ -4196,6 +4201,7 @@ void test_MQTT_Disconnect3( void )
 
     /* Send failure with timeout in calling transport send. */
     MQTT_GetDisconnectPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_ValidateDisconnectProperties_ExpectAnyArgsAndReturn( MQTTSuccess ); 
     MQTT_SerializeDisconnectFixed_Stub( MQTTV5_SerializeDisconnectFixed_cb );
     status = MQTT_Disconnect( &mqttContext, NULL, 0x00 );
     TEST_ASSERT_EQUAL( MQTTSendFailed, status );
@@ -4234,6 +4240,7 @@ void test_MQTT_Disconnect4( void )
     mqttContext.transportInterface.send = mockSend;
     MQTT_GetDisconnectPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_GetDisconnectPacketSize_ReturnThruPtr_pPacketSize( &disconnectSize );
+    MQTT_ValidateDisconnectProperties_ExpectAnyArgsAndReturn( MQTTSuccess ); 
     MQTT_SerializeDisconnectFixed_Stub( MQTTV5_SerializeDisconnectFixed_cb ); /* Write a disconnect packet into the buffer. */
     mqttBuffer[ 0 ] = MQTT_PACKET_TYPE_DISCONNECT;
 
@@ -4283,6 +4290,7 @@ void test_MQTT_Disconnect4_status_disconnect_pending( void )
     mqttContext.transportInterface.send = mockSend;
     MQTT_GetDisconnectPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_GetDisconnectPacketSize_ReturnThruPtr_pPacketSize( &disconnectSize );
+    MQTT_ValidateDisconnectProperties_ExpectAnyArgsAndReturn( MQTTSuccess ); 
     MQTT_SerializeDisconnectFixed_Stub( MQTTV5_SerializeDisconnectFixed_cb );
     /* Write a disconnect packet into the buffer. */
     mqttBuffer[ 0 ] = MQTT_PACKET_TYPE_DISCONNECT;
@@ -7224,6 +7232,7 @@ void test_MQTT_Unsubscribe_happy_path( void )
     context.connectStatus = MQTTConnected;
     /* Verify MQTTSuccess is returned with the following mocks. */
     MQTT_SerializeUnsubscribeHeader_Stub( MQTTV5_SerializeUnsubscribeHeader_cb );
+    MQTT_ValidateUnsubscribeProperties_ExpectAnyArgsAndReturn( MQTTSuccess ) ; 
     MQTT_GetUnsubscribePacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_GetUnsubscribePacketSize_ReturnThruPtr_pPacketSize( &packetSize );
     MQTT_GetUnsubscribePacketSize_ReturnThruPtr_pRemainingLength( &remainingLength );

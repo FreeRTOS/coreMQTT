@@ -1875,7 +1875,6 @@ static MQTTStatus_t handleIncomingAck( MQTTContext_t * pContext,
             /* Deserialize and give these to the app provided callback. */
             status = handleSuback( pContext, pIncomingPacket );
             break;
-
         default:
             /* Bad response from the server. */
             LogError( ( "Unexpected packet type from server: PacketType=%02x.",
@@ -3230,6 +3229,11 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
 
     incomingPacket.type = ( uint8_t ) 0;
 
+    if( ( pWillInfo != NULL ) && ( pWillPropertyBuilder != NULL ) )
+    {
+        status = MQTT_ValidateWillProperties(pWillPropertyBuilder) ; 
+    }
+
     if( ( pContext == NULL ) || ( pConnectInfo == NULL ) || ( pSessionPresent == NULL ) )
     {
         LogError( ( "Argument cannot be NULL: pContext=%p, "
@@ -3662,6 +3666,10 @@ MQTTStatus_t MQTT_Unsubscribe( MQTTContext_t * pContext,
     size_t remainingLength = 0UL, packetSize = 0UL;
     MQTTStatus_t status;
 
+    if(pPropertyBuilder != NULL && (pPropertyBuilder->pBuffer != NULL ))
+    {
+        status = MQTT_ValidateUnsubscribeProperties(pPropertyBuilder) ; 
+    }
     /* Validate arguments. */
     status = validateSubscribeUnsubscribeParams( pContext,
                                                  pSubscriptionList,
@@ -3736,6 +3744,11 @@ MQTTStatus_t MQTT_Disconnect( MQTTContext_t * pContext,
         status = MQTT_GetDisconnectPacketSize( pPropertyBuilder, &remainingLength, &packetSize, pContext->connectProperties.serverMaxPacketSize, reasonCode );
         LogDebug( ( "MQTT DISCONNECT packet size is %lu.",
                     ( unsigned long ) packetSize ) );
+    }
+
+    if( status == MQTTSuccess )
+    {
+        status = MQTT_ValidateDisconnectProperties( pContext->connectProperties.sessionExpiry, pPropertyBuilder ); 
     }
 
     if( status == MQTTSuccess )

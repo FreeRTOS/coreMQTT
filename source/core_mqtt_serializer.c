@@ -6807,3 +6807,135 @@ MQTTStatus_t MQTT_IncomingGetNextProp( MQTTPropBuilder_t * propBuffer,
 
     return status;
 }
+
+MQTTStatus_t MQTT_ValidateDisconnectProperties( uint32_t connectSessionExpiry, const MQTTPropBuilder_t * pPropertyBuilder)
+{
+    MQTTStatus_t status = MQTTSuccess; 
+    size_t propertyLength = 0; 
+    uint8_t * pIndex = NULL; 
+    uint32_t sessionExpiry ;  
+
+
+    if ((pPropertyBuilder != NULL) && (pPropertyBuilder->pBuffer != NULL))
+    {
+        propertyLength = pPropertyBuilder->currentIndex; 
+        pIndex = pPropertyBuilder->pBuffer; 
+    }
+
+    while ((propertyLength > 0) && (status == MQTTSuccess))
+    {
+        uint8_t propertyId = *pIndex; 
+        bool used = false ;
+        pIndex = &pIndex[1]; 
+        propertyLength -= sizeof(uint8_t); 
+
+        switch (propertyId) 
+        {
+        case MQTT_SESSION_EXPIRY_ID:
+            status = decodeuint32_t(&sessionExpiry, &propertyLength, &used, &pIndex);
+
+            if(status == MQTTSuccess)
+            {
+                if( (connectSessionExpiry == 0) && (sessionExpiry!=0))
+                {
+                    status = MQTTBadParameter ; 
+                    LogError(("Disconnect Session Expiry non-zero while Connect Session Expiry was zero. ")); 
+                }
+            }
+            break;
+        case MQTT_REASON_STRING_ID:
+            status = decodeAndDiscardutf_8(&propertyLength, &used, &pIndex); 
+            break; 
+        case MQTT_USER_PROPERTY_ID:
+            status = decodeAndDiscard(&propertyLength, &pIndex); 
+            break; 
+        default :
+            status = MQTTBadParameter; 
+            break; 
+
+        }
+    }
+    return status; 
+}
+
+MQTTStatus_t MQTT_ValidateUnsubscribeProperties( const MQTTPropBuilder_t * pPropertyBuilder)
+{
+    MQTTStatus_t status = MQTTSuccess; 
+    size_t propertyLength = 0; 
+    uint8_t * pIndex = NULL; 
+
+
+    if ((pPropertyBuilder != NULL) && (pPropertyBuilder->pBuffer != NULL))
+    {
+        propertyLength = pPropertyBuilder->currentIndex; 
+        pIndex = pPropertyBuilder->pBuffer; 
+    }
+
+    while ((propertyLength > 0) && (status == MQTTSuccess))
+    {
+        uint8_t propertyId = *pIndex; 
+        pIndex = &pIndex[1]; 
+        propertyLength -= sizeof(uint8_t); 
+
+        switch (propertyId) 
+        {
+        case MQTT_USER_PROPERTY_ID:
+            status = decodeAndDiscard(&propertyLength, &pIndex); 
+            break; 
+        default :
+            status = MQTTBadParameter; 
+            break; 
+
+        }
+    }
+    return status; 
+}
+
+MQTTStatus_t MQTT_ValidateWillProperties( const MQTTPropBuilder_t * pPropertyBuilder)
+{
+    MQTTStatus_t status = MQTTSuccess; 
+    size_t propertyLength = 0; 
+    uint8_t * pIndex = NULL; 
+
+
+    if ((pPropertyBuilder != NULL) && (pPropertyBuilder->pBuffer != NULL))
+    {
+        propertyLength = pPropertyBuilder->currentIndex; 
+        pIndex = pPropertyBuilder->pBuffer; 
+    }
+
+    while ((propertyLength > 0) && (status == MQTTSuccess))
+    {
+        uint8_t propertyId = *pIndex; 
+        bool used = false ;
+        pIndex = &pIndex[1]; 
+        propertyLength -= sizeof(uint8_t); 
+
+        switch (propertyId) 
+        {
+        case MQTT_WILL_DELAY_ID :
+            status = decodeAndDiscard_uint32(&propertyLength, &used, &pIndex) ; 
+            break ; 
+        case MQTT_PAYLOAD_FORMAT_ID:
+            status = decodeAndDiscard_uint8(&propertyLength , &used, &pIndex ); 
+            break ; 
+        case MQTT_MSG_EXPIRY_ID:
+            status = decodeAndDiscard_uint32( &propertyLength, &used, &pIndex );
+            break;
+        case MQTT_CONTENT_TYPE_ID:
+        case MQTT_RESPONSE_TOPIC_ID:
+        case MQTT_CORRELATION_DATA_ID:
+            status = decodeAndDiscardutf_8( &propertyLength , &used, &pIndex ) ;
+            break ; 
+        case MQTT_USER_PROPERTY_ID:
+            status = decodeAndDiscard(&propertyLength, &pIndex); 
+            break; 
+        default :
+            status = MQTTBadParameter; 
+            break; 
+
+        }
+    }
+    return status; 
+}
+
