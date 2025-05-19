@@ -61,31 +61,14 @@
 #define MQTT_PUBLISH_FLAG_QOS2             ( 2 )          /**< @brief MQTT PUBLISH QoS2 flag. */
 #define MQTT_PUBLISH_FLAG_DUP              ( 3 )          /**< @brief MQTT PUBLISH duplicate flag. */
 
-
-
 /**
- * @brief Size of the fixed header of a PUBLISH packet.
- */
-
-/**
- * @brief The size of MQTT DISCONNECT packets, per MQTT spec.
- */
-#define MQTT_DISCONNECT_PACKET_SIZE                 ( 2UL )
-
-/**
- * @brief A PINGREQ packet is always 2 bytes in size, defined by MQTT 3.1.1 spec.
+ * @brief A PINGREQ packet is always 2 bytes in size, defined by MQTT 5.0 spec.
  */
 #define MQTT_PACKET_PINGREQ_SIZE                    ( 2UL )
 
-/**
- * @brief The Remaining Length field of MQTT disconnect packets, per MQTT spec.
- */
-#define MQTT_DISCONNECT_REMAINING_LENGTH            ( ( uint8_t ) 0 )
-
 /*
- * Constants relating to CONNACK packets, defined by MQTT 3.1.1 spec.
+ * Constants relating to CONNACK packets, defined by MQTT 5.0 spec.
  */
-#define MQTT_PACKET_CONNACK_REMAINING_LENGTH        ( ( uint8_t ) 2U )    /**< @brief A CONNACK packet always has a "Remaining length" of 2. */
 #define MQTT_PACKET_CONNACK_SESSION_PRESENT_MASK    ( ( uint8_t ) 0x01U ) /**< @brief The "Session Present" bit is always the lowest bit. */
 
 /*
@@ -96,7 +79,7 @@
 #define MQTT_PACKET_PINGRESP_REMAINING_LENGTH       ( 0U )            /**< @brief A PINGRESP packet always has a "Remaining length" of 0. */
 
 /**
- * @brief Per the MQTT 3.1.1 spec, the largest "Remaining Length" of an MQTT
+ * @brief Per the MQTT 5.0 spec, the largest "Remaining Length" of an MQTT
  * packet is this value, 256 MB.
  */
 #define MQTT_MAX_REMAINING_LENGTH                   ( 268435455UL )
