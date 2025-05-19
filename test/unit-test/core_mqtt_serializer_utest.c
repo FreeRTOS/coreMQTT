@@ -2930,18 +2930,18 @@ void test_incoming_publish1V5( void )
     MQTTPublishInfo_t publishIn;
     ( void ) memset( &publishIn, 0x0, sizeof( publishIn ) );
 
-    status = MQTT_DeserializePublish( &mqttPacketInfo, &packetIdentifier, &publishIn, &propBuffer, 100 );
+    status = MQTT_DeserializePublish( &mqttPacketInfo, &packetIdentifier, &publishIn, &propBuffer, 100 , 100);
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
 
     buffer[ 8 ] = 100;
     mqttPacketInfo.remainingLength = 47;
-    status = MQTT_DeserializePublish( &mqttPacketInfo, &packetIdentifier, &publishIn, &propBuffer, 100 );
+    status = MQTT_DeserializePublish( &mqttPacketInfo, &packetIdentifier, &publishIn, &propBuffer, 100, 100 );
     TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
 
     mqttPacketInfo.type = ( MQTT_PACKET_TYPE_PUBLISH | 0x04 );
     mqttPacketInfo.remainingLength = 8;
     buffer[ 5 ] = 0x00, buffer[ 6 ] = 0x01, buffer[ 7 ] = 0x00;
-    status = MQTT_DeserializePublish( &mqttPacketInfo, &packetIdentifier, &publishInfo, &propBuffer, 100 );
+    status = MQTT_DeserializePublish( &mqttPacketInfo, &packetIdentifier, &publishInfo, &propBuffer, 100, 100 );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
 
     buffer[ 5 ] = 12;
@@ -2950,31 +2950,31 @@ void test_incoming_publish1V5( void )
     mqttPacketInfo.type = MQTT_PACKET_TYPE_PUBLISH;
     pIndex = serializeutf_8( pIndex, MQTT_RESPONSE_TOPIC_ID );
     pIndex = serializeutf_8( pIndex, MQTT_RESPONSE_TOPIC_ID );
-    status = MQTT_DeserializePublish( &mqttPacketInfo, &packetIdentifier, &publishIn, &propBuffer, 100 );
+    status = MQTT_DeserializePublish( &mqttPacketInfo, &packetIdentifier, &publishIn, &propBuffer, 100 , 100);
     TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
 
     pIndex = &buffer[ 6 ];
     pIndex = serializeutf_8( pIndex, MQTT_CORRELATION_DATA_ID );
     pIndex = serializeutf_8( pIndex, MQTT_CORRELATION_DATA_ID );
-    status = MQTT_DeserializePublish( &mqttPacketInfo, &packetIdentifier, &publishIn, &propBuffer, 100 );
+    status = MQTT_DeserializePublish( &mqttPacketInfo, &packetIdentifier, &publishIn, &propBuffer, 100, 100 );
     TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
 
     pIndex = &buffer[ 6 ];
     pIndex = serializeuint_8( pIndex, MQTT_PAYLOAD_FORMAT_ID );
     pIndex = serializeuint_8( pIndex, MQTT_PAYLOAD_FORMAT_ID );
-    status = MQTT_DeserializePublish( &mqttPacketInfo, &packetIdentifier, &publishIn, &propBuffer, 100 );
+    status = MQTT_DeserializePublish( &mqttPacketInfo, &packetIdentifier, &publishIn, &propBuffer, 100, 100 );
     TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
 
     pIndex = &buffer[ 6 ];
     pIndex = serializeuint_16( pIndex, MQTT_TOPIC_ALIAS_ID );
     pIndex = serializeuint_16( pIndex, MQTT_TOPIC_ALIAS_ID );
-    status = MQTT_DeserializePublish( &mqttPacketInfo, &packetIdentifier, &publishIn, &propBuffer, 100 );
+    status = MQTT_DeserializePublish( &mqttPacketInfo, &packetIdentifier, &publishIn, &propBuffer, 100 , 100);
     TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
 
     pIndex = &buffer[ 6 ];
     pIndex = serializeuint_32( pIndex, MQTT_MSG_EXPIRY_ID );
     pIndex = serializeuint_32( pIndex, MQTT_MSG_EXPIRY_ID );
-    status = MQTT_DeserializePublish( &mqttPacketInfo, &packetIdentifier, &publishIn, &propBuffer, 100 );
+    status = MQTT_DeserializePublish( &mqttPacketInfo, &packetIdentifier, &publishIn, &propBuffer, 100, 100 );
     TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
 
 }
@@ -3003,11 +3003,11 @@ void test_incoming_publish_withPacketId( void )
     MQTTPublishInfo_t publishIn;
     ( void ) memset( &publishIn, 0x0, sizeof( publishIn ) );
 
-    status = MQTT_DeserializePublish( &mqttPacketInfo, &packetIdentifier, &publishIn, &propBuffer, 100 );
+    status = MQTT_DeserializePublish( &mqttPacketInfo, &packetIdentifier, &publishIn, &propBuffer, 100, 100 );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
 
     buffer[ 6 ] = 0x00;
-    status = MQTT_DeserializePublish( &mqttPacketInfo, &packetIdentifier, &publishIn, &propBuffer, 100 );
+    status = MQTT_DeserializePublish( &mqttPacketInfo, &packetIdentifier, &publishIn, &propBuffer, 100, 100 );
     TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
 }
 
@@ -3030,11 +3030,11 @@ void test_Invalid_IncomingPublish( void )
 
     MQTTPublishInfo_t publishIn;
     ( void ) memset( &publishIn, 0x0, sizeof( publishIn ) );
-    status = MQTT_DeserializePublish( &mqttPacketInfo, &packetIdentifier, &publishIn, &propBuffer, 100 );
+    status = MQTT_DeserializePublish( &mqttPacketInfo, &packetIdentifier, &publishIn, &propBuffer, 100, 100 );
     TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
 
     mqttPacketInfo.type = MQTT_PACKET_TYPE_PUBLISH | 0x02;
-    status = MQTT_DeserializePublish( &mqttPacketInfo, &packetIdentifier, &publishIn, &propBuffer, 100 );
+    status = MQTT_DeserializePublish( &mqttPacketInfo, &packetIdentifier, &publishIn, &propBuffer, 100, 100 );
     TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
 }
 
@@ -3893,38 +3893,38 @@ void test_MQTT_DeserializePublish( void )
     memset( &mqttPacketInfo, 0x00, sizeof( mqttPacketInfo ) );
 
     /* Verify parameters. */
-    status = MQTT_DeserializePublish( NULL, &packetIdentifier, &publishInfo, &propBuffer, 100 );
+    status = MQTT_DeserializePublish( NULL, &packetIdentifier, &publishInfo, &propBuffer, 100, 100 );
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
-    status = MQTT_DeserializePublish( &mqttPacketInfo, NULL, &publishInfo, &propBuffer, 100 );
+    status = MQTT_DeserializePublish( &mqttPacketInfo, NULL, &publishInfo, &propBuffer, 100 , 100);
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
-    status = MQTT_DeserializePublish( &mqttPacketInfo, &packetIdentifier, NULL, &propBuffer, 100 );
+    status = MQTT_DeserializePublish( &mqttPacketInfo, &packetIdentifier, NULL, &propBuffer, 100, 100 );
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
 
     mqttPacketInfo.type = MQTT_PACKET_TYPE_PUBLISH;
-    status = MQTT_DeserializePublish( &mqttPacketInfo, &packetIdentifier, &publishInfo, &propBuffer, 100 );
+    status = MQTT_DeserializePublish( &mqttPacketInfo, &packetIdentifier, &publishInfo, &propBuffer, 100, 100 );
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
 
     /* Bad Packet Type. */
     mqttPacketInfo.type = 0x01;
     mqttPacketInfo.pRemainingData = buffer;
-    status = MQTT_DeserializePublish( &mqttPacketInfo, &packetIdentifier, &publishInfo, &propBuffer, 100 );
+    status = MQTT_DeserializePublish( &mqttPacketInfo, &packetIdentifier, &publishInfo, &propBuffer, 100, 100 );
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
 
     /* Incorrect flags. */
     mqttPacketInfo.type = MQTT_PACKET_TYPE_PUBLISH | 0xf;
-    status = MQTT_DeserializePublish( &mqttPacketInfo, &packetIdentifier, &publishInfo, &propBuffer, 100 );
+    status = MQTT_DeserializePublish( &mqttPacketInfo, &packetIdentifier, &publishInfo, &propBuffer, 100, 100 );
     TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
 
     /* QoS 0 bad remaining length. */
     mqttPacketInfo.type = MQTT_PACKET_TYPE_PUBLISH;
     mqttPacketInfo.remainingLength = 0;
-    status = MQTT_DeserializePublish( &mqttPacketInfo, &packetIdentifier, &publishInfo, &propBuffer, 100 );
+    status = MQTT_DeserializePublish( &mqttPacketInfo, &packetIdentifier, &publishInfo, &propBuffer, 100, 100 );
     TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
 
     /* QoS 1 bad remaining length. */
     mqttPacketInfo.type = MQTT_PACKET_TYPE_PUBLISH | 0x2;
     mqttPacketInfo.remainingLength = 0;
-    status = MQTT_DeserializePublish( &mqttPacketInfo, &packetIdentifier, &publishInfo, &propBuffer, 100 );
+    status = MQTT_DeserializePublish( &mqttPacketInfo, &packetIdentifier, &publishInfo, &propBuffer, 100, 100 );
     TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
 
     /* QoS 1 invalid packet identifier. */
@@ -3934,11 +3934,11 @@ void test_MQTT_DeserializePublish( void )
     buffer[ 2 ] = ( uint8_t ) 'a';
     buffer[ 3 ] = 0;
     buffer[ 4 ] = 0;
-    status = MQTT_DeserializePublish( &mqttPacketInfo, &packetIdentifier, &publishInfo, &propBuffer, 100 );
+    status = MQTT_DeserializePublish( &mqttPacketInfo, &packetIdentifier, &publishInfo, &propBuffer, 100, 100 );
     TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
 
     /*Invalid max packet size*/
-    status = MQTT_DeserializePublish( &mqttPacketInfo, &packetIdentifier, &publishInfo, &propBuffer, 1 );
+    status = MQTT_DeserializePublish( &mqttPacketInfo, &packetIdentifier, &publishInfo, &propBuffer, 1, 100 );
     TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
 }
 void test_serializeHeaders( void )

@@ -1402,6 +1402,7 @@ MQTTStatus_t MQTT_SerializePingreq( const MQTTFixedBuffer_t * pFixedBuffer );
  * MQTTPropBuilder_t propBuffer ;
  * uint32_t maxPacketSize;
  * uint16_t packetId;
+ * uint16_t topicAliasMax ; 
  *
  * int32_t bytesRecvd;
  * // A buffer to hold remaining data of the incoming packet.
@@ -1425,7 +1426,7 @@ MQTTStatus_t MQTT_SerializePingreq( const MQTTFixedBuffer_t * pFixedBuffer );
  * // Deserialize the publish information if the incoming packet is a publish.
  * if( ( incomingPacket.type & 0xF0 ) == MQTT_PACKET_TYPE_PUBLISH )
  * {
- *      status = MQTT_DeserializePublish( &incomingPacket, &packetId, &publishInfo, &propBuffer, maxPacketSize );
+ *      status = MQTT_DeserializePublish( &incomingPacket, &packetId, &publishInfo, &propBuffer, maxPacketSize, topicAliasMax );
  *      if( status == MQTTSuccess )
  *      {
  *          // The deserialized publish information can now be used from `publishInfo`.
@@ -1438,7 +1439,8 @@ MQTTStatus_t MQTT_DeserializePublish( const MQTTPacketInfo_t* pIncomingPacket,
                                       uint16_t* pPacketId,
                                       MQTTPublishInfo_t* pPublishInfo,
                                       MQTTPropBuilder_t* propBuffer,
-                                      uint32_t maxPacketSize );
+                                      uint32_t maxPacketSize,
+                                      uint16_t topicAliasMax );
 /* @[declare_mqtt_deserializepublish] */
 
 /**

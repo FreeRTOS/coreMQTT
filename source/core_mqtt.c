@@ -1592,7 +1592,7 @@ static MQTTStatus_t handleIncomingPublish( MQTTContext_t * pContext,
 
     ( void ) memset( &publishInfo, 0x0, sizeof( publishInfo ) );
 
-    status = MQTT_DeserializePublish( pIncomingPacket, &packetIdentifier, &publishInfo, &propBuffer, pContext->connectProperties.maxPacketSize );
+    status = MQTT_DeserializePublish( pIncomingPacket, &packetIdentifier, &publishInfo, &propBuffer, pContext->connectProperties.maxPacketSize, pContext->connectProperties.topicAliasMax );
     LogInfo( ( "De-serialized incoming PUBLISH packet: DeserializerResult=%s.",
                MQTT_Status_strerror( status ) ) );
 
@@ -3371,16 +3371,15 @@ MQTTStatus_t MQTT_Subscribe( MQTTContext_t * pContext,
     size_t remainingLength = 0UL, packetSize = 0UL;
     MQTTStatus_t status;
 
+    if( ( pPropertyBuilder != NULL ) && ( pPropertyBuilder->pBuffer != NULL ) )
+    {
+        status = MQTT_ValidateSubscribeProperties( pContext->connectProperties.isSubscriptionIdAvailable, pPropertyBuilder );
+    }
     status = validateSubscribeUnsubscribeParams( pContext,
                                                  pSubscriptionList,
                                                  subscriptionCount,
                                                  packetId,
                                                  MQTT_TYPE_SUBSCRIBE );
-
-    if( ( status == MQTTSuccess ) && ( pPropertyBuilder != NULL ) )
-    {
-        status = MQTT_ValidateSubscribeProperties( pContext->connectProperties.isSubscriptionIdAvailable, pPropertyBuilder );
-    }
 
     if( status == MQTTSuccess )
     {
@@ -3451,14 +3450,14 @@ MQTTStatus_t MQTT_Publish( MQTTContext_t * pContext,
      * an extra call to 'send' (in case writev is not defined) to send the
      * topic length.    */
     uint8_t mqttHeader[ 7U ];
+    MQTTStatus_t status = MQTTSuccess ; 
 
-    /* Validate arguments. */
-    MQTTStatus_t status = validatePublishParams( pContext, pPublishInfo, packetId );
-
-    if( ( status == MQTTSuccess ) && ( pPropertyBuilder != NULL ) )
+    if( ( pPropertyBuilder != NULL ) && ( pPropertyBuilder->pBuffer != NULL ) )
     {
         status = MQTT_ValidatePublishProperties( pContext->connectProperties.serverTopicAliasMax, pPropertyBuilder, &topicAlias );
     }
+    /* Validate arguments. */
+    status = validatePublishParams( pContext, pPublishInfo, packetId );
 
     if( status == MQTTSuccess )
     {
