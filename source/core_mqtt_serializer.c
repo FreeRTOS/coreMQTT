@@ -56,7 +56,7 @@
 #define MQTT_PUBLISH_FLAG_DUP              ( 3 )          /**< @brief MQTT PUBLISH duplicate flag. */
 
 /**
- * @brief A PINGREQ packet is always 2 bytes in size, defined by MQTT 3.1.1 spec.
+ * @brief A PINGREQ packet is always 2 bytes in size, defined by MQTT 5.0 spec.
  */
 #define MQTT_PACKET_PINGREQ_SIZE                    ( 2UL )
 
