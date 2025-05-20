@@ -1644,7 +1644,7 @@ MQTTStatus_t MQTT_DeserializeSuback( MQTTReasonCodeInfo_t * subackReasonCodes,
                                      uint32_t maxPacketSize )
 {
     MQTTStatus_t status = MQTTSuccess;
-    uint8_t * pIndex;
+    uint8_t * pIndex = NULL;
     size_t remainingLength = 0U;
     size_t statusCount = 0U;
     const uint8_t * pStatusStart;
@@ -4377,7 +4377,7 @@ MQTTStatus_t MQTT_ValidatePublishProperties( uint16_t serverTopicAliasMax,
 {
     MQTTStatus_t status = MQTTSuccess;
     size_t propertyLength;
-    uint8_t * pLocalIndex;
+    uint8_t * pLocalIndex = NULL;
     bool topicAliasBool = false;
 
     if( ( propBuilder == NULL ) || ( propBuilder->pBuffer == NULL ) )
@@ -4447,7 +4447,7 @@ MQTTStatus_t MQTT_ValidateSubscribeProperties( uint8_t isSubscriptionIdAvailable
 {
     MQTTStatus_t status = MQTTSuccess;
     size_t propertyLength;
-    uint8_t * pLocalIndex;
+    uint8_t * pLocalIndex = NULL;
     size_t subscriptionId = 0 ; 
 
     if( ( propBuilder == NULL ) || ( propBuilder->pBuffer == NULL ) )
