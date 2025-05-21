@@ -706,7 +706,7 @@ MQTTStatus_t MQTT_CheckConnectStatus( const MQTTContext_t * pContext );
  * A zero timeout makes use of the retries for receiving CONNACK as configured with
  * #MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT.
  * @param[in] pPropertyBuilder Properties to be sent in the outgoing packet.
- * @param[in] pwillPropertyBuilder Will Properties to be sent in the outgoing packet.
+ * @param[in] pWillPropertyBuilder Will Properties to be sent in the outgoing packet.
  * @param[out] pSessionPresent This value will be set to true if a previous session
  * was present; otherwise it will be set to false. It is only relevant if not
  * establishing a clean session.
@@ -757,6 +757,7 @@ MQTTStatus_t MQTT_CheckConnectStatus( const MQTTContext_t * pContext );
  * - #MQTTPropAdd_ConnAuthData
  *
  * Will Properties:
+ * - #MQTTPropAdd_WillDelayInterval
  * - #MQTTPropAdd_PubPayloadFormat
  * - #MQTTPropAdd_PubMessageExpiry
  * - #MQTTPropAdd_PubResponseTopic

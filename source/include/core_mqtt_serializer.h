@@ -1380,6 +1380,7 @@ MQTTStatus_t MQTT_SerializePingreq( const MQTTFixedBuffer_t * pFixedBuffer );
  * @param[out] pPublishInfo Struct containing information about the publish.
  * @param[in] propBuffer Buffer to hold the properties.
  * @param[in] maxPacketSize Maximum packet size.
+ * @param[in] topicAliasMax Maximum topic alias specified in the CONNECT packet. 
  *
  * @return #MQTTBadParameter, #MQTTBadResponse, or #MQTTSuccess.
  *
@@ -2573,6 +2574,24 @@ MQTTStatus_t MQTTPropAdd_PubPayloadFormat(MQTTPropBuilder_t* pPropertyBuilder, b
 MQTTStatus_t MQTTPropAdd_PubMessageExpiry(MQTTPropBuilder_t* pPropertyBuilder, uint32_t messageExpiry);
 /* @[declare_mqttpropadd_pubmessageexpiry] */
 
+/**
+ * @brief Adds Will Delay Interval property to the MQTT property builder.
+ *
+ * This function adds Message Expiry Interval property to the property builder.
+ *
+ * @param[out] pPropertyBuilder   Pointer to the property builder structure.
+ * @param[in]  willDelayInterval  Will Delay Interval in seconds.
+ *
+ * @return Returns one of the following:
+ * - #MQTTSuccess if the Message Expiry Interval was successfully added
+ * - #MQTTBadParameter if an invalid parameter is passed
+ * - #MQTTNoMemory if the property builder has insufficient space
+ */
+/* @[declare_mqttpropadd_willdelayinterval] */
+MQTTStatus_t MQTTPropAdd_WillDelayInterval( MQTTPropBuilder_t * pPropertyBuilder,
+                                            uint32_t willDelayInterval );
+/* @[declare_mqttpropadd_willdelayinterval] */
+ 
 /**
  * @brief Adds Topic Alias property to the MQTT property builder.
  *

@@ -187,6 +187,11 @@
 #define MQTT_REASON_STRING_POS                      ( 18 )
 
 /**
+ * @brief Position for Will Delay Interval property
+ */
+#define MQTT_WILL_DELAY_POS                         ( 19 )
+
+/**
  * @brief A value that represents an invalid remaining length.
  *
  * This value is greater than what is allowed by the MQTT specification.
@@ -267,7 +272,25 @@ static MQTTStatus_t calculateSubscriptionPacketSize( const MQTTSubscribeInfo_t *
                                                      uint32_t maxPacketSize,
                                                      MQTTSubscriptionType_t subscriptionType );
 
-
+/**
+ * @brief Validates parameters of #MQTT_SerializeSubscribe or
+ * #MQTT_SerializeUnsubscribe.
+ *
+ * @param[in] pSubscriptionList List of MQTT subscription info.
+ * @param[in] subscriptionCount The number of elements in pSubscriptionList.
+ * @param[in] packetId Packet identifier.
+ * @param[in] remainingLength Remaining length of the packet.
+ * @param[in] pFixedBuffer Buffer for packet serialization.
+ *
+ * @return #MQTTNoMemory if pBuffer is too small to hold the MQTT packet;
+ * #MQTTBadParameter if invalid parameters are passed;
+ * #MQTTSuccess otherwise.
+ */
+static MQTTStatus_t validateSubscriptionSerializeParams( const MQTTSubscribeInfo_t * pSubscriptionList,
+                                                         size_t subscriptionCount,
+                                                         uint16_t packetId,
+                                                         size_t remainingLength,
+                                                         const MQTTFixedBuffer_t * pFixedBuffer );
 /**
  * @brief Serialize an MQTT CONNECT packet in the given buffer.
  *
@@ -3594,20 +3617,16 @@ static MQTTStatus_t deserializeConnack( MQTTConnectProperties_t * pConnackProper
     bool reasonString = false;
 
     pVariableHeader = &pVariableHeader[ variableLengthEncodedSize( propertyLength ) ];
-    if( (propBuffer == NULL) && (propertyLength != 0))
-    {
-        status = MQTTNoMemory ; 
-        LogError( ( "Publish Property buffer is NULL but property length is non-zero." ) );
-    }
 
-    if( (status == MQTTSuccess) && ( propBuffer != NULL ))
+    if( propBuffer != NULL )
     {
         propBuffer->pBuffer = pVariableHeader;
         propBuffer->bufferLength = propertyLength;
     }
 
     /*Decode all the properties received, validate and store them in pConnackProperties.*/
-    while( ( propertyLength > 0U ) && ( status == MQTTSuccess ) )
+
+    while( ( propertyLength > 0U ) && ( status == MQTTSuccess ) && ( propBuffer != NULL ) )
     {
         uint8_t propertyId = *pVariableHeader;
         pVariableHeader = &pVariableHeader[ 1 ];
@@ -3689,6 +3708,7 @@ static MQTTStatus_t deserializeConnack( MQTTConnectProperties_t * pConnackProper
                 break;
         }
     }
+
 
     if( status == MQTTSuccess )
     {
@@ -4034,15 +4054,6 @@ static MQTTStatus_t deserializePublishProperties( MQTTPublishInfo_t * pPublishIn
 
                 case MQTT_TOPIC_ALIAS_ID:
                     status = decodeuint16_t(&topicAliasVal,  &propertyLength, &topicAlias, &pLocalIndex );
-
-                    if(status == MQTTSuccess)
-                    {
-                        if(topicAliasMax < topicAliasVal)
-                        {
-                            status = MQTTBadParameter ; 
-                            LogError(("Topic Alias greater than Topic Alias Max. "));
-                        }
-                    }
                     break;
 
                 case MQTT_RESPONSE_TOPIC_ID:
@@ -4080,6 +4091,15 @@ static MQTTStatus_t deserializePublishProperties( MQTTPublishInfo_t * pPublishIn
                     status = MQTTBadResponse;
                     break;
             }
+        }
+    }
+
+    if( (status == MQTTSuccess ) && ( topicAlias == true ) )
+    {
+        if(topicAliasMax < topicAliasVal)
+        {
+            status = MQTTBadParameter ; 
+            LogError(("Topic Alias greater than Topic Alias Max. "));
         }
     }
 
@@ -4511,22 +4531,19 @@ static MQTTStatus_t deserializeSubackProperties( MQTTPropBuilder_t * propBuffer,
     status = decodeVariableLength( pLocalIndex, &propertyLength );
     *pSubackPropertyLength = propertyLength;
 
-    if( ( propBuffer == NULL ) && ( propertyLength != 0 ) )
-    {
-        status = MQTTNoMemory;
-        LogError( ( "Publish Property buffer is NULL but property length is non-zero." ) );
-    }
-
-    if( ( status == MQTTSuccess ) && ( propBuffer != NULL ) )
+    if( status == MQTTSuccess )
     {
         pLocalIndex = &pLocalIndex[ variableLengthEncodedSize( propertyLength ) ];
-        /**Validate remaining Length */
+    }
+
+    if( propBuffer != NULL )
+    {
         propBuffer->bufferLength = propertyLength;
         /* coverity[misra_c_2012_rule_11_8_violation] */
         propBuffer->pBuffer = pLocalIndex;
     }
 
-    if( status == MQTTSuccess )
+    if( (status == MQTTSuccess) && ( propBuffer != NULL ) )
     {
         while( ( propertyLength > 0U ) && ( status == MQTTSuccess ) )
         {
@@ -5415,6 +5432,49 @@ MQTTStatus_t MQTTPropAdd_PubMessageExpiry( MQTTPropBuilder_t * pPropertyBuilder,
 }
 
 /*-----------------------------------------------------------*/
+
+MQTTStatus_t MQTTPropAdd_WillDelayInterval( MQTTPropBuilder_t * pPropertyBuilder,
+                                           uint32_t willDelayInterval )
+{
+    uint8_t * pIndex;
+    MQTTStatus_t status = MQTTSuccess;
+
+    if( ( pPropertyBuilder == NULL ) )
+    {
+        LogError( ( "Arguments cannot be NULL : pPropertyBuilder=%p.", ( void * ) pPropertyBuilder ) );
+        status = MQTTBadParameter;
+    }
+    else if( pPropertyBuilder->pBuffer == NULL )
+    {
+        LogError( ( "Arguments cannot be NULL : pPropertyBuilder->pBuffer=%p.", ( void * ) pPropertyBuilder->pBuffer ) );
+        status = MQTTBadParameter;
+    }
+    else if( ( UINT32_CHECK_BIT( pPropertyBuilder->fieldSet, MQTT_WILL_DELAY_POS ) ) )
+    {
+        LogError( ( "Message Expiry Interval already set" ) );
+        status = MQTTBadParameter;
+    }
+    else if( ( pPropertyBuilder->currentIndex + sizeof( uint32_t ) + sizeof( uint8_t ) ) > pPropertyBuilder->bufferLength )
+    {
+        LogError( ( "Buffer too small to add property" ) );
+        status = MQTTNoMemory;
+    }
+    else
+    {
+        pIndex = &pPropertyBuilder->pBuffer[ pPropertyBuilder->currentIndex ];
+        *pIndex = MQTT_WILL_DELAY_ID;
+        pIndex++;
+        pIndex[ 0 ] = UINT32_GET_BYTE( willDelayInterval, 3 );
+        pIndex[ 1 ] = UINT32_GET_BYTE( willDelayInterval, 2 );
+        pIndex[ 2 ] = UINT32_GET_BYTE( willDelayInterval, 1 );
+        pIndex[ 3 ] = UINT32_GET_BYTE( willDelayInterval, 0 );
+        pIndex = &pIndex[ 4 ];
+        UINT32_SET_BIT( pPropertyBuilder->fieldSet, MQTT_WILL_DELAY_POS );
+        pPropertyBuilder->currentIndex += 5U;
+    }
+
+    return status;
+}
 
 MQTTStatus_t MQTTPropAdd_PubTopicAlias( MQTTPropBuilder_t * pPropertyBuilder,
                                         uint16_t topicAlias )

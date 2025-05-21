@@ -63,10 +63,15 @@ declared in @ref core_mqtt_serializer.h. If a user does not want to use the func
 these low-level functions can be used directly:
 
 - @ref mqtt_getconnectpacketsize_function <br>
+- @ref mqtt_serializeconnect_function <br>
 - @ref mqtt_getsubscribepacketsize_function <br>
+- @ref mqtt_serializesubscribe_function <br>
 - @ref mqtt_validatesubscribeproperties_function <br>
 - @ref mqtt_getunsubscribepacketsize_function <br>
+- @ref mqtt_serializeunsubscribe_function <br>
 - @ref mqtt_getpublishpacketsize_function <br>
+- @ref mqtt_serializepublish_function <br>
+- @ref mqtt_serializepublishheader_function <br>
 - @ref mqtt_serializepublishheaderwithouttopic_function <br>
 - @ref mqtt_validatepublishparams_function <br>
 - @ref mqtt_validatepublishproperties_function <br>
@@ -110,20 +115,20 @@ The exception is @ref mqtt_connect_function; since a MQTT session cannot be cons
 the function waits until the CONNACK is received.
 
 @subsection mqtt_receivetimeout Runtime Timeouts passed to MQTT library
-@ref mqtt_connect_function, @ref mqtt_processloop_function, and @ref mqtt_receiveloop_function all accept a timeout parameter for packet reception.<br>
+@ref mqtt_connect_function accepts a timeout parameter for packet reception.<br>
 For the @ref mqtt_connect_function, if this value is set to 0, then instead of a time-based loop, it will attempt to call the transport receive function up to a maximum number of retries,
 which is defined by @ref MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT.
 
-For @ref mqtt_processloop_function and @ref mqtt_receiveloop_function, the timeout value represents the <i>minimum</i> duration that will be spent in the function, provided there are no network errors.
-Should the timeout be set to 0, then the loop will run for a single iteration. A single iteration of a loop consists of an attempt to receive a single byte from the network, and
-if the single byte receive was successful, then attempt(s) to receive the rest of the packet (with retry attempts governed by @ref MQTT_RECV_POLLING_TIMEOUT_MS), followed by sending acknowledgement response, if needed
-(with retry attempts governed by @ref MQTT_SEND_TIMEOUT_MS), and then, finally deserialization of the packet received and a call to the application callback.
+For @ref mqtt_processloop_function and @ref mqtt_receiveloop_function, the timeout functionality is handled by the user application. It is up to the user to define the number of times these functions will be called, provided that there are no network errors. 
+A single call to the function consists of an attempt to receive all available bytes from the network, and if the read was successful, then attempt(s) to receive the rest of the packet (with retry attempts governed by @ref MQTT_RECV_POLLING_TIMEOUT_MS), followed by the deserialization of the received packet. 
+After this a call to application callback is invoked, followed by sending acknowledgement response, if needed
+(with retry attempts governed by @ref MQTT_SEND_TIMEOUT_MS).
 If the first read did not succeed, then instead the library checks if a ping request needs to be sent (only for the process loop).
 
 See the below diagrams for a representation of the above flows:
 | MQTT Connect Diagram | MQTT ProcessLoop Diagram | MQTT ReceiveLoop Diagram |
 | :--: | :--: | :--: |
-|<img src="mqtt_connect_design.png" alt="MQTT Connect" width=100% /> |<img src="mqtt_processloop_design.png" alt="MQTT Process Loop" width=100% /> |<img src="mqtt_receiveloop_design.png" alt="MQTT Receive Loop" width=100% /> |
+|<img src="CONNECT_V5(2).png" alt="MQTT Connect" width=100% /> |<img src="MQTT_ProcessLoopV5 (2).png" alt="MQTT Process Loop" width=100% /> |<img src="MQTT_ReceiveLoopV5.png" alt="MQTT Receive Loop" width=100% /> |
 
 @section mqtt_keepalive Keep-Alive
 
@@ -196,10 +201,15 @@ Some configuration settings are C pre-processor constants, and some are function
 
 Serializer functions of the MQTT library:<br><br>
 @subpage mqtt_getconnectpacketsize_function <br>
+@subpage mqtt_serializeconnect_function <br>
 @subpage mqtt_getsubscribepacketsize_function <br>
+@subpage mqtt_serializesubscribe_function <br>
 @subpage mqtt_validatesubscribeproperties_function <br>
 @subpage mqtt_getunsubscribepacketsize_function <br>
+@subpage mqtt_serializeunsubscribe_function <br>
 @subpage mqtt_getpublishpacketsize_function <br>
+@subpage mqtt_serializepublish_function <br>
+@subpage mqtt_serializepublishheader_function <br>
 @subpage mqtt_serializepublishheaderwithouttopic_function <br>
 @subpage mqtt_validatepublishparams_function <br>
 @subpage mqtt_validatepublishproperties_function <br>
@@ -228,6 +238,7 @@ Property Add functions:<br><br>
 @subpage mqttpropadd_connrequestprobinfo_function <br>
 @subpage mqttpropadd_connauthmethod_function <br>
 @subpage mqttpropadd_connauthdata_function <br>
+@subpage mqttpropadd_willdelayinterval_function <br> 
 @subpage mqttpropadd_pubpayloadformat_function <br>
 @subpage mqttpropadd_pubmessageexpiry_function <br>
 @subpage mqttpropadd_pubtopicalias_function <br>
@@ -323,13 +334,25 @@ Property Get functions:<br><br>
 @snippet core_mqtt_serializer.h declare_mqtt_getconnectpacketsize
 @copydoc MQTT_GetConnectPacketSize
 
+@page mqtt_serializeconnect_function MQTT_SerializeConnect
+@snippet core_mqtt_serializer.h declare_mqtt_serializeconnect
+@copydoc MQTT_SerializeConnect
+
 @page mqtt_getsubscribepacketsize_function MQTT_GetSubscribePacketSize
 @snippet core_mqtt_serializer.h declare_mqtt_getsubscribepacketsize
 @copydoc MQTT_GetSubscribePacketSize
 
+@page mqtt_serializesubscribe_function MQTT_SerializeSubscribe
+@snippet core_mqtt_serializer.h declare_mqtt_serializesubscribe
+@copydoc MQTT_SerializeSubscribe
+
 @page mqtt_getunsubscribepacketsize_function MQTT_GetUnsubscribePacketSize
 @snippet core_mqtt_serializer.h declare_mqtt_getunsubscribepacketsize
 @copydoc MQTT_GetUnsubscribePacketSize
+
+@page mqtt_serializeunsubscribe_function MQTT_SerializeUnsubscribe
+@snippet core_mqtt_serializer.h declare_mqtt_serializeunsubscribe
+@copydoc MQTT_SerializeUnsubscribe
 
 @page mqtt_validatepublishparams_function MQTT_ValidatePublishParams
 @snippet core_mqtt_serializer.h declare_mqtt_validatepublishparams
@@ -339,9 +362,17 @@ Property Get functions:<br><br>
 @snippet core_mqtt_serializer.h declare_mqtt_getpublishpacketsize
 @copydoc MQTT_GetPublishPacketSize
 
+@page mqtt_serializepublish_function MQTT_SerializePublish
+@snippet core_mqtt_serializer.h declare_mqtt_serializepublish
+@copydoc MQTT_SerializePublish
+
 @page mqtt_validatepublishproperties_function MQTT_ValidatePublishProperties
 @snippet core_mqtt_serializer.h declare_mqtt_validatepublishproperties
 @copydoc MQTT_ValidatePublishProperties
+
+@page mqtt_serializepublishheader_function MQTT_SerializePublishHeader
+@snippet core_mqtt_serializer.h declare_mqtt_serializepublishheader
+@copydoc MQTT_SerializePublishHeader
 
 @page mqtt_serializepublishheaderwithouttopic_function MQTT_SerializePublishHeaderWithoutTopic
 @snippet core_mqtt_serializer.h declare_mqtt_serializepublishheaderwithouttopic
@@ -406,6 +437,10 @@ Property Get functions:<br><br>
 @page mqttpropadd_sessionexpiry_function MQTTPropAdd_SessionExpiry
 @snippet core_mqtt_serializer.h declare_mqttpropadd_sessionexpiry
 @copydoc MQTTPropAdd_SessionExpiry
+
+@page mqttpropadd_willdelayinterval_function MQTTPropAdd_WillDelayInterval
+@snippet core_mqtt_serializer.h declare_mqttpropadd_willdelayinterval
+@copydoc MQTTPropAdd_WillDelayInterval
 
 @page mqttpropadd_connreceivemax_function MQTTPropAdd_ConnReceiveMax
 @snippet core_mqtt_serializer.h declare_mqttpropadd_connreceivemax
