@@ -559,7 +559,7 @@ static MQTTStatus_t decodeutf_8( const char ** pProperty,
  *
  * @return #MQTTSuccess, #MQTTBadResponse
  **/
-static MQTTStatus_t deserializeConnack( MQTTConnectProperties_t * pConnackProperties,
+static MQTTStatus_t deserializeConnackProperties( MQTTConnectProperties_t * pConnackProperties,
                                         size_t length,
                                         uint8_t * pIndex,
                                         MQTTPropBuilder_t * propBuffer );
@@ -750,6 +750,20 @@ static uint8_t * encodeBinaryData( uint8_t * pDestination,
                                    const void * pSource,
                                    uint16_t sourceLength );
 
+/**
+ * @brief Deserialize an MQTT CONNACK packet.
+ *
+ * @param[out] pConnackProperties To store the deserialized connack properties.
+ * @param[in]  pIncomingPacket #MQTTPacketInfo_t containing the buffer.
+ * @param[out]  pSessionPresent Whether a previous session was present.
+ * @param[in]  propBuffer MQTTPropBuilder_t to store the deserialized properties.
+ *
+ * @return #MQTTBadParameter, #MQTTBadResponse, #MQTTSuccess, #MQTTServerRefused
+ */                                   
+MQTTStatus_t deserializeConnack( MQTTConnectProperties_t * pConnackProperties,
+                                const MQTTPacketInfo_t * pIncomingPacket,
+                                bool * pSessionPresent,
+                                MQTTPropBuilder_t * propBuffer ); 
 /*-----------------------------------------------------------*/
 
 static size_t variableLengthEncodedSize( size_t length )
@@ -1445,7 +1459,7 @@ static MQTTStatus_t logConnackResponse( uint8_t responseCode )
 
 /*-----------------------------------------------------------*/
 
-MQTTStatus_t MQTT_DeserializeConnack( MQTTConnectProperties_t * pConnackProperties,
+MQTTStatus_t deserializeConnack( MQTTConnectProperties_t * pConnackProperties,
                                       const MQTTPacketInfo_t * pIncomingPacket,
                                       bool * pSessionPresent,
                                       MQTTPropBuilder_t * propBuffer )
@@ -1457,14 +1471,7 @@ MQTTStatus_t MQTT_DeserializeConnack( MQTTConnectProperties_t * pConnackProperti
     MQTTStatus_t statusCopy = MQTTSuccess;
 
     /*Validate the arguments*/
-    if( pConnackProperties == NULL )
-    {
-        status = MQTTBadParameter;
-    }
-    else
-    {
-        status = validateConnackParams( pIncomingPacket, pSessionPresent );
-    }
+    status = validateConnackParams( pIncomingPacket, pSessionPresent );
 
     if( status == MQTTServerRefused )
     {
@@ -1496,7 +1503,7 @@ MQTTStatus_t MQTT_DeserializeConnack( MQTTConnectProperties_t * pConnackProperti
         /*Deserialize the connack properties.*/
         else
         {
-            status = deserializeConnack( pConnackProperties, propertyLength, pVariableHeader, propBuffer );
+            status = deserializeConnackProperties( pConnackProperties, propertyLength, pVariableHeader, propBuffer );
         }
     }
 
@@ -1660,11 +1667,10 @@ static MQTTStatus_t readSubackStatus( size_t statusCount,
 
 /*-----------------------------------------------------------*/
 
-MQTTStatus_t MQTT_DeserializeSuback( MQTTReasonCodeInfo_t * subackReasonCodes,
-                                     const MQTTPacketInfo_t * incomingPacket,
+static MQTTStatus_t deserializeSuback( const MQTTPacketInfo_t * incomingPacket,
                                      uint16_t * pPacketId,
-                                     MQTTPropBuilder_t * propBuffer,
-                                     uint32_t maxPacketSize )
+                                     MQTTReasonCodeInfo_t * subackReasonCodes,
+                                     MQTTPropBuilder_t * propBuffer)
 {
     MQTTStatus_t status = MQTTSuccess;
     uint8_t * pIndex = NULL;
@@ -1673,44 +1679,39 @@ MQTTStatus_t MQTT_DeserializeSuback( MQTTReasonCodeInfo_t * subackReasonCodes,
     const uint8_t * pStatusStart;
     size_t propertyLength = 0U;
 
-    /* Validate input parameters instead of using assert */
-    if( ( incomingPacket == NULL ) || ( pPacketId == NULL ) || ( subackReasonCodes == NULL ) )
+    /* Validate input parameters using assert */
+    assert(incomingPacket != NULL) ; 
+    assert(pPacketId != NULL) ;
+
+
+    pIndex = incomingPacket->pRemainingData;
+    remainingLength = incomingPacket->remainingLength;
+
+    pIndex = incomingPacket->pRemainingData;
+
+    if( subackReasonCodes == NULL )
     {
-        LogError( ( "Null parameter passed to MQTT_DeserializeSuback." ) );
-        status = MQTTBadParameter;
+        status = MQTTBadParameter ; 
     }
-
-    if( status == MQTTSuccess )
+    else if( incomingPacket->remainingLength < 3U )
     {
-        pIndex = incomingPacket->pRemainingData;
-        remainingLength = incomingPacket->remainingLength;
+        LogError( ( "Suback Packet Cannot have a remaining Length of less than 3" ) );
+        status = MQTTBadResponse;
+    }
+    else
+    {
+        *pPacketId = UINT16_DECODE( pIndex );
+        pIndex = &pIndex[ 2 ];
+        LogDebug( ( "Packet Identifier is %hu.",
+                    ( unsigned short ) *pPacketId ) );
 
-        pIndex = incomingPacket->pRemainingData;
-
-        if( incomingPacket->remainingLength < 3U )
+        if( *pPacketId == 0U )
         {
-            LogError( ( "Suback Packet Cannot have a remaining Length of less than 3" ) );
+            LogError( ( "Packet Id cannot be 0" ) );
             status = MQTTBadResponse;
         }
-        else if( ( incomingPacket->remainingLength + variableLengthEncodedSize( incomingPacket->remainingLength ) + 1U ) > maxPacketSize )
-        {
-            LogError( ( "Packet size greater than max allowed by the client." ) );
-            status = MQTTBadParameter;
-        }
-        else
-        {
-            *pPacketId = UINT16_DECODE( pIndex );
-            pIndex = &pIndex[ 2 ];
-            LogDebug( ( "Packet Identifier is %hu.",
-                        ( unsigned short ) *pPacketId ) );
-
-            if( *pPacketId == 0U )
-            {
-                LogError( ( "Packet Id cannot be 0" ) );
-                status = MQTTBadResponse;
-            }
-        }
     }
+
 
     if( ( status == MQTTSuccess ) && ( incomingPacket->remainingLength > 4U ) )
     {
@@ -1837,8 +1838,11 @@ static MQTTStatus_t deserializeSimpleAck( const MQTTPacketInfo_t * pAck,
 {
     MQTTStatus_t status = MQTTSuccess;
     uint8_t * pIndex = pAck->pRemainingData;
-
-    if( pAck->remainingLength < 2U )
+    if( pReasonCode == NULL )
+    {
+        status = MQTTBadParameter ; 
+    }
+    else if( pAck->remainingLength < 2U )
     {
         status = MQTTBadResponse;
     }
@@ -3273,69 +3277,51 @@ static MQTTStatus_t validateConnackParams( const MQTTPacketInfo_t * pIncomingPac
 {
     MQTTStatus_t status = MQTTSuccess;
 
-    /*Validate the arguments*/
-    if( pIncomingPacket == NULL )
+    /*Validate the arguments via asserts. */
+    assert( pIncomingPacket != NULL ); 
+    assert( pSessionPresent != NULL ); 
+    assert( pIncomingPacket->pRemainingData != NULL ); 
+    assert( pIncomingPacket->type == MQTT_PACKET_TYPE_CONNACK ); 
+
+    const uint8_t * pRemainingData = NULL;
+    pRemainingData = pIncomingPacket->pRemainingData;
+
+    if( ( pRemainingData[ 0 ] | 0x01U ) != 0x01U )
     {
-        LogError( ( "pIncomingPacket cannot be NULL." ) );
-        status = MQTTBadParameter;
-    }
-    else if( pSessionPresent == NULL )
-    {
-        LogError( ( "pSessionPresent cannot be NULL for CONNACK packet." ) );
-        status = MQTTBadParameter;
-    }
-    else if( pIncomingPacket->pRemainingData == NULL )
-    {
-        LogError( ( "Remaining data of incoming packet is NULL." ) );
-        status = MQTTBadParameter;
-    }
-    else if( pIncomingPacket->type != MQTT_PACKET_TYPE_CONNACK )
-    {
-        LogError( ( "Packet type is invalid." ) );
-        status = MQTTBadParameter;
+        LogError( ( "Reserved bits in CONNACK incorrect." ) );
+
+        status = MQTTBadResponse;
     }
     else
     {
-        const uint8_t * pRemainingData = NULL;
-        pRemainingData = pIncomingPacket->pRemainingData;
-
-        if( ( pRemainingData[ 0 ] | 0x01U ) != 0x01U )
+        /* Determine if the "Session Present" bit is set. This is the lowest bit of
+            * the third byte in CONNACK. */
+        if( ( pRemainingData[ 0 ] & MQTT_PACKET_CONNACK_SESSION_PRESENT_MASK ) == MQTT_PACKET_CONNACK_SESSION_PRESENT_MASK )
         {
-            LogError( ( "Reserved bits in CONNACK incorrect." ) );
+            LogDebug( ( "CONNACK session present bit set." ) );
+            *pSessionPresent = true;
 
-            status = MQTTBadResponse;
+            /* MQTT 5 specifies that the fourth byte in CONNACK must be 0 if the
+                * "Session Present" bit is set. */
+            if( pRemainingData[ 1 ] != 0U )
+            {
+                LogError( ( "Session Present bit is set, but connect return code in CONNACK is %u (nonzero).",
+                            ( unsigned int ) pRemainingData[ 1 ] ) );
+                status = MQTTBadResponse;
+            }
         }
         else
         {
-            /* Determine if the "Session Present" bit is set. This is the lowest bit of
-             * the third byte in CONNACK. */
-            if( ( pRemainingData[ 0 ] & MQTT_PACKET_CONNACK_SESSION_PRESENT_MASK ) == MQTT_PACKET_CONNACK_SESSION_PRESENT_MASK )
-            {
-                LogDebug( ( "CONNACK session present bit set." ) );
-                *pSessionPresent = true;
-
-                /* MQTT 5 specifies that the fourth byte in CONNACK must be 0 if the
-                 * "Session Present" bit is set. */
-                if( pRemainingData[ 1 ] != 0U )
-                {
-                    LogError( ( "Session Present bit is set, but connect return code in CONNACK is %u (nonzero).",
-                                ( unsigned int ) pRemainingData[ 1 ] ) );
-                    status = MQTTBadResponse;
-                }
-            }
-            else
-            {
-                LogDebug( ( "CONNACK session present bit not set." ) );
-                *pSessionPresent = false;
-            }
+            LogDebug( ( "CONNACK session present bit not set." ) );
+            *pSessionPresent = false;
         }
+    }
 
-        if( status == MQTTSuccess )
+    if( status == MQTTSuccess )
+    {
+        if( pRemainingData[ 1 ] != 0U )
         {
-            if( pRemainingData[ 1 ] != 0U )
-            {
-                status = logConnackResponse( pRemainingData[ 1 ] );
-            }
+            status = logConnackResponse( pRemainingData[ 1 ] );
         }
     }
 
@@ -3591,7 +3577,7 @@ static MQTTStatus_t decodeBinaryData( const void ** pProperty,
 
 /*-----------------------------------------------------------*/
 
-static MQTTStatus_t deserializeConnack( MQTTConnectProperties_t * pConnackProperties,
+static MQTTStatus_t deserializeConnackProperties( MQTTConnectProperties_t * pConnackProperties,
                                         size_t length,
                                         uint8_t * pIndex,
                                         MQTTPropBuilder_t * propBuffer )
@@ -4303,38 +4289,6 @@ MQTTStatus_t updateContextWithConnectProps( const MQTTPropBuilder_t * pPropBuild
 
 /*-----------------------------------------------------------*/
 
-MQTTStatus_t MQTT_DeserializePing( const MQTTPacketInfo_t * pIncomingPacket )
-{
-    MQTTStatus_t status = MQTTSuccess;
-
-    if( pIncomingPacket == NULL )
-    {
-        LogError( ( "pIncomingPacket cannot be NULL." ) );
-        status = MQTTBadParameter;
-    }
-    else
-    {
-        /* Make sure response packet is a valid ack. */
-        switch( pIncomingPacket->type )
-        {
-            case MQTT_PACKET_TYPE_PINGRESP:
-                status = deserializePingresp( pIncomingPacket );
-                break;
-
-            /* Any other packet type is invalid. */
-            default:
-                LogError( ( "IotMqtt_DeserializeResponse() called with unknown packet type:(%02x).",
-                            ( unsigned int ) pIncomingPacket->type ) );
-                status = MQTTBadResponse;
-                break;
-        }
-    }
-
-    return status;
-}
-
-/*-----------------------------------------------------------*/
-
 MQTTStatus_t MQTT_ValidatePublishParams( const MQTTPublishInfo_t * pPublishInfo,
                                          uint8_t retainAvailable,
                                          uint8_t maxQos,
@@ -4574,44 +4528,66 @@ static MQTTStatus_t deserializeSubackProperties( MQTTPropBuilder_t * propBuffer,
 
 /*-----------------------------------------------------------*/
 
-MQTTStatus_t MQTT_DeserializePublishAck( const MQTTPacketInfo_t * pIncomingPacket,
-                                         uint16_t * pPacketId,
-                                         MQTTReasonCodeInfo_t * pReasonCode,
-                                         bool requestProblem,
-                                         uint32_t maxPacketSize,
-                                         MQTTPropBuilder_t * propBuffer )
+MQTTStatus_t MQTT_DeserializeAck( const MQTTPacketInfo_t * pIncomingPacket,
+                                uint16_t * pPacketId,
+                                bool * pSessionPresent, 
+                                MQTTReasonCodeInfo_t * pReasonCode,
+                                bool requestProblem,
+                                uint32_t maxPacketSize,
+                                MQTTPropBuilder_t * propBuffer,
+                                MQTTConnectProperties_t * pConnectProperties )
 {
     MQTTStatus_t status = MQTTSuccess;
+    bool skipMaxPacketSizeCheck = false ;
 
-    if( ( pIncomingPacket == NULL ) || ( pReasonCode == NULL ) )
+    if( ( pIncomingPacket != NULL ) && ( ( pIncomingPacket->type == MQTT_PACKET_TYPE_CONNACK ) || ( pIncomingPacket->type == MQTT_PACKET_TYPE_PINGRESP ) ) )
+    {
+        skipMaxPacketSizeCheck = true ; 
+    }
+
+    if( pIncomingPacket == NULL )
     {
         LogError( ( "pIncomingPacket , pReasonCode cannot be NULL." ) );
         status = MQTTBadParameter;
     }
-
     /* Pointer for packet identifier cannot be NULL for packets other than
      * CONNACK and PINGRESP. */
-    else if( pPacketId == NULL )
+    else if( ( pPacketId == NULL ) &&
+             ( ( pIncomingPacket->type != MQTT_PACKET_TYPE_CONNACK ) &&
+               ( pIncomingPacket->type != MQTT_PACKET_TYPE_PINGRESP ) ) )
     {
         LogError( ( "pPacketId cannot be NULL for packet type %02x.",
                     ( unsigned int ) pIncomingPacket->type ) );
         status = MQTTBadParameter;
     }
-
+    /* Pointer for session present cannot be NULL for CONNACK. */
+    else if( ( pSessionPresent == NULL ) &&
+             ( pIncomingPacket->type == MQTT_PACKET_TYPE_CONNACK ) )
+    {
+        LogError( ( "pSessionPresent cannot be NULL for CONNACK packet." ) );
+        status = MQTTBadParameter;
+    }
+    else if( ( pConnectProperties == NULL ) && ( pIncomingPacket->type == MQTT_PACKET_TYPE_CONNACK ) )
+    {
+        LogError( ( "pConnectProperties cannot be NULL for CONNACK packet." ) );
+        status = MQTTBadParameter;
+    }
     /* Pointer for remaining data cannot be NULL for packets other
      * than PINGRESP. */
-    else if( pIncomingPacket->pRemainingData == NULL )
+    else if( ( pIncomingPacket->pRemainingData == NULL ) &&
+             ( pIncomingPacket->type != MQTT_PACKET_TYPE_PINGRESP ) )
     {
         LogError( ( "Remaining data of incoming packet is NULL." ) );
         status = MQTTBadParameter;
     }
     /*Max packet size cannot be 0.*/
-    else if( maxPacketSize == 0U )
+    else if( ( maxPacketSize == 0U ) && ( skipMaxPacketSizeCheck != true ) )
     {
         status = MQTTBadParameter;
     }
-    else if( ( pIncomingPacket->remainingLength + variableLengthEncodedSize( pIncomingPacket->remainingLength ) + 1U ) > maxPacketSize )
+    else if( ( ( pIncomingPacket->remainingLength + variableLengthEncodedSize( pIncomingPacket->remainingLength ) + 1U ) > maxPacketSize ) && ( skipMaxPacketSizeCheck != true ) )
     {
+        LogError(("Packet Size cannot be greater than max packet size. ")); 
         status = MQTTBadResponse;
     }
     else
@@ -4619,6 +4595,9 @@ MQTTStatus_t MQTT_DeserializePublishAck( const MQTTPacketInfo_t * pIncomingPacke
         /* Make sure response packet is a valid ack. */
         switch( pIncomingPacket->type )
         {
+            case MQTT_PACKET_TYPE_CONNACK:
+                status = deserializeConnack(pConnectProperties, pIncomingPacket, pSessionPresent, propBuffer ) ;
+                break ;  
             case MQTT_PACKET_TYPE_PUBACK:
             case MQTT_PACKET_TYPE_PUBREC:
                 status = deserializeSimpleAck( pIncomingPacket, pPacketId, pReasonCode, requestProblem, propBuffer );
@@ -4640,7 +4619,13 @@ MQTTStatus_t MQTT_DeserializePublishAck( const MQTTPacketInfo_t * pIncomingPacke
                 }
 
                 break;
-
+            case MQTT_PACKET_TYPE_SUBACK:
+            case MQTT_PACKET_TYPE_UNSUBACK:
+                status = deserializeSuback( pIncomingPacket, pPacketId, pReasonCode, propBuffer); 
+                break ; 
+            case MQTT_PACKET_TYPE_PINGRESP:
+                status = deserializePingresp( pIncomingPacket );
+                break;
             /* Any other packet type is invalid. */
             default:
                 LogError( ( "Function called with unknown packet type:(%02x).",

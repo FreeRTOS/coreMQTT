@@ -661,31 +661,31 @@ void test_MQTTV5_DeserializeConnackOnlyStatus( void )
     MQTTPropBuilder_t propBuffer = { 0 };
 
 
-    status = MQTT_DeserializeConnack( NULL, NULL, NULL, &propBuffer );
+    status = MQTT_DeserializeAck( NULL, NULL, NULL, NULL, 0, 0, &propBuffer, NULL );
     TEST_ASSERT_EQUAL( MQTTBadParameter, status );
 
     bool sessionPresent;
-    status = MQTT_DeserializeConnack( NULL, &packetInfo, &sessionPresent, &propBuffer );
+    status = MQTT_DeserializeAck( &packetInfo, NULL,  &sessionPresent, NULL, 0, 0, &propBuffer, NULL );
     TEST_ASSERT_EQUAL( MQTTBadParameter, status );
 
-    status = MQTT_DeserializeConnack( &properties, NULL, &sessionPresent, &propBuffer );
+    status = MQTT_DeserializeAck( NULL, NULL, &sessionPresent, NULL, 0, 0,&propBuffer, &properties );
     TEST_ASSERT_EQUAL( MQTTBadParameter, status );
 
-    status = MQTT_DeserializeConnack( &properties, &packetInfo, NULL, &propBuffer );
+    status = MQTT_DeserializeAck( &packetInfo, NULL, NULL, NULL, 0, 0, &propBuffer, &properties );
     TEST_ASSERT_EQUAL( MQTTBadParameter, status );
 
     packetInfo.type = MQTT_PACKET_TYPE_CONNACK;
-    status = MQTT_DeserializeConnack( &properties, &packetInfo, &sessionPresent, &propBuffer );
+    status = MQTT_DeserializeAck( &packetInfo, NULL, &sessionPresent, NULL, 0, 0,&propBuffer, &properties );
     TEST_ASSERT_EQUAL( MQTTBadParameter, status );
 
     packetInfo.pRemainingData = pIndex;
     packetInfo.type = MQTT_PACKET_TYPE_CONNECT;
-    status = MQTT_DeserializeConnack( &properties, &packetInfo, &sessionPresent, &propBuffer );
+    status = MQTT_DeserializeAck( &packetInfo, NULL,  &sessionPresent, NULL, 0, 0,&propBuffer, &properties );
     TEST_ASSERT_EQUAL( MQTTBadParameter, status );
     /*Reserved bit incorrect*/
     buffer[ 0 ] = 0x11;
     packetInfo.type = MQTT_PACKET_TYPE_CONNACK;
-    status = MQTT_DeserializeConnack( &properties, &packetInfo, &sessionPresent, &propBuffer );
+    status = MQTT_DeserializeAck( &packetInfo, NULL,  &sessionPresent, NULL, 0, 0,&propBuffer, &properties );
     TEST_ASSERT_EQUAL( MQTTBadResponse, status );
 
     /*
@@ -693,7 +693,7 @@ void test_MQTTV5_DeserializeConnackOnlyStatus( void )
      */
     buffer[ 0 ] = 0x01;
     buffer[ 1 ] = 0x01;
-    status = MQTT_DeserializeConnack( &properties, &packetInfo, &sessionPresent, &propBuffer );
+    status = MQTT_DeserializeAck( &packetInfo, NULL, &sessionPresent, NULL, 0, 0,&propBuffer, &properties );
     TEST_ASSERT_EQUAL( MQTTBadResponse, status );
 
     /* 5 + 1 + 2 = 8 */
@@ -702,126 +702,126 @@ void test_MQTTV5_DeserializeConnackOnlyStatus( void )
     /*Not a valid reason code*/
     buffer[ 0 ] = 0x00;
     buffer[ 1 ] = 0x03;
-    status = MQTT_DeserializeConnack( &properties, &packetInfo, &sessionPresent, &propBuffer );
+    status = MQTT_DeserializeAck( &packetInfo, NULL, &sessionPresent, NULL, 0, 0, &propBuffer, &properties );
     TEST_ASSERT_EQUAL( MQTTBadResponse, status );
     /*All the valid response code*/
     buffer[ 1 ] = 0x80;
     buffer[ 2 ] = 0;
     properties.maxPacketSize = 100;
     packetInfo.remainingLength = 3;
-    status = MQTT_DeserializeConnack( &properties, &packetInfo, &sessionPresent, &propBuffer );
+    status = MQTT_DeserializeAck(&packetInfo, NULL, &sessionPresent, NULL, 0, 0, &propBuffer, &properties );
     TEST_ASSERT_EQUAL( MQTTServerRefused, status );
 
     buffer[ 1 ] = 0x80;
-    status = MQTT_DeserializeConnack( &properties, &packetInfo, &sessionPresent, &propBuffer );
+    status = MQTT_DeserializeAck(&packetInfo, NULL, &sessionPresent, NULL, 0, 0, &propBuffer, &properties );
     TEST_ASSERT_EQUAL( MQTTServerRefused, status );
 
     buffer[ 1 ] = 0x81;
-    status = MQTT_DeserializeConnack( &properties, &packetInfo, &sessionPresent, &propBuffer );
+    status = MQTT_DeserializeAck( &packetInfo, NULL, &sessionPresent, NULL, 0, 0, &propBuffer, &properties );
     TEST_ASSERT_EQUAL( MQTTServerRefused, status );
 
     buffer[ 1 ] = 0x82;
-    status = MQTT_DeserializeConnack( &properties, &packetInfo, &sessionPresent, &propBuffer );
+    status = MQTT_DeserializeAck( &packetInfo, NULL, &sessionPresent, NULL, 0, 0, &propBuffer, &properties );
     TEST_ASSERT_EQUAL( MQTTServerRefused, status );
 
     buffer[ 1 ] = 0x83;
-    status = MQTT_DeserializeConnack( &properties, &packetInfo, &sessionPresent, &propBuffer );
+    status = MQTT_DeserializeAck(&packetInfo, NULL, &sessionPresent, NULL, 0, 0, &propBuffer, &properties );
     TEST_ASSERT_EQUAL( MQTTServerRefused, status );
 
     buffer[ 1 ] = 0x80;
-    status = MQTT_DeserializeConnack( &properties, &packetInfo, &sessionPresent, &propBuffer );
+    status = MQTT_DeserializeAck(&packetInfo, NULL, &sessionPresent, NULL, 0, 0, &propBuffer, &properties );
     TEST_ASSERT_EQUAL( MQTTServerRefused, status );
 
     buffer[ 1 ] = 0x84;
-    status = MQTT_DeserializeConnack( &properties, &packetInfo, &sessionPresent, &propBuffer );
+    status = MQTT_DeserializeAck(&packetInfo, NULL, &sessionPresent, NULL, 0, 0, &propBuffer, &properties );
     TEST_ASSERT_EQUAL( MQTTServerRefused, status );
 
     buffer[ 1 ] = 0x80;
-    status = MQTT_DeserializeConnack( &properties, &packetInfo, &sessionPresent, &propBuffer );
+    status = MQTT_DeserializeAck(&packetInfo, NULL, &sessionPresent, NULL, 0, 0, &propBuffer, &properties);
     TEST_ASSERT_EQUAL( MQTTServerRefused, status );
 
     buffer[ 1 ] = 0x85;
-    status = MQTT_DeserializeConnack( &properties, &packetInfo, &sessionPresent, &propBuffer );
+    status = MQTT_DeserializeAck(&packetInfo, NULL, &sessionPresent, NULL, 0, 0, &propBuffer, &properties );
     TEST_ASSERT_EQUAL( MQTTServerRefused, status );
 
     buffer[ 1 ] = 0x86;
-    status = MQTT_DeserializeConnack( &properties, &packetInfo, &sessionPresent, &propBuffer );
+    status = MQTT_DeserializeAck(&packetInfo, NULL, &sessionPresent, NULL, 0, 0, &propBuffer, &properties );
     TEST_ASSERT_EQUAL( MQTTServerRefused, status );
 
     buffer[ 1 ] = 0x87;
-    status = MQTT_DeserializeConnack( &properties, &packetInfo, &sessionPresent, &propBuffer );
+    status = MQTT_DeserializeAck(&packetInfo, NULL, &sessionPresent, NULL, 0, 0, &propBuffer, &properties );
     TEST_ASSERT_EQUAL( MQTTServerRefused, status );
 
     buffer[ 1 ] = 0x88;
-    status = MQTT_DeserializeConnack( &properties, &packetInfo, &sessionPresent, &propBuffer );
+    status = MQTT_DeserializeAck(&packetInfo, NULL, &sessionPresent, NULL, 0, 0, &propBuffer, &properties );
     TEST_ASSERT_EQUAL( MQTTServerRefused, status );
 
     buffer[ 1 ] = 0x89;
-    status = MQTT_DeserializeConnack( &properties, &packetInfo, &sessionPresent, &propBuffer );
+    status = MQTT_DeserializeAck(&packetInfo, NULL, &sessionPresent, NULL, 0, 0, &propBuffer, &properties );
     TEST_ASSERT_EQUAL( MQTTServerRefused, status );
 
     buffer[ 1 ] = 0x8A;
-    status = MQTT_DeserializeConnack( &properties, &packetInfo, &sessionPresent, &propBuffer );
+    status = MQTT_DeserializeAck(&packetInfo, NULL,  &sessionPresent, NULL, 0, 0, &propBuffer, &properties);
     TEST_ASSERT_EQUAL( MQTTServerRefused, status );
 
     buffer[ 1 ] = 0x8C;
-    status = MQTT_DeserializeConnack( &properties, &packetInfo, &sessionPresent, &propBuffer );
+    status = MQTT_DeserializeAck( &packetInfo, NULL, &sessionPresent, NULL, 0, 0, &propBuffer, &properties );
     TEST_ASSERT_EQUAL( MQTTServerRefused, status );
 
     buffer[ 1 ] = 0x88;
-    status = MQTT_DeserializeConnack( &properties, &packetInfo, &sessionPresent, &propBuffer );
+    status = MQTT_DeserializeAck(&packetInfo, NULL, &sessionPresent, NULL, 0, 0, &propBuffer, &properties );
     TEST_ASSERT_EQUAL( MQTTServerRefused, status );
 
     buffer[ 1 ] = 0x90;
-    status = MQTT_DeserializeConnack( &properties, &packetInfo, &sessionPresent, &propBuffer );
+    status = MQTT_DeserializeAck(&packetInfo, NULL, &sessionPresent, NULL, 0, 0, &propBuffer, &properties );
     TEST_ASSERT_EQUAL( MQTTServerRefused, status );
 
     buffer[ 1 ] = 0x95;
-    status = MQTT_DeserializeConnack( &properties, &packetInfo, &sessionPresent, &propBuffer );
+    status = MQTT_DeserializeAck(&packetInfo, NULL, &sessionPresent, NULL, 0, 0, &propBuffer, &properties );
     TEST_ASSERT_EQUAL( MQTTServerRefused, status );
 
     buffer[ 1 ] = 0x97;
-    status = MQTT_DeserializeConnack( &properties, &packetInfo, &sessionPresent, &propBuffer );
+    status = MQTT_DeserializeAck( &packetInfo, NULL,  &sessionPresent, NULL, 0, 0, &propBuffer, &properties );
     TEST_ASSERT_EQUAL( MQTTServerRefused, status );
 
     buffer[ 1 ] = 0x99;
-    status = MQTT_DeserializeConnack( &properties, &packetInfo, &sessionPresent, &propBuffer );
+    status = MQTT_DeserializeAck(&packetInfo, NULL, &sessionPresent, NULL, 0, 0, &propBuffer, &properties );
     TEST_ASSERT_EQUAL( MQTTServerRefused, status );
 
     buffer[ 1 ] = 0x9A;
-    status = MQTT_DeserializeConnack( &properties, &packetInfo, &sessionPresent, &propBuffer );
+    status = MQTT_DeserializeAck(&packetInfo, NULL,  &sessionPresent, NULL, 0, 0, &propBuffer, &properties );
     TEST_ASSERT_EQUAL( MQTTServerRefused, status );
 
     buffer[ 1 ] = 0x9A;
-    status = MQTT_DeserializeConnack( &properties, &packetInfo, &sessionPresent, &propBuffer );
+    status = MQTT_DeserializeAck( &packetInfo, NULL, &sessionPresent, NULL, 0, 0, &propBuffer, &properties );
     TEST_ASSERT_EQUAL( MQTTServerRefused, status );
 
     buffer[ 1 ] = 0x9B;
-    status = MQTT_DeserializeConnack( &properties, &packetInfo, &sessionPresent, &propBuffer );
+    status = MQTT_DeserializeAck(&packetInfo, NULL, &sessionPresent, NULL, 0, 0, &propBuffer, &properties );
     TEST_ASSERT_EQUAL( MQTTServerRefused, status );
 
     buffer[ 1 ] = 0x9C;
-    status = MQTT_DeserializeConnack( &properties, &packetInfo, &sessionPresent, &propBuffer );
+    status = MQTT_DeserializeAck( &packetInfo, NULL, &sessionPresent, NULL, 0, 0, &propBuffer, &properties);
     TEST_ASSERT_EQUAL( MQTTServerRefused, status );
 
     buffer[ 1 ] = 0x9D;
-    status = MQTT_DeserializeConnack( &properties, &packetInfo, &sessionPresent, &propBuffer );
+    status = MQTT_DeserializeAck( &packetInfo, NULL, &sessionPresent, NULL, 0, 0, &propBuffer, &properties );
     TEST_ASSERT_EQUAL( MQTTServerRefused, status );
 
     buffer[ 1 ] = 0x9F;
-    status = MQTT_DeserializeConnack( &properties, &packetInfo, &sessionPresent, &propBuffer );
+    status = MQTT_DeserializeAck(  &packetInfo, NULL,  &sessionPresent, NULL, 0, 0,  &propBuffer, &properties );
     TEST_ASSERT_EQUAL( MQTTServerRefused, status );
 
     /*Exceeds the max packet size set by the client*/
     properties.maxPacketSize = 2;
     buffer[ 1 ] = 0x00;
-    status = MQTT_DeserializeConnack( &properties, &packetInfo, &sessionPresent, &propBuffer );
+    status = MQTT_DeserializeAck(&packetInfo, NULL,  &sessionPresent, NULL, 0, 0, &propBuffer, &properties );
     TEST_ASSERT_EQUAL( MQTTBadResponse, status );
 
     /*Validate the remaining length*/
     properties.maxPacketSize = MQTT_MAX_PACKET_SIZE;
     packetInfo.remainingLength = 7;
-    status = MQTT_DeserializeConnack( &properties, &packetInfo, &sessionPresent, &propBuffer );
+    status = MQTT_DeserializeAck( &packetInfo, NULL, &sessionPresent, NULL, 0, 0, &propBuffer , &properties);
     TEST_ASSERT_EQUAL( MQTTBadResponse, status );
 
     /*Invalid property length*/
@@ -830,7 +830,7 @@ void test_MQTTV5_DeserializeConnackOnlyStatus( void )
     propertyLength = encodeRemainingLength( pIndex, 20971556356235 );
     LogDebug( ( "Encoded size for length is %lu bytes.",
                 ( unsigned long ) propertyLength ) );
-    status = MQTT_DeserializeConnack( &properties, &packetInfo, &sessionPresent, &propBuffer );
+    status = MQTT_DeserializeAck( &packetInfo, NULL, &sessionPresent, NULL, 0, 0, &propBuffer , &properties);
     TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
 
     /*Invalid property length*/
@@ -838,8 +838,14 @@ void test_MQTTV5_DeserializeConnackOnlyStatus( void )
     *pIndex = 0x81;
     pIndex++;
     *pIndex = 0x00;
-    status = MQTT_DeserializeConnack( &properties, &packetInfo, &sessionPresent, &propBuffer );
+    status = MQTT_DeserializeAck( &packetInfo, NULL, &sessionPresent, NULL, 0, 0, &propBuffer, &properties );
     TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
+
+    status = MQTT_DeserializeAck(&packetInfo, NULL,NULL, NULL, 0, 0, &propBuffer, &properties) ; 
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+
+    status = MQTT_DeserializeAck(&packetInfo, NULL,&sessionPresent, NULL, 0, 0, &propBuffer, NULL) ; 
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
 }
 
 void test_MQTTV5_DeserializeConnackOnlyuint_32( void )
@@ -855,7 +861,7 @@ void test_MQTTV5_DeserializeConnackOnlyuint_32( void )
     pIndexLocal++;
     pIndexLocal = serializeuint_32( pIndexLocal, MQTT_SESSION_EXPIRY_ID );
     pIndexLocal = serializeuint_32( pIndexLocal, MQTT_MAX_PACKET_SIZE_ID );
-    status = MQTT_DeserializeConnack( &properties, &packetInfo, &session, &propBuffer );
+    status = MQTT_DeserializeAck(&packetInfo, NULL,  &session, NULL, 0, 0, &propBuffer, &properties );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
     TEST_ASSERT_EQUAL_INT( MQTT_TEST_UINT32, properties.sessionExpiry );
     TEST_ASSERT_EQUAL_INT( MQTT_TEST_UINT32, properties.serverMaxPacketSize );
@@ -867,7 +873,7 @@ void test_MQTTV5_DeserializeConnackOnlyuint_32( void )
     pIndexLocal++;
     pIndexLocal = serializeuint_32( pIndexLocal, MQTT_SESSION_EXPIRY_ID );
     pIndexLocal = serializeuint_32( pIndexLocal, MQTT_SESSION_EXPIRY_ID );
-    status = MQTT_DeserializeConnack( &properties, &packetInfo, &session, &propBuffer );
+    status = MQTT_DeserializeAck(&packetInfo, NULL, &session, NULL, 0, 0, &propBuffer, &properties );
     TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
 
     /*Invalid property length*/
@@ -878,7 +884,7 @@ void test_MQTTV5_DeserializeConnackOnlyuint_32( void )
     *pIndexLocal = MQTT_SESSION_EXPIRY_ID;
     pIndexLocal++;
     pIndexLocal = serializeuint_32( pIndexLocal, MQTT_SESSION_EXPIRY_ID );
-    status = MQTT_DeserializeConnack( &properties, &packetInfo, &session, &propBuffer );
+    status = MQTT_DeserializeAck(&packetInfo, NULL, &session, NULL, 0, 0, &propBuffer, &properties );
     TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
 
     /*Invalid id*/
@@ -887,7 +893,7 @@ void test_MQTTV5_DeserializeConnackOnlyuint_32( void )
     propertyLength = encodeRemainingLength( pIndexLocal, 5 );
     pIndexLocal++;
     pIndexLocal = serializeuint_32( pIndexLocal, 0x00 );
-    status = MQTT_DeserializeConnack( &properties, &packetInfo, &session, &propBuffer );
+    status = MQTT_DeserializeAck( &packetInfo, NULL, &session, NULL, 0, 0, &propBuffer, &properties );
     TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
 
     /* Max packet size cannot have  a value 0*/
@@ -902,7 +908,7 @@ void test_MQTTV5_DeserializeConnackOnlyuint_32( void )
     pIndexLocal[ 2 ] = UINT32_BYTE1( 0 );
     pIndexLocal[ 3 ] = UINT32_BYTE0( 0 );
     pIndexLocal = &pIndexLocal[ 4 ];
-    status = MQTT_DeserializeConnack( &properties, &packetInfo, &session, &propBuffer );
+    status = MQTT_DeserializeAck(&packetInfo, NULL, &session, NULL, 0, 0, &propBuffer, &properties );
     TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
 }
 
@@ -925,7 +931,7 @@ void test_MQTTV5_DeserializeConnackOnlyuint_16( void )
     pIndexLocal = serializeuint_16( pIndexLocal, MQTT_RECEIVE_MAX_ID );
     pIndexLocal = serializeuint_16( pIndexLocal, MQTT_TOPIC_ALIAS_MAX_ID );
     pIndexLocal = serializeuint_16( pIndexLocal, MQTT_SERVER_KEEP_ALIVE_ID );
-    status = MQTT_DeserializeConnack( &properties, &packetInfo, &session, &propBuffer );
+    status = MQTT_DeserializeAck( &packetInfo, NULL, &session, NULL, 0, 0, &propBuffer, &properties );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
     TEST_ASSERT_EQUAL_INT( MQTT_TEST_UINT16, properties.serverReceiveMax );
     TEST_ASSERT_EQUAL_INT( MQTT_TEST_UINT16, properties.serverTopicAliasMax );
@@ -941,7 +947,7 @@ void test_MQTTV5_DeserializeConnackOnlyuint_16( void )
     pIndexLocal[ 0 ] = UINT16_HIGH_BYTE( 0 );
     pIndexLocal[ 1 ] = UINT16_LOW_BYTE( 0 );
     pIndexLocal = &pIndexLocal[ 2 ];
-    status = MQTT_DeserializeConnack( &properties, &packetInfo, &session, &propBuffer );
+    status = MQTT_DeserializeAck(&packetInfo, NULL, &session, NULL, 0, 0, &propBuffer, &properties );
     TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
 
     /*Protocol error to include the same property twice*/
@@ -951,7 +957,7 @@ void test_MQTTV5_DeserializeConnackOnlyuint_16( void )
     pIndexLocal++;
     pIndexLocal = serializeuint_16( pIndexLocal, MQTT_RECEIVE_MAX_ID );
     pIndexLocal = serializeuint_16( pIndexLocal, MQTT_RECEIVE_MAX_ID );
-    status = MQTT_DeserializeConnack( &properties, &packetInfo, &session, &propBuffer );
+    status = MQTT_DeserializeAck( &packetInfo, NULL,  &session, NULL, 0, 0, &propBuffer, &properties );
     TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
 
     /*Invalid property length*/
@@ -960,7 +966,7 @@ void test_MQTTV5_DeserializeConnackOnlyuint_16( void )
     propertyLength = encodeRemainingLength( pIndexLocal, 2 );
     pIndexLocal++;
     pIndexLocal = serializeuint_16( pIndexLocal, MQTT_RECEIVE_MAX_ID );
-    status = MQTT_DeserializeConnack( &properties, &packetInfo, &session, &propBuffer );
+    status = MQTT_DeserializeAck( &packetInfo, NULL,  &session, NULL, 0, 0, &propBuffer, &properties );
     TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
 }
 
@@ -986,7 +992,7 @@ void test_MQTTV5_DeserializeConnackOnlyuint_8( void )
     pIndexLocal = serializeuint_8( pIndexLocal, MQTT_SHARED_SUB_ID );
     pIndexLocal = serializeuint_8( pIndexLocal, MQTT_SUB_AVAILABLE_ID );
 
-    status = MQTT_DeserializeConnack( &properties, &packetInfo, &session, &propBuffer );
+    status = MQTT_DeserializeAck(&packetInfo, NULL, &session,NULL, 0, 0, &propBuffer, &properties );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
     TEST_ASSERT_EQUAL_INT( MQTT_TEST_UINT8, properties.serverMaxQos );
     TEST_ASSERT_EQUAL_INT( MQTT_TEST_UINT8, properties.retainAvailable );
@@ -1003,7 +1009,7 @@ void test_MQTTV5_DeserializeConnackOnlyuint_8( void )
     pIndexLocal++;
     pIndexLocal[ 0 ] = 3;
     pIndexLocal++;
-    status = MQTT_DeserializeConnack( &properties, &packetInfo, &session, &propBuffer );
+    status = MQTT_DeserializeAck(&packetInfo, NULL, &session, NULL, 0, 0, &propBuffer, &properties );
     TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
 
     /*Protocol error to include the same property twice*/
@@ -1013,7 +1019,7 @@ void test_MQTTV5_DeserializeConnackOnlyuint_8( void )
     pIndexLocal++;
     pIndexLocal = serializeuint_8( pIndexLocal, MQTT_MAX_QOS_ID );
     pIndexLocal = serializeuint_8( pIndexLocal, MQTT_MAX_QOS_ID );
-    status = MQTT_DeserializeConnack( &properties, &packetInfo, &session, &propBuffer );
+    status = MQTT_DeserializeAck(&packetInfo, NULL, &session, NULL, 0, 0, &propBuffer, &properties );
     TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
 
     /*Invalid property length*/
@@ -1025,7 +1031,7 @@ void test_MQTTV5_DeserializeConnackOnlyuint_8( void )
     pIndexLocal++;
     pIndexLocal[ 0 ] = 0;
     pIndexLocal++;
-    status = MQTT_DeserializeConnack( &properties, &packetInfo, &session, &propBuffer );
+    status = MQTT_DeserializeAck(&packetInfo, NULL, &session, NULL, 0, 0, &propBuffer, &properties );
     TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
 }
 
@@ -1052,7 +1058,7 @@ void test_MQTTV5_DeserializeConnackOnlyutf_8( void )
     pIndexLocal = serializeutf_8( pIndexLocal, MQTT_REASON_STRING_ID );
     pIndexLocal = serializeutf_8( pIndexLocal, MQTT_RESPONSE_INFO_ID );
     pIndexLocal = serializeutf_8( pIndexLocal, MQTT_SERVER_REF_ID );
-    status = MQTT_DeserializeConnack( &properties, &packetInfo, &session, &propBuffer );
+    status = MQTT_DeserializeAck( &packetInfo, NULL, &session, NULL, 0, 0, &propBuffer, &properties );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
 
     /*Protocol error to include the same property twice*/
@@ -1062,7 +1068,7 @@ void test_MQTTV5_DeserializeConnackOnlyutf_8( void )
     pIndexLocal++;
     pIndexLocal = serializeutf_8( pIndexLocal, MQTT_ASSIGNED_CLIENT_ID );
     pIndexLocal = serializeutf_8( pIndexLocal, MQTT_ASSIGNED_CLIENT_ID );
-    status = MQTT_DeserializeConnack( &properties, &packetInfo, &session, &propBuffer );
+    status = MQTT_DeserializeAck(&packetInfo, NULL, &session, NULL, 0, 0, &propBuffer, &properties );
     TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
 
     /*Invalid property length*/
@@ -1071,7 +1077,7 @@ void test_MQTTV5_DeserializeConnackOnlyutf_8( void )
     propertyLength = encodeRemainingLength( pIndexLocal, 4 );
     pIndexLocal++;
     pIndexLocal = serializeutf_8( pIndexLocal, MQTT_ASSIGNED_CLIENT_ID );
-    status = MQTT_DeserializeConnack( &properties, &packetInfo, &session, &propBuffer );
+    status = MQTT_DeserializeAck( &packetInfo, NULL, &session, NULL, 0, 0, &propBuffer, &properties );
     TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
 
     /*Invalid property length*/
@@ -1080,7 +1086,7 @@ void test_MQTTV5_DeserializeConnackOnlyutf_8( void )
     packetInfo.remainingLength = propertyLength + 4;
     pIndexLocal++;
     serializeutf_8( pIndexLocal, MQTT_ASSIGNED_CLIENT_ID );
-    status = MQTT_DeserializeConnack( &properties, &packetInfo, &session, &propBuffer );
+    status = MQTT_DeserializeAck( &packetInfo, NULL, &session, NULL, 0, 0,&propBuffer, &properties );
     TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
 
     /*Protocol error to include response information if is is set to false by client*/
@@ -1090,7 +1096,7 @@ void test_MQTTV5_DeserializeConnackOnlyutf_8( void )
     propertyLength = encodeRemainingLength( pIndexLocal, 7 );
     pIndexLocal++;
     pIndexLocal = serializeutf_8( pIndexLocal, MQTT_RESPONSE_INFO_ID );
-    status = MQTT_DeserializeConnack( &properties, &packetInfo, &session, &propBuffer );
+    status = MQTT_DeserializeAck( &packetInfo, NULL, &session, NULL, 0, 0, &propBuffer, &properties );
     TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
 
     packetInfo.remainingLength = 10;
@@ -1098,14 +1104,14 @@ void test_MQTTV5_DeserializeConnackOnlyutf_8( void )
     propertyLength = encodeRemainingLength( pIndexLocal, 7 );
     pIndexLocal++;
     pIndexLocal = serializeutf_8( pIndexLocal, MQTT_AUTH_METHOD_ID );
-    status = MQTT_DeserializeConnack( &properties, &packetInfo, &session, &propBuffer );
+    status = MQTT_DeserializeAck( &packetInfo, NULL, &session, NULL, 0, 0, &propBuffer, &properties );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
 
     pIndexLocal = &buffer[ 2 ];
     propertyLength = encodeRemainingLength( pIndexLocal, 7 );
     pIndexLocal++;
     pIndexLocal = serializeutf_8( pIndexLocal, MQTT_AUTH_DATA_ID );
-    status = MQTT_DeserializeConnack( &properties, &packetInfo, &session, &propBuffer );
+    status = MQTT_DeserializeAck(&packetInfo, NULL, &session, NULL, 0, 0, &propBuffer, &properties );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
 }
 
@@ -1130,7 +1136,7 @@ void test_MQTTV5_DeserializeConnackOnlyUserProperty( void )
     size_t propertyLength = encodeRemainingLength( pIndexLocal, 13 );
     pIndexLocal++;
     pIndexLocal = serializeutf_8pair( pIndexLocal );
-    status = MQTT_DeserializeConnack( &properties, &packetInfo, &session, &propBuffer );
+    status = MQTT_DeserializeAck( &packetInfo, NULL, &session, NULL, 0, 0, &propBuffer, &properties );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
 
     /*Invalid property length*/
@@ -1139,7 +1145,7 @@ void test_MQTTV5_DeserializeConnackOnlyUserProperty( void )
     propertyLength = encodeRemainingLength( pIndexLocal, 2 );
     pIndexLocal++;
     pIndexLocal = serializeutf_8pair( pIndexLocal );
-    status = MQTT_DeserializeConnack( &properties, &packetInfo, &session, &propBuffer );
+    status = MQTT_DeserializeAck( &packetInfo, NULL, &session, NULL, 0, 0, &propBuffer , &properties);
     TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
 
     /*Invalid property length*/
@@ -1148,7 +1154,7 @@ void test_MQTTV5_DeserializeConnackOnlyUserProperty( void )
     propertyLength = encodeRemainingLength( pIndexLocal, 3 );
     pIndexLocal++;
     pIndexLocal = serializeutf_8pair( pIndexLocal );
-    status = MQTT_DeserializeConnack( &properties, &packetInfo, &session, &propBuffer );
+    status = MQTT_DeserializeAck( &packetInfo, NULL, &session, NULL, 0, 0, &propBuffer, &properties );
     TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
 
     /*Invalid property length*/
@@ -1157,7 +1163,7 @@ void test_MQTTV5_DeserializeConnackOnlyUserProperty( void )
     packetInfo.remainingLength = propertyLength + 10;
     pIndexLocal++;
     pIndexLocal = serializeutf_8pair( pIndexLocal );
-    status = MQTT_DeserializeConnack( &properties, &packetInfo, &session, &propBuffer );
+    status = MQTT_DeserializeAck(&packetInfo, NULL, &session, NULL, 0, 0, &propBuffer, &properties );
     TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
 
     /*Invalid property length*/
@@ -1166,7 +1172,7 @@ void test_MQTTV5_DeserializeConnackOnlyUserProperty( void )
     propertyLength = encodeRemainingLength( pIndexLocal, 12 );
     pIndexLocal++;
     pIndexLocal = serializeutf_8pair( pIndexLocal );
-    status = MQTT_DeserializeConnack( &properties, &packetInfo, &session, &propBuffer );
+    status = MQTT_DeserializeAck(&packetInfo, NULL, &session, NULL, 0, 0, &propBuffer, &properties );
     TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
 
     /*Discard user property*/
@@ -1181,7 +1187,7 @@ void test_MQTTV5_DeserializeConnackOnlyUserProperty( void )
         pIndexLocal = serializeutf_8pair( pIndexLocal );
     }
 
-    status = MQTT_DeserializeConnack( &properties, &packetInfo, &session, &propBuffer );
+    status = MQTT_DeserializeAck( &packetInfo, NULL, &session,NULL, 0, 0, &propBuffer, &properties );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
 
     packetInfo.remainingLength = 65017;
@@ -1194,7 +1200,7 @@ void test_MQTTV5_DeserializeConnackOnlyUserProperty( void )
         pIndexLocal = serializeutf_8pair( pIndexLocal );
     }
 
-    status = MQTT_DeserializeConnack( &properties, &packetInfo, &session, &propBuffer );
+    status = MQTT_DeserializeAck( &packetInfo, NULL, &session, NULL, 0, 0, &propBuffer, &properties );
     TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
 }
 
@@ -1845,19 +1851,22 @@ void test_MQTTV5_DeserializeAck_puback( void )
 
 
     mqttPacketInfo.type = MQTT_PACKET_TYPE_PUBACK;
-    status = MQTT_DeserializePublishAck( NULL, &packetIdentifier, &ackInfo, requestProblem, maxPacketSize, &propBuffer );
+    status = MQTT_DeserializeAck( NULL, &packetIdentifier, NULL, &ackInfo, requestProblem, maxPacketSize, &propBuffer, NULL );
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
 
-    status = MQTT_DeserializePublishAck( &mqttPacketInfo, NULL, &ackInfo, requestProblem, maxPacketSize, &propBuffer );
+    status = MQTT_DeserializeAck( &mqttPacketInfo, NULL, NULL, &ackInfo, requestProblem, maxPacketSize, &propBuffer, NULL );
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
 
     /*Remaining data cannot be NULL.*/
-    status = MQTT_DeserializePublishAck( &mqttPacketInfo, &packetIdentifier, &ackInfo, requestProblem, maxPacketSize, &propBuffer );
+    status = MQTT_DeserializeAck( &mqttPacketInfo, &packetIdentifier,NULL, &ackInfo, requestProblem, maxPacketSize, &propBuffer, NULL );
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
 
     /*Max packet size cannot be 0*/
     mqttPacketInfo.pRemainingData = buffer;
-    status = MQTT_DeserializePublishAck( &mqttPacketInfo, &packetIdentifier, &ackInfo, requestProblem, maxPacketSize, &propBuffer );
+    status = MQTT_DeserializeAck( &mqttPacketInfo, &packetIdentifier, NULL, &ackInfo, requestProblem, maxPacketSize, &propBuffer, NULL );
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+
+    status = MQTT_DeserializeAck( &mqttPacketInfo, &packetIdentifier, NULL, NULL, requestProblem, MQTT_MAX_PACKET_SIZE, &propBuffer, NULL );
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
 
     maxPacketSize = 200U;
@@ -1865,41 +1874,41 @@ void test_MQTTV5_DeserializeAck_puback( void )
     buffer[ 0 ] = 0;
     buffer[ 1 ] = 0;
     mqttPacketInfo.remainingLength = MQTT_PACKET_SIMPLE_ACK_REMAINING_LENGTH;
-    status = MQTT_DeserializePublishAck( &mqttPacketInfo, &packetIdentifier, &ackInfo, requestProblem, maxPacketSize, &propBuffer );
+    status = MQTT_DeserializeAck( &mqttPacketInfo, &packetIdentifier, NULL, &ackInfo, requestProblem, maxPacketSize, &propBuffer, NULL );
     TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
 
 
     /*Remaining length connot be less than 2*/
     mqttPacketInfo.remainingLength = 1;
-    status = MQTT_DeserializePublishAck( &mqttPacketInfo, &packetIdentifier, &ackInfo, requestProblem, maxPacketSize, &propBuffer );
+    status = MQTT_DeserializeAck( &mqttPacketInfo, &packetIdentifier, NULL, &ackInfo, requestProblem, maxPacketSize, &propBuffer, NULL );
     TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
 
     /*Packet size greater than allowed.*/
     mqttPacketInfo.remainingLength = 1000U;
-    status = MQTT_DeserializePublishAck( &mqttPacketInfo, &packetIdentifier, &ackInfo, requestProblem, maxPacketSize, &propBuffer );
+    status = MQTT_DeserializeAck( &mqttPacketInfo, &packetIdentifier, NULL, &ackInfo, requestProblem, maxPacketSize, &propBuffer, NULL );
     TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
 
     /* Process a valid PUBACK. */
     mqttPacketInfo.remainingLength = 2;
     buffer[ 1 ] = 1;
-    status = MQTT_DeserializePublishAck( &mqttPacketInfo, &packetIdentifier, &ackInfo, requestProblem, maxPacketSize, &propBuffer );
+    status = MQTT_DeserializeAck( &mqttPacketInfo, &packetIdentifier, NULL, &ackInfo, requestProblem, maxPacketSize, &propBuffer, NULL );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
     TEST_ASSERT_EQUAL_INT( 1, packetIdentifier );
 
     mqttPacketInfo.remainingLength = 3;
     buffer[ 2 ] = 0x00;
-    status = MQTT_DeserializePublishAck( &mqttPacketInfo, &packetIdentifier, &ackInfo, requestProblem, maxPacketSize, &propBuffer );
+    status = MQTT_DeserializeAck( &mqttPacketInfo, &packetIdentifier, NULL, &ackInfo, requestProblem, maxPacketSize, &propBuffer, NULL );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
     TEST_ASSERT_EQUAL_INT( 1, packetIdentifier );
 
     /*Property length should be zero when request problem is set to false*/
     mqttPacketInfo.remainingLength = 24;
-    status = MQTT_DeserializePublishAck( &mqttPacketInfo, &packetIdentifier, &ackInfo, requestProblem, maxPacketSize, &propBuffer );
+    status = MQTT_DeserializeAck( &mqttPacketInfo, &packetIdentifier, NULL,  &ackInfo, requestProblem, maxPacketSize, &propBuffer, NULL );
     TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
 
     requestProblem = true;
     /*User properties not initialized.*/
-    status = MQTT_DeserializePublishAck( &mqttPacketInfo, &packetIdentifier, &ackInfo, requestProblem, maxPacketSize, &propBuffer );
+    status = MQTT_DeserializeAck( &mqttPacketInfo, &packetIdentifier, NULL, &ackInfo, requestProblem, maxPacketSize, &propBuffer, NULL );
     TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
 
     /*Valid parameters.*/
@@ -1908,7 +1917,7 @@ void test_MQTTV5_DeserializeAck_puback( void )
     pIndex++;
     pIndex = serializeutf_8( pIndex, MQTT_REASON_STRING_ID );
     pIndex = serializeutf_8pair( pIndex );
-    status = MQTT_DeserializePublishAck( &mqttPacketInfo, &packetIdentifier, &ackInfo, requestProblem, maxPacketSize, &propBuffer );
+    status = MQTT_DeserializeAck( &mqttPacketInfo, &packetIdentifier, NULL,  &ackInfo, requestProblem, maxPacketSize, &propBuffer, NULL );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
 
     /*Invalid property id*/
@@ -1917,7 +1926,7 @@ void test_MQTTV5_DeserializeAck_puback( void )
     mqttPacketInfo.remainingLength = dummy + 7 + 3;
     pIndex++;
     pIndex = serializeutf_8( pIndex, MQTT_CORRELATION_DATA_ID );
-    status = MQTT_DeserializePublishAck( &mqttPacketInfo, &packetIdentifier, &ackInfo, requestProblem, maxPacketSize, &propBuffer );
+    status = MQTT_DeserializeAck( &mqttPacketInfo, &packetIdentifier, NULL, &ackInfo, requestProblem, maxPacketSize, &propBuffer, NULL );
     TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
 
     /*Invalid remaining length*/
@@ -1925,14 +1934,14 @@ void test_MQTTV5_DeserializeAck_puback( void )
     dummy = encodeRemainingLength( pIndex, 12 );
     pIndex++;
     pIndex = serializeutf_8( pIndex, MQTT_REASON_STRING_ID );
-    status = MQTT_DeserializePublishAck( &mqttPacketInfo, &packetIdentifier, &ackInfo, requestProblem, maxPacketSize, &propBuffer );
+    status = MQTT_DeserializeAck( &mqttPacketInfo, &packetIdentifier, NULL, &ackInfo, requestProblem, maxPacketSize, &propBuffer, NULL );
     TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
 
 
     /*Invalid property length*/
     pIndex = &buffer[ 3 ];
     dummy = encodeRemainingLength( pIndex, 20971556356235 );
-    status = MQTT_DeserializePublishAck( &mqttPacketInfo, &packetIdentifier, &ackInfo, requestProblem, maxPacketSize, &propBuffer );
+    status = MQTT_DeserializeAck( &mqttPacketInfo, &packetIdentifier, NULL, &ackInfo, requestProblem, maxPacketSize, &propBuffer, NULL );
     TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
 }
 
@@ -1956,44 +1965,44 @@ void test_MQTTV5_DeserializeAck_LogPuback()
     /*Validate all the correct reason codes.*/
     buffer[ 1 ] = 1;
     buffer[ 2 ] = MQTT_REASON_SUCCESS;
-    status = MQTT_DeserializePublishAck( &mqttPacketInfo, &packetIdentifier, &ackInfo, requestProblem, maxPacketSize, &propBuffer );
+    status = MQTT_DeserializeAck( &mqttPacketInfo, &packetIdentifier, NULL, &ackInfo, requestProblem, maxPacketSize, &propBuffer, NULL );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
 
     buffer[ 2 ] = MQTT_REASON_NO_MATCHING_SUBSCRIBERS;
-    status = MQTT_DeserializePublishAck( &mqttPacketInfo, &packetIdentifier, &ackInfo, requestProblem, maxPacketSize, &propBuffer );
+    status = MQTT_DeserializeAck( &mqttPacketInfo, &packetIdentifier, NULL, &ackInfo, requestProblem, maxPacketSize, &propBuffer, NULL );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
 
     buffer[ 2 ] = MQTT_REASON_UNSPECIFIED_ERR;
-    status = MQTT_DeserializePublishAck( &mqttPacketInfo, &packetIdentifier, &ackInfo, requestProblem, maxPacketSize, &propBuffer );
+    status = MQTT_DeserializeAck( &mqttPacketInfo, &packetIdentifier,NULL, &ackInfo, requestProblem, maxPacketSize, &propBuffer, NULL );
     TEST_ASSERT_EQUAL_INT( MQTTServerRefused, status );
 
     buffer[ 2 ] = MQTT_REASON_IMPL_SPECIFIC_ERR;
-    status = MQTT_DeserializePublishAck( &mqttPacketInfo, &packetIdentifier, &ackInfo, requestProblem, maxPacketSize, &propBuffer );
+    status = MQTT_DeserializeAck( &mqttPacketInfo, &packetIdentifier, NULL, &ackInfo, requestProblem, maxPacketSize, &propBuffer, NULL );
     TEST_ASSERT_EQUAL_INT( MQTTServerRefused, status );
 
     buffer[ 2 ] = MQTT_REASON_NOT_AUTHORIZED;
-    status = MQTT_DeserializePublishAck( &mqttPacketInfo, &packetIdentifier, &ackInfo, requestProblem, maxPacketSize, &propBuffer );
+    status = MQTT_DeserializeAck( &mqttPacketInfo, &packetIdentifier, NULL, &ackInfo, requestProblem, maxPacketSize, &propBuffer, NULL );
     TEST_ASSERT_EQUAL_INT( MQTTServerRefused, status );
 
     buffer[ 2 ] = MQTT_REASON_TOPIC_NAME_INVALID;
-    status = MQTT_DeserializePublishAck( &mqttPacketInfo, &packetIdentifier, &ackInfo, requestProblem, maxPacketSize, &propBuffer );
+    status = MQTT_DeserializeAck( &mqttPacketInfo, &packetIdentifier, NULL, &ackInfo, requestProblem, maxPacketSize, &propBuffer, NULL );
     TEST_ASSERT_EQUAL_INT( MQTTServerRefused, status );
 
     buffer[ 2 ] = MQTT_REASON_PACKET_ID_IN_USE;
-    status = MQTT_DeserializePublishAck( &mqttPacketInfo, &packetIdentifier, &ackInfo, requestProblem, maxPacketSize, &propBuffer );
+    status = MQTT_DeserializeAck( &mqttPacketInfo, &packetIdentifier, NULL,  &ackInfo, requestProblem, maxPacketSize, &propBuffer, NULL );
     TEST_ASSERT_EQUAL_INT( MQTTServerRefused, status );
 
     buffer[ 2 ] = MQTT_REASON_QUOTA_EXCEEDED;
-    status = MQTT_DeserializePublishAck( &mqttPacketInfo, &packetIdentifier, &ackInfo, requestProblem, maxPacketSize, &propBuffer );
+    status = MQTT_DeserializeAck( &mqttPacketInfo, &packetIdentifier, NULL, &ackInfo, requestProblem, maxPacketSize, &propBuffer, NULL );
     TEST_ASSERT_EQUAL_INT( MQTTServerRefused, status );
 
     buffer[ 2 ] = MQTT_REASON_PAYLOAD_FORMAT_INVALID;
-    status = MQTT_DeserializePublishAck( &mqttPacketInfo, &packetIdentifier, &ackInfo, requestProblem, maxPacketSize, &propBuffer );
+    status = MQTT_DeserializeAck( &mqttPacketInfo, &packetIdentifier, NULL, &ackInfo, requestProblem, maxPacketSize, &propBuffer, NULL );
     TEST_ASSERT_EQUAL_INT( MQTTServerRefused, status );
 
     /*Invlaid reason code.*/
     buffer[ 2 ] = MQTT_REASON_BANNED;
-    status = MQTT_DeserializePublishAck( &mqttPacketInfo, &packetIdentifier, &ackInfo, requestProblem, maxPacketSize, &propBuffer );
+    status = MQTT_DeserializeAck( &mqttPacketInfo, &packetIdentifier, NULL, &ackInfo, requestProblem, maxPacketSize, &propBuffer, NULL );
     TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
 }
 
@@ -2017,31 +2026,31 @@ void test_MQTTV5_DeserializeAck_Pubrel()
     /*Validate all the correct reason codes.*/
     buffer[ 1 ] = 1;
     buffer[ 2 ] = MQTT_REASON_SUCCESS;
-    status = MQTT_DeserializePublishAck( &mqttPacketInfo, &packetIdentifier, &ackInfo, requestProblem, maxPacketSize, &propBuffer );
+    status = MQTT_DeserializeAck( &mqttPacketInfo, &packetIdentifier, NULL, &ackInfo, requestProblem, maxPacketSize, &propBuffer, NULL );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
 
     buffer[ 2 ] = MQTT_REASON_PACKET_ID_NOT_FOUND;
-    status = MQTT_DeserializePublishAck( &mqttPacketInfo, &packetIdentifier, &ackInfo, requestProblem, maxPacketSize, &propBuffer );
+    status = MQTT_DeserializeAck( &mqttPacketInfo, &packetIdentifier, NULL, &ackInfo, requestProblem, maxPacketSize, &propBuffer, NULL );
     TEST_ASSERT_EQUAL_INT( MQTTServerRefused, status );
 
     /*Invalid reason code.*/
     buffer[ 2 ] = MQTT_REASON_BANNED;
-    status = MQTT_DeserializePublishAck( &mqttPacketInfo, &packetIdentifier, &ackInfo, requestProblem, maxPacketSize, &propBuffer );
+    status = MQTT_DeserializeAck( &mqttPacketInfo, &packetIdentifier, NULL, &ackInfo, requestProblem, maxPacketSize, &propBuffer, NULL );
     TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
 
     /*Invalid reason code.*/
     buffer[ 2 ] = MQTT_REASON_SEND_WILL;
-    status = MQTT_DeserializePublishAck( &mqttPacketInfo, &packetIdentifier, &ackInfo, requestProblem, maxPacketSize, &propBuffer );
+    status = MQTT_DeserializeAck( &mqttPacketInfo, &packetIdentifier, NULL, &ackInfo, requestProblem, maxPacketSize, &propBuffer, NULL );
     TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
 
     /*Invalid packet id*/
     buffer[ 1 ] = 0;
-    status = MQTT_DeserializePublishAck( &mqttPacketInfo, &packetIdentifier, &ackInfo, requestProblem, maxPacketSize, &propBuffer );
+    status = MQTT_DeserializeAck( &mqttPacketInfo, &packetIdentifier,NULL, &ackInfo, requestProblem, maxPacketSize, &propBuffer, NULL );
     TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
 
     /*Invalid packet type. */
-    mqttPacketInfo.type = MQTT_PACKET_TYPE_CONNACK;
-    status = MQTT_DeserializePublishAck( &mqttPacketInfo, &packetIdentifier, &ackInfo, requestProblem, maxPacketSize, &propBuffer );
+    mqttPacketInfo.type = MQTT_PACKET_TYPE_DISCONNECT;
+    status = MQTT_DeserializeAck( &mqttPacketInfo, &packetIdentifier, NULL , &ackInfo, requestProblem, maxPacketSize, &propBuffer, NULL );
     TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
 }
 
@@ -2762,20 +2771,20 @@ void test_MQTTV5_suback( void )
     uint16_t packetIdentifier = 0;
     MQTTReasonCodeInfo_t subackReasonCodes;
     MQTTPropBuilder_t propBuffer = { 0 };
-    status = MQTT_DeserializeSuback( &subackReasonCodes, &subackPacket, &packetIdentifier, &propBuffer, MQTT_MAX_PACKET_SIZE );
+    status = MQTT_DeserializeAck( &subackPacket, &packetIdentifier, NULL, &subackReasonCodes,0, MQTT_MAX_PACKET_SIZE, &propBuffer, NULL );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
 
     packetBuffer[ 11 ] = 0x00;
-    status = MQTT_DeserializeSuback( &subackReasonCodes, &subackPacket, &packetIdentifier, &propBuffer, MQTT_MAX_PACKET_SIZE );
+    status = MQTT_DeserializeAck( &subackPacket, &packetIdentifier, NULL, &subackReasonCodes, 0, MQTT_MAX_PACKET_SIZE, &propBuffer, NULL);
     TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
 
-    status = MQTT_DeserializeSuback(NULL, &subackPacket, &packetIdentifier, &propBuffer, MQTT_MAX_PACKET_SIZE );
+    status = MQTT_DeserializeAck( &subackPacket, &packetIdentifier,NULL, NULL, 0, MQTT_MAX_PACKET_SIZE,  &propBuffer, NULL );
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
 
-    status = MQTT_DeserializeSuback( &subackReasonCodes, NULL , &packetIdentifier, &propBuffer, MQTT_MAX_PACKET_SIZE );
+    status = MQTT_DeserializeAck( NULL , &packetIdentifier,NULL, &subackReasonCodes,0, MQTT_MAX_PACKET_SIZE, &propBuffer, NULL );
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
 
-    status = MQTT_DeserializeSuback( &subackReasonCodes, &subackPacket, NULL , &propBuffer, MQTT_MAX_PACKET_SIZE );
+    status = MQTT_DeserializeAck( &subackPacket, NULL ,NULL, &subackReasonCodes, 0,MQTT_MAX_PACKET_SIZE, &propBuffer, NULL );
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
 }
 
@@ -2831,26 +2840,26 @@ void test_MQTTV5_DeserializeSuback( void )
 
     MQTTReasonCodeInfo_t subackReasonCodes;
 
-    status = MQTT_DeserializeSuback( &subackReasonCodes, &mqttPacketInfo, &packetIdentifier, &propBuffer, MQTT_MAX_PACKET_SIZE );
+    status = MQTT_DeserializeAck( &mqttPacketInfo, &packetIdentifier, NULL, &subackReasonCodes, 0, MQTT_MAX_PACKET_SIZE,  &propBuffer, NULL );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
 
     buffer[ 13 ] = 0xA4;
-    status = MQTT_DeserializeSuback( &subackReasonCodes, &mqttPacketInfo, &packetIdentifier, &propBuffer, MQTT_MAX_PACKET_SIZE );
+    status = MQTT_DeserializeAck( &mqttPacketInfo, &packetIdentifier, NULL, &subackReasonCodes,0, MQTT_MAX_PACKET_SIZE,  &propBuffer, NULL );
     TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
 
     /*Max Packet Size lesser than suback packet size*/
-    status = MQTT_DeserializeSuback( &subackReasonCodes, &mqttPacketInfo, &packetIdentifier, &propBuffer, 1U );
-    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+    status = MQTT_DeserializeAck( &mqttPacketInfo, &packetIdentifier, NULL, &subackReasonCodes,0,1U,  &propBuffer, NULL );
+    TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
 
     /*Invalid Remaining Length*/
     mqttPacketInfo.remainingLength = 2;
-    status = MQTT_DeserializeSuback( &subackReasonCodes, &mqttPacketInfo, &packetIdentifier, &propBuffer, MQTT_MAX_PACKET_SIZE );
+    status = MQTT_DeserializeAck( &mqttPacketInfo, &packetIdentifier, NULL, &subackReasonCodes,0, MQTT_MAX_PACKET_SIZE, &propBuffer, NULL);
     TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
     mqttPacketInfo.remainingLength = 14;
 
     /*Invalid packet type*/
     buffer[ 1 ] = 0;
-    status = MQTT_DeserializeSuback( &subackReasonCodes, &mqttPacketInfo, &packetIdentifier, &propBuffer, MQTT_MAX_PACKET_SIZE );
+    status = MQTT_DeserializeAck( &mqttPacketInfo, &packetIdentifier,NULL, &subackReasonCodes,0, MQTT_MAX_PACKET_SIZE, &propBuffer,NULL );
     TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
 
     buffer[1] = 1 ; 
@@ -2859,7 +2868,7 @@ void test_MQTTV5_DeserializeSuback( void )
     uint8_t * pIndex = &buffer[3] ; 
     pIndex = serializeutf_8(pIndex, MQTT_REASON_STRING_ID); 
     pIndex = serializeutf_8(pIndex, MQTT_REASON_STRING_ID); 
-    status = MQTT_DeserializeSuback( &subackReasonCodes, &mqttPacketInfo, &packetIdentifier, &propBuffer, MQTT_MAX_PACKET_SIZE );
+    status = MQTT_DeserializeAck( &mqttPacketInfo, &packetIdentifier, NULL, &subackReasonCodes,0,MQTT_MAX_PACKET_SIZE, &propBuffer, NULL );
     TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
 }
 
@@ -3160,22 +3169,17 @@ void test_MQTT_DeserializeAck_pingresp( void )
     ( void ) memset( &mqttPacketInfo, 0x00, sizeof( mqttPacketInfo ) );
     mqttPacketInfo.type = MQTT_PACKET_TYPE_PINGRESP;
     mqttPacketInfo.remainingLength = MQTT_PACKET_PINGRESP_REMAINING_LENGTH + 1;
-    status = MQTT_DeserializePing( &mqttPacketInfo );
-    TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
-
-    mqttPacketInfo.type = MQTT_PACKET_TYPE_SUBACK;
-    mqttPacketInfo.remainingLength = 5;
-    status = MQTT_DeserializePing( &mqttPacketInfo );
+    status = MQTT_DeserializeAck( &mqttPacketInfo,NULL,NULL, NULL,0,0,NULL,NULL );
     TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
 
     /* Process a valid PINGRESP. */
     mqttPacketInfo.type = MQTT_PACKET_TYPE_PINGRESP;
     mqttPacketInfo.remainingLength = MQTT_PACKET_PINGRESP_REMAINING_LENGTH;
     mqttPacketInfo.pRemainingData = NULL;
-    status = MQTT_DeserializePing( &mqttPacketInfo );
+    status = MQTT_DeserializeAck( &mqttPacketInfo,NULL,NULL, NULL,0,0,NULL,NULL );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
 
-    status = MQTT_DeserializePing( NULL );
+    status = MQTT_DeserializeAck(NULL,NULL,NULL, NULL,0,0,NULL,NULL  );
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
 }
 

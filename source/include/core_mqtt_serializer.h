@@ -1445,39 +1445,6 @@ MQTTStatus_t MQTT_DeserializePublish( const MQTTPacketInfo_t* pIncomingPacket,
 /* @[declare_mqtt_deserializepublish] */
 
 /**
- * @brief Deserialize PINGRESP.
- *
- * @param[in] pIncomingPacket #MQTTPacketInfo_t containing the buffer.
- *
- * @return #MQTTBadParameter, #MQTTBadResponse, or #MQTTSuccess.
- *
- * <b>Example</b>
- * @code{c}
- *
- * // Variables used in this example.
- * MQTTStatus_t status;
- * MQTTPacketInfo_t incomingPacket;
- *
- * // Receive an incoming packet and populate all fields. The details are out of scope
- * // for this example.
- * receiveIncomingPacket( &incomingPacket );
- *
- * // Deserialize ack information if the incoming packet is not a publish.
- * if( ( incomingPacket.type ) == MQTT_PACKET_TYPE_PINGRESP )
- * {
- *      status = MQTT_DeserializePing( &incomingPacket);
- *      if( status == MQTTSuccess )
- *      {
- *          // For ping response packets, the only information is the status code.
- *      }
- * }
- * @endcode
- */
-/* @[declare_mqtt_deserializeping] */
-MQTTStatus_t MQTT_DeserializePing( const MQTTPacketInfo_t * pIncomingPacket);
-/* @[declare_mqtt_deserializeping] */
-
-/**
  * @brief Extract the MQTT packet type and length from incoming packet.
  *
  * This function must be called for every incoming packet to retrieve the
@@ -1647,71 +1614,6 @@ uint8_t * MQTT_SerializeUnsubscribeHeader( size_t remainingLength,
                                            uint8_t * pIndex,
                                            uint16_t packetId );
 /** @endcond */
-/**
- * @brief Deserialize an MQTT CONNACK packet.
- *
- * @param[out] pConnackProperties To store the deserialized connack properties.
- * @param[in]  pIncomingPacket #MQTTPacketInfo_t containing the buffer.
- * @param[out]  pSessionPresent Whether a previous session was present.
- * @param[in]  propBuffer MQTTPropBuilder_t to store the deserialized properties.
- *
- * @return #MQTTBadParameter, #MQTTBadResponse, #MQTTSuccess, #MQTTServerRefused
- *
- * <b>Example</b>
- * @code{c}
- *
- * // TransportRecv_t function for reading from the network.
- * int32_t socket_recv(
- *      NetworkContext_t * pNetworkContext,
- *      void * pBuffer,
- *      size_t bytesToRecv
- * );
- * // Some context to be used with the above transport receive function.
- * NetworkContext_t networkContext;
- *
- * // Other variables used in this example.
- * MQTTStatus_t status;
- * MQTTPacketInfo_t incomingPacket;
- * MQTTConnectProperties_t properties = {0};
- * uint16_t packetId;
- *
- * int32_t bytesRecvd;
- * // A buffer to hold remaining data of the incoming packet.
- * uint8_t buffer[ BUFFER_SIZE ];
- *
- * // Populate all fields of the incoming packet.
- * status = MQTT_GetIncomingPacketTypeAndLength(
- *      socket_recv,
- *      &networkContext,
- *      &incomingPacket
- * );
- * assert( status == MQTTSuccess );
- * assert( incomingPacket.remainingLength <= BUFFER_SIZE );
- * bytesRecvd = socket_recv(
- *      &networkContext,
- *      ( void * ) buffer,
- *      incomingPacket.remainingLength
- * );
- * incomingPacket.pRemainingData = buffer;
- *
- * // Deserialize the publish information if the incoming packet is a publish.
- * if( ( incomingPacket.type & 0xF0 ) == MQTT_PACKET_TYPE_CONNACK )
- * {
- *      status = MQTT_DeserializeConnack(&properties, &incomingPacket, &session, &propBuffer);
- *      if( status == MQTTSuccess )
- *      {
- *          // The deserialized connack information can now be used from `properties`.
- *      }
- * }
- * @endcode
- */
-/* @[declare_mqtt_deserializeconnack] */
-MQTTStatus_t MQTT_DeserializeConnack(MQTTConnectProperties_t* pConnackProperties,
-                                        const MQTTPacketInfo_t* pIncomingPacket,
-                                        bool* pSessionPresent,
-                                        MQTTPropBuilder_t* propBuffer);
-/* @[declare_mqtt_deserializeconnack] */
-
 
 /**
  * @brief Get the size and Remaining Length of an MQTT Version 5 CONNECT packet.
@@ -1963,16 +1865,31 @@ MQTTStatus_t MQTT_GetPublishPacketSize( const MQTTPublishInfo_t * pPublishInfo,
 
 
 /**
- * @brief Deserialize an MQTT PUBACK, PUBREC, PUBREL, PUBCOMP, or PINGRESP.
+ * @brief Deserialize an MQTT PUBACK, PUBREC, PUBREL, PUBCOMP, SUBACK, UNSUBACK, PINGRESP or CONNACK.
  *
  * @param[in] pIncomingPacket #MQTTPacketInfo_t containing the buffer.
- * @param[out] pPacketId The packet ID of obtained from the buffer.
- * @param[out] pReasonCode Struct to store reason code.
+ * @param[out] pPacketId The packet ID obtained from the buffer.
+ * @param[out] pSessionPresent Boolean flag indicating if a session is present (only valid for CONNACK packets).
+ *                            For CONNACK: true if session is present, false otherwise.
+ *                            For other packet types: this parameter is ignored.
+ * @param[out] pReasonCode Struct to store reason code(s) from the acknowledgment packet.
+ *                        Contains the success/failure status of the corresponding request.
  * @param[in] requestProblem Request problem value set in the connect packet.
- * @param[in]  maxPacketSize Maximum packet size allowed by the client.
- * @param[out] propBuffer Struct to store the deserialized ack properties
+ *                          Indicates if there was an issue with the original request.
+ * @param[in] maxPacketSize Maximum packet size allowed by the client.
+ *                         Used for validation of incoming packet size.
+ * @param[out] propBuffer Struct to store the deserialized acknowledgment properties.
+ *                       Will contain any MQTT v5.0 properties included in the ack packet.
+ * @param[in,out] pConnectProperties Struct to store the deserialized connect/connack properties.
+ *                                  Used only for CONNACK packets to store connection-specific properties.
+ *                                  For other packet types, this parameter can be NULL.
  *
- * @return #MQTTBadParameter, #MQTTBadResponse, #MQTTServerRefused, #MQTTBadResponse, #MQTTBadResponse  or #MQTTSuccess.
+ * @return Returns one of the following:
+ * - #MQTTSuccess if the packet was successfully deserialized
+ * - #MQTTBadParameter if invalid parameters are passed
+ * - #MQTTBadResponse if the packet is malformed
+ * - #MQTTServerRefused if the server explicitly rejected the request
+ * - #MQTTBadResponse if the packet type is invalid or packet parsing fails
  *
  * <b>Example</b>
  * @code{c}
@@ -1981,83 +1898,43 @@ MQTTStatus_t MQTT_GetPublishPacketSize( const MQTTPublishInfo_t * pPublishInfo,
  * MQTTStatus_t status;
  * MQTTPacketInfo_t incomingPacket;
  * uint16_t packetId;
- * MQTTReasonCodeInfo_t reasonCode ;
+ * bool sessionPresent;
+ * MQTTReasonCodeInfo_t reasonCode;
  * bool requestProblem;
  * uint32_t maxPacketSize;
  * MQTTPropBuilder_t propBuffer;
+ * MQTTConnectProperties_t connectProperties;
  *
  * // Receive an incoming packet and populate all fields. The details are out of scope
  * // for this example.
- * receiveIncomingPacket( &incomingPacket );
+ * receiveIncomingPacket(&incomingPacket);
  *
  * // Deserialize ack information if the incoming packet is a publish ack.
- *    status = MQTT_DeserializePublishAck(&incomingPacket,
-                                            &packetId,
-                                            &reasonCode,
-                                            requestProblem,
-                                            maxPacketSize);
- *      if( status == MQTTSuccess )
- *      {
- *       // Ack information is now available.
- *      }
+ * status = MQTT_DeserializeAck(&incomingPacket,
+ *                             &packetId,
+ *                             &sessionPresent,
+ *                             &reasonCode,
+ *                             requestProblem,
+ *                             maxPacketSize,
+ *                             &propBuffer,
+ *                             &connectProperties);
+ * if(status == MQTTSuccess)
+ * {
+ *     // Ack information is now available.
  * }
  * @endcode
  */
-/* @[declare_mqtt_deserializepublishack] */
-MQTTStatus_t MQTT_DeserializePublishAck(const MQTTPacketInfo_t* pIncomingPacket,
-                                    uint16_t* pPacketId,
-                                    MQTTReasonCodeInfo_t* pReasonCode,
-                                    bool requestProblem,
-                                    uint32_t maxPacketSize,
-                                    MQTTPropBuilder_t* propBuffer);
-/* @[declare_mqtt_deserializepublishack] */
+/* @[declare_mqtt_deserializeack] */
+MQTTStatus_t MQTT_DeserializeAck( const MQTTPacketInfo_t * pIncomingPacket,
+                                uint16_t * pPacketId,
+                                bool * pSessionPresent, 
+                                MQTTReasonCodeInfo_t * pReasonCode,
+                                bool requestProblem,
+                                uint32_t maxPacketSize,
+                                MQTTPropBuilder_t * propBuffer,
+                                MQTTConnectProperties_t * pConnectProperties ); 
+/* @[declare_mqtt_deserializeack] */
 
-/**
- * @brief Deserialize an MQTT SUBACK.
- *
- * @param[out] subackReasonCodes The #MQTTReasonCodeInfo_t to store reason codes for each topic filter.
- * @param[in] incomingPacket #MQTTPacketInfo_t containing the buffer.
- * @param[out] pPacketId The packet ID of obtained from the buffer.
- * @param[out] propBuffer Store MQTT properties in the buffer.
- * @param[in] maxPacketSize Maximum packet size allowed by the client.
- *
- * @return #MQTTBadParameter, #MQTTBadResponse, #MQTTServerRefused, #MQTTBadResponse, #MQTTBadResponse  or #MQTTSuccess.
- *
- * <b>Example</b>
- * @code{c}
- *
- * // Variables used in this example.
- * MQTTStatus_t status;
- * MQTTPacketInfo_t incomingPacket;
- * uint16_t packetId;
- * MQTTReasonCodeInfo_t subackReasonCodes;
- * MQTTPropBuilder_t propBuffer;
- * uint32_t maxPacketSize;
- *
- * // Receive an incoming packet and populate all fields. The details are out of scope
- * // for this example.
- * receiveIncomingPacket( &incomingPacket );
- *
- * // Deserialize suback information if the incoming packet is a suback.
- * status = MQTT_DeserializeSuback(&subackReasonCodes,
- *                                  &incomingPacket,
-                                    &packetId,
-                                    &propBuffer,
-                                    maxPacketSize);
- *      if( status == MQTTSuccess )
- *      {
- *       // Suback information is now available.
- *      }
- * }
- * @endcode
- */
-/* @[declare_mqtt_deserializesuback] */
-MQTTStatus_t MQTT_DeserializeSuback( MQTTReasonCodeInfo_t* subackReasonCodes,
-                                     const MQTTPacketInfo_t* incomingPacket,
-                                     uint16_t* pPacketId,
-                                     MQTTPropBuilder_t* propBuffer,
-                                     uint32_t maxPacketSize );
-/* @[declare_mqtt_deserializesuback] */
 /**
  * @fn uint8_t* MQTT_SerializeAckFixed(uint8_t* pIndex,
                                         uint8_t packetType,

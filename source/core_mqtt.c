@@ -1764,7 +1764,7 @@ static MQTTStatus_t handlePublishAcks( MQTTContext_t * pContext,
 
     ackType = getAckFromPacketType( pIncomingPacket->type );
 
-    status = MQTT_DeserializePublishAck( pIncomingPacket, &packetIdentifier, &incomingReasonCode, pContext->connectProperties.requestProblemInfo, pContext->connectProperties.maxPacketSize, &propBuffer );
+    status = MQTT_DeserializeAck( pIncomingPacket, &packetIdentifier, NULL, &incomingReasonCode, pContext->connectProperties.requestProblemInfo, pContext->connectProperties.maxPacketSize, &propBuffer, NULL );
 
     LogInfo( ( "Ack packet deserialized with result: %s.",
                MQTT_Status_strerror( status ) ) );
@@ -1881,7 +1881,7 @@ static MQTTStatus_t handleIncomingAck( MQTTContext_t * pContext,
             break;
 
         case MQTT_PACKET_TYPE_PINGRESP:
-            status = MQTT_DeserializePing( pIncomingPacket );
+            status = MQTT_DeserializeAck( pIncomingPacket, &packetIdentifier, NULL, NULL, 0 , pContext->connectProperties.maxPacketSize, NULL, NULL );
             invokeAppCallback = ( status == MQTTSuccess ) && !manageKeepAlive;
 
             if( ( status == MQTTSuccess ) && ( manageKeepAlive == true ) )
@@ -2898,7 +2898,7 @@ static MQTTStatus_t receiveConnack( MQTTContext_t * pContext,
         pIncomingPacket->pRemainingData = pContext->networkBuffer.pBuffer;
 
         /* Deserialize CONNACK. */
-        status = MQTT_DeserializeConnack( &pContext->connectProperties, pIncomingPacket, pSessionPresent, &propBuffer );
+        status = MQTT_DeserializeAck( pIncomingPacket, NULL, pSessionPresent, NULL, 0 , 0 , &propBuffer, &pContext->connectProperties );
     }
 
     /* If a clean session is requested, a session present should not be set by
@@ -4296,7 +4296,7 @@ static MQTTStatus_t handleSuback( MQTTContext_t * pContext,
 
     appCallback = pContext->appCallback;
 
-    status = MQTT_DeserializeSuback( &ackInfo, pIncomingPacket, &packetIdentifier, &propBuffer, pContext->connectProperties.maxPacketSize );
+    status = MQTT_DeserializeAck( pIncomingPacket, &packetIdentifier, NULL, &ackInfo, 0, pContext->connectProperties.maxPacketSize, &propBuffer, NULL );
 
     LogInfo( ( "Ack packet deserialized with result: %s.",
                MQTT_Status_strerror( status ) ) );
