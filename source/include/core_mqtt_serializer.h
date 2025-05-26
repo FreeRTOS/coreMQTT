@@ -2615,7 +2615,7 @@ MQTTStatus_t MQTT_ValidateDisconnectProperties( uint32_t connectSessionExpiry, c
 /* @[declare_mqtt_validatedisconnectproperties] */
 
 /**
- * @brief Validates the properties specified for an MQTT DISCONNECT packet.
+ * @brief Validates the properties specified for an WILL Properties in the MQTT CONNECT packet.
  *
  * @param[in] pPropertyBuilder Pointer to the property builder structure containing will properties.
  * 
@@ -2627,7 +2627,7 @@ MQTTStatus_t MQTT_ValidateWillProperties( const MQTTPropBuilder_t * pPropertyBui
 /* @[declare_mqtt_validatewillproperties] */
 
 /**
- * @brief Validates the properties specified for an MQTT DISCONNECT packet.
+ * @brief Validates the properties specified for an MQTT UNSUBSCRIBE packet.
  * 
  * @param[in] pPropertyBuilder Pointer to the property builder structure containing unsubscribe properties.
  * 
@@ -2637,6 +2637,18 @@ MQTTStatus_t MQTT_ValidateWillProperties( const MQTTPropBuilder_t * pPropertyBui
 /* @[declare_mqtt_validateunsubscribeproperties] */
 MQTTStatus_t MQTT_ValidateUnsubscribeProperties( const MQTTPropBuilder_t * pPropertyBuilder); 
 /* @[declare_mqtt_validateunsubscribeproperties] */
+
+/**
+ * @brief Validates the properties specified for an MQTT PUBLISH ACK packet.
+ * 
+ * @param[in] pPropertyBuilder Pointer to the property builder structure containing unsubscribe properties.
+ * 
+ * @return Returns one of the following:
+ * - #MQTTSuccess , #MQTTBadParameter or #MQTTBadResponse. 
+ */
+/* @[declare_mqtt_validatepublishackproperties] */
+MQTTStatus_t MQTT_ValidatePublishAckProperties( const MQTTPropBuilder_t * pPropertyBuilder ); 
+/* @[declare_mqtt_validatepublishackproperties] */
 
 /**
  * @brief Gets the Topic Alias property from the MQTT property builder.

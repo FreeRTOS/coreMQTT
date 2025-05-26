@@ -81,10 +81,7 @@ these low-level functions can be used directly:
 - @ref mqtt_getpingreqpacketsize_function <br>
 - @ref mqtt_serializepingreq_function <br>
 - @ref mqtt_deserializepublish_function <br>
-- @ref mqtt_deserializesuback_function <br>
-- @ref mqtt_deserializepublishack_function <br>
-- @ref mqtt_deserializeping_function <br>
-- @ref mqtt_deserializeconnack_function <br>
+- @ref mqtt_deserializeack_function <br>
 - @ref mqtt_deserializedisconnect_function <br>
 - @ref mqtt_getincomingpackettypeandlength_function <br>
 
@@ -128,7 +125,7 @@ If the first read did not succeed, then instead the library checks if a ping req
 See the below diagrams for a representation of the above flows:
 | MQTT Connect Diagram | MQTT ProcessLoop Diagram | MQTT ReceiveLoop Diagram |
 | :--: | :--: | :--: |
-|<img src="CONNECT_V5(2).png" alt="MQTT Connect" width=100% /> |<img src="MQTT_ProcessLoopV5 (2).png" alt="MQTT Process Loop" width=100% /> |<img src="MQTT_ReceiveLoopV5.png" alt="MQTT Receive Loop" width=100% /> |
+|<img src="mqtt_connect_design.png" alt="MQTT Connect" width=100% /> |<img src="mqtt_processloop_design.png" alt="MQTT Process Loop" width=100% /> |<img src="mqtt_receiveloop_design.png" alt="MQTT Receive Loop" width=100% /> |
 
 @section mqtt_keepalive Keep-Alive
 
@@ -219,10 +216,7 @@ Serializer functions of the MQTT library:<br><br>
 @subpage mqtt_getpingreqpacketsize_function <br>
 @subpage mqtt_serializepingreq_function <br>
 @subpage mqtt_deserializepublish_function <br>
-@subpage mqtt_deserializesuback_function <br>
-@subpage mqtt_deserializepublishack_function <br>
-@subpage mqtt_deserializeping_function <br>
-@subpage mqtt_deserializeconnack_function <br>
+@subpage mqtt_deserializeack_function <br>
 @subpage mqtt_deserializedisconnect_function <br>
 @subpage mqtt_getincomingpackettypeandlength_function <br>
 
@@ -402,21 +396,9 @@ Property Get functions:<br><br>
 @snippet core_mqtt_serializer.h declare_mqtt_deserializepublish
 @copydoc MQTT_DeserializePublish
 
-@page mqtt_deserializeping_function MQTT_DeserializePing
-@snippet core_mqtt_serializer.h declare_mqtt_deserializeping
-@copydoc MQTT_DeserializePing
-
-@page mqtt_deserializesuback_function MQTT_DeserializeSuback
-@snippet core_mqtt_serializer.h declare_mqtt_deserializesuback
-@copydoc MQTT_DeserializeSuback
-
-@page mqtt_deserializepublishack_function MQTT_DeserializePublishAck
-@snippet core_mqtt_serializer.h declare_mqtt_deserializepublishack
-@copydoc MQTT_DeserializePublishAck
-
-@page mqtt_deserializeconnack_function MQTT_DeserializeConnack
-@snippet core_mqtt_serializer.h declare_mqtt_deserializeconnack
-@copydoc MQTT_DeserializeConnack
+@page mqtt_deserializeack_function MQTT_DeserializeAck
+@snippet core_mqtt_serializer.h declare_mqtt_deserializeack
+@copydoc MQTT_DeserializeAck
 
 @page mqtt_deserializedisconnect_function MQTT_DeserializeDisconnect
 @snippet core_mqtt_serializer.h declare_mqtt_deserializedisconnect

@@ -399,7 +399,6 @@ static void eventCallback2( MQTTContext_t * pContext,
     ( void ) pPacketInfo;
     ( void ) pDeserializedInfo;
     ( void ) pReasonCode;
-    ( void ) sendPropsBuffer;
     ( void ) getPropsBuffer;
 
 
@@ -439,20 +438,20 @@ static void eventCallback3( MQTTContext_t * pContext,
     isEventCallbackInvoked = true;
 
     *pReasonCode = MQTT_REASON_PUBREC_NOT_AUTHORIZED;
-    uint8_t buf[ 13 ];
-    buf[ 0 ] = 0x26;
-    buf[ 1 ] = 0x00;
-    buf[ 2 ] = 0x02;
-    buf[ 3 ] = 'a';
-    buf[ 4 ] = 'b';
-    buf[ 5 ] = 0x00;
-    buf[ 6 ] = 0x02;
-    buf[ 7 ] = 'c';
-    buf[ 8 ] = 'd';
-    buf[ 9 ] = 0x1F;
-    buf[ 10 ] = 0x00;
-    buf[ 11 ] = 0x01;
-    buf[ 12 ] = 'e';
+    // uint8_t buf[ 13 ];
+    // buf[ 0 ] = 0x26;
+    // buf[ 1 ] = 0x00;
+    // buf[ 2 ] = 0x02;
+    // buf[ 3 ] = 'a';
+    // buf[ 4 ] = 'b';
+    // buf[ 5 ] = 0x00;
+    // buf[ 6 ] = 0x02;
+    // buf[ 7 ] = 'c';
+    // buf[ 8 ] = 'd';
+    // buf[ 9 ] = 0x1F;
+    // buf[ 10 ] = 0x00;
+    // buf[ 11 ] = 0x01;
+    // buf[ 12 ] = 'e';
 
     // sendPropsBuffer->pBuffer = buf;
     // sendPropsBuffer->currentIndex = 13;
@@ -516,8 +515,6 @@ static void eventCallback4( MQTTContext_t * pContext,
     ( void ) pContext;
     ( void ) pPacketInfo;
     ( void ) pDeserializedInfo;
-    ( void ) pReasonCode;
-    ( void ) sendPropsBuffer;
     ( void ) getPropsBuffer;
     uint8_t buf[10] ; 
 
@@ -1457,6 +1454,8 @@ static void expectProcessLoopCalls( MQTTContext_t * const pContext,
     {
         if( ( updateStateStatus != MQTTStateCollision ) && ( pContext->ackPropsBuffer.pBuffer != NULL ) )
         {
+
+            MQTT_ValidatePublishAckProperties_ExpectAnyArgsAndReturn( MQTTSuccess ); 
             MQTT_SerializeAckFixed_Stub( MQTTV5_SerializeAckFixed_cb );
             MQTT_GetAckPacketSize_ExpectAnyArgsAndReturn( serializeStatus );
         }
@@ -1464,6 +1463,7 @@ static void expectProcessLoopCalls( MQTTContext_t * const pContext,
         {
             MQTT_SerializeAck_ExpectAnyArgsAndReturn( serializeStatus );
         }
+
 
         if( serializeStatus != MQTTSuccess )
         {
@@ -5104,7 +5104,7 @@ void test_MQTT_ProcessLoop_handleIncomingAck_Happy_Paths( void )
 
     setupTransportInterface( &transport );
     setupNetworkBuffer( &networkBuffer );
-
+    
     mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback2, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
 
@@ -5202,6 +5202,10 @@ void test_MQTT_ProcessLoop_handleIncomingAck_Clear_Publish_Copies( void )
     TransportInterface_t transport = { 0 };
     MQTTFixedBuffer_t networkBuffer = { 0 };
     ProcessLoopReturns_t expectParams = { 0 };
+    uint8_t ackPropsBuf[ 500 ];
+    size_t ackPropsBufLength = sizeof( ackPropsBuf );
+    MQTTPubAckInfo_t incomingRecords = { 0 };
+    MQTTPubAckInfo_t outgoingRecords = { 0 };
 
     setupTransportInterface( &transport );
     setupNetworkBuffer( &networkBuffer );
@@ -5209,6 +5213,9 @@ void test_MQTT_ProcessLoop_handleIncomingAck_Clear_Publish_Copies( void )
     mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback2, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
 
+    mqttStatus = MQTT_InitStatefulQoS( &context,
+        &outgoingRecords, 4,
+        &incomingRecords, 4, ackPropsBuf, ackPropsBufLength );
     mqttStatus = MQTT_InitRetransmits( &context, publishStoreCallbackSuccess,
                                        publishRetrieveCallbackSuccess,
                                        publishClearCallback );
@@ -5521,7 +5528,7 @@ void test_MQTT_ProcessLoop_handleIncomingAck_InvalidReasonCode( void )
     MQTT_UpdateStateAck_ExpectAnyArgsAndReturn( expectParams.updateStateStatus );
     MQTT_UpdateStateAck_ReturnThruPtr_pNewState( &expectParams.stateAfterDeserialize );
 
-
+    MQTT_ValidatePublishAckProperties_ExpectAnyArgsAndReturn( MQTTSuccess ); 
     mqttStatus = MQTT_ProcessLoop( &context );
     TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
 }
@@ -6236,6 +6243,7 @@ void test_MQTT_ProcessLoop_handleIncomingAck_Error_Paths3( void )
     MQTT_DeserializeAck_ReturnThruPtr_pPacketId( &packetId );
     MQTT_UpdateStateAck_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_UpdateStateAck_ReturnThruPtr_pNewState( &stateAfterDeserialize );
+    MQTT_ValidatePublishAckProperties_ExpectAnyArgsAndReturn( MQTTSuccess ); 
     MQTT_GetAckPacketSize_ExpectAnyArgsAndReturn( MQTTBadParameter );
     status = MQTT_ProcessLoop( &context );
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
@@ -6279,6 +6287,7 @@ void test_MQTT_ProcessLoop_handleIncomingAck_Happy_Paths2( void )
     MQTT_DeserializeAck_ReturnThruPtr_pPacketId( &packetId );
     MQTT_UpdateStateAck_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_UpdateStateAck_ReturnThruPtr_pNewState( &stateAfterDeserialize );
+    MQTT_ValidatePublishAckProperties_ExpectAnyArgsAndReturn( MQTTSuccess ); 
     MQTT_GetAckPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_SerializeAckFixed_Stub( MQTTV5_SerializeAckFixed_cb );
     MQTT_UpdateStateAck_ExpectAnyArgsAndReturn( MQTTSuccess );
@@ -6325,6 +6334,7 @@ void test_MQTT_ProcessLoop_handleIncomingPublish_Happy_Paths3( void )
     MQTT_DeserializePublish_ReturnThruPtr_pPacketId( &packetId );
     MQTT_UpdateStatePublish_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_UpdateStatePublish_ReturnThruPtr_pNewState( &stateAfterDeserialize );
+    MQTT_ValidatePublishAckProperties_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_GetAckPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_SerializeAckFixed_Stub( MQTTV5_SerializeAckFixed_cb );
     MQTT_UpdateStateAck_ExpectAnyArgsAndReturn( MQTTSuccess );
@@ -6371,6 +6381,7 @@ void test_MQTT_ProcessLoop_handleIncomingAck_Happy_Paths3( void )
     MQTT_DeserializeAck_ReturnThruPtr_pPacketId( &packetId );
     MQTT_UpdateStateAck_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_UpdateStateAck_ReturnThruPtr_pNewState( &stateAfterDeserialize );
+    MQTT_ValidatePublishAckProperties_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_GetAckPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_SerializeAckFixed_Stub( MQTTV5_SerializeAckFixed_cb );
     MQTT_UpdateStateAck_ExpectAnyArgsAndReturn( MQTTSuccess );
@@ -6417,6 +6428,7 @@ void test_MQTT_ProcessLoop_handleIncomingAck_Happy_Paths4( void )
     MQTT_DeserializeAck_ReturnThruPtr_pPacketId( &packetId );
     MQTT_UpdateStateAck_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_UpdateStateAck_ReturnThruPtr_pNewState( &stateAfterDeserialize );
+    MQTT_ValidatePublishAckProperties_ExpectAnyArgsAndReturn( MQTTSuccess ); 
     MQTT_GetAckPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_SerializeAckFixed_Stub( MQTTV5_SerializeAckFixed_cb );
     MQTT_UpdateStateAck_ExpectAnyArgsAndReturn( MQTTSuccess );
@@ -6463,6 +6475,7 @@ void test_MQTT_ProcessLoop_handleIncomingAck_Error_Paths5( void )
     MQTT_DeserializeAck_ReturnThruPtr_pPacketId( &packetId );
     MQTT_UpdateStateAck_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_UpdateStateAck_ReturnThruPtr_pNewState( &stateAfterDeserialize );
+    MQTT_ValidatePublishAckProperties_ExpectAnyArgsAndReturn( MQTTSuccess ); 
     MQTT_GetAckPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_SerializeAckFixed_Stub( MQTTV5_SerializeAckFixed_cb );
     status = MQTT_ProcessLoop( &context );

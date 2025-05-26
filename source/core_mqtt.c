@@ -1820,7 +1820,7 @@ static MQTTStatus_t handlePublishAcks( MQTTContext_t * pContext,
         appCallback( pContext, pIncomingPacket, &deserializedInfo, &reasonCode, &pContext->ackPropsBuffer, &propBuffer );
 
         /* Send PUBREL or PUBCOMP if necessary. */
-        ackPropsAdded = ( pContext->ackPropsBuffer.pBuffer != NULL ) && ( pContext->ackPropsBuffer.currentIndex > 0U );
+        ackPropsAdded = ( ( pContext->ackPropsBuffer.pBuffer != NULL ) && ( pContext->ackPropsBuffer.currentIndex > 0U ) );
 
         if( ( ackPropsAdded == false ) && ( reasonCode == MQTT_REASON_PUBREC_SUCCESS ) )
         {
@@ -3135,6 +3135,7 @@ MQTTStatus_t MQTT_Init( MQTTContext_t * pContext,
         pContext->getTime = getTimeFunction;
         pContext->appCallback = userCallback;
         pContext->networkBuffer = *pNetworkBuffer;
+        pContext->ackPropsBuffer.pBuffer = NULL;
 
         /* Zero is not a valid packet ID per MQTT spec. Start from 1. */
         pContext->nextPacketId = 1;
@@ -4420,7 +4421,7 @@ static MQTTStatus_t sendPublishAcksWithProperty( MQTTContext_t * pContext,
      * Packet Identifier        + 2 = 7
      * Reason Code              + 1 = 8
      */
-    uint8_t pubAckHeader[ 8 ];
+    uint8_t pubAckHeader[ 8U ];
     size_t remainingLength = 0U;
     size_t packetSize = 0U;
 
@@ -4444,7 +4445,15 @@ static MQTTStatus_t sendPublishAcksWithProperty( MQTTContext_t * pContext,
 
     packetTypeByte = getAckTypeToSend( publishState );
 
-    status = validatePublishAckReasonCode( reasonCode );
+    if( packetTypeByte != 0U )
+    {
+        status = MQTT_ValidatePublishAckProperties( &pContext->ackPropsBuffer ); 
+    }
+
+    if( ( packetTypeByte != 0U ) && ( status == MQTTSuccess ) )
+    {
+        status = validatePublishAckReasonCode( reasonCode );
+    }
 
     if( ( packetTypeByte != 0U ) && ( status == MQTTSuccess ) )
     {

@@ -764,6 +764,22 @@ MQTTStatus_t deserializeConnack( MQTTConnectProperties_t * pConnackProperties,
                                 const MQTTPacketInfo_t * pIncomingPacket,
                                 bool * pSessionPresent,
                                 MQTTPropBuilder_t * propBuffer ); 
+
+/**
+ * @brief Deserialize an MQTT SUBACK / UNSUBACK packet.
+ *
+ * @param[in]  incomingPacket #MQTTPacketInfo_t containing the buffer.
+ * @param[in]  pPacketId The packet ID obtained from the buffer.
+ * @param[in]  subackReasonCodes Struct to store reason code(s) from the acknowledgment packet.
+ *                               Contains the success/failure status of the corresponding request.
+ * @param[in]  propBuffer MQTTPropBuilder_t to store the deserialized properties.
+ *
+ * @return #MQTTBadParameter, #MQTTBadResponse, #MQTTSuccess, #MQTTServerRefused
+ */                                    
+static MQTTStatus_t deserializeSuback( const MQTTPacketInfo_t * incomingPacket,
+                                     uint16_t * pPacketId,
+                                     MQTTReasonCodeInfo_t * subackReasonCodes,
+                                     MQTTPropBuilder_t * propBuffer);                        
 /*-----------------------------------------------------------*/
 
 static size_t variableLengthEncodedSize( size_t length )
@@ -3276,6 +3292,7 @@ static MQTTStatus_t validateConnackParams( const MQTTPacketInfo_t * pIncomingPac
                                            bool * pSessionPresent )
 {
     MQTTStatus_t status = MQTTSuccess;
+    const uint8_t * pRemainingData = NULL;
 
     /*Validate the arguments via asserts. */
     assert( pIncomingPacket != NULL ); 
@@ -3283,9 +3300,7 @@ static MQTTStatus_t validateConnackParams( const MQTTPacketInfo_t * pIncomingPac
     assert( pIncomingPacket->pRemainingData != NULL ); 
     assert( pIncomingPacket->type == MQTT_PACKET_TYPE_CONNACK ); 
 
-    const uint8_t * pRemainingData = NULL;
     pRemainingData = pIncomingPacket->pRemainingData;
-
     if( ( pRemainingData[ 0 ] | 0x01U ) != 0x01U )
     {
         LogError( ( "Reserved bits in CONNACK incorrect." ) );
@@ -6920,6 +6935,45 @@ MQTTStatus_t MQTT_ValidateWillProperties( const MQTTPropBuilder_t * pPropertyBui
 
         }
     }
+    return status; 
+}
+
+/*-----------------------------------------------------------*/
+
+MQTTStatus_t MQTT_ValidatePublishAckProperties( const MQTTPropBuilder_t * pPropertyBuilder )
+{
+    MQTTStatus_t status = MQTTSuccess ; 
+    size_t propertyLength = 0 ; 
+    uint8_t * pIndex = NULL ;
+
+    if ( ( pPropertyBuilder != NULL ) && ( pPropertyBuilder->pBuffer != NULL ) )
+    {
+        propertyLength = pPropertyBuilder->currentIndex; 
+        pIndex = pPropertyBuilder->pBuffer; 
+    }
+
+    while ( ( propertyLength > 0 ) && ( status == MQTTSuccess ) )
+    {
+        uint8_t propertyId = *pIndex; 
+        bool used = false ;
+        pIndex = &pIndex[1]; 
+        propertyLength -= sizeof(uint8_t); 
+
+        switch (propertyId) 
+        {
+        case MQTT_REASON_STRING_ID:
+            status = decodeAndDiscardutf_8( &propertyLength , &used, &pIndex ) ;
+            break ; 
+        case MQTT_USER_PROPERTY_ID:
+            status = decodeAndDiscard(&propertyLength, &pIndex); 
+            break; 
+        default :
+            status = MQTTBadParameter; 
+            break; 
+
+        }
+    }
+
     return status; 
 }
 
