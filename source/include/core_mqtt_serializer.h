@@ -2468,7 +2468,7 @@ MQTTStatus_t MQTTPropAdd_PubMessageExpiry(MQTTPropBuilder_t* pPropertyBuilder, u
 MQTTStatus_t MQTTPropAdd_WillDelayInterval( MQTTPropBuilder_t * pPropertyBuilder,
                                             uint32_t willDelayInterval );
 /* @[declare_mqttpropadd_willdelayinterval] */
- 
+
 /**
  * @brief Adds Topic Alias property to the MQTT property builder.
  *
