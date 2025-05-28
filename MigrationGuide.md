@@ -313,7 +313,7 @@ status = MQTT_Init( &mqttContext,
                     eventCallback,
                     &fixedBuffer );
 ```
-* The `MQTT_InitStatefulQoS` function now includes support for MQTT v5 properties in publish acknowledgments with two additional parameters. Thus, the signature of `MQTT_InitStatefulQoS` changed from `MQTTStatus_t MQTT_InitStatefulQoS( MQTTContext_t * pContext, MQTTPubAckInfo_t * pOutgoingPublishRecords, size_t outgoingPublishCount, MQTTPubAckInfo_t * pIncomingPublishRecords, size_t incomingPublishCount )` to `MQTTStatus_t MQTT_InitStatefulQoS( MQTTContext_t * pContext, MQTTPubAckInfo_t * pOutgoingPublishRecords, size_t outgoingPublishCount, MQTTPubAckInfo_t * pIncomingPublishRecords, size_t incomingPublishCount, uint8_t * pBuffer, size_t bufferLength )`. The new parameters can be set to NULL and 0 respectively if not using MQTT v5 properties in publish acknowledgments. For example: 
+* The `MQTT_InitStatefulQoS` function now includes support for MQTT v5 properties in outgoing publish acknowledgments with two additional parameters. Thus, the signature of `MQTT_InitStatefulQoS` changed from `MQTTStatus_t MQTT_InitStatefulQoS( MQTTContext_t * pContext, MQTTPubAckInfo_t * pOutgoingPublishRecords, size_t outgoingPublishCount, MQTTPubAckInfo_t * pIncomingPublishRecords, size_t incomingPublishCount )` to `MQTTStatus_t MQTT_InitStatefulQoS( MQTTContext_t * pContext, MQTTPubAckInfo_t * pOutgoingPublishRecords, size_t outgoingPublishCount, MQTTPubAckInfo_t * pIncomingPublishRecords, size_t incomingPublishCount, uint8_t * pBuffer, size_t bufferLength )`. The new parameters can be set to NULL and 0 respectively if not using MQTT v5 properties in publish acknowledgments. For example: 
 
 **Old Code Snippet**:
 ```

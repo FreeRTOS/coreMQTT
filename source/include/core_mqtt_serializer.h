@@ -3072,7 +3072,6 @@ MQTTStatus_t MQTTPropGet_ConnAuthData(MQTTPropBuilder_t * propBuffer,
 
 /* @[declare_mqttpropget_connauthdata] */
 
-
 /**
  * @brief Gets the next property identifier from the incoming MQTT packet properties.
  *

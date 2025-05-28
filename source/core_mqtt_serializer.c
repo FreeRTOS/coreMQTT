@@ -2428,7 +2428,7 @@ MQTTStatus_t MQTT_SerializeSubscribe( const MQTTSubscribeInfo_t * pSubscriptionL
             {
                 LogInfo( ( "Adding QoS as QoS 2 in SUBSCRIBE payload" ) );
                 UINT8_SET_BIT( subscriptionOptions, MQTT_SUBSCRIBE_QOS2 );
-            }
+            }git 
             else
             {
                 LogInfo( ( "Adding QoS as QoS 0 in SUBSCRIBE payload" ) );
@@ -2469,7 +2469,7 @@ MQTTStatus_t MQTT_SerializeSubscribe( const MQTTSubscribeInfo_t * pSubscriptionL
                 UINT8_SET_BIT( subscriptionOptions, MQTT_SUBSCRIBE_RETAIN_HANDLING2 );
             }
             *pIndex = subscriptionOptions ;
-            pIndex = &pIndex[1];
+            pIndex = &pIndex[ 1 ];
         }
 
         LogDebug( ( "Length of serialized SUBSCRIBE packet is %lu.",
@@ -3779,7 +3779,7 @@ static MQTTStatus_t deserializeConnackProperties( MQTTConnectProperties_t * pCon
         }
         else
         {
-            /* MISRA Empty body */
+            /* Empty else MISRA 15.7 */
         }
     }
 
@@ -4559,7 +4559,6 @@ static MQTTStatus_t deserializeSubackProperties( MQTTPropBuilder_t * propBuffer,
     if( propBuffer != NULL )
     {
         propBuffer->bufferLength = propertyLength;
-        /* coverity[misra_c_2012_rule_11_8_violation] */
         propBuffer->pBuffer = pLocalIndex;
     }
 

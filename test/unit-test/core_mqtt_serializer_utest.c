@@ -4973,7 +4973,7 @@ void test_ValidateWillProperties( void )
     TEST_ASSERT_EQUAL( MQTTBadParameter, status );
 }
 
-void test_VaidatePublishAckProperties(void)
+void test_ValidatePublishAckProperties(void)
 {
     MQTTStatus_t status = MQTTSuccess;
 
