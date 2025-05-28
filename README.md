@@ -176,7 +176,8 @@ git submodule update --checkout --init --recursive test/unit-test/CMock
               -DCMAKE_BUILD_TYPE=Debug  \
               -DBUILD_CLONE_SUBMODULES=ON \
               -DUNITTEST=1 \
-              -DCMAKE_C_FLAGS='--coverage -Wall -Wextra -Wsign-compare -Werror -DNDEBUG -DLIBRARY_LOG_LEVEL=LOG_DEBUG'
+              -DCOV_ANALYSIS=1 \
+              -DCMAKE_C_FLAGS='--coverage -Wall -Wextra -Wsign-compare -Werror -DLIBRARY_LOG_LEVEL=LOG_DEBUG'
     ```
     For Mac machines:
 
@@ -186,7 +187,8 @@ git submodule update --checkout --init --recursive test/unit-test/CMock
               -DCMAKE_BUILD_TYPE=RelWithDebInfo  \
               -DBUILD_CLONE_SUBMODULES=ON \
               -DUNITTEST=1 \
-              -DCMAKE_C_FLAGS='--coverage -Wall -Wextra -Wsign-compare -Werror -DNDEBUG -DLIBRARY_LOG_LEVEL=LOG_DEBUG' \
+              -DCOV_ANALYSIS=1 \
+              -DCMAKE_C_FLAGS='--coverage -Wall -Wextra -Wsign-compare -Werror -DLIBRARY_LOG_LEVEL=LOG_DEBUG' \
               -DCMAKE_C_STANDARD=99
     ```
 
