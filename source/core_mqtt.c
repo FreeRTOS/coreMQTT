@@ -874,7 +874,7 @@ static int32_t sendMessageVector( MQTTContext_t * pContext,
          * bounded if the sendResult is positive. If it were not then the assert
          * above in the function will be triggered and the flow will never reach
          * here. Hence for that sake the branches on this condition are excluded
-         * from coverage anayalis */
+         * from coverage analysis */
         if( ( sendResult > 0 ) &&
             ( pIoVectIterator <= &( pIoVec[ ioVecCount - 1U ] ) ) ) /* LCOV_EXCL_BR_LINE */
         {
