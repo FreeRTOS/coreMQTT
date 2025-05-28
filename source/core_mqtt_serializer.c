@@ -2413,17 +2413,63 @@ MQTTStatus_t MQTT_SerializeSubscribe( const MQTTSubscribeInfo_t * pSubscriptionL
         /* Serialize each subscription topic filter and QoS. */
         for( i = 0; i < subscriptionCount; i++ )
         {
+            uint8_t subscriptionOptions = 0U ; 
             pIndex = encodeString( pIndex,
                                    pSubscriptionList[ i ].pTopicFilter,
                                    pSubscriptionList[ i ].topicFilterLength );
 
             /* Place the subscription options  */
-            *pIndex = ( ( ( ( uint8_t ) pSubscriptionList[ i ].qos ) & 0x03 ) |
-            ( ( uint8_t ) ( pSubscriptionList[ i ].noLocalOption ? ( 1 << 2 ) : 0 ) ) |
-            ( ( uint8_t ) ( pSubscriptionList[ i ].retainAsPublishedOption ? ( 1 << 3 ) : 0 ) ) |
-            ( ( ( ( uint8_t ) pSubscriptionList[ i ].retainHandlingOption ) & 0x03 ) << 4 ) );
+            if( pSubscriptionList[i].qos == MQTTQoS1 )
+            {
+                LogInfo( ( "Adding QoS as QoS 1 in SUBSCRIBE payload" ) );
+                UINT8_SET_BIT( subscriptionOptions, MQTT_SUBSCRIBE_QOS1 );
+            }
+            else if( pSubscriptionList[i].qos == MQTTQoS2 )
+            {
+                LogInfo( ( "Adding QoS as QoS 2 in SUBSCRIBE payload" ) );
+                UINT8_SET_BIT( subscriptionOptions, MQTT_SUBSCRIBE_QOS2 );
+            }
+            else
+            {
+                LogInfo( ( "Adding QoS as QoS 0 in SUBSCRIBE payload" ) );
+            }
 
-            pIndex++;
+            if( pSubscriptionList[i].noLocalOption )
+            {
+                LogInfo( ( "Adding noLocalOption in SUBSCRIBE payload" ) );
+                UINT8_SET_BIT( subscriptionOptions, MQTT_SUBSCRIBE_NO_LOCAL );
+            }
+            else
+            {
+                LogDebug( ( "Adding noLocalOption as 0 in SUBSCRIBE payload" ) );
+            }
+
+            if( pSubscriptionList[i].retainAsPublishedOption )
+            {
+                LogInfo( ( " retainAsPublishedOption in SUBSCRIBE payload" ) );
+                UINT8_SET_BIT( subscriptionOptions, MQTT_SUBSCRIBE_RETAIN_AS_PUBLISHED );
+            }
+            else
+            {
+                LogDebug( ( "retainAsPublishedOption as 0 in SUBSCRIBE payload" ) );
+            }
+
+            if( pSubscriptionList[i].retainHandlingOption == retainSendOnSub )
+            {
+                LogInfo( ( "Send Retain messages at the time of subscribe" ) );
+            }
+            else if( pSubscriptionList[i].retainHandlingOption == retainSendOnSubIfNotPresent )
+            {
+                LogInfo( ( "Send retained messages at subscribe only if the subscription does not currently exist" ) );
+                UINT8_SET_BIT( subscriptionOptions, MQTT_SUBSCRIBE_RETAIN_HANDLING1 );
+            }
+            else
+            {
+                LogInfo( ( "Do not send retained messages at subscribe" ) );
+                UINT8_SET_BIT( subscriptionOptions, MQTT_SUBSCRIBE_RETAIN_HANDLING2 );
+            }
+            *pIndex = subscriptionOptions ;
+            pIndex = &pIndex[1];
         }
 
         LogDebug( ( "Length of serialized SUBSCRIBE packet is %lu.",

@@ -2202,9 +2202,11 @@ static MQTTStatus_t sendSubscribeWithoutCopy( MQTTContext_t * pContext,
      */
     uint8_t propertyLength[ 4U ];
 
-    pIndex = MQTT_SerializeSubscribeHeader( remainingLength, subscribeHeader, packetId );
-
+    pIndex = subscribeHeader ; 
     pIterator = pIoVector;
+
+    pIndex = MQTT_SerializeSubscribeHeader( remainingLength, pIndex , packetId );
+
     pIterator->iov_base = subscribeHeader;
     /* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-182 */
     /* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-108 */
@@ -2328,22 +2330,24 @@ static MQTTStatus_t sendUnsubscribeWithoutCopy( MQTTContext_t * pContext,
      * Remaining Length    + 4 = 5
      * Packet Id           + 2 = 7
      */
-    uint8_t subscribeHeader[ 7U ];
+    uint8_t unsubscribeHeader[ 7U ];
     /**
      * Maximum number of bytes to send the Property Length.
      * Property Length  0 + 4 = 4
      */
     uint8_t propertyLength[ 4U ];
 
-    pIndex = MQTT_SerializeUnsubscribeHeader( remainingLength, subscribeHeader, packetId );
+    pIndex = unsubscribeHeader ; 
+    pIterator = pIoVector ; 
 
-    pIterator = pIoVector;
-    pIterator->iov_base = subscribeHeader;
+    pIndex = MQTT_SerializeUnsubscribeHeader( remainingLength, pIndex, packetId );
+
+    pIterator->iov_base = unsubscribeHeader;
     /* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-182 */
     /* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-108 */
     /* coverity[misra_c_2012_rule_18_2_violation] */
     /* coverity[misra_c_2012_rule_10_8_violation] */
-    pIterator->iov_len = ( size_t ) ( pIndex - subscribeHeader );
+    pIterator->iov_len = ( size_t ) ( pIndex - unsubscribeHeader );
     totalPacketLength += pIterator->iov_len;
     pIterator++;
     ioVectorLength++;
@@ -2495,7 +2499,7 @@ static MQTTStatus_t sendPublishWithoutCopy( MQTTContext_t * pContext,
 
     iterator = &pIoVector[ ioVectorLength ];
     pIndex = propertyLength;
-    pIndex = encodeVariableLength( propertyLength, publishPropLength );
+    pIndex = encodeVariableLength( pIndex, publishPropLength );
     iterator->iov_base = propertyLength;
     /* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-182 */
     /* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-108 */
