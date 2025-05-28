@@ -1710,9 +1710,9 @@ static MQTTStatus_t deserializeSuback( const MQTTPacketInfo_t * incomingPacket,
     {
         status = MQTTBadParameter;
     }
-    else if( incomingPacket->remainingLength < 3U )
+    else if( incomingPacket->remainingLength < 4U )
     {
-        LogError( ( "Suback Packet Cannot have a remaining Length of less than 3" ) );
+        LogError( ( "Suback Packet Cannot have a remaining Length of less than 4" ) );
         status = MQTTBadResponse;
     }
     else
@@ -3629,7 +3629,7 @@ static MQTTStatus_t deserializeConnackProperties( MQTTConnectProperties_t * pCon
 
     /*Decode all the properties received, validate and store them in pConnackProperties.*/
 
-    while( ( propertyLength > 0U ) && ( status == MQTTSuccess ) && ( propBuffer != NULL ) )
+    while( ( propertyLength > 0U ) && ( status == MQTTSuccess ) )
     {
         uint8_t propertyId = *pVariableHeader;
         pVariableHeader = &pVariableHeader[ 1 ];
@@ -4566,7 +4566,7 @@ MQTTStatus_t MQTT_DeserializeAck( const MQTTPacketInfo_t * pIncomingPacket,
 
     if( pIncomingPacket == NULL )
     {
-        LogError( ( "pIncomingPacket , pReasonCode cannot be NULL." ) );
+        LogError( ( "pIncomingPacket cannot be NULL." ) );
         status = MQTTBadParameter;
     }
 

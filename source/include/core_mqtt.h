@@ -1477,6 +1477,21 @@ MQTTStatus_t MQTT_PropertyBuilder_Init( MQTTPropBuilder_t * pPropertyBuilder,
                                         size_t length );
 /* @[declare_mqtt_propertybuilder_init] */
 
+/**
+ * @brief Initialize an MQTTConnectProperties_t.
+ *
+ * @note This function initializes the connect properties to default values. 
+ *
+ * @param[in] pConnectProperties The connect properties to initialize.
+ *
+ * @return 
+ * - #MQTTBadParameter if pConnectProperties is NULL.
+ * - #MQTTSuccess otherwise.
+ */
+/* @[declare_mqtt_initconnect] */
+MQTTStatus_t MQTT_InitConnect( MQTTConnectProperties_t * pConnectProperties ); 
+/* @[declare_mqtt_initconnect] */
+
 /* *INDENT-OFF* */
 #ifdef __cplusplus
     }

@@ -1201,12 +1201,13 @@ MQTTStatus_t MQTT_SerializePublishHeaderWithoutTopic( const MQTTPublishInfo_t * 
  * // Variables used in this example.
  * MQTTStatus_t status;
  * MQTTPublishInfo_t publishInfo = { 0 };
- * MQTTPropBuilder_t publishProperties = { 0 };
+ * MQTTPropBuilder_t publishProperties ;
  * MQTTFixedBuffer_t fixedBuffer;
  * uint8_t buffer[ BUFFER_SIZE ];
  * size_t remainingLength = 0, packetSize = 0, headerSize = 0;
  * uint16_t packetId;
  * int32_t bytesSent;
+ * uint32_t maxPacketSize = pContext->connectProperties.serverMaxPacketSize;
  *
  * fixedBuffer.pBuffer = buffer;
  * fixedBuffer.size = BUFFER_SIZE;
@@ -1217,8 +1218,8 @@ MQTTStatus_t MQTT_SerializePublishHeaderWithoutTopic( const MQTTPublishInfo_t * 
  *
  * // Assume publishInfo and publishProperties have been initialized. Get the publish packet size.
  * status = MQTT_GetPublishPacketSize(
- *      &publishInfo, &publishProperties, &remainingLength, &packetSize
- * );
+ *      &publishInfo, &publishProperties, &remainingLength, &packetSize, maxPacketSize
+);
  * assert( status == MQTTSuccess );
  * // The payload will not be serialized, so the the fixed buffer does not need to hold it.
  * assert( ( packetSize - publishInfo.payloadLength ) <= BUFFER_SIZE );
@@ -1899,11 +1900,11 @@ MQTTStatus_t MQTT_GetPublishPacketSize( const MQTTPublishInfo_t * pPublishInfo,
  * MQTTPacketInfo_t incomingPacket;
  * uint16_t packetId;
  * bool sessionPresent;
- * MQTTReasonCodeInfo_t reasonCode;
- * bool requestProblem;
- * uint32_t maxPacketSize;
- * MQTTPropBuilder_t propBuffer;
- * MQTTConnectProperties_t connectProperties;
+ * MQTTReasonCodeInfo_t reasonCode ; // Can be set to NULL if the incoming packet is CONNACK or PINGRESP
+ * bool requestProblem = = pContext->connectProperties.requestProblemInfo ; // only relevant if the incoming packet is a PUBLISH Ack. 
+ * uint32_t maxPacketSize = pContext->connectProperties.maxPacketSize ; 
+ * MQTTPropBuilder_t propBuffer; // Can be set to NULL if the user does not want any incoming properties. 
+ * MQTTConnectProperties_t connectProperties = pContext->connectProperties;  // Can be set to NULL if the incoming packet is PUBLISH ACKs, SUBACK, UNSUBACK or PINGRESP
  *
  * // Receive an incoming packet and populate all fields. The details are out of scope
  * // for this example.
@@ -1919,7 +1920,7 @@ MQTTStatus_t MQTT_GetPublishPacketSize( const MQTTPublishInfo_t * pPublishInfo,
  *                             &propBuffer,
  *                             &connectProperties);
  * if(status == MQTTSuccess)
- * {
+ * {s
  *     // Ack information is now available.
  * }
  * @endcode

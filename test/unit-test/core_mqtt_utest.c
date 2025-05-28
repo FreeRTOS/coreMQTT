@@ -5412,6 +5412,21 @@ void test_MQTT_ProcessLoop_handleIncomingAck_Error_PathsWithProperties( void )
 
     /* Verify that MQTTStatusNotConnected propagated when receiving a any ACK,
      * here PUBREC but thr connection status is MQTTNotConnected. */
+
+    /* Verify that MQTTStatusNotConnected propagated when receiving a any ACK,
+     * here PUBREC but thr connection status is MQTTNotConnected. */
+    context.connectStatus = MQTTNotConnected;
+    currentPacketType = MQTT_PACKET_TYPE_PUBREC;
+    /* Set expected return values in the loop. */
+    resetProcessLoopParams( &expectParams );
+    expectParams.stateAfterDeserialize = MQTTPubRelSend;
+    expectParams.stateAfterSerialize = MQTTPubCompPending;
+    expectParams.serializeStatus = MQTTSuccess;
+    expectParams.processLoopStatus = MQTTStatusNotConnected;
+    context.connectStatus = MQTTNotConnected;
+    expectProcessLoopCalls( &context, &expectParams );
+     
+
     context.connectStatus = MQTTNotConnected;
     currentPacketType = MQTT_PACKET_TYPE_PUBREC;
     /* Set expected return values in the loop. */
@@ -8686,4 +8701,16 @@ void test_receiveFailed( void )
     status = MQTT_ProcessLoop( &mqttContext );
     TEST_ASSERT_EQUAL( MQTTRecvFailed, status );
     TEST_ASSERT_EQUAL( MQTTDisconnectPending, mqttContext.connectStatus );
+}
+
+void test_MQTT_InitConnect(void)
+{
+    MQTTStatus_t status = MQTTSuccess ; 
+
+    status = MQTT_InitConnect( NULL ); 
+    TEST_ASSERT_EQUAL( MQTTBadParameter, status );
+
+    MQTTConnectProperties_t connectProperties ; 
+    status = MQTT_InitConnect(&connectProperties);
+    TEST_ASSERT_EQUAL( MQTTSuccess, status );
 }

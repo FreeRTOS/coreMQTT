@@ -36,22 +36,6 @@
 /* Include config defaults header to get default values of configs. */
 #include "core_mqtt_config_defaults.h"
 
-#ifndef MQTT_PRE_SEND_HOOK
-
-/**
- * @brief Hook called before a 'send' operation is executed.
- */
-    #define MQTT_PRE_SEND_HOOK( pContext )
-#endif /* !MQTT_PRE_SEND_HOOK */
-
-#ifndef MQTT_POST_SEND_HOOK
-
-/**
- * @brief Hook called after the 'send' operation is complete.
- */
-    #define MQTT_POST_SEND_HOOK( pContext )
-#endif /* !MQTT_POST_SEND_HOOK */
-
 #ifndef MQTT_PRE_STATE_UPDATE_HOOK
 
 /**
@@ -579,7 +563,7 @@ static MQTTStatus_t sendDisconnectWithoutCopy( MQTTContext_t * pContext,
  *
  * @return #MQTTSuccess
  */
-static MQTTStatus_t MQTT_InitConnect( MQTTConnectProperties_t * pConnectProperties );
+static MQTTStatus_t initConnectProperties( MQTTConnectProperties_t * pConnectProperties );
 
 /**
  * @brief Validate Publish Ack Reason Code
@@ -1705,8 +1689,8 @@ static MQTTStatus_t handleIncomingPublish( MQTTContext_t * pContext,
     if( status == MQTTSuccess )
     {
         deserializedInfo.packetIdentifier = packetIdentifier;
-        deserializedInfo.deserializationResult = status;
         deserializedInfo.pPublishInfo = &publishInfo;
+        deserializedInfo.deserializationResult = status;
 
         /* Invoke application callback to hand the buffer over to application
          * before sending acks. */
@@ -1729,11 +1713,7 @@ static MQTTStatus_t handleIncomingPublish( MQTTContext_t * pContext,
         }
         else
         {
-            MQTT_PRE_SEND_HOOK( pContext );
-
             status = sendPublishAcksWithProperty( pContext, packetIdentifier, publishRecordState, reasonCode );
-
-            MQTT_POST_SEND_HOOK( pContext );
         }
     }
 
@@ -1831,11 +1811,8 @@ static MQTTStatus_t handlePublishAcks( MQTTContext_t * pContext,
         }
         else
         {
-            MQTT_PRE_SEND_HOOK( pContext );
-
             status = sendPublishAcksWithProperty( pContext, packetIdentifier, publishRecordState, reasonCode );
 
-            MQTT_POST_SEND_HOOK( pContext );
         }
     }
 
@@ -1919,6 +1896,7 @@ static MQTTStatus_t handleIncomingAck( MQTTContext_t * pContext,
 
     return status;
 }
+
 /*-----------------------------------------------------------*/
 
 static MQTTStatus_t receiveSingleIteration( MQTTContext_t * pContext,
@@ -2287,7 +2265,7 @@ static MQTTStatus_t sendSubscribeWithoutCopy( MQTTContext_t * pContext,
             pIterator = &pIterator[ vectorsAdded ];
             ioVectorLength += vectorsAdded;
 
-            /* Lastly, send the Subscription Options */
+            /* Lastly, send the subscription options. */
 
             addSubscriptionOptions( pSubscriptionList[ subscriptionsSent ], subscriptionOptionsArray, currentOptionIndex );
 
@@ -2351,6 +2329,10 @@ static MQTTStatus_t sendUnsubscribeWithoutCopy( MQTTContext_t * pContext,
      * Packet Id           + 2 = 7
      */
     uint8_t subscribeHeader[ 7U ];
+    /**
+     * Maximum number of bytes to send the Property Length.
+     * Property Length  0 + 4 = 4
+     */
     uint8_t propertyLength[ 4U ];
 
     pIndex = MQTT_SerializeUnsubscribeHeader( remainingLength, subscribeHeader, packetId );
@@ -2458,6 +2440,10 @@ static MQTTStatus_t sendPublishWithoutCopy( MQTTContext_t * pContext,
     /* Bytes required to encode the packet ID in an MQTT header according to
      * the MQTT specification. */
     uint8_t serializedPacketID[ 2U ];
+    /**
+     * Maximum number of bytes to send the Property Length.
+     * Property Length  0 + 4 = 4
+     */
     uint8_t propertyLength[ 4U ];
 
     /* Maximum number of vectors required to encode and send a publish
@@ -2469,7 +2455,7 @@ static MQTTStatus_t sendPublishWithoutCopy( MQTTContext_t * pContext,
      * Optional Properties                                 + 1 = 5
      * Payload                                             + 1 = 6  */
 
-    TransportOutVector_t pIoVector[ 6 ];
+    TransportOutVector_t pIoVector[ 6U ];
     uint8_t * pIndex;
     TransportOutVector_t * iterator;
 
@@ -2604,13 +2590,17 @@ static MQTTStatus_t sendConnectWithoutCopy( MQTTContext_t * pContext,
     uint8_t serializedPayloadLength[ 2U ];
     uint8_t serializedUsernameLength[ 2U ];
     uint8_t serializedPasswordLength[ 2U ];
+    /**
+     * Maximum number of bytes to send the Property Length.
+     * Property Length  0 + 4 = 4
+     */
     uint8_t propertyLength[ 4U ];
     uint8_t willPropertyLength[ 4U ];
     size_t vectorsAdded;
 
 
 
-    /* Maximum number of bytes required by the fixed  part of the CONNECT
+    /* Maximum number of bytes required by the fixed part of the CONNECT
      * packet header according to the MQTT specification.
      * MQTT Control Byte          0 + 1 = 1
      * Remaining length (max)       + 4 = 5
@@ -2651,6 +2641,9 @@ static MQTTStatus_t sendConnectWithoutCopy( MQTTContext_t * pContext,
                                                    pConnectInfo,
                                                    pWillInfo,
                                                    remainingLength );
+
+        /* Set Default value of serverKeepAlive to keepAlive value sent in the CONNECT packet. */                                           
+        pContext->connectProperties.serverKeepAlive = pConnectInfo->keepAliveSeconds;
 
         iterator->iov_base = connectPacketHeader;
         /* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-182 */
@@ -3144,7 +3137,7 @@ MQTTStatus_t MQTT_Init( MQTTContext_t * pContext,
         pContext->nextPacketId = 1;
 
         /* Setting default connect properties in our application */
-        status = MQTT_InitConnect( &connectProperties );
+        status = initConnectProperties( &connectProperties );
         pContext->connectProperties = connectProperties;
     }
 
@@ -3443,7 +3436,7 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
         {
             pContext->connectStatus = MQTTConnected;
             /* Initialize keep-alive fields after a successful connection. */
-            pContext->keepAliveIntervalSec = pConnectInfo->keepAliveSeconds;
+            pContext->keepAliveIntervalSec = pContext->connectProperties.serverKeepAlive;
             pContext->waitingForPingResp = false;
             pContext->pingReqSendTimeMs = 0U;
         }
@@ -4374,7 +4367,7 @@ MQTTStatus_t MQTT_PropertyBuilder_Init( MQTTPropBuilder_t * pPropertyBuilder,
 
 /*-----------------------------------------------------------*/
 
-static MQTTStatus_t MQTT_InitConnect( MQTTConnectProperties_t * pConnectProperties )
+static MQTTStatus_t initConnectProperties( MQTTConnectProperties_t * pConnectProperties )
 {
     MQTTStatus_t status = MQTTSuccess;
 
@@ -4405,6 +4398,23 @@ static MQTTStatus_t MQTT_InitConnect( MQTTConnectProperties_t * pConnectProperti
 
 /*-----------------------------------------------------------*/
 
+MQTTStatus_t MQTT_InitConnect( MQTTConnectProperties_t * pConnectProperties )
+{
+    MQTTStatus_t status = MQTTSuccess ; 
+    if( pConnectProperties == NULL )
+    {
+        LogError( ( "Invalid parameter: pConnectProperties is NULL." ) );
+        status = MQTTBadParameter;
+    }
+    else
+    {
+        status = initConnectProperties( pConnectProperties );
+    }
+    return status ; 
+}
+
+/*-----------------------------------------------------------*/
+
 static MQTTStatus_t sendPublishAcksWithProperty( MQTTContext_t * pContext,
                                                  uint16_t packetId,
                                                  MQTTPublishState_t publishState,
@@ -4418,6 +4428,10 @@ static MQTTStatus_t sendPublishAcksWithProperty( MQTTContext_t * pContext,
     uint8_t packetTypeByte = 0U;
     MQTTPubAckType_t packetType;
     size_t ackPropertyLength = 0U;
+    /**
+     * Maximum number of bytes to send the Property Length.
+     * Property Length  0 + 4 = 4
+     */
     uint8_t propertyLength[ 4U ];
 
     /* Maximum number of bytes required by the fixed size properties and header.
@@ -4519,6 +4533,8 @@ static MQTTStatus_t sendPublishAcksWithProperty( MQTTContext_t * pContext,
             pContext->ackPropsBuffer.fieldSet = 0;
         }
 
+        MQTT_PRE_STATE_UPDATE_HOOK( pContext );
+
         bytesSentOrError = sendMessageVector( pContext, pIoVector, ioVectorLength );
 
         if( bytesSentOrError != ( int32_t ) totalMessageLength )
@@ -4529,6 +4545,8 @@ static MQTTStatus_t sendPublishAcksWithProperty( MQTTContext_t * pContext,
                         packetSize ) );
             status = MQTTSendFailed;
         }
+
+        MQTT_POST_STATE_UPDATE_HOOK( pContext );
 
         if( status == MQTTSuccess )
         {
@@ -4575,6 +4593,10 @@ static MQTTStatus_t sendDisconnectWithoutCopy( MQTTContext_t * pContext,
      * Reason Code              + 1 = 6
      */
     uint8_t fixedHeader[ 6U ];
+    /**
+     * Maximum number of bytes to send the Property Length.
+     * Property Length  0 + 4 = 4
+     */
     uint8_t propertyLength[ 4U ];
 
     /* The maximum vectors required to encode and send a disconnect packet. The
