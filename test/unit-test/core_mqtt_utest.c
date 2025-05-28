@@ -1555,7 +1555,7 @@ void test_MQTT_Connect_sendConnect1( void )
     size_t packetSize;
 
     setupTransportInterface( &transport );
-    transport.writev = transportWritevFail;
+    transport.writev = NULL;
     setupNetworkBuffer( &networkBuffer );
 
     memset( &mqttContext, 0x0, sizeof( mqttContext ) );
@@ -1674,7 +1674,7 @@ void test_MQTT_Connect_ProperWIllInfo( void )
     MQTTPublishInfo_t willInfo;
 
     setupTransportInterface( &transport );
-    transport.writev = transportWritevFail;
+    transport.writev = NULL;
     setupNetworkBuffer( &networkBuffer );
 
     memset( &mqttContext, 0x0, sizeof( mqttContext ) );
@@ -1730,7 +1730,7 @@ void test_MQTT_Connect_ProperWIllInfoWithNoPayload( void )
     MQTTPublishInfo_t willInfo;
 
     setupTransportInterface( &transport );
-    transport.writev = transportWritevFail;
+    transport.writev = NULL;
     setupNetworkBuffer( &networkBuffer );
 
     memset( &mqttContext, 0x0, sizeof( mqttContext ) );
@@ -1785,7 +1785,7 @@ void test_MQTT_Connect_ProperWIllInfoWithPayloadButZeroLength( void )
     MQTTPublishInfo_t willInfo;
 
     setupTransportInterface( &transport );
-    transport.writev = transportWritevFail;
+    transport.writev = NULL;
     setupNetworkBuffer( &networkBuffer );
 
     memset( &mqttContext, 0x0, sizeof( mqttContext ) );
@@ -3476,7 +3476,8 @@ void test_MQTT_Publish7( void )
 
     setupTransportInterface( &transport );
     setupNetworkBuffer( &networkBuffer );
-    transport.writev = transportWritevFail;
+    transport.writev = NULL;
+    transport.send = transportSendFailure;
 
     memset( &mqttContext, 0x0, sizeof( mqttContext ) );
     memset( &publishInfo, 0x0, sizeof( publishInfo ) );
@@ -3508,7 +3509,7 @@ void test_MQTT_Publish8( void )
 
     setupTransportInterface( &transport );
     setupNetworkBuffer( &networkBuffer );
-    transport.writev = transportWritevFail;
+    transport.writev = NULL;
 
     memset( &mqttContext, 0x0, sizeof( mqttContext ) );
     memset( &publishInfo, 0x0, sizeof( publishInfo ) );
@@ -3794,7 +3795,7 @@ void test_MQTT_Publish_Send_Timeout( void )
 
     setupNetworkBuffer( &networkBuffer );
     setupTransportInterface( &transport );
-    transport.writev = transportWritevFail;
+    transport.writev = NULL;
 
     /* Set the transport send function to the mock that always returns zero
      * bytes for the test. */
@@ -5359,8 +5360,9 @@ void test_MQTT_ProcessLoop_handleKeepAlive_Error_Paths3( void )
     context.waitingForPingResp = false;
     /* Set expected return values in the loop. */
     resetProcessLoopParams( &expectParams );
-
+    size_t packetSize = MQTT_PACKET_PINGREQ_SIZE;
     MQTT_GetPingreqPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_GetPingreqPacketSize_ReturnThruPtr_pPacketSize( &packetSize );
     MQTT_SerializePingreq_ExpectAnyArgsAndReturn( MQTTSuccess );
 
     mqttStatus = MQTT_ProcessLoop( &context );
@@ -5417,8 +5419,9 @@ void test_MQTT_ProcessLoop_handleKeepAlive_Error_Paths4( void )
 
     MQTT_ProcessIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTNeedMoreBytes );
     MQTT_ProcessIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
-
+    size_t packetSize = MQTT_PACKET_PINGREQ_SIZE;
     MQTT_GetPingreqPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_GetPingreqPacketSize_ReturnThruPtr_pPacketSize( &packetSize );
     MQTT_SerializePingreq_ExpectAnyArgsAndReturn( MQTTSuccess );
 
     mqttStatus = MQTT_ProcessLoop( &context );
@@ -5975,7 +5978,7 @@ void test_MQTT_Subscribe_error_paths1( void )
     subscribeInfo.qos = MQTTQoS0;
     setupTransportInterface( &transport );
     transport.send = transportSendFailure;
-    transport.writev = transportWritevFail;
+    transport.writev = NULL;
 
     /* Initialize context. */
     mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
@@ -6450,7 +6453,7 @@ void test_MQTT_Unsubscribe_error_path1( void )
 
     transport.send = transportSendFailure;
     transport.recv = transportRecvFailure;
-    transport.writev = transportWritevFail;
+    transport.writev = NULL;
 
     /* Initialize context. */
     mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
@@ -6492,7 +6495,7 @@ void test_MQTT_Unsubscribe_error_path2( void )
     setupTransportInterface( &transport );
     transport.send = transportSendFailure;
     transport.recv = transportRecvFailure;
-    transport.writev = transportWritevFail;
+    transport.writev = NULL;
 
     /* Initialize context. */
     mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
