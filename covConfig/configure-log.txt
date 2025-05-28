@@ -1,0 +1,3 @@
+Native Compiler and extra args: ./ 
+Working directory: /home/adituc/coreMQTT
+Comptype: gcc
