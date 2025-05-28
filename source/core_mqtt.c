@@ -870,11 +870,11 @@ static int32_t sendMessageVector( MQTTContext_t * pContext,
 
         /* Some of the bytes from this vector were sent as well, update the length
          * and the pointer to data in this vector. One branch in the following
-         * condition logically cannot be reached as the iterator would always be 
+         * condition logically cannot be reached as the iterator would always be
          * bounded if the sendResult is positive. If it were not then the assert
          * above in the function will be triggered and the flow will never reach
          * here. Hence for that sake the branches on this condition are excluded
-         * from coverage anayalis */ 
+         * from coverage anayalis */
         if( ( sendResult > 0 ) &&
             ( pIoVectIterator <= &( pIoVec[ ioVecCount - 1U ] ) ) ) /* LCOV_EXCL_BR_LINE */
         {
