@@ -2413,17 +2413,18 @@ MQTTStatus_t MQTT_SerializeSubscribe( const MQTTSubscribeInfo_t * pSubscriptionL
         /* Serialize each subscription topic filter and QoS. */
         for( i = 0; i < subscriptionCount; i++ )
         {
+            int8_t subscriptionOptions ; 
             pIndex = encodeString( pIndex,
                                    pSubscriptionList[ i ].pTopicFilter,
                                    pSubscriptionList[ i ].topicFilterLength );
 
             /* Place the subscription options  */
-            *pIndex = ( ( ( ( uint8_t ) pSubscriptionList[ i ].qos ) & 0x03 ) |
-            ( ( uint8_t ) ( pSubscriptionList[ i ].noLocalOption ? ( 1 << 2 ) : 0 ) ) |
-            ( ( uint8_t ) ( pSubscriptionList[ i ].retainAsPublishedOption ? ( 1 << 3 ) : 0 ) ) |
-            ( ( ( ( uint8_t ) pSubscriptionList[ i ].retainHandlingOption ) & 0x03 ) << 4 ) );
-
-            pIndex++;
+            // *pIndex = ( ( ( ( uint8_t ) pSubscriptionList[ i ].qos ) & 0x03 ) |
+            // ( ( uint8_t ) ( pSubscriptionList[ i ].noLocalOption ? ( 1 << 2 ) : 0 ) ) |
+            // ( ( uint8_t ) ( pSubscriptionList[ i ].retainAsPublishedOption ? ( 1 << 3 ) : 0 ) ) |
+            // ( ( ( ( uint8_t ) pSubscriptionList[ i ].retainHandlingOption ) & 0x03 ) << 4 ) );
+            addSubscriptionOptions(pSubscriptionList[ i ], &subscriptionOptions, 0);
+            *pIndex++ = subscriptionOptions ;
         }
 
         LogDebug( ( "Length of serialized SUBSCRIBE packet is %lu.",
