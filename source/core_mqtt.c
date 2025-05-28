@@ -2235,7 +2235,7 @@ static MQTTStatus_t sendSubscribeWithoutCopy( MQTTContext_t * pContext,
     pIterator++;
     ioVectorLength++;
 
-    if( subscribePropLen > 0 )
+    if( subscribePropLen > 0U )
     {
         pIterator->iov_base = pPropertyBuilder->pBuffer;
         pIterator->iov_len = pPropertyBuilder->currentIndex;
@@ -2368,7 +2368,7 @@ static MQTTStatus_t sendUnsubscribeWithoutCopy( MQTTContext_t * pContext,
     pIterator++;
     ioVectorLength++;
 
-    if( unsubscribePropLen > 0 )
+    if( unsubscribePropLen > 0U )
     {
         pIterator->iov_base = pPropertyBuilder->pBuffer;
         pIterator->iov_len = pPropertyBuilder->currentIndex;
@@ -3590,7 +3590,10 @@ MQTTStatus_t MQTT_Publish( MQTTContext_t * pContext,
     }
 
     /* Validate arguments. */
-    status = validatePublishParams( pContext, pPublishInfo, packetId );
+    if( status == MQTTSuccess )
+    {
+        status = validatePublishParams( pContext, pPublishInfo, packetId );
+    }
 
     if( status == MQTTSuccess )
     {
@@ -4641,7 +4644,7 @@ static MQTTStatus_t sendDisconnectWithoutCopy( MQTTContext_t * pContext,
     iterator++;
     ioVectorLength++;
 
-    if( disconnectPropLen > 0 )
+    if( disconnectPropLen > 0U )
     {
         iterator->iov_base = pPropertyBuilder->pBuffer;
         iterator->iov_len = pPropertyBuilder->currentIndex;
