@@ -2428,7 +2428,7 @@ MQTTStatus_t MQTT_SerializeSubscribe( const MQTTSubscribeInfo_t * pSubscriptionL
             {
                 LogInfo( ( "Adding QoS as QoS 2 in SUBSCRIBE payload" ) );
                 UINT8_SET_BIT( subscriptionOptions, MQTT_SUBSCRIBE_QOS2 );
-            }git 
+            }
             else
             {
                 LogInfo( ( "Adding QoS as QoS 0 in SUBSCRIBE payload" ) );
@@ -4027,6 +4027,7 @@ static uint8_t * encodeBinaryData( uint8_t * pDestination,
     const uint8_t * pSourceBuffer = ( const uint8_t * ) pSource;
 
     assert( pDestination != NULL );
+    assert( pSource != NULL );
 
     pBuffer = pDestination;
 
@@ -4039,10 +4040,8 @@ static uint8_t * encodeBinaryData( uint8_t * pDestination,
     pBuffer++;
 
     /* Copy the string into pBuffer. */
-    if( pSourceBuffer != NULL )
-    {
-        ( void ) memcpy( pBuffer, pSourceBuffer, sourceLength );
-    }
+
+    ( void ) memcpy( pBuffer, pSourceBuffer, sourceLength );
 
     /* Return the pointer to the end of the encoded string. */
     pBuffer = &pBuffer[ sourceLength ];
@@ -4457,7 +4456,7 @@ MQTTStatus_t MQTT_ValidatePublishProperties( uint16_t serverTopicAliasMax,
             case MQTT_TOPIC_ALIAS_ID:
                 status = decodeuint16_t( topicAlias, &propertyLength, &topicAliasBool, &pLocalIndex );
 
-                if( ( serverTopicAliasMax < *topicAlias ) && ( status == MQTTSuccess ) )
+                if( ( status == MQTTSuccess ) && ( serverTopicAliasMax < *topicAlias ) )
                 {
                     LogError( ( "Protocol Error: Topic Alias greater than Topic Alias Max" ) );
                     status = MQTTBadParameter;
