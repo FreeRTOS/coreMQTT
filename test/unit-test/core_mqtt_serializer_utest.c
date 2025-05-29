@@ -4937,15 +4937,12 @@ void test_getProps_decodeFailure(void)
 {
     MQTTStatus_t status = MQTTSuccess;
     MQTTPropBuilder_t propBuffer;
-    uint16_t topicAlias;
-    uint16_t topicAliasMax ; 
-    uint16_t receiveMax;
+    uint16_t twoByteProperty;
     uint8_t oneByteProperty ; 
     uint8_t propertyId ; 
     uint32_t messageExpiry ;
     uint32_t sessionExpiry ;
     uint32_t maxPacketSize ; 
-    size_t subId ;
     const char * string;
     uint16_t stringLength;
 
@@ -4964,7 +4961,7 @@ void test_getProps_decodeFailure(void)
 
     status = MQTT_IncomingGetNextProp( &propBuffer, &propertyId );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
-    status = MQTTPropGet_PubTopicAlias( &propBuffer , &topicAlias ); 
+    status = MQTTPropGet_PubTopicAlias( &propBuffer , &twoByteProperty ); 
     TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
 
     propBuffer.bufferLength += 1 ; 
@@ -4982,10 +4979,10 @@ void test_getProps_decodeFailure(void)
     status = MQTTPropGet_SessionExpiry( &propBuffer , &sessionExpiry ); 
     TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
 
-    status = MQTTPropGet_ConnTopicAliasMax( &propBuffer , &topicAliasMax ); 
+    status = MQTTPropGet_ConnTopicAliasMax( &propBuffer , &twoByteProperty ); 
     TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
 
-    status = MQTTPropGet_ConnReceiveMax( &propBuffer , &receiveMax ); 
+    status = MQTTPropGet_ConnReceiveMax( &propBuffer , &twoByteProperty ); 
     TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
 
     status = MQTTPropGet_ConnMaxQos( &propBuffer , &oneByteProperty ); 
@@ -5006,12 +5003,35 @@ void test_getProps_decodeFailure(void)
     status = MQTTPropGet_ConnSubId( &propBuffer , &oneByteProperty ); 
     TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
 
+    status = MQTTPropGet_UserProp( &propBuffer , &string, &stringLength, &string, &stringLength ); 
+    TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
+
+    status = MQTTPropGet_ReasonString( &propBuffer , &string, &stringLength ); 
+    TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
+
+    status = MQTTPropGet_ServerRef( &propBuffer , &string, &stringLength ); 
+    TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
+
+    status = MQTTPropGet_ConnSharedSubAvailable( &propBuffer , &oneByteProperty ); 
+    TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
+
+    status = MQTTPropGet_ConnServerKeepAlive( &propBuffer , &twoByteProperty ); 
+    TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
+
+    status = MQTTPropGet_ConnResponseInfo( &propBuffer , &string, &stringLength ); 
+    TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
+
+    status = MQTTPropGet_ConnAuthMethod( &propBuffer , &string, &stringLength ); 
+    TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
+
+    status = MQTTPropGet_ConnAuthData( &propBuffer , &string, &stringLength ); 
+    TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
+
     // propBuffer.bufferLength += 1 ; 
     // status = MQTT_IncomingGetNextProp( &propBuffer, &propertyId );
     // TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
     // status = MQTTPropGet_PubSubscriptionId( &propBuffer , &subId ); 
     // TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
-
 
 }
 
