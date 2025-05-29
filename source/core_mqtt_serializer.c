@@ -1094,7 +1094,7 @@ static void serializePublishCommon( const MQTTPublishInfo_t * pPublishInfo,
 
     if( propertyLength > 0U )
     {
-        ( void ) memcpy ( ( void * ) pIndex, ( const void * ) pPublishProperties->pBuffer, propertyLength );
+        ( void ) memcpy( ( void * ) pIndex, ( const void * ) pPublishProperties->pBuffer, propertyLength );
         pIndex = &pIndex[ propertyLength ];
     }
 
@@ -2413,18 +2413,18 @@ MQTTStatus_t MQTT_SerializeSubscribe( const MQTTSubscribeInfo_t * pSubscriptionL
         /* Serialize each subscription topic filter and QoS. */
         for( i = 0; i < subscriptionCount; i++ )
         {
-            uint8_t subscriptionOptions = 0U ; 
+            uint8_t subscriptionOptions = 0U;
             pIndex = encodeString( pIndex,
                                    pSubscriptionList[ i ].pTopicFilter,
                                    pSubscriptionList[ i ].topicFilterLength );
 
             /* Place the subscription options  */
-            if( pSubscriptionList[i].qos == MQTTQoS1 )
+            if( pSubscriptionList[ i ].qos == MQTTQoS1 )
             {
                 LogInfo( ( "Adding QoS as QoS 1 in SUBSCRIBE payload" ) );
                 UINT8_SET_BIT( subscriptionOptions, MQTT_SUBSCRIBE_QOS1 );
             }
-            else if( pSubscriptionList[i].qos == MQTTQoS2 )
+            else if( pSubscriptionList[ i ].qos == MQTTQoS2 )
             {
                 LogInfo( ( "Adding QoS as QoS 2 in SUBSCRIBE payload" ) );
                 UINT8_SET_BIT( subscriptionOptions, MQTT_SUBSCRIBE_QOS2 );
@@ -2434,7 +2434,7 @@ MQTTStatus_t MQTT_SerializeSubscribe( const MQTTSubscribeInfo_t * pSubscriptionL
                 LogInfo( ( "Adding QoS as QoS 0 in SUBSCRIBE payload" ) );
             }
 
-            if( pSubscriptionList[i].noLocalOption )
+            if( pSubscriptionList[ i ].noLocalOption )
             {
                 LogInfo( ( "Adding noLocalOption in SUBSCRIBE payload" ) );
                 UINT8_SET_BIT( subscriptionOptions, MQTT_SUBSCRIBE_NO_LOCAL );
@@ -2444,7 +2444,7 @@ MQTTStatus_t MQTT_SerializeSubscribe( const MQTTSubscribeInfo_t * pSubscriptionL
                 LogDebug( ( "Adding noLocalOption as 0 in SUBSCRIBE payload" ) );
             }
 
-            if( pSubscriptionList[i].retainAsPublishedOption )
+            if( pSubscriptionList[ i ].retainAsPublishedOption )
             {
                 LogInfo( ( " retainAsPublishedOption in SUBSCRIBE payload" ) );
                 UINT8_SET_BIT( subscriptionOptions, MQTT_SUBSCRIBE_RETAIN_AS_PUBLISHED );
@@ -2454,11 +2454,11 @@ MQTTStatus_t MQTT_SerializeSubscribe( const MQTTSubscribeInfo_t * pSubscriptionL
                 LogDebug( ( "retainAsPublishedOption as 0 in SUBSCRIBE payload" ) );
             }
 
-            if( pSubscriptionList[i].retainHandlingOption == retainSendOnSub )
+            if( pSubscriptionList[ i ].retainHandlingOption == retainSendOnSub )
             {
                 LogInfo( ( "Send Retain messages at the time of subscribe" ) );
             }
-            else if( pSubscriptionList[i].retainHandlingOption == retainSendOnSubIfNotPresent )
+            else if( pSubscriptionList[ i ].retainHandlingOption == retainSendOnSubIfNotPresent )
             {
                 LogInfo( ( "Send retained messages at subscribe only if the subscription does not currently exist" ) );
                 UINT8_SET_BIT( subscriptionOptions, MQTT_SUBSCRIBE_RETAIN_HANDLING1 );
@@ -2468,7 +2468,8 @@ MQTTStatus_t MQTT_SerializeSubscribe( const MQTTSubscribeInfo_t * pSubscriptionL
                 LogInfo( ( "Do not send retained messages at subscribe" ) );
                 UINT8_SET_BIT( subscriptionOptions, MQTT_SUBSCRIBE_RETAIN_HANDLING2 );
             }
-            *pIndex = subscriptionOptions ;
+
+            *pIndex = subscriptionOptions;
             pIndex = &pIndex[ 1 ];
         }
 
@@ -3285,7 +3286,7 @@ static MQTTStatus_t decodeAndDiscard_uint8( size_t * pPropertyLength,
                                             uint8_t ** pIndex )
 {
     MQTTStatus_t status = MQTTSuccess;
-    uint8_t * pVariableHeader = *pIndex; 
+    uint8_t * pVariableHeader = *pIndex;
 
     if( *pPropertyLength < sizeof( uint8_t ) )
     {
@@ -3302,6 +3303,7 @@ static MQTTStatus_t decodeAndDiscard_uint8( size_t * pPropertyLength,
         *pPropertyLength -= sizeof( uint8_t );
         *pUsed = true;
     }
+
     *pIndex = pVariableHeader;
     return status;
 }
@@ -3313,7 +3315,7 @@ static MQTTStatus_t decodeAndDiscard_uint32( size_t * pPropertyLength,
                                              uint8_t ** pIndex )
 {
     MQTTStatus_t status = MQTTSuccess;
-    uint8_t * pVariableHeader = *pIndex; 
+    uint8_t * pVariableHeader = *pIndex;
 
     if( *pPropertyLength < sizeof( uint32_t ) )
     {
@@ -3330,6 +3332,7 @@ static MQTTStatus_t decodeAndDiscard_uint32( size_t * pPropertyLength,
         *pPropertyLength -= sizeof( uint32_t );
         *pUsed = true;
     }
+
     *pIndex = pVariableHeader;
     return status;
 }

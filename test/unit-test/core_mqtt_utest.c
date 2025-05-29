@@ -2206,7 +2206,6 @@ void test_MQTT_Connect_error_path()
     willInfo.topicNameLength = 4;
     willInfo.pPayload = "Payload";
     willInfo.payloadLength = 7;
-    willInfo.payloadFormat = 1;
 
     connectInfo.pUserName = "abcd";
     connectInfo.userNameLength = 3;
@@ -3005,10 +3004,10 @@ void test_MQTT_Connect_happy_path1()
 
     /*Test MQTT_Connect with NULL buffer of propBuilder.*/
     mqttContext.connectStatus = MQTTNotConnected;
-    MQTTPropBuilder_t propBuilder ; 
-    propBuilder.pBuffer = NULL ; 
-    MQTTPublishInfo_t willInfo = { 0 } ; 
-    willInfo.pTopicName = "willTopic" ;
+    MQTTPropBuilder_t propBuilder;
+    propBuilder.pBuffer = NULL;
+    MQTTPublishInfo_t willInfo = { 0 };
+    willInfo.pTopicName = "willTopic";
     willInfo.topicNameLength = 10;
     MQTT_ValidateWillProperties_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_GetConnectPacketSize_IgnoreAndReturn( MQTTSuccess );
@@ -3323,15 +3322,15 @@ void test_MQTT_Publish( void )
     status = MQTT_Publish( &mqttContext, &publishInfo, PACKET_ID, &propBuilder );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
 
-    propBuilder.pBuffer = NULL ; 
+    propBuilder.pBuffer = NULL;
     MQTT_ValidatePublishParams_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_GetPublishPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_SerializePublishHeaderWithoutTopic_ExpectAnyArgsAndReturn( MQTTSuccess );
     status = MQTT_Publish( &mqttContext, &publishInfo, PACKET_ID, &propBuilder );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
-    propBuilder.pBuffer = buf ;
+    propBuilder.pBuffer = buf;
 
-    MQTT_ValidatePublishProperties_ExpectAnyArgsAndReturn( MQTTBadParameter ); 
+    MQTT_ValidatePublishProperties_ExpectAnyArgsAndReturn( MQTTBadParameter );
     status = MQTT_Publish( &mqttContext, &publishInfo, PACKET_ID, &propBuilder );
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
 }
@@ -3748,6 +3747,7 @@ void test_MQTT_Publish_DuplicatePublish2( void )
 
     TEST_ASSERT_EQUAL_INT( MQTTStateCollision, status );
 }
+
 /**
  * @brief Test that MQTT_Publish works as intended when the connection status is anything but MQTTConnected.
  */
@@ -4259,7 +4259,7 @@ void test_MQTTV5_Disconnect()
 
     /*Test MQTT_Disconnect with NULL property buffer.*/
     context.connectStatus = MQTTConnected;
-    propBuilder.pBuffer = NULL ; 
+    propBuilder.pBuffer = NULL;
     MQTT_GetDisconnectPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_ValidateDisconnectProperties_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_SerializeDisconnectFixed_Stub( MQTTV5_SerializeDisconnectFixed_cb );
@@ -5501,7 +5501,7 @@ void test_MQTT_ProcessLoop_handleIncomingAck_Error_PathsWithProperties( void )
     expectParams.processLoopStatus = MQTTStatusNotConnected;
     context.connectStatus = MQTTNotConnected;
     expectProcessLoopCalls( &context, &expectParams );
-     
+
 
     context.connectStatus = MQTTNotConnected;
     currentPacketType = MQTT_PACKET_TYPE_PUBREC;
@@ -6638,7 +6638,6 @@ void test_MQTT_ProcessLoop_handleIncomingDisconnect( void )
                                    &outgoingRecords, 4,
                                    &incomingRecords, 4, ackPropsBuf, ackPropsBufLength );
     TEST_ASSERT_EQUAL( MQTTSuccess, status );
-    context.pDisconnectInfo = &disconnectInfo;
     incomingPacket.type = MQTT_PACKET_TYPE_DISCONNECT;
     incomingPacket.remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
     incomingPacket.headerLength = MQTT_SAMPLE_REMAINING_LENGTH;
@@ -6924,8 +6923,8 @@ void test_MQTTV5_Subscribe_happy_path( void )
 
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
 
-    MQTT_ValidateSubscribeProperties_ExpectAnyArgsAndReturn( MQTTBadParameter ) ; 
-    mqttStatus = MQTT_Subscribe(&context, &subscribeInfo, 1, MQTT_FIRST_VALID_PACKET_ID, &propBuilder );
+    MQTT_ValidateSubscribeProperties_ExpectAnyArgsAndReturn( MQTTBadParameter );
+    mqttStatus = MQTT_Subscribe( &context, &subscribeInfo, 1, MQTT_FIRST_VALID_PACKET_ID, &propBuilder );
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, mqttStatus );
 }
 
@@ -7644,7 +7643,7 @@ void test_MQTT_Unsubscribe_happy_path( void )
     MQTT_GetUnsubscribePacketSize_ReturnThruPtr_pRemainingLength( &remainingLength );
     mqttStatus = MQTT_Unsubscribe( &context, &subscribeInfo, 1, MQTT_FIRST_VALID_PACKET_ID, &propBuilder );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
-    propBuilder.pBuffer = buf ;
+    propBuilder.pBuffer = buf;
 
     MQTT_GetUnsubscribePacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_GetUnsubscribePacketSize_ReturnThruPtr_pPacketSize( &packetSize );
@@ -7653,10 +7652,9 @@ void test_MQTT_Unsubscribe_happy_path( void )
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
 
     /*Simulate Failure of MQTT_ValidateUnsubscribeProperties. */
-    MQTT_ValidateUnsubscribeProperties_ExpectAnyArgsAndReturn( MQTTBadParameter ); 
+    MQTT_ValidateUnsubscribeProperties_ExpectAnyArgsAndReturn( MQTTBadParameter );
     mqttStatus = MQTT_Unsubscribe( &context, &subscribeInfo, 1, MQTT_FIRST_VALID_PACKET_ID, &propBuilder );
     TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
-
 }
 void test_MQTT_Unsubscribe_MultipleSubscriptions( void )
 {
@@ -7669,7 +7667,7 @@ void test_MQTT_Unsubscribe_MultipleSubscriptions( void )
     size_t packetSize = MQTT_SAMPLE_REMAINING_LENGTH;
     MQTTPubAckInfo_t incomingRecords = { 0 };
     MQTTPubAckInfo_t outgoingRecords = { 0 };
-    uint8_t buf[100] ; 
+    uint8_t buf[ 100 ];
 
     TEST_ASSERT_EQUAL_MESSAGE( 6U, MQTT_SUB_UNSUB_MAX_VECTORS,
                                "This test is configured to work with MQTT_SUB_UNSUB_MAX_VECTORS defined as 6." );
@@ -7786,7 +7784,7 @@ void test_MQTTV5_Unsubscribe_happy_path( void )
 
     /*With NULL buffer of propBuilder. */
     MQTTPropBuilder_t propBuilder;
-    propBuilder.pBuffer = NULL ; 
+    propBuilder.pBuffer = NULL;
     MQTT_GetSubscribePacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_GetSubscribePacketSize_ReturnThruPtr_pPacketSize( &packetSize );
     MQTT_GetSubscribePacketSize_ReturnThruPtr_pRemainingLength( &remainingLength );
@@ -8842,14 +8840,14 @@ void test_receiveFailed( void )
     TEST_ASSERT_EQUAL( MQTTDisconnectPending, mqttContext.connectStatus );
 }
 
-void test_MQTT_InitConnect(void)
+void test_MQTT_InitConnect( void )
 {
-    MQTTStatus_t status = MQTTSuccess ; 
+    MQTTStatus_t status = MQTTSuccess;
 
-    status = MQTT_InitConnect( NULL ); 
+    status = MQTT_InitConnect( NULL );
     TEST_ASSERT_EQUAL( MQTTBadParameter, status );
 
-    MQTTConnectProperties_t connectProperties ; 
-    status = MQTT_InitConnect(&connectProperties);
+    MQTTConnectProperties_t connectProperties;
+    status = MQTT_InitConnect( &connectProperties );
     TEST_ASSERT_EQUAL( MQTTSuccess, status );
 }

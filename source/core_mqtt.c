@@ -1812,7 +1812,6 @@ static MQTTStatus_t handlePublishAcks( MQTTContext_t * pContext,
         else
         {
             status = sendPublishAcksWithProperty( pContext, packetIdentifier, publishRecordState, reasonCode );
-
         }
     }
 
@@ -2202,10 +2201,10 @@ static MQTTStatus_t sendSubscribeWithoutCopy( MQTTContext_t * pContext,
      */
     uint8_t propertyLength[ 4U ];
 
-    pIndex = subscribeHeader ; 
+    pIndex = subscribeHeader;
     pIterator = pIoVector;
 
-    pIndex = MQTT_SerializeSubscribeHeader( remainingLength, pIndex , packetId );
+    pIndex = MQTT_SerializeSubscribeHeader( remainingLength, pIndex, packetId );
 
     pIterator->iov_base = subscribeHeader;
     /* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-182 */
@@ -2331,14 +2330,15 @@ static MQTTStatus_t sendUnsubscribeWithoutCopy( MQTTContext_t * pContext,
      * Packet Id           + 2 = 7
      */
     uint8_t unsubscribeHeader[ 7U ];
+
     /**
      * Maximum number of bytes to send the Property Length.
      * Property Length  0 + 4 = 4
      */
     uint8_t propertyLength[ 4U ];
 
-    pIndex = unsubscribeHeader ; 
-    pIterator = pIoVector ; 
+    pIndex = unsubscribeHeader;
+    pIterator = pIoVector;
 
     pIndex = MQTT_SerializeUnsubscribeHeader( remainingLength, pIndex, packetId );
 
@@ -2444,6 +2444,7 @@ static MQTTStatus_t sendPublishWithoutCopy( MQTTContext_t * pContext,
     /* Bytes required to encode the packet ID in an MQTT header according to
      * the MQTT specification. */
     uint8_t serializedPacketID[ 2U ];
+
     /**
      * Maximum number of bytes to send the Property Length.
      * Property Length  0 + 4 = 4
@@ -2594,6 +2595,7 @@ static MQTTStatus_t sendConnectWithoutCopy( MQTTContext_t * pContext,
     uint8_t serializedPayloadLength[ 2U ];
     uint8_t serializedUsernameLength[ 2U ];
     uint8_t serializedPasswordLength[ 2U ];
+
     /**
      * Maximum number of bytes to send the Property Length.
      * Property Length  0 + 4 = 4
@@ -2646,7 +2648,7 @@ static MQTTStatus_t sendConnectWithoutCopy( MQTTContext_t * pContext,
                                                    pWillInfo,
                                                    remainingLength );
 
-        /* Set Default value of serverKeepAlive to keepAlive value sent in the CONNECT packet. */                                           
+        /* Set Default value of serverKeepAlive to keepAlive value sent in the CONNECT packet. */
         pContext->connectProperties.serverKeepAlive = pConnectInfo->keepAliveSeconds;
 
         iterator->iov_base = connectPacketHeader;
@@ -4396,8 +4398,6 @@ static MQTTStatus_t initConnectProperties( MQTTConnectProperties_t * pConnectPro
     pConnectProperties->retainAvailable = 1U;
     pConnectProperties->serverTopicAliasMax = 0U;
     pConnectProperties->serverKeepAlive = UINT16_MAX;
-    pConnectProperties->pClientIdentifier = NULL;
-    pConnectProperties->clientIdLength = 0U;
 
 
     return status;
@@ -4407,7 +4407,8 @@ static MQTTStatus_t initConnectProperties( MQTTConnectProperties_t * pConnectPro
 
 MQTTStatus_t MQTT_InitConnect( MQTTConnectProperties_t * pConnectProperties )
 {
-    MQTTStatus_t status = MQTTSuccess ; 
+    MQTTStatus_t status = MQTTSuccess;
+
     if( pConnectProperties == NULL )
     {
         LogError( ( "Invalid parameter: pConnectProperties is NULL." ) );
@@ -4417,7 +4418,8 @@ MQTTStatus_t MQTT_InitConnect( MQTTConnectProperties_t * pConnectProperties )
     {
         status = initConnectProperties( pConnectProperties );
     }
-    return status ; 
+
+    return status;
 }
 
 /*-----------------------------------------------------------*/
@@ -4435,6 +4437,7 @@ static MQTTStatus_t sendPublishAcksWithProperty( MQTTContext_t * pContext,
     uint8_t packetTypeByte = 0U;
     MQTTPubAckType_t packetType;
     size_t ackPropertyLength = 0U;
+
     /**
      * Maximum number of bytes to send the Property Length.
      * Property Length  0 + 4 = 4
@@ -4600,6 +4603,7 @@ static MQTTStatus_t sendDisconnectWithoutCopy( MQTTContext_t * pContext,
      * Reason Code              + 1 = 6
      */
     uint8_t fixedHeader[ 6U ];
+
     /**
      * Maximum number of bytes to send the Property Length.
      * Property Length  0 + 4 = 4

@@ -48,7 +48,7 @@
  * If MQTT_LIBRARY_VERSION ends with + it represents the version in development
  * after the numbered release.
  */
-#define MQTT_LIBRARY_VERSION    "v3.0.0"
+#define MQTT_LIBRARY_VERSION    "v2.3.1+"
 /** @endcond */
 
 /**
@@ -371,13 +371,6 @@ typedef struct MQTTContext
      * @brief Connect and Connack Properties.
      */
     MQTTConnectProperties_t connectProperties;
-
-    /**
-     * @brief To store disconnect information.
-     */
-    MQTTReasonCodeInfo_t * pDisconnectInfo;
-
-
 
     /**
      * @brief User defined API used to store outgoing publishes.
@@ -1480,16 +1473,16 @@ MQTTStatus_t MQTT_PropertyBuilder_Init( MQTTPropBuilder_t * pPropertyBuilder,
 /**
  * @brief Initialize an MQTTConnectProperties_t.
  *
- * @note This function initializes the connect properties to default values. 
+ * @note This function initializes the connect properties to default values.
  *
  * @param[in] pConnectProperties The connect properties to initialize.
  *
- * @return 
+ * @return
  * - #MQTTBadParameter if pConnectProperties is NULL.
  * - #MQTTSuccess otherwise.
  */
 /* @[declare_mqtt_initconnect] */
-MQTTStatus_t MQTT_InitConnect( MQTTConnectProperties_t * pConnectProperties ); 
+MQTTStatus_t MQTT_InitConnect( MQTTConnectProperties_t * pConnectProperties );
 /* @[declare_mqtt_initconnect] */
 
 /* *INDENT-OFF* */

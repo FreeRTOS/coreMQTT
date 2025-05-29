@@ -602,16 +602,6 @@ typedef struct MQTTConnectProperties
      */
     uint32_t serverMaxPacketSize;
 
-    /**
-     * @brief Client identifier assigned by the client.
-     */
-    const char* pClientIdentifier;
-
-     /**
-     * @brief Length of the assigned client identifier.
-     */
-    uint16_t clientIdLength;
-
      /**
      * @brief Two Byte Integer representing the Topic Alias Maximum value.
      */
@@ -711,54 +701,6 @@ typedef struct MQTTPublishInfo
      * @brief Length of the properties.
      */
     size_t propertyLength;
-     /**
-     * @brief  Four Byte Integer representing the Will Delay Interval in seconds.
-     */
-    uint32_t willDelay;
-     /**
-     * @brief Payload Format Indicator.
-     **/
-      uint8_t payloadFormat;
-     /**
-     * @brief Topic alias value.
-     **/
-    uint16_t topicAlias;
-     /**
-     * @brief Four Byte Integer representing the Message Expiry Interval.
-     */
-    uint32_t msgExpiryInterval;
-     /**
-     * @brief Whether the message expiry is specified.
-     */
-    bool msgExpiryPresent;
-     /**
-     * @brief Length of the content type.
-     */
-    uint16_t contentTypeLength;
-     /**
-     * @brief UTF-8 Encoded String describing the content of the Will Message.
-     */
-    const char *pContentType;
-     /**
-     * @brief Length of the response topic.
-     */
-    uint16_t responseTopicLength;
-     /**
-     * @brief UTF-8 Encoded String which is used as the Topic Name for a response message.
-     */
-    const char *pResponseTopic;
-     /**
-     * @brief Length of the correlation data.
-     */
-    uint16_t correlationLength;
-     /**
-     * @brief To identify which request the Response Message is for.
-     */
-    const void *pCorrelationData;
-    /**
-     * @brief Subscription ID.
-     */
-    size_t subscriptionId ;
 
 } MQTTPublishInfo_t;
 
