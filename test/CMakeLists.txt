@@ -52,9 +52,6 @@ if( COV_ANALYSIS )
 
     # Build MQTT library target without custom config dependency.
     target_compile_definitions( coverity_analysis PUBLIC MQTT_DO_NOT_USE_CUSTOM_CONFIG=1 )
-    # target_compile_definitions( coverity_analysis PUBLIC MQTT_VERSION_5_ENABLED=1 )
-    # target_compile_definitions( coverity_analysis PUBLIC MAX_USER_PROPERTY=5)
-    # target_compile_definitions( coverity_analysis PUBLIC MQTT_USER_PROPERTY_ENABLED=1)
 
     # MQTT public include path.
     target_include_directories( coverity_analysis PUBLIC ${MQTT_INCLUDE_PUBLIC_DIRS} )
