@@ -5234,3 +5234,25 @@ void test_ValidatePublishAckProperties( void )
     status = MQTT_ValidatePublishAckProperties( &propBuffer );
     TEST_ASSERT_EQUAL( MQTTBadParameter, status );
 }
+
+void test_Mqtt_PropertyBuilder_Init( void )
+{
+    MQTTPropBuilder_t ackPropsBuilder;
+    uint8_t ackPropsBuf[ 500 ];
+    size_t ackPropsBufLength = sizeof( ackPropsBuf );
+    MQTTStatus_t mqttStatus;
+
+    mqttStatus = MQTT_PropertyBuilder_Init( &( ackPropsBuilder ), ackPropsBuf, ackPropsBufLength );
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+
+    mqttStatus = MQTT_PropertyBuilder_Init( NULL, ackPropsBuf, ackPropsBufLength );
+    TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
+
+    mqttStatus = MQTT_PropertyBuilder_Init( &( ackPropsBuilder ), NULL, ackPropsBufLength );
+    TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
+
+    mqttStatus = MQTT_PropertyBuilder_Init( &( ackPropsBuilder ), ackPropsBuf, 0 );
+    TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
+}
+
+/* ========================================================================== */

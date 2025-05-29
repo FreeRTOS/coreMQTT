@@ -1454,23 +1454,6 @@ void MQTT_SerializeMQTTVec( uint8_t * pAllocatedMem,
 /* @[declare_mqtt_serializemqttvec] */
 
 /**
- * @brief Initialize the property builder.
- *
- * @param[out] pPropertyBuilder Property builder to initialize.
- * @param[in] buffer Buffer to store the properties.
- * @param[in] length Length of the buffer.
- *
- * @return
- * - #MQTTBadParameter if invalid parameters are passed.
- * - #MQTTSuccess otherwise.
- */
-/* @[declare_mqtt_propertybuilder_init] */
-MQTTStatus_t MQTT_PropertyBuilder_Init( MQTTPropBuilder_t * pPropertyBuilder,
-                                        uint8_t * buffer,
-                                        size_t length );
-/* @[declare_mqtt_propertybuilder_init] */
-
-/**
  * @brief Initialize an MQTTConnectProperties_t.
  *
  * @note This function initializes the connect properties to default values.

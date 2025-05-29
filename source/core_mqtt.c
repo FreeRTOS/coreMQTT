@@ -4351,31 +4351,6 @@ static MQTTStatus_t handleIncomingDisconnect( MQTTContext_t * pContext,
 
 /*-----------------------------------------------------------*/
 
-MQTTStatus_t MQTT_PropertyBuilder_Init( MQTTPropBuilder_t * pPropertyBuilder,
-                                        uint8_t * buffer,
-                                        size_t length )
-{
-    MQTTStatus_t status = MQTTSuccess;
-
-    if( ( pPropertyBuilder == NULL ) || ( buffer == NULL ) || ( length == 0U ) )
-    {
-        LogError( ( "Invalid arguments passed to MQTT_PropertyBuilder_Init." ) );
-        status = MQTTBadParameter;
-    }
-
-    if( status == MQTTSuccess )
-    {
-        pPropertyBuilder->pBuffer = buffer;
-        pPropertyBuilder->currentIndex = 0;
-        pPropertyBuilder->bufferLength = length;
-        pPropertyBuilder->fieldSet = 0; /* 0 means no field is set */
-    }
-
-    return status;
-}
-
-/*-----------------------------------------------------------*/
-
 static MQTTStatus_t initConnectProperties( MQTTConnectProperties_t * pConnectProperties )
 {
     MQTTStatus_t status = MQTTSuccess;

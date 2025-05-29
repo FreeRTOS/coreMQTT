@@ -3031,6 +3031,23 @@ MQTTStatus_t MQTTPropGet_ConnAuthData(MQTTPropBuilder_t * propBuffer,
 MQTTStatus_t MQTT_IncomingGetNextProp(MQTTPropBuilder_t* propBuffer, uint8_t* propertyId);
 /* @[declare_mqtt_incominggetnextprop] */
 
+/**
+ * @brief Initialize the property builder.
+ *
+ * @param[out] pPropertyBuilder Property builder to initialize.
+ * @param[in] buffer Buffer to store the properties.
+ * @param[in] length Length of the buffer.
+ *
+ * @return
+ * - #MQTTBadParameter if invalid parameters are passed.
+ * - #MQTTSuccess otherwise.
+ */
+/* @[declare_mqtt_propertybuilder_init] */
+MQTTStatus_t MQTT_PropertyBuilder_Init( MQTTPropBuilder_t * pPropertyBuilder,
+                                        uint8_t * buffer,
+                                        size_t length );
+/* @[declare_mqtt_propertybuilder_init] */
+
 /* *INDENT-OFF* */
 #ifdef __cplusplus
     }
