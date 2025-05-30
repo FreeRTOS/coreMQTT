@@ -104,8 +104,8 @@ typedef uint32_t (* MQTTGetCurrentTimeFunc_t )( void );
  * @param[in] pContext Initialized MQTT context.
  * @param[in] pPacketInfo Information on the type of incoming MQTT packet.
  * @param[in] pDeserializedInfo Deserialized information from incoming packet.
- * @param[in] pReasonCode Reason code for the incoming packet.
- * @param[in] sendPropsBuffer Properties to be sent in the outgoing packet.
+ * @param[out] pReasonCode Reason code for the incoming packet.
+ * @param[out] sendPropsBuffer Properties to be sent in the outgoing packet.
  * @param[in] getPropsBuffer Properties to be received in the incoming packet.
  *
  * @note Get optional properties of incoming packets by calling these functions:

@@ -1737,7 +1737,7 @@ static MQTTStatus_t deserializeSuback( const MQTTPacketInfo_t * incomingPacket,
     if( status == MQTTSuccess )
     {
         statusCount = remainingLength - sizeof( uint16_t ) - propertyLength - variableLengthEncodedSize( propertyLength );
-        pStatusStart = &pIndex[ propertyLength + variableLengthEncodedSize( propertyLength ) ];
+        pStatusStart = &pIndex[ propertyLength + variableLengthEncodedSize( propertyLength ) ];        
         status = readSubackStatus( statusCount, pStatusStart, subackReasonCodes );
     }
 
@@ -3724,7 +3724,7 @@ static MQTTStatus_t deserializeConnackProperties( MQTTConnectProperties_t * pCon
                 break;
 
             case MQTT_WILDCARD_ID:
-                status = decodeuint8_t( &pConnackProperties->isWildcardAvaiable, &propertyLength, &wildcard, &pVariableHeader );
+                status = decodeuint8_t( &pConnackProperties->isWildcardAvailable, &propertyLength, &wildcard, &pVariableHeader );
                 break;
 
             case MQTT_SUB_AVAILABLE_ID:

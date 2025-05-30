@@ -1695,7 +1695,7 @@ static MQTTStatus_t handleIncomingPublish( MQTTContext_t * pContext,
         /* Invoke application callback to hand the buffer over to application
          * before sending acks. */
 
-        reasonCode = MQTT_REASON_PUBREC_SUCCESS;
+        reasonCode = MQTT_INVALID_REASON_CODE;
 
         if( duplicatePublish == false )
         {
@@ -1705,7 +1705,7 @@ static MQTTStatus_t handleIncomingPublish( MQTTContext_t * pContext,
         /* Send PUBREC or PUBCOMP if necessary. */
         ackPropsAdded = ( pContext->ackPropsBuffer.pBuffer != NULL ) && ( pContext->ackPropsBuffer.currentIndex > 0U );
 
-        if( ( ackPropsAdded == false ) && ( reasonCode == MQTT_REASON_PUBREC_SUCCESS ) )
+        if( ( ackPropsAdded == false ) && ( reasonCode == MQTT_INVALID_REASON_CODE ) )
         {
             status = sendPublishAcks( pContext,
                                       packetIdentifier,
@@ -1796,14 +1796,14 @@ static MQTTStatus_t handlePublishAcks( MQTTContext_t * pContext,
         /* Invoke application callback to hand the buffer over to application
          * before sending acks. */
 
-        reasonCode = MQTT_REASON_PUBREC_SUCCESS;
+        reasonCode = MQTT_INVALID_REASON_CODE;
 
         appCallback( pContext, pIncomingPacket, &deserializedInfo, &reasonCode, &pContext->ackPropsBuffer, &propBuffer );
 
         /* Send PUBREL or PUBCOMP if necessary. */
         ackPropsAdded = ( ( pContext->ackPropsBuffer.pBuffer != NULL ) && ( pContext->ackPropsBuffer.currentIndex > 0U ) );
 
-        if( ( ackPropsAdded == false ) && ( reasonCode == MQTT_REASON_PUBREC_SUCCESS ) )
+        if( ( ackPropsAdded == false ) && ( reasonCode == MQTT_INVALID_REASON_CODE ) )
         {
             status = sendPublishAcks( pContext,
                                       packetIdentifier,
@@ -4351,6 +4351,7 @@ static MQTTStatus_t handleIncomingDisconnect( MQTTContext_t * pContext,
 
 /*-----------------------------------------------------------*/
 
+
 static MQTTStatus_t initConnectProperties( MQTTConnectProperties_t * pConnectProperties )
 {
     MQTTStatus_t status = MQTTSuccess;
@@ -4363,7 +4364,7 @@ static MQTTStatus_t initConnectProperties( MQTTConnectProperties_t * pConnectPro
     pConnectProperties->serverReceiveMax = UINT16_MAX;
     pConnectProperties->serverMaxQos = 1U;
     pConnectProperties->serverMaxPacketSize = MQTT_MAX_PACKET_SIZE;
-    pConnectProperties->isWildcardAvaiable = 1U;
+    pConnectProperties->isWildcardAvailable = 1U;
     pConnectProperties->isSubscriptionIdAvailable = 1U;
     pConnectProperties->isSharedAvailable = 1U;
     pConnectProperties->sessionExpiry = 0U;
@@ -4802,7 +4803,7 @@ static MQTTStatus_t validateSubscribeTopicFilter( const MQTTContext_t * pContext
         LogError( ( "Protocol Error : QoS cannot be greater than 2" ) );
         status = MQTTBadParameter;
     }
-    else if( checkWildcardSubscriptions( pContext->connectProperties.isWildcardAvaiable, pSubscriptionList, iterator ) )
+    else if( checkWildcardSubscriptions( pContext->connectProperties.isWildcardAvailable, pSubscriptionList, iterator ) )
     {
         LogError( ( "Protocol Error : Wildcard Subscriptions not allowed. " ) );
         status = MQTTBadParameter;

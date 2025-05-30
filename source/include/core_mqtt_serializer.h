@@ -240,7 +240,9 @@ typedef enum MQTTSuccessFailReasonCode
     MQTT_REASON_DISCONNECT_CONNECTION_RATE_EXCEEDED = 0x9F, /**< Connection rate limit exceeded. */
     MQTT_REASON_DISCONNECT_MAXIMUM_CONNECT_TIME = 0xA0,    /**< Maximum connection time authorized exceeded. */
     MQTT_REASON_DISCONNECT_SUBSCRIPTION_IDENTIFIERS_NOT_SUPPORTED = 0xA1, /**< Subscription identifiers are not supported. */
-    MQTT_REASON_DISCONNECT_WILDCARD_SUBSCRIPTIONS_NOT_SUPPORTED = 0xA2    /**< Wildcard subscriptions are not supported. */
+    MQTT_REASON_DISCONNECT_WILDCARD_SUBSCRIPTIONS_NOT_SUPPORTED = 0xA2,    /**< Wildcard subscriptions are not supported. */
+
+    MQTT_INVALID_REASON_CODE = 0xFF /**< @brief Invalid reason code. */
 
 } MQTTSuccessFailReasonCode_t;
 
@@ -610,7 +612,7 @@ typedef struct MQTTConnectProperties
      /**
      * @brief Whether wildcard subscription is available.
      */
-    uint8_t isWildcardAvaiable;
+    uint8_t isWildcardAvailable;
 
      /**
      * @brief Whether the Server supports Subscription Identifiers.
