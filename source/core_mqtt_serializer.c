@@ -4104,15 +4104,15 @@ static MQTTStatus_t deserializePublishProperties( MQTTPublishInfo_t * pPublishIn
                     status = decodeutf_8( &pPublishInfo->pContentType, &pPublishInfo->contentTypeLength, &propertyLength, &contentType, &pLocalIndex );
                     break;
 
-            case MQTT_SUBSCRIPTION_ID_ID:
-                status = decodeVariableLength(pLocalIndex, propertyLength, &pPublishInfo->subscriptionId);
-                if (status == MQTTSuccess)
-                {
-                    pLocalIndex = &pLocalIndex[variableLengthEncodedSize(pPublishInfo->subscriptionId)];
-                    propertyLength -= variableLengthEncodedSize(pPublishInfo->subscriptionId);
-                }
-                break;
-
+                case MQTT_SUBSCRIPTION_ID_ID:
+                    status = decodeVariableLength(pLocalIndex, propertyLength, &pPublishInfo->subscriptionId);
+                    if (status == MQTTSuccess)
+                    {
+                        pLocalIndex = &pLocalIndex[variableLengthEncodedSize(pPublishInfo->subscriptionId)];
+                        propertyLength -= variableLengthEncodedSize(pPublishInfo->subscriptionId);
+                    }
+                    break;
+            
                 case MQTT_USER_PROPERTY_ID:
                     status = decodeAndDiscard( &propertyLength, &pLocalIndex );
                     break;

@@ -19,22 +19,19 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 
-HARNESS_ENTRY=harness
-HARNESS_FILE=MQTT_DeserializePublish_harness
-PROOF_UID=MQTT_DeserializePublish
+MQTT_INCOMING_PUBLISH_MAX_PROPERTIES=2
 
-DEFINES += 
+HARNESS_ENTRY=harness
+HARNESS_FILE=DeserializeHelpers_harness
+PROOF_UID=DeserializeHelpers
+
+DEFINES +=
 INCLUDES +=
 
-# These functions have their memory saftey proven in other harnesses.
-REMOVE_FUNCTION_BODY += __CPROVER_file_local_core_mqtt_serializer_c_deserializePublishProperties
-
-UNWINDSET += __CPROVER_file_local_core_mqtt_serializer_c_decodeVariableLength.0:5
+REMOVE_FUNCTION_BODY +=
 
 PROOF_SOURCES += $(PROOFDIR)/$(HARNESS_FILE).c
 PROOF_SOURCES += $(SRCDIR)/test/cbmc/sources/mqtt_cbmc_state.c
-PROOF_SOURCES += $(SRCDIR)/test/cbmc/stubs/deserialize_properties_stubs.c
-PROJECT_SOURCES += $(SRCDIR)/source/core_mqtt.c
 PROJECT_SOURCES += $(SRCDIR)/source/core_mqtt_serializer.c
 
 include ../Makefile.common
