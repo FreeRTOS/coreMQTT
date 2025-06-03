@@ -2837,7 +2837,7 @@ void test_MQTTV5_suback( void )
         4,             /* Remaining Length = 4 bytes */
         0x00, 0x01,    /* Packet Identifier = 1 */
         0x00,          /* Property Length = 1 byte */
-        0x00,           /* Payload: Reason code = 0x00 (Success) */
+        0x00,          /* Payload: Reason code = 0x00 (Success) */
         0x00
     };
 
@@ -2861,13 +2861,12 @@ void test_MQTTV5_suback( void )
     status = MQTT_DeserializeAck( &subackPacket, &packetIdentifier, NULL, &subackReasonCodes, 0, MQTT_MAX_PACKET_SIZE, NULL, NULL );
     TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
 
-    subackPacket.remainingLength = 5 ; 
-    packetBufferNoProperties[ 4 ] = 1; /* Set property length to 1 byte */ 
-    packetBufferNoProperties[ 5 ] = 0x00 ; 
+    subackPacket.remainingLength = 5;
+    packetBufferNoProperties[ 4 ] = 1;    /* Set property length to 1 byte */
+    packetBufferNoProperties[ 5 ] = 0x00;
     packetBufferNoProperties[ 6 ] = 0x00; /* Set reason code to 0x00 (Success) */
     status = MQTT_DeserializeAck( &subackPacket, &packetIdentifier, NULL, &subackReasonCodes, 0, MQTT_MAX_PACKET_SIZE, NULL, NULL );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
-
 }
 
 void test_MQTTV5_GetUnsubscribePacketSize_Path( void )
@@ -5008,12 +5007,11 @@ void test_getProps_decodeFailure( void )
     status = MQTTPropGet_ConnAuthData( &propBuffer, &string, &stringLength );
     TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
 
-    size_t subId ; 
-    pIndex = buffer ; 
-    encodeRemainingLength(pIndex, 20971556356235); 
+    size_t subId;
+    pIndex = buffer;
+    encodeRemainingLength( pIndex, 20971556356235 );
     status = MQTTPropGet_PubSubscriptionId( &propBuffer, &subId );
     TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
-
 }
 
 /* ==================  Testing MQTT_UpdateDuplicatePublishFlag ===================== */

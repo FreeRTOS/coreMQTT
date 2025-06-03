@@ -781,6 +781,7 @@ static MQTTStatus_t deserializeSuback( const MQTTPacketInfo_t * incomingPacket,
                                        uint16_t * pPacketId,
                                        MQTTReasonCodeInfo_t * subackReasonCodes,
                                        MQTTPropBuilder_t * propBuffer );
+
 /*-----------------------------------------------------------*/
 
 static size_t variableLengthEncodedSize( size_t length )
@@ -1737,7 +1738,7 @@ static MQTTStatus_t deserializeSuback( const MQTTPacketInfo_t * incomingPacket,
     if( status == MQTTSuccess )
     {
         statusCount = remainingLength - sizeof( uint16_t ) - propertyLength - variableLengthEncodedSize( propertyLength );
-        pStatusStart = &pIndex[ propertyLength + variableLengthEncodedSize( propertyLength ) ];        
+        pStatusStart = &pIndex[ propertyLength + variableLengthEncodedSize( propertyLength ) ];
         status = readSubackStatus( statusCount, pStatusStart, subackReasonCodes );
     }
 
@@ -2368,6 +2369,8 @@ uint8_t * MQTT_SerializeUnsubscribeHeader( size_t remainingLength,
 
     return pIterator;
 }
+
+/*-----------------------------------------------------------*/
 
 MQTTStatus_t MQTT_SerializeSubscribe( const MQTTSubscribeInfo_t * pSubscriptionList,
                                       size_t subscriptionCount,
@@ -4479,6 +4482,7 @@ MQTTStatus_t MQTT_ValidatePublishProperties( uint16_t serverTopicAliasMax,
 
     return status;
 }
+
 /*-----------------------------------------------------------*/
 
 MQTTStatus_t MQTT_ValidateSubscribeProperties( uint8_t isSubscriptionIdAvailable,
@@ -7066,7 +7070,7 @@ MQTTStatus_t MQTT_PropertyBuilder_Init( MQTTPropBuilder_t * pPropertyBuilder,
         pPropertyBuilder->pBuffer = buffer;
         pPropertyBuilder->currentIndex = 0;
         pPropertyBuilder->bufferLength = length;
-        pPropertyBuilder->fieldSet = 0; /* 0 means no field is set */
+        pPropertyBuilder->fieldSet = 0; /* 0 means no field is set. */
     }
 
     return status;

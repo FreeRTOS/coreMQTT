@@ -63,7 +63,7 @@
  * @brief Number of vectors required to encode one topic filter in a subscribe
  * request. Three vectors are required as there are three fields in the
  * subscribe request namely:
- * 1. Topic filter length; 2. Topic filter; and 3. QoS in this order.
+ * 1. Topic filter length; 2. Topic filter; and 3. Subscription options in this order.
  */
 #define CORE_MQTT_SUBSCRIBE_PER_TOPIC_VECTOR_LENGTH      ( 3U )
 
@@ -118,8 +118,8 @@ static int32_t sendBuffer( MQTTContext_t * pContext,
  * @brief param[in] pWillInfo Last Will and Testament. Pass NULL if Last Will and
  * Testament is not used.
  * @brief param[in] remainingLength the length of the connect packet.
- * @brief param[in] pPropertyBuilder MQTT property builder.
- * @brief param[in] pWillPropertyBuilder MQTT will properties builder.
+ * @brief param[in] pPropertyBuilder Property builder containing CONNECT properties.
+ * @brief param[in] pWillPropertyBuilder Property builder containing WILL properties.
  * @note This operation may call the transport send function
  * repeatedly to send bytes over the network until either:
  * 1. The requested number of bytes @a remainingLength have been sent.
@@ -418,13 +418,13 @@ static MQTTStatus_t handleCleanSession( MQTTContext_t * pContext );
  * @brief Send the publish packet without copying the topic string and payload in
  * the buffer.
  *
- * @brief param[in] pContext Initialized MQTT context.
- * @brief param[in] pPublishInfo MQTT PUBLISH packet parameters.
- * @brief param[in] pMqttHeader the serialized MQTT header with the header byte;
+ * @param[in] pContext Initialized MQTT context.
+ * @param[in] pPublishInfo MQTT PUBLISH packet parameters.
+ * @param[in] pMqttHeader the serialized MQTT header with the header byte;
  * the encoded length of the packet; and the encoded length of the topic string.
- * @brief param[in] headerSize Size of the serialized PUBLISH header.
- * @brief param[in] packetId Packet Id of the publish packet.
- * @brief param[in] pPropertyBuilder MQTT Publish property builder.
+ * @param[in] headerSize Size of the serialized PUBLISH header.
+ * @param[in] packetId Packet Id of the publish packet.
+ * @param[in] pPropertyBuilder MQTT Publish property builder.
  *
  * @return #MQTTSendFailed if transport send during resend failed;
  * #MQTTSuccess otherwise.
@@ -439,9 +439,9 @@ static MQTTStatus_t sendPublishWithoutCopy( MQTTContext_t * pContext,
 /**
  * @brief Function to validate #MQTT_Publish parameters.
  *
- * @brief param[in] pContext Initialized MQTT context.
- * @brief param[in] pPublishInfo MQTT PUBLISH packet parameters.
- * @brief param[in] packetId Packet Id for the MQTT PUBLISH packet.
+ * @param[in] pContext Initialized MQTT context.
+ * @param[in] pPublishInfo MQTT PUBLISH packet parameters.
+ * @param[in] packetId Packet Id for the MQTT PUBLISH packet.
  *
  * @return #MQTTBadParameter if invalid parameters are passed;
  * #MQTTSuccess otherwise.
@@ -537,7 +537,8 @@ static MQTTStatus_t sendPublishAcksWithProperty( MQTTContext_t * pContext,
                                                  MQTTSuccessFailReasonCode_t reasonCode );
 
 /**
- * @brief Send acks for received QoS 1/2 publishes with properties.
+ * @brief Send the disconnect packet without copying the reason code and properties in
+ * the buffer.
  *
  * @param[in] pContext MQTT Connection context.
  * @param[in] reasonCode Reason code to be sent in the Disconnect packet.
@@ -545,7 +546,8 @@ static MQTTStatus_t sendPublishAcksWithProperty( MQTTContext_t * pContext,
  * @param[in] pPropertyBuilder MQTT Disconnect property builder.
  *
  *
- * @return #MQTTSuccess, #MQTTBadParameter, #MQTTIllegalState or #MQTTSendFailed.
+ * @return #MQTTSendFailed if transport send during resend failed;
+ * #MQTTSuccess otherwise.
  */
 
 static MQTTStatus_t sendDisconnectWithoutCopy( MQTTContext_t * pContext,
@@ -553,11 +555,10 @@ static MQTTStatus_t sendDisconnectWithoutCopy( MQTTContext_t * pContext,
                                                size_t remainingLength,
                                                const MQTTPropBuilder_t * pPropertyBuilder );
 
-
 /**
  * @brief Initialize an MQTTConnectProperties_t.
  *
- * @note This function initializes the connect properties to default values in the #MQTT_Init.
+ * @note This function initializes the connect properties to default values.
  *
  * @param[in] pConnectProperties The connect properties to initialize.
  *
@@ -615,12 +616,12 @@ static MQTTStatus_t validateSharedSubscriptions( const MQTTContext_t * pContext,
 /**
  * @brief Send Subscribe without copying the users data into any buffer.
  *
- * @brief param[in] pContext Initialized MQTT context.
- * @brief param[in] pSubscriptionList List of MQTT subscription info.
- * @brief param[in] subscriptionCount Number of elements in pSubscriptionList.
- * @brief param[in] packetId Packet identifier.
- * @brief param[in] remainingLength Remaining length of the packet.
- * @brief param[in] pPropertyBuilder MQTT property builder.
+ * @param[in] pContext Initialized MQTT context.
+ * @param[in] pSubscriptionList List of MQTT subscription info.
+ * @param[in] subscriptionCount Number of elements in pSubscriptionList.
+ * @param[in] packetId Packet identifier.
+ * @param[in] remainingLength Remaining length of the packet.
+ * @param[in] pPropertyBuilder MQTT property builder.
  * @note This operation may call the transport send function
  * repeatedly to send bytes over the network until either:
  * 1. The requested number of bytes @a remainingLength have been sent.
@@ -643,12 +644,12 @@ static MQTTStatus_t sendSubscribeWithoutCopy( MQTTContext_t * pContext,
 /**
  * @brief Send Unsubscribe without copying the users data into any buffer.
  *
- * @brief param[in] pContext Initialized MQTT context.
- * @brief param[in] pSubscriptionList List of MQTT subscription info.
- * @brief param[in] subscriptionCount Number of elements in pSubscriptionList.
- * @brief param[in] packetId Packet identifier.
- * @brief param[in] remainingLength Remaining length of the packet.
- * @brief param[in] pPropertyBuilder MQTT property builder.
+ * @param[in] pContext Initialized MQTT context.
+ * @param[in] pSubscriptionList List of MQTT subscription info.
+ * @param[in] subscriptionCount Number of elements in pSubscriptionList.
+ * @param[in] packetId Packet identifier.
+ * @param[in] remainingLength Remaining length of the packet.
+ * @param[in] pPropertyBuilder MQTT property builder.
  * @note This operation may call the transport send function
  * repeatedly to send bytes over the network until either:
  * 1. The requested number of bytes @a remainingLength have been sent.
@@ -668,7 +669,7 @@ static MQTTStatus_t sendUnsubscribeWithoutCopy( MQTTContext_t * pContext,
                                                 const MQTTPropBuilder_t * pPropertyBuilder );
 
 /**
- * @brief Add subscription options to the options array
+ * @brief Add subscription options to the options array.
  *
  * @param[in] pSubscriptionInfo MQTT subscription information.
  * @param[out] subscriptionOptionsArray Array to store subscription options.
@@ -681,7 +682,7 @@ static void addSubscriptionOptions( const MQTTSubscribeInfo_t pSubscriptionInfo,
                                     size_t currentOptionIndex );
 
 /**
- * @brief Check if wildcard subscriptions are allowed and valid
+ * @brief Check if wildcard subscriptions are allowed and valid.
  *
  * @param[in] isWildcardAvailable Flag indicating if wildcard subscriptions are supported.
  * @param[in] pSubscriptionList List of MQTT subscription info.
@@ -695,7 +696,7 @@ static bool checkWildcardSubscriptions( uint8_t isWildcardAvailable,
                                         size_t iterator );
 
 /**
- * @brief Validate the topic filter in a subscription
+ * @brief Validate the topic filter in a subscription.
  *
  * @param[in] pContext MQTT Connection context.
  * @param[in] pSubscriptionList List of MQTT subscription info.
@@ -749,6 +750,8 @@ static bool matchEndWildcardsSpecialCases( const char * pTopicFilter,
 
     return matchFound;
 }
+
+/*-----------------------------------------------------------*/
 
 static bool matchWildcards( const char * pTopicName,
                             uint16_t topicNameLength,
@@ -1030,6 +1033,8 @@ static int32_t sendMessageVector( MQTTContext_t * pContext,
     return bytesSentOrError;
 }
 
+/*-----------------------------------------------------------*/
+
 static int32_t sendBuffer( MQTTContext_t * pContext,
                            const uint8_t * pBufferToSend,
                            size_t bytesToSend )
@@ -1286,6 +1291,7 @@ static MQTTStatus_t discardPacket( MQTTContext_t * pContext,
 
     return status;
 }
+
 /*-----------------------------------------------------------*/
 
 static MQTTStatus_t discardStoredPacket( MQTTContext_t * pContext,
@@ -2994,6 +3000,8 @@ static MQTTStatus_t handleUncleanSessionResumption( MQTTContext_t * pContext )
     return status;
 }
 
+/*-----------------------------------------------------------*/
+
 static MQTTStatus_t handleCleanSession( MQTTContext_t * pContext )
 {
     MQTTStatus_t status = MQTTSuccess;
@@ -3040,6 +3048,8 @@ static MQTTStatus_t handleCleanSession( MQTTContext_t * pContext )
 
     return status;
 }
+
+/*-----------------------------------------------------------*/
 
 static MQTTStatus_t validatePublishParams( const MQTTContext_t * pContext,
                                            const MQTTPublishInfo_t * pPublishInfo,
