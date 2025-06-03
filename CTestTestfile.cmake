@@ -4,5 +4,4 @@
 #
 # This file includes the relevant testing commands required for
 # testing this directory and lists subdirectories to be tested as well.
-subdirs("unit-test/MQTT")
-subdirs("unit-test/MQTTv5")
+subdirs("unit-test")

@@ -69,7 +69,7 @@ struct MQTTDeserializedInfo;
  * @brief An opaque structure provided by the library to the #MQTTStorePacketForRetransmit function when using #MQTTStorePacketForRetransmit.
  */
 typedef struct MQTTVec MQTTVec_t;
-struct MqttPropBuilder;
+struct MQTTPropBuilder;
 
 /**
  * @ingroup mqtt_callback_types
@@ -104,8 +104,8 @@ typedef uint32_t (* MQTTGetCurrentTimeFunc_t )( void );
  * @param[in] pContext Initialized MQTT context.
  * @param[in] pPacketInfo Information on the type of incoming MQTT packet.
  * @param[in] pDeserializedInfo Deserialized information from incoming packet.
- * @param[in] pReasonCode Reason code for the incoming packet.
- * @param[in] sendPropsBuffer Properties to be sent in the outgoing packet.
+ * @param[out] pReasonCode Reason code for the incoming packet.
+ * @param[out] sendPropsBuffer Properties to be sent in the outgoing packet.
  * @param[in] getPropsBuffer Properties to be received in the incoming packet.
  *
  * @note Get optional properties of incoming packets by calling these functions:
@@ -160,8 +160,8 @@ typedef void (* MQTTEventCallback_t )( struct MQTTContext * pContext,
                                        struct MQTTPacketInfo * pPacketInfo,
                                        struct MQTTDeserializedInfo * pDeserializedInfo,
                                        enum MQTTSuccessFailReasonCode * pReasonCode,
-                                       struct MqttPropBuilder * sendPropsBuffer,
-                                       struct MqttPropBuilder * getPropsBuffer );
+                                       struct MQTTPropBuilder * sendPropsBuffer,
+                                       struct MQTTPropBuilder * getPropsBuffer );
 
 /**
  * @brief User defined callback used to store outgoing publishes. Used to track any publish
@@ -319,7 +319,7 @@ typedef struct MQTTContext
     /**
      * @brief The buffer used to store properties for outgoing ack packets.
      */
-    MqttPropBuilder_t ackPropsBuffer;
+    MQTTPropBuilder_t ackPropsBuffer;
 
     /**
      * @brief The next available ID for outgoing MQTT packets.
@@ -371,13 +371,6 @@ typedef struct MQTTContext
      * @brief Connect and Connack Properties.
      */
     MQTTConnectProperties_t connectProperties;
-
-    /**
-     * @brief To store disconnect information.
-     */
-    MQTTReasonCodeInfo_t * pDisconnectInfo;
-
-
 
     /**
      * @brief User defined API used to store outgoing publishes.
@@ -706,7 +699,7 @@ MQTTStatus_t MQTT_CheckConnectStatus( const MQTTContext_t * pContext );
  * A zero timeout makes use of the retries for receiving CONNACK as configured with
  * #MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT.
  * @param[in] pPropertyBuilder Properties to be sent in the outgoing packet.
- * @param[in] pwillPropertyBuilder Will Properties to be sent in the outgoing packet.
+ * @param[in] pWillPropertyBuilder Will Properties to be sent in the outgoing packet.
  * @param[out] pSessionPresent This value will be set to true if a previous session
  * was present; otherwise it will be set to false. It is only relevant if not
  * establishing a clean session.
@@ -757,6 +750,7 @@ MQTTStatus_t MQTT_CheckConnectStatus( const MQTTContext_t * pContext );
  * - #MQTTPropAdd_ConnAuthData
  *
  * Will Properties:
+ * - #MQTTPropAdd_WillDelayInterval
  * - #MQTTPropAdd_PubPayloadFormat
  * - #MQTTPropAdd_PubMessageExpiry
  * - #MQTTPropAdd_PubResponseTopic
@@ -790,7 +784,7 @@ MQTTStatus_t MQTT_CheckConnectStatus( const MQTTContext_t * pContext );
  * connectInfo.pPassword = "somePassword";
  * connectInfo.passwordLength = strlen( connectInfo.pPassword );
  *  // Optional properties to be sent in the CONNECT packet.
- * MqttPropBuilder_t connectPropsBuilder;
+ * MQTTPropBuilder_t connectPropsBuilder;
  * uint8_t connectPropsBuffer[ 100 ];
  * size_t connectPropsBufferLength = sizeof( connectPropsBuffer );
  * status = MQTT_PropertyBuilder_Init( &connectPropsBuilder, connectPropsBuffer, connectPropsBufferLength );
@@ -807,7 +801,7 @@ MQTTStatus_t MQTT_CheckConnectStatus( const MQTTContext_t * pContext );
  * willInfo.pPayload = "LWT Message";
  * willInfo.payloadLength = strlen( "LWT Message" );
  *  // Optional Will Properties to be sent in the CONNECT packet.
- * MqttPropBuilder_t willPropsBuilder;
+ * MQTTPropBuilder_t willPropsBuilder;
  * uint8_t willPropsBuffer[ 100 ];
  * size_t willPropsBufferLength = sizeof( willPropsBuffer );
  * status = MQTT_PropertyBuilder_Init( &willPropsBuilder, willPropsBuffer, willPropsBufferLength );
@@ -833,8 +827,8 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
                            const MQTTPublishInfo_t * pWillInfo,
                            uint32_t timeoutMs,
                            bool * pSessionPresent,
-                           const MqttPropBuilder_t * pPropertyBuilder,
-                           const MqttPropBuilder_t * pWillPropertyBuilder );
+                           const MQTTPropBuilder_t * pPropertyBuilder,
+                           const MQTTPropBuilder_t * pWillPropertyBuilder );
 /* @[declare_mqtt_connect] */
 
 /**
@@ -882,7 +876,7 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
  *      subscriptionList[ i ].topicFilterLength = strlen( filters[ i ] );
  * }
  * // Optional Properties to be sent in the SUBSCRIBE packet
- * MqttPropBuilder_t propertyBuilder;
+ * MQTTPropBuilder_t propertyBuilder;
  * uint8_t propertyBuffer[ 100 ];
  * size_t propertyBufferLength = sizeof( propertyBuffer );
  * status = MQTT_PropertyBuilder_Init( &propertyBuilder, propertyBuffer, propertyBufferLength );
@@ -908,7 +902,7 @@ MQTTStatus_t MQTT_Subscribe( MQTTContext_t * pContext,
                              const MQTTSubscribeInfo_t * pSubscriptionList,
                              size_t subscriptionCount,
                              uint16_t packetId,
-                             const MqttPropBuilder_t * pPropertyBuilder );
+                             const MQTTPropBuilder_t * pPropertyBuilder );
 
 /* @[declare_mqtt_subscribe] */
 
@@ -957,7 +951,7 @@ MQTTStatus_t MQTT_Subscribe( MQTTContext_t * pContext,
  * publishInfo.pPayload = "Hello World!";
  * publishInfo.payloadLength = strlen( "Hello World!" );
  * // Optional properties to be sent in the PUBLISH packet.
- * MqttPropBuilder_t propertyBuilder;
+ * MQTTPropBuilder_t propertyBuilder;
  * uint8_t propertyBuffer[ 100 ];
  * size_t propertyBufferLength = sizeof( propertyBuffer );
  * status = MQTT_PropertyBuilder_Init( &propertyBuilder, propertyBuffer, propertyBufferLength );
@@ -981,7 +975,7 @@ MQTTStatus_t MQTT_Subscribe( MQTTContext_t * pContext,
 MQTTStatus_t MQTT_Publish( MQTTContext_t * pContext,
                            const MQTTPublishInfo_t * pPublishInfo,
                            uint16_t packetId,
-                           const MqttPropBuilder_t * pPropertyBuilder );
+                           const MQTTPropBuilder_t * pPropertyBuilder );
 /* @[declare_mqtt_publish] */
 
 /**
@@ -1070,7 +1064,7 @@ MQTTStatus_t MQTT_Ping( MQTTContext_t * pContext );
  * // Obtain a new packet id for the unsubscribe request.
  * packetId = MQTT_GetPacketId( pContext );
  * // Optional properties to be sent in the UNSUBSCRIBE packet.
- * MqttPropBuilder_t propertyBuilder;
+ * MQTTPropBuilder_t propertyBuilder;
  * uint8_t propertyBuffer[ 100 ];
  * size_t propertyBufferLength = sizeof( propertyBuffer );
  * status = MQTT_PropertyBuilder_Init( &propertyBuilder, propertyBuffer, propertyBufferLength );
@@ -1098,7 +1092,7 @@ MQTTStatus_t MQTT_Unsubscribe( MQTTContext_t * pContext,
                                const MQTTSubscribeInfo_t * pSubscriptionList,
                                size_t subscriptionCount,
                                uint16_t packetId,
-                               const MqttPropBuilder_t * pPropertyBuilder );
+                               const MQTTPropBuilder_t * pPropertyBuilder );
 /* @[declare_mqtt_unsubscribe] */
 
 /**
@@ -1128,7 +1122,7 @@ MQTTStatus_t MQTT_Unsubscribe( MQTTContext_t * pContext,
  * // This context is assumed to be initialized and connected.
  * MQTTContext_t * pContext;
  * // Optional properties to be sent in the DISCONNECT packet.
- * MqttPropBuilder_t propertyBuilder;
+ * MQTTPropBuilder_t propertyBuilder;
  * uint8_t propertyBuffer[ 100 ];
  * size_t propertyBufferLength = sizeof( propertyBuffer );
  * status = MQTT_PropertyBuilder_Init( &propertyBuilder, propertyBuffer, propertyBufferLength );
@@ -1146,7 +1140,7 @@ MQTTStatus_t MQTT_Unsubscribe( MQTTContext_t * pContext,
  */
 /* @[declare_mqtt_disconnect] */
 MQTTStatus_t MQTT_Disconnect( MQTTContext_t * pContext,
-                              const MqttPropBuilder_t * pPropertyBuilder,
+                              const MQTTPropBuilder_t * pPropertyBuilder,
                               MQTTSuccessFailReasonCode_t reasonCode );
 /* @[declare_mqtt_disconnect] */
 
@@ -1460,21 +1454,19 @@ void MQTT_SerializeMQTTVec( uint8_t * pAllocatedMem,
 /* @[declare_mqtt_serializemqttvec] */
 
 /**
- * @brief Initialize the property builder.
+ * @brief Initialize an MQTTConnectProperties_t.
  *
- * @param[out] pPropertyBuilder Property builder to initialize.
- * @param[in] buffer Buffer to store the properties.
- * @param[in] length Length of the buffer.
+ * @note This function initializes the connect properties to default values.
+ *
+ * @param[in] pConnectProperties The connect properties to initialize.
  *
  * @return
- * - #MQTTBadParameter if invalid parameters are passed.
+ * - #MQTTBadParameter if pConnectProperties is NULL.
  * - #MQTTSuccess otherwise.
  */
-/* @[declare_mqtt_propertybuilder_init] */
-MQTTStatus_t MQTT_PropertyBuilder_Init( MqttPropBuilder_t * pPropertyBuilder,
-                                       uint8_t * buffer,
-                                       size_t length );
-/* @[declare_mqtt_propertybuilder_init] */
+/* @[declare_mqtt_initconnect] */
+MQTTStatus_t MQTT_InitConnect( MQTTConnectProperties_t * pConnectProperties );
+/* @[declare_mqtt_initconnect] */
 
 /* *INDENT-OFF* */
 #ifdef __cplusplus

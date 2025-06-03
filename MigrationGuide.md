@@ -1,6 +1,6 @@
-## coreMQTT version >=v2.0.0 Migration Guide
+## coreMQTT version v2.x Migration Guide
 
-With coreMQTT versions >=v2.0.0, there are some breaking changes that need to be addressed when upgrading.
+With coreMQTT versions >=v2.x, there are some breaking changes that need to be addressed when upgrading.
 
 ### Breaking Changes
 
@@ -232,3 +232,1647 @@ if( status == MQTTSuccess )
 ### Additional Changes
 
 * The `MQTT_CancelCallback` function has been added to allow a program to prevent the event callback from being called when receiving an ACK for a sent packet. For example, if a program sends a publish with packet ID 2 and QoS > 0 using `MQTT_Publish`, the program could then call `MQTT_CancelCallback` on packet ID 2 to prevent coreMQTT from calling the event callback when it receives the `PUBACK` for packet ID 2.
+
+## coreMQTT version >=v3.0.0 Migration Guide
+
+With coreMQTT versions >=v3.0.0, there are some breaking changes that need to be addressed when upgrading.
+
+### Breaking Changes
+
+* The `MQTTEventCallback_t` function signature used in `MQTT_Init` has changed to support MQTT v5 properties and reason codes. The signature changed from `void (* MQTTEventCallback_t)( struct MQTTContext * pContext, struct MQTTPacketInfo * pPacketInfo, struct MQTTDeserializedInfo * pDeserializedInfo )` to `void (* MQTTEventCallback_t)( struct MQTTContext * pContext, struct MQTTPacketInfo * pPacketInfo, struct MQTTDeserializedInfo * pDeserializedInfo, enum MQTTSuccessFailReasonCode * pReasonCode, struct MQTTPropBuilder * sendPropsBuffer, struct MQTTPropBuilder * getPropsBuffer )`. For example:
+
+**Old Code Snippet**:
+```
+// Callback function implementation
+static void eventCallback(
+    MQTTContext_t * pContext,
+    MQTTPacketInfo_t * pPacketInfo,
+    MQTTDeserializedInfo_t * pDeserializedInfo )
+{
+    /* Handle incoming publish. The lower 4 bits of the publish packet
+     * type is used for the dup, QoS, and retain flags. Hence masking
+     * out the lower bits to check if the packet is publish. */
+    if( ( pPacketInfo->type & 0xF0U ) == MQTT_PACKET_TYPE_PUBLISH )
+    {
+        /* Handle incoming publish. */
+    }
+    else
+    {
+        /* Handle other packets. */
+    }
+}
+
+// MQTT_Init call
+status = MQTT_Init( &mqttContext,
+                    &transport,
+                    getTimeMs,
+                    eventCallback,
+                    &fixedBuffer );
+```
+**New Code Snippet**:
+```
+// Callback function implementation
+static void eventCallback(
+    MQTTContext_t * pContext,
+    MQTTPacketInfo_t * pPacketInfo,
+    MQTTDeserializedInfo_t * pDeserializedInfo,
+    MQTTSuccessFailReasonCode * pReasonCode,
+    MQTTPropBuilder_t * sendPropsBuffer,
+    MQTTPropBuilder_t * getPropsBuffer )
+{
+    /* Handle incoming publish. The lower 4 bits of the publish packet
+     * type is used for the dup, QoS, and retain flags. Hence masking
+     * out the lower bits to check if the packet is publish. */
+    if( ( pPacketInfo->type & 0xF0U ) == MQTT_PACKET_TYPE_PUBLISH )
+    {
+        /* Handle incoming publish. */
+        
+        /* Access publish properties if needed */
+        uint16_t topicAlias;
+        if( MQTTPropGet_PubTopicAlias( getPropsBuffer, &topicAlias ) == MQTTSuccess )
+        {
+            /* Handle topic alias */
+        }
+    }
+    else
+    {
+        /* Handle other packets. */
+        
+        /* Add properties to outgoing ack packets if needed */
+        if( pPacketInfo->type == MQTT_PACKET_TYPE_PUBACK )
+        {
+            MQTTPropAdd_ReasonString( sendPropsBuffer, "Success", 7 );
+        }
+    }
+}
+
+// MQTT_Init call
+status = MQTT_Init( &mqttContext,
+                    &transport,
+                    getTimeMs,
+                    eventCallback,
+                    &fixedBuffer );
+```
+* The `MQTT_InitStatefulQoS` function now includes support for MQTT v5 properties in outgoing publish acknowledgments with two additional parameters. Thus, the signature of `MQTT_InitStatefulQoS` changed from `MQTTStatus_t MQTT_InitStatefulQoS( MQTTContext_t * pContext, MQTTPubAckInfo_t * pOutgoingPublishRecords, size_t outgoingPublishCount, MQTTPubAckInfo_t * pIncomingPublishRecords, size_t incomingPublishCount )` to `MQTTStatus_t MQTT_InitStatefulQoS( MQTTContext_t * pContext, MQTTPubAckInfo_t * pOutgoingPublishRecords, size_t outgoingPublishCount, MQTTPubAckInfo_t * pIncomingPublishRecords, size_t incomingPublishCount, uint8_t * pBuffer, size_t bufferLength )`. The new parameters can be set to NULL and 0 respectively if not using MQTT v5 properties in publish acknowledgments. For example: 
+
+**Old Code Snippet**:
+```
+// Variables used in this example.
+MQTTContext_t mqttContext;
+const size_t outgoingPublishCount = 10;
+const size_t incomingPublishCount = 10;
+MQTTPubAckInfo_t pOutgoingPublishRecords[ outgoingPublishCount ];
+MQTTPubAckInfo_t pIncomingPublishRecords[ incomingPublishCount ];
+
+status = MQTT_InitStatefulQoS( &mqttContext,
+                              pOutgoingPublishRecords,
+                              outgoingPublishCount,
+                              pIncomingPublishRecords,
+                              incomingPublishCount );
+
+if( status == MQTTSuccess )
+{
+    // QoS > 0 operations can now be performed
+}
+```
+**New Code snippet**:
+```
+/ Variables used in this example.
+MQTTContext_t mqttContext;
+const size_t outgoingPublishCount = 10;
+const size_t incomingPublishCount = 10;
+MQTTPubAckInfo_t pOutgoingPublishRecords[ outgoingPublishCount ];
+MQTTPubAckInfo_t pIncomingPublishRecords[ incomingPublishCount ];
+
+// Option 1: Without MQTT v5 properties in publish acknowledgments
+status = MQTT_InitStatefulQoS( &mqttContext,
+                              pOutgoingPublishRecords,
+                              outgoingPublishCount,
+                              pIncomingPublishRecords,
+                              incomingPublishCount,
+                              NULL,  // No buffer for properties
+                              0 );   // No buffer length
+
+// Option 2: With MQTT v5 properties in publish acknowledgments
+uint8_t propertyBuffer[500];
+status = MQTT_InitStatefulQoS( &mqttContext,
+                              pOutgoingPublishRecords,
+                              outgoingPublishCount,
+                              pIncomingPublishRecords,
+                              incomingPublishCount,
+                              propertyBuffer,     // Buffer for properties
+                              sizeof(propertyBuffer) );
+
+if( status == MQTTSuccess )
+{
+    // QoS > 0 operations can now be performed
+}
+```
+* The `MQTT_Connect` function now includes MQTT v5 property support with two additional parameters. Thus, the signature of `MQTT_Connect` changed from `MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext, const MQTTConnectInfo_t * pConnectInfo, const MQTTPublishInfo_t * pWillInfo, uint32_t timeoutMs, bool * pSessionPresent )` to `MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext, const MQTTConnectInfo_t * pConnectInfo, const MQTTPublishInfo_t * pWillInfo, uint32_t timeoutMs, bool * pSessionPresent, const MQTTPropBuilder_t * pPropertyBuilder, const MQTTPropBuilder_t * pWillPropertyBuilder )`.`pPropertyBuilder` and `pWillPropertyBuilder` can be set to NULL if the user does not want to send any properties.
+
+**Old Code Snippet**:
+```
+// Variables used in this example.
+MQTTStatus_t status;
+MQTTConnectInfo_t connectInfo = { 0 };
+bool sessionPresent;
+// This context is assumed to be initialized.
+MQTTContext_t * pContext;
+
+// Set connection info.
+connectInfo.keepAliveSeconds = 60;
+connectInfo.cleanSession = true;
+connectInfo.pClientIdentifier = "clientId";
+connectInfo.clientIdentifierLength = strlen("clientId");
+
+status = MQTT_Connect( pContext,
+                      &connectInfo,
+                      NULL, /* No will message */
+                      MQTT_TIMEOUT_MS,
+                      &sessionPresent );
+
+if( status == MQTTSuccess )
+{
+    // Connection successful
+}
+```
+**New Code Snippet**:
+```
+// Variables used in this example.
+MQTTStatus_t status;
+MQTTConnectInfo_t connectInfo = { 0 };
+bool sessionPresent;
+// This context is assumed to be initialized.
+MQTTContext_t * pContext;
+
+// Set connection info.
+connectInfo.keepAliveSeconds = 60;
+connectInfo.cleanSession = true;
+connectInfo.pClientIdentifier = "clientId";
+connectInfo.clientIdentifierLength = strlen("clientId");
+
+status = MQTT_Connect( pContext,
+                      &connectInfo,
+                      NULL, /* No will message */
+                      MQTT_TIMEOUT_MS,
+                      &sessionPresent,
+                      NULL, /* No connect properties */
+                      NULL  /* No will properties */ );
+
+if( status == MQTTSuccess )
+{
+    // Connection successful
+}
+
+// To use MQTT v5 properties, initialize and use the property builders:
+
+// Variables used in this example.
+MQTTStatus_t status;
+MQTTConnectInfo_t connectInfo = { 0 };
+bool sessionPresent;
+MQTTPropBuilder_t connectProperties = { 0 };
+// This context is assumed to be initialized.
+MQTTContext_t * pContext;
+
+// Set connection info.
+connectInfo.keepAliveSeconds = 60;
+connectInfo.cleanSession = true;
+connectInfo.pClientIdentifier = "clientId";
+connectInfo.clientIdentifierLength = strlen("clientId");
+
+// Initialize and add connect properties
+MQTTPropBuilder_t connectProperties ; 
+uint8_t buf[500] ; 
+size bufLength = sizeof(buf); 
+MQTT_PropertyBuilder_Init(&connectProperties, buf, bufLength) ; 
+
+uint32_t sessionExpiryInterval = 100 ; // 100ms
+MQTTPropAdd_SessionExpiry(&connectProperties, sessionExpiryInterval ); 
+
+// Can also use the will properties in a similar way. 
+
+status = MQTT_Connect( pContext,
+                      &connectInfo,
+                      NULL, /* No will message */
+                      MQTT_TIMEOUT_MS,
+                      &sessionPresent,
+                      &connectProperties,
+                      NULL /* No will properties */ );
+if( status == MQTTSuccess )
+{
+    // Connection successful
+}
+```
+* The `MQTT_Subscribe` function now includes support for MQTT v5 properties with an additional parameter. Thus, the signature of `MQTT_Subscribe` changed from `MQTTStatus_t MQTT_Subscribe( MQTTContext_t * pContext, const MQTTSubscribeInfo_t * pSubscriptionList, size_t subscriptionCount, uint16_t packetId )` to `MQTTStatus_t MQTT_Subscribe( MQTTContext_t * pContext, const MQTTSubscribeInfo_t * pSubscriptionList, size_t subscriptionCount, uint16_t packetId, const MQTTPropBuilder_t * pPropertyBuilder )`. The new parameter can be set to NULL if not using MQTT v5 properties. For example:
+
+**Old Code Snippet**:
+```
+// Variables used in this example.
+MQTTContext_t mqttContext;
+MQTTSubscribeInfo_t subscriptionList[1];
+uint16_t packetId;
+
+// Configure subscription
+subscriptionList[0].qos = MQTTQoS0;
+subscriptionList[0].pTopicFilter = "topic/example";
+subscriptionList[0].topicFilterLength = strlen("topic/example");
+
+// Get packet id
+packetId = MQTT_GetPacketId(&mqttContext);
+
+status = MQTT_Subscribe(&mqttContext,
+                       subscriptionList,
+                       1,
+                       packetId);
+
+if(status == MQTTSuccess)
+{
+    // Subscription request sent successfully
+}
+```
+**New Code Snippet**
+```
+// Variables used in this example.
+MQTTContext_t mqttContext;
+MQTTSubscribeInfo_t subscriptionList[1];
+uint16_t packetId;
+
+// Configure subscription
+subscriptionList[0].qos = MQTTQoS0;
+subscriptionList[0].pTopicFilter = "topic/example";
+subscriptionList[0].topicFilterLength = strlen("topic/example");
+
+// Get packet id
+packetId = MQTT_GetPacketId(&mqttContext);
+
+// Option 1: Without MQTT v5 properties
+status = MQTT_Subscribe(&mqttContext,
+                       subscriptionList,
+                       1,
+                       packetId,
+                       NULL);  // No properties
+
+// Option 2: With MQTT v5 properties
+MQTTPropBuilder_t propertyBuilder = { 0 };
+uint8_t propertyBuffer[100];
+
+// Initialize property builder
+MQTT_PropertyBuilder_Init(&propertyBuilder, 
+                         propertyBuffer, 
+                         sizeof(propertyBuffer));
+
+// Add subscription identifier property
+MQTTPropAdd_SubscribeId(&propertyBuilder, 1);
+
+status = MQTT_Subscribe(&mqttContext,
+                       subscriptionList,
+                       1,
+                       packetId,
+                       &propertyBuilder);
+
+if(status == MQTTSuccess)
+{
+    // Subscription request sent successfully
+}
+```
+* The `MQTT_Publish` function now includes support for MQTT v5 properties with an additional parameter. Thus, the signature of `MQTT_Publish` changed from `MQTTStatus_t MQTT_Publish( MQTTContext_t * pContext, const MQTTPublishInfo_t * pPublishInfo, uint16_t packetId )` to `MQTTStatus_t MQTT_Publish( MQTTContext_t * pContext, const MQTTPublishInfo_t * pPublishInfo, uint16_t packetId, const MQTTPropBuilder_t * pPropertyBuilder )`. The new parameter can be set to NULL if not using MQTT v5 properties. For example:
+
+**Old Code Snippet**:
+```
+// Variables used in this example.
+MQTTContext_t mqttContext;
+MQTTPublishInfo_t publishInfo = { 0 };
+uint16_t packetId;
+
+// Configure publish message
+publishInfo.qos = MQTTQoS1;
+publishInfo.pTopicName = "topic/example";
+publishInfo.topicNameLength = strlen("topic/example");
+publishInfo.pPayload = "Hello World!";
+publishInfo.payloadLength = strlen("Hello World!");
+
+// Get packet id for QoS > 0
+packetId = MQTT_GetPacketId(&mqttContext);
+
+status = MQTT_Publish(&mqttContext,
+                     &publishInfo,
+                     packetId);
+
+if(status == MQTTSuccess)
+{
+    // Message published successfully
+}
+```
+**New Code Snippet**
+```
+// Variables used in this example.
+MQTTContext_t mqttContext;
+MQTTPublishInfo_t publishInfo = { 0 };
+uint16_t packetId;
+
+// Configure publish message
+publishInfo.qos = MQTTQoS1;
+publishInfo.pTopicName = "topic/example";
+publishInfo.topicNameLength = strlen("topic/example");
+publishInfo.pPayload = "Hello World!";
+publishInfo.payloadLength = strlen("Hello World!");
+
+// Get packet id for QoS > 0
+packetId = MQTT_GetPacketId(&mqttContext);
+
+// Option 1: Without MQTT v5 properties
+status = MQTT_Publish(&mqttContext,
+                     &publishInfo,
+                     packetId,
+                     NULL);  // No properties
+
+// Option 2: With MQTT v5 properties
+MQTTPropBuilder_t propertyBuilder = { 0 };
+uint8_t propertyBuffer[100];
+
+// Initialize property builder
+MQTT_PropertyBuilder_Init(&propertyBuilder, 
+                         propertyBuffer, 
+                         sizeof(propertyBuffer));
+
+// Add publish properties
+MQTTPropAdd_PubPayloadFormat(&propertyBuilder, 1);
+MQTTPropAdd_PubTopicAlias(&propertyBuilder, 1); 
+
+status = MQTT_Publish(&mqttContext,
+                     &publishInfo,
+                     packetId,
+                     &propertyBuilder);
+
+if(status == MQTTSuccess)
+{
+    // Message published successfully
+}
+```
+* The `MQTT_Unsubscribe` function now includes support for MQTT v5 properties with an additional parameter. Thus, the signature of `MQTT_Unsubscribe` changed from `MQTTStatus_t MQTT_Unsubscribe( MQTTContext_t * pContext, const MQTTSubscribeInfo_t * pSubscriptionList, size_t subscriptionCount, uint16_t packetId )` to `MQTTStatus_t MQTT_Unsubscribe( MQTTContext_t * pContext, const MQTTSubscribeInfo_t * pSubscriptionList, size_t subscriptionCount, uint16_t packetId, const MQTTPropBuilder_t * pPropertyBuilder )`. The new parameter can be set to NULL if not using MQTT v5 properties. For example:
+
+**Old Code Snippet**
+```
+// Variables used in this example.
+MQTTContext_t mqttContext;
+MQTTSubscribeInfo_t unsubscribeList[1];
+uint16_t packetId;
+
+// Configure unsubscribe info
+unsubscribeList[0].pTopicFilter = "topic/example";
+unsubscribeList[0].topicFilterLength = strlen("topic/example");
+// QoS field is unused for unsubscribe
+
+// Get packet id
+packetId = MQTT_GetPacketId(&mqttContext);
+
+status = MQTT_Unsubscribe(&mqttContext,
+                         unsubscribeList,
+                         1,
+                         packetId);
+
+if(status == MQTTSuccess)
+{
+    // Unsubscribe request sent successfully
+}
+```
+**New Code Snippet**
+```
+// Variables used in this example.
+MQTTContext_t mqttContext;
+MQTTSubscribeInfo_t unsubscribeList[1];
+uint16_t packetId;
+
+// Configure unsubscribe info
+unsubscribeList[0].pTopicFilter = "topic/example";
+unsubscribeList[0].topicFilterLength = strlen("topic/example");
+// QoS field is unused for unsubscribe
+
+// Get packet id
+packetId = MQTT_GetPacketId(&mqttContext);
+
+// Option 1: Without MQTT v5 properties
+status = MQTT_Unsubscribe(&mqttContext,
+                         unsubscribeList,
+                         1,
+                         packetId,
+                         NULL);  // No properties
+
+// Option 2: With MQTT v5 properties
+MQTTPropBuilder_t propertyBuilder = { 0 };
+uint8_t propertyBuffer[100];
+
+// Initialize property builder
+MQTT_PropertyBuilder_Init(&propertyBuilder, 
+                         propertyBuffer, 
+                         sizeof(propertyBuffer));
+
+// Add user property
+MQTTUserProperty_t userProperty = {
+    .pKey = "key",
+    .keyLength = strlen("key"),
+    .pValue = "value",
+    .valueLength = strlen("value")
+};
+MQTTPropAdd_UserProp(&propertyBuilder, &userProperty);
+
+status = MQTT_Unsubscribe(&mqttContext,
+                         unsubscribeList,
+                         1,
+                         packetId,
+                         &propertyBuilder);
+
+if(status == MQTTSuccess)
+{
+    // Unsubscribe request sent successfully
+}
+```
+* The `MQTT_Disconnect` function now includes support for MQTT v5 properties and reason codes with two additional parameters. Thus, the signature of `MQTT_Disconnect` changed from `MQTTStatus_t MQTT_Disconnect( MQTTContext_t * pContext )` to `MQTTStatus_t MQTT_Disconnect( MQTTContext_t * pContext, const MQTTPropBuilder_t * pPropertyBuilder, MQTTSuccessFailReasonCode_t reasonCode )`. The new parameters can be set to NULL and 0 respectively if not using MQTT v5 features. For example:
+
+**Old Code Snippet**
+```
+// Variables used in this example.
+MQTTContext_t mqttContext;
+
+status = MQTT_Disconnect(&mqttContext);
+
+if(status == MQTTSuccess)
+{
+    // Disconnected successfully
+}
+```
+**New Code Snippet**
+```
+// Variables used in this example.
+MQTTContext_t mqttContext;
+
+// Option 1: Without MQTT v5 properties and reason code
+status = MQTT_Disconnect(&mqttContext,
+                        NULL,  // No properties
+                        0);    // No reason code 
+
+// Option 2: With MQTT v5 properties and reason code
+MQTTPropBuilder_t propertyBuilder = { 0 };
+uint8_t propertyBuffer[100];
+
+// Initialize property builder
+MQTT_PropertyBuilder_Init(&propertyBuilder, 
+                         propertyBuffer, 
+                         sizeof(propertyBuffer));
+
+// Add disconnect properties
+MQTTPropAdd_ReasonString(&propertyBuilder, 
+                        "Normal shutdown", 
+                        strlen("Normal shutdown"));
+
+status = MQTT_Disconnect(&mqttContext,
+                        &propertyBuilder,
+                        MQTT_REASON_DISCONNECT_NORMAL_DISCONNECTION);
+
+if(status == MQTTSuccess)
+{
+    // Disconnected successfully
+}
+```
+* The `MQTT_GetConnectPacketSize` function now includes support for MQTT v5 properties with two additional parameters. Thus, the signature of `MQTT_GetConnectPacketSize` changed from `MQTTStatus_t MQTT_GetConnectPacketSize( const MQTTConnectInfo_t * pConnectInfo, const MQTTPublishInfo_t * pWillInfo, size_t * pRemainingLength, size_t * pPacketSize )` to `MQTTStatus_t MQTT_GetConnectPacketSize( const MQTTConnectInfo_t * pConnectInfo, const MQTTPublishInfo_t * pWillInfo, const MQTTPropBuilder_t *pConnectProperties, const MQTTPropBuilder_t *pWillProperties, size_t * pRemainingLength, size_t * pPacketSize )`. The new parameters can be set to NULL if not using MQTT v5 properties. For example:
+
+**Old Code Snippet**
+```
+// Variables used in this example.
+MQTTConnectInfo_t connectInfo = { 0 };
+MQTTPublishInfo_t willInfo = { 0 };
+size_t remainingLength = 0;
+size_t packetSize = 0;
+
+// Configure connect and will info
+connectInfo.keepAliveSeconds = 60;
+connectInfo.cleanSession = true;
+connectInfo.pClientIdentifier = "clientId";
+connectInfo.clientIdentifierLength = strlen("clientId");
+
+status = MQTT_GetConnectPacketSize(&connectInfo,
+                                  &willInfo,
+                                  &remainingLength,
+                                  &packetSize);
+
+if(status == MQTTSuccess)
+{
+    // Use packet size information
+}
+```
+**New Code Snippet**
+```
+// Variables used in this example.
+MQTTConnectInfo_t connectInfo = { 0 };
+MQTTPublishInfo_t willInfo = { 0 };
+size_t remainingLength = 0;
+size_t packetSize = 0;
+
+// Configure connect and will info
+connectInfo.keepAliveSeconds = 60;
+connectInfo.cleanSession = true;
+connectInfo.pClientIdentifier = "clientId";
+connectInfo.clientIdentifierLength = strlen("clientId");
+
+// Option 1: Without MQTT v5 properties
+status = MQTT_GetConnectPacketSize(&connectInfo,
+                                  &willInfo,
+                                  NULL,  // No connect properties
+                                  NULL,  // No will properties
+                                  &remainingLength,
+                                  &packetSize);
+
+// Option 2: With MQTT v5 properties
+MQTTPropBuilder_t connectProperties = { 0 };
+MQTTPropBuilder_t willProperties = { 0 };
+uint8_t connectPropBuffer[100];
+uint8_t willPropBuffer[100];
+
+// Initialize property builders
+MQTT_PropertyBuilder_Init(&connectProperties, 
+                         connectPropBuffer, 
+                         sizeof(connectPropBuffer));
+MQTT_PropertyBuilder_Init(&willProperties, 
+                         willPropBuffer, 
+                         sizeof(willPropBuffer));
+
+// Add properties as needed
+MQTTPropAdd_SessionExpiry(&connectProperties, 3600);
+MQTTPropAdd_WillDelayInterval(&willProperties, 60);
+
+status = MQTT_GetConnectPacketSize(&connectInfo,
+                                  &willInfo,
+                                  &connectProperties,
+                                  &willProperties,
+                                  &remainingLength,
+                                  &packetSize);
+
+if(status == MQTTSuccess)
+{
+    // Use packet size information
+}
+```
+* The `MQTT_GetPublishPacketSize` function now includes support for MQTT v5 properties and maximum packet size with two additional parameters. Thus, the signature of `MQTT_GetPublishPacketSize` changed from `MQTTStatus_t MQTT_GetPublishPacketSize( const MQTTPublishInfo_t * pPublishInfo, size_t * pRemainingLength, size_t * pPacketSize )` to `MQTTStatus_t MQTT_GetPublishPacketSize( const MQTTPublishInfo_t * pPublishInfo, const MQTTPropBuilder_t * pPublishProperties, size_t * pRemainingLength, size_t * pPacketSize, uint32_t maxPacketSize )`. The new parameters include support for MQTT v5 properties and server-imposed packet size limitations. For example:
+
+**Old Code Snippet**
+```
+// Variables used in this example.
+MQTTPublishInfo_t publishInfo = { 0 };
+size_t remainingLength = 0;
+size_t packetSize = 0;
+
+// Configure publish info
+publishInfo.qos = MQTTQoS1;
+publishInfo.pTopicName = "topic/example";
+publishInfo.topicNameLength = strlen("topic/example");
+publishInfo.pPayload = "Hello World!";
+publishInfo.payloadLength = strlen("Hello World!");
+
+status = MQTT_GetPublishPacketSize(&publishInfo,
+                                  &remainingLength,
+                                  &packetSize);
+
+if(status == MQTTSuccess)
+{
+    // Use packet size information
+}
+```
+**New Code Snippet**
+```
+// Variables used in this example.
+MQTTPublishInfo_t publishInfo = { 0 };
+size_t remainingLength = 0;
+size_t packetSize = 0;
+uint32_t maxPacketSize = 268435455; // Default max packet size
+
+// Configure publish info
+publishInfo.qos = MQTTQoS1;
+publishInfo.pTopicName = "topic/example";
+publishInfo.topicNameLength = strlen("topic/example");
+publishInfo.pPayload = "Hello World!";
+publishInfo.payloadLength = strlen("Hello World!");
+
+// Option 1: Without MQTT v5 properties
+status = MQTT_GetPublishPacketSize(&publishInfo,
+                                  NULL,  // No publish properties
+                                  &remainingLength,
+                                  &packetSize,
+                                  maxPacketSize);
+
+// Option 2: With MQTT v5 properties
+MQTTPropBuilder_t publishProperties = { 0 };
+uint8_t propBuffer[100];
+
+// Initialize property builder
+MQTT_PropertyBuilder_Init(&publishProperties, 
+                         propBuffer, 
+                         sizeof(propBuffer));
+
+// Add publish properties
+MQTTPropAdd_PubTopicAlias(&publishProperties, 1);
+MQTTPropAdd_PubPayloadFormat(&publishProperties, 1);
+
+// Get max packet size from CONNACK properties
+uint32_t serverMaxPacketSize = pContext->connectProperties.serverMaxPacketSize; // Value from server
+
+status = MQTT_GetPublishPacketSize(&publishInfo,
+                                  &publishProperties,
+                                  &remainingLength,
+                                  &packetSize,
+                                  serverMaxPacketSize);
+
+if(status == MQTTSuccess)
+{
+    // Use packet size information
+}
+```
+* The `MQTT_GetSubscribePacketSize` function now includes support for MQTT v5 properties and maximum packet size with two additional parameters. Thus, the signature of `MQTT_GetSubscribePacketSize` changed from `MQTTStatus_t MQTT_GetSubscribePacketSize( const MQTTSubscribeInfo_t * pSubscriptionList, size_t subscriptionCount, size_t * pRemainingLength, size_t * pPacketSize )` to `MQTTStatus_t MQTT_GetSubscribePacketSize( const MQTTSubscribeInfo_t * pSubscriptionList, size_t subscriptionCount, const MQTTPropBuilder_t * pSubscribeProperties, size_t * pRemainingLength, size_t * pPacketSize, uint32_t maxPacketSize )`. For example:
+
+**Old Code Snippet**
+```
+// Variables used in this example.
+MQTTSubscribeInfo_t subscriptionList[2];
+size_t remainingLength = 0;
+size_t packetSize = 0;
+
+// Configure subscription list
+subscriptionList[0].qos = MQTTQoS1;
+subscriptionList[0].pTopicFilter = "topic/1";
+subscriptionList[0].topicFilterLength = strlen("topic/1");
+
+subscriptionList[1].qos = MQTTQoS0;
+subscriptionList[1].pTopicFilter = "topic/2";
+subscriptionList[1].topicFilterLength = strlen("topic/2");
+
+status = MQTT_GetSubscribePacketSize(subscriptionList,
+                                   2,
+                                   &remainingLength,
+                                   &packetSize);
+
+if(status == MQTTSuccess)
+{
+    // Use packet size information
+}
+```
+**New Code Snippet**
+```
+// Variables used in this example.
+MQTTSubscribeInfo_t subscriptionList[1];
+size_t remainingLength = 0;
+size_t packetSize = 0;
+
+// Configure subscription list
+subscriptionList[0].qos = MQTTQoS1;
+subscriptionList[0].pTopicFilter = "topic/1";
+subscriptionList[0].topicFilterLength = strlen("topic/1");
+subscriptionList[0].noLocalOption = false;
+subscriptionList[0].retainAsPublishedOption = false;
+subscriptionList[0].retainHandlingOption = retainSendOnSub;
+
+MQTTPropBuilder_t subscribeProperties = { 0 };
+uint8_t propBuffer[100];
+
+// Initialize property builder
+MQTT_PropertyBuilder_Init(&subscribeProperties, 
+                         propBuffer, 
+                         sizeof(propBuffer));
+
+// Add subscription identifier
+MQTTPropAdd_SubscribeId(&subscribeProperties, 1);
+
+// Get max packet size from CONNACK properties
+uint32_t serverMaxPacketSize = pContext->connectProperties.serverMaxPacketSize; // value from server
+
+status = MQTT_GetSubscribePacketSize(subscriptionList,
+                                   1,
+                                   &subscribeProperties,
+                                   &remainingLength,
+                                   &packetSize,
+                                   serverMaxPacketSize);
+
+if(status == MQTTSuccess)
+{
+    // Use packet size information
+}
+```
+* The `MQTT_GetUnsubscribePacketSize` function now includes support for MQTT v5 properties with two additional parameters. Thus, the signature of `MQTT_GetUnsubscribePacketSize` changed from `MQTTStatus_t MQTT_GetUnsubscribePacketSize( const MQTTSubscribeInfo_t * pSubscriptionList, size_t subscriptionCount, size_t * pRemainingLength, size_t * pPacketSize )` to `MQTTStatus_t MQTT_GetUnsubscribePacketSize( const MQTTSubscribeInfo_t * pSubscriptionList, size_t subscriptionCount, const MQTTPropBuilder_t * pUnsubscribeProperties, size_t * pRemainingLength, size_t * pPacketSize, uint32_t maxPacketSize )`. For example:
+
+**Old Code Snippet**
+```
+// Variables used in this example.
+MQTTSubscribeInfo_t subscriptionList[1];
+size_t remainingLength = 0;
+size_t packetSize = 0;
+
+// Configure unsubscribe list
+subscriptionList[0].pTopicFilter = "topic/1";
+subscriptionList[0].topicFilterLength = strlen("topic/1");
+
+status = MQTT_GetUnsubscribePacketSize(subscriptionList,
+                                     1,
+                                     &remainingLength,
+                                     &packetSize);
+
+if(status == MQTTSuccess)
+{
+    // Use packet size information
+}
+```
+**New Code Snippet**
+```
+// Variables used in this example.
+MQTTSubscribeInfo_t subscriptionList[1];
+size_t remainingLength = 0;
+size_t packetSize = 0;
+uint32_t maxPacketSize = 268435455; // Default max packet size
+
+// Configure unsubscribe list
+subscriptionList[0].pTopicFilter = "topic/1";
+subscriptionList[0].topicFilterLength = strlen("topic/1");
+
+// Option 1: Without MQTT v5 properties
+status = MQTT_GetUnsubscribePacketSize(subscriptionList,
+                                     1,
+                                     NULL,  // No unsubscribe properties
+                                     &remainingLength,
+                                     &packetSize,
+                                     maxPacketSize);
+
+// Option 2: With MQTT v5 properties
+MQTTPropBuilder_t unsubscribeProperties;
+uint8_t propBuffer[100];
+
+// Initialize property builder
+MQTT_PropertyBuilder_Init(&unsubscribeProperties, 
+                         propBuffer, 
+                         sizeof(propBuffer));
+
+// Add user property
+MQTTUserProperty_t userProperty = {
+    .pKey = "key",
+    .keyLength = strlen("key"),
+    .pValue = "value",
+    .valueLength = strlen("value")
+};
+MQTTPropAdd_UserProp(&unsubscribeProperties, &userProperty);
+
+// Get max packet size from CONNACK properties
+uint32_t serverMaxPacketSize = pContext->connectProperties.serverMaxPacketSize; // Value from server
+
+status = MQTT_GetUnsubscribePacketSize(subscriptionList,
+                                     2,
+                                     &unsubscribeProperties,
+                                     &remainingLength,
+                                     &packetSize,
+                                     serverMaxPacketSize);
+
+if(status == MQTTSuccess)
+{
+    // Use packet size information
+}
+```
+* The `MQTT_GetDisconnectPacketSize` function now includes support for MQTT v5 properties and reason code validation with four additional parameters. Thus, the signature of `MQTT_GetDisconnectPacketSize` changed from `MQTTStatus_t MQTT_GetDisconnectPacketSize( size_t * pPacketSize )` to `MQTTStatus_t MQTT_GetDisconnectPacketSize( const MQTTPropBuilder_t * pDisconnectProperties, size_t * pRemainingLength, size_t * pPacketSize, uint32_t maxPacketSize, MQTTSuccessFailReasonCode_t reasonCode )`. For example:
+
+**Old Code Snippet**
+```
+// Variables used in this example.
+size_t packetSize = 0;
+
+status = MQTT_GetDisconnectPacketSize(&packetSize);
+
+if(status == MQTTSuccess)
+{
+    // Packet Size was always 2.
+}
+```
+**New Code Snippet**
+```
+// Variables used in this example.
+size_t remainingLength = 0;
+size_t packetSize = 0;
+uint32_t serverMaxPacketSize = pContext->connectProperties.serverMaxPacketSize ; 
+
+// Option 1: Without MQTT v5 properties and default reason code
+status = MQTT_GetDisconnectPacketSize(NULL,  // No disconnect properties
+                                    &remainingLength,
+                                    &packetSize,
+                                    serverMaxPacketSize,
+                                    0);  // Default reason code
+
+// Option 2: With MQTT v5 properties and specific reason code
+MQTTPropBuilder_t disconnectProperties;
+uint8_t propBuffer[100];
+
+// Initialize property builder
+MQTT_PropertyBuilder_Init(&disconnectProperties, 
+                         propBuffer, 
+                         sizeof(propBuffer));
+
+// Add disconnect properties
+MQTTPropAdd_SessionExpiry(&disconnectProperties, 0);
+MQTTPropAdd_ReasonString(&disconnectProperties, 
+                        "Normal shutdown", 
+                        strlen("Normal shutdown"));
+
+
+status = MQTT_GetDisconnectPacketSize(&disconnectProperties,
+                                    &remainingLength,
+                                    &packetSize,
+                                    serverMaxPacketSize,
+                                    MQTT_REASON_DISCONNECT_NORMAL_DISCONNECTION);
+
+if(status == MQTTSuccess)
+{
+    // Use packet size information
+}
+```
+* The `MQTT_SerializeConnect` function now includes support for MQTT v5 properties with two additional parameters. Thus, the signature of `MQTT_SerializeConnect` changed from `MQTTStatus_t MQTT_SerializeConnect( const MQTTConnectInfo_t * pConnectInfo, const MQTTPublishInfo_t * pWillInfo, size_t remainingLength, const MQTTFixedBuffer_t * pFixedBuffer )` to `MQTTStatus_t MQTT_SerializeConnect( const MQTTConnectInfo_t * pConnectInfo, const MQTTPublishInfo_t * pWillInfo, const MQTTPropBuilder_t * pConnectProperties, const MQTTPropBuilder_t * pWillProperties, size_t remainingLength, const MQTTFixedBuffer_t * pFixedBuffer )`. For example:
+
+**Old Code Snippet**
+```
+// Variables used in this example.
+MQTTConnectInfo_t connectInfo = { 0 };
+MQTTPublishInfo_t willInfo = { 0 };
+MQTTFixedBuffer_t fixedBuffer;
+uint8_t buffer[BUFFER_SIZE];
+size_t remainingLength = 0;
+
+// Configure connect info
+connectInfo.keepAliveSeconds = 60;
+connectInfo.cleanSession = true;
+connectInfo.pClientIdentifier = "clientId";
+connectInfo.clientIdentifierLength = strlen("clientId");
+
+// Configure fixed buffer
+fixedBuffer.pBuffer = buffer;
+fixedBuffer.size = BUFFER_SIZE;
+
+// Get remaining length first
+status = MQTT_GetConnectPacketSize(&connectInfo,
+                                  &willInfo,
+                                  &remainingLength,
+                                  &packetSize);
+
+// Serialize connect packet
+status = MQTT_SerializeConnect(&connectInfo,
+                             &willInfo,
+                             remainingLength,
+                             &fixedBuffer);
+
+if(status == MQTTSuccess)
+{
+    // Connect packet serialized successfully
+}
+```
+**New Code Snippet**
+```
+// Variables used in this example.
+MQTTConnectInfo_t connectInfo = { 0 };
+MQTTPublishInfo_t willInfo = { 0 };
+MQTTFixedBuffer_t fixedBuffer;
+uint8_t buffer[BUFFER_SIZE];
+size_t remainingLength = 0;
+
+// Configure connect info
+connectInfo.keepAliveSeconds = 60;
+connectInfo.cleanSession = true;
+connectInfo.pClientIdentifier = "clientId";
+connectInfo.clientIdentifierLength = strlen("clientId");
+
+// Configure fixed buffer
+fixedBuffer.pBuffer = buffer;
+fixedBuffer.size = BUFFER_SIZE;
+
+// Option 1: Without MQTT v5 properties
+// Get remaining length first
+status = MQTT_GetConnectPacketSize(&connectInfo,
+                                  &willInfo,
+                                  NULL,  // No connect properties
+                                  NULL,  // No will properties
+                                  &remainingLength,
+                                  &packetSize);
+
+// Serialize connect packet
+status = MQTT_SerializeConnect(&connectInfo,
+                             &willInfo,
+                             NULL,  // No connect properties
+                             NULL,  // No will properties
+                             remainingLength,
+                             &fixedBuffer);
+// Option 2: With MQTT v5 properties
+MQTTPropBuilder_t connectProperties ;
+MQTTPropBuilder_t willProperties ;
+uint8_t connectPropBuffer[100];
+uint8_t willPropBuffer[100];
+
+// Initialize property builders
+MQTT_PropertyBuilder_Init(&connectProperties, 
+                         connectPropBuffer, 
+                         sizeof(connectPropBuffer));
+MQTT_PropertyBuilder_Init(&willProperties, 
+                         willPropBuffer, 
+                         sizeof(willPropBuffer));
+
+// Add connect properties
+MQTTPropAdd_SessionExpiry(&connectProperties, 3600);
+MQTTPropAdd_MaxPacketSize(&connectProperties, 1024);
+
+// Add will properties if using will message
+MQTTPropAdd_WillDelayInterval(&willProperties, 60);
+
+// Get remaining length first
+status = MQTT_GetConnectPacketSize(&connectInfo,
+                                  &willInfo,
+                                  &connectProperties,
+                                  &willProperties,
+                                  &remainingLength,
+                                  &packetSize);
+
+// Serialize connect packet
+status = MQTT_SerializeConnect(&connectInfo,
+                             &willInfo,
+                             &connectProperties,
+                             &willProperties,
+                             remainingLength,
+                             &fixedBuffer);
+
+if(status == MQTTSuccess)
+{
+    // Connect packet serialized successfully
+}                             
+```
+* The `MQTT_SerializePublish` function now includes support for MQTT v5 properties with an additional parameter. Thus, the signature of `MQTT_SerializePublish changed from MQTTStatus_t MQTT_SerializePublish( const MQTTPublishInfo_t * pPublishInfo, uint16_t packetId, size_t remainingLength, const MQTTFixedBuffer_t * pFixedBuffer )` to `MQTTStatus_t MQTT_SerializePublish( const MQTTPublishInfo_t * pPublishInfo, const MQTTPropBuilder_t * pPublishProperties, uint16_t packetId, size_t remainingLength, const MQTTFixedBuffer_t * pFixedBuffer )`. For example:
+
+**Old Code Snippet**
+```
+// Variables used in this example.
+MQTTPublishInfo_t publishInfo = { 0 };
+MQTTFixedBuffer_t fixedBuffer;
+uint8_t buffer[BUFFER_SIZE];
+size_t remainingLength = 0;
+uint16_t packetId = 1;
+
+// Configure publish info
+publishInfo.qos = MQTTQoS1;
+publishInfo.pTopicName = "topic/example";
+publishInfo.topicNameLength = strlen("topic/example");
+publishInfo.pPayload = "Hello World!";
+publishInfo.payloadLength = strlen("Hello World!");
+
+// Configure fixed buffer
+fixedBuffer.pBuffer = buffer;
+fixedBuffer.size = BUFFER_SIZE;
+
+// Get remaining length first
+status = MQTT_GetPublishPacketSize(&publishInfo,
+                                  &remainingLength,
+                                  &packetSize);
+
+// Serialize publish packet
+status = MQTT_SerializePublish(&publishInfo,
+                              packetId,
+                              remainingLength,
+                              &fixedBuffer);
+
+if(status == MQTTSuccess)
+{
+    // Publish packet serialized successfully
+}
+```
+**New Code Snippet**
+```
+// Variables used in this example.
+MQTTPublishInfo_t publishInfo = { 0 };
+MQTTFixedBuffer_t fixedBuffer;
+uint8_t buffer[BUFFER_SIZE];
+size_t remainingLength = 0;
+uint16_t packetId = 1;
+uint32_t maxPacketSize = pContext->connectProperties.serverMaxPacketSize ; 
+
+// Configure publish info
+publishInfo.qos = MQTTQoS1;
+publishInfo.pTopicName = "topic/example";
+publishInfo.topicNameLength = strlen("topic/example");
+publishInfo.pPayload = "Hello World!";
+publishInfo.payloadLength = strlen("Hello World!");
+
+// Configure fixed buffer
+fixedBuffer.pBuffer = buffer;
+fixedBuffer.size = BUFFER_SIZE;
+
+// Option 1: Without MQTT v5 properties
+// Get remaining length first
+status = MQTT_GetPublishPacketSize(&publishInfo,
+                                  NULL,  // No publish properties
+                                  &remainingLength,
+                                  &packetSize,
+                                  maxPacketSize);
+
+// Serialize publish packet
+status = MQTT_SerializePublish(&publishInfo,
+                              NULL,  // No publish properties
+                              packetId,
+                              remainingLength,
+                              &fixedBuffer);
+
+// Option 2: With MQTT v5 properties
+MQTTPropBuilder_t publishProperties = { 0 };
+uint8_t propBuffer[100];
+
+// Initialize property builder
+MQTT_PropertyBuilder_Init(&publishProperties, 
+                         propBuffer, 
+                         sizeof(propBuffer));
+
+// Add publish properties
+MQTTPropAdd_PubPayloadFormat(&publishProperties, 1);
+MQTTPropAdd_PubTopicAlias(&publishProperties, 1);
+MQTTPropAdd_PubMessageExpiry(&publishProperties, 3600);
+
+// Get remaining length first
+status = MQTT_GetPublishPacketSize(&publishInfo,
+                                  &publishProperties,
+                                  &remainingLength,
+                                  &packetSize,
+                                  maxPacketSize);
+
+// Serialize publish packet
+status = MQTT_SerializePublish(&publishInfo,
+                              &publishProperties,
+                              packetId,
+                              remainingLength,
+                              &fixedBuffer);
+
+if(status == MQTTSuccess)
+{
+    // Publish packet serialized successfully
+}
+```
+* The `MQTT_SerializePublishHeader` function now includes support for MQTT v5 properties with an additional parameter. Thus, the signature of `MQTT_SerializePublishHeader` changed from `MQTTStatus_t MQTT_SerializePublishHeader( const MQTTPublishInfo_t * pPublishInfo, uint16_t packetId, size_t remainingLength, const MQTTFixedBuffer_t * pFixedBuffer, size_t * pHeaderSize )` to `MQTTStatus_t MQTT_SerializePublishHeader( const MQTTPublishInfo_t * pPublishInfo, const MQTTPropBuilder_t * pPublishProperties, uint16_t packetId, size_t remainingLength, const MQTTFixedBuffer_t * pFixedBuffer, size_t * pHeaderSize )`. For example:
+
+**Old Code Snippet**
+```
+// Variables used in this example.
+MQTTPublishInfo_t publishInfo = { 0 };
+MQTTFixedBuffer_t fixedBuffer;
+uint8_t buffer[BUFFER_SIZE];
+size_t remainingLength = 0;
+size_t headerSize = 0;
+uint16_t packetId = 1;
+
+// Configure publish info
+publishInfo.qos = MQTTQoS1;
+publishInfo.pTopicName = "topic/example";
+publishInfo.topicNameLength = strlen("topic/example");
+publishInfo.pPayload = "Hello World!";
+publishInfo.payloadLength = strlen("Hello World!");
+
+// Configure fixed buffer
+fixedBuffer.pBuffer = buffer;
+fixedBuffer.size = BUFFER_SIZE;
+
+// Get remaining length first
+status = MQTT_GetPublishPacketSize(&publishInfo,
+                                  &remainingLength,
+                                  &packetSize);
+
+// Serialize publish header
+status = MQTT_SerializePublishHeader(&publishInfo,
+                                   packetId,
+                                   remainingLength,
+                                   &fixedBuffer,
+                                   &headerSize);
+
+if(status == MQTTSuccess)
+{
+    // Send header and payload separately
+    send(socket, fixedBuffer.pBuffer, headerSize, 0);
+    send(socket, publishInfo.pPayload, publishInfo.payloadLength, 0);
+}
+```
+**New Code Snippet**
+```
+// Variables used in this example.
+MQTTPublishInfo_t publishInfo = { 0 };
+MQTTFixedBuffer_t fixedBuffer;
+uint8_t buffer[BUFFER_SIZE];
+size_t remainingLength = 0;
+size_t headerSize = 0;
+uint16_t packetId = 1;
+uint32_t maxPacketSize = pContext->connectProperties.serverMaxPacketSize;
+
+// Configure publish info
+publishInfo.qos = MQTTQoS1;
+publishInfo.pTopicName = "topic/example";
+publishInfo.topicNameLength = strlen("topic/example");
+publishInfo.pPayload = "Hello World!";
+publishInfo.payloadLength = strlen("Hello World!");
+
+// Configure fixed buffer
+fixedBuffer.pBuffer = buffer;
+fixedBuffer.size = BUFFER_SIZE;
+
+// Option 1: Without MQTT v5 properties
+// Get remaining length first
+status = MQTT_GetPublishPacketSize(&publishInfo,
+                                  NULL,  // No publish properties
+                                  &remainingLength,
+                                  &packetSize,
+                                  maxPacketSize);
+
+// Serialize publish header
+status = MQTT_SerializePublishHeader(&publishInfo,
+                                   NULL,  // No publish properties
+                                   packetId,
+                                   remainingLength,
+                                   &fixedBuffer,
+                                   &headerSize);
+
+// Option 2: With MQTT v5 properties
+MQTTPropBuilder_t publishProperties ;
+uint8_t propBuffer[100];
+
+// Initialize property builder
+MQTT_PropertyBuilder_Init(&publishProperties, 
+                         propBuffer, 
+                         sizeof(propBuffer));
+
+// Add publish properties
+MQTTPropAdd_PubPayloadFormat(&publishProperties, 1);
+MQTTPropAdd_PubTopicAlias(&publishProperties, 1);
+MQTTPropAdd_PubMessageExpiry(&publishProperties, 3600);
+
+// Get remaining length first
+status = MQTT_GetPublishPacketSize(&publishInfo,
+                                  &publishProperties,
+                                  &remainingLength,
+                                  &packetSize,
+                                  maxPacketSize);
+
+// Serialize publish header
+status = MQTT_SerializePublishHeader(&publishInfo,
+                                   &publishProperties,
+                                   packetId,
+                                   remainingLength,
+                                   &fixedBuffer,
+                                   &headerSize);
+
+if(status == MQTTSuccess)
+{
+    // Send header and payload separately
+    send(socket, fixedBuffer.pBuffer, headerSize, 0);
+    send(socket, publishInfo.pPayload, publishInfo.payloadLength, 0);
+}
+```
+
+* The `MQTT_SerializeSubscribe` function now includes support for MQTT v5 properties with an additional parameter. Thus, the signature of `MQTT_SerializeSubscribe` changed from `MQTTStatus_t MQTT_SerializeSubscribe( const MQTTSubscribeInfo_t * pSubscriptionList, size_t subscriptionCount, uint16_t packetId, size_t remainingLength, const MQTTFixedBuffer_t * pFixedBuffer )` to `MQTTStatus_t MQTT_SerializeSubscribe( const MQTTSubscribeInfo_t * pSubscriptionList, size_t subscriptionCount, const MQTTPropBuilder_t * pSubscribeProperties, uint16_t packetId, size_t remainingLength, const MQTTFixedBuffer_t * pFixedBuffer )`. For example:
+
+**Old Code Snippet**
+```
+// Variables used in this example.
+MQTTSubscribeInfo_t subscriptionList[1];
+MQTTFixedBuffer_t fixedBuffer;
+uint8_t buffer[BUFFER_SIZE];
+size_t remainingLength = 0;
+uint16_t packetId = 1;
+
+// Configure subscription list
+subscriptionList[0].qos = MQTTQoS1;
+subscriptionList[0].pTopicFilter = "topic/1";
+subscriptionList[0].topicFilterLength = strlen("topic/1");
+
+// Configure fixed buffer
+fixedBuffer.pBuffer = buffer;
+fixedBuffer.size = BUFFER_SIZE;
+
+// Get remaining length first
+status = MQTT_GetSubscribePacketSize(subscriptionList,
+                                   1,
+                                   &remainingLength,
+                                   &packetSize);
+
+// Serialize subscribe packet
+status = MQTT_SerializeSubscribe(subscriptionList,
+                               1,
+                               packetId,
+                               remainingLength,
+                               &fixedBuffer);
+
+if(status == MQTTSuccess)
+{
+    // Subscribe packet serialized successfully
+}
+```
+**New Code Snippet**
+```
+// Variables used in this example.
+MQTTSubscribeInfo_t subscriptionList[11];
+MQTTFixedBuffer_t fixedBuffer;
+uint8_t buffer[BUFFER_SIZE];
+size_t remainingLength = 0;
+uint16_t packetId = 1;
+uint32_t maxPacketSize = pContext->connectProperties.serverMaxPacketSize ; 
+
+// Configure subscription list
+subscriptionList[0].qos = MQTTQoS1;
+subscriptionList[0].pTopicFilter = "topic/1";
+subscriptionList[0].topicFilterLength = strlen("topic/1");
+subscriptionList[0].noLocalOption = false;
+subscriptionList[0].retainAsPublishedOption = false;
+subscriptionList[0].retainHandlingOption = retainSendOnSub;
+
+// Configure fixed buffer
+fixedBuffer.pBuffer = buffer;
+fixedBuffer.size = BUFFER_SIZE;
+
+// Option 1: Without MQTT v5 properties
+// Get remaining length first
+status = MQTT_GetSubscribePacketSize(subscriptionList,
+                                   1,
+                                   NULL,  // No subscribe properties
+                                   &remainingLength,
+                                   &packetSize,
+                                   maxPacketSize);
+
+// Serialize subscribe packet
+status = MQTT_SerializeSubscribe(subscriptionList,
+                               1,
+                               NULL,  // No subscribe properties
+                               packetId,
+                               remainingLength,
+                               &fixedBuffer);
+
+// Option 2: With MQTT v5 properties
+MQTTPropBuilder_t subscribeProperties = { 0 };
+uint8_t propBuffer[100];
+
+// Initialize property builder
+MQTT_PropertyBuilder_Init(&subscribeProperties, 
+                         propBuffer, 
+                         sizeof(propBuffer));
+
+// Add subscription identifier
+MQTTPropAdd_SubscribeId(&subscribeProperties, 1);
+
+// Get remaining length first
+status = MQTT_GetSubscribePacketSize(subscriptionList,
+                                   1,
+                                   &subscribeProperties,
+                                   &remainingLength,
+                                   &packetSize,
+                                   maxPacketSize);
+
+// Serialize subscribe packet
+status = MQTT_SerializeSubscribe(subscriptionList,
+                               1,
+                               &subscribeProperties,
+                               packetId,
+                               remainingLength,
+                               &fixedBuffer);
+
+if(status == MQTTSuccess)
+{
+    // Subscribe packet serialized successfully
+}
+```
+* The `MQTT_SerializeUnsubscribe` function now includes support for MQTT v5 properties with an additional parameter. Thus, the signature of `MQTT_SerializeUnsubscribe` changed from `MQTTStatus_t MQTT_SerializeUnsubscribe( const MQTTSubscribeInfo_t * pSubscriptionList, size_t subscriptionCount, uint16_t packetId, size_t remainingLength, const MQTTFixedBuffer_t * pFixedBuffer )` to `MQTTStatus_t MQTT_SerializeUnsubscribe( const MQTTSubscribeInfo_t * pSubscriptionList, size_t subscriptionCount, const MQTTPropBuilder_t * pUnsubscribeProperties, uint16_t packetId, size_t remainingLength, const MQTTFixedBuffer_t * pFixedBuffer )`. For example:
+
+**Old Code Snippet**
+```
+// Variables used in this example.
+MQTTSubscribeInfo_t subscriptionList[1];
+MQTTFixedBuffer_t fixedBuffer;
+uint8_t buffer[BUFFER_SIZE];
+size_t remainingLength = 0;
+uint16_t packetId = 1;
+
+// Configure unsubscribe list
+subscriptionList[0].pTopicFilter = "topic/1";
+subscriptionList[0].topicFilterLength = strlen("topic/1");
+
+// Configure fixed buffer
+fixedBuffer.pBuffer = buffer;
+fixedBuffer.size = BUFFER_SIZE;
+
+// Get remaining length first
+status = MQTT_GetUnsubscribePacketSize(subscriptionList,
+                                     1,
+                                     &remainingLength,
+                                     &packetSize);
+
+// Serialize unsubscribe packet
+status = MQTT_SerializeUnsubscribe(subscriptionList,
+                                  1,
+                                  packetId,
+                                  remainingLength,
+                                  &fixedBuffer);
+
+if(status == MQTTSuccess)
+{
+    // Unsubscribe packet serialized successfully
+}
+```
+**New Code Snippet**
+```
+// Variables used in this example.
+MQTTSubscribeInfo_t subscriptionList[1];
+MQTTFixedBuffer_t fixedBuffer;
+uint8_t buffer[BUFFER_SIZE];
+size_t remainingLength = 0;
+uint16_t packetId = 1;
+uint32_t maxPacketSize = pContext->connectProperties.serverMaxPacketSize ; 
+
+// Configure unsubscribe list
+subscriptionList[0].pTopicFilter = "topic/1";
+subscriptionList[0].topicFilterLength = strlen("topic/1");
+
+// Configure fixed buffer
+fixedBuffer.pBuffer = buffer;
+fixedBuffer.size = BUFFER_SIZE;
+
+// Option 1: Without MQTT v5 properties
+// Get remaining length first
+status = MQTT_GetUnsubscribePacketSize(subscriptionList,
+                                     1,
+                                     NULL,  // No unsubscribe properties
+                                     &remainingLength,
+                                     &packetSize,
+                                     maxPacketSize);
+
+// Serialize unsubscribe packet
+status = MQTT_SerializeUnsubscribe(subscriptionList,
+                                  1,
+                                  NULL,  // No unsubscribe properties
+                                  packetId,
+                                  remainingLength,
+                                  &fixedBuffer);
+
+// Option 2: With MQTT v5 properties
+MQTTPropBuilder_t unsubscribeProperties ;
+uint8_t propBuffer[100];
+
+// Initialize property builder
+MQTT_PropertyBuilder_Init(&unsubscribeProperties, 
+                         propBuffer, 
+                         sizeof(propBuffer));
+
+// Add user property
+MQTTUserProperty_t userProperty = {
+    .pKey = "key",
+    .keyLength = strlen("key"),
+    .pValue = "value",
+    .valueLength = strlen("value")
+};
+MQTTPropAdd_UserProp(&unsubscribeProperties, &userProperty);
+
+// Get remaining length first
+status = MQTT_GetUnsubscribePacketSize(subscriptionList,
+                                     1,
+                                     &unsubscribeProperties,
+                                     &remainingLength,
+                                     &packetSize,
+                                     maxPacketSize);
+
+// Serialize unsubscribe packet
+status = MQTT_SerializeUnsubscribe(subscriptionList,
+                                  1,
+                                  &unsubscribeProperties,
+                                  packetId,
+                                  remainingLength,
+                                  &fixedBuffer);
+
+if(status == MQTTSuccess)
+{
+    // Unsubscribe packet serialized successfully
+}
+```
+* The `MQTT_SerializeDisconnect` function now includes support for MQTT v5 properties and reason codes with three additional parameters. Thus, the signature of `MQTT_SerializeDisconnect` changed from `MQTTStatus_t MQTT_SerializeDisconnect( const MQTTFixedBuffer_t * pFixedBuffer )` to `MQTTStatus_t MQTT_SerializeDisconnect( const MQTTPropBuilder_t *pDisconnectProperties, MQTTSuccessFailReasonCode_t reasonCode, size_t remainingLength, const MQTTFixedBuffer_t * pFixedBuffer )`. For example:
+
+**Old Code Snippet**
+```
+// Variables used in this example.
+MQTTFixedBuffer_t fixedBuffer;
+uint8_t buffer[BUFFER_SIZE];
+
+// Configure fixed buffer
+fixedBuffer.pBuffer = buffer;
+fixedBuffer.size = BUFFER_SIZE;
+
+// Serialize disconnect packet
+status = MQTT_SerializeDisconnect(&fixedBuffer);
+
+if(status == MQTTSuccess)
+{
+    // Disconnect packet serialized successfully
+}
+```
+**New Code Snippet**
+```
+// Variables used in this example.
+MQTTFixedBuffer_t fixedBuffer;
+uint8_t buffer[BUFFER_SIZE];
+size_t remainingLength = 0;
+uint32_t maxPacketSize = pContext->connectProperties.serverMaxPacketSize ; 
+
+// Configure fixed buffer
+fixedBuffer.pBuffer = buffer;
+fixedBuffer.size = BUFFER_SIZE;
+
+// Option 1: Without MQTT v5 properties
+// Get remaining length first
+status = MQTT_GetDisconnectPacketSize(NULL,  // No disconnect properties
+                                    &remainingLength,
+                                    &packetSize,
+                                    maxPacketSize,
+                                    0);  // Default reason code
+
+// Serialize disconnect packet
+status = MQTT_SerializeDisconnect(NULL,  // No disconnect properties
+                                 0,      // Default reason code
+                                 remainingLength,
+                                 &fixedBuffer);
+
+// Option 2: With MQTT v5 properties
+MQTTPropBuilder_t disconnectProperties ;
+uint8_t propBuffer[100];
+
+// Initialize property builder
+MQTT_PropertyBuilder_Init(&disconnectProperties, 
+                         propBuffer, 
+                         sizeof(propBuffer));
+
+// Add disconnect properties
+MQTTPropAdd_SessionExpiry(&disconnectProperties, 0);
+MQTTPropAdd_ReasonString(&disconnectProperties, 
+                        "Normal shutdown", 
+                        strlen("Normal shutdown"));
+
+// Get remaining length first
+status = MQTT_GetDisconnectPacketSize(&disconnectProperties,
+                                    &remainingLength,
+                                    &packetSize,
+                                    maxPacketSize,
+                                    MQTT_REASON_DISCONNECT_NORMAL_DISCONNECTION);
+
+// Serialize disconnect packet
+status = MQTT_SerializeDisconnect(&disconnectProperties,
+                                 MQTT_REASON_DISCONNECT_NORMAL_DISCONNECTION,
+                                 remainingLength,
+                                 &fixedBuffer);
+
+if(status == MQTTSuccess)
+{
+    // Disconnect packet serialized successfully
+}
+```
+* The `MQTT_DeserializePublish` function now includes support for MQTT v5 properties with three additional parameters. Thus, the signature of `MQTT_DeserializePublish` changed from `MQTTStatus_t MQTT_DeserializePublish( const MQTTPacketInfo_t * pIncomingPacket, uint16_t * pPacketId, MQTTPublishInfo_t * pPublishInfo )` to `MQTTStatus_t MQTT_DeserializePublish( const MQTTPacketInfo_t * pIncomingPacket, uint16_t * pPacketId, MQTTPublishInfo_t * pPublishInfo, MQTTPropBuilder_t * propBuffer, uint32_t maxPacketSize, uint16_t topicAliasMax )`. For example:
+
+**Old Code Snippet**
+```
+// Variables used in this example.
+MQTTPacketInfo_t incomingPacket;
+MQTTPublishInfo_t publishInfo = { 0 };
+uint16_t packetId;
+
+// Assume incomingPacket is populated from network
+
+if((incomingPacket.type & 0xF0) == MQTT_PACKET_TYPE_PUBLISH)
+{
+    status = MQTT_DeserializePublish(&incomingPacket,
+                                   &packetId,
+                                   &publishInfo);
+
+    if(status == MQTTSuccess)
+    {
+        // Handle received publish
+        handlePublish(&publishInfo);
+    }
+}
+```
+**New Code Snippet**
+```
+// Variables used in this example.
+MQTTPacketInfo_t incomingPacket;
+MQTTPublishInfo_t publishInfo = { 0 };
+uint16_t packetId;
+
+uint16_t topicAliasMax = pContext->connectProperties.topicAliasMax ; 
+uint32_t maxPacketSize = pContext->connectProperties.maxPacketSize ; 
+
+// Option 1: Without MQTT v5 properties
+if((incomingPacket.type & 0xF0) == MQTT_PACKET_TYPE_PUBLISH)
+{
+    status = MQTT_DeserializePublish(&incomingPacket,
+                                   &packetId,
+                                   &publishInfo,
+                                   NULL,  // No property buffer
+                                   maxPacketSize,     // No max packet size
+                                   topicAliasMax);    // No topic alias maximum
+
+    if(status == MQTTSuccess)
+    {
+        // Handle received publish
+        handlePublish(&publishInfo);
+    }
+}
+
+// Option 2: With MQTT v5 properties
+MQTTPropBuilder_t propBuffer = { 0 };
+uint8_t buffer[100];
+
+// Initialize property buffer
+MQTT_PropertyBuilder_Init(&propBuffer, 
+                         buffer, 
+                         sizeof(buffer));
+
+if((incomingPacket.type & 0xF0) == MQTT_PACKET_TYPE_PUBLISH)
+{
+    status = MQTT_DeserializePublish(&incomingPacket,
+                                   &packetId,
+                                   &publishInfo,
+                                   &propBuffer,
+                                   maxPacketSize,
+                                   topicAliasMax);
+
+    if(status == MQTTSuccess)
+    {
+        // Access publish properties if needed
+        uint8_t payloadFormat;
+        if(MQTTPropGet_PubPayloadFormat(&propBuffer, &payloadFormat) == MQTTSuccess)
+        {
+            // Handle payload format
+        }
+
+        uint16_t topicAlias;
+        if(MQTTPropGet_PubTopicAlias(&propBuffer, &topicAlias) == MQTTSuccess)
+        {
+            // Handle topic alias
+        }
+
+        // Handle received publish
+        handlePublish(&publishInfo);
+    }
+}
+```
+* The `MQTT_DeserializeAck` function now includes support for MQTT v5 properties and reason codes with five additional parameters. Thus, the signature of `MQTT_DeserializeAck` changed from `MQTTStatus_t MQTT_DeserializeAck( const MQTTPacketInfo_t * pIncomingPacket, uint16_t * pPacketId, bool * pSessionPresent )` to `MQTTStatus_t MQTT_DeserializeAck( const MQTTPacketInfo_t * pIncomingPacket, uint16_t * pPacketId, bool * pSessionPresent, MQTTReasonCodeInfo_t * pReasonCode, bool requestProblem, uint32_t maxPacketSize, MQTTPropBuilder_t * propBuffer, MQTTConnectProperties_t * pConnectProperties )`. For example:
+
+**Old Code Snippet**
+```
+/ Variables used in this example.
+MQTTPacketInfo_t incomingPacket;
+uint16_t packetId;
+bool sessionPresent;
+
+// Assume incomingPacket is populated from network
+
+status = MQTT_DeserializeAck(&incomingPacket,
+                            &packetId,
+                            &sessionPresent);
+
+if(status == MQTTSuccess)
+{
+    // Handle acknowledgment
+}
+```
+**New Code Snippet**
+```
+// Variables used in this example.
+MQTTPacketInfo_t incomingPacket;
+uint16_t packetId;
+bool sessionPresent;
+MQTTPropBuilder_t propBuffer ; // Can be set to NULL if the user does not want any incoming properties. 
+
+MQTTReasonCodeInfo_t reasonCode ; // Can be set to NULL if the incoming packet is CONNACK or PINGRESP
+
+MQTTConnectProperties_t connectProperties = pContext->connectProperties;  // Can be set to NULL if the incoming packet is PUBLISH ACKs, SUBACK, UNSUBACK or PINGRESP
+
+bool requestProblem = pContext->connectProperties.requestProblemInfo ; // only relevant if the incoming packet is a PUBLISH Ack. 
+
+uint32_t maxPacketSize = pContext->connectProperties.maxPacketSize ; 
+
+status = MQTT_DeserializeAck(&incomingPacket,
+                            &packetId,
+                            &sessionPresent,
+                            &reasonCode,
+                            requestProblem,
+                            maxPacketSize,
+                            &propBuffer,
+                            &connectProperties);
+
+if(status == MQTTSuccess)
+{
+    // Handle acknowledgment based on packet type
+    
+}
+```
+
+
+
+
+
+
+
+
+
+
+
