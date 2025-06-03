@@ -196,3 +196,4 @@ jobs:
         uses: FreeRTOS/CI-CD-Github-Actions/run_cbmc@main
         with:
           proofs_dir: test/cbmc/proofs
+          run_cbmc_proofs_command: ./run-cbmc-proofs.py -p MQTT_Connect MQTT_ProcessLoop
