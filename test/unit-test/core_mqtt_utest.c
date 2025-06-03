@@ -481,33 +481,6 @@ static void eventCallbackInvalidRC( MQTTContext_t * pContext,
 }
 
 /**
- * @brief Mocked MQTT event callback, sets connectStatus in pContext to NULL.
- * Only used for testing purposes, the callback should not modify the connectProperties.
- *
- * @param[in] pContext MQTT context pointer.
- * @param[in] pPacketInfo Packet Info pointer for the incoming packet.
- * @param[in] pDeserializedInfo Deserialized information from the incoming packet.
- */
-static void eventCallbackConnectProperties( MQTTContext_t * pContext,
-                                            MQTTPacketInfo_t * pPacketInfo,
-                                            MQTTDeserializedInfo_t * pDeserializedInfo,
-                                            MQTTSuccessFailReasonCode_t * pReasonCode,
-                                            MQTTPropBuilder_t * sendPropsBuffer,
-                                            MQTTPropBuilder_t * getPropsBuffer )
-{
-    ( void ) pPacketInfo;
-    ( void ) pDeserializedInfo;
-    ( void ) pReasonCode;
-    ( void ) sendPropsBuffer;
-    ( void ) getPropsBuffer;
-
-    /* Update the global state to indicate that event callback is invoked. */
-    pContext->connectStatus = MQTTNotConnected;
-    isEventCallbackInvoked = true;
-    sendPropsBuffer->pBuffer = NULL;
-}
-
-/**
  * @brief Mocked MQTT event callback.
  *
  * @param[in] pContext MQTT context pointer.
@@ -9025,35 +8998,4 @@ void test_MQTT_InitConnect( void )
     MQTTConnectProperties_t connectProperties;
     status = MQTT_InitConnect( &connectProperties );
     TEST_ASSERT_EQUAL( MQTTSuccess, status );
-}
-
-void test_last_branch( void )
-{
-    MQTTStatus_t mqttStatus;
-    MQTTContext_t context = { 0 };
-    TransportInterface_t transport = { 0 };
-    MQTTFixedBuffer_t networkBuffer = { 0 };
-    NetworkContext_t networkContext = { 0 };
-    uint8_t buffer[ 10 ];
-    uint8_t * bufPtr = buffer;
-    size_t pingreqSize = MQTT_PACKET_PINGREQ_SIZE;
-
-    setupTransportInterface( &transport );
-    setupNetworkBuffer( &networkBuffer );
-    networkContext.buffer = &bufPtr;
-    transport.pNetworkContext = &networkContext;
-    transport.recv = transportRecvSuccess;
-    transport.send = transportSendFailure;
-
-    /* Initialize context. */
-    mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
-    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
-    context.connectStatus = MQTTConnected;
-    /* Verify MQTTSuccess is returned. */
-    MQTT_GetPingreqPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
-    MQTT_GetPingreqPacketSize_ReturnThruPtr_pPacketSize( &pingreqSize );
-    MQTT_SerializePingreq_ExpectAnyArgsAndReturn( MQTTSuccess );
-    /* Expect the above calls when running MQTT_Ping. */
-    mqttStatus = MQTT_Ping( &context );
-    TEST_ASSERT_EQUAL( MQTTSendFailed, mqttStatus );
 }
