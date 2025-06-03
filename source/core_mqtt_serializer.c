@@ -321,8 +321,8 @@ static void serializeConnectPacket( const MQTTConnectInfo_t * pConnectInfo,
  */
 static void serializeConnectPacket( const MQTTConnectInfo_t * pConnectInfo,
                                     const MQTTPublishInfo_t * pWillInfo,
-                                    const MqttPropBuilder_t * pConnectProperties,
-                                    const MqttPropBuilder_t * pWillProperties,
+                                    const MQTTPropBuilder_t * pConnectProperties,
+                                    const MQTTPropBuilder_t * pWillProperties,
                                     size_t remainingLength,
                                     const MQTTFixedBuffer_t * pFixedBuffer );
 
@@ -668,7 +668,8 @@ static MQTTStatus_t validateDisconnectResponse( uint8_t reasonCode,
  */
 static MQTTStatus_t deserializeSubackProperties( MQTTPropBuilder_t * propBuffer,
                                                  uint8_t * pIndex,
-                                                 size_t * pSubackPropertyLength );
+                                                 size_t * pSubackPropertyLength,
+                                                 size_t remainingLength );
 
 /**
  * @brief Deserialize properties in the PUBLISH packet received from the server.
@@ -4096,7 +4097,8 @@ static uint8_t * encodeBinaryData( uint8_t * pDestination,
 static MQTTStatus_t deserializePublishProperties( MQTTPublishInfo_t * pPublishInfo,
                                                   MQTTPropBuilder_t * propBuffer,
                                                   uint8_t * pIndex,
-                                                  uint16_t topicAliasMax )
+                                                  uint16_t topicAliasMax,
+                                                  size_t remainingLength )
 {
     MQTTStatus_t status = MQTTSuccess;
     size_t propertyLength = 0U;
@@ -4549,7 +4551,7 @@ MQTTStatus_t MQTT_ValidateSubscribeProperties( uint8_t isSubscriptionIdAvailable
         {
             case MQTT_SUBSCRIPTION_ID_ID:
 
-                status = decodeVariableLength( pLocalIndex, &subscriptionId );
+                status = decodeVariableLength( pLocalIndex, propertyLength, &subscriptionId );
 
                 if( status == MQTTSuccess )
                 {

@@ -83,7 +83,8 @@ static size_t variableLengthEncodedSizeForProof( size_t length )
 void harness()
 {
     MQTTPublishInfo_t * pPublishInfo;
-    MqttPropBuilder_t * propBuffer;
+    MQTTPropBuilder_t * propBuffer;
+    uint16_t topicAliasMax;
     uint8_t * packetBytes;
     size_t propertyLength;
     size_t maxPropertyLength;
@@ -115,5 +116,5 @@ void harness()
 
     encodeVariableLength( packetBytes, propertyLength );
 
-    __CPROVER_file_local_core_mqtt_serializer_c_deserializePublishProperties( pPublishInfo, propBuffer, packetBytes, remainingLength );
+    __CPROVER_file_local_core_mqtt_serializer_c_deserializePublishProperties( pPublishInfo, propBuffer, packetBytes, topicAliasMax, remainingLength );
 }

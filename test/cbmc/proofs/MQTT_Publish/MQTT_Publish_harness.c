@@ -59,7 +59,7 @@ void harness()
 {
     MQTTContext_t * pContext;
     MQTTPublishInfo_t * pPublishInfo;
-    MqttPropBuilder_t * propBuffer;
+    MQTTPropBuilder_t * propBuffer;
     uint16_t packetId;
 
     pContext = allocateMqttContext( NULL );

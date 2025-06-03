@@ -60,8 +60,8 @@ void harness()
     MQTTContext_t * pContext;
     MQTTConnectInfo_t * pConnectInfo;
     MQTTPublishInfo_t * pWillInfo;
-    MqttPropBuilder_t * pPropertyBuilder;
-    MqttPropBuilder_t * willPropsBuilder;
+    MQTTPropBuilder_t * pPropertyBuilder;
+    MQTTPropBuilder_t * willPropsBuilder;
     uint32_t timeoutMs;
     size_t totalMessageLength = 0U;
     bool * pSessionPresent;

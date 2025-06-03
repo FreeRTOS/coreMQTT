@@ -121,9 +121,9 @@ MQTTFixedBuffer_t * allocateMqttFixedBuffer( MQTTFixedBuffer_t * pFixedBuffer );
  */
 bool isValidMqttFixedBuffer( const MQTTFixedBuffer_t * pFixedBuffer );
 
-MqttPropBuilder_t * allocateMqttPropBuilder( MqttPropBuilder_t * pPropBuilder );
+MQTTPropBuilder_t * allocateMqttPropBuilder( MQTTPropBuilder_t * pPropBuilder );
 
-bool isValidMqttPropBuilder( const MqttPropBuilder_t * pPropBuilder );
+bool isValidMqttPropBuilder( const MQTTPropBuilder_t * pPropBuilder );
 
 /**
  * @brief Allocate an array of #MQTTSubscribeInfo_t objects.

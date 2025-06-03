@@ -191,7 +191,7 @@ bool isValidMqttFixedBuffer( const MQTTFixedBuffer_t * pFixedBuffer )
     return isValid;
 }
 
-MqttPropBuilder_t * allocateMqttPropBuilder( MqttPropBuilder_t * pPropBuilder )
+MQTTPropBuilder_t * allocateMqttPropBuilder( MQTTPropBuilder_t * pPropBuilder )
 {
     uint8_t * buffer;
     size_t length;
@@ -201,7 +201,7 @@ MqttPropBuilder_t * allocateMqttPropBuilder( MqttPropBuilder_t * pPropBuilder )
 
     if( pPropBuilder == NULL )
     {
-        pPropBuilder = malloc( sizeof( MqttPropBuilder_t ) );
+        pPropBuilder = malloc( sizeof( MQTTPropBuilder_t ) );
     }
 
     if( pPropBuilder != NULL )
@@ -232,7 +232,7 @@ MqttPropBuilder_t * allocateMqttPropBuilder( MqttPropBuilder_t * pPropBuilder )
     return pPropBuilder;
 }
 
-bool isValidMqttPropBuilder( const MqttPropBuilder_t * pPropBuilder )
+bool isValidMqttPropBuilder( const MQTTPropBuilder_t * pPropBuilder )
 {
     bool isValid = true;
 

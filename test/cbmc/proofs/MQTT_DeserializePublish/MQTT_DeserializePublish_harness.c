@@ -34,7 +34,7 @@ void harness()
 {
     MQTTPacketInfo_t * pIncomingPacket;
     MQTTPublishInfo_t * pPublishInfo;
-    MqttPropBuilder_t * propBuffer;
+    MQTTPropBuilder_t * propBuffer;
     uint16_t * pPacketId;
     uint32_t maxPacketSize;
 

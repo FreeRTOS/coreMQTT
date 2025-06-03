@@ -101,6 +101,10 @@ void harness()
      *  is a variable length integer and hence will have a max value of REMAINING_LENGTH_MAX */
     __CPROVER_assume( *length < REMAINING_LENGTH_MAX );
 
+    used = malloc( sizeof( bool ) );
+
+    __CPROVER_assume( used != NULL );
+
     buffer = malloc( sizeof( uint8_t * ) );
 
     __CPROVER_assume( buffer != NULL );
@@ -109,7 +113,7 @@ void harness()
 
     __CPROVER_assume( *buffer != NULL );
 
-    __CPROVER_file_local_core_mqtt_serializer_c_decodeAndDiscard_uint8( length, buffer );
+    __CPROVER_file_local_core_mqtt_serializer_c_decodeAndDiscard_uint8( length, used, buffer );
 
 
     /*-----------------------------------------------------------*/
@@ -123,6 +127,10 @@ void harness()
      *  is a variable length integer and hence will have a max value of REMAINING_LENGTH_MAX */
     __CPROVER_assume( *length < REMAINING_LENGTH_MAX );
 
+    used = malloc( sizeof( bool ) );
+
+    __CPROVER_assume( used != NULL );
+
     buffer = malloc( sizeof( uint8_t * ) );
 
     __CPROVER_assume( buffer != NULL );
@@ -131,7 +139,7 @@ void harness()
 
     __CPROVER_assume( *buffer != NULL );
 
-    __CPROVER_file_local_core_mqtt_serializer_c_decodeAndDiscard_uint32( length, buffer );
+    __CPROVER_file_local_core_mqtt_serializer_c_decodeAndDiscard_uint32( length, used, buffer );
 
     /*-----------------------------------------------------------*/
 

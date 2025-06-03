@@ -126,7 +126,6 @@ MQTTStatus_t __CPROVER_file_local_core_mqtt_serializer_c_decodeutf_8( const char
 MQTTStatus_t __CPROVER_file_local_core_mqtt_serializer_c_decodeBinaryData( const void ** pProperty,
                                       uint16_t * pLength,
                                       size_t * pPropertyLength,
-                                      bool * pUsed,
                                       uint8_t ** pIndex )
 {
     return updatePointer( pPropertyLength );

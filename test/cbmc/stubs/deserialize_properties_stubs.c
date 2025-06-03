@@ -66,8 +66,9 @@ static size_t variableLengthEncodedSizeForProof( size_t length )
 }
 
 MQTTStatus_t __CPROVER_file_local_core_mqtt_serializer_c_deserializePublishProperties( MQTTPublishInfo_t * pPublishInfo,
-                                                  MqttPropBuilder_t * propBuffer,
+                                                  MQTTPropBuilder_t * propBuffer,
                                                   uint8_t * pIndex,
+                                                  uint16_t topicAliasMax,
                                                   size_t remainingLength )
 {
     MQTTStatus_t status;

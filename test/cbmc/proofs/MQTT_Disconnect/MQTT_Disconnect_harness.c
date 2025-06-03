@@ -57,7 +57,7 @@ static uint32_t ulGetTimeFunction( void )
 void harness()
 {
     MQTTContext_t * pContext;
-    MqttPropBuilder_t * propBuffer;
+    MQTTPropBuilder_t * propBuffer;
     MQTTSuccessFailReasonCode_t reasonCode;
 
     pContext = allocateMqttContext( NULL );

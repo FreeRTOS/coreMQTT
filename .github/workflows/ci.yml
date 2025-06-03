@@ -10,7 +10,7 @@ on:
   push:
     branches: ["**"]
   pull_request:
-    branches: [main, mqtt-dev-cbmc]
+    branches: [main]
   workflow_dispatch:
 
 jobs:

@@ -59,7 +59,7 @@ void harness()
 {
     MQTTContext_t * pContext;
     MQTTSubscribeInfo_t * pSubscriptionList;
-    MqttPropBuilder_t * propBuffer;
+    MQTTPropBuilder_t * propBuffer;
     size_t subscriptionCount;
     uint16_t packetId;
 
