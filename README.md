@@ -3,8 +3,7 @@
 **[API Documentation Pages for current and previous releases of this library can be found here](https://freertos.github.io/coreMQTT/)**
 
 This repository contains the coreMQTT library that has been optimized for a low
-memory footprint. The coreMQTT library is compliant with the
-[MQTT 3.1.1](https://docs.oasis-open.org/mqtt/mqtt/v3.1.1/mqtt-v3.1.1.html)
+memory footprint.
 standard. It has no dependencies on any additional libraries other than the
 standard C library, a customer-implemented network transport interface, and
 _optionally_ a user-implemented platform time function. This library is
@@ -20,6 +19,10 @@ library has also undergone both static code analysis from
 [Coverity static analysis](https://scan.coverity.com/), and validation of memory
 safety through the
 [CBMC automated reasoning tool](https://www.cprover.org/cbmc/).
+
+-For MQTT v3.1.1 [(MQTTv3 Specification)](https://docs.oasis-open.org/mqtt/mqtt/v3.1.1/mqtt-v3.1.1.html), use code from tag : [coreMQTT v2.3.1](https://github.com/FreeRTOS/coreMQTT/tree/v2.3.1)
+
+-For MQTT v5.0 [(MQTTv5 Specification)](https://docs.oasis-open.org/mqtt/mqtt/v5.0/mqtt-v5.0.html), use code from tag : [coreMQTT v3.0.0](https://github.com/FreeRTOS/coreMQTT/tree/v3.0.0)
 
 See memory requirements for this library
 [here](./docs/doxygen/include/size_table.md).
@@ -109,10 +112,15 @@ connectInfo.userNameLength = USERNAME_STRING_LENGTH;
 mqttStatus = MQTT_Connect( pMqttContext, &connectInfo, NULL, CONNACK_RECV_TIMEOUT_MS, pSessionPresent );
 ```
 
-## Upgrading to v2.0.0 and above
+## Upgrading to v2.x
 
-With coreMQTT versions >=v2.0.0, there are breaking changes. Please refer to the
-[coreMQTT version >=v2.0.0 Migration Guide](MigrationGuide.md).
+With coreMQTT versions v2.x, there are breaking changes. Please refer to the
+[coreMQTT version v2.x Migration Guide](MigrationGuide.md).
+
+## Upgrading to v3.0.0 and above
+
+With coreMQTT versions >=v3.0.0, there are breaking changes. Please refer to the
+[coreMQTT version >=v3.0.0 Migration Guide](MigrationGuide.md)
 
 ## Building the Library
 
