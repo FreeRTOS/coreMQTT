@@ -60,7 +60,7 @@ static uint32_t ulGetTimeFunction( void )
     return systemTime;
 }
 
-MQTTStatus_t updateContextWithConnectProps( const MqttPropBuilder_t * pPropBuilder,
+MQTTStatus_t updateContextWithConnectProps( const MQTTPropBuilder_t * pPropBuilder,
                                             MQTTConnectProperties_t * pConnectProperties )
 {
     MQTTStatus_t status;
