@@ -116,8 +116,8 @@ the function waits until the CONNACK is received.
 For the @ref mqtt_connect_function, if this value is set to 0, then instead of a time-based loop, it will attempt to call the transport receive function up to a maximum number of retries,
 which is defined by @ref MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT.
 
-For @ref mqtt_processloop_function and @ref mqtt_receiveloop_function, the timeout functionality is handled by the user application. It is up to the user to define the number of times these functions will be called, provided that there are no network errors. 
-A single call to the function consists of an attempt to receive all available bytes from the network, and if the read was successful, then attempt(s) to receive the rest of the packet (with retry attempts governed by @ref MQTT_RECV_POLLING_TIMEOUT_MS), followed by the deserialization of the received packet. 
+For @ref mqtt_processloop_function and @ref mqtt_receiveloop_function, the timeout functionality is handled by the user application. It is up to the user to define the number of times these functions will be called, provided that there are no network errors.
+A single call to the function consists of an attempt to receive all available bytes from the network, and if the read was successful, then attempt(s) to receive the rest of the packet (with retry attempts governed by @ref MQTT_RECV_POLLING_TIMEOUT_MS), followed by the deserialization of the received packet.
 After this a call to application callback is invoked, followed by sending acknowledgement response, if needed
 (with retry attempts governed by @ref MQTT_SEND_TIMEOUT_MS).
 If the first read did not succeed, then instead the library checks if a ping request needs to be sent (only for the process loop).
@@ -232,7 +232,7 @@ Property Add functions:<br><br>
 @subpage mqttpropadd_connrequestprobinfo_function <br>
 @subpage mqttpropadd_connauthmethod_function <br>
 @subpage mqttpropadd_connauthdata_function <br>
-@subpage mqttpropadd_willdelayinterval_function <br> 
+@subpage mqttpropadd_willdelayinterval_function <br>
 @subpage mqttpropadd_pubpayloadformat_function <br>
 @subpage mqttpropadd_pubmessageexpiry_function <br>
 @subpage mqttpropadd_pubtopicalias_function <br>

@@ -166,14 +166,14 @@ struct NetworkContext
 #define MQTT_TEST_BUFFER_LENGTH             ( 1024 )
 
 #define UINT16_DECODE( ptr )                            \
-        ( uint16_t ) ( ( ( ( uint16_t ) ptr[ 0 ] ) << 8 ) | \
-                       ( ( uint16_t ) ptr[ 1 ] ) )
+    ( uint16_t ) ( ( ( ( uint16_t ) ptr[ 0 ] ) << 8 ) | \
+                   ( ( uint16_t ) ptr[ 1 ] ) )
 
 #define UINT32_DECODE( ptr )                             \
-        ( uint32_t ) ( ( ( ( uint32_t ) ptr[ 0 ] ) << 24 ) | \
-                       ( ( ( uint32_t ) ptr[ 1 ] ) << 16 ) | \
-                       ( ( ( uint32_t ) ptr[ 2 ] ) << 8 ) |  \
-                       ( ( uint32_t ) ptr[ 3 ] ) )
+    ( uint32_t ) ( ( ( ( uint32_t ) ptr[ 0 ] ) << 24 ) | \
+                   ( ( ( uint32_t ) ptr[ 1 ] ) << 16 ) | \
+                   ( ( ( uint32_t ) ptr[ 2 ] ) << 8 ) |  \
+                   ( ( uint32_t ) ptr[ 3 ] ) )
 
 #define UINT32_BYTE3( x )    ( ( uint8_t ) ( ( x ) >> 24 ) )
 
@@ -1488,7 +1488,7 @@ void test_RemaininglengthLimit( void )
     MQTTPropBuilder_t propBuffer = { 0 };
     uint8_t buf[ 10 ];
     propBuffer.pBuffer = buf;
-    propBuffer.currentIndex = MQTT_MAX_REMAINING_LENGTH;  /* property length == max_remaining_length */
+    propBuffer.currentIndex = MQTT_MAX_REMAINING_LENGTH; /* property length == max_remaining_length */
 
     status = MQTT_GetPublishPacketSize( &publishInfo, &propBuffer, &remainingLength, &packetSize, MQTT_MAX_REMAINING_LENGTH );
     TEST_ASSERT_EQUAL( MQTTBadParameter, status );
@@ -2165,7 +2165,7 @@ void test_MQTTV5_GetDisconnectPacketSize()
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
 
 
-    propBuffer.currentIndex = MQTT_MAX_REMAINING_LENGTH;  /* Other fields do not have to be set as we only testing if the length of properties == max_remaining_length */
+    propBuffer.currentIndex = MQTT_MAX_REMAINING_LENGTH; /* Other fields do not have to be set as we only testing if the length of properties == max_remaining_length */
     status = MQTT_GetDisconnectPacketSize( &propBuffer, &remainingLength, &packetSize, maxPacketSize, MQTT_REASON_DISCONNECT_NORMAL_DISCONNECTION );
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
 
@@ -2528,7 +2528,7 @@ void test_MQTT_SerializeSubscribe( void )
     pIterator += encodeRemainingLength( pIterator, remainingLength );
     *pIterator++ = UINT16_HIGH_BYTE( PACKET_ID );
     *pIterator++ = UINT16_LOW_BYTE( PACKET_ID );
-    *pIterator++ = 0;  /* Length of properties = 0 */
+    *pIterator++ = 0; /* Length of properties = 0 */
     pIterator += encodeString( pIterator, subscriptionList.pTopicFilter, subscriptionList.topicFilterLength );
     *pIterator++ = 0x1C;
     TEST_ASSERT_EQUAL_MEMORY( expectedPacket, &buffer[ BUFFER_PADDING_LENGTH ], packetSize );
@@ -2550,7 +2550,7 @@ void test_MQTT_SerializeSubscribe( void )
     pIterator += encodeRemainingLength( pIterator, remainingLength );
     *pIterator++ = UINT16_HIGH_BYTE( PACKET_ID );
     *pIterator++ = UINT16_LOW_BYTE( PACKET_ID );
-    *pIterator++ = 0;  /* Length of properties = 0 */
+    *pIterator++ = 0; /* Length of properties = 0 */
     pIterator += encodeString( pIterator, subscriptionList.pTopicFilter, subscriptionList.topicFilterLength );
     *pIterator++ = 0x10;
     TEST_ASSERT_EQUAL_MEMORY( expectedPacket, &buffer[ BUFFER_PADDING_LENGTH ], packetSize );
@@ -2833,11 +2833,11 @@ void test_MQTTV5_suback( void )
 
     uint8_t packetBufferNoProperties[ 7 ] =
     {
-        0x90,          /* Fixed header: SUBACK type (0x90) */
-        4,             /* Remaining Length = 4 bytes */
-        0x00, 0x01,    /* Packet Identifier = 1 */
-        0x00,          /* Property Length = 1 byte */
-        0x00,          /* Payload: Reason code = 0x00 (Success) */
+        0x90,       /* Fixed header: SUBACK type (0x90) */
+        4,          /* Remaining Length = 4 bytes */
+        0x00, 0x01, /* Packet Identifier = 1 */
+        0x00,       /* Property Length = 1 byte */
+        0x00,       /* Payload: Reason code = 0x00 (Success) */
         0x00
     };
 
@@ -3180,7 +3180,7 @@ void test_MQTT_SerializeDisconnect( void )
     *pIterator++ = MQTT_PACKET_TYPE_DISCONNECT;
     pIterator += encodeRemainingLength( pIterator, remainingLength );
     *pIterator++ = MQTT_REASON_DISCONNECT_NORMAL_DISCONNECTION;
-    *pIterator = 0;  /*Property length is 0 */
+    *pIterator = 0; /*Property length is 0 */
     TEST_ASSERT_EQUAL_MEMORY( expectedPacket, &buffer[ BUFFER_PADDING_LENGTH ], packetSize );
 
     /*Test with properties. */
