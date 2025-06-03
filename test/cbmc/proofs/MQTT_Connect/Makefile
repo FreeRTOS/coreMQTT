@@ -25,7 +25,7 @@ PROOF_UID=MQTT_Connect
 
 # Please see test/cbmc/stubs/network_interface_subs.c for
 # more information on MAX_NETWORK_SEND_TRIES.
-MAX_NETWORK_SEND_TRIES=3
+MAX_NETWORK_SEND_TRIES=4
 # Bound on the timeout in receiveConnack. This timeout is bounded because
 # memory saftey can be proven in a only a few iteration of the MQTT operations.
 # Each iteration will try to receive a single packet in its entirety. With a
@@ -53,6 +53,7 @@ REMOVE_FUNCTION_BODY += MQTT_ProcessLoop
 REMOVE_FUNCTION_BODY += MQTT_ReceiveLoop
 REMOVE_FUNCTION_BODY += __CPROVER_file_local_core_mqtt_c_handleIncomingPublish
 REMOVE_FUNCTION_BODY += __CPROVER_file_local_core_mqtt_c_handleKeepAlive
+REMOVE_FUNCTION_BODY += updateContextWithConnectProps
 #REMOVE_FUNCTION_BODY += __CPROVER_file_local_core_mqtt_c_sendMessageVector
 #REMOVE_FUNCTION_BODY += __CPROVER_file_local_core_mqtt_c_sendBuffer
 

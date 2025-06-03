@@ -35,6 +35,7 @@ void harness()
     MQTTPacketInfo_t * pIncomingPacket;
     MQTTPublishInfo_t * pPublishInfo;
     MQTTPropBuilder_t * propBuffer;
+    uint16_t topicAliasMax;
     uint16_t * pPacketId;
     uint32_t maxPacketSize;
 
@@ -54,5 +55,5 @@ void harness()
 
     /* This function grabs the topic name, the topic name length, the
      * the payload, and the payload length. */
-    MQTT_DeserializePublish( pIncomingPacket, pPacketId, pPublishInfo, propBuffer, maxPacketSize );
+    MQTT_DeserializePublish( pIncomingPacket, pPacketId, pPublishInfo, propBuffer, maxPacketSize, topicAliasMax );
 }

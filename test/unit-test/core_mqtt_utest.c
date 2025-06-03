@@ -481,33 +481,6 @@ static void eventCallbackInvalidRC( MQTTContext_t * pContext,
 }
 
 /**
- * @brief Mocked MQTT event callback, sets connectStatus in pContext to NULL.
- * Only used for testing purposes, the callback should not modify the connectProperties.
- *
- * @param[in] pContext MQTT context pointer.
- * @param[in] pPacketInfo Packet Info pointer for the incoming packet.
- * @param[in] pDeserializedInfo Deserialized information from the incoming packet.
- */
-static void eventCallbackConnectProperties( MQTTContext_t * pContext,
-                                            MQTTPacketInfo_t * pPacketInfo,
-                                            MQTTDeserializedInfo_t * pDeserializedInfo,
-                                            MQTTSuccessFailReasonCode_t * pReasonCode,
-                                            MQTTPropBuilder_t * sendPropsBuffer,
-                                            MQTTPropBuilder_t * getPropsBuffer )
-{
-    ( void ) pPacketInfo;
-    ( void ) pDeserializedInfo;
-    ( void ) pReasonCode;
-    ( void ) sendPropsBuffer;
-    ( void ) getPropsBuffer;
-
-    /* Update the global state to indicate that event callback is invoked. */
-    pContext->connectStatus = MQTTNotConnected;
-    isEventCallbackInvoked = true;
-    sendPropsBuffer->pBuffer = NULL;
-}
-
-/**
  * @brief Mocked MQTT event callback.
  *
  * @param[in] pContext MQTT context pointer.
