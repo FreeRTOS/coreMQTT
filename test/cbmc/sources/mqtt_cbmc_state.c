@@ -411,3 +411,34 @@ MQTTVec_t * allocateMqttVec( MQTTVec_t * mqttVec )
 
     return mqttVec;
 }
+
+size_t variableLengthEncodedSizeForProof( size_t length )
+{
+    size_t encodedSize;
+
+    /* Determine how many bytes are needed to encode length.
+     * The values below are taken from the MQTT 3.1.1 spec. */
+
+    /* 1 byte is needed to encode lengths between 0 and 127. */
+    if( length < 128U )
+    {
+        encodedSize = 1U;
+    }
+    /* 2 bytes are needed to encode lengths between 128 and 16,383. */
+    else if( length < 16384U )
+    {
+        encodedSize = 2U;
+    }
+    /* 3 bytes are needed to encode lengths between 16,384 and 2,097,151. */
+    else if( length < 2097152U )
+    {
+        encodedSize = 3U;
+    }
+    /* 4 bytes are needed to encode lengths between 2,097,152 and 268,435,455. */
+    else
+    {
+        encodedSize = 4U;
+    }
+
+    return encodedSize;
+}

@@ -30,6 +30,10 @@
 #include <stdint.h>
 #include "core_mqtt.h"
 
+#ifndef MAX_UTF_8_STRING_LENGTH
+    #define MAX_UTF_8_STRING_LENGTH    ( 10U )
+#endif
+
 /* Here we assume all the properties in the packet are user properties all of the same 
  * length. Each user property includes two UTF-8 strings and 
  * their corresponding 2 byte lengths.

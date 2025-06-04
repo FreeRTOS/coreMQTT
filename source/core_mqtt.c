@@ -2027,13 +2027,14 @@ static MQTTStatus_t receiveSingleIteration( MQTTContext_t * pContext,
             status = handleIncomingDisconnect( pContext, &incomingPacket );
 
             if( status == MQTTSuccess )
-            {
+            {   
                 LogInfo( ( "Disconnected from the broker." ) );
+                
+                MQTT_PRE_STATE_UPDATE_HOOK( pContext );
+
                 pContext->connectStatus = MQTTNotConnected;
 
-                /* Reset the index and clean the buffer on a successful disconnect. */
-                pContext->index = 0;
-                ( void ) memset( pContext->networkBuffer.pBuffer, 0, pContext->networkBuffer.size );
+                MQTT_POST_STATE_UPDATE_HOOK( pContext );
             }
         }
 

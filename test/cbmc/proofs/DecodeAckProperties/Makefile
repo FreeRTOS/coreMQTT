@@ -19,20 +19,34 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 
-HARNESS_ENTRY=harness
-HARNESS_FILE=MQTT_DeserializePublish_harness
-PROOF_UID=MQTT_DeserializePublish
+MQTT_INCOMING_MAX_PROPERTIES=14
+MAX_UTF_8_STRING_LENGTH=10
 
-DEFINES += 
+HARNESS_ENTRY=harness
+HARNESS_FILE=DecodeAckProperties_harness
+PROOF_UID=DecodeAckProperties
+
+DEFINES += -DMAX_UTF_8_STRING_LENGTH=$(MAX_UTF_8_STRING_LENGTH)
 INCLUDES +=
 
 # These functions have their memory saftey proven in other harnesses.
-REMOVE_FUNCTION_BODY += __CPROVER_file_local_core_mqtt_serializer_c_deserializePublishProperties
+REMOVE_FUNCTION_BODY += __CPROVER_file_local_core_mqtt_serializer_c_decodeAndDiscard
+REMOVE_FUNCTION_BODY += __CPROVER_file_local_core_mqtt_serializer_c_decodeAndDiscardutf_8
+REMOVE_FUNCTION_BODY += __CPROVER_file_local_core_mqtt_serializer_c_decodeAndDiscard_uint8
+REMOVE_FUNCTION_BODY += __CPROVER_file_local_core_mqtt_serializer_c_decodeAndDiscard_uint32
+REMOVE_FUNCTION_BODY += __CPROVER_file_local_core_mqtt_serializer_c_decodeuint32_t
+REMOVE_FUNCTION_BODY += __CPROVER_file_local_core_mqtt_serializer_c_decodeuint16_t
+REMOVE_FUNCTION_BODY += __CPROVER_file_local_core_mqtt_serializer_c_decodeuint8_t
+REMOVE_FUNCTION_BODY += __CPROVER_file_local_core_mqtt_serializer_c_decodeutf_8
+REMOVE_FUNCTION_BODY += __CPROVER_file_local_core_mqtt_serializer_c_decodeBinaryData
 
 UNWINDSET += __CPROVER_file_local_core_mqtt_serializer_c_decodeVariableLength.0:5
+UNWINDSET += __CPROVER_file_local_core_mqtt_serializer_c_decodeAckProperties.0:$(MQTT_INCOMING_MAX_PROPERTIES)
 
 PROOF_SOURCES += $(PROOFDIR)/$(HARNESS_FILE).c
 PROOF_SOURCES += $(SRCDIR)/test/cbmc/sources/mqtt_cbmc_state.c
+PROOF_SOURCES += $(SRCDIR)/test/cbmc/stubs/deserialize_helpers_stubs.c
+PROOF_SOURCES += $(SRCDIR)/source/core_mqtt_utils.c
 PROJECT_SOURCES += $(SRCDIR)/source/core_mqtt.c
 PROJECT_SOURCES += $(SRCDIR)/source/core_mqtt_serializer.c
 

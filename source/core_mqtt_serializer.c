@@ -1909,7 +1909,7 @@ static MQTTStatus_t deserializeSimpleAck( const MQTTPacketInfo_t * pAck,
         pIndex++;
     }
 
-    if( ( pAck->remainingLength > 3U ) )
+    if( ( status == MQTTSuccess ) && ( pAck->remainingLength > 3U ) )
     {
         /*Protocol error to send user property and reason string if client has set request problem to false.*/
         if( requestProblem == false )
@@ -3384,34 +3384,44 @@ static MQTTStatus_t validateConnackParams( const MQTTPacketInfo_t * pIncomingPac
 
     pRemainingData = pIncomingPacket->pRemainingData;
 
-    if( ( pRemainingData[ 0 ] | 0x01U ) != 0x01U )
+    if( pIncomingPacket->remainingLength < 3 )
     {
-        LogError( ( "Reserved bits in CONNACK incorrect." ) );
+        LogError( ( "Incomplete Connack received" ) );
 
         status = MQTTBadResponse;
     }
-    else
-    {
-        /* Determine if the "Session Present" bit is set. This is the lowest bit of
-         * the third byte in CONNACK. */
-        if( ( pRemainingData[ 0 ] & MQTT_PACKET_CONNACK_SESSION_PRESENT_MASK ) == MQTT_PACKET_CONNACK_SESSION_PRESENT_MASK )
-        {
-            LogDebug( ( "CONNACK session present bit set." ) );
-            *pSessionPresent = true;
 
-            /* MQTT 5 specifies that the fourth byte in CONNACK must be 0 if the
-             * "Session Present" bit is set. */
-            if( pRemainingData[ 1 ] != 0U )
-            {
-                LogError( ( "Session Present bit is set, but connect return code in CONNACK is %u (nonzero).",
-                            ( unsigned int ) pRemainingData[ 1 ] ) );
-                status = MQTTBadResponse;
-            }
+    if( status == MQTTSuccess )
+    {
+        if( ( pRemainingData[ 0 ] | 0x01U ) != 0x01U )
+        {
+            LogError( ( "Reserved bits in CONNACK incorrect." ) );
+
+            status = MQTTBadResponse;
         }
         else
         {
-            LogDebug( ( "CONNACK session present bit not set." ) );
-            *pSessionPresent = false;
+            /* Determine if the "Session Present" bit is set. This is the lowest bit of
+            * the third byte in CONNACK. */
+            if( ( pRemainingData[ 0 ] & MQTT_PACKET_CONNACK_SESSION_PRESENT_MASK ) == MQTT_PACKET_CONNACK_SESSION_PRESENT_MASK )
+            {
+                LogDebug( ( "CONNACK session present bit set." ) );
+                *pSessionPresent = true;
+
+                /* MQTT 5 specifies that the fourth byte in CONNACK must be 0 if the
+                * "Session Present" bit is set. */
+                if( pRemainingData[ 1 ] != 0U )
+                {
+                    LogError( ( "Session Present bit is set, but connect return code in CONNACK is %u (nonzero).",
+                                ( unsigned int ) pRemainingData[ 1 ] ) );
+                    status = MQTTBadResponse;
+                }
+            }
+            else
+            {
+                LogDebug( ( "CONNACK session present bit not set." ) );
+                *pSessionPresent = false;
+            }
         }
     }
 
@@ -3452,7 +3462,7 @@ static MQTTStatus_t decodeVariableLength(const uint8_t* pBuffer,
         }
         else
         {
-            if(bufferLength > 0)
+            if( bufferLength > 0 )
             {
                 encodedByte = pBuffer[bytesDecoded];
                 remainingLength += ((size_t)encodedByte & 0x7FU) * multiplier;
@@ -4650,7 +4660,9 @@ MQTTStatus_t MQTT_DeserializeAck( const MQTTPacketInfo_t * pIncomingPacket,
     MQTTStatus_t status = MQTTSuccess;
     bool skipMaxPacketSizeCheck = false;
 
-    if( ( pIncomingPacket != NULL ) && ( ( pIncomingPacket->type == MQTT_PACKET_TYPE_CONNACK ) || ( pIncomingPacket->type == MQTT_PACKET_TYPE_PINGRESP ) ) )
+    if( ( pIncomingPacket != NULL ) && 
+        ( ( pIncomingPacket->type == MQTT_PACKET_TYPE_CONNACK ) || 
+          ( pIncomingPacket->type == MQTT_PACKET_TYPE_PINGRESP ) ) )
     {
         skipMaxPacketSizeCheck = true;
     }

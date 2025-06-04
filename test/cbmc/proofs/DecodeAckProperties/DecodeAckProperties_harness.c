@@ -41,45 +41,32 @@
  */
 #define MIN_LENGTH_OF_SINGLE_PROPERTY ( 2U )
 
+#define MIN_REMAINING_LENGTH_FOR_ACK_WITHOUT_PROPS ( 2U )
+
 #ifndef REMAINING_LENGTH_MAX
     #define REMAINING_LENGTH_MAX    CBMC_MAX_OBJECT_SIZE
 #endif
 
 void harness()
 {
-    MQTTPublishInfo_t * pPublishInfo;
     MQTTPropBuilder_t * propBuffer;
-    uint16_t topicAliasMax;
-    uint8_t * packetBytes;
-    size_t propertyLength;
-    size_t maxPropertyLength;
-    size_t minRemainingLength;
+    uint8_t * packetBytes;;
     size_t remainingLength;
-
-    pPublishInfo = allocateMqttPublishInfo( NULL );
-    __CPROVER_assume( isValidMqttPublishInfo( pPublishInfo ) );
-    __CPROVER_assume( pPublishInfo != NULL ); 
-    __CPROVER_assume( pPublishInfo->topicNameLength != 0 ); 
+    size_t propertyLength;
 
     propBuffer = allocateMqttPropBuilder( NULL );
     __CPROVER_assume( isValidMqttPropBuilder( propBuffer ) );
 
-    maxPropertyLength = MAX_PROPERTY_LENGTH;
-
     __CPROVER_assume( propertyLength >= 0 );
-    __CPROVER_assume( propertyLength <= maxPropertyLength );
+    __CPROVER_assume( propertyLength <= MAX_PROPERTY_LENGTH );
 
-    minRemainingLength = pPublishInfo->topicNameLength + sizeof( uint16_t ) ;
-    minRemainingLength += ( pPublishInfo->qos > MQTTQoS0 )? 2: 0;
-    minRemainingLength += propertyLength + variableLengthEncodedSizeForProof( propertyLength );
+    remainingLength = MIN_REMAINING_LENGTH_FOR_ACK_WITHOUT_PROPS;
+    remainingLength += variableLengthEncodedSizeForProof( propertyLength ) + propertyLength;
 
-    __CPROVER_assume( remainingLength >= minRemainingLength );
-    __CPROVER_assume( remainingLength <  REMAINING_LENGTH_MAX );
-
-    packetBytes = malloc( remainingLength - ( minRemainingLength - propertyLength - ( 4 * sizeof( uint8_t ) ) ) );
+    packetBytes = malloc( remainingLength );
     __CPROVER_assume( packetBytes != NULL );
 
-    encodeVariableLength( packetBytes, propertyLength );
+    encodeVariableLength( &packetBytes[ MIN_REMAINING_LENGTH_FOR_ACK_WITHOUT_PROPS ], propertyLength );
 
-    __CPROVER_file_local_core_mqtt_serializer_c_deserializePublishProperties( pPublishInfo, propBuffer, packetBytes, topicAliasMax, remainingLength );
+    __CPROVER_file_local_core_mqtt_serializer_c_decodeAckProperties( propBuffer, packetBytes, remainingLength );
 }
