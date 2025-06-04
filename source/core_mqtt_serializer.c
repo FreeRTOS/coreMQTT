@@ -880,7 +880,9 @@ static MQTTStatus_t calculatePublishPacketSize( const MQTTPublishInfo_t * pPubli
                                                 size_t publishPropertyLength )
 {
     MQTTStatus_t status = MQTTSuccess;
-    size_t packetSize = 0, payloadLimit = 0;
+    size_t packetSize = 0, propertyAndPayloadLimit = 0;
+    size_t propertyAndPayloadSize = 0;
+
 
     assert( pPublishInfo != NULL );
     assert( pRemainingLength != NULL );
@@ -898,22 +900,21 @@ static MQTTStatus_t calculatePublishPacketSize( const MQTTPublishInfo_t * pPubli
         packetSize += sizeof( uint16_t );
     }
 
-    packetSize += publishPropertyLength;
-    packetSize += variableLengthEncodedSize( publishPropertyLength );
+    /* Calculate the maximum allowed size of the properties and payload combined for
+     * the given parameters. */
+    propertyAndPayloadLimit = MQTT_MAX_REMAINING_LENGTH - packetSize;
 
-    /* Calculate the maximum allowed size of the payload for the given parameters.
-     * This calculation excludes the "Remaining length" encoding, whose size is not
-     * yet known. */
-    payloadLimit = MQTT_MAX_REMAINING_LENGTH - packetSize - 1U;
+    propertyAndPayloadSize += publishPropertyLength;
+    propertyAndPayloadSize += variableLengthEncodedSize( publishPropertyLength );
+    propertyAndPayloadSize += pPublishInfo->payloadLength;
 
-    /* Ensure that the given payload fits within the calculated limit. */
-    if( pPublishInfo->payloadLength > payloadLimit )
+    if( propertyAndPayloadSize > propertyAndPayloadLimit )
     {
-        LogError( ( "PUBLISH payload length of %lu cannot exceed "
+        LogError( ( "PUBLISH properties and payload combined length of %lu cannot exceed "
                     "%lu so as not to exceed the maximum "
-                    "remaining length of MQTT 3.1.1 packet( %lu ).",
-                    ( unsigned long ) pPublishInfo->payloadLength,
-                    ( unsigned long ) payloadLimit,
+                    "remaining length of MQTT 5.0 packet( %lu ).",
+                    ( unsigned long ) propertyAndPayloadSize,
+                    ( unsigned long ) propertyAndPayloadLimit,
                     MQTT_MAX_REMAINING_LENGTH ) );
         status = MQTTBadParameter;
     }
@@ -922,39 +923,21 @@ static MQTTStatus_t calculatePublishPacketSize( const MQTTPublishInfo_t * pPubli
     {
         /* Add the length of the PUBLISH payload. At this point, the "Remaining length"
          * has been calculated. */
-        packetSize += pPublishInfo->payloadLength;
+        packetSize += propertyAndPayloadSize;
+        
+        /* Set the "Remaining length" output parameter and calculate the full
+            * size of the PUBLISH packet. */
+        *pRemainingLength = packetSize;
 
-        /* Now that the "Remaining length" is known, recalculate the payload limit
-         * based on the size of its encoding. */
-        payloadLimit -= variableLengthEncodedSize( packetSize );
+        packetSize += 1U + variableLengthEncodedSize( packetSize );
 
-        /* Check that the given payload fits within the size allowed by MQTT spec. */
-        if( pPublishInfo->payloadLength > payloadLimit )
+        if( packetSize > maxPacketSize )
         {
-            LogError( ( "PUBLISH payload length of %lu cannot exceed "
-                        "%lu so as not to exceed the maximum "
-                        "remaining length of MQTT 3.1.1 packet( %lu ).",
-                        ( unsigned long ) pPublishInfo->payloadLength,
-                        ( unsigned long ) payloadLimit,
-                        MQTT_MAX_REMAINING_LENGTH ) );
+            LogError( ( "Packet size is greater than the allowed maximum packet size." ) );
             status = MQTTBadParameter;
         }
-        else
-        {
-            /* Set the "Remaining length" output parameter and calculate the full
-             * size of the PUBLISH packet. */
-            *pRemainingLength = packetSize;
 
-            packetSize += 1U + variableLengthEncodedSize( packetSize );
-
-            if( packetSize > maxPacketSize )
-            {
-                LogError( ( "Packet size is greater than the allowed maximum packet size." ) );
-                status = MQTTBadParameter;
-            }
-
-            *pPacketSize = packetSize;
-        }
+        *pPacketSize = packetSize;
     }
 
     LogDebug( ( "PUBLISH packet remaining length=%lu and packet size=%lu.",

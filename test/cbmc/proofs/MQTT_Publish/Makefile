@@ -34,7 +34,7 @@ PUBLISH_PACKET_VECTORS = 7
 DEFINES += -DMAX_NETWORK_SEND_TRIES=$(MAX_NETWORK_SEND_TRIES)
 INCLUDES +=
 
-REMOVE_FUNCTION_BODY +=
+REMOVE_FUNCTION_BODY += MQTT_ValidatePublishProperties
 REMOVE_FUNCTION_BODY +=
 # These loops will run for the maximum number of publishes pending acknowledgement.
 # This is set in test/cbmc/include/core_mqtt_config.h.

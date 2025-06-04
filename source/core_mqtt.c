@@ -3601,15 +3601,12 @@ MQTTStatus_t MQTT_Publish( MQTTContext_t * pContext,
     uint8_t mqttHeader[ 7U ];
     MQTTStatus_t status = MQTTSuccess;
 
-    if( ( pPropertyBuilder != NULL ) && ( pPropertyBuilder->pBuffer != NULL ) )
+    /* Validate arguments. */
+    status = validatePublishParams( pContext, pPublishInfo, packetId );
+
+    if( ( status == MQTTSuccess ) && ( pPropertyBuilder != NULL ) && ( pPropertyBuilder->pBuffer != NULL ) )
     {
         status = MQTT_ValidatePublishProperties( pContext->connectProperties.serverTopicAliasMax, pPropertyBuilder, &topicAlias );
-    }
-
-    /* Validate arguments. */
-    if( status == MQTTSuccess )
-    {
-        status = validatePublishParams( pContext, pPublishInfo, packetId );
     }
 
     /* Validate arguments. */

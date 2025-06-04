@@ -19,34 +19,34 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 
+MQTT_INCOMING_PUBLISH_MAX_PROPERTIES=14
+MAX_UTF_8_STRING_LENGTH=10
+
 HARNESS_ENTRY=harness
-HARNESS_FILE=MQTT_Disconnect_harness
-PROOF_UID=MQTT_Disconnect
+HARNESS_FILE=DeserializeConnackProperties_harness
+PROOF_UID=DeserializeConnackProperties
 
-# Please see test/cbmc/stubs/network_interface_subs.c for
-# more information on MAX_NETWORK_SEND_TRIES.
-MAX_NETWORK_SEND_TRIES=3
-
-DISCONNECT_PACKET_VECTORS = 4
-
-DEFINES += -DMAX_NETWORK_SEND_TRIES=$(MAX_NETWORK_SEND_TRIES)
+DEFINES += -DMAX_UTF_8_STRING_LENGTH=$(MAX_UTF_8_STRING_LENGTH)
 INCLUDES +=
 
-REMOVE_FUNCTION_BODY += MQTT_ValidateDisconnectProperties
+# These functions have their memory saftey proven in other harnesses.
+REMOVE_FUNCTION_BODY += __CPROVER_file_local_core_mqtt_serializer_c_decodeAndDiscard
+REMOVE_FUNCTION_BODY += __CPROVER_file_local_core_mqtt_serializer_c_decodeAndDiscardutf_8
+REMOVE_FUNCTION_BODY += __CPROVER_file_local_core_mqtt_serializer_c_decodeAndDiscard_uint8
+REMOVE_FUNCTION_BODY += __CPROVER_file_local_core_mqtt_serializer_c_decodeAndDiscard_uint32
+REMOVE_FUNCTION_BODY += __CPROVER_file_local_core_mqtt_serializer_c_decodeuint32_t
+REMOVE_FUNCTION_BODY += __CPROVER_file_local_core_mqtt_serializer_c_decodeuint16_t
+REMOVE_FUNCTION_BODY += __CPROVER_file_local_core_mqtt_serializer_c_decodeuint8_t
+REMOVE_FUNCTION_BODY += __CPROVER_file_local_core_mqtt_serializer_c_decodeutf_8
+REMOVE_FUNCTION_BODY += __CPROVER_file_local_core_mqtt_serializer_c_decodeBinaryData
 
-UNWINDSET += encodeVariableLength.0:5
-UNWINDSET += __CPROVER_file_local_core_mqtt_c_sendMessageVector.0:${DISCONNECT_PACKET_VECTORS}
-UNWINDSET += __CPROVER_file_local_core_mqtt_c_sendMessageVector.1:${DISCONNECT_PACKET_VECTORS}
-UNWINDSET += __CPROVER_file_local_core_mqtt_c_sendMessageVector.2:${DISCONNECT_PACKET_VECTORS}
+UNWINDSET += __CPROVER_file_local_core_mqtt_serializer_c_deserializeConnackProperties.0:$(MQTT_INCOMING_PUBLISH_MAX_PROPERTIES)
 
 PROOF_SOURCES += $(PROOFDIR)/$(HARNESS_FILE).c
 PROOF_SOURCES += $(SRCDIR)/test/cbmc/sources/mqtt_cbmc_state.c
-PROOF_SOURCES += $(SRCDIR)/test/cbmc/stubs/network_interface_stubs.c
-PROOF_SOURCES += $(SRCDIR)/test/cbmc/stubs/get_time_stub.c
-PROOF_SOURCES += $(SRCDIR)/test/cbmc/stubs/event_callback_stub.c
+PROOF_SOURCES += $(SRCDIR)/test/cbmc/stubs/deserialize_helpers_stubs.c
+PROOF_SOURCES += $(SRCDIR)/source/core_mqtt_utils.c
 PROJECT_SOURCES += $(SRCDIR)/source/core_mqtt.c
 PROJECT_SOURCES += $(SRCDIR)/source/core_mqtt_serializer.c
-PROJECT_SOURCES += $(SRCDIR)/source/core_mqtt_state.c
-PROJECT_SOURCES += $(SRCDIR)/source/core_mqtt_utils.c
 
 include ../Makefile.common

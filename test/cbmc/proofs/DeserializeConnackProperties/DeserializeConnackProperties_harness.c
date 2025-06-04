@@ -23,60 +23,46 @@
  */
 
 /**
- * @file MQTT_Disconnect_harness.c
- * @brief Implements the proof harness for MQTT_Disconnect function.
+ * @file MQTT_DeserializePublish_harness.c
+ * @brief Implements the proof harness for MQTT_DeserializePublish function.
  */
+
 #include "core_mqtt.h"
 #include "mqtt_cbmc_state.h"
 
-/**
- * @brief Implement a get time function to return timeout after certain
- * iterations have been made in the code. This ensures that we do not hit
- * unwinding error in CBMC. In real life scenarios, the send function will
- * not just keep accepting 1 byte at a time for a long time since it just
- * gets added to the TCP buffer.
- *
- * @return The global system time.
+/* Here we constraint the length of the properties to 25 bytes.
  */
-static uint32_t ulGetTimeFunction( void )
-{
-    static uint32_t systemTime = 0;
+#define MAX_PROPERTY_LENGTH 25U
 
-    if( systemTime >= MAX_NETWORK_SEND_TRIES )
-    {
-        systemTime = systemTime + MQTT_SEND_TIMEOUT_MS + 1;
-    }
-    else
-    {
-        systemTime = systemTime + 1;
-    }
+/* Here we assume the minimum size of a property can only be for a variable length
+ * integer property, e.g. subscription ID. Those will contain a 1 byte property ID,
+ * and a variable length integer. Due to this the maximum number of properties that
+ * will be in the packet will be MAX_PROPERTY_LENGTH / MIN_LENGTH_OF_SINGLE_PROPERTY.
+ */
+#define MIN_LENGTH_OF_SINGLE_PROPERTY ( 2U )
 
-    return systemTime;
-}
-
-MQTTStatus_t MQTT_ValidateDisconnectProperties( uint32_t connectSessionExpiry,
-                                                const MQTTPropBuilder_t * pPropertyBuilder )
-{
-    MQTTStatus_t status;
-
-    return status;
-}
+#ifndef REMAINING_LENGTH_MAX
+    #define REMAINING_LENGTH_MAX    CBMC_MAX_OBJECT_SIZE
+#endif
 
 void harness()
 {
-    MQTTContext_t * pContext;
+    MQTTConnectProperties_t * pConnectProperties;
+    size_t propertyLength;
     MQTTPropBuilder_t * propBuffer;
-    MQTTSuccessFailReasonCode_t reasonCode;
-
-    pContext = allocateMqttContext( NULL );
-    __CPROVER_assume( isValidMqttContext( pContext ) );
-    __CPROVER_assume( pContext != NULL );
-    __CPROVER_assume( pContext->networkBuffer.pBuffer != NULL );
-
-    pContext->getTime = ulGetTimeFunction;
+    uint8_t * packetBytes;
+    
+    pConnectProperties = malloc( sizeof( MQTTConnectProperties_t ) );
+    __CPROVER_assume( pConnectProperties != NULL );
 
     propBuffer = allocateMqttPropBuilder( NULL );
     __CPROVER_assume( isValidMqttPropBuilder( propBuffer ) );
 
-    MQTT_Disconnect( pContext, propBuffer, reasonCode );
+    __CPROVER_assume( propertyLength >= 0 );
+    __CPROVER_assume( propertyLength <= MAX_PROPERTY_LENGTH );
+
+    packetBytes = malloc( propertyLength + variableLengthEncodedSizeForProof( propertyLength ) );
+    __CPROVER_assume( packetBytes != NULL );
+
+    __CPROVER_file_local_core_mqtt_serializer_c_deserializeConnackProperties( pConnectProperties, propertyLength, packetBytes, propBuffer );
 }

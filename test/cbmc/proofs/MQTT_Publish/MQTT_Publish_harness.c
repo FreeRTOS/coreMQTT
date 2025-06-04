@@ -54,6 +54,13 @@ static uint32_t ulGetTimeFunction( void )
 
     return systemTime;
 }
+MQTTStatus_t MQTT_ValidatePublishProperties( uint16_t serverTopicAliasMax,
+                                             const MQTTPropBuilder_t * propBuilder,
+                                             uint16_t * topicAlias )
+{
+    MQTTStatus_t status;
+    return status;
+}
 
 void harness()
 {
