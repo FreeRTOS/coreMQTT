@@ -67,6 +67,26 @@ MQTTStatus_t updateContextWithConnectProps( const MQTTPropBuilder_t * pPropBuild
     return status;
 }
 
+MQTTStatus_t MQTT_ValidateWillProperties( const MQTTPropBuilder_t * pPropertyBuilder )
+{
+    MQTTStatus_t status;
+    return status;
+}
+
+MQTTStatus_t MQTT_DeserializeAck( const MQTTPacketInfo_t * pIncomingPacket,
+                                  uint16_t * pPacketId,
+                                  bool * pSessionPresent,
+                                  MQTTReasonCodeInfo_t * pReasonCode,
+                                  bool requestProblem,
+                                  uint32_t maxPacketSize,
+                                  MQTTPropBuilder_t * propBuffer,
+                                  MQTTConnectProperties_t * pConnectProperties )
+{
+    MQTTStatus_t result;
+
+    return result;
+}
+
 void harness()
 {
     MQTTContext_t * pContext;
