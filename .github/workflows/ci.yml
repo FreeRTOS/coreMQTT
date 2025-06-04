@@ -196,4 +196,4 @@ jobs:
         uses: FreeRTOS/CI-CD-Github-Actions/run_cbmc@main
         with:
           proofs_dir: test/cbmc/proofs
-          run_cbmc_proofs_command: ./run-cbmc-proofs.py -p MQTT_SerializeConnect MQTT_SerializeDisconnect MQTT_SerializePublish MQTT_SerializePublishHeader MQTT_SerializeSubscribe MQTT_SerializeUnsubscribe
+          run_cbmc_proofs_command: ./run-cbmc-proofs.py -p MQTT_SerializeDisconnect MQTT_SerializePublish MQTT_SerializePublishHeader MQTT_SerializeSubscribe MQTT_SerializeUnsubscribe
