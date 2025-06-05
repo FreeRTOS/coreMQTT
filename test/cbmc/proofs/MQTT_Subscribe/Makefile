@@ -35,16 +35,19 @@ MAX_TOPIC_NAME_FILTER_LENGTH=10
 
 DEFINES += -DMAX_NETWORK_SEND_TRIES=$(MAX_NETWORK_SEND_TRIES)
 DEFINES += -DSUBSCRIPTION_COUNT_MAX=$(SUBSCRIPTION_COUNT_MAX)
+DEFINES += -DMAX_TOPIC_NAME_FILTER_LENGTH=$(MAX_TOPIC_NAME_FILTER_LENGTH)
 INCLUDES +=
 
-REMOVE_FUNCTION_BODY +=
+REMOVE_FUNCTION_BODY += MQTT_ValidateSubscribeProperties
 # Unlike recvExact, sendBuffer is not bounded by the timeout. The loop in
 # sendBuffer will continue until all the bytes are sent or a network error
 # occurs. Please see NetworkInterfaceReceiveStub in
 # libraries\standard\mqtt\cbmc\stubs\network_interface_stubs.c for more
 # information.
 UNWINDSET += strncmp.0:$(MAX_TOPIC_NAME_FILTER_LENGTH)
+UNWINDSET += strchr.0:$(MAX_TOPIC_NAME_FILTER_LENGTH)
 UNWINDSET += allocateMqttSubscriptionList.0:$(SUBSCRIPTION_COUNT_MAX)
+UNWINDSET += __CPROVER_file_local_core_mqtt_c_validateSharedSubscriptions.0:$(MAX_TOPIC_NAME_FILTER_LENGTH)
 UNWINDSET += __CPROVER_file_local_core_mqtt_serializer_c_calculateSubscriptionPacketSize.0:$(SUBSCRIPTION_COUNT_MAX)
 UNWINDSET += __CPROVER_file_local_core_mqtt_c_validateSubscribeUnsubscribeParams.0:$(SUBSCRIPTION_COUNT_MAX)
 UNWINDSET += __CPROVER_file_local_core_mqtt_c_validateSubscribeUnsubscribeParams.1:$(SUBSCRIPTION_COUNT_MAX)
@@ -63,6 +66,7 @@ PROOF_SOURCES += $(SRCDIR)/test/cbmc/sources/mqtt_cbmc_state.c
 PROOF_SOURCES += $(SRCDIR)/test/cbmc/stubs/network_interface_stubs.c
 PROOF_SOURCES += $(SRCDIR)/test/cbmc/stubs/get_time_stub.c
 PROOF_SOURCES += $(SRCDIR)/test/cbmc/stubs/event_callback_stub.c
+PROOF_SOURCES += $(SRCDIR)/test/cbmc/stubs/memchr.c
 PROJECT_SOURCES += $(SRCDIR)/source/core_mqtt.c
 PROJECT_SOURCES += $(SRCDIR)/source/core_mqtt_serializer.c
 PROJECT_SOURCES += $(SRCDIR)/source/core_mqtt_state.c

@@ -55,6 +55,13 @@ static uint32_t ulGetTimeFunction( void )
     return systemTime;
 }
 
+MQTTStatus_t MQTT_ValidateUnsubscribeProperties( const MQTTPropBuilder_t * pPropertyBuilder )
+{
+    MQTTStatus_t status;
+
+    return status;
+}
+
 void harness()
 {
     MQTTContext_t * pContext;

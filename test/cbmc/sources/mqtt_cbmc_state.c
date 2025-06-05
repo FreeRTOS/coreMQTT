@@ -258,6 +258,8 @@ MQTTSubscribeInfo_t * allocateMqttSubscriptionList( MQTTSubscribeInfo_t * pSubsc
     {
         for( int i = 0; i < subscriptionCount; i++ )
         {
+            __CPROVER_assume( pSubscriptionList[ i ].topicFilterLength < MAX_TOPIC_NAME_FILTER_LENGTH );
+
             pSubscriptionList[ i ].pTopicFilter = malloc( pSubscriptionList[ i ].topicFilterLength );
         }
     }
