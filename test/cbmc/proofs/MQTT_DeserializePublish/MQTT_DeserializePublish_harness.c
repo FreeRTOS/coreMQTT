@@ -31,10 +31,10 @@
 #include "mqtt_cbmc_state.h"
 
 MQTTStatus_t __CPROVER_file_local_core_mqtt_serializer_c_deserializePublishProperties( MQTTPublishInfo_t * pPublishInfo,
-                                                  MQTTPropBuilder_t * propBuffer,
-                                                  uint8_t * pIndex,
-                                                  uint16_t topicAliasMax,
-                                                  size_t remainingLength )
+                                                                                       MQTTPropBuilder_t * propBuffer,
+                                                                                       uint8_t * pIndex,
+                                                                                       uint16_t topicAliasMax,
+                                                                                       size_t remainingLength )
 {
     MQTTStatus_t status;
     size_t propertyLength = 0U;
@@ -43,13 +43,13 @@ MQTTStatus_t __CPROVER_file_local_core_mqtt_serializer_c_deserializePublishPrope
 
     remainingLengthForProperties = remainingLength;
     remainingLengthForProperties -= pPublishInfo->topicNameLength + sizeof( uint16_t );
-    remainingLengthForProperties -= ( pPublishInfo->qos > 0 )? sizeof( uint16_t ) : 0;
+    remainingLengthForProperties -= ( pPublishInfo->qos > 0 ) ? sizeof( uint16_t ) : 0;
 
-    status = __CPROVER_file_local_core_mqtt_serializer_c_decodeVariableLength(pLocalIndex, remainingLengthForProperties, &propertyLength); 
+    status = __CPROVER_file_local_core_mqtt_serializer_c_decodeVariableLength( pLocalIndex, remainingLengthForProperties, &propertyLength );
     pPublishInfo->propertyLength = propertyLength;
 
-    if( status == MQTTSuccess &&
-        propertyLength > remainingLengthForProperties - variableLengthEncodedSizeForProof( propertyLength ) )
+    if( ( status == MQTTSuccess ) &&
+        ( propertyLength > remainingLengthForProperties - variableLengthEncodedSizeForProof( propertyLength ) ) )
     {
         status = MQTTBadResponse;
     }

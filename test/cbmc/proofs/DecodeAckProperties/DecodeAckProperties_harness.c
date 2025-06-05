@@ -32,25 +32,25 @@
 
 /* Here we constraint the length of the properties to 25 bytes.
  */
-#define MAX_PROPERTY_LENGTH 25U
+#define MAX_PROPERTY_LENGTH                           25U
 
 /* Here we assume the minimum size of a property can only be for a variable length
  * integer property, e.g. subscription ID. Those will contain a 1 byte property ID,
  * and a variable length integer. Due to this the maximum number of properties that
  * will be in the packet will be MAX_PROPERTY_LENGTH / MIN_LENGTH_OF_SINGLE_PROPERTY.
  */
-#define MIN_LENGTH_OF_SINGLE_PROPERTY ( 2U )
+#define MIN_LENGTH_OF_SINGLE_PROPERTY                 ( 2U )
 
-#define MIN_REMAINING_LENGTH_FOR_ACK_WITHOUT_PROPS ( 2U )
+#define MIN_REMAINING_LENGTH_FOR_ACK_WITHOUT_PROPS    ( 2U )
 
 #ifndef REMAINING_LENGTH_MAX
-    #define REMAINING_LENGTH_MAX    CBMC_MAX_OBJECT_SIZE
+    #define REMAINING_LENGTH_MAX                      CBMC_MAX_OBJECT_SIZE
 #endif
 
 void harness()
 {
     MQTTPropBuilder_t * propBuffer;
-    uint8_t * packetBytes;;
+    uint8_t * packetBytes;
     size_t remainingLength;
     size_t propertyLength;
 

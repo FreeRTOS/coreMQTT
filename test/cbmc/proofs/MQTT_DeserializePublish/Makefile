@@ -23,7 +23,7 @@ HARNESS_ENTRY=harness
 HARNESS_FILE=MQTT_DeserializePublish_harness
 PROOF_UID=MQTT_DeserializePublish
 
-DEFINES += 
+DEFINES +=
 INCLUDES +=
 
 # These functions have their memory saftey proven in other harnesses.

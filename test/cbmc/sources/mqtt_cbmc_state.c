@@ -209,7 +209,7 @@ MQTTPropBuilder_t * allocateMqttPropBuilder( MQTTPropBuilder_t * pPropBuilder )
         __CPROVER_assume( length > 0 );
 
         /* This buffer is used to store packet properties. The property length
-           is a variable length integer and hence will have a max value of REMAINING_LENGTH_MAX */
+         * is a variable length integer and hence will have a max value of REMAINING_LENGTH_MAX */
         __CPROVER_assume( length < REMAINING_LENGTH_MAX );
 
         buffer = malloc( length );
@@ -336,8 +336,8 @@ MQTTContext_t * allocateMqttContext( MQTTContext_t * pContext )
                             GetCurrentTimeStub,
                             EventCallbackStub,
                             pNetworkBuffer );
-        
-        /* This is to make sure that the API's are called with all possible 
+
+        /* This is to make sure that the API's are called with all possible
          * connection status values */
         pContext->connectStatus = nonDetConnectStatus;
     }

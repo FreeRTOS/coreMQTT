@@ -44,7 +44,7 @@ void EventCallbackStub( MQTTContext_t * pContext,
                         MQTTPacketInfo_t * pPacketInfo,
                         MQTTDeserializedInfo_t * pDeserializedInfo,
                         enum MQTTSuccessFailReasonCode * pReasonCode,
-                        struct MqttPropBuilder* sendPropsBuffer,
-                        struct MqttPropBuilder* getPropsBuffer  );
+                        struct MqttPropBuilder * sendPropsBuffer,
+                        struct MqttPropBuilder * getPropsBuffer );
 
 #endif /* ifndef EVENT_CALLBACK_STUB_H_ */

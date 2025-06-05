@@ -32,17 +32,17 @@
 
 /* Here we constraint the length of the properties to 25 bytes.
  */
-#define MAX_PROPERTY_LENGTH 25U
+#define MAX_PROPERTY_LENGTH              25U
 
 /* Here we assume the minimum size of a property can only be for a variable length
  * integer property, e.g. subscription ID. Those will contain a 1 byte property ID,
  * and a variable length integer. Due to this the maximum number of properties that
  * will be in the packet will be MAX_PROPERTY_LENGTH / MIN_LENGTH_OF_SINGLE_PROPERTY.
  */
-#define MIN_LENGTH_OF_SINGLE_PROPERTY ( 2U )
+#define MIN_LENGTH_OF_SINGLE_PROPERTY    ( 2U )
 
 #ifndef REMAINING_LENGTH_MAX
-    #define REMAINING_LENGTH_MAX    CBMC_MAX_OBJECT_SIZE
+    #define REMAINING_LENGTH_MAX         CBMC_MAX_OBJECT_SIZE
 #endif
 
 void harness()
@@ -58,8 +58,8 @@ void harness()
 
     pPublishInfo = allocateMqttPublishInfo( NULL );
     __CPROVER_assume( isValidMqttPublishInfo( pPublishInfo ) );
-    __CPROVER_assume( pPublishInfo != NULL ); 
-    __CPROVER_assume( pPublishInfo->topicNameLength != 0 ); 
+    __CPROVER_assume( pPublishInfo != NULL );
+    __CPROVER_assume( pPublishInfo->topicNameLength != 0 );
 
     propBuffer = allocateMqttPropBuilder( NULL );
     __CPROVER_assume( isValidMqttPropBuilder( propBuffer ) );
@@ -69,12 +69,12 @@ void harness()
     __CPROVER_assume( propertyLength >= 0 );
     __CPROVER_assume( propertyLength <= maxPropertyLength );
 
-    minRemainingLength = pPublishInfo->topicNameLength + sizeof( uint16_t ) ;
-    minRemainingLength += ( pPublishInfo->qos > MQTTQoS0 )? 2: 0;
+    minRemainingLength = pPublishInfo->topicNameLength + sizeof( uint16_t );
+    minRemainingLength += ( pPublishInfo->qos > MQTTQoS0 ) ? 2 : 0;
     minRemainingLength += propertyLength + variableLengthEncodedSizeForProof( propertyLength );
 
     __CPROVER_assume( remainingLength >= minRemainingLength );
-    __CPROVER_assume( remainingLength <  REMAINING_LENGTH_MAX );
+    __CPROVER_assume( remainingLength < REMAINING_LENGTH_MAX );
 
     packetBytes = malloc( remainingLength - ( minRemainingLength - propertyLength - ( 4 * sizeof( uint8_t ) ) ) );
     __CPROVER_assume( packetBytes != NULL );

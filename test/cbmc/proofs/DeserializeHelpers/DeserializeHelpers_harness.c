@@ -47,7 +47,7 @@ void harness()
     uint16_t * property_length;
 
     length = malloc( sizeof( size_t ) );
-    
+
     __CPROVER_assume( length != NULL );
     __CPROVER_assume( *length >= 0 );
 
@@ -68,7 +68,7 @@ void harness()
     /*-----------------------------------------------------------*/
 
     length = malloc( sizeof( size_t ) );
-    
+
     __CPROVER_assume( length != NULL );
     __CPROVER_assume( *length >= 0 );
 
@@ -93,7 +93,7 @@ void harness()
     /*-----------------------------------------------------------*/
 
     length = malloc( sizeof( size_t ) );
-    
+
     __CPROVER_assume( length != NULL );
     __CPROVER_assume( *length >= 0 );
 
@@ -119,7 +119,7 @@ void harness()
     /*-----------------------------------------------------------*/
 
     length = malloc( sizeof( size_t ) );
-    
+
     __CPROVER_assume( length != NULL );
     __CPROVER_assume( *length >= 0 );
 
@@ -148,7 +148,7 @@ void harness()
     __CPROVER_assume( property_uint32_t != NULL );
 
     length = malloc( sizeof( size_t ) );
-    
+
     __CPROVER_assume( length != NULL );
     __CPROVER_assume( *length >= 0 );
 
@@ -177,7 +177,7 @@ void harness()
     __CPROVER_assume( property_uint16_t != NULL );
 
     length = malloc( sizeof( size_t ) );
-    
+
     __CPROVER_assume( length != NULL );
     __CPROVER_assume( *length >= 0 );
 
@@ -206,7 +206,7 @@ void harness()
     __CPROVER_assume( property_uint8_t != NULL );
 
     length = malloc( sizeof( size_t ) );
-    
+
     __CPROVER_assume( length != NULL );
     __CPROVER_assume( *length >= 0 );
 
@@ -238,8 +238,8 @@ void harness()
 
     __CPROVER_assume( property_length != NULL );
 
-     length = malloc( sizeof( size_t ) );
-    
+    length = malloc( sizeof( size_t ) );
+
     __CPROVER_assume( length != NULL );
     __CPROVER_assume( *length >= 0 );
 
@@ -271,8 +271,8 @@ void harness()
 
     __CPROVER_assume( property_length != NULL );
 
-     length = malloc( sizeof( size_t ) );
-    
+    length = malloc( sizeof( size_t ) );
+
     __CPROVER_assume( length != NULL );
     __CPROVER_assume( *length >= 0 );
 

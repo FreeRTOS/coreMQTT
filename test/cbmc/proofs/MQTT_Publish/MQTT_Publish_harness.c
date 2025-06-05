@@ -59,6 +59,7 @@ MQTTStatus_t MQTT_ValidatePublishProperties( uint16_t serverTopicAliasMax,
                                              uint16_t * topicAlias )
 {
     MQTTStatus_t status;
+
     return status;
 }
 

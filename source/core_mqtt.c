@@ -2027,9 +2027,9 @@ static MQTTStatus_t receiveSingleIteration( MQTTContext_t * pContext,
             status = handleIncomingDisconnect( pContext, &incomingPacket );
 
             if( status == MQTTSuccess )
-            {   
+            {
                 LogInfo( ( "Disconnected from the broker." ) );
-                
+
                 MQTT_PRE_STATE_UPDATE_HOOK( pContext );
 
                 pContext->connectStatus = MQTTNotConnected;

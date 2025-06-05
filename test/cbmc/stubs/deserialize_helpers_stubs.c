@@ -34,18 +34,18 @@
     #define MAX_UTF_8_STRING_LENGTH    ( 10U )
 #endif
 
-/* Here we assume all the properties in the packet are user properties all of the same 
- * length. Each user property includes two UTF-8 strings and 
+/* Here we assume all the properties in the packet are user properties all of the same
+ * length. Each user property includes two UTF-8 strings and
  * their corresponding 2 byte lengths.
  */
-#define MAX_LENGTH_OF_SINGLE_PROPERTY ( 2 * MAX_UTF_8_STRING_LENGTH + 4 )
+#define MAX_LENGTH_OF_SINGLE_PROPERTY    ( 2 * MAX_UTF_8_STRING_LENGTH + 4 )
 
 MQTTStatus_t updatePointer( size_t * pPropertyLength )
 {
     MQTTStatus_t status = MQTTSuccess;
     size_t length = *pPropertyLength;
 
-    size_t decrement = ( length < MAX_LENGTH_OF_SINGLE_PROPERTY )? length: MAX_LENGTH_OF_SINGLE_PROPERTY;
+    size_t decrement = ( length < MAX_LENGTH_OF_SINGLE_PROPERTY ) ? length : MAX_LENGTH_OF_SINGLE_PROPERTY;
 
     *pPropertyLength -= decrement;
 
@@ -55,7 +55,7 @@ MQTTStatus_t updatePointer( size_t * pPropertyLength )
 /*-----------------------------------------------------------*/
 
 MQTTStatus_t __CPROVER_file_local_core_mqtt_serializer_c_decodeAndDiscard( size_t * pPropertyLength,
-                                      uint8_t ** pIndex )
+                                                                           uint8_t ** pIndex )
 {
     return updatePointer( pPropertyLength );
 }
@@ -63,8 +63,8 @@ MQTTStatus_t __CPROVER_file_local_core_mqtt_serializer_c_decodeAndDiscard( size_
 /*-----------------------------------------------------------*/
 
 MQTTStatus_t __CPROVER_file_local_core_mqtt_serializer_c_decodeAndDiscardutf_8( size_t * pPropertyLength,
-                                           bool * pUsed,
-                                           uint8_t ** pIndex )
+                                                                                bool * pUsed,
+                                                                                uint8_t ** pIndex )
 {
     return updatePointer( pPropertyLength );
 }
@@ -72,14 +72,14 @@ MQTTStatus_t __CPROVER_file_local_core_mqtt_serializer_c_decodeAndDiscardutf_8( 
 /*-----------------------------------------------------------*/
 
 MQTTStatus_t __CPROVER_file_local_core_mqtt_serializer_c_decodeAndDiscard_uint8( size_t * pPropertyLength,
-                                            uint8_t ** pIndex )
+                                                                                 uint8_t ** pIndex )
 {
     return updatePointer( pPropertyLength );
 }
 
 /*-----------------------------------------------------------*/
 MQTTStatus_t __CPROVER_file_local_core_mqtt_serializer_c_decodeAndDiscard_uint32( size_t * pPropertyLength,
-                                            uint8_t ** pIndex )
+                                                                                  uint8_t ** pIndex )
 {
     return updatePointer( pPropertyLength );
 }
@@ -87,9 +87,9 @@ MQTTStatus_t __CPROVER_file_local_core_mqtt_serializer_c_decodeAndDiscard_uint32
 /*-----------------------------------------------------------*/
 
 MQTTStatus_t __CPROVER_file_local_core_mqtt_serializer_c_decodeuint32_t( uint32_t * pProperty,
-                                    size_t * pPropertyLength,
-                                    bool * pUsed,
-                                    uint8_t ** pIndex )
+                                                                         size_t * pPropertyLength,
+                                                                         bool * pUsed,
+                                                                         uint8_t ** pIndex )
 {
     return updatePointer( pPropertyLength );
 }
@@ -97,9 +97,9 @@ MQTTStatus_t __CPROVER_file_local_core_mqtt_serializer_c_decodeuint32_t( uint32_
 /*-----------------------------------------------------------*/
 
 MQTTStatus_t __CPROVER_file_local_core_mqtt_serializer_c_decodeuint16_t( uint16_t * pProperty,
-                                    size_t * pPropertyLength,
-                                    bool * pUsed,
-                                    uint8_t ** pIndex )
+                                                                         size_t * pPropertyLength,
+                                                                         bool * pUsed,
+                                                                         uint8_t ** pIndex )
 {
     return updatePointer( pPropertyLength );
 }
@@ -107,9 +107,9 @@ MQTTStatus_t __CPROVER_file_local_core_mqtt_serializer_c_decodeuint16_t( uint16_
 /*-----------------------------------------------------------*/
 
 MQTTStatus_t __CPROVER_file_local_core_mqtt_serializer_c_decodeuint8_t( uint8_t * pProperty,
-                                   size_t * pPropertyLength,
-                                   bool * pUsed,
-                                   uint8_t ** pIndex )
+                                                                        size_t * pPropertyLength,
+                                                                        bool * pUsed,
+                                                                        uint8_t ** pIndex )
 {
     return updatePointer( pPropertyLength );
 }
@@ -117,10 +117,10 @@ MQTTStatus_t __CPROVER_file_local_core_mqtt_serializer_c_decodeuint8_t( uint8_t 
 /*-----------------------------------------------------------*/
 
 MQTTStatus_t __CPROVER_file_local_core_mqtt_serializer_c_decodeutf_8( const char ** pProperty,
-                                 uint16_t * pLength,
-                                 size_t * pPropertyLength,
-                                 bool * pUsed,
-                                 uint8_t ** pIndex )
+                                                                      uint16_t * pLength,
+                                                                      size_t * pPropertyLength,
+                                                                      bool * pUsed,
+                                                                      uint8_t ** pIndex )
 {
     return updatePointer( pPropertyLength );
 }
@@ -128,9 +128,9 @@ MQTTStatus_t __CPROVER_file_local_core_mqtt_serializer_c_decodeutf_8( const char
 /*-----------------------------------------------------------*/
 
 MQTTStatus_t __CPROVER_file_local_core_mqtt_serializer_c_decodeBinaryData( const void ** pProperty,
-                                      uint16_t * pLength,
-                                      size_t * pPropertyLength,
-                                      uint8_t ** pIndex )
+                                                                           uint16_t * pLength,
+                                                                           size_t * pPropertyLength,
+                                                                           uint8_t ** pIndex )
 {
     return updatePointer( pPropertyLength );
 }
