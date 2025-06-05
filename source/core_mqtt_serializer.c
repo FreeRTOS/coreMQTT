@@ -310,23 +310,6 @@ static void serializeConnectPacket( const MQTTConnectInfo_t * pConnectInfo,
                                     const MQTTFixedBuffer_t * pFixedBuffer );
 
 /**
- * @brief Serialize an MQTT CONNECT packet in the given buffer.
- *
- * @param[in] pConnectInfo MQTT CONNECT packet parameters.
- * @param[in] pWillInfo Last Will and Testament. Pass NULL if not used.
- * @param[in] pConnectProperties MQTT CONNECT properties.
- * @param[in] pWillProperties MQTT Will properties.
- * @param[in] remainingLength Remaining Length of MQTT CONNECT packet.
- * @param[out] pFixedBuffer Buffer for packet serialization.
- */
-static void serializeConnectPacket( const MQTTConnectInfo_t * pConnectInfo,
-                                    const MQTTPublishInfo_t * pWillInfo,
-                                    const MQTTPropBuilder_t * pConnectProperties,
-                                    const MQTTPropBuilder_t * pWillProperties,
-                                    size_t remainingLength,
-                                    const MQTTFixedBuffer_t * pFixedBuffer );
-
-/**
  * @brief Retrieve the size of the remaining length if it were to be encoded.
  *
  * @param[in] length The remaining length to be encoded.
@@ -471,13 +454,14 @@ static MQTTStatus_t decodeAndDiscard( size_t * pPropertyLength,
  * Uses the algorithm provided in the spec.
  *
  * @param[in] pBuffer Pointer to the buffer.
+ * @param[in] bufferLength Length of the buffer.
  * @param[out] pLength Decoded variable length
  *
  * @return #MQTTSuccess if variable length and paramters are valid else #MQTTBadParameter.
  */
 static MQTTStatus_t decodeVariableLength( const uint8_t * pBuffer,
                                           size_t bufferLength,
-                                              size_t * pLength );
+                                          size_t * pLength );
 
 /**
  * @brief Validate the connack parameters.
@@ -662,6 +646,7 @@ static MQTTStatus_t validateDisconnectResponse( uint8_t reasonCode,
  * @param[out] propBuffer Pointer to the property buffer.
  * @param[in] pIndex Pointer to the start of the properties.
  * @param[out] pSubackPropertyLength Pointer to the length of suback properties
+ * @param[in] remainingLength Remaining length of the incoming packet.
  *
  * @return #MQTTSuccess if SUBACK is valid; #MQTTBadResponse
  *
@@ -682,6 +667,7 @@ static MQTTStatus_t deserializeSubackProperties( MQTTPropBuilder_t * propBuffer,
  * @param[in] propBuffer Pointer to the property buffer.
  * @param[in] pIndex Pointer to the start of the properties.
  * @param[in] topicAliasMax Maximum allowed Topic Alias.
+ * @param[in] remainingLength Remaining length of the incoming packet.
  *
  * @return #MQTTSuccess if PUBLISH is valid; #MQTTBadResponse
  * if the PUBLISH packet doesn't follow MQTT spec.
@@ -1897,6 +1883,7 @@ static MQTTStatus_t deserializeSimpleAck( const MQTTPacketInfo_t * pAck,
         /*Protocol error to send user property and reason string if client has set request problem to false.*/
         if( requestProblem == false )
         {
+            LogError( ( "User property and reason string not expected in ACK packet when requestProblem is false." ) );
             status = MQTTBadResponse;
         }
         else
