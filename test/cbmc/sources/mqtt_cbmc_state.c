@@ -52,6 +52,10 @@
     #define REMAINING_LENGTH_MAX    CBMC_MAX_OBJECT_SIZE
 #endif
 
+#ifndef MAX_TOPIC_NAME_FILTER_LENGTH
+    #define MAX_TOPIC_NAME_FILTER_LENGTH    10
+#endif
+
 /**
  * @brief Determines the maximum number of MQTT PUBLISH messages, pending
  * acknowledgement at a time, that are supported for incoming and outgoing
