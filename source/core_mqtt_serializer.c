@@ -656,6 +656,10 @@ static MQTTStatus_t deserializeSubackProperties( MQTTPropBuilder_t * propBuffer,
                                                  size_t * pSubackPropertyLength,
                                                  size_t remainingLength );
 
+
+static MQTTStatus_t deserializeDisconnectProperties( uint8_t * pIndex, 
+                                                     size_t propertyLength );
+
 /**
  * @brief Deserialize properties in the PUBLISH packet received from the server.
  *
@@ -4939,7 +4943,24 @@ MQTTStatus_t MQTT_DeserializeDisconnect( const MQTTPacketInfo_t * pPacket,
 
     if( status == MQTTSuccess )
     {
-        while( ( propertyLength > 0U ) && ( status == MQTTSuccess ) )
+        status = deserializeDisconnectProperties( pIndex, propertyLength );
+    }
+
+    return status;
+}
+
+/*-----------------------------------------------------------*/
+
+static MQTTStatus_t deserializeDisconnectProperties( uint8_t * pIndex,
+                                                     size_t propertyLength )
+{
+    MQTTStatus_t status = MQTTSuccess;
+    const char * pReasonString;
+    uint16_t reasonStringLength;
+    const char * pServerRef;
+    uint16_t pServerRefLength;
+
+    while( ( propertyLength > 0U ) && ( status == MQTTSuccess ) )
         {
             /*Decode the property id.*/
             uint8_t propertyId = *pIndex;
@@ -4968,10 +4989,8 @@ MQTTStatus_t MQTT_DeserializeDisconnect( const MQTTPacketInfo_t * pPacket,
                     break;
             }
         }
-    }
-
-    return status;
 }
+
 
 /*-----------------------------------------------------------*/
 

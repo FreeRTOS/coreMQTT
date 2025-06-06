@@ -186,7 +186,7 @@ jobs:
 
   proof_ci:
     if: ${{ github.event.pull_request }}
-    runs-on: cbmc_ubuntu-latest_64-core
+    runs-on: cbmc_ubuntu-latest_16-core
     steps:
       - name: Set up CBMC runner
         uses: FreeRTOS/CI-CD-Github-Actions/set_up_cbmc_runner@main
