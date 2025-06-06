@@ -867,7 +867,6 @@ static MQTTStatus_t calculatePublishPacketSize( const MQTTPublishInfo_t * pPubli
 {
     MQTTStatus_t status = MQTTSuccess;
     size_t packetSize = 0, propertyAndPayloadLimit = 0;
-    size_t propertyAndPayloadSize = 0;
 
 
     assert( pPublishInfo != NULL );
@@ -886,31 +885,48 @@ static MQTTStatus_t calculatePublishPacketSize( const MQTTPublishInfo_t * pPubli
         packetSize += sizeof( uint16_t );
     }
 
+    packetSize += variableLengthEncodedSize( publishPropertyLength );
+
     /* Calculate the maximum allowed size of the properties and payload combined for
      * the given parameters. */
     propertyAndPayloadLimit = MQTT_MAX_REMAINING_LENGTH - packetSize;
 
-    propertyAndPayloadSize += publishPropertyLength;
-    propertyAndPayloadSize += variableLengthEncodedSize( publishPropertyLength );
-    propertyAndPayloadSize += pPublishInfo->payloadLength;
-
-    if( propertyAndPayloadSize > propertyAndPayloadLimit )
+    if( publishPropertyLength > propertyAndPayloadLimit )
     {
-        LogError( ( "PUBLISH properties and payload combined length of %lu cannot exceed "
+        LogError( ( "PUBLISH properties length of %lu cannot exceed "
                     "%lu so as not to exceed the maximum "
                     "remaining length of MQTT 5.0 packet( %lu ).",
-                    ( unsigned long ) propertyAndPayloadSize,
+                    ( unsigned long ) publishPropertyLength,
                     ( unsigned long ) propertyAndPayloadLimit,
                     MQTT_MAX_REMAINING_LENGTH ) );
         status = MQTTBadParameter;
     }
+    else 
+    {
+        packetSize += publishPropertyLength;
+        propertyAndPayloadLimit -= publishPropertyLength;
+    }
+
+    if( ( status == MQTTSuccess ) ) 
+    {
+        if ( pPublishInfo->payloadLength > propertyAndPayloadLimit ) 
+        {
+            LogError( ( "PUBLISH properties and payload combined length of %lu cannot exceed "
+                        "%lu so as not to exceed the maximum "
+                        "remaining length of MQTT 5.0 packet( %lu ).",
+                        ( unsigned long ) ( pPublishInfo->payloadLength + publishPropertyLength ),
+                        ( unsigned long ) ( propertyAndPayloadLimit + publishPropertyLength ),
+                        MQTT_MAX_REMAINING_LENGTH ) );
+            status = MQTTBadParameter;
+        }
+        else
+        {
+            packetSize += pPublishInfo->payloadLength;
+        }
+    }
 
     if( status == MQTTSuccess )
     {
-        /* Add the length of the PUBLISH payload. At this point, the "Remaining length"
-         * has been calculated. */
-        packetSize += propertyAndPayloadSize;
-
         /* Set the "Remaining length" output parameter and calculate the full
          * size of the PUBLISH packet. */
         *pRemainingLength = packetSize;
