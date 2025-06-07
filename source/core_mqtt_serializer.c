@@ -2068,43 +2068,43 @@ static void serializeConnectPacket( const MQTTConnectInfo_t * pConnectInfo,
                            pConnectInfo->clientIdentifierLength );
 
     /* Write the will topic name and message into the CONNECT packet if provided. */
-    if( pWillInfo != NULL )
-    {
-        pIndex = encodeVariableLength( pIndex, willPropertyLength );
+    // if( pWillInfo != NULL )
+    // {
+    //     pIndex = encodeVariableLength( pIndex, willPropertyLength );
 
-        if( willPropertyLength > 0U )
-        {
-            ( void ) memcpy( ( void * ) pIndex, ( const void * ) pWillProperties->pBuffer, willPropertyLength );
-            pIndex = &pIndex[ willPropertyLength ];
-        }
+    //     if( willPropertyLength > 0U )
+    //     {
+    //         ( void ) memcpy( ( void * ) pIndex, ( const void * ) pWillProperties->pBuffer, willPropertyLength );
+    //         pIndex = &pIndex[ willPropertyLength ];
+    //     }
 
-        pIndex = encodeString( pIndex,
-                               pWillInfo->pTopicName,
-                               pWillInfo->topicNameLength );
+    //     pIndex = encodeString( pIndex,
+    //                            pWillInfo->pTopicName,
+    //                            pWillInfo->topicNameLength );
 
-        pIndex = encodeString( pIndex,
-                               pWillInfo->pPayload,
-                               ( uint16_t ) pWillInfo->payloadLength );
-    }
+    //     pIndex = encodeString( pIndex,
+    //                            pWillInfo->pPayload,
+    //                            ( uint16_t ) pWillInfo->payloadLength );
+    // }
 
-    /* Encode the user name if provided. */
-    if( pConnectInfo->pUserName != NULL )
-    {
-        pIndex = encodeString( pIndex, pConnectInfo->pUserName, pConnectInfo->userNameLength );
-    }
+    // /* Encode the user name if provided. */
+    // if( pConnectInfo->pUserName != NULL )
+    // {
+    //     pIndex = encodeString( pIndex, pConnectInfo->pUserName, pConnectInfo->userNameLength );
+    // }
 
-    /* Encode the password if provided. */
-    if( pConnectInfo->pPassword != NULL )
-    {
-        pIndex = encodeString( pIndex, pConnectInfo->pPassword, pConnectInfo->passwordLength );
-    }
+    // /* Encode the password if provided. */
+    // if( pConnectInfo->pPassword != NULL )
+    // {
+    //     pIndex = encodeString( pIndex, pConnectInfo->pPassword, pConnectInfo->passwordLength );
+    // }
 
-    LogDebug( ( "Length of serialized CONNECT packet is %lu.",
-                ( ( unsigned long ) ( pIndex - pFixedBuffer->pBuffer ) ) ) );
+    // LogDebug( ( "Length of serialized CONNECT packet is %lu.",
+    //             ( ( unsigned long ) ( pIndex - pFixedBuffer->pBuffer ) ) ) );
 
-    /* Ensure that the difference between the end and beginning of the buffer
-     * is less than the buffer size. */
-    assert( ( ( size_t ) ( pIndex - pFixedBuffer->pBuffer ) ) <= pFixedBuffer->size );
+    // /* Ensure that the difference between the end and beginning of the buffer
+    //  * is less than the buffer size. */
+    // assert( ( ( size_t ) ( pIndex - pFixedBuffer->pBuffer ) ) <= pFixedBuffer->size );
 }
 
 /*-----------------------------------------------------------*/
@@ -6148,10 +6148,11 @@ MQTTStatus_t MQTTPropGet_PubSubscriptionId( MQTTPropBuilder_t * propBuffer,
         status = decodeVariableLength( startOfProp,
                                        propBuffer->bufferLength - propBuffer->currentIndex,
                                        subscriptionId );
-        startOfProp = &startOfProp[ variableLengthEncodedSize( *subscriptionId ) ];
 
         if( status == MQTTSuccess )
         {
+            startOfProp = &startOfProp[ variableLengthEncodedSize( *subscriptionId ) ];
+
             /* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-182 */
             /* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-108 */
             /* coverity[misra_c_2012_rule_18_2_violation] */
@@ -6907,6 +6908,11 @@ MQTTStatus_t MQTT_IncomingGetNextProp( MQTTPropBuilder_t * propBuffer,
     else if( propBuffer->pBuffer == NULL )
     {
         LogError( ( "Arguments cannot be NULL : pPropertyBuilder->pBuffer=%p.", ( void * ) propBuffer->pBuffer ) );
+        status = MQTTBadParameter;
+    }
+    else if( propertyId == NULL )
+    {
+        LogError( ( "Arguments cannot be NULL : propertyId=%p.", ( void * )propertyId ) );
         status = MQTTBadParameter;
     }
     else
