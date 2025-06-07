@@ -2087,24 +2087,24 @@ static void serializeConnectPacket( const MQTTConnectInfo_t * pConnectInfo,
                                ( uint16_t ) pWillInfo->payloadLength );
     }
 
-    // /* Encode the user name if provided. */
-    // if( pConnectInfo->pUserName != NULL )
-    // {
-    //     pIndex = encodeString( pIndex, pConnectInfo->pUserName, pConnectInfo->userNameLength );
-    // }
+    /* Encode the user name if provided. */
+    if( pConnectInfo->pUserName != NULL )
+    {
+        pIndex = encodeString( pIndex, pConnectInfo->pUserName, pConnectInfo->userNameLength );
+    }
 
-    // /* Encode the password if provided. */
-    // if( pConnectInfo->pPassword != NULL )
-    // {
-    //     pIndex = encodeString( pIndex, pConnectInfo->pPassword, pConnectInfo->passwordLength );
-    // }
+    /* Encode the password if provided. */
+    if( pConnectInfo->pPassword != NULL )
+    {
+        pIndex = encodeString( pIndex, pConnectInfo->pPassword, pConnectInfo->passwordLength );
+    }
 
-    // LogDebug( ( "Length of serialized CONNECT packet is %lu.",
-    //             ( ( unsigned long ) ( pIndex - pFixedBuffer->pBuffer ) ) ) );
+    LogDebug( ( "Length of serialized CONNECT packet is %lu.",
+                ( ( unsigned long ) ( pIndex - pFixedBuffer->pBuffer ) ) ) );
 
-    // /* Ensure that the difference between the end and beginning of the buffer
-    //  * is less than the buffer size. */
-    // assert( ( ( size_t ) ( pIndex - pFixedBuffer->pBuffer ) ) <= pFixedBuffer->size );
+    /* Ensure that the difference between the end and beginning of the buffer
+     * is less than the buffer size. */
+    assert( ( ( size_t ) ( pIndex - pFixedBuffer->pBuffer ) ) <= pFixedBuffer->size );
 }
 
 /*-----------------------------------------------------------*/

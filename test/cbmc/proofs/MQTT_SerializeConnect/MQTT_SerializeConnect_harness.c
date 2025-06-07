@@ -29,6 +29,10 @@
 #include "core_mqtt.h"
 #include "mqtt_cbmc_state.h"
 
+/* Here we constraint the length of the properties to 25 bytes.
+ */
+#define MAX_PROPERTY_LENGTH              ( 25U )
+
 void harness()
 {
     MQTTConnectInfo_t * pConnectInfo;
@@ -53,6 +57,8 @@ void harness()
 
     if( pConnectProperties != NULL )
     {
+        __CPROVER_assume( pConnectProperties->bufferLength >= 0 );
+        __CPROVER_assume( pConnectProperties->bufferLength <= MAX_PROPERTY_LENGTH );
         __CPROVER_assume( pConnectProperties->currentIndex >= 0 );
         __CPROVER_assume( pConnectProperties->currentIndex < pConnectProperties->bufferLength );
         __CPROVER_assume( pConnectProperties->fieldSet >= 0 );
@@ -62,6 +68,8 @@ void harness()
 
     if( pWillProperties != NULL )
     {
+        __CPROVER_assume( pWillProperties->bufferLength >= 0 );
+        __CPROVER_assume( pWillProperties->bufferLength <= MAX_PROPERTY_LENGTH );
         __CPROVER_assume( pWillProperties->currentIndex >= 0 );
         __CPROVER_assume( pWillProperties->currentIndex < pWillProperties->bufferLength );
         __CPROVER_assume( pWillProperties->fieldSet >= 0 );
@@ -92,4 +100,65 @@ void harness()
          * function. */
         MQTT_SerializeConnect( pConnectInfo, pWillInfo, pConnectProperties, pWillProperties, remainingLength, pFixedBuffer );
     }
+
+    // MQTTConnectInfo_t connectInfo = {0};
+    // MQTTPublishInfo_t willInfo = {0};
+    // size_t remainingLength;
+    // size_t packetSize;
+    // MQTTStatus_t status = MQTTSuccess;
+    // MQTTFixedBuffer_t fixedBuffer = {0};
+    // uint8_t buffer[100];
+    // MQTTPropBuilder_t pConnectProperties={0};
+    // MQTTPropBuilder_t pWillProperties={0};
+    // uint8_t willpayload[3]={'a', 'b', 'c'};
+    // uint8_t connectProps[3]={'a', 'b', 'c'};
+    // uint8_t willProps[3]={'a', 'b', 'c'};
+
+    // connectInfo.cleanSession = true;
+    // connectInfo.pClientIdentifier = "lmaolol";
+    // connectInfo.clientIdentifierLength = 7U;
+    // connectInfo.keepAliveSeconds = 60;
+    // connectInfo.pUserName = "username";
+    // connectInfo.userNameLength = 8U;
+    // connectInfo.pPassword = "password";
+    // connectInfo.passwordLength = 8U;
+
+    // willInfo.pTopicName="mytopic";
+    // willInfo.topicNameLength=7U;
+    // willInfo.pPayload=(const void *) willpayload;
+    // willInfo.payloadLength=3;
+
+    // fixedBuffer.pBuffer = buffer;
+    // fixedBuffer.size = 100U;
+
+    // pConnectProperties.pBuffer=connectProps;
+    // pConnectProperties.bufferLength=3;
+    // pConnectProperties.currentIndex=3;
+
+    // pWillProperties.pBuffer=willProps;
+    // pWillProperties.bufferLength=3;
+    // pWillProperties.currentIndex=3;
+
+    // /* The output parameter pPacketSize of the function MQTT_GetConnectPacketSize()
+    // * must not be NULL. packetSize returned is not used in this proof, but
+    // * is used normally by the application to verify the size of its
+    // * MQTTFixedBuffer_t. MQTT_SerializeConnect() will use the remainingLength
+    // * to recalculate the packetSize. */
+    // status = MQTT_GetConnectPacketSize( &connectInfo,
+    //                                     &willInfo,
+    //                                     &pConnectProperties,
+    //                                     &pWillProperties,
+    //                                     &remainingLength,
+    //                                     &packetSize );
+    
+    // remainingLength+=0;
+    // packetSize+=0;
+
+    // if( status == MQTTSuccess )
+    // {
+    //     /* For coverage, it is expected that a NULL pConnectInfo will reach this
+    //      * function. */
+    //     MQTT_SerializeConnect( &connectInfo, &willInfo, &pConnectProperties, &pWillProperties, remainingLength, &fixedBuffer );
+    // }
+    // __CPROVER_assert(0, "debug");
 }
