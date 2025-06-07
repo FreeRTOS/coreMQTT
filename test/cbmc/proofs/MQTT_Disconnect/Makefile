@@ -26,16 +26,18 @@ PROOF_UID=MQTT_Disconnect
 # Please see test/cbmc/stubs/network_interface_subs.c for
 # more information on MAX_NETWORK_SEND_TRIES.
 MAX_NETWORK_SEND_TRIES=3
+
+DISCONNECT_PACKET_VECTORS = 4
+
 DEFINES += -DMAX_NETWORK_SEND_TRIES=$(MAX_NETWORK_SEND_TRIES)
 INCLUDES +=
 
-REMOVE_FUNCTION_BODY +=
-# Unlike recvExact, sendBuffer is not bounded by the timeout. The loop in
-# sendBuffer will continue until all the bytes are sent or a network error
-# occurs. Please see NetworkInterfaceReceiveStub in
-# libraries\standard\mqtt\cbmc\stubs\network_interface_stubs.c for more
-# information.
-UNWINDSET += __CPROVER_file_local_core_mqtt_c_sendBuffer.0:$(MAX_NETWORK_SEND_TRIES)
+REMOVE_FUNCTION_BODY += MQTT_ValidateDisconnectProperties
+
+UNWINDSET += encodeVariableLength.0:5
+UNWINDSET += __CPROVER_file_local_core_mqtt_c_sendMessageVector.0:${DISCONNECT_PACKET_VECTORS}
+UNWINDSET += __CPROVER_file_local_core_mqtt_c_sendMessageVector.1:${DISCONNECT_PACKET_VECTORS}
+UNWINDSET += __CPROVER_file_local_core_mqtt_c_sendMessageVector.2:${DISCONNECT_PACKET_VECTORS}
 
 PROOF_SOURCES += $(PROOFDIR)/$(HARNESS_FILE).c
 PROOF_SOURCES += $(SRCDIR)/test/cbmc/sources/mqtt_cbmc_state.c
@@ -45,5 +47,6 @@ PROOF_SOURCES += $(SRCDIR)/test/cbmc/stubs/event_callback_stub.c
 PROJECT_SOURCES += $(SRCDIR)/source/core_mqtt.c
 PROJECT_SOURCES += $(SRCDIR)/source/core_mqtt_serializer.c
 PROJECT_SOURCES += $(SRCDIR)/source/core_mqtt_state.c
+PROJECT_SOURCES += $(SRCDIR)/source/core_mqtt_utils.c
 
 include ../Makefile.common

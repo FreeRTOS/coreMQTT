@@ -55,12 +55,20 @@ static uint32_t ulGetTimeFunction( void )
     return systemTime;
 }
 
+MQTTStatus_t MQTT_ValidateUnsubscribeProperties( const MQTTPropBuilder_t * pPropertyBuilder )
+{
+    MQTTStatus_t status;
+
+    return status;
+}
+
 void harness()
 {
     MQTTContext_t * pContext;
     MQTTSubscribeInfo_t * pSubscriptionList;
     size_t subscriptionCount;
     uint16_t packetId;
+    MQTTPropBuilder_t * pUnsubscribeProperties;
 
     pContext = allocateMqttContext( NULL );
     __CPROVER_assume( isValidMqttContext( pContext ) );
@@ -77,5 +85,14 @@ void harness()
     pSubscriptionList = allocateMqttSubscriptionList( NULL, 1U );
     __CPROVER_assume( isValidMqttSubscriptionList( pSubscriptionList, 1U ) );
 
-    MQTT_Unsubscribe( pContext, pSubscriptionList, subscriptionCount, packetId );
+    pUnsubscribeProperties = allocateMqttPropBuilder( NULL );
+
+    if( pUnsubscribeProperties != NULL )
+    {
+        __CPROVER_assume( pUnsubscribeProperties->currentIndex >= 0 );
+        __CPROVER_assume( pUnsubscribeProperties->currentIndex < pUnsubscribeProperties->bufferLength );
+        __CPROVER_assume( pUnsubscribeProperties->fieldSet >= 0 );
+    }
+
+    MQTT_Unsubscribe( pContext, pSubscriptionList, subscriptionCount, packetId, pUnsubscribeProperties );
 }

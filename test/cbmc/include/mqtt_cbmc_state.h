@@ -35,6 +35,8 @@
 
 #define IMPLIES( a, b )    ( !( a ) || ( b ) )
 
+#define MQTT_MAX_PACKET_SIZE    ( 268435460U )
+
 /**
  * @brief Allocate a #MQTTPacketInfo_t object.
  *
@@ -118,6 +120,10 @@ MQTTFixedBuffer_t * allocateMqttFixedBuffer( MQTTFixedBuffer_t * pFixedBuffer );
  * parameter checks in the function under proof.
  */
 bool isValidMqttFixedBuffer( const MQTTFixedBuffer_t * pFixedBuffer );
+
+MQTTPropBuilder_t * allocateMqttPropBuilder( MQTTPropBuilder_t * pPropBuilder );
+
+bool isValidMqttPropBuilder( const MQTTPropBuilder_t * pPropBuilder );
 
 /**
  * @brief Allocate an array of #MQTTSubscribeInfo_t objects.
