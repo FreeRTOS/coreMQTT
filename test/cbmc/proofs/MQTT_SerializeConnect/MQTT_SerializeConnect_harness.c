@@ -28,17 +28,6 @@
  */
 #include "core_mqtt.h"
 #include "mqtt_cbmc_state.h"
-uint8_t * MQTT_SerializeConnectFixedHeader( uint8_t * pIndex,
-                                            const MQTTConnectInfo_t * pConnectInfo,
-                                            const MQTTPublishInfo_t * pWillInfo,
-                                            size_t remainingLength )
-{
-    size_t increment;
-    __CPROVER_assume( increment >=10 );
-    __CPROVER_assume( increment <=13 );
-
-    return &pIndex[increment];
-}
 
 void harness()
 {
