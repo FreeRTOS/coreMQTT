@@ -701,6 +701,7 @@ static bool checkWildcardSubscriptions( uint8_t isWildcardAvailable,
  * @param[in] pContext MQTT Connection context.
  * @param[in] pSubscriptionList List of MQTT subscription info.
  * @param[in] iterator The iterator pointing to a topic filter in pSubscriptionList.
+ * @param[in] subscriptionType The type of subscription, either #MQTT_TYPE_SUBSCRIBE or #MQTT_TYPE_UNSUBSCRIBE.
  *
  * @return Returns one of the following:
  * - #MQTTSuccess if the topic filter is valid

@@ -115,7 +115,7 @@ void harness()
     // uint8_t willProps[3]={'a', 'b', 'c'};
 
     // connectInfo.cleanSession = true;
-    // connectInfo.pClientIdentifier = "lmaolol";
+    // connectInfo.pClientIdentifier = "sample_client_id";
     // connectInfo.clientIdentifierLength = 7U;
     // connectInfo.keepAliveSeconds = 60;
     // connectInfo.pUserName = "username";
@@ -123,7 +123,7 @@ void harness()
     // connectInfo.pPassword = "password";
     // connectInfo.passwordLength = 8U;
 
-    // willInfo.pTopicName="mytopic";
+    // willInfo.pTopicName="my_topic";
     // willInfo.topicNameLength=7U;
     // willInfo.pPayload=(const void *) willpayload;
     // willInfo.payloadLength=3;
