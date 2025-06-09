@@ -185,86 +185,6 @@ struct NetworkContext
 
 
 #define MQTT_MAX_PACKET_SIZE                   ( 268435460UL )
-#define MQTT_VERSION_5                         ( 5U )
-#define MQTT_SESSION_EXPIRY_SIZE               ( 5U )
-#define MQTT_RECEIVE_MAX_SIZE                  ( 3U )
-#define MQTT_MAX_PACKET_PROPERTY_SIZE          ( 5U )
-#define MQTT_TOPIC_ALIAS_SIZE                  ( 3U )
-#define MQTT_REQUEST_RESPONSE_SIZE             ( 2U )
-#define MQTT_REQUEST_PROBLEM_SIZE              ( 2U )
-
-#define MQTT_SESSION_EXPIRY_ID                 ( 0x11 )
-#define MQTT_RECEIVE_MAX_ID                    ( 0x21 )
-#define MQTT_MAX_PACKET_SIZE_ID                ( 0x27 )
-#define MQTT_TOPIC_ALIAS_MAX_ID                ( 0x22 )
-#define MQTT_REQUEST_RESPONSE_ID               ( 0x19 )
-#define MQTT_REQUEST_PROBLEM_ID                ( 0x17 )
-#define MQTT_USER_PROPERTY_ID                  ( 0x26 )
-#define MQTT_AUTH_METHOD_ID                    ( 0x15 )
-#define MQTT_AUTH_DATA_ID                      ( 0x16 )
-
-#define MQTT_WILL_DELAY_ID                     ( 0x18 )
-#define MQTT_PAYLOAD_FORMAT_ID                 ( 0x01 )
-#define MQTT_MSG_EXPIRY_ID                     ( 0x02 )
-#define MQTT_CONTENT_TYPE_ID                   ( 0x03 )
-#define MQTT_RESPONSE_TOPIC_ID                 ( 0x08 )
-#define MQTT_CORRELATION_DATA_ID               ( 0x09 )
-
-#define MQTT_MAX_QOS_ID                        ( 0x24 )
-#define MQTT_RETAIN_AVAILABLE_ID               ( 0x25 )
-#define MQTT_ASSIGNED_CLIENT_ID                ( 0x12 )
-#define MQTT_REASON_STRING_ID                  ( 0x1F )
-#define MQTT_WILDCARD_ID                       ( 0x28 )
-#define MQTT_SUB_AVAILABLE_ID                  ( 0x29 )
-#define MQTT_SHARED_SUB_ID                     ( 0x2A )
-#define MQTT_SERVER_KEEP_ALIVE_ID              ( 0x13 )
-#define MQTT_RESPONSE_INFO_ID                  ( 0x1A )
-#define MQTT_SERVER_REF_ID                     ( 0x1C )
-
-#define MQTT_REASON_SUCCESS                    ( 0x00 )
-#define MQTT_REASON_SEND_WILL                  ( 0x04 )
-#define MQTT_REASON_NO_MATCHING_SUBSCRIBERS    ( 0x10 )
-#define MQTT_REASON_UNSPECIFIED_ERR            ( 0x80 )
-#define MQTT_REASON_MALFORMED_PACKET           ( 0x81 )
-#define MQTT_REASON_PROTOCOL_ERR               ( 0x82 )
-#define MQTT_REASON_IMPL_SPECIFIC_ERR          ( 0x83 )
-#define MQTT_REASON_UNSUPPORTED_PROTO_VER      ( 0x84 )
-#define MQTT_REASON_CLIENT_ID_NOT_VALID        ( 0x85 )
-#define MQTT_REASON_BAD_USER_OR_PASS           ( 0x86 )
-#define MQTT_REASON_NOT_AUTHORIZED             ( 0x87 )
-#define MQTT_REASON_SERVER_UNAVAILABLE         ( 0x88 )
-#define MQTT_REASON_SERVER_BUSY                ( 0x89 )
-#define MQTT_REASON_BANNED                     ( 0x8A )
-#define MQTT_REASON_SERVER_SHUTTING_DOWN       ( 0x8B )
-#define MQTT_REASON_BAD_AUTH_METHOD            ( 0x8C )
-#define MQTT_REASON_KEEP_ALIVE_TIMEOUT         ( 0x8D )
-#define MQTT_REASON_SESSION_TAKEN_OVER         ( 0x8E )
-#define MQTT_REASON_TOPIC_FILTER_INVALID       ( 0x8F )
-#define MQTT_REASON_TOPIC_NAME_INVALID         ( 0x90 )
-#define MQTT_REASON_PACKET_ID_IN_USE           ( 0x91 )
-#define MQTT_REASON_PACKET_ID_NOT_FOUND        ( 0x92 )
-#define MQTT_REASON_RX_MAX_EXCEEDED            ( 0x93 )
-#define MQTT_REASON_TOPIC_ALIAS_INVALID        ( 0x94 )
-#define MQTT_REASON_PACKET_TOO_LARGE           ( 0x95 )
-#define MQTT_REASON_MSG_RATE_TOO_HIGH          ( 0x96 )
-#define MQTT_REASON_QUOTA_EXCEEDED             ( 0x97 )
-#define MQTT_REASON_ADMIN_ACTION               ( 0x98 )
-#define MQTT_REASON_PAYLOAD_FORMAT_INVALID     ( 0x99 )
-#define MQTT_REASON_RETAIN_NOT_SUPPORTED       ( 0x9A )
-#define MQTT_REASON_QOS_NOT_SUPPORTED          ( 0x9B )
-#define MQTT_REASON_USE_ANOTHER_SERVER         ( 0x9C )
-#define MQTT_REASON_SERVER_MOVED               ( 0x9D )
-#define MQTT_REASON_SS_NOT_SUPPORTED           ( 0x9E )
-#define MQTT_REASON_CON_RATE_EXCEED            ( 0x9F )
-#define MQTT_REASON_MAX_CON_TIME               ( 0xA0 )
-#define MQTT_REASON_SUB_ID_NOT_SUP             ( 0xA1 )
-#define MQTT_REASON_WILDCARD_SUB_NOT_SUP       ( 0xA2 )
-
-#define CORE_MQTT_ID_SIZE                      ( 1U )
-#define MQTT_REMAINING_LENGTH_INVALID          ( ( size_t ) 268435456 )
-#define MQTT_SUBSCRIPTION_ID_ID                ( 0x0B )
-#define MQTT_TOPIC_ALIAS_ID                    ( 0x23 )
-
 
 /* Variables common to testcases */
 MQTTConnectProperties_t properties;
@@ -1977,44 +1897,44 @@ void test_MQTTV5_DeserializeAck_LogPuback()
     mqttPacketInfo.remainingLength = 3;
     /*Validate all the correct reason codes.*/
     buffer[ 1 ] = 1;
-    buffer[ 2 ] = MQTT_REASON_SUCCESS;
+    buffer[ 2 ] = MQTT_REASON_PUBACK_SUCCESS;
     status = MQTT_DeserializeAck( &mqttPacketInfo, &packetIdentifier, NULL, &ackInfo, requestProblem, maxPacketSize, &propBuffer, NULL );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
 
-    buffer[ 2 ] = MQTT_REASON_NO_MATCHING_SUBSCRIBERS;
+    buffer[ 2 ] = MQTT_REASON_PUBACK_NO_MATCHING_SUBSCRIBERS;
     status = MQTT_DeserializeAck( &mqttPacketInfo, &packetIdentifier, NULL, &ackInfo, requestProblem, maxPacketSize, &propBuffer, NULL );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
 
-    buffer[ 2 ] = MQTT_REASON_UNSPECIFIED_ERR;
+    buffer[ 2 ] = MQTT_REASON_PUBACK_UNSPECIFIED_ERROR ; 
     status = MQTT_DeserializeAck( &mqttPacketInfo, &packetIdentifier, NULL, &ackInfo, requestProblem, maxPacketSize, &propBuffer, NULL );
     TEST_ASSERT_EQUAL_INT( MQTTServerRefused, status );
 
-    buffer[ 2 ] = MQTT_REASON_IMPL_SPECIFIC_ERR;
+    buffer[ 2 ] = MQTT_REASON_PUBACK_IMPLEMENTATION_SPECIFIC_ERROR;
     status = MQTT_DeserializeAck( &mqttPacketInfo, &packetIdentifier, NULL, &ackInfo, requestProblem, maxPacketSize, &propBuffer, NULL );
     TEST_ASSERT_EQUAL_INT( MQTTServerRefused, status );
 
-    buffer[ 2 ] = MQTT_REASON_NOT_AUTHORIZED;
+    buffer[ 2 ] = MQTT_REASON_PUBACK_NOT_AUTHORIZED ; 
     status = MQTT_DeserializeAck( &mqttPacketInfo, &packetIdentifier, NULL, &ackInfo, requestProblem, maxPacketSize, &propBuffer, NULL );
     TEST_ASSERT_EQUAL_INT( MQTTServerRefused, status );
 
-    buffer[ 2 ] = MQTT_REASON_TOPIC_NAME_INVALID;
+    buffer[ 2 ] = MQTT_REASON_PUBACK_TOPIC_NAME_INVALID;
     status = MQTT_DeserializeAck( &mqttPacketInfo, &packetIdentifier, NULL, &ackInfo, requestProblem, maxPacketSize, &propBuffer, NULL );
     TEST_ASSERT_EQUAL_INT( MQTTServerRefused, status );
 
-    buffer[ 2 ] = MQTT_REASON_PACKET_ID_IN_USE;
+    buffer[ 2 ] = MQTT_REASON_PUBACK_PACKET_IDENTIFIER_IN_USE;
     status = MQTT_DeserializeAck( &mqttPacketInfo, &packetIdentifier, NULL, &ackInfo, requestProblem, maxPacketSize, &propBuffer, NULL );
     TEST_ASSERT_EQUAL_INT( MQTTServerRefused, status );
 
-    buffer[ 2 ] = MQTT_REASON_QUOTA_EXCEEDED;
+    buffer[ 2 ] = MQTT_REASON_PUBACK_QUOTA_EXCEEDED;
     status = MQTT_DeserializeAck( &mqttPacketInfo, &packetIdentifier, NULL, &ackInfo, requestProblem, maxPacketSize, &propBuffer, NULL );
     TEST_ASSERT_EQUAL_INT( MQTTServerRefused, status );
 
-    buffer[ 2 ] = MQTT_REASON_PAYLOAD_FORMAT_INVALID;
+    buffer[ 2 ] = MQTT_REASON_PUBACK_PAYLOAD_FORMAT_INVALID;
     status = MQTT_DeserializeAck( &mqttPacketInfo, &packetIdentifier, NULL, &ackInfo, requestProblem, maxPacketSize, &propBuffer, NULL );
     TEST_ASSERT_EQUAL_INT( MQTTServerRefused, status );
 
     /*Invlaid reason code.*/
-    buffer[ 2 ] = MQTT_REASON_BANNED;
+    buffer[ 2 ] = MQTT_REASON_CONNACK_BANNED;
     status = MQTT_DeserializeAck( &mqttPacketInfo, &packetIdentifier, NULL, &ackInfo, requestProblem, maxPacketSize, &propBuffer, NULL );
     TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
 }
@@ -2038,21 +1958,21 @@ void test_MQTTV5_DeserializeAck_Pubrel()
     mqttPacketInfo.remainingLength = 3;
     /*Validate all the correct reason codes.*/
     buffer[ 1 ] = 1;
-    buffer[ 2 ] = MQTT_REASON_SUCCESS;
+    buffer[ 2 ] = MQTT_REASON_PUBREL_SUCCESS;
     status = MQTT_DeserializeAck( &mqttPacketInfo, &packetIdentifier, NULL, &ackInfo, requestProblem, maxPacketSize, &propBuffer, NULL );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
 
-    buffer[ 2 ] = MQTT_REASON_PACKET_ID_NOT_FOUND;
+    buffer[ 2 ] = MQTT_REASON_PUBREL_PACKET_IDENTIFIER_NOT_FOUND;
     status = MQTT_DeserializeAck( &mqttPacketInfo, &packetIdentifier, NULL, &ackInfo, requestProblem, maxPacketSize, &propBuffer, NULL );
     TEST_ASSERT_EQUAL_INT( MQTTServerRefused, status );
 
     /*Invalid reason code.*/
-    buffer[ 2 ] = MQTT_REASON_BANNED;
+    buffer[ 2 ] = MQTT_REASON_CONNACK_BANNED;
     status = MQTT_DeserializeAck( &mqttPacketInfo, &packetIdentifier, NULL, &ackInfo, requestProblem, maxPacketSize, &propBuffer, NULL );
     TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
 
     /*Invalid reason code.*/
-    buffer[ 2 ] = MQTT_REASON_SEND_WILL;
+    buffer[ 2 ] = MQTT_REASON_DISCONNECT_DISCONNECT_WITH_WILL_MESSAGE;
     status = MQTT_DeserializeAck( &mqttPacketInfo, &packetIdentifier, NULL, &ackInfo, requestProblem, maxPacketSize, &propBuffer, NULL );
     TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
 

@@ -546,6 +546,31 @@ static uint8_t * MQTTV5_SerializeDisconnectFixed_cb( uint8_t * pIndex,
     return pIndex;
 }
 
+/**
+ * @brief Mocked function to retrieve a function while setting the connectStatus to not connected.
+ *
+ * @param[in] pContext MQTT context pointer.
+ * @param[in] packetId Packet ID.
+ * @param[out] pSerializedMqttVec Pointer to serialized MQTT vector.
+ * @param[out] pSerializedMqttVecLen Length of serialized MQTT vector.
+ *
+ * @return Returns true. 
+ */
+bool retieveFunctionNotConnected( MQTTContext_t * pContext,
+                                  uint16_t packetId,
+                                  uint8_t ** pSerializedMqttVec,
+                                  size_t * pSerializedMqttVecLen )
+{
+    ( void ) packetId;
+    ( void ) pSerializedMqttVec;
+    ( void ) pSerializedMqttVecLen;
+
+    pContext->connectStatus = MQTTNotConnected; 
+    *pSerializedMqttVecLen = 10 ; 
+
+    return true;
+}
+
 
 
 /**
@@ -9001,33 +9026,54 @@ void test_MQTT_InitConnect( void )
     TEST_ASSERT_EQUAL( MQTTSuccess, status );
 }
 
-void test_last_branch( void )
+void test_ResendUnackedPublishesWithNotConnected( void )
 {
-    MQTTStatus_t mqttStatus;
-    MQTTContext_t context = { 0 };
+    MQTTContext_t mqttContext = { 0 };
+    MQTTConnectInfo_t connectInfo = { 0 };
+    uint32_t timeout = 2;
+    bool sessionPresent, sessionPresentResult;
+    MQTTStatus_t status;
     TransportInterface_t transport = { 0 };
     MQTTFixedBuffer_t networkBuffer = { 0 };
-    NetworkContext_t networkContext = { 0 };
-    uint8_t buffer[ 10 ];
-    uint8_t * bufPtr = buffer;
-    size_t pingreqSize = MQTT_PACKET_PINGREQ_SIZE;
+    MQTTPacketInfo_t incomingPacket = { 0 };
+    uint16_t packetIdentifier = 1;
+    MQTTPublishState_t pubRelState = MQTTPubRelSend;
 
     setupTransportInterface( &transport );
     setupNetworkBuffer( &networkBuffer );
-    networkContext.buffer = &bufPtr;
-    transport.pNetworkContext = &networkContext;
-    transport.recv = transportRecvSuccess;
-    transport.send = transportSendFailure;
 
-    /* Initialize context. */
-    mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
-    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
-    context.connectStatus = MQTTConnected;
-    /* Verify MQTTSuccess is returned. */
-    MQTT_GetPingreqPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
-    MQTT_GetPingreqPacketSize_ReturnThruPtr_pPacketSize( &pingreqSize );
-    MQTT_SerializePingreq_ExpectAnyArgsAndReturn( MQTTSuccess );
-    /* Expect the above calls when running MQTT_Ping. */
-    mqttStatus = MQTT_Ping( &context );
-    TEST_ASSERT_EQUAL( MQTTSendFailed, mqttStatus );
+    memset( &mqttContext, 0x0, sizeof( mqttContext ) );
+    memset( &connectInfo, 0x00, sizeof( connectInfo ) );
+    MQTT_Init( &mqttContext, &transport, getTime, eventCallback, &networkBuffer );
+
+    
+    /**
+     * Test : One packet found in ack pending state, Transport Send failed and 
+     * connectStatus is set to MQTTNotConnected during the retrieveFunction using a stub.
+     */
+    
+    MQTT_GetConnectPacketSize_IgnoreAndReturn( MQTTSuccess );
+    connectInfo.keepAliveSeconds = MQTT_SAMPLE_KEEPALIVE_INTERVAL_S;
+    incomingPacket.type = MQTT_PACKET_TYPE_CONNACK;
+    incomingPacket.remainingLength = 2;
+    MQTT_SerializeConnectFixedHeader_Stub( MQTT_SerializeConnectFixedHeader_cb );
+
+    sessionPresentResult = false;
+    mqttContext.connectStatus = MQTTNotConnected;
+    mqttContext.keepAliveIntervalSec = 0;
+    mqttContext.transportInterface.send = transportSendFailure;
+    MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_GetIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
+    MQTT_DeserializeAck_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_DeserializeAck_ReturnThruPtr_pSessionPresent( &sessionPresent );
+    MQTT_PubrelToResend_ExpectAnyArgsAndReturn( MQTT_PACKET_TYPE_INVALID );
+    MQTT_PublishToResend_ExpectAnyArgsAndReturn( 1 );
+
+    mqttContext.retrieveFunction = retieveFunctionNotConnected  ; 
+
+    status = MQTT_Connect( &mqttContext, &connectInfo, NULL, timeout, &sessionPresentResult, NULL, NULL );
+    TEST_ASSERT_EQUAL_INT( MQTTSendFailed, status );
+
 }
+
+

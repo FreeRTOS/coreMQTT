@@ -1025,7 +1025,7 @@ static int32_t sendMessageVector( MQTTContext_t * pContext,
         /* Some of the bytes from this vector were sent as well, update the length
          * and the pointer to data in this vector. */
         if( ( sendResult > 0 ) &&
-            ( pIoVectIterator <= &( pIoVec[ ioVecCount - 1U ] ) ) )
+            ( pIoVectIterator <= &( pIoVec[ ioVecCount - 1U ] ) ) ) /* LCOV_EXCL_BR_LINE */
         {
             pIoVectIterator->iov_base = ( const void * ) &( ( ( const uint8_t * ) pIoVectIterator->iov_base )[ sendResult ] );
             pIoVectIterator->iov_len -= ( size_t ) sendResult;
