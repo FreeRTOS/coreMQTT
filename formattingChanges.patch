@@ -1,0 +1,793 @@
+diff --git a/source/core_mqtt_serializer.c b/source/core_mqtt_serializer.c
+index 21f2770..e815762 100644
+--- a/source/core_mqtt_serializer.c
++++ b/source/core_mqtt_serializer.c
+@@ -658,14 +658,14 @@ static MQTTStatus_t deserializeSubackProperties( MQTTPropBuilder_t * propBuffer,
+ 
+ /**
+  * @brief Deserialize properties in the DISCONNECT packet received from the server.
+- * 
++ *
+  * @param[in] pIndex Pointer to the start of the properties.
+  * @param[in] propertyLength Length of the properties in the DISCONNECT packet.
+- * 
++ *
+  * @return #MQTTSuccess if DISCONNECT is valid;
+- * #MQTTBadResponse if the DISCONNECT packet is invalid. 
++ * #MQTTBadResponse if the DISCONNECT packet is invalid.
+  */
+-static MQTTStatus_t deserializeDisconnectProperties( uint8_t * pIndex, 
++static MQTTStatus_t deserializeDisconnectProperties( uint8_t * pIndex,
+                                                      size_t propertyLength );
+ 
+ /**
+@@ -913,15 +913,15 @@ static MQTTStatus_t calculatePublishPacketSize( const MQTTPublishInfo_t * pPubli
+                     MQTT_MAX_REMAINING_LENGTH ) );
+         status = MQTTBadParameter;
+     }
+-    else 
++    else
+     {
+         packetSize += publishPropertyLength;
+         propertyAndPayloadLimit -= publishPropertyLength;
+     }
+ 
+-    if( ( status == MQTTSuccess ) ) 
++    if( ( status == MQTTSuccess ) )
+     {
+-        if ( pPublishInfo->payloadLength > propertyAndPayloadLimit ) 
++        if( pPublishInfo->payloadLength > propertyAndPayloadLimit )
+         {
+             LogError( ( "PUBLISH properties and payload combined length of %lu cannot exceed "
+                         "%lu so as not to exceed the maximum "
+@@ -4993,7 +4993,8 @@ static MQTTStatus_t deserializeDisconnectProperties( uint8_t * pIndex,
+                 break;
+         }
+     }
+-    return status ; 
++
++    return status;
+ }
+ 
+ 
+@@ -6917,7 +6918,7 @@ MQTTStatus_t MQTT_IncomingGetNextProp( MQTTPropBuilder_t * propBuffer,
+     }
+     else if( propertyId == NULL )
+     {
+-        LogError( ( "Arguments cannot be NULL : propertyId=%p.", ( void * )propertyId ) );
++        LogError( ( "Arguments cannot be NULL : propertyId=%p.", ( void * ) propertyId ) );
+         status = MQTTBadParameter;
+     }
+     else
+diff --git a/test/cbmc/proofs/MQTTPropGet_ConnAuthData/Makefile b/test/cbmc/proofs/MQTTPropGet_ConnAuthData/Makefile
+index c8b416a..c5da777 100644
+--- a/test/cbmc/proofs/MQTTPropGet_ConnAuthData/Makefile
++++ b/test/cbmc/proofs/MQTTPropGet_ConnAuthData/Makefile
+@@ -23,12 +23,12 @@ HARNESS_ENTRY=harness
+ HARNESS_FILE=MQTTPropGet_ConnAuthData_harness
+ PROOF_UID=MQTTPropGet_ConnAuthData
+ 
+-DEFINES += 
++DEFINES +=
+ INCLUDES +=
+ 
+-REMOVE_FUNCTION_BODY += 
++REMOVE_FUNCTION_BODY +=
+ 
+-UNWINDSET += 
++UNWINDSET +=
+ 
+ PROOF_SOURCES += $(PROOFDIR)/$(HARNESS_FILE).c
+ PROOF_SOURCES += $(SRCDIR)/test/cbmc/sources/mqtt_cbmc_state.c
+diff --git a/test/cbmc/proofs/MQTTPropGet_ConnAuthMethod/Makefile b/test/cbmc/proofs/MQTTPropGet_ConnAuthMethod/Makefile
+index cb1050e..8bd6eaa 100644
+--- a/test/cbmc/proofs/MQTTPropGet_ConnAuthMethod/Makefile
++++ b/test/cbmc/proofs/MQTTPropGet_ConnAuthMethod/Makefile
+@@ -23,12 +23,12 @@ HARNESS_ENTRY=harness
+ HARNESS_FILE=MQTTPropGet_ConnAuthMethod_harness
+ PROOF_UID=MQTTPropGet_ConnAuthMethod
+ 
+-DEFINES += 
++DEFINES +=
+ INCLUDES +=
+ 
+-REMOVE_FUNCTION_BODY += 
++REMOVE_FUNCTION_BODY +=
+ 
+-UNWINDSET += 
++UNWINDSET +=
+ 
+ PROOF_SOURCES += $(PROOFDIR)/$(HARNESS_FILE).c
+ PROOF_SOURCES += $(SRCDIR)/test/cbmc/sources/mqtt_cbmc_state.c
+diff --git a/test/cbmc/proofs/MQTTPropGet_ConnClientId/Makefile b/test/cbmc/proofs/MQTTPropGet_ConnClientId/Makefile
+index 3935449..f14ac5a 100644
+--- a/test/cbmc/proofs/MQTTPropGet_ConnClientId/Makefile
++++ b/test/cbmc/proofs/MQTTPropGet_ConnClientId/Makefile
+@@ -23,12 +23,12 @@ HARNESS_ENTRY=harness
+ HARNESS_FILE=MQTTPropGet_ConnClientId_harness
+ PROOF_UID=MQTTPropGet_ConnClientId
+ 
+-DEFINES += 
++DEFINES +=
+ INCLUDES +=
+ 
+-REMOVE_FUNCTION_BODY += 
++REMOVE_FUNCTION_BODY +=
+ 
+-UNWINDSET += 
++UNWINDSET +=
+ 
+ PROOF_SOURCES += $(PROOFDIR)/$(HARNESS_FILE).c
+ PROOF_SOURCES += $(SRCDIR)/test/cbmc/sources/mqtt_cbmc_state.c
+diff --git a/test/cbmc/proofs/MQTTPropGet_ConnMaxPacketSize/Makefile b/test/cbmc/proofs/MQTTPropGet_ConnMaxPacketSize/Makefile
+index a023870..6ef4d2a 100644
+--- a/test/cbmc/proofs/MQTTPropGet_ConnMaxPacketSize/Makefile
++++ b/test/cbmc/proofs/MQTTPropGet_ConnMaxPacketSize/Makefile
+@@ -23,12 +23,12 @@ HARNESS_ENTRY=harness
+ HARNESS_FILE=MQTTPropGet_ConnMaxPacketSize_harness
+ PROOF_UID=MQTTPropGet_ConnMaxPacketSize
+ 
+-DEFINES += 
++DEFINES +=
+ INCLUDES +=
+ 
+-REMOVE_FUNCTION_BODY += 
++REMOVE_FUNCTION_BODY +=
+ 
+-UNWINDSET += 
++UNWINDSET +=
+ 
+ PROOF_SOURCES += $(PROOFDIR)/$(HARNESS_FILE).c
+ PROOF_SOURCES += $(SRCDIR)/test/cbmc/sources/mqtt_cbmc_state.c
+diff --git a/test/cbmc/proofs/MQTTPropGet_ConnMaxQos/MQTTPropGet_ConnMaxQos_harness.c b/test/cbmc/proofs/MQTTPropGet_ConnMaxQos/MQTTPropGet_ConnMaxQos_harness.c
+index 5ad831f..1f52e0a 100644
+--- a/test/cbmc/proofs/MQTTPropGet_ConnMaxQos/MQTTPropGet_ConnMaxQos_harness.c
++++ b/test/cbmc/proofs/MQTTPropGet_ConnMaxQos/MQTTPropGet_ConnMaxQos_harness.c
+@@ -48,4 +48,3 @@ void harness()
+ 
+     MQTTPropGet_ConnMaxQos( propBuffer, maxQos );
+ }
+-
+diff --git a/test/cbmc/proofs/MQTTPropGet_ConnMaxQos/Makefile b/test/cbmc/proofs/MQTTPropGet_ConnMaxQos/Makefile
+index 144387f..d7c43d3 100644
+--- a/test/cbmc/proofs/MQTTPropGet_ConnMaxQos/Makefile
++++ b/test/cbmc/proofs/MQTTPropGet_ConnMaxQos/Makefile
+@@ -23,12 +23,12 @@ HARNESS_ENTRY=harness
+ HARNESS_FILE=MQTTPropGet_ConnMaxQos_harness
+ PROOF_UID=MQTTPropGet_ConnMaxQos
+ 
+-DEFINES += 
++DEFINES +=
+ INCLUDES +=
+ 
+-REMOVE_FUNCTION_BODY += 
++REMOVE_FUNCTION_BODY +=
+ 
+-UNWINDSET += 
++UNWINDSET +=
+ 
+ PROOF_SOURCES += $(PROOFDIR)/$(HARNESS_FILE).c
+ PROOF_SOURCES += $(SRCDIR)/test/cbmc/sources/mqtt_cbmc_state.c
+diff --git a/test/cbmc/proofs/MQTTPropGet_ConnReceiveMax/Makefile b/test/cbmc/proofs/MQTTPropGet_ConnReceiveMax/Makefile
+index c368726..d3d812e 100644
+--- a/test/cbmc/proofs/MQTTPropGet_ConnReceiveMax/Makefile
++++ b/test/cbmc/proofs/MQTTPropGet_ConnReceiveMax/Makefile
+@@ -23,12 +23,12 @@ HARNESS_ENTRY=harness
+ HARNESS_FILE=MQTTPropGet_ConnReceiveMax_harness
+ PROOF_UID=MQTTPropGet_ConnReceiveMax
+ 
+-DEFINES += 
++DEFINES +=
+ INCLUDES +=
+ 
+-REMOVE_FUNCTION_BODY += 
++REMOVE_FUNCTION_BODY +=
+ 
+-UNWINDSET += 
++UNWINDSET +=
+ 
+ PROOF_SOURCES += $(PROOFDIR)/$(HARNESS_FILE).c
+ PROOF_SOURCES += $(SRCDIR)/test/cbmc/sources/mqtt_cbmc_state.c
+diff --git a/test/cbmc/proofs/MQTTPropGet_ConnResponseInfo/Makefile b/test/cbmc/proofs/MQTTPropGet_ConnResponseInfo/Makefile
+index 5b83a0c..6fcee21 100644
+--- a/test/cbmc/proofs/MQTTPropGet_ConnResponseInfo/Makefile
++++ b/test/cbmc/proofs/MQTTPropGet_ConnResponseInfo/Makefile
+@@ -23,12 +23,12 @@ HARNESS_ENTRY=harness
+ HARNESS_FILE=MQTTPropGet_ConnResponseInfo_harness
+ PROOF_UID=MQTTPropGet_ConnResponseInfo
+ 
+-DEFINES += 
++DEFINES +=
+ INCLUDES +=
+ 
+-REMOVE_FUNCTION_BODY += 
++REMOVE_FUNCTION_BODY +=
+ 
+-UNWINDSET += 
++UNWINDSET +=
+ 
+ PROOF_SOURCES += $(PROOFDIR)/$(HARNESS_FILE).c
+ PROOF_SOURCES += $(SRCDIR)/test/cbmc/sources/mqtt_cbmc_state.c
+diff --git a/test/cbmc/proofs/MQTTPropGet_ConnRetainAvailable/MQTTPropGet_ConnRetainAvailable_harness.c b/test/cbmc/proofs/MQTTPropGet_ConnRetainAvailable/MQTTPropGet_ConnRetainAvailable_harness.c
+index 3dc1525..bc3f5b6 100644
+--- a/test/cbmc/proofs/MQTTPropGet_ConnRetainAvailable/MQTTPropGet_ConnRetainAvailable_harness.c
++++ b/test/cbmc/proofs/MQTTPropGet_ConnRetainAvailable/MQTTPropGet_ConnRetainAvailable_harness.c
+@@ -48,4 +48,3 @@ void harness()
+ 
+     MQTTPropGet_ConnRetainAvailable( propBuffer, retainAvailable );
+ }
+-
+diff --git a/test/cbmc/proofs/MQTTPropGet_ConnRetainAvailable/Makefile b/test/cbmc/proofs/MQTTPropGet_ConnRetainAvailable/Makefile
+index 285edb0..cc6dc58 100644
+--- a/test/cbmc/proofs/MQTTPropGet_ConnRetainAvailable/Makefile
++++ b/test/cbmc/proofs/MQTTPropGet_ConnRetainAvailable/Makefile
+@@ -23,12 +23,12 @@ HARNESS_ENTRY=harness
+ HARNESS_FILE=MQTTPropGet_ConnRetainAvailable_harness
+ PROOF_UID=MQTTPropGet_ConnRetainAvailable
+ 
+-DEFINES += 
++DEFINES +=
+ INCLUDES +=
+ 
+-REMOVE_FUNCTION_BODY += 
++REMOVE_FUNCTION_BODY +=
+ 
+-UNWINDSET += 
++UNWINDSET +=
+ 
+ PROOF_SOURCES += $(PROOFDIR)/$(HARNESS_FILE).c
+ PROOF_SOURCES += $(SRCDIR)/test/cbmc/sources/mqtt_cbmc_state.c
+diff --git a/test/cbmc/proofs/MQTTPropGet_ConnServerKeepAlive/Makefile b/test/cbmc/proofs/MQTTPropGet_ConnServerKeepAlive/Makefile
+index 45870c7..337eb02 100644
+--- a/test/cbmc/proofs/MQTTPropGet_ConnServerKeepAlive/Makefile
++++ b/test/cbmc/proofs/MQTTPropGet_ConnServerKeepAlive/Makefile
+@@ -23,12 +23,12 @@ HARNESS_ENTRY=harness
+ HARNESS_FILE=MQTTPropGet_ConnServerKeepAlive_harness
+ PROOF_UID=MQTTPropGet_ConnServerKeepAlive
+ 
+-DEFINES += 
++DEFINES +=
+ INCLUDES +=
+ 
+-REMOVE_FUNCTION_BODY += 
++REMOVE_FUNCTION_BODY +=
+ 
+-UNWINDSET += 
++UNWINDSET +=
+ 
+ PROOF_SOURCES += $(PROOFDIR)/$(HARNESS_FILE).c
+ PROOF_SOURCES += $(SRCDIR)/test/cbmc/sources/mqtt_cbmc_state.c
+diff --git a/test/cbmc/proofs/MQTTPropGet_ConnSharedSubAvailable/Makefile b/test/cbmc/proofs/MQTTPropGet_ConnSharedSubAvailable/Makefile
+index 32ee473..6bf1fbe 100644
+--- a/test/cbmc/proofs/MQTTPropGet_ConnSharedSubAvailable/Makefile
++++ b/test/cbmc/proofs/MQTTPropGet_ConnSharedSubAvailable/Makefile
+@@ -23,12 +23,12 @@ HARNESS_ENTRY=harness
+ HARNESS_FILE=MQTTPropGet_ConnSharedSubAvailable_harness
+ PROOF_UID=MQTTPropGet_ConnSharedSubAvailable
+ 
+-DEFINES += 
++DEFINES +=
+ INCLUDES +=
+ 
+-REMOVE_FUNCTION_BODY += 
++REMOVE_FUNCTION_BODY +=
+ 
+-UNWINDSET += 
++UNWINDSET +=
+ 
+ PROOF_SOURCES += $(PROOFDIR)/$(HARNESS_FILE).c
+ PROOF_SOURCES += $(SRCDIR)/test/cbmc/sources/mqtt_cbmc_state.c
+diff --git a/test/cbmc/proofs/MQTTPropGet_ConnSubId/MQTTPropGet_ConnSubId_harness.c b/test/cbmc/proofs/MQTTPropGet_ConnSubId/MQTTPropGet_ConnSubId_harness.c
+index 37ab86a..8ec5c7b 100644
+--- a/test/cbmc/proofs/MQTTPropGet_ConnSubId/MQTTPropGet_ConnSubId_harness.c
++++ b/test/cbmc/proofs/MQTTPropGet_ConnSubId/MQTTPropGet_ConnSubId_harness.c
+@@ -48,4 +48,3 @@ void harness()
+ 
+     MQTTPropGet_ConnSubId( propBuffer, isSubIdAvailable );
+ }
+-
+diff --git a/test/cbmc/proofs/MQTTPropGet_ConnSubId/Makefile b/test/cbmc/proofs/MQTTPropGet_ConnSubId/Makefile
+index 14d5a7f..2581444 100644
+--- a/test/cbmc/proofs/MQTTPropGet_ConnSubId/Makefile
++++ b/test/cbmc/proofs/MQTTPropGet_ConnSubId/Makefile
+@@ -23,12 +23,12 @@ HARNESS_ENTRY=harness
+ HARNESS_FILE=MQTTPropGet_ConnSubId_harness
+ PROOF_UID=MQTTPropGet_ConnSubId
+ 
+-DEFINES += 
++DEFINES +=
+ INCLUDES +=
+ 
+-REMOVE_FUNCTION_BODY += 
++REMOVE_FUNCTION_BODY +=
+ 
+-UNWINDSET += 
++UNWINDSET +=
+ 
+ PROOF_SOURCES += $(PROOFDIR)/$(HARNESS_FILE).c
+ PROOF_SOURCES += $(SRCDIR)/test/cbmc/sources/mqtt_cbmc_state.c
+diff --git a/test/cbmc/proofs/MQTTPropGet_ConnTopicAliasMax/Makefile b/test/cbmc/proofs/MQTTPropGet_ConnTopicAliasMax/Makefile
+index e8b4d98..8aa98af 100644
+--- a/test/cbmc/proofs/MQTTPropGet_ConnTopicAliasMax/Makefile
++++ b/test/cbmc/proofs/MQTTPropGet_ConnTopicAliasMax/Makefile
+@@ -23,12 +23,12 @@ HARNESS_ENTRY=harness
+ HARNESS_FILE=MQTTPropGet_ConnTopicAliasMax_harness
+ PROOF_UID=MQTTPropGet_ConnTopicAliasMax
+ 
+-DEFINES += 
++DEFINES +=
+ INCLUDES +=
+ 
+-REMOVE_FUNCTION_BODY += 
++REMOVE_FUNCTION_BODY +=
+ 
+-UNWINDSET += 
++UNWINDSET +=
+ 
+ PROOF_SOURCES += $(PROOFDIR)/$(HARNESS_FILE).c
+ PROOF_SOURCES += $(SRCDIR)/test/cbmc/sources/mqtt_cbmc_state.c
+diff --git a/test/cbmc/proofs/MQTTPropGet_ConnWildcard/Makefile b/test/cbmc/proofs/MQTTPropGet_ConnWildcard/Makefile
+index 8db169a..09c3f15 100644
+--- a/test/cbmc/proofs/MQTTPropGet_ConnWildcard/Makefile
++++ b/test/cbmc/proofs/MQTTPropGet_ConnWildcard/Makefile
+@@ -23,12 +23,12 @@ HARNESS_ENTRY=harness
+ HARNESS_FILE=MQTTPropGet_ConnWildcard_harness
+ PROOF_UID=MQTTPropGet_ConnWildcard
+ 
+-DEFINES += 
++DEFINES +=
+ INCLUDES +=
+ 
+-REMOVE_FUNCTION_BODY += 
++REMOVE_FUNCTION_BODY +=
+ 
+-UNWINDSET += 
++UNWINDSET +=
+ 
+ PROOF_SOURCES += $(PROOFDIR)/$(HARNESS_FILE).c
+ PROOF_SOURCES += $(SRCDIR)/test/cbmc/sources/mqtt_cbmc_state.c
+diff --git a/test/cbmc/proofs/MQTTPropGet_PubContentType/Makefile b/test/cbmc/proofs/MQTTPropGet_PubContentType/Makefile
+index 9199d7f..734d5f9 100644
+--- a/test/cbmc/proofs/MQTTPropGet_PubContentType/Makefile
++++ b/test/cbmc/proofs/MQTTPropGet_PubContentType/Makefile
+@@ -23,12 +23,12 @@ HARNESS_ENTRY=harness
+ HARNESS_FILE=MQTTPropGet_PubContentType_harness
+ PROOF_UID=MQTTPropGet_PubContentType
+ 
+-DEFINES += 
++DEFINES +=
+ INCLUDES +=
+ 
+-REMOVE_FUNCTION_BODY += 
++REMOVE_FUNCTION_BODY +=
+ 
+-UNWINDSET += 
++UNWINDSET +=
+ 
+ PROOF_SOURCES += $(PROOFDIR)/$(HARNESS_FILE).c
+ PROOF_SOURCES += $(SRCDIR)/test/cbmc/sources/mqtt_cbmc_state.c
+diff --git a/test/cbmc/proofs/MQTTPropGet_PubCorrelationData/Makefile b/test/cbmc/proofs/MQTTPropGet_PubCorrelationData/Makefile
+index 63ca392..1e4b2a8 100644
+--- a/test/cbmc/proofs/MQTTPropGet_PubCorrelationData/Makefile
++++ b/test/cbmc/proofs/MQTTPropGet_PubCorrelationData/Makefile
+@@ -23,12 +23,12 @@ HARNESS_ENTRY=harness
+ HARNESS_FILE=MQTTPropGet_PubCorrelationData_harness
+ PROOF_UID=MQTTPropGet_PubCorrelationData
+ 
+-DEFINES += 
++DEFINES +=
+ INCLUDES +=
+ 
+-REMOVE_FUNCTION_BODY += 
++REMOVE_FUNCTION_BODY +=
+ 
+-UNWINDSET += 
++UNWINDSET +=
+ 
+ PROOF_SOURCES += $(PROOFDIR)/$(HARNESS_FILE).c
+ PROOF_SOURCES += $(SRCDIR)/test/cbmc/sources/mqtt_cbmc_state.c
+diff --git a/test/cbmc/proofs/MQTTPropGet_PubMessageExpiryInterval/Makefile b/test/cbmc/proofs/MQTTPropGet_PubMessageExpiryInterval/Makefile
+index a17bdc6..33470d5 100644
+--- a/test/cbmc/proofs/MQTTPropGet_PubMessageExpiryInterval/Makefile
++++ b/test/cbmc/proofs/MQTTPropGet_PubMessageExpiryInterval/Makefile
+@@ -23,12 +23,12 @@ HARNESS_ENTRY=harness
+ HARNESS_FILE=MQTTPropGet_PubMessageExpiryInterval_harness
+ PROOF_UID=MQTTPropGet_PubMessageExpiryInterval
+ 
+-DEFINES += 
++DEFINES +=
+ INCLUDES +=
+ 
+-REMOVE_FUNCTION_BODY += 
++REMOVE_FUNCTION_BODY +=
+ 
+-UNWINDSET += 
++UNWINDSET +=
+ 
+ PROOF_SOURCES += $(PROOFDIR)/$(HARNESS_FILE).c
+ PROOF_SOURCES += $(SRCDIR)/test/cbmc/sources/mqtt_cbmc_state.c
+diff --git a/test/cbmc/proofs/MQTTPropGet_PubPayloadFormatIndicator/Makefile b/test/cbmc/proofs/MQTTPropGet_PubPayloadFormatIndicator/Makefile
+index 384c9f0..41c4313 100644
+--- a/test/cbmc/proofs/MQTTPropGet_PubPayloadFormatIndicator/Makefile
++++ b/test/cbmc/proofs/MQTTPropGet_PubPayloadFormatIndicator/Makefile
+@@ -23,12 +23,12 @@ HARNESS_ENTRY=harness
+ HARNESS_FILE=MQTTPropGet_PubPayloadFormatIndicator_harness
+ PROOF_UID=MQTTPropGet_PubPayloadFormatIndicator
+ 
+-DEFINES += 
++DEFINES +=
+ INCLUDES +=
+ 
+-REMOVE_FUNCTION_BODY += 
++REMOVE_FUNCTION_BODY +=
+ 
+-UNWINDSET += 
++UNWINDSET +=
+ 
+ PROOF_SOURCES += $(PROOFDIR)/$(HARNESS_FILE).c
+ PROOF_SOURCES += $(SRCDIR)/test/cbmc/sources/mqtt_cbmc_state.c
+diff --git a/test/cbmc/proofs/MQTTPropGet_PubResponseTopic/Makefile b/test/cbmc/proofs/MQTTPropGet_PubResponseTopic/Makefile
+index 2164c74..615c384 100644
+--- a/test/cbmc/proofs/MQTTPropGet_PubResponseTopic/Makefile
++++ b/test/cbmc/proofs/MQTTPropGet_PubResponseTopic/Makefile
+@@ -23,12 +23,12 @@ HARNESS_ENTRY=harness
+ HARNESS_FILE=MQTTPropGet_PubResponseTopic_harness
+ PROOF_UID=MQTTPropGet_PubResponseTopic
+ 
+-DEFINES += 
++DEFINES +=
+ INCLUDES +=
+ 
+-REMOVE_FUNCTION_BODY += 
++REMOVE_FUNCTION_BODY +=
+ 
+-UNWINDSET += 
++UNWINDSET +=
+ 
+ PROOF_SOURCES += $(PROOFDIR)/$(HARNESS_FILE).c
+ PROOF_SOURCES += $(SRCDIR)/test/cbmc/sources/mqtt_cbmc_state.c
+diff --git a/test/cbmc/proofs/MQTTPropGet_PubSubscriptionId/Makefile b/test/cbmc/proofs/MQTTPropGet_PubSubscriptionId/Makefile
+index 9a51927..8e005dd 100644
+--- a/test/cbmc/proofs/MQTTPropGet_PubSubscriptionId/Makefile
++++ b/test/cbmc/proofs/MQTTPropGet_PubSubscriptionId/Makefile
+@@ -23,10 +23,10 @@ HARNESS_ENTRY=harness
+ HARNESS_FILE=MQTTPropGet_PubSubscriptionId_harness
+ PROOF_UID=MQTTPropGet_PubSubscriptionId
+ 
+-DEFINES += 
++DEFINES +=
+ INCLUDES +=
+ 
+-REMOVE_FUNCTION_BODY += 
++REMOVE_FUNCTION_BODY +=
+ 
+ UNWINDSET += __CPROVER_file_local_core_mqtt_serializer_c_decodeVariableLength.0:5
+ 
+diff --git a/test/cbmc/proofs/MQTTPropGet_PubTopicAlias/Makefile b/test/cbmc/proofs/MQTTPropGet_PubTopicAlias/Makefile
+index 75dcafd..1b61a78 100644
+--- a/test/cbmc/proofs/MQTTPropGet_PubTopicAlias/Makefile
++++ b/test/cbmc/proofs/MQTTPropGet_PubTopicAlias/Makefile
+@@ -23,12 +23,12 @@ HARNESS_ENTRY=harness
+ HARNESS_FILE=MQTTPropGet_PubTopicAlias_harness
+ PROOF_UID=MQTTPropGet_PubTopicAlias
+ 
+-DEFINES += 
++DEFINES +=
+ INCLUDES +=
+ 
+-REMOVE_FUNCTION_BODY += 
++REMOVE_FUNCTION_BODY +=
+ 
+-UNWINDSET += 
++UNWINDSET +=
+ 
+ PROOF_SOURCES += $(PROOFDIR)/$(HARNESS_FILE).c
+ PROOF_SOURCES += $(SRCDIR)/test/cbmc/sources/mqtt_cbmc_state.c
+diff --git a/test/cbmc/proofs/MQTTPropGet_ReasonString/Makefile b/test/cbmc/proofs/MQTTPropGet_ReasonString/Makefile
+index 327f21a..178c0dd 100644
+--- a/test/cbmc/proofs/MQTTPropGet_ReasonString/Makefile
++++ b/test/cbmc/proofs/MQTTPropGet_ReasonString/Makefile
+@@ -23,12 +23,12 @@ HARNESS_ENTRY=harness
+ HARNESS_FILE=MQTTPropGet_ReasonString_harness
+ PROOF_UID=MQTTPropGet_ReasonString
+ 
+-DEFINES += 
++DEFINES +=
+ INCLUDES +=
+ 
+-REMOVE_FUNCTION_BODY += 
++REMOVE_FUNCTION_BODY +=
+ 
+-UNWINDSET += 
++UNWINDSET +=
+ 
+ PROOF_SOURCES += $(PROOFDIR)/$(HARNESS_FILE).c
+ PROOF_SOURCES += $(SRCDIR)/test/cbmc/sources/mqtt_cbmc_state.c
+diff --git a/test/cbmc/proofs/MQTTPropGet_ServerRef/Makefile b/test/cbmc/proofs/MQTTPropGet_ServerRef/Makefile
+index 194d52a..8d26894 100644
+--- a/test/cbmc/proofs/MQTTPropGet_ServerRef/Makefile
++++ b/test/cbmc/proofs/MQTTPropGet_ServerRef/Makefile
+@@ -23,12 +23,12 @@ HARNESS_ENTRY=harness
+ HARNESS_FILE=MQTTPropGet_ServerRef_harness
+ PROOF_UID=MQTTPropGet_ServerRef
+ 
+-DEFINES += 
++DEFINES +=
+ INCLUDES +=
+ 
+-REMOVE_FUNCTION_BODY += 
++REMOVE_FUNCTION_BODY +=
+ 
+-UNWINDSET += 
++UNWINDSET +=
+ 
+ PROOF_SOURCES += $(PROOFDIR)/$(HARNESS_FILE).c
+ PROOF_SOURCES += $(SRCDIR)/test/cbmc/sources/mqtt_cbmc_state.c
+diff --git a/test/cbmc/proofs/MQTTPropGet_SessionExpiry/Makefile b/test/cbmc/proofs/MQTTPropGet_SessionExpiry/Makefile
+index 77c884f..e3dc3b1 100644
+--- a/test/cbmc/proofs/MQTTPropGet_SessionExpiry/Makefile
++++ b/test/cbmc/proofs/MQTTPropGet_SessionExpiry/Makefile
+@@ -23,12 +23,12 @@ HARNESS_ENTRY=harness
+ HARNESS_FILE=MQTTPropGet_SessionExpiry_harness
+ PROOF_UID=MQTTPropGet_SessionExpiry
+ 
+-DEFINES += 
++DEFINES +=
+ INCLUDES +=
+ 
+-REMOVE_FUNCTION_BODY += 
++REMOVE_FUNCTION_BODY +=
+ 
+-UNWINDSET += 
++UNWINDSET +=
+ 
+ PROOF_SOURCES += $(PROOFDIR)/$(HARNESS_FILE).c
+ PROOF_SOURCES += $(SRCDIR)/test/cbmc/sources/mqtt_cbmc_state.c
+diff --git a/test/cbmc/proofs/MQTTPropGet_UserProp/Makefile b/test/cbmc/proofs/MQTTPropGet_UserProp/Makefile
+index c4edda6..908f1f8 100644
+--- a/test/cbmc/proofs/MQTTPropGet_UserProp/Makefile
++++ b/test/cbmc/proofs/MQTTPropGet_UserProp/Makefile
+@@ -23,12 +23,12 @@ HARNESS_ENTRY=harness
+ HARNESS_FILE=MQTTPropGet_UserProp_harness
+ PROOF_UID=MQTTPropGet_UserProp
+ 
+-DEFINES += 
++DEFINES +=
+ INCLUDES +=
+ 
+-REMOVE_FUNCTION_BODY += 
++REMOVE_FUNCTION_BODY +=
+ 
+-UNWINDSET += 
++UNWINDSET +=
+ 
+ PROOF_SOURCES += $(PROOFDIR)/$(HARNESS_FILE).c
+ PROOF_SOURCES += $(SRCDIR)/test/cbmc/sources/mqtt_cbmc_state.c
+diff --git a/test/cbmc/proofs/MQTT_IncomingGetNextProp/Makefile b/test/cbmc/proofs/MQTT_IncomingGetNextProp/Makefile
+index 0574620..48c9cb7 100644
+--- a/test/cbmc/proofs/MQTT_IncomingGetNextProp/Makefile
++++ b/test/cbmc/proofs/MQTT_IncomingGetNextProp/Makefile
+@@ -23,12 +23,12 @@ HARNESS_ENTRY=harness
+ HARNESS_FILE=MQTT_IncomingGetNextProp_harness
+ PROOF_UID=MQTT_IncomingGetNextProp
+ 
+-DEFINES += 
++DEFINES +=
+ INCLUDES +=
+ 
+-REMOVE_FUNCTION_BODY += 
++REMOVE_FUNCTION_BODY +=
+ 
+-UNWINDSET += 
++UNWINDSET +=
+ 
+ PROOF_SOURCES += $(PROOFDIR)/$(HARNESS_FILE).c
+ PROOF_SOURCES += $(SRCDIR)/test/cbmc/sources/mqtt_cbmc_state.c
+diff --git a/test/cbmc/proofs/MQTT_SerializeConnect/MQTT_SerializeConnect_harness.c b/test/cbmc/proofs/MQTT_SerializeConnect/MQTT_SerializeConnect_harness.c
+index 8b1858f..ff94e42 100644
+--- a/test/cbmc/proofs/MQTT_SerializeConnect/MQTT_SerializeConnect_harness.c
++++ b/test/cbmc/proofs/MQTT_SerializeConnect/MQTT_SerializeConnect_harness.c
+@@ -31,7 +31,7 @@
+ 
+ /* Here we constraint the length of the properties to 25 bytes.
+  */
+-#define MAX_PROPERTY_LENGTH              ( 25U )
++#define MAX_PROPERTY_LENGTH    ( 25U )
+ 
+ void harness()
+ {
+@@ -101,64 +101,64 @@ void harness()
+         MQTT_SerializeConnect( pConnectInfo, pWillInfo, pConnectProperties, pWillProperties, remainingLength, pFixedBuffer );
+     }
+ 
+-    // MQTTConnectInfo_t connectInfo = {0};
+-    // MQTTPublishInfo_t willInfo = {0};
+-    // size_t remainingLength;
+-    // size_t packetSize;
+-    // MQTTStatus_t status = MQTTSuccess;
+-    // MQTTFixedBuffer_t fixedBuffer = {0};
+-    // uint8_t buffer[100];
+-    // MQTTPropBuilder_t pConnectProperties={0};
+-    // MQTTPropBuilder_t pWillProperties={0};
+-    // uint8_t willpayload[3]={'a', 'b', 'c'};
+-    // uint8_t connectProps[3]={'a', 'b', 'c'};
+-    // uint8_t willProps[3]={'a', 'b', 'c'};
+-
+-    // connectInfo.cleanSession = true;
+-    // connectInfo.pClientIdentifier = "sample_client_id";
+-    // connectInfo.clientIdentifierLength = 7U;
+-    // connectInfo.keepAliveSeconds = 60;
+-    // connectInfo.pUserName = "username";
+-    // connectInfo.userNameLength = 8U;
+-    // connectInfo.pPassword = "password";
+-    // connectInfo.passwordLength = 8U;
+-
+-    // willInfo.pTopicName="my_topic";
+-    // willInfo.topicNameLength=7U;
+-    // willInfo.pPayload=(const void *) willpayload;
+-    // willInfo.payloadLength=3;
+-
+-    // fixedBuffer.pBuffer = buffer;
+-    // fixedBuffer.size = 100U;
+-
+-    // pConnectProperties.pBuffer=connectProps;
+-    // pConnectProperties.bufferLength=3;
+-    // pConnectProperties.currentIndex=3;
+-
+-    // pWillProperties.pBuffer=willProps;
+-    // pWillProperties.bufferLength=3;
+-    // pWillProperties.currentIndex=3;
+-
+-    // /* The output parameter pPacketSize of the function MQTT_GetConnectPacketSize()
+-    // * must not be NULL. packetSize returned is not used in this proof, but
+-    // * is used normally by the application to verify the size of its
+-    // * MQTTFixedBuffer_t. MQTT_SerializeConnect() will use the remainingLength
+-    // * to recalculate the packetSize. */
+-    // status = MQTT_GetConnectPacketSize( &connectInfo,
+-    //                                     &willInfo,
+-    //                                     &pConnectProperties,
+-    //                                     &pWillProperties,
+-    //                                     &remainingLength,
+-    //                                     &packetSize );
+-    
+-    // remainingLength+=0;
+-    // packetSize+=0;
+-
+-    // if( status == MQTTSuccess )
+-    // {
+-    //     /* For coverage, it is expected that a NULL pConnectInfo will reach this
+-    //      * function. */
+-    //     MQTT_SerializeConnect( &connectInfo, &willInfo, &pConnectProperties, &pWillProperties, remainingLength, &fixedBuffer );
+-    // }
+-    // __CPROVER_assert(0, "debug");
++    /* MQTTConnectInfo_t connectInfo = {0}; */
++    /* MQTTPublishInfo_t willInfo = {0}; */
++    /* size_t remainingLength; */
++    /* size_t packetSize; */
++    /* MQTTStatus_t status = MQTTSuccess; */
++    /* MQTTFixedBuffer_t fixedBuffer = {0}; */
++    /* uint8_t buffer[100]; */
++    /* MQTTPropBuilder_t pConnectProperties={0}; */
++    /* MQTTPropBuilder_t pWillProperties={0}; */
++    /* uint8_t willpayload[3]={'a', 'b', 'c'}; */
++    /* uint8_t connectProps[3]={'a', 'b', 'c'}; */
++    /* uint8_t willProps[3]={'a', 'b', 'c'}; */
++
++    /* connectInfo.cleanSession = true; */
++    /* connectInfo.pClientIdentifier = "sample_client_id"; */
++    /* connectInfo.clientIdentifierLength = 7U; */
++    /* connectInfo.keepAliveSeconds = 60; */
++    /* connectInfo.pUserName = "username"; */
++    /* connectInfo.userNameLength = 8U; */
++    /* connectInfo.pPassword = "password"; */
++    /* connectInfo.passwordLength = 8U; */
++
++    /* willInfo.pTopicName="my_topic"; */
++    /* willInfo.topicNameLength=7U; */
++    /* willInfo.pPayload=(const void *) willpayload; */
++    /* willInfo.payloadLength=3; */
++
++    /* fixedBuffer.pBuffer = buffer; */
++    /* fixedBuffer.size = 100U; */
++
++    /* pConnectProperties.pBuffer=connectProps; */
++    /* pConnectProperties.bufferLength=3; */
++    /* pConnectProperties.currentIndex=3; */
++
++    /* pWillProperties.pBuffer=willProps; */
++    /* pWillProperties.bufferLength=3; */
++    /* pWillProperties.currentIndex=3; */
++
++    /* / * The output parameter pPacketSize of the function MQTT_GetConnectPacketSize() */
++    /* * must not be NULL. packetSize returned is not used in this proof, but */
++    /* * is used normally by the application to verify the size of its */
++    /* * MQTTFixedBuffer_t. MQTT_SerializeConnect() will use the remainingLength */
++    /* * to recalculate the packetSize. * / */
++    /* status = MQTT_GetConnectPacketSize( &connectInfo, */
++    /*                                     &willInfo, */
++    /*                                     &pConnectProperties, */
++    /*                                     &pWillProperties, */
++    /*                                     &remainingLength, */
++    /*                                     &packetSize ); */
++
++    /* remainingLength+=0; */
++    /* packetSize+=0; */
++
++    /* if( status == MQTTSuccess ) */
++    /* { */
++    /*     / * For coverage, it is expected that a NULL pConnectInfo will reach this */
++    /*      * function. * / */
++    /*     MQTT_SerializeConnect( &connectInfo, &willInfo, &pConnectProperties, &pWillProperties, remainingLength, &fixedBuffer ); */
++    /* } */
++    /* __CPROVER_assert(0, "debug"); */
+ }
+diff --git a/test/cbmc/proofs/MQTT_Subscribe/MQTT_Subscribe_harness.c b/test/cbmc/proofs/MQTT_Subscribe/MQTT_Subscribe_harness.c
+index b41bd91..a553fea 100644
+--- a/test/cbmc/proofs/MQTT_Subscribe/MQTT_Subscribe_harness.c
++++ b/test/cbmc/proofs/MQTT_Subscribe/MQTT_Subscribe_harness.c
+@@ -59,7 +59,7 @@ MQTTStatus_t MQTT_ValidateSubscribeProperties( uint8_t isSubscriptionIdAvailable
+                                                const MQTTPropBuilder_t * propBuilder )
+ {
+     MQTTStatus_t status;
+-    
++
+     return status;
+ }
+ 
+diff --git a/test/cbmc/stubs/memchr.c b/test/cbmc/stubs/memchr.c
+index 53672d0..f1f045b 100644
+--- a/test/cbmc/stubs/memchr.c
++++ b/test/cbmc/stubs/memchr.c
+@@ -24,16 +24,19 @@
+ 
+ #include <stdlib.h>
+ 
+-void* memchr( const void* ptr, 
+-              int ch, 
+-              size_t count )
++void * memchr( const void * ptr,
++               int ch,
++               size_t count )
+ {
+-    const unsigned char *buf = ptr;
++    const unsigned char * buf = ptr;
+     size_t index;
+-    __CPROVER_assume(index <= count);
+-    if (index == count)
++
++    __CPROVER_assume( index <= count );
++
++    if( index == count )
+     {
+         return NULL;
+     }
+-    return (void *)(buf + index);
++
++    return ( void * ) ( buf + index );
+ }
+diff --git a/test/unit-test/core_mqtt_serializer_utest.c b/test/unit-test/core_mqtt_serializer_utest.c
+index 687d137..4ccfce9 100644
+--- a/test/unit-test/core_mqtt_serializer_utest.c
++++ b/test/unit-test/core_mqtt_serializer_utest.c
+@@ -4717,7 +4717,7 @@ void test_getProps( void )
+     status = MQTT_IncomingGetNextProp( NULL, &propertyId );
+     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+ 
+-    status = MQTT_IncomingGetNextProp(&propBuffer, NULL) ; 
++    status = MQTT_IncomingGetNextProp( &propBuffer, NULL );
+     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+ 
+     status = MQTT_IncomingGetNextProp( &propBuffer1, &propertyId );
+diff --git a/test/unit-test/core_mqtt_utest.c b/test/unit-test/core_mqtt_utest.c
+index 9b40533..b970619 100644
+--- a/test/unit-test/core_mqtt_utest.c
++++ b/test/unit-test/core_mqtt_utest.c
+@@ -6896,7 +6896,7 @@ void test_MQTTV5_Subscribe_invalid_params( void )
+     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, mqttStatus );
+ 
+     /* Test invalid shared subscription */
+-    subscribeInfo.qos = 0 ; 
++    subscribeInfo.qos = 0;
+     subscribeInfo.pTopicFilter = "$share/invalid#";
+     subscribeInfo.noLocalOption = 0;
+     subscribeInfo.topicFilterLength = strlen( subscribeInfo.pTopicFilter );
