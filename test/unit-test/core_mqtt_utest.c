@@ -556,7 +556,7 @@ static uint8_t * MQTTV5_SerializeDisconnectFixed_cb( uint8_t * pIndex,
  *
  * @return Returns true. 
  */
-bool retieveFunctionNotConnected( MQTTContext_t * pContext,
+bool retrieveFunctionNotConnected( MQTTContext_t * pContext,
                                   uint16_t packetId,
                                   uint8_t ** pSerializedMqttVec,
                                   size_t * pSerializedMqttVecLen )
@@ -9031,22 +9031,22 @@ void test_ResendUnackedPublishesWithNotConnected( void )
     MQTTContext_t mqttContext = { 0 };
     MQTTConnectInfo_t connectInfo = { 0 };
     uint32_t timeout = 2;
-    bool sessionPresent, sessionPresentResult;
-    MQTTStatus_t status;
+    bool sessionPresent = true ; 
+    bool sessionPresentResult;
+    MQTTStatus_t status = MQTTSuccess;
     TransportInterface_t transport = { 0 };
     MQTTFixedBuffer_t networkBuffer = { 0 };
     MQTTPacketInfo_t incomingPacket = { 0 };
     uint16_t packetIdentifier = 1;
-    MQTTPublishState_t pubRelState = MQTTPubRelSend;
 
     setupTransportInterface( &transport );
     setupNetworkBuffer( &networkBuffer );
 
     memset( &mqttContext, 0x0, sizeof( mqttContext ) );
     memset( &connectInfo, 0x00, sizeof( connectInfo ) );
-    MQTT_Init( &mqttContext, &transport, getTime, eventCallback, &networkBuffer );
+    status = MQTT_Init( &mqttContext, &transport, getTime, eventCallback, &networkBuffer );
+    TEST_ASSERT_EQUAL( MQTTSuccess, status );
 
-    
     /**
      * Test : One packet found in ack pending state, Transport Send failed and 
      * connectStatus is set to MQTTNotConnected during the retrieveFunction using a stub.
@@ -9067,9 +9067,9 @@ void test_ResendUnackedPublishesWithNotConnected( void )
     MQTT_DeserializeAck_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_DeserializeAck_ReturnThruPtr_pSessionPresent( &sessionPresent );
     MQTT_PubrelToResend_ExpectAnyArgsAndReturn( MQTT_PACKET_TYPE_INVALID );
-    MQTT_PublishToResend_ExpectAnyArgsAndReturn( 1 );
+    MQTT_PublishToResend_ExpectAnyArgsAndReturn( packetIdentifier );
 
-    mqttContext.retrieveFunction = retieveFunctionNotConnected  ; 
+    mqttContext.retrieveFunction = retrieveFunctionNotConnected  ; 
 
     status = MQTT_Connect( &mqttContext, &connectInfo, NULL, timeout, &sessionPresentResult, NULL, NULL );
     TEST_ASSERT_EQUAL_INT( MQTTSendFailed, status );
