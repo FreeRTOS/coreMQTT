@@ -4804,9 +4804,9 @@ static MQTTStatus_t validateTopicFilter( const MQTTContext_t * pContext,
 {
     MQTTStatus_t status = MQTTSuccess;
 
-    if( pSubscriptionList[ iterator ].pTopicFilter == NULL )
+    if( ( pSubscriptionList[ iterator ].pTopicFilter == NULL ) || ( pSubscriptionList[ iterator ].topicFilterLength == 0U ) )
     {
-        LogError( ( "Argument cannot be null : pTopicFilter" ) );
+        LogError( ( "Argument cannot be null : pTopicFilter or topicFilterLength cannot be zero. " ) );
         status = MQTTBadParameter;
     }
 

@@ -6896,6 +6896,7 @@ void test_MQTTV5_Subscribe_invalid_params( void )
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, mqttStatus );
 
     /* Test invalid shared subscription */
+    subscribeInfo.qos = 0 ; 
     subscribeInfo.pTopicFilter = "$share/invalid#";
     subscribeInfo.noLocalOption = 0;
     subscribeInfo.topicFilterLength = strlen( subscribeInfo.pTopicFilter );
@@ -7355,7 +7356,7 @@ void test_MQTTV5_Subscribe_happy_path3( void )
 
     subscribeInfo.qos = MQTTQoS1;
     subscribeInfo.pTopicFilter = "$share/abc/def";
-    subscribeInfo.topicFilterLength = 11;
+    subscribeInfo.topicFilterLength = 14;
     subscribeInfo.noLocalOption = 0;
     subscribeInfo.retainAsPublishedOption = 1;
     subscribeInfo.retainHandlingOption = 0;
@@ -7639,7 +7640,7 @@ void test_MQTTV5_shared_subscriptions( void )
     MQTT_SerializeSubscribeHeader_Stub( MQTTV5_SerializeSubscribedHeader_cb );
 
     subscribeInfo.pTopicFilter = "$share/abc/bcd";
-    subscribeInfo.topicFilterLength = 10;
+    subscribeInfo.topicFilterLength = 14;
     subscribeInfo.noLocalOption = 0;
     subscribeInfo.retainAsPublishedOption = 1;
     subscribeInfo.retainHandlingOption = 0;

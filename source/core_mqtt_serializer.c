@@ -4875,10 +4875,6 @@ MQTTStatus_t MQTT_DeserializeDisconnect( const MQTTPacketInfo_t * pPacket,
     MQTTStatus_t status = MQTTSuccess;
     uint8_t * pIndex = NULL;
     size_t propertyLength = 0U;
-    const char * pReasonString;
-    uint16_t reasonStringLength;
-    const char * pServerRef;
-    uint16_t pServerRefLength;
 
     /*Validate the arguments*/
     if( ( pPacket == NULL ) || ( pPacket->pRemainingData == NULL ) )
@@ -4961,34 +4957,35 @@ static MQTTStatus_t deserializeDisconnectProperties( uint8_t * pIndex,
     uint16_t pServerRefLength;
 
     while( ( propertyLength > 0U ) && ( status == MQTTSuccess ) )
+    {
+        /*Decode the property id.*/
+        uint8_t propertyId = *pIndex;
+        bool reasonString = false;
+        bool serverRef = false;
+        pIndex = &pIndex[ 1 ];
+        propertyLength -= sizeof( uint8_t );
+
+        /*Validate the property id and decode accordingly.*/
+        switch( propertyId )
         {
-            /*Decode the property id.*/
-            uint8_t propertyId = *pIndex;
-            bool reasonString = false;
-            bool serverRef = false;
-            pIndex = &pIndex[ 1 ];
-            propertyLength -= sizeof( uint8_t );
+            case MQTT_REASON_STRING_ID:
+                status = decodeutf_8( &pReasonString, &reasonStringLength, &propertyLength, &reasonString, &pIndex );
+                break;
 
-            /*Validate the property id and decode accordingly.*/
-            switch( propertyId )
-            {
-                case MQTT_REASON_STRING_ID:
-                    status = decodeutf_8( &pReasonString, &reasonStringLength, &propertyLength, &reasonString, &pIndex );
-                    break;
+            case MQTT_USER_PROPERTY_ID:
+                status = decodeAndDiscard( &propertyLength, &pIndex );
+                break;
 
-                case MQTT_USER_PROPERTY_ID:
-                    status = decodeAndDiscard( &propertyLength, &pIndex );
-                    break;
+            case MQTT_SERVER_REF_ID:
+                status = decodeutf_8( &pServerRef, &pServerRefLength, &propertyLength, &serverRef, &pIndex );
+                break;
 
-                case MQTT_SERVER_REF_ID:
-                    status = decodeutf_8( &pServerRef, &pServerRefLength, &propertyLength, &serverRef, &pIndex );
-                    break;
-
-                default:
-                    status = MQTTBadResponse;
-                    break;
-            }
+            default:
+                status = MQTTBadResponse;
+                break;
         }
+    }
+    return status ; 
 }
 
 

@@ -4717,6 +4717,9 @@ void test_getProps( void )
     status = MQTT_IncomingGetNextProp( NULL, &propertyId );
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
 
+    status = MQTT_IncomingGetNextProp(&propBuffer, NULL) ; 
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+
     status = MQTT_IncomingGetNextProp( &propBuffer1, &propertyId );
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
 
