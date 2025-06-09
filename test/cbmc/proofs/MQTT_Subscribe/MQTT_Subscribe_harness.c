@@ -59,7 +59,7 @@ MQTTStatus_t MQTT_ValidateSubscribeProperties( uint8_t isSubscriptionIdAvailable
                                                const MQTTPropBuilder_t * propBuilder )
 {
     MQTTStatus_t status;
-    
+
     return status;
 }
 

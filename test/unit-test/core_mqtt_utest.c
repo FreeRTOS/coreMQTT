@@ -6896,7 +6896,7 @@ void test_MQTTV5_Subscribe_invalid_params( void )
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, mqttStatus );
 
     /* Test invalid shared subscription */
-    subscribeInfo.qos = 0 ; 
+    subscribeInfo.qos = 0;
     subscribeInfo.pTopicFilter = "$share/invalid#";
     subscribeInfo.noLocalOption = 0;
     subscribeInfo.topicFilterLength = strlen( subscribeInfo.pTopicFilter );

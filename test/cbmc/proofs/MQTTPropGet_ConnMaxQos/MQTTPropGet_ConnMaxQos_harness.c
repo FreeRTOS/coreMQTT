@@ -48,4 +48,3 @@ void harness()
 
     MQTTPropGet_ConnMaxQos( propBuffer, maxQos );
 }
-

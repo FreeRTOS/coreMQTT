@@ -24,16 +24,19 @@
 
 #include <stdlib.h>
 
-void* memchr( const void* ptr, 
-              int ch, 
-              size_t count )
+void * memchr( const void * ptr,
+               int ch,
+               size_t count )
 {
-    const unsigned char *buf = ptr;
+    const unsigned char * buf = ptr;
     size_t index;
-    __CPROVER_assume(index <= count);
-    if (index == count)
+
+    __CPROVER_assume( index <= count );
+
+    if( index == count )
     {
         return NULL;
     }
-    return (void *)(buf + index);
+
+    return ( void * ) ( buf + index );
 }

@@ -23,12 +23,12 @@ HARNESS_ENTRY=harness
 HARNESS_FILE=MQTTPropGet_PubTopicAlias_harness
 PROOF_UID=MQTTPropGet_PubTopicAlias
 
-DEFINES += 
+DEFINES +=
 INCLUDES +=
 
-REMOVE_FUNCTION_BODY += 
+REMOVE_FUNCTION_BODY +=
 
-UNWINDSET += 
+UNWINDSET +=
 
 PROOF_SOURCES += $(PROOFDIR)/$(HARNESS_FILE).c
 PROOF_SOURCES += $(SRCDIR)/test/cbmc/sources/mqtt_cbmc_state.c

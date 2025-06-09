@@ -658,14 +658,14 @@ static MQTTStatus_t deserializeSubackProperties( MQTTPropBuilder_t * propBuffer,
 
 /**
  * @brief Deserialize properties in the DISCONNECT packet received from the server.
- * 
+ *
  * @param[in] pIndex Pointer to the start of the properties.
  * @param[in] propertyLength Length of the properties in the DISCONNECT packet.
- * 
+ *
  * @return #MQTTSuccess if DISCONNECT is valid;
- * #MQTTBadResponse if the DISCONNECT packet is invalid. 
+ * #MQTTBadResponse if the DISCONNECT packet is invalid.
  */
-static MQTTStatus_t deserializeDisconnectProperties( uint8_t * pIndex, 
+static MQTTStatus_t deserializeDisconnectProperties( uint8_t * pIndex,
                                                      size_t propertyLength );
 
 /**
@@ -913,15 +913,15 @@ static MQTTStatus_t calculatePublishPacketSize( const MQTTPublishInfo_t * pPubli
                     MQTT_MAX_REMAINING_LENGTH ) );
         status = MQTTBadParameter;
     }
-    else 
+    else
     {
         packetSize += publishPropertyLength;
         propertyAndPayloadLimit -= publishPropertyLength;
     }
 
-    if( ( status == MQTTSuccess ) ) 
+    if( ( status == MQTTSuccess ) )
     {
-        if ( pPublishInfo->payloadLength > propertyAndPayloadLimit ) 
+        if( pPublishInfo->payloadLength > propertyAndPayloadLimit )
         {
             LogError( ( "PUBLISH properties and payload combined length of %lu cannot exceed "
                         "%lu so as not to exceed the maximum "
@@ -4993,7 +4993,8 @@ static MQTTStatus_t deserializeDisconnectProperties( uint8_t * pIndex,
                 break;
         }
     }
-    return status ; 
+
+    return status;
 }
 
 
@@ -6917,7 +6918,7 @@ MQTTStatus_t MQTT_IncomingGetNextProp( MQTTPropBuilder_t * propBuffer,
     }
     else if( propertyId == NULL )
     {
-        LogError( ( "Arguments cannot be NULL : propertyId=%p.", ( void * )propertyId ) );
+        LogError( ( "Arguments cannot be NULL : propertyId=%p.", ( void * ) propertyId ) );
         status = MQTTBadParameter;
     }
     else

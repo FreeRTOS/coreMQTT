@@ -23,10 +23,10 @@ HARNESS_ENTRY=harness
 HARNESS_FILE=MQTTPropGet_PubSubscriptionId_harness
 PROOF_UID=MQTTPropGet_PubSubscriptionId
 
-DEFINES += 
+DEFINES +=
 INCLUDES +=
 
-REMOVE_FUNCTION_BODY += 
+REMOVE_FUNCTION_BODY +=
 
 UNWINDSET += __CPROVER_file_local_core_mqtt_serializer_c_decodeVariableLength.0:5
 

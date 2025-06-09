@@ -23,12 +23,12 @@ HARNESS_ENTRY=harness
 HARNESS_FILE=MQTT_IncomingGetNextProp_harness
 PROOF_UID=MQTT_IncomingGetNextProp
 
-DEFINES += 
+DEFINES +=
 INCLUDES +=
 
-REMOVE_FUNCTION_BODY += 
+REMOVE_FUNCTION_BODY +=
 
-UNWINDSET += 
+UNWINDSET +=
 
 PROOF_SOURCES += $(PROOFDIR)/$(HARNESS_FILE).c
 PROOF_SOURCES += $(SRCDIR)/test/cbmc/sources/mqtt_cbmc_state.c
