@@ -4137,18 +4137,19 @@ MQTTStatus_t MQTT_GetSubAckStatusCodes( const MQTTPacketInfo_t * pSubackPacket,
     else if( pSubackPacket->remainingLength < 4U )
     {
         LogError( ( "Invalid parameter: Packet remaining length is invalid: "
-                    "Should be greater than 2 for SUBACK packet: InputRemainingLength=%lu",
+                    "Should be greater than or equal to 4 for SUBACK packet: InputRemainingLength=%lu",
                     ( unsigned long ) pSubackPacket->remainingLength ) );
         status = MQTTBadParameter;
     }
     else
     {
         /* According to the MQTT 5.0 protocol specification, the "Remaining Length" field is a
-         * length of the variable header (max 4 bytes) plus the length of the payload.
-         * Therefore, we add 4 positions for the starting address of the payload, and
-         * subtract 4 bytes from the remaining length for the length of the payload.*/
-        *pPayloadStart = &pSubackPacket->pRemainingData[ sizeof( uint32_t ) ];
-        *pPayloadSize = pSubackPacket->remainingLength - sizeof( uint32_t );
+         * length of the variable header (Packet ID and property length) plus the length of the payload.
+         * Therefore, we add 2 positions for the starting address of the payload, and
+         * subtract 2 bytes from the remaining length for the length of the payload.
+         * This gives us the start of the properties. */
+        *pPayloadStart = &pSubackPacket->pRemainingData[ sizeof( uint16_t ) ];
+        *pPayloadSize = pSubackPacket->remainingLength - sizeof( uint16_t ) ;
     }
 
     return status;

@@ -8650,23 +8650,25 @@ void test_MQTT_GetSubAckStatusCodes( void )
 
     buffer[ 0 ] = 0;
     buffer[ 1 ] = 1;
-    buffer[ 2 ] = 0x00;
-    buffer[ 3 ] = 0x01;
-    buffer[ 4 ] = 0x02;
-    buffer[ 5 ] = 0x80;
+    buffer[ 2 ] = 0; /*Length of the properties is 0. */
+    buffer[ 3 ] = 0x00;
+    buffer[ 4 ] = 0x01;
+    buffer[ 5 ] = 0x02;
+    buffer[ 6 ] = 0x80;
 
     /* Process a valid SUBACK packet containing whole range of server response codes. */
     mqttPacketInfo.type = MQTT_PACKET_TYPE_SUBACK;
     mqttPacketInfo.pRemainingData = buffer;
-    mqttPacketInfo.remainingLength = 6;
+    mqttPacketInfo.remainingLength = 7;
     status = MQTT_GetSubAckStatusCodes( &mqttPacketInfo, &pPayloadStart, &payloadSize );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
     TEST_ASSERT_EQUAL_PTR( &buffer[ 2 ], pPayloadStart );
-    TEST_ASSERT_EQUAL_INT( MQTTSubAckSuccessQos0, pPayloadStart[ 0 ] );
-    TEST_ASSERT_EQUAL_INT( MQTTSubAckSuccessQos1, pPayloadStart[ 1 ] );
-    TEST_ASSERT_EQUAL_INT( MQTTSubAckSuccessQos2, pPayloadStart[ 2 ] );
-    TEST_ASSERT_EQUAL_INT( MQTTSubAckFailure, pPayloadStart[ 3 ] );
-    TEST_ASSERT_EQUAL_INT( 4, payloadSize );
+    TEST_ASSERT_EQUAL_INT( 0, pPayloadStart[ 0 ] ); /* Property Length is 0. */
+    TEST_ASSERT_EQUAL_INT( MQTTSubAckSuccessQos0, pPayloadStart[ 1 ] );
+    TEST_ASSERT_EQUAL_INT( MQTTSubAckSuccessQos1, pPayloadStart[ 2 ] );
+    TEST_ASSERT_EQUAL_INT( MQTTSubAckSuccessQos2, pPayloadStart[ 3 ] );
+    TEST_ASSERT_EQUAL_INT( MQTTSubAckFailure, pPayloadStart[ 4 ] );
+    TEST_ASSERT_EQUAL_INT( 5, payloadSize );
 
     /* Packet is NULL. */
     status = MQTT_GetSubAckStatusCodes( NULL, &pPayloadStart, &payloadSize );
@@ -9167,7 +9169,6 @@ void test_eventCallbackFailed3( void )
     MQTTStatus_t status;
     TransportInterface_t transport = { 0 };
     MQTTFixedBuffer_t networkBuffer = { 0 };
-    ProcessLoopReturns_t expectParams = { 0 };
 
     setupTransportInterface( &transport );
     setupNetworkBuffer( &networkBuffer );
@@ -9180,10 +9181,6 @@ void test_eventCallbackFailed3( void )
 
     mqttContext.waitingForPingResp = false;
     mqttContext.keepAliveIntervalSec = 0;
-    expectParams.incomingPublish = false;
-    expectParams.updateStateStatus = MQTTSuccess;
-    expectParams.processLoopStatus = MQTTSuccess;
-    expectParams.stateAfterDeserialize = MQTTPubRelSend;
     /* Set expected return values in the loop. All success. */
     MQTTPacketInfo_t incomingPacket = { 0 };
     /* Modify incoming packet depending on type to be tested. */
@@ -9237,7 +9234,6 @@ void test_eventCallbackFailed4( void )
     MQTTStatus_t status;
     TransportInterface_t transport = { 0 };
     MQTTFixedBuffer_t networkBuffer = { 0 };
-    ProcessLoopReturns_t expectParams = { 0 };
     size_t packetSize ; 
     size_t remainingLength ; 
 

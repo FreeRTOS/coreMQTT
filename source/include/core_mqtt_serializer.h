@@ -104,7 +104,6 @@ typedef enum MQTTStatus
                                     incomplete data; it should be called again (probably after
                                     a delay). */
     MQTTEndOfProperties,            /**< End of properties reached while parsing MQTT packet. */
-
     MQTTStatusConnected,            /**< MQTT connection is established with the broker. */
     MQTTStatusNotConnected,         /**< MQTT connection is not established with the broker. */
     MQTTStatusDisconnectPending,    /**< Transport Interface has failed and MQTT connection needs to be closed. */

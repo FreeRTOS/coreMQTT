@@ -33,6 +33,9 @@
 /* Include config defaults header to get default values of configs. */
 #include "core_mqtt_config_defaults.h"
 #include "core_mqtt_utils.h"
+#include "core_mqtt_serializer.h"
+
+#define MQTT_REMAINING_LENGTH_INVALID               ( ( size_t ) 268435456 )
 
 uint8_t * encodeVariableLength( uint8_t * pDestination,
                                 size_t length )
@@ -64,3 +67,4 @@ uint8_t * encodeVariableLength( uint8_t * pDestination,
 
     return pLengthEnd;
 }
+
