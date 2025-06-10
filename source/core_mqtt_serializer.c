@@ -918,7 +918,7 @@ static MQTTStatus_t calculatePublishPacketSize( const MQTTPublishInfo_t * pPubli
         propertyAndPayloadLimit -= publishPropertyLength;
     }
 
-    if( ( status == MQTTSuccess ) )
+    if( status == MQTTSuccess )
     {
         if( pPublishInfo->payloadLength > propertyAndPayloadLimit )
         {
