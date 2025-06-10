@@ -444,7 +444,7 @@ connectInfo.clientIdentifierLength = strlen("clientId");
 MQTTPropBuilder_t connectProperties ;
 uint8_t buf[500] ;
 size bufLength = sizeof(buf);
-MQTT_PropertyBuilder_Init(&connectProperties, buf, bufLength) ;
+MQTTPropertyBuilder_Init(&connectProperties, buf, bufLength) ;
 
 uint32_t sessionExpiryInterval = 100 ; // 100ms
 MQTTPropAdd_SessionExpiry(&connectProperties, sessionExpiryInterval );
@@ -517,7 +517,7 @@ MQTTPropBuilder_t propertyBuilder = { 0 };
 uint8_t propertyBuffer[100];
 
 // Initialize property builder
-MQTT_PropertyBuilder_Init(&propertyBuilder,
+MQTTPropertyBuilder_Init(&propertyBuilder,
                          propertyBuffer,
                          sizeof(propertyBuffer));
 
@@ -591,7 +591,7 @@ MQTTPropBuilder_t propertyBuilder = { 0 };
 uint8_t propertyBuffer[100];
 
 // Initialize property builder
-MQTT_PropertyBuilder_Init(&propertyBuilder,
+MQTTPropertyBuilder_Init(&propertyBuilder,
                          propertyBuffer,
                          sizeof(propertyBuffer));
 
@@ -663,7 +663,7 @@ MQTTPropBuilder_t propertyBuilder = { 0 };
 uint8_t propertyBuffer[100];
 
 // Initialize property builder
-MQTT_PropertyBuilder_Init(&propertyBuilder,
+MQTTPropertyBuilder_Init(&propertyBuilder,
                          propertyBuffer,
                          sizeof(propertyBuffer));
 
@@ -716,7 +716,7 @@ MQTTPropBuilder_t propertyBuilder = { 0 };
 uint8_t propertyBuffer[100];
 
 // Initialize property builder
-MQTT_PropertyBuilder_Init(&propertyBuilder,
+MQTTPropertyBuilder_Init(&propertyBuilder,
                          propertyBuffer,
                          sizeof(propertyBuffer));
 
@@ -789,10 +789,10 @@ uint8_t connectPropBuffer[100];
 uint8_t willPropBuffer[100];
 
 // Initialize property builders
-MQTT_PropertyBuilder_Init(&connectProperties,
+MQTTPropertyBuilder_Init(&connectProperties,
                          connectPropBuffer,
                          sizeof(connectPropBuffer));
-MQTT_PropertyBuilder_Init(&willProperties,
+MQTTPropertyBuilder_Init(&willProperties,
                          willPropBuffer,
                          sizeof(willPropBuffer));
 
@@ -864,7 +864,7 @@ MQTTPropBuilder_t publishProperties = { 0 };
 uint8_t propBuffer[100];
 
 // Initialize property builder
-MQTT_PropertyBuilder_Init(&publishProperties,
+MQTTPropertyBuilder_Init(&publishProperties,
                          propBuffer,
                          sizeof(propBuffer));
 
@@ -933,7 +933,7 @@ MQTTPropBuilder_t subscribeProperties = { 0 };
 uint8_t propBuffer[100];
 
 // Initialize property builder
-MQTT_PropertyBuilder_Init(&subscribeProperties,
+MQTTPropertyBuilder_Init(&subscribeProperties,
                          propBuffer,
                          sizeof(propBuffer));
 
@@ -1003,7 +1003,7 @@ MQTTPropBuilder_t unsubscribeProperties;
 uint8_t propBuffer[100];
 
 // Initialize property builder
-MQTT_PropertyBuilder_Init(&unsubscribeProperties,
+MQTTPropertyBuilder_Init(&unsubscribeProperties,
                          propBuffer,
                          sizeof(propBuffer));
 
@@ -1064,7 +1064,7 @@ MQTTPropBuilder_t disconnectProperties;
 uint8_t propBuffer[100];
 
 // Initialize property builder
-MQTT_PropertyBuilder_Init(&disconnectProperties,
+MQTTPropertyBuilder_Init(&disconnectProperties,
                          propBuffer,
                          sizeof(propBuffer));
 
@@ -1166,10 +1166,10 @@ uint8_t connectPropBuffer[100];
 uint8_t willPropBuffer[100];
 
 // Initialize property builders
-MQTT_PropertyBuilder_Init(&connectProperties,
+MQTTPropertyBuilder_Init(&connectProperties,
                          connectPropBuffer,
                          sizeof(connectPropBuffer));
-MQTT_PropertyBuilder_Init(&willProperties,
+MQTTPropertyBuilder_Init(&willProperties,
                          willPropBuffer,
                          sizeof(willPropBuffer));
 
@@ -1280,7 +1280,7 @@ MQTTPropBuilder_t publishProperties = { 0 };
 uint8_t propBuffer[100];
 
 // Initialize property builder
-MQTT_PropertyBuilder_Init(&publishProperties,
+MQTTPropertyBuilder_Init(&publishProperties,
                          propBuffer,
                          sizeof(propBuffer));
 
@@ -1393,7 +1393,7 @@ MQTTPropBuilder_t publishProperties ;
 uint8_t propBuffer[100];
 
 // Initialize property builder
-MQTT_PropertyBuilder_Init(&publishProperties,
+MQTTPropertyBuilder_Init(&publishProperties,
                          propBuffer,
                          sizeof(propBuffer));
 
@@ -1507,7 +1507,7 @@ MQTTPropBuilder_t subscribeProperties = { 0 };
 uint8_t propBuffer[100];
 
 // Initialize property builder
-MQTT_PropertyBuilder_Init(&subscribeProperties,
+MQTTPropertyBuilder_Init(&subscribeProperties,
                          propBuffer,
                          sizeof(propBuffer));
 
@@ -1612,7 +1612,7 @@ MQTTPropBuilder_t unsubscribeProperties ;
 uint8_t propBuffer[100];
 
 // Initialize property builder
-MQTT_PropertyBuilder_Init(&unsubscribeProperties,
+MQTTPropertyBuilder_Init(&unsubscribeProperties,
                          propBuffer,
                          sizeof(propBuffer));
 
@@ -1697,7 +1697,7 @@ MQTTPropBuilder_t disconnectProperties ;
 uint8_t propBuffer[100];
 
 // Initialize property builder
-MQTT_PropertyBuilder_Init(&disconnectProperties,
+MQTTPropertyBuilder_Init(&disconnectProperties,
                          propBuffer,
                          sizeof(propBuffer));
 
@@ -1781,7 +1781,7 @@ MQTTPropBuilder_t propBuffer = { 0 };
 uint8_t buffer[100];
 
 // Initialize property buffer
-MQTT_PropertyBuilder_Init(&propBuffer,
+MQTTPropertyBuilder_Init(&propBuffer,
                          buffer,
                          sizeof(buffer));
 

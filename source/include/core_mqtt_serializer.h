@@ -24,7 +24,7 @@
 
 /**
  * @file core_mqtt_serializer.h
- * @brief User-facing functions for serializing and deserializing MQTT 3.1.1
+ * @brief User-facing functions for serializing and deserializing MQTT 5.0
  * packets. This header should be included for building a lighter weight MQTT
  * client than the managed CSDK MQTT library API in core_mqtt.h, by using the
  * serializer and de-serializer functions exposed in this file's API.
@@ -103,15 +103,15 @@ typedef enum MQTTStatus
     MQTTNeedMoreBytes,              /**< MQTT_ProcessLoop/MQTT_ReceiveLoop has received
                                     incomplete data; it should be called again (probably after
                                     a delay). */
-    MQTTEndOfProperties,
-
+    MQTTEndOfProperties,            /**< End of properties reached while parsing MQTT packet. */
     MQTTStatusConnected,            /**< MQTT connection is established with the broker. */
     MQTTStatusNotConnected,         /**< MQTT connection is not established with the broker. */
     MQTTStatusDisconnectPending,    /**< Transport Interface has failed and MQTT connection needs to be closed. */
     MQTTPublishStoreFailed,         /**< User provided API to store a copy of outgoing publish for retransmission  purposes,
                                     has failed. */
-    MQTTPublishRetrieveFailed       /**< User provided API to retrieve the copy of a publish while reconnecting
+    MQTTPublishRetrieveFailed,       /**< User provided API to retrieve the copy of a publish while reconnecting
                                     with an unclean session has failed. */
+    MQTTEventCallbackFailed         /**< Error in the user provided event callback function. */
 } MQTTStatus_t;
 
 /**
@@ -2939,9 +2939,9 @@ MQTTStatus_t MQTTPropGet_ConnSubId(MQTTPropBuilder_t* propBuffer, uint8_t* isSub
  * @param[out] isSharedSubAvailable Pointer to store whether shared subscriptions are supported
  *                                 1 if available, 0 if not available
  *
- * @return MQTTSuccess if property was found and retrieved successfully
- *         MQTTBadParameter if propBuffer or isSharedSubAvailable is NULL
- *         MQTTBadResponse if property value is invalid in buffer
+ * @return #MQTTSuccess if property was found and retrieved successfully
+ *         #MQTTBadParameter if propBuffer or isSharedSubAvailable is NULL
+ *         #MQTTBadResponse if property value is invalid in buffer
  */
 /* @[declare_mqttpropget_connsharedsubavailable] */
 MQTTStatus_t MQTTPropGet_ConnSharedSubAvailable( MQTTPropBuilder_t * propBuffer,
@@ -2953,9 +2953,9 @@ MQTTStatus_t MQTTPropGet_ConnSharedSubAvailable( MQTTPropBuilder_t * propBuffer,
  * @param[in] propBuffer The property buffer containing CONNACK properties
  * @param[out] serverKeepAlive Pointer to store the server-specified keep alive interval in seconds
  *
- * @return MQTTSuccess if property was found and retrieved successfully
- *         MQTTBadParameter if propBuffer or serverKeepAlive is NULL
- *         MQTTBadResponse if property value is invalid in buffer
+ * @return #MQTTSuccess if property was found and retrieved successfully
+ *         #MQTTBadParameter if propBuffer or serverKeepAlive is NULL
+ *         #MQTTBadResponse if property value is invalid in buffer
  */
 /* @[declare_mqttpropget_connserverkeepalive] */
 MQTTStatus_t MQTTPropGet_ConnServerKeepAlive( MQTTPropBuilder_t * propBuffer,
@@ -2969,9 +2969,9 @@ MQTTStatus_t MQTTPropGet_ConnServerKeepAlive( MQTTPropBuilder_t * propBuffer,
  * @param[out] pResponseInfo Pointer to store the response information string
  * @param[out] responseInfoLength Pointer to store length of response information
  *
- * @return MQTTSuccess if property was found and retrieved successfully
- *         MQTTBadParameter if propBuffer, pResponseInfo, or responseInfoLength is NULL
- *         MQTTBadResponse if property value is invalid in buffer
+ * @return #MQTTSuccess if property was found and retrieved successfully
+ *         #MQTTBadParameter if propBuffer, pResponseInfo, or responseInfoLength is NULL
+ *         #MQTTBadResponse if property value is invalid in buffer
  */
 /* @[declare_mqttpropget_connresponseinfo] */
 MQTTStatus_t MQTTPropGet_ConnResponseInfo( MQTTPropBuilder_t * propBuffer,
@@ -2986,9 +2986,9 @@ MQTTStatus_t MQTTPropGet_ConnResponseInfo( MQTTPropBuilder_t * propBuffer,
  * @param[out] pAuthMethod Pointer to store the authentication method string
  * @param[out] authMethodLength Pointer to store length of authentication method
  *
- * @return MQTTSuccess if property was found and retrieved successfully
- *         MQTTBadParameter if propBuffer, pAuthMethod, or authMethodLength is NULL
- *         MQTTBadResponse if property value is invalid in buffer
+ * @return #MQTTSuccess if property was found and retrieved successfully
+ *         #MQTTBadParameter if propBuffer, pAuthMethod, or authMethodLength is NULL
+ *         #MQTTBadResponse if property value is invalid in buffer
  */
 
 /* @[declare_mqttpropget_connauthmethod] */
@@ -3004,9 +3004,9 @@ MQTTStatus_t MQTTPropGet_ConnAuthMethod(MQTTPropBuilder_t * propBuffer,
  * @param[out] pAuthData Pointer to store the authentication data
  * @param[out] authDataLength Pointer to store length of authentication data
  *
- * @return MQTTSuccess if property was found and retrieved successfully
- *         MQTTBadParameter if propBuffer, pAuthData, or authDataLength is NULL
- *         MQTTBadResponse if property value is invalid in buffer
+ * @return #MQTTSuccess if property was found and retrieved successfully
+ *         #MQTTBadParameter if propBuffer, pAuthData, or authDataLength is NULL
+ *         #MQTTBadResponse if property value is invalid in buffer
  */
 
 /* @[declare_mqttpropget_connauthdata] */
@@ -3045,7 +3045,7 @@ MQTTStatus_t MQTT_IncomingGetNextProp(MQTTPropBuilder_t* propBuffer, uint8_t* pr
  * - #MQTTSuccess otherwise.
  */
 /* @[declare_mqtt_propertybuilder_init] */
-MQTTStatus_t MQTT_PropertyBuilder_Init( MQTTPropBuilder_t * pPropertyBuilder,
+MQTTStatus_t MQTTPropertyBuilder_Init( MQTTPropBuilder_t * pPropertyBuilder,
                                         uint8_t * buffer,
                                         size_t length );
 /* @[declare_mqtt_propertybuilder_init] */
