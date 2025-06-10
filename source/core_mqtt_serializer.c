@@ -259,8 +259,8 @@ static MQTTStatus_t calculatePublishPacketSize( const MQTTPublishInfo_t * pPubli
  * @param[in] maxPacketSize Maximum Packet Size allowed by the broker
  * @param[in] subscriptionType #MQTT_TYPE_SUBSCRIBE or #MQTT_TYPE_UNSUBSCRIBE.
  *
- * #MQTTBadParameter if the packet would exceed the size allowed by the
- * MQTT spec or a subscription is empty; #MQTTSuccess otherwise.
+ * @return MQTTBadParameter if the packet would exceed the size allowed by the
+ * MQTT spec or a subscription is empty; MQTTSuccess otherwise.
  *
  */
 
@@ -435,7 +435,6 @@ static MQTTStatus_t deserializePublish( const MQTTPacketInfo_t * pIncomingPacket
  * packet doesn't follow MQTT spec.
  */
 static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
-
 
 /**
  * @brief Validate the length and decode a user property.
@@ -789,7 +788,7 @@ static size_t variableLengthEncodedSize( size_t length )
     size_t encodedSize;
 
     /* Determine how many bytes are needed to encode length.
-     * The values below are taken from the MQTT 3.1.1 spec. */
+     * The values below are taken from the MQTT 5.0 spec. */
 
     /* 1 byte is needed to encode lengths between 0 and 127. */
     if( length < 128U )
@@ -891,7 +890,7 @@ static MQTTStatus_t calculatePublishPacketSize( const MQTTPublishInfo_t * pPubli
     {
         LogError( ( "PUBLISH payload length of %lu cannot exceed "
                     "%lu so as not to exceed the maximum "
-                    "remaining length of MQTT 3.1.1 packet( %lu ).",
+                    "remaining length of MQTT 5.0 packet( %lu ).",
                     ( unsigned long ) pPublishInfo->payloadLength,
                     ( unsigned long ) payloadLimit,
                     MQTT_MAX_REMAINING_LENGTH ) );
@@ -913,7 +912,7 @@ static MQTTStatus_t calculatePublishPacketSize( const MQTTPublishInfo_t * pPubli
         {
             LogError( ( "PUBLISH payload length of %lu cannot exceed "
                         "%lu so as not to exceed the maximum "
-                        "remaining length of MQTT 3.1.1 packet( %lu ).",
+                        "remaining length of MQTT 5.0 packet( %lu ).",
                         ( unsigned long ) pPublishInfo->payloadLength,
                         ( unsigned long ) payloadLimit,
                         MQTT_MAX_REMAINING_LENGTH ) );
@@ -1128,7 +1127,7 @@ static size_t getRemainingLength( TransportRecv_t recvFunc,
     uint8_t encodedByte = 0;
     int32_t bytesReceived = 0;
 
-    /* This algorithm is copied from the MQTT v3.1.1 spec. */
+    /* This algorithm is copied from the MQTT v5.0 spec. */
     do
     {
         if( multiplier > 2097152U ) /* 128 ^ 3 */
@@ -1184,7 +1183,7 @@ static MQTTStatus_t processRemainingLength( const uint8_t * pBuffer,
     uint8_t encodedByte = 0;
     MQTTStatus_t status = MQTTSuccess;
 
-    /* This algorithm is copied from the MQTT v3.1.1 spec. */
+    /* This algorithm is copied from the MQTT v5.0 spec. */
     do
     {
         if( multiplier > 2097152U ) /* 128 ^ 3 */
@@ -3410,7 +3409,7 @@ static MQTTStatus_t decodeVariableLength( const uint8_t * pBuffer,
     uint8_t encodedByte = 0;
     MQTTStatus_t status = MQTTSuccess;
 
-    /* This algorithm is copied from the MQTT v3.1.1 spec. */
+    /* This algorithm is copied from the MQTT 5.0 spec. */
     do
     {
         if( multiplier > 2097152U ) /* 128 ^ 3 */
@@ -7053,7 +7052,7 @@ MQTTStatus_t MQTT_ValidatePublishAckProperties( const MQTTPropBuilder_t * pPrope
 
 /*-----------------------------------------------------------*/
 
-MQTTStatus_t MQTT_PropertyBuilder_Init( MQTTPropBuilder_t * pPropertyBuilder,
+MQTTStatus_t MQTTPropertyBuilder_Init( MQTTPropBuilder_t * pPropertyBuilder,
                                         uint8_t * buffer,
                                         size_t length )
 {
@@ -7061,7 +7060,7 @@ MQTTStatus_t MQTT_PropertyBuilder_Init( MQTTPropBuilder_t * pPropertyBuilder,
 
     if( ( pPropertyBuilder == NULL ) || ( buffer == NULL ) || ( length == 0U ) )
     {
-        LogError( ( "Invalid arguments passed to MQTT_PropertyBuilder_Init." ) );
+        LogError( ( "Invalid arguments passed to MQTTPropertyBuilder_Init." ) );
         status = MQTTBadParameter;
     }
 

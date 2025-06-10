@@ -109,7 +109,7 @@
 
 /**
  * @brief Encodes the remaining length of the packet using the variable length
- * encoding scheme provided in the MQTT v3.1.1 specification.
+ * encoding scheme provided in the MQTT 5.0 specification.
  *
  * @param[out] pDestination The destination buffer to store the encoded remaining
  * length.

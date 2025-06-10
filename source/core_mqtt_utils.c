@@ -45,7 +45,7 @@ uint8_t * encodeVariableLength( uint8_t * pDestination,
 
     pLengthEnd = pDestination;
 
-    /* This algorithm is copied from the MQTT v3.1.1 spec. */
+    /* This algorithm is copied from the MQTT 5.0 spec. */
     do
     {
         lengthByte = ( uint8_t ) ( remainingLength % 128U );

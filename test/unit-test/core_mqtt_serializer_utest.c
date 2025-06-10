@@ -66,11 +66,6 @@ struct NetworkContext
 #define TEST_TOPIC_NAME_LENGTH                      ( ( uint16_t ) ( sizeof( TEST_TOPIC_NAME ) - 1 ) ) /**< @brief Length of topic name. */
 
 /**
- * @brief MQTT protocol version 3.1.1.
- */
-#define MQTT_VERSION_3_1_1                          ( ( uint8_t ) 4U )
-
-/**
  * @brief Test-defined macro for MQTT username.
  */
 #define MQTT_TEST_USERNAME                          "username"
@@ -146,7 +141,7 @@ struct NetworkContext
 
 /**
  * @brief Maximum number of bytes in the Remaining Length field is four according
- * to MQTT 3.1.1 spec.
+ * to MQTT 5.0 spec.
  */
 #define MQTT_REMAINING_BUFFER_MAX_LENGTH    ( 4 )
 
@@ -404,7 +399,7 @@ static void setupPublishInfo( MQTTPublishInfo_t * pPublishInfo )
 
 /**
  * @brief Encode remaining length into pDestination for packet serialization
- * using MQTT v3.1.1 spec.
+ * using MQTT 5.0 spec.
  *
  * @param[in] pDestination Buffer to write encoded remaining length.
  * @param[in] length Actual remaining length.
@@ -420,7 +415,7 @@ static size_t encodeRemainingLength( uint8_t * pDestination,
 
     pLengthEnd = pDestination;
 
-    /* This algorithm is copied from the MQTT v3.1.1 spec. */
+    /* This algorithm is copied from the MQTT 5.0 spec. */
     do
     {
         lengthByte = ( uint8_t ) ( remainingLength % 128U );
@@ -5247,16 +5242,16 @@ void test_Mqtt_PropertyBuilder_Init( void )
     size_t ackPropsBufLength = sizeof( ackPropsBuf );
     MQTTStatus_t mqttStatus;
 
-    mqttStatus = MQTT_PropertyBuilder_Init( &( ackPropsBuilder ), ackPropsBuf, ackPropsBufLength );
+    mqttStatus = MQTTPropertyBuilder_Init( &( ackPropsBuilder ), ackPropsBuf, ackPropsBufLength );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
 
-    mqttStatus = MQTT_PropertyBuilder_Init( NULL, ackPropsBuf, ackPropsBufLength );
+    mqttStatus = MQTTPropertyBuilder_Init( NULL, ackPropsBuf, ackPropsBufLength );
     TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
 
-    mqttStatus = MQTT_PropertyBuilder_Init( &( ackPropsBuilder ), NULL, ackPropsBufLength );
+    mqttStatus = MQTTPropertyBuilder_Init( &( ackPropsBuilder ), NULL, ackPropsBufLength );
     TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
 
-    mqttStatus = MQTT_PropertyBuilder_Init( &( ackPropsBuilder ), ackPropsBuf, 0 );
+    mqttStatus = MQTTPropertyBuilder_Init( &( ackPropsBuilder ), ackPropsBuf, 0 );
     TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
 }
 

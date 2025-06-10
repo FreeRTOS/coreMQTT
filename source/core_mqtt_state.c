@@ -535,7 +535,7 @@ static MQTTStatus_t addRecord( MQTTPubAckInfo_t * records,
     /* Start from end so first available index will be populated.
      * Available index is always found after the last element in the records.
      * This is to make sure the relative order of the records in order to meet
-     * the message ordering requirement of MQTT spec 3.1.1. */
+     * the message ordering requirement of MQTT spec 5.0. */
     for( index = ( ( int32_t ) recordCount - 1 ); index >= 0; index-- )
     {
         /* Available index is only found after packet at the highest index. */

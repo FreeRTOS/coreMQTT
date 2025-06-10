@@ -320,9 +320,9 @@ Property Get functions:<br><br>
 @snippet core_mqtt_state.h declare_mqtt_publishtoresend
 @copydoc MQTT_PublishToResend
 
-@page mqtt_propertybuilder_init_function MQTT_PropertyBuilder_Init
+@page mqtt_propertybuilder_init_function MQTTPropertyBuilder_Init
 @snippet core_mqtt_serializer.h declare_mqtt_propertybuilder_init
-@copydoc MQTT_PropertyBuilder_Init
+@copydoc MQTTPropertyBuilder_Init
 
 @page mqtt_getconnectpacketsize_function MQTT_GetConnectPacketSize
 @snippet core_mqtt_serializer.h declare_mqtt_getconnectpacketsize
