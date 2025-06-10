@@ -64,4 +64,3 @@ uint8_t * encodeVariableLength( uint8_t * pDestination,
 
     return pLengthEnd;
 }
-

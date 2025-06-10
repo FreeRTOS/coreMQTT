@@ -7128,8 +7128,8 @@ MQTTStatus_t MQTT_ValidatePublishAckProperties( const MQTTPropBuilder_t * pPrope
 /*-----------------------------------------------------------*/
 
 MQTTStatus_t MQTTPropertyBuilder_Init( MQTTPropBuilder_t * pPropertyBuilder,
-                                        uint8_t * buffer,
-                                        size_t length )
+                                       uint8_t * buffer,
+                                       size_t length )
 {
     MQTTStatus_t status = MQTTSuccess;
 

@@ -359,11 +359,11 @@ static uint32_t getTimeMockBigTimeStep( void )
  * @param[in] pDeserializedInfo Deserialized information from the incoming packet.
  */
 static MQTTStatus_t eventCallback( MQTTContext_t * pContext,
-                           MQTTPacketInfo_t * pPacketInfo,
-                           MQTTDeserializedInfo_t * pDeserializedInfo,
-                           MQTTSuccessFailReasonCode_t * pReasonCode,
-                           MQTTPropBuilder_t * sendPropsBuffer,
-                           MQTTPropBuilder_t * getPropsBuffer )
+                                   MQTTPacketInfo_t * pPacketInfo,
+                                   MQTTDeserializedInfo_t * pDeserializedInfo,
+                                   MQTTSuccessFailReasonCode_t * pReasonCode,
+                                   MQTTPropBuilder_t * sendPropsBuffer,
+                                   MQTTPropBuilder_t * getPropsBuffer )
 {
     ( void ) pContext;
     ( void ) pPacketInfo;
@@ -390,11 +390,11 @@ MQTTReasonCodeInfo_t GlobalAckInfo;
 
 
 static MQTTStatus_t eventCallback2( MQTTContext_t * pContext,
-                            MQTTPacketInfo_t * pPacketInfo,
-                            MQTTDeserializedInfo_t * pDeserializedInfo,
-                            MQTTSuccessFailReasonCode_t * pReasonCode,
-                            MQTTPropBuilder_t * sendPropsBuffer,
-                            MQTTPropBuilder_t * getPropsBuffer )
+                                    MQTTPacketInfo_t * pPacketInfo,
+                                    MQTTDeserializedInfo_t * pDeserializedInfo,
+                                    MQTTSuccessFailReasonCode_t * pReasonCode,
+                                    MQTTPropBuilder_t * sendPropsBuffer,
+                                    MQTTPropBuilder_t * getPropsBuffer )
 {
     ( void ) pContext;
     ( void ) pPacketInfo;
@@ -422,14 +422,14 @@ static MQTTStatus_t eventCallback2( MQTTContext_t * pContext,
     sendPropsBuffer->currentIndex = 13;
     isEventCallbackInvoked = true;
 
-    return MQTTSuccess ; 
+    return MQTTSuccess;
 }
 static MQTTStatus_t eventCallback3( MQTTContext_t * pContext,
-                            MQTTPacketInfo_t * pPacketInfo,
-                            MQTTDeserializedInfo_t * pDeserializedInfo,
-                            MQTTSuccessFailReasonCode_t * pReasonCode,
-                            MQTTPropBuilder_t * sendPropsBuffer,
-                            MQTTPropBuilder_t * getPropsBuffer )
+                                    MQTTPacketInfo_t * pPacketInfo,
+                                    MQTTDeserializedInfo_t * pDeserializedInfo,
+                                    MQTTSuccessFailReasonCode_t * pReasonCode,
+                                    MQTTPropBuilder_t * sendPropsBuffer,
+                                    MQTTPropBuilder_t * getPropsBuffer )
 {
     ( void ) pContext;
     ( void ) pPacketInfo;
@@ -445,15 +445,15 @@ static MQTTStatus_t eventCallback3( MQTTContext_t * pContext,
     sendPropsBuffer->currentIndex = 0;
     pDeserializedInfo->packetIdentifier = 0;
 
-    return MQTTSuccess ; 
+    return MQTTSuccess;
 }
 
 static MQTTStatus_t eventCallbackInvalidRC( MQTTContext_t * pContext,
-                                    MQTTPacketInfo_t * pPacketInfo,
-                                    MQTTDeserializedInfo_t * pDeserializedInfo,
-                                    MQTTSuccessFailReasonCode_t * pReasonCode,
-                                    MQTTPropBuilder_t * sendPropsBuffer,
-                                    MQTTPropBuilder_t * getPropsBuffer )
+                                            MQTTPacketInfo_t * pPacketInfo,
+                                            MQTTDeserializedInfo_t * pDeserializedInfo,
+                                            MQTTSuccessFailReasonCode_t * pReasonCode,
+                                            MQTTPropBuilder_t * sendPropsBuffer,
+                                            MQTTPropBuilder_t * getPropsBuffer )
 {
     ( void ) pContext;
     ( void ) pPacketInfo;
@@ -498,11 +498,11 @@ static MQTTStatus_t eventCallbackInvalidRC( MQTTContext_t * pContext,
  * @param[in] getPropsBuffer Buffer to get properties for the incoming packet.
  */
 static MQTTStatus_t eventCallback4( MQTTContext_t * pContext,
-                            MQTTPacketInfo_t * pPacketInfo,
-                            MQTTDeserializedInfo_t * pDeserializedInfo,
-                            MQTTSuccessFailReasonCode_t * pReasonCode,
-                            MQTTPropBuilder_t * sendPropsBuffer,
-                            MQTTPropBuilder_t * getPropsBuffer )
+                                    MQTTPacketInfo_t * pPacketInfo,
+                                    MQTTDeserializedInfo_t * pDeserializedInfo,
+                                    MQTTSuccessFailReasonCode_t * pReasonCode,
+                                    MQTTPropBuilder_t * sendPropsBuffer,
+                                    MQTTPropBuilder_t * getPropsBuffer )
 {
     ( void ) pContext;
     ( void ) pPacketInfo;
@@ -516,8 +516,9 @@ static MQTTStatus_t eventCallback4( MQTTContext_t * pContext,
     sendPropsBuffer->pBuffer = buf;
     sendPropsBuffer->currentIndex = 0;
 
-    return MQTTSuccess ; 
+    return MQTTSuccess;
 }
+
 /**
  * @brief Mocked MQTT event callback that fails with a #MQTTEventCallbackFailed
  *
@@ -529,20 +530,20 @@ static MQTTStatus_t eventCallback4( MQTTContext_t * pContext,
  * @param[in] getPropsBuffer Buffer to get properties for the incoming packet.
  */
 static MQTTStatus_t eventCallbackFail( MQTTContext_t * pContext,
-                            MQTTPacketInfo_t * pPacketInfo,
-                            MQTTDeserializedInfo_t * pDeserializedInfo,
-                            MQTTSuccessFailReasonCode_t * pReasonCode,
-                            MQTTPropBuilder_t * sendPropsBuffer,
-                            MQTTPropBuilder_t * getPropsBuffer )
+                                       MQTTPacketInfo_t * pPacketInfo,
+                                       MQTTDeserializedInfo_t * pDeserializedInfo,
+                                       MQTTSuccessFailReasonCode_t * pReasonCode,
+                                       MQTTPropBuilder_t * sendPropsBuffer,
+                                       MQTTPropBuilder_t * getPropsBuffer )
 {
     ( void ) pContext;
     ( void ) pPacketInfo;
     ( void ) pDeserializedInfo;
-    ( void ) pReasonCode ; 
+    ( void ) pReasonCode;
     ( void ) sendPropsBuffer;
     ( void ) getPropsBuffer;
     isEventCallbackInvoked = true;
-    return MQTTEventCallbackFailed ; 
+    return MQTTEventCallbackFailed;
 }
 
 
@@ -594,19 +595,19 @@ static uint8_t * MQTTV5_SerializeDisconnectFixed_cb( uint8_t * pIndex,
  * @param[out] pSerializedMqttVec Pointer to serialized MQTT vector.
  * @param[out] pSerializedMqttVecLen Length of serialized MQTT vector.
  *
- * @return Returns true. 
+ * @return Returns true.
  */
 bool retrieveFunctionNotConnected( MQTTContext_t * pContext,
-                                  uint16_t packetId,
-                                  uint8_t ** pSerializedMqttVec,
-                                  size_t * pSerializedMqttVecLen )
+                                   uint16_t packetId,
+                                   uint8_t ** pSerializedMqttVec,
+                                   size_t * pSerializedMqttVecLen )
 {
     ( void ) packetId;
     ( void ) pSerializedMqttVec;
     ( void ) pSerializedMqttVecLen;
 
-    pContext->connectStatus = MQTTNotConnected; 
-    *pSerializedMqttVecLen = 10 ; 
+    pContext->connectStatus = MQTTNotConnected;
+    *pSerializedMqttVecLen = 10;
 
     return true;
 }
@@ -9073,7 +9074,7 @@ void test_ResendUnackedPublishesWithNotConnected( void )
     MQTTContext_t mqttContext = { 0 };
     MQTTConnectInfo_t connectInfo = { 0 };
     uint32_t timeout = 2;
-    bool sessionPresent = true ; 
+    bool sessionPresent = true;
     bool sessionPresentResult;
     MQTTStatus_t status = MQTTSuccess;
     TransportInterface_t transport = { 0 };
@@ -9090,10 +9091,10 @@ void test_ResendUnackedPublishesWithNotConnected( void )
     TEST_ASSERT_EQUAL( MQTTSuccess, status );
 
     /**
-     * Test : One packet found in ack pending state, Transport Send failed and 
+     * Test : One packet found in ack pending state, Transport Send failed and
      * connectStatus is set to MQTTNotConnected during the retrieveFunction using a stub.
      */
-    
+
     MQTT_GetConnectPacketSize_IgnoreAndReturn( MQTTSuccess );
     connectInfo.keepAliveSeconds = MQTT_SAMPLE_KEEPALIVE_INTERVAL_S;
     incomingPacket.type = MQTT_PACKET_TYPE_CONNACK;
@@ -9111,11 +9112,10 @@ void test_ResendUnackedPublishesWithNotConnected( void )
     MQTT_PubrelToResend_ExpectAnyArgsAndReturn( MQTT_PACKET_TYPE_INVALID );
     MQTT_PublishToResend_ExpectAnyArgsAndReturn( packetIdentifier );
 
-    mqttContext.retrieveFunction = retrieveFunctionNotConnected  ; 
+    mqttContext.retrieveFunction = retrieveFunctionNotConnected;
 
     status = MQTT_Connect( &mqttContext, &connectInfo, NULL, timeout, &sessionPresentResult, NULL, NULL );
     TEST_ASSERT_EQUAL_INT( MQTTSendFailed, status );
-
 }
 
 void test_eventCallbackFailed( void )
@@ -9158,7 +9158,6 @@ void test_eventCallbackFailed( void )
     MQTT_UpdateStateAck_ReturnThruPtr_pNewState( &expectParams.stateAfterDeserialize );
     status = MQTT_ProcessLoop( &mqttContext );
     TEST_ASSERT_EQUAL( MQTTEventCallbackFailed, status );
-
 }
 
 void test_eventCallbackFailed1( void )
@@ -9235,7 +9234,6 @@ void test_eventCallbackFailed2( void )
 
     status = MQTT_ProcessLoop( &mqttContext );
     TEST_ASSERT_EQUAL( MQTTEventCallbackFailed, status );
-
 }
 
 void test_eventCallbackFailed3( void )
@@ -9270,7 +9268,6 @@ void test_eventCallbackFailed3( void )
     MQTT_DeserializeDisconnect_ExpectAnyArgsAndReturn( MQTTSuccess );
     status = MQTT_ProcessLoop( &mqttContext );
     TEST_ASSERT_EQUAL( MQTTEventCallbackFailed, status );
-
 }
 
 void test_MQTT_ReceiveLoop_KeepAliveCallbackFail( void )
@@ -9310,8 +9307,8 @@ void test_eventCallbackFailed4( void )
     MQTTStatus_t status;
     TransportInterface_t transport = { 0 };
     MQTTFixedBuffer_t networkBuffer = { 0 };
-    size_t packetSize ; 
-    size_t remainingLength ; 
+    size_t packetSize;
+    size_t remainingLength;
 
     setupTransportInterface( &transport );
     setupNetworkBuffer( &networkBuffer );
@@ -9343,7 +9340,7 @@ void test_eventCallbackFailed4( void )
     MQTT_GetIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
     MQTT_DeserializeAck_ExpectAnyArgsAndReturn( MQTTSuccess );
     bool sessionPresent = false;
-    
-    status = MQTT_Connect( &mqttContext, &connectInfo, NULL, 0,&sessionPresent, NULL, NULL);
+
+    status = MQTT_Connect( &mqttContext, &connectInfo, NULL, 0, &sessionPresent, NULL, NULL );
     TEST_ASSERT_EQUAL( MQTTEventCallbackFailed, status );
 }

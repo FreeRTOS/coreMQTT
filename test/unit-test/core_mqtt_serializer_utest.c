@@ -179,7 +179,7 @@ struct NetworkContext
 #define UINT32_BYTE0( x )    ( ( uint8_t ) ( ( x ) & 0x000000FFU ) )
 
 
-#define MQTT_MAX_PACKET_SIZE                   ( 268435460UL )
+#define MQTT_MAX_PACKET_SIZE    ( 268435460UL )
 
 /* Variables common to testcases */
 MQTTConnectProperties_t properties;
@@ -1900,7 +1900,7 @@ void test_MQTTV5_DeserializeAck_LogPuback()
     status = MQTT_DeserializeAck( &mqttPacketInfo, &packetIdentifier, NULL, &ackInfo, requestProblem, maxPacketSize, &propBuffer, NULL );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
 
-    buffer[ 2 ] = MQTT_REASON_PUBACK_UNSPECIFIED_ERROR ; 
+    buffer[ 2 ] = MQTT_REASON_PUBACK_UNSPECIFIED_ERROR;
     status = MQTT_DeserializeAck( &mqttPacketInfo, &packetIdentifier, NULL, &ackInfo, requestProblem, maxPacketSize, &propBuffer, NULL );
     TEST_ASSERT_EQUAL_INT( MQTTServerRefused, status );
 
@@ -1908,7 +1908,7 @@ void test_MQTTV5_DeserializeAck_LogPuback()
     status = MQTT_DeserializeAck( &mqttPacketInfo, &packetIdentifier, NULL, &ackInfo, requestProblem, maxPacketSize, &propBuffer, NULL );
     TEST_ASSERT_EQUAL_INT( MQTTServerRefused, status );
 
-    buffer[ 2 ] = MQTT_REASON_PUBACK_NOT_AUTHORIZED ; 
+    buffer[ 2 ] = MQTT_REASON_PUBACK_NOT_AUTHORIZED;
     status = MQTT_DeserializeAck( &mqttPacketInfo, &packetIdentifier, NULL, &ackInfo, requestProblem, maxPacketSize, &propBuffer, NULL );
     TEST_ASSERT_EQUAL_INT( MQTTServerRefused, status );
 

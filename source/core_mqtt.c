@@ -1718,8 +1718,8 @@ static MQTTStatus_t handleIncomingPublish( MQTTContext_t * pContext,
             if( ( ackPropsAdded == false ) && ( reasonCode == MQTT_INVALID_REASON_CODE ) )
             {
                 status = sendPublishAcks( pContext,
-                                        packetIdentifier,
-                                        publishRecordState );
+                                          packetIdentifier,
+                                          publishRecordState );
             }
             else
             {
@@ -1819,8 +1819,8 @@ static MQTTStatus_t handlePublishAcks( MQTTContext_t * pContext,
             if( ( ackPropsAdded == false ) && ( reasonCode == MQTT_INVALID_REASON_CODE ) )
             {
                 status = sendPublishAcks( pContext,
-                                        packetIdentifier,
-                                        publishRecordState );
+                                          packetIdentifier,
+                                          publishRecordState );
             }
             else
             {
@@ -1902,7 +1902,7 @@ static MQTTStatus_t handleIncomingAck( MQTTContext_t * pContext,
         deserializedInfo.packetIdentifier = packetIdentifier;
         deserializedInfo.deserializationResult = status;
         deserializedInfo.pPublishInfo = NULL;
-        status = ( ( appCallback( pContext, pIncomingPacket, &deserializedInfo, NULL, &pContext->ackPropsBuffer, NULL ) == MQTTEventCallbackFailed ) ? MQTTEventCallbackFailed : status ) ;
+        status = ( ( appCallback( pContext, pIncomingPacket, &deserializedInfo, NULL, &pContext->ackPropsBuffer, NULL ) == MQTTEventCallbackFailed ) ? MQTTEventCallbackFailed : status );
     }
 
     return status;
@@ -2056,8 +2056,8 @@ static MQTTStatus_t receiveSingleIteration( MQTTContext_t * pContext,
         if( status != MQTTEventCallbackFailed )
         {
             ( void ) memmove( pContext->networkBuffer.pBuffer,
-                            &( pContext->networkBuffer.pBuffer[ totalMQTTPacketLength ] ),
-                            pContext->index );
+                              &( pContext->networkBuffer.pBuffer[ totalMQTTPacketLength ] ),
+                              pContext->index );
         }
 
         if( status == MQTTSuccess )
@@ -2944,7 +2944,7 @@ static MQTTStatus_t receiveConnack( MQTTContext_t * pContext,
     if( ( status == MQTTSuccess ) || ( status == MQTTServerRefused ) )
     {
         deserializedInfo.deserializationResult = status;
-        status = ( ( pContext->appCallback( pContext, pIncomingPacket, &deserializedInfo, NULL, &pContext->ackPropsBuffer, &propBuffer ) == MQTTEventCallbackFailed ) ? MQTTEventCallbackFailed : status ) ; 
+        status = ( ( pContext->appCallback( pContext, pIncomingPacket, &deserializedInfo, NULL, &pContext->ackPropsBuffer, &propBuffer ) == MQTTEventCallbackFailed ) ? MQTTEventCallbackFailed : status );
     }
 
     return status;
@@ -4149,7 +4149,7 @@ MQTTStatus_t MQTT_GetSubAckStatusCodes( const MQTTPacketInfo_t * pSubackPacket,
          * subtract 2 bytes from the remaining length for the length of the payload.
          * This gives us the start of the properties. */
         *pPayloadStart = &pSubackPacket->pRemainingData[ sizeof( uint16_t ) ];
-        *pPayloadSize = pSubackPacket->remainingLength - sizeof( uint16_t ) ;
+        *pPayloadSize = pSubackPacket->remainingLength - sizeof( uint16_t );
     }
 
     return status;
@@ -4335,7 +4335,7 @@ static MQTTStatus_t handleSuback( MQTTContext_t * pContext,
         deserializedInfo.pReasonCode = &ackInfo;
 
         /* Invoke application callback to hand the buffer over to application */
-        status = ( ( appCallback( pContext, pIncomingPacket, &deserializedInfo, NULL, &pContext->ackPropsBuffer, &propBuffer ) == MQTTEventCallbackFailed ) ? MQTTEventCallbackFailed : status ) ;
+        status = ( ( appCallback( pContext, pIncomingPacket, &deserializedInfo, NULL, &pContext->ackPropsBuffer, &propBuffer ) == MQTTEventCallbackFailed ) ? MQTTEventCallbackFailed : status );
     }
 
     return status;
@@ -4361,7 +4361,7 @@ static MQTTStatus_t handleIncomingDisconnect( MQTTContext_t * pContext,
     if( status == MQTTSuccess )
     {
         deserializedInfo.pReasonCode = &reasonCode;
-        status = ( ( pContext->appCallback( pContext, pIncomingPacket, &deserializedInfo, NULL, &pContext->ackPropsBuffer, &propBuffer ) == MQTTEventCallbackFailed ) ? MQTTEventCallbackFailed : status ) ;
+        status = ( ( pContext->appCallback( pContext, pIncomingPacket, &deserializedInfo, NULL, &pContext->ackPropsBuffer, &propBuffer ) == MQTTEventCallbackFailed ) ? MQTTEventCallbackFailed : status );
     }
 
     return status;
