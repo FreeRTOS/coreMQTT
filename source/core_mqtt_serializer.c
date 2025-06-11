@@ -3214,8 +3214,6 @@ static MQTTStatus_t decodeAndDiscard( size_t * pPropertyLength,
     MQTTStatus_t status = MQTTSuccess;
     uint16_t keyLength;
     uint16_t valueLength;
-    const char * pKey;
-    const char * pValue;
 
     /*Validate the property length and decode the user property received.*/
     if( *pPropertyLength < sizeof( uint16_t ) )
@@ -3234,7 +3232,6 @@ static MQTTStatus_t decodeAndDiscard( size_t * pPropertyLength,
         else
         {
             pVariableHeader = &pVariableHeader[ sizeof( uint16_t ) ];
-            pKey = ( const char * ) pVariableHeader;
             *pPropertyLength -= keyLength;
             pVariableHeader = &pVariableHeader[ keyLength ];
 
@@ -3254,7 +3251,6 @@ static MQTTStatus_t decodeAndDiscard( size_t * pPropertyLength,
                 }
                 else
                 {
-                    pValue = ( const char * ) pVariableHeader;
                     pVariableHeader = &pVariableHeader[ valueLength ];
                     *pPropertyLength -= valueLength;
                 }
