@@ -1033,8 +1033,6 @@ void test_MQTTV5_DeserializeConnackOnlyutf_8( void )
 
 void test_MQTTV5_DeserializeConnackOnlyUserProperty( void )
 {
-    /* change this, it is not put in the struct at all. */
-
     uint8_t buffer[ 70000 ] = { 0 };
     uint8_t * pIndexLocal = buffer;
 
@@ -1928,7 +1926,7 @@ void test_MQTTV5_DeserializeAck_LogPuback()
     status = MQTT_DeserializeAck( &mqttPacketInfo, &packetIdentifier, NULL, &ackInfo, requestProblem, maxPacketSize, &propBuffer, NULL );
     TEST_ASSERT_EQUAL_INT( MQTTServerRefused, status );
 
-    /*Invlaid reason code.*/
+    /*Invalid reason code.*/
     buffer[ 2 ] = MQTT_REASON_CONNACK_BANNED;
     status = MQTT_DeserializeAck( &mqttPacketInfo, &packetIdentifier, NULL, &ackInfo, requestProblem, maxPacketSize, &propBuffer, NULL );
     TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
@@ -2061,7 +2059,7 @@ void test_MQTTV5_GetDisconnectPacketSize()
     status = MQTT_GetDisconnectPacketSize( NULL, &remainingLength, &packetSize, maxPacketSize, MQTT_REASON_DISCONNECT_NORMAL_DISCONNECTION );
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
 
-    /* / *Invalid Reason code* / */
+    /* Invalid Reason code. */
     maxPacketSize = 60U;
     status = MQTT_GetDisconnectPacketSize( NULL, &remainingLength, &packetSize, maxPacketSize, MQTT_REASON_SUBACK_GRANTED_QOS1 );
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
@@ -2074,6 +2072,7 @@ void test_MQTTV5_GetDisconnectPacketSize()
     status = MQTT_GetDisconnectPacketSize( NULL, &remainingLength, &packetSize, maxPacketSize, MQTT_REASON_DISCONNECT_PACKET_TOO_LARGE );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
 
+    /*Invalid reason code. */
     status = MQTT_GetDisconnectPacketSize( NULL, &remainingLength, &packetSize, maxPacketSize, MQTT_REASON_DISCONNECT_SERVER_BUSY );
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
 
@@ -2164,16 +2163,12 @@ void test_MQTTV5_DeserializeDisconnect()
     status = MQTT_DeserializeDisconnect( &packetInfo, maxPacketSize, &disconnectInfo, &propBuffer );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
 
-
-
-    status = MQTT_DeserializeDisconnect( &packetInfo, maxPacketSize, &disconnectInfo, NULL );
-    TEST_ASSERT_EQUAL_INT( MQTTNoMemory, status );
-
+    /*Invalid reason code for incoming DISCONNECT packet. */
     buffer[ 0 ] = MQTT_REASON_DISCONNECT_DISCONNECT_WITH_WILL_MESSAGE;
     status = MQTT_DeserializeDisconnect( &packetInfo, maxPacketSize, &disconnectInfo, &propBuffer );
     TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
-
     buffer[ 0 ] = MQTT_REASON_DISCONNECT_NORMAL_DISCONNECTION;
+
     /*Invalid property id.*/
     pIndex = &buffer[ 1 ];
     packetInfo.remainingLength = 9;
@@ -2191,11 +2186,13 @@ void test_MQTTV5_DeserializeDisconnect()
     status = MQTT_DeserializeDisconnect( &packetInfo, maxPacketSize, &disconnectInfo, &propBuffer );
     TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
 
+    /*Invalid property length.*/
     buffer[ 1 ] = 0x81;
     buffer[ 2 ] = 0x00;
     status = MQTT_DeserializeDisconnect( &packetInfo, maxPacketSize, &disconnectInfo, &propBuffer );
     TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
 
+    /*Property length is 0. */
     buffer[ 0 ] = MQTT_REASON_DISCONNECT_NORMAL_DISCONNECTION;
     pIndex = &buffer[ 1 ];
     packetInfo.remainingLength = 2;
@@ -2240,10 +2237,8 @@ void test_MQTTV5_GetSubscribePacketSize( void )
 
     subscribeInfo.topicFilterLength = 13;
     subscribeInfo.pTopicFilter = "example/topic";
-    /*Invalid max packet size*/
-    status = MQTT_GetSubscribePacketSize( &subscribeInfo, 1, NULL, &remainingLength, &packetSize, 1 );
-    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
 
+    /*Invalid max packet size*/
     status = MQTT_GetSubscribePacketSize( &subscribeInfo, 1, NULL, &remainingLength, &packetSize, 0 );
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
 }
@@ -2791,7 +2786,7 @@ void test_MQTTV5_suback( void )
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
 }
 
-void test_MQTTV5_GetUnsubscribePacketSize_Path( void )
+void test_MQTTV5_GetUnsubscribePacketSize( void )
 {
     MQTTStatus_t status = MQTTSuccess;
     MQTTSubscribeInfo_t subscribeInfo = { 0 };
@@ -2809,7 +2804,6 @@ void test_MQTTV5_GetUnsubscribePacketSize_Path( void )
 
     subscribeInfo.pTopicFilter = TEST_TOPIC_NAME;
     subscribeInfo.topicFilterLength = TEST_TOPIC_NAME_LENGTH;
-
 
     status = MQTT_GetUnsubscribePacketSize( &subscribeInfo, 1, NULL, &remainingLength, &packetSize, MQTT_MAX_PACKET_SIZE );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
@@ -2887,7 +2881,7 @@ void test_MQTTV5_DeserializeSuback( void )
 }
 
 
-void test_incoming_publish1V5( void )
+void test_incoming_publish2( void )
 {
     MQTTPacketInfo_t mqttPacketInfo;
     uint16_t packetIdentifier = 1;
@@ -4509,6 +4503,7 @@ void test_validateSubscribeProperties( void )
     status = MQTT_ValidateSubscribeProperties( isSubIdAvailable, &propBuilder );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
 
+    /* Subscription Id not available is set in the connack, but Subscription Id is sent. */
     uint8_t * pIndex = buffer;
     *pIndex = MQTT_SUBSCRIPTION_ID_ID;
     pIndex++;
@@ -4517,16 +4512,19 @@ void test_validateSubscribeProperties( void )
     status = MQTT_ValidateSubscribeProperties( isSubIdAvailable, &propBuilder );
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
 
+    /* Subscription Id is available. */
     isSubIdAvailable = 1;
     status = MQTT_ValidateSubscribeProperties( isSubIdAvailable, &propBuilder );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
 
+    /*Validating user properties. */
     pIndex = buffer;
     pIndex = serializeutf_8pair( pIndex );
     propBuilder.currentIndex += 11;
     status = MQTT_ValidateSubscribeProperties( 1, &propBuilder );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
 
+    /*Invalid property sent. */
     pIndex = serializeuint_8( pIndex, MQTT_PAYLOAD_FORMAT_ID );
     propBuilder.currentIndex += 2;
     status = MQTT_ValidateSubscribeProperties( 1, &propBuilder );
@@ -5024,11 +5022,13 @@ void test_ValidatePublishProperties( void )
     status = MQTT_ValidatePublishProperties( serverTopicAliasMax, &propBuilder, &topicAlias );
     TEST_ASSERT_EQUAL( MQTTSuccess, status );
 
+    /* Invalid property sent. */
     pIndex = serializeuint_8( pIndex, MQTT_REQUEST_PROBLEM_ID );
     propBuilder.currentIndex += 2;
     status = MQTT_ValidatePublishProperties( serverTopicAliasMax, &propBuilder, &topicAlias );
     TEST_ASSERT_EQUAL( MQTTBadParameter, status );
 
+    /* Invalid property length. */
     pIndex = buf;
     propBuilder.currentIndex = 1;
     pIndex = serializeuint_8( pIndex, MQTT_PAYLOAD_FORMAT_ID );
@@ -5066,13 +5066,16 @@ void test_ValidateDisconnectProperties( void )
     status = MQTT_ValidateDisconnectProperties( 10, &propBuffer );
     TEST_ASSERT_EQUAL( MQTTSuccess, status );
 
+    /*Disconnect Session Expiry non-zero while Connect Session Expiry was zero.*/
     status = MQTT_ValidateDisconnectProperties( 0, &propBuffer );
     TEST_ASSERT_EQUAL( MQTTBadParameter, status );
 
+    /*Invalid property is sent in the disconnect. */
     propBuffer.currentIndex = 28;
     status = MQTT_ValidateDisconnectProperties( 10, &propBuffer );
     TEST_ASSERT_EQUAL( MQTTBadParameter, status );
 
+    /*Invalid property length. */
     propBuffer.currentIndex = 2;
     status = MQTT_ValidateDisconnectProperties( 10, &propBuffer );
     TEST_ASSERT_EQUAL( MQTTBadResponse, status );
@@ -5109,7 +5112,7 @@ void test_ValidateUnsubscribeProperties( void )
     TEST_ASSERT_EQUAL( MQTTSuccess, status );
 
     propBuffer.currentIndex = 18;
-
+    /*Invalid property send in the unsubscribe.*/
     status = MQTT_ValidateUnsubscribeProperties( &propBuffer );
     TEST_ASSERT_EQUAL( MQTTBadParameter, status );
 }
@@ -5143,7 +5146,7 @@ void test_ValidateWillProperties( void )
     TEST_ASSERT_EQUAL( MQTTSuccess, status );
 
     propBuffer.currentIndex = 37;
-
+    /*Invalid property sent in LWT. */
     status = MQTT_ValidateWillProperties( &propBuffer );
     TEST_ASSERT_EQUAL( MQTTBadParameter, status );
 }

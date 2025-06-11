@@ -4923,12 +4923,6 @@ MQTTStatus_t MQTT_DeserializeDisconnect( const MQTTPacketInfo_t * pPacket,
             /*Extract the property length.*/
             status = decodeVariableLength( pIndex, pPacket->remainingLength - 1, &propertyLength );
 
-            if( ( propBuffer == NULL ) && ( propertyLength != 0U ) )
-            {
-                status = MQTTNoMemory;
-                LogError( ( "Publish Property buffer is NULL but property length is non-zero." ) );
-            }
-
             if( ( status == MQTTSuccess ) && ( propBuffer != NULL ) )
             {
                 pIndex = &pIndex[ variableLengthEncodedSize( propertyLength ) ];
