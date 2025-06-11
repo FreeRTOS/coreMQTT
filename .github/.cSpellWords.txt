@@ -52,3 +52,4 @@ Werror
 Wextra
 Wsign
 Wunused
+DCOV
