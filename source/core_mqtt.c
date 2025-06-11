@@ -571,11 +571,12 @@ static MQTTStatus_t initConnectProperties( MQTTConnectProperties_t * pConnectPro
  *
  * @param[in] reasonCode Reason Code to validate
  * @param[in] packetType Packet Type byte of the publish ack packet. (PUBACK, PUBREC, PUBREL, PUBCOMP)
- * 
+ *
  * @return #MQTTBadParameter if invalid parameters are passed;
  * #MQTTSuccess otherwise
  */
-static MQTTStatus_t validatePublishAckReasonCode( MQTTSuccessFailReasonCode_t reasonCode, uint8_t packetType );
+static MQTTStatus_t validatePublishAckReasonCode( MQTTSuccessFailReasonCode_t reasonCode,
+                                                  uint8_t packetType );
 
 /**
  * @brief Handle Incoming Subscribe ACK
@@ -4281,15 +4282,17 @@ void MQTT_SerializeMQTTVec( uint8_t * pAllocatedMem,
 
 /*-----------------------------------------------------------*/
 
-static MQTTStatus_t validatePublishAckReasonCode( MQTTSuccessFailReasonCode_t reasonCode, uint8_t packetType )
+static MQTTStatus_t validatePublishAckReasonCode( MQTTSuccessFailReasonCode_t reasonCode,
+                                                  uint8_t packetType )
 {
     MQTTStatus_t status = MQTTSuccess;
 
     switch( reasonCode )
     {
         case MQTT_REASON_PUBACK_SUCCESS:
-            status = MQTTSuccess ; 
-            break ; 
+            status = MQTTSuccess;
+            break;
+
         case MQTT_REASON_PUBACK_NO_MATCHING_SUBSCRIBERS:
         case MQTT_REASON_PUBACK_UNSPECIFIED_ERROR:
         case MQTT_REASON_PUBACK_IMPLEMENTATION_SPECIFIC_ERROR:
@@ -4298,6 +4301,7 @@ static MQTTStatus_t validatePublishAckReasonCode( MQTTSuccessFailReasonCode_t re
         case MQTT_REASON_PUBACK_PACKET_IDENTIFIER_IN_USE:
         case MQTT_REASON_PUBACK_QUOTA_EXCEEDED:
         case MQTT_REASON_PUBACK_PAYLOAD_FORMAT_INVALID:
+
             if( ( packetType == MQTT_PACKET_TYPE_PUBACK ) || ( packetType == MQTT_PACKET_TYPE_PUBREC ) )
             {
                 status = MQTTSuccess;
@@ -4307,8 +4311,11 @@ static MQTTStatus_t validatePublishAckReasonCode( MQTTSuccessFailReasonCode_t re
                 status = MQTTBadParameter;
                 LogError( ( "Invalid Reason Code for PUBREL or PUBCOMP packet." ) );
             }
-            break ; 
+
+            break;
+
         case MQTT_REASON_PUBREL_PACKET_IDENTIFIER_NOT_FOUND:
+
             if( ( packetType == MQTT_PACKET_TYPE_PUBREL ) || ( packetType == MQTT_PACKET_TYPE_PUBCOMP ) )
             {
                 status = MQTTSuccess;
@@ -4318,7 +4325,9 @@ static MQTTStatus_t validatePublishAckReasonCode( MQTTSuccessFailReasonCode_t re
                 status = MQTTBadParameter;
                 LogError( ( "Invalid Reason Code for PUBREC or PUBACK packet." ) );
             }
+
             break;
+
         default:
             status = MQTTBadParameter;
             LogError( ( "Invalid Reason Code." ) );

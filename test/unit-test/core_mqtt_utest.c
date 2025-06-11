@@ -511,7 +511,7 @@ static MQTTStatus_t eventCallback4( MQTTContext_t * pContext,
     uint8_t buf[ 10 ];
 
     /* Update the global state to indicate that event callback is invoked. */
-    *pReasonCode = MQTT_REASON_PUBREL_PACKET_IDENTIFIER_NOT_FOUND ; 
+    *pReasonCode = MQTT_REASON_PUBREL_PACKET_IDENTIFIER_NOT_FOUND;
     isEventCallbackInvoked = true;
     sendPropsBuffer->pBuffer = buf;
     sendPropsBuffer->currentIndex = 0;
@@ -605,8 +605,9 @@ bool retrieveFunctionNotConnected( MQTTContext_t * pContext,
     ( void ) packetId;
     ( void ) pSerializedMqttVec;
     ( void ) pSerializedMqttVecLen;
-
+    static uint8_t buf[10] ; 
     pContext->connectStatus = MQTTNotConnected;
+    *pSerializedMqttVec = buf ; 
     *pSerializedMqttVecLen = 10;
 
     return true;
@@ -6868,7 +6869,7 @@ void test_MQTT_ProcessLoop_handleIncomingPublish_Error_Paths_Send_Puback( void )
     /*Using event call back to set reason string and user properties,*/
     setupTransportInterface( &transport );
     setupNetworkBuffer( &networkBuffer );
-    incomingPacket.type = MQTT_PACKET_TYPE_PUBLISH; 
+    incomingPacket.type = MQTT_PACKET_TYPE_PUBLISH;
     incomingPacket.remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
     incomingPacket.headerLength = MQTT_SAMPLE_REMAINING_LENGTH;
     status = MQTT_Init( &context, &transport, getTime, eventCallback4, &networkBuffer );
