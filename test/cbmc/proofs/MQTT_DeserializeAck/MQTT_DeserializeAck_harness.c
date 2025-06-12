@@ -64,8 +64,6 @@ void harness()
     uint16_t * pPacketId;
     bool * pSessionPresent;
     MQTTReasonCodeInfo_t * pReasonCode;
-    bool requestProblem;
-    uint32_t maxPacketSize;
     MQTTPropBuilder_t * pPropertyBuilder;
     MQTTConnectProperties_t * pConnectProperties;
 
@@ -86,8 +84,6 @@ void harness()
                          pPacketId,
                          pSessionPresent,
                          pReasonCode,
-                         requestProblem,
-                         maxPacketSize,
                          pPropertyBuilder,
                          pConnectProperties );
 }
