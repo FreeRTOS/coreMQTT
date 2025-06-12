@@ -3045,11 +3045,11 @@ MQTTStatus_t MQTT_IncomingGetNextProp(MQTTPropBuilder_t* propBuffer, uint8_t* pr
  * - #MQTTBadParameter if invalid parameters are passed.
  * - #MQTTSuccess otherwise.
  */
-/* @[declare_mqtt_propertybuilder_init] */
+/* @[declare_mqttpropertybuilder_init] */
 MQTTStatus_t MQTTPropertyBuilder_Init( MQTTPropBuilder_t * pPropertyBuilder,
                                         uint8_t * buffer,
                                         size_t length );
-/* @[declare_mqtt_propertybuilder_init] */
+/* @[declare_mqttpropertybuilder_init] */
 
 /**
  * @brief Decodes the property length field in a SUBACK packet.
