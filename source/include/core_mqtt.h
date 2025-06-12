@@ -716,6 +716,8 @@ MQTTStatus_t MQTT_CheckConnectStatus( const MQTTContext_t * pContext );
  * MQTTPublishRetrieveFailed if on an unclean session connection, the copied
  * publishes are not retrieved successfully for retransmission
  * #MQTTBadResponse if the received CONNACK packet is malformed
+ * #MQTTServerRefused if the server refuses the connection in the CONNACK.
+ * #MQTTEventCallbackFailed if the user defined callback fails.
  * #MQTTSuccess otherwise.
  *
  * @note This API may spend more time than provided in the timeoutMS parameters in
@@ -843,6 +845,7 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
  * @param[in] pPropertyBuilder Properties to be sent in the outgoing packet.
  * @return
  * #MQTTBadParameter if invalid parameters are passed;
+ * #MQTTBadResponse if there is an error in property parsing; 
  * #MQTTSendFailed if transport write failed;
  * #MQTTStatusNotConnected if the connection is not established yet
  * #MQTTStatusDisconnectPending if the user is expected to call MQTT_Disconnect
@@ -916,6 +919,7 @@ MQTTStatus_t MQTT_Subscribe( MQTTContext_t * pContext,
  *
  * @return
  * #MQTTBadParameter if invalid parameters are passed;
+ * #MQTTBadResponse if there is an error in property parsing;
  * #MQTTSendFailed if transport write failed;
  * #MQTTStatusNotConnected if the connection is not established yet
  * #MQTTStatusDisconnectPending if the user is expected to call MQTT_Disconnect
@@ -1029,12 +1033,13 @@ MQTTStatus_t MQTT_Ping( MQTTContext_t * pContext );
  * @param[in] pPropertyBuilder Properties to be sent in the outgoing packet.
  *
  * @return
- * #MQTTBadParameter if invalid parameters are passed;
- * #MQTTSendFailed if transport write failed;
- * #MQTTStatusNotConnected if the connection is not established yet
- * #MQTTStatusDisconnectPending if the user is expected to call MQTT_Disconnect
+ * - #MQTTBadParameter if invalid parameters are passed;
+ * - #MQTTBadResponse if invalid properties are parsed;
+ * - #MQTTSendFailed if transport write failed;
+ * - #MQTTStatusNotConnected if the connection is not established yet
+ * - #MQTTStatusDisconnectPending if the user is expected to call MQTT_Disconnect
  * before calling any other API
- * #MQTTSuccess otherwise.
+ * - #MQTTSuccess otherwise.
  *
  * @note Functions to add optional properties to the UNSUBSCRIBE packet are:
  *
@@ -1104,7 +1109,12 @@ MQTTStatus_t MQTT_Unsubscribe( MQTTContext_t * pContext,
  *
  * @return
  * #MQTTBadParameter if invalid parameters are passed;
+ * #MQTTBadResponse if invalid properties are parsed;
  * #MQTTSendFailed if transport send failed;
+ * #MQTTStatusNotConnected if the connection is not established yet and a PING
+ * or an ACK is being sent.
+ * #MQTTStatusDisconnectPending if the user is expected to call MQTT_Disconnect
+ * before calling any other API
  * #MQTTSuccess otherwise.
  *
  * @note Functions to add optional properties to the DISCONNECT packet are:
@@ -1228,10 +1238,17 @@ MQTTStatus_t MQTT_ProcessLoop( MQTTContext_t * pContext );
  * #MQTTRecvFailed if a network error occurs during reception;
  * #MQTTSendFailed if a network error occurs while sending an ACK or PINGREQ;
  * #MQTTBadResponse if an invalid packet is received;
+ * #MQTTKeepAliveTimeout if the server has not sent a PINGRESP before
+ * #MQTT_PINGRESP_TIMEOUT_MS milliseconds;
  * #MQTTIllegalState if an incoming QoS 1/2 publish or ack causes an
  * invalid transition for the internal state machine;
- * #MQTTNeedMoreBytes if MQTT_ReceiveLoop has received
+ * #MQTTNeedMoreBytes if MQTT_ProcessLoop has received
  * incomplete data; it should be called again (probably after a delay);
+ * #MQTTStatusNotConnected if the connection is not established yet and a PING
+ * or an ACK is being sent.
+ * #MQTTStatusDisconnectPending if the user is expected to call MQTT_Disconnect
+ * before calling any other API
+ * #MQTTEventCallbackFailed if the user provided #MQTTEventCallback_t callback fails to process the received packet;
  * #MQTTSuccess on success.
  *
  * <b>Example</b>

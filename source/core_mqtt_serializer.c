@@ -415,8 +415,8 @@ static MQTTStatus_t processPublishFlags( uint8_t publishFlags,
  * @param[out] propBuffer Pointer to the property buffer.
  * @param[in] topicAliasMax Maximum allowed Topic Alias.
  *
- * @return #MQTTSuccess if PUBLISH is valid; #MQTTBadResponse
- * if the PUBLISH packet doesn't follow MQTT spec.
+ * @return #MQTTSuccess if PUBLISH is valid; 
+ * #MQTTBadResponse if the PUBLISH packet doesn't follow MQTT spec.
  */
 static MQTTStatus_t deserializePublish( const MQTTPacketInfo_t * pIncomingPacket,
                                         uint16_t * pPacketId,
@@ -456,7 +456,7 @@ static MQTTStatus_t decodeAndDiscard( size_t * pPropertyLength,
  * @param[in] bufferLength Length of the buffer.
  * @param[out] pLength Decoded variable length
  *
- * @return #MQTTSuccess if variable length and paramters are valid else #MQTTBadParameter.
+ * @return #MQTTSuccess if variable length and paramters are valid else #MQTTBadResponse.
  */
 static MQTTStatus_t decodeVariableLength( const uint8_t * pBuffer,
                                           size_t bufferLength,
@@ -472,8 +472,9 @@ static MQTTStatus_t decodeVariableLength( const uint8_t * pBuffer,
  * @param[out] pSessionPresent Whether a session is present or not.
  *
  *
- * @return #MQTTSuccess if connack  without connack properties is valid; #MQTTBadResponse if the Connack
- * packet doesn't follow MQTT spec.
+ * @return #MQTTSuccess if connack  without connack properties is valid; 
+ * #MQTTServerRefused if the server refused the connection; 
+ * #MQTTBadResponse if the Connack packet doesn't follow MQTT spec.
  */
 static MQTTStatus_t validateConnackParams( const MQTTPacketInfo_t * pIncomingPacket,
                                            bool * pSessionPresent );
@@ -484,7 +485,7 @@ static MQTTStatus_t validateConnackParams( const MQTTPacketInfo_t * pIncomingPac
  *
  * @param[in] responseCode MQTT Verion 5 standard CONNACK response code.
  *
- * @return MQTTServerRefused if response code is valid and MQTTBadResponse if responseCode is invalid.
+ * @return MQTTServerRefused if response code is valid and MQTTBadResponse if responseCode is invalid, else return MQTTSuccess.
  */
 static MQTTStatus_t logConnackResponse( uint8_t responseCode );
 
@@ -599,7 +600,7 @@ static MQTTStatus_t logSimpleAckResponse( uint8_t reasonCode,
  * @param[out] remainingLength Remaining length of the incoming packet.
  *
  *
- * @return #MQTTSuccess, #MQTTBadResponse and #MQTTBadResponse
+ * @return #MQTTSuccess, #MQTTBadResponse.
  **/
 static MQTTStatus_t decodeAckProperties( MQTTPropBuilder_t * propBuffer,
                                          uint8_t * pIndex,
@@ -617,7 +618,7 @@ static MQTTStatus_t decodeAckProperties( MQTTPropBuilder_t * propBuffer,
  * @param[in] requestProblem To validate the packet.
  * @param[out] propBuffer Pointer to the property buffer.
  *
- * @return #MQTTSuccess, #MQTTBadResponse, #MQTTBadResponse and  #MQTTBadResponse.
+ * @return #MQTTSuccess, #MQTTBadResponse, #MQTTBadParameter.
  */
 static MQTTStatus_t deserializeSimpleAck( const MQTTPacketInfo_t * pAck,
                                           uint16_t * pPacketIdentifier,
@@ -632,7 +633,7 @@ static MQTTStatus_t deserializeSimpleAck( const MQTTPacketInfo_t * pAck,
  * @param[in] reasonCode MQTT Verion 5 standard DISCONNECT response code.
  * @param[in] incoming To differentiate between outgoing and incoming disconnect.
  *
- * @return #MQTTSuccess,#MQTTBadParameter and #MQTTBadResponse.
+ * @return #MQTTSuccess, #MQTTBadParameter and #MQTTBadResponse.
  */
 static MQTTStatus_t validateDisconnectResponse( uint8_t reasonCode,
                                                 bool incoming );
@@ -647,7 +648,8 @@ static MQTTStatus_t validateDisconnectResponse( uint8_t reasonCode,
  * @param[out] pSubackPropertyLength Pointer to the length of suback properties
  * @param[in] remainingLength Remaining length of the incoming packet.
  *
- * @return #MQTTSuccess if SUBACK is valid; #MQTTBadResponse
+ * @return #MQTTSuccess if SUBACK is valid; 
+ * #MQTTBadResponse if SUBACK is invalid.
  *
  */
 static MQTTStatus_t deserializeSubackProperties( MQTTPropBuilder_t * propBuffer,
@@ -4197,7 +4199,7 @@ static MQTTStatus_t deserializePublishProperties( MQTTPublishInfo_t * pPublishIn
     {
         if( topicAliasMax < topicAliasVal )
         {
-            status = MQTTBadParameter;
+            status = MQTTBadResponse;
             LogError( ( "Topic Alias greater than Topic Alias Max. " ) );
         }
     }

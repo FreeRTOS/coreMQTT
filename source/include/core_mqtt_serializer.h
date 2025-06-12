@@ -737,11 +737,13 @@ typedef struct MQTTPacketInfo
 /**
  * @brief Get packet size and Remaining Length of an MQTT SUBSCRIBE packet.
  *
- * This function must be called before #sendSubscribeWithoutCopy in order to get
+ * This function must be called before #MQTT_SerializeSubscribe in order to get
  * the size of the MQTT SUBSCRIBE packet that is generated from the list of
- * #MQTTSubscribeInfo_t and optional subscribe properties.
- * The remaining length returned in @p pRemainingLength and
- * the packet size returned in @p pPacketSize are valid
+ * #MQTTSubscribeInfo_t and #MQTTPropBuilder_t (optional subscribe properties).
+ * The size of the #MQTTFixedBuffer_t supplied to #MQTT_SerializeSubscribe must be at least @p pPacketSize. The provided
+ * @p pSubscriptionList is valid for serialization with #MQTT_SerializeSubscribe
+ * only if this function returns #MQTTSuccess. The remaining length returned in
+ * @p pRemainingLength and the packet size returned in @p pPacketSize are valid
  * only if this function returns #MQTTSuccess.
  *
  * @param[in] pSubscriptionList List of MQTT subscription info.
@@ -792,7 +794,8 @@ typedef struct MQTTPacketInfo
  *
  * if( status == MQTTSuccess )
  * {
- *      // The subscribe packet can now be sent to the broker.
+ *      // The application should allocate or use a static #MQTTFixedBuffer_t
+ *      // of size >= packetSize to serialize the subscribe request. 
  * }
  * @endcode
  */
@@ -881,11 +884,14 @@ MQTTStatus_t MQTT_SerializeSubscribe( const MQTTSubscribeInfo_t * pSubscriptionL
 /**
  * @brief Get packet size and Remaining Length of an MQTT UNSUBSCRIBE packet.
  *
- * This function must be called before #sendSubscribeWithoutCopy in order to
+ * This function must be called before #MQTT_SerializeUnsubscribe in order to
  * get the size of the MQTT UNSUBSCRIBE packet that is generated from the list
- * of #MQTTSubscribeInfo_t and optional propertyLength. The remaining length returned in
- * @p pRemainingLength and the packet size returned in @p pPacketSize are valid
- * only if this function returns #MQTTSuccess.
+ * of #MQTTSubscribeInfo_t and #MQTTPropBuilder_t (optional unsubscribe properties). 
+ * The size of the #MQTTFixedBuffer_t supplied to #MQTT_SerializeUnsubscribe must be
+ * at least @p pPacketSize. The provided @p pSubscriptionList is valid for serialization 
+ * with #MQTT_SerializeUnsubscribe only if this function returns #MQTTSuccess. 
+ * The remaining length returned in @p pRemainingLength and the packet size returned
+ * in @p pPacketSize are valid only if this function returns #MQTTSuccess.
  *
  * @param[in] pSubscriptionList List of MQTT subscription info.
  * @param[in] subscriptionCount The number of elements in pSubscriptionList.
@@ -1246,8 +1252,6 @@ MQTTStatus_t MQTT_SerializeAck( const MQTTFixedBuffer_t * pFixedBuffer,
                                 uint16_t packetId );
 /* @[declare_mqtt_serializeack] */
 
-
-
 /**
  * @brief Get the size of an MQTT PINGREQ packet.
  *
@@ -1327,7 +1331,10 @@ MQTTStatus_t MQTT_SerializePingreq( const MQTTFixedBuffer_t * pFixedBuffer );
  * @param[in] maxPacketSize Maximum packet size.
  * @param[in] topicAliasMax Maximum topic alias specified in the CONNECT packet.
  *
- * @return #MQTTBadParameter, #MQTTBadResponse, or #MQTTSuccess.
+ * @return 
+ * - #MQTTBadParameter if invalid parameters are passed
+ * - #MQTTBadResponse if invalid packet is read
+ * - #MQTTSuccess otherwise.
  *
  * <b>Example</b>
  * @code{c}
@@ -1563,9 +1570,14 @@ uint8_t * MQTT_SerializeUnsubscribeHeader( size_t remainingLength,
 /**
  * @brief Get the size and Remaining Length of an MQTT Version 5 CONNECT packet.
  *
- * This function must be called before #sendConnectWithoutCopy in order to get
- * the size of the MQTT CONNECT packet that is generated from #MQTTConnectInfo_t,
- * optional #MQTTPublishInfo_t and optional connect and will properties.
+ * This function must be called before #MQTT_SerializeConnect in order to get
+ * the size of the MQTT CONNECT packet that is generated from #MQTTConnectInfo_t, #MQTTPublishInfo_t 
+ * and optional MQTTPropBuilder_t. The size of the #MQTTFixedBuffer_t supplied
+ * to #MQTT_SerializeConnect must be at least @p pPacketSize. The provided
+ * @p pConnectInfo and @p pWillInfo are valid for serialization with
+ * #MQTT_SerializeConnect only if this function returns #MQTTSuccess. The
+ * remaining length returned in @p pRemainingLength and the packet size returned
+ * in @p pPacketSize are valid only if this function returns #MQTTSuccess.
  *
  * @param[in] pConnectInfo MQTT CONNECT packet parameters.
  * @param[in] pWillInfo Last Will and Testament. Pass NULL if not used.
@@ -1821,7 +1833,7 @@ MQTTStatus_t MQTT_GetPublishPacketSize( const MQTTPublishInfo_t * pPublishInfo,
  *                        Contains the success/failure status of the corresponding request.
  * @param[in] requestProblem Request problem value set in the connect packet.
  *                          Indicates if there was an issue with the original request.
- * @param[in] maxPacketSize Maximum packet size allowed by the client.
+ * @param[in] maxPacketSize Maximum packet size allowed by the server.
  *                         Used for validation of incoming packet size.
  * @param[out] propBuffer Struct to store the deserialized acknowledgment properties.
  *                       Will contain any MQTT v5.0 properties included in the ack packet.
@@ -1832,8 +1844,7 @@ MQTTStatus_t MQTT_GetPublishPacketSize( const MQTTPublishInfo_t * pPublishInfo,
  * @return Returns one of the following:
  * - #MQTTSuccess if the packet was successfully deserialized
  * - #MQTTBadParameter if invalid parameters are passed
- * - #MQTTBadResponse if the packet is malformed
- * - #MQTTServerRefused if the server explicitly rejected the request
+ * - #MQTTServerRefused if the server explicitly rejected the request, either in the CONNACK or a SUBACK. 
  * - #MQTTBadResponse if the packet type is invalid or packet parsing fails
  *
  * <b>Example</b>
@@ -2086,7 +2097,7 @@ uint8_t * MQTT_SerializeDisconnectFixed(uint8_t * pIndex,
  * @param[out] pDisconnectInfo Struct containing disconnect reason code
  * @param[out] propBuffer MQTTPropBuilder_t to store the deserialized properties.
  *
- * @return #MQTTBadParameter, #MQTTServerRefused, #MQTTBadResponse or #MQTTSuccess.
+ * @return #MQTTBadParameter, #MQTTBadResponse or #MQTTSuccess.
  *
  * <b>Example</b>
  * @code{c}
@@ -2521,6 +2532,7 @@ MQTTStatus_t MQTTPropAdd_ReasonString(MQTTPropBuilder_t* pPropertyBuilder,
  *
  * @return Returns one of the following:
  * - #MQTTSuccess if the properties are valid
+ * - #MQTTBadParameter if invalid parameters are passed
  * - #MQTTBadResponse if an invalid packet is read
  */
 /* @[declare_mqtt_validatepublishproperties] */

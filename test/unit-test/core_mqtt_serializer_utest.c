@@ -2979,7 +2979,7 @@ void test_incoming_publish2( void )
     pIndex = serializeuint_16( pIndex, MQTT_TOPIC_ALIAS_ID );
     uint16_t topicAliasMax = 1;
     status = MQTT_DeserializePublish( &mqttPacketInfo, &packetIdentifier, &publishIn, &propBuffer, 100, topicAliasMax );
-    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+    TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
 
     /*Invalid property type. */
     buffer[ 6 ] = 5;

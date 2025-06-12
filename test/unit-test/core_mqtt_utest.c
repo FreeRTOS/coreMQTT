@@ -6427,6 +6427,23 @@ void test_MQTT_ProcessLoop_handleIncomingAck_Error_Paths1( void )
     MQTT_UpdateStateAck_ReturnThruPtr_pNewState( &stateAfterSerialize );
     status = MQTT_ProcessLoop( &context );
     TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
+
+    /*Packet size is greater than the allowed maximum packet size.*/
+
+    context.connectProperties.serverMaxPacketSize = 1 ; 
+    context.connectStatus = MQTTConnected;
+    modifyIncomingPacketStatus = MQTTSuccess;
+    stateAfterDeserialize = MQTTPubRelSend;
+    stateAfterSerialize = MQTTPubCompPending;
+    MQTT_ProcessIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_ProcessIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
+    MQTT_DeserializeAck_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_UpdateStateAck_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_UpdateStateAck_ReturnThruPtr_pNewState( &stateAfterDeserialize );
+    MQTT_SerializeAck_ExpectAnyArgsAndReturn( MQTTSuccess );
+    status = MQTT_ProcessLoop( &context );
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status);
+
 }
 
 void test_MQTT_ProcessLoop_handleIncomingAck_Error_Paths2( void )

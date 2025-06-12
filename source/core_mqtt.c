@@ -129,7 +129,7 @@ static int32_t sendBuffer( MQTTContext_t * pContext,
  *                    OR
  * 3. There is an error in sending data over the network.
  *
- * @return #MQTTSendFailed or #MQTTSuccess.
+ * @return #MQTTSendFailed, #MQTTBadParameter, #MQTTBadResponse or #MQTTSuccess.
  */
 static MQTTStatus_t sendConnectWithoutCopy( MQTTContext_t * pContext,
                                             const MQTTConnectInfo_t * pConnectInfo,
@@ -286,7 +286,7 @@ static uint8_t getAckTypeToSend( MQTTPublishState_t state );
  * @param[in] packetId packet ID of original PUBLISH.
  * @param[in] publishState Current publish state in record.
  *
- * @return #MQTTSuccess, #MQTTIllegalState or #MQTTSendFailed.
+ * @return MQTTSuccess, MQTTBadParamater, MQTTBadResponse, MQTTIllegalState, MQTTSendFailed, MQTTStatusNotConnected, MQTTStatusDisconnectPending or MQTTNoMemory.
  */
 static MQTTStatus_t sendPublishAcks( MQTTContext_t * pContext,
                                      uint16_t packetId,
@@ -308,7 +308,7 @@ static MQTTStatus_t handleKeepAlive( MQTTContext_t * pContext );
  * @param[in] pContext MQTT Connection context.
  * @param[in] pIncomingPacket Incoming packet.
  *
- * @return MQTTSuccess, MQTTIllegalState or deserialization error.
+ * @return MQTTSuccess, MQTTIllegalState, MQTTRecvFailed, MQTTBadParamater, MQTTBadResponse, MQTTStatusDisconnectPending, MQTTStatusNotConnected or MQTTEventCallbackFailed.
  */
 static MQTTStatus_t handleIncomingPublish( MQTTContext_t * pContext,
                                            MQTTPacketInfo_t * pIncomingPacket );
@@ -319,7 +319,7 @@ static MQTTStatus_t handleIncomingPublish( MQTTContext_t * pContext,
  * @param[in] pContext MQTT Connection context.
  * @param[in] pIncomingPacket Incoming packet.
  *
- * @return MQTTSuccess, MQTTIllegalState, or deserialization error.
+ * @return MQTTSuccess, MQTTIllegalState, MQTTBadResponse, MQTTBadParameter, MQTTSendFailed, MQTTStatusNotConnected, MQTTStatusDisconnectPending or MQTTEventCallbackFailed.
  */
 static MQTTStatus_t handlePublishAcks( MQTTContext_t * pContext,
                                        MQTTPacketInfo_t * pIncomingPacket );
@@ -332,7 +332,7 @@ static MQTTStatus_t handlePublishAcks( MQTTContext_t * pContext,
  * @param[in] manageKeepAlive Flag indicating if PINGRESPs should not be given
  * to the application
  *
- * @return MQTTSuccess, MQTTIllegalState, or deserialization error.
+ * @return MQTTSuccess, MQTTIllegalState, MQTTBadResponse, MQTTBadParameter, MQTTSendFailed, MQTTServerRefused, MQTTStatusNotConnected, MQTTStatusDisconnectPending or MQTTEventCallbackFailed.
  */
 static MQTTStatus_t handleIncomingAck( MQTTContext_t * pContext,
                                        MQTTPacketInfo_t * pIncomingPacket,
@@ -347,10 +347,20 @@ static MQTTStatus_t handleIncomingAck( MQTTContext_t * pContext,
  * @return #MQTTRecvFailed if a network error occurs during reception;
  * #MQTTSendFailed if a network error occurs while sending an ACK or PINGREQ;
  * #MQTTBadResponse if an invalid packet is received;
+ * #MQTTBadParameter if an invalid parameter is passed;
  * #MQTTKeepAliveTimeout if the server has not sent a PINGRESP before
  * #MQTT_PINGRESP_TIMEOUT_MS milliseconds;
  * #MQTTIllegalState if an incoming QoS 1/2 publish or ack causes an
  * invalid transition for the internal state machine;
+ * #MQTTStatusNotConnected if the connection is not established yet and a PING
+ * or an ACK is being sent;
+ * #MQTTStatusDisconnectPending if the user is expected to call MQTT_Disconnect
+ * before calling any other API;
+ * #MQTTNeedMoreBytes if MQTT_ProcessLoop has received
+ * incomplete data; it should be called again (probably after a delay);
+ * #MQTTNoDataAvailable if no data available for transport recv;
+ * #MQTTServerRefused if the server explicitly rejected the request, either in the CONNACK or a SUBACK. 
+ * #MQTTEventCallbackFailed if the user defined event callback fails. 
  * #MQTTSuccess on success.
  */
 static MQTTStatus_t receiveSingleIteration( MQTTContext_t * pContext,
@@ -385,8 +395,11 @@ static MQTTStatus_t validateSubscribeUnsubscribeParams( const MQTTContext_t * pC
  * Only relevant if not establishing a clean session.
  *
  * @return #MQTTBadResponse if a bad response is received;
+ * #MQTTBadParameter if invalid parameters are passed.
  * #MQTTNoDataAvailable if no data available for transport recv;
- * ##MQTTRecvFailed if transport recv failed;
+ * #MQTTServerRefused if the server refused the connection;
+ * #MQTTRecvFailed if transport recv failed;
+ * #MQTTEventCallbackFailed if the user defined callback fails.
  * #MQTTSuccess otherwise.
  */
 static MQTTStatus_t receiveConnack( MQTTContext_t * pContext,
@@ -427,6 +440,7 @@ static MQTTStatus_t handleCleanSession( MQTTContext_t * pContext );
  * @param[in] pPropertyBuilder MQTT Publish property builder.
  *
  * @return #MQTTSendFailed if transport send during resend failed;
+ * #MQTTPublishStoreFailed if storing the outgoing publish failed in the case of QoS 1/2
  * #MQTTSuccess otherwise.
  */
 static MQTTStatus_t sendPublishWithoutCopy( MQTTContext_t * pContext,
@@ -529,7 +543,7 @@ static bool matchTopicFilter( const char * pTopicName,
  * @param[in] publishState Current publish state in record.
  * @param[in] reasonCode Reason code to be sent in the Publish Ack.
  *
- * @return #MQTTSuccess, #MQTTBadParameter, #MQTTIllegalState or #MQTTSendFailed.
+ * @return #MQTTSuccess, #MQTTBadParameter, #MQTTIllegalState, #MQTTSendFailed, #MQTTStatusNotConnected, #MQTTStatusDisconnectPending or #MQTTBadResponse.
  */
 static MQTTStatus_t sendPublishAcksWithProperty( MQTTContext_t * pContext,
                                                  uint16_t packetId,
@@ -584,7 +598,7 @@ static MQTTStatus_t validatePublishAckReasonCode( MQTTSuccessFailReasonCode_t re
  * @param[in] pContext MQTT Connection context.
  * @param[in] pIncomingPacket Information of incoming packet
  *
- * @return #MQTTSuccess or #MQTTBadResponse
+ * @return #MQTTSuccess, #MQTTServerRefused, #MQTTBadResponse, #MQTTBadParameter, #MQTTEventCallbackFailed.
  */
 static MQTTStatus_t handleSuback( MQTTContext_t * pContext,
                                   MQTTPacketInfo_t * pIncomingPacket );
@@ -595,7 +609,7 @@ static MQTTStatus_t handleSuback( MQTTContext_t * pContext,
  * @param[in] pContext MQTT Connection context.
  * @param[in] pIncomingPacket Information of incoming packet
  *
- * @return #MQTTSuccess or #MQTTBadResponse
+ * @return #MQTTSuccess, #MQTTBadResponse, #MQTTBadParameter, #MQTTEventCallbackFailed, 
  */
 static MQTTStatus_t handleIncomingDisconnect( MQTTContext_t * pContext,
                                               MQTTPacketInfo_t * pIncomingPacket );
@@ -1480,6 +1494,12 @@ static MQTTStatus_t sendPublishAcks( MQTTContext_t * pContext,
         status = MQTT_SerializeAck( &localBuffer,
                                     packetTypeByte,
                                     packetId );
+
+        if( MQTT_PUBLISH_ACK_PACKET_SIZE > pContext->connectProperties.serverMaxPacketSize )
+        {
+            LogError( ( "Packet size is greater than the allowed maximum packet size." ) );
+            status = MQTTBadParameter;
+        }
 
         if( status == MQTTSuccess )
         {
@@ -3620,12 +3640,6 @@ MQTTStatus_t MQTT_Publish( MQTTContext_t * pContext,
     if( ( status == MQTTSuccess ) && ( pPropertyBuilder != NULL ) && ( pPropertyBuilder->pBuffer != NULL ) )
     {
         status = MQTT_ValidatePublishProperties( pContext->connectProperties.serverTopicAliasMax, pPropertyBuilder, &topicAlias );
-    }
-
-    /* Validate arguments. */
-    if( status == MQTTSuccess )
-    {
-        status = validatePublishParams( pContext, pPublishInfo, packetId );
     }
 
     if( status == MQTTSuccess )
