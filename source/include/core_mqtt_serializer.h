@@ -1831,15 +1831,10 @@ MQTTStatus_t MQTT_GetPublishPacketSize( const MQTTPublishInfo_t * pPublishInfo,
  *                            For other packet types: this parameter is ignored.
  * @param[out] pReasonCode Struct to store reason code(s) from the acknowledgment packet.
  *                        Contains the success/failure status of the corresponding request.
- * @param[in] requestProblem Request problem value set in the connect packet.
- *                          Indicates if there was an issue with the original request.
- * @param[in] maxPacketSize Maximum packet size allowed by the server.
- *                         Used for validation of incoming packet size.
  * @param[out] propBuffer Struct to store the deserialized acknowledgment properties.
  *                       Will contain any MQTT v5.0 properties included in the ack packet.
  * @param[in,out] pConnectProperties Struct to store the deserialized connect/connack properties.
- *                                  Used only for CONNACK packets to store connection-specific properties.
- *                                  For other packet types, this parameter can be NULL.
+ *                                   This parameter cannot be NULL.
  *
  * @return Returns one of the following:
  * - #MQTTSuccess if the packet was successfully deserialized
@@ -1885,8 +1880,6 @@ MQTTStatus_t MQTT_DeserializeAck( const MQTTPacketInfo_t * pIncomingPacket,
                                 uint16_t * pPacketId,
                                 bool * pSessionPresent,
                                 MQTTReasonCodeInfo_t * pReasonCode,
-                                bool requestProblem,
-                                uint32_t maxPacketSize,
                                 MQTTPropBuilder_t * propBuffer,
                                 MQTTConnectProperties_t * pConnectProperties );
 /* @[declare_mqtt_deserializeack] */
@@ -3062,6 +3055,17 @@ MQTTStatus_t MQTTPropertyBuilder_Init( MQTTPropBuilder_t * pPropertyBuilder,
                                         size_t length );
 /* @[declare_mqtt_propertybuilder_init] */
 
+/**
+ * @brief Decodes the property length field in a SUBACK packet.
+ *
+ * @param[in] pIndex Pointer to the start of the properties in the SUBACK packet.
+ * @param[in] remainingLength The remaining length of the MQTT packet being parsed, without Packet ID.
+ * @param[out] subackPropertyLength The decoded property length including the size of its encoded representation.
+ *
+ * @return #MQTTSuccess if the property length is successfully decoded;
+ *         #MQTTBadResponse if the decoded property length is greater than the remaining length.
+ */
+MQTTStatus_t decodeSubackPropertyLength(uint8_t * pIndex, size_t remainingLength, size_t * subackPropertyLength); 
 /* *INDENT-OFF* */
 #ifdef __cplusplus
     }

@@ -564,6 +564,15 @@ static uint8_t * MQTTV5_SerializeAckFixed_cb( uint8_t * pIndex,
     return pIndex;
 }
 
+static MQTTStatus_t decodeSubackPropertyLength_cb(uint8_t * pIndex, size_t remainingLength, size_t * subackPropertyLength,int numcallbacks)
+{
+    ( void ) pIndex ; 
+    ( void ) remainingLength ; 
+    ( void ) numcallbacks ;
+    *subackPropertyLength = 1 ;  
+    return MQTTSuccess ; 
+}
+
 MQTTStatus_t MQTT_SerializeAck_StubSuccess( const MQTTFixedBuffer_t * pFixedBuffer,
                                             uint8_t packetType,
                                             uint16_t packetId )
@@ -8894,15 +8903,15 @@ void test_MQTT_GetSubAckStatusCodes( void )
     mqttPacketInfo.type = MQTT_PACKET_TYPE_SUBACK;
     mqttPacketInfo.pRemainingData = buffer;
     mqttPacketInfo.remainingLength = 7;
+    decodeSubackPropertyLength_Stub( decodeSubackPropertyLength_cb ); 
     status = MQTT_GetSubAckStatusCodes( &mqttPacketInfo, &pPayloadStart, &payloadSize );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
-    TEST_ASSERT_EQUAL_PTR( &buffer[ 2 ], pPayloadStart );
-    TEST_ASSERT_EQUAL_INT( 0, pPayloadStart[ 0 ] ); /* Property Length is 0. */
-    TEST_ASSERT_EQUAL_INT( MQTTSubAckSuccessQos0, pPayloadStart[ 1 ] );
-    TEST_ASSERT_EQUAL_INT( MQTTSubAckSuccessQos1, pPayloadStart[ 2 ] );
-    TEST_ASSERT_EQUAL_INT( MQTTSubAckSuccessQos2, pPayloadStart[ 3 ] );
-    TEST_ASSERT_EQUAL_INT( MQTTSubAckFailure, pPayloadStart[ 4 ] );
-    TEST_ASSERT_EQUAL_INT( 5, payloadSize );
+    TEST_ASSERT_EQUAL_PTR( &buffer[ 3 ], pPayloadStart );
+    TEST_ASSERT_EQUAL_INT( MQTTSubAckSuccessQos0, pPayloadStart[ 0 ] );
+    TEST_ASSERT_EQUAL_INT( MQTTSubAckSuccessQos1, pPayloadStart[ 1 ] );
+    TEST_ASSERT_EQUAL_INT( MQTTSubAckSuccessQos2, pPayloadStart[ 2 ] );
+    TEST_ASSERT_EQUAL_INT( MQTTSubAckFailure, pPayloadStart[ 3 ] );
+    TEST_ASSERT_EQUAL_INT( 4, payloadSize );
 
     /* Packet is NULL. */
     status = MQTT_GetSubAckStatusCodes( NULL, &pPayloadStart, &payloadSize );

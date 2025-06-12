@@ -1525,13 +1525,8 @@ MQTTStatus_t deserializeConnack( MQTTConnectProperties_t * pConnackProperties,
     /*Validate the packet size if max packet size is set*/
     if( status == MQTTSuccess )
     {
-        if( ( pIncomingPacket->remainingLength + remainingLengthSize + 1U ) > ( pConnackProperties->maxPacketSize ) )
-        {
-            LogError( ( "CONNACK packet size greater than maxPacketSize allowed" ) );
-            status = MQTTBadResponse;
-        }
         /*Validate the remaining length*/
-        else if( ( pIncomingPacket->remainingLength ) != ( 2U + propertyLength + variableLengthEncodedSize( propertyLength ) ) )
+        if( ( pIncomingPacket->remainingLength ) != ( 2U + propertyLength + variableLengthEncodedSize( propertyLength ) ) )
         {
             LogError( ( "Invalid Remaining Length" ) );
             status = MQTTBadResponse;
@@ -4652,19 +4647,15 @@ MQTTStatus_t MQTT_DeserializeAck( const MQTTPacketInfo_t * pIncomingPacket,
                                   uint16_t * pPacketId,
                                   bool * pSessionPresent,
                                   MQTTReasonCodeInfo_t * pReasonCode,
-                                  bool requestProblem,
-                                  uint32_t maxPacketSize,
                                   MQTTPropBuilder_t * propBuffer,
                                   MQTTConnectProperties_t * pConnectProperties )
 {
     MQTTStatus_t status = MQTTSuccess;
-    bool skipMaxPacketSizeCheck = false;
+    uint32_t maxPacketSize ;
 
-    if( ( pIncomingPacket != NULL ) &&
-        ( ( pIncomingPacket->type == MQTT_PACKET_TYPE_CONNACK ) ||
-          ( pIncomingPacket->type == MQTT_PACKET_TYPE_PINGRESP ) ) )
+    if( pConnectProperties != NULL )
     {
-        skipMaxPacketSizeCheck = true;
+        maxPacketSize = pConnectProperties->maxPacketSize;
     }
 
     if( pIncomingPacket == NULL )
@@ -4672,7 +4663,11 @@ MQTTStatus_t MQTT_DeserializeAck( const MQTTPacketInfo_t * pIncomingPacket,
         LogError( ( "pIncomingPacket cannot be NULL." ) );
         status = MQTTBadParameter;
     }
-
+    else if( pConnectProperties == NULL )
+    {
+        LogError( ( "pConnectProperties cannot be NULL." ) );
+        status = MQTTBadParameter;
+    }
     /* Pointer for packet identifier cannot be NULL for packets other than
      * CONNACK and PINGRESP. */
     else if( ( pPacketId == NULL ) &&
@@ -4690,12 +4685,6 @@ MQTTStatus_t MQTT_DeserializeAck( const MQTTPacketInfo_t * pIncomingPacket,
         LogError( ( "pSessionPresent cannot be NULL for CONNACK packet." ) );
         status = MQTTBadParameter;
     }
-    else if( ( pConnectProperties == NULL ) && ( pIncomingPacket->type == MQTT_PACKET_TYPE_CONNACK ) )
-    {
-        LogError( ( "pConnectProperties cannot be NULL for CONNACK packet." ) );
-        status = MQTTBadParameter;
-    }
-
     /* Pointer for remaining data cannot be NULL for packets other
      * than PINGRESP. */
     else if( ( pIncomingPacket->pRemainingData == NULL ) &&
@@ -4705,11 +4694,12 @@ MQTTStatus_t MQTT_DeserializeAck( const MQTTPacketInfo_t * pIncomingPacket,
         status = MQTTBadParameter;
     }
     /*Max packet size cannot be 0.*/
-    else if( ( maxPacketSize == 0U ) && ( skipMaxPacketSizeCheck != true ) )
+    else if( maxPacketSize == 0U  )
     {
+        LogError(("Max packet size cannot be 0.")); 
         status = MQTTBadParameter;
     }
-    else if( ( ( pIncomingPacket->remainingLength + variableLengthEncodedSize( pIncomingPacket->remainingLength ) + 1U ) > maxPacketSize ) && ( skipMaxPacketSizeCheck != true ) )
+    else if( ( pIncomingPacket->remainingLength + variableLengthEncodedSize( pIncomingPacket->remainingLength ) + 1U ) > maxPacketSize )
     {
         LogError( ( "Packet Size cannot be greater than max packet size. " ) );
         status = MQTTBadResponse;
@@ -4725,7 +4715,7 @@ MQTTStatus_t MQTT_DeserializeAck( const MQTTPacketInfo_t * pIncomingPacket,
 
             case MQTT_PACKET_TYPE_PUBACK:
             case MQTT_PACKET_TYPE_PUBREC:
-                status = deserializeSimpleAck( pIncomingPacket, pPacketId, pReasonCode, requestProblem, propBuffer );
+                status = deserializeSimpleAck( pIncomingPacket, pPacketId, pReasonCode, pConnectProperties->requestProblemInfo, propBuffer );
 
                 if( ( status == MQTTSuccess ) && ( pIncomingPacket->remainingLength > 2U ) )
                 {
@@ -4736,7 +4726,7 @@ MQTTStatus_t MQTT_DeserializeAck( const MQTTPacketInfo_t * pIncomingPacket,
 
             case MQTT_PACKET_TYPE_PUBREL:
             case MQTT_PACKET_TYPE_PUBCOMP:
-                status = deserializeSimpleAck( pIncomingPacket, pPacketId, pReasonCode, requestProblem, propBuffer );
+                status = deserializeSimpleAck( pIncomingPacket, pPacketId, pReasonCode, pConnectProperties->requestProblemInfo, propBuffer );
 
                 if( ( status == MQTTSuccess ) && ( pIncomingPacket->remainingLength > 2U ) )
                 {
@@ -7140,6 +7130,28 @@ MQTTStatus_t MQTTPropertyBuilder_Init( MQTTPropBuilder_t * pPropertyBuilder,
     }
 
     return status;
+}
+
+/*-----------------------------------------------------------*/
+
+MQTTStatus_t decodeSubackPropertyLength(uint8_t * pIndex, size_t remainingLength, size_t * subackPropertyLength)
+{
+    MQTTStatus_t status ; 
+    uint8_t * pLocalIndex = pIndex ; 
+    size_t propertyLength = 0U ; 
+
+    status = decodeVariableLength( pLocalIndex, remainingLength, &propertyLength) ; 
+
+    if( propertyLength > remainingLength )
+    {
+        status = MQTTBadResponse ; 
+    }
+
+    if( status == MQTTSuccess )
+    {
+        *subackPropertyLength = ( propertyLength + variableLengthEncodedSize( propertyLength ) ) ;  
+    }
+    return status ; 
 }
 
 /*-----------------------------------------------------------*/
