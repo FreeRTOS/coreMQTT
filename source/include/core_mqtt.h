@@ -845,7 +845,7 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
  * @param[in] pPropertyBuilder Properties to be sent in the outgoing packet.
  * @return
  * #MQTTBadParameter if invalid parameters are passed;
- * #MQTTBadResponse if there is an error in property parsing; 
+ * #MQTTBadResponse if there is an error in property parsing;
  * #MQTTSendFailed if transport write failed;
  * #MQTTStatusNotConnected if the connection is not established yet
  * #MQTTStatusDisconnectPending if the user is expected to call MQTT_Disconnect

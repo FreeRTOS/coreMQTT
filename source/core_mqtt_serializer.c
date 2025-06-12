@@ -415,7 +415,7 @@ static MQTTStatus_t processPublishFlags( uint8_t publishFlags,
  * @param[out] propBuffer Pointer to the property buffer.
  * @param[in] topicAliasMax Maximum allowed Topic Alias.
  *
- * @return #MQTTSuccess if PUBLISH is valid; 
+ * @return #MQTTSuccess if PUBLISH is valid;
  * #MQTTBadResponse if the PUBLISH packet doesn't follow MQTT spec.
  */
 static MQTTStatus_t deserializePublish( const MQTTPacketInfo_t * pIncomingPacket,
@@ -472,8 +472,8 @@ static MQTTStatus_t decodeVariableLength( const uint8_t * pBuffer,
  * @param[out] pSessionPresent Whether a session is present or not.
  *
  *
- * @return #MQTTSuccess if connack  without connack properties is valid; 
- * #MQTTServerRefused if the server refused the connection; 
+ * @return #MQTTSuccess if connack  without connack properties is valid;
+ * #MQTTServerRefused if the server refused the connection;
  * #MQTTBadResponse if the Connack packet doesn't follow MQTT spec.
  */
 static MQTTStatus_t validateConnackParams( const MQTTPacketInfo_t * pIncomingPacket,
@@ -648,7 +648,7 @@ static MQTTStatus_t validateDisconnectResponse( uint8_t reasonCode,
  * @param[out] pSubackPropertyLength Pointer to the length of suback properties
  * @param[in] remainingLength Remaining length of the incoming packet.
  *
- * @return #MQTTSuccess if SUBACK is valid; 
+ * @return #MQTTSuccess if SUBACK is valid;
  * #MQTTBadResponse if SUBACK is invalid.
  *
  */
@@ -1502,7 +1502,6 @@ MQTTStatus_t deserializeConnack( MQTTConnectProperties_t * pConnackProperties,
 {
     MQTTStatus_t status = MQTTSuccess;
     size_t propertyLength = 0U;
-    size_t remainingLengthSize;
     uint8_t * pVariableHeader = NULL;
     MQTTStatus_t statusCopy = MQTTSuccess;
 
@@ -1518,7 +1517,6 @@ MQTTStatus_t deserializeConnack( MQTTConnectProperties_t * pConnackProperties,
     {
         pVariableHeader = pIncomingPacket->pRemainingData;
         pVariableHeader = &pVariableHeader[ 2 ];
-        remainingLengthSize = variableLengthEncodedSize( pIncomingPacket->remainingLength );
         status = decodeVariableLength( pVariableHeader, pIncomingPacket->remainingLength - 2, &propertyLength );
     }
 
@@ -4651,7 +4649,7 @@ MQTTStatus_t MQTT_DeserializeAck( const MQTTPacketInfo_t * pIncomingPacket,
                                   MQTTConnectProperties_t * pConnectProperties )
 {
     MQTTStatus_t status = MQTTSuccess;
-    uint32_t maxPacketSize ;
+    uint32_t maxPacketSize;
 
     if( pConnectProperties != NULL )
     {
@@ -4668,6 +4666,7 @@ MQTTStatus_t MQTT_DeserializeAck( const MQTTPacketInfo_t * pIncomingPacket,
         LogError( ( "pConnectProperties cannot be NULL." ) );
         status = MQTTBadParameter;
     }
+
     /* Pointer for packet identifier cannot be NULL for packets other than
      * CONNACK and PINGRESP. */
     else if( ( pPacketId == NULL ) &&
@@ -4685,6 +4684,7 @@ MQTTStatus_t MQTT_DeserializeAck( const MQTTPacketInfo_t * pIncomingPacket,
         LogError( ( "pSessionPresent cannot be NULL for CONNACK packet." ) );
         status = MQTTBadParameter;
     }
+
     /* Pointer for remaining data cannot be NULL for packets other
      * than PINGRESP. */
     else if( ( pIncomingPacket->pRemainingData == NULL ) &&
@@ -4694,9 +4694,9 @@ MQTTStatus_t MQTT_DeserializeAck( const MQTTPacketInfo_t * pIncomingPacket,
         status = MQTTBadParameter;
     }
     /*Max packet size cannot be 0.*/
-    else if( maxPacketSize == 0U  )
+    else if( maxPacketSize == 0U )
     {
-        LogError(("Max packet size cannot be 0.")); 
+        LogError( ( "Max packet size cannot be 0." ) );
         status = MQTTBadParameter;
     }
     else if( ( pIncomingPacket->remainingLength + variableLengthEncodedSize( pIncomingPacket->remainingLength ) + 1U ) > maxPacketSize )
@@ -7134,24 +7134,27 @@ MQTTStatus_t MQTTPropertyBuilder_Init( MQTTPropBuilder_t * pPropertyBuilder,
 
 /*-----------------------------------------------------------*/
 
-MQTTStatus_t decodeSubackPropertyLength(uint8_t * pIndex, size_t remainingLength, size_t * subackPropertyLength)
+MQTTStatus_t decodeSubackPropertyLength( uint8_t * pIndex,
+                                         size_t remainingLength,
+                                         size_t * subackPropertyLength )
 {
-    MQTTStatus_t status ; 
-    uint8_t * pLocalIndex = pIndex ; 
-    size_t propertyLength = 0U ; 
+    MQTTStatus_t status;
+    uint8_t * pLocalIndex = pIndex;
+    size_t propertyLength = 0U;
 
-    status = decodeVariableLength( pLocalIndex, remainingLength, &propertyLength) ; 
+    status = decodeVariableLength( pLocalIndex, remainingLength, &propertyLength );
 
     if( propertyLength > remainingLength )
     {
-        status = MQTTBadResponse ; 
+        status = MQTTBadResponse;
     }
 
     if( status == MQTTSuccess )
     {
-        *subackPropertyLength = ( propertyLength + variableLengthEncodedSize( propertyLength ) ) ;  
+        *subackPropertyLength = ( propertyLength + variableLengthEncodedSize( propertyLength ) );
     }
-    return status ; 
+
+    return status;
 }
 
 /*-----------------------------------------------------------*/

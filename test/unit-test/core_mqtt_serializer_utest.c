@@ -564,7 +564,7 @@ void test_MQTTV5_DeserializeConnackOnlyStatus( void )
     uint8_t * pIndex = buffer;
     MQTTPropBuilder_t propBuffer = { 0 };
 
-    memset( &properties, 0x00, sizeof( properties ) ); 
+    memset( &properties, 0x00, sizeof( properties ) );
 
     status = MQTT_DeserializeAck( NULL, NULL, NULL, NULL, &propBuffer, &properties );
     TEST_ASSERT_EQUAL( MQTTBadParameter, status );
@@ -589,13 +589,13 @@ void test_MQTTV5_DeserializeConnackOnlyStatus( void )
     TEST_ASSERT_EQUAL( MQTTBadParameter, status );
 
     /*Incomplete connack received. */
-    properties.maxPacketSize = 100 ;
+    properties.maxPacketSize = 100;
     packetInfo.type = MQTT_PACKET_TYPE_CONNACK;
     packetInfo.remainingLength = 2;
     status = MQTT_DeserializeAck( &packetInfo, NULL, &sessionPresent, NULL, &propBuffer, &properties );
     TEST_ASSERT_EQUAL( MQTTBadResponse, status );
 
-    /*Reserved bit incorrect*/ 
+    /*Reserved bit incorrect*/
     packetInfo.remainingLength = 3;
     buffer[ 0 ] = 0x11;
     packetInfo.type = MQTT_PACKET_TYPE_CONNACK;
@@ -986,7 +986,7 @@ void test_MQTTV5_DeserializeConnackOnlyutf_8( void )
     pIndexLocal++;
     pIndexLocal = serializeutf_8( pIndexLocal, MQTT_ASSIGNED_CLIENT_ID );
     pIndexLocal = serializeutf_8( pIndexLocal, MQTT_ASSIGNED_CLIENT_ID );
-    status = MQTT_DeserializeAck( &packetInfo, NULL, &session, NULL,  &propBuffer, &properties );
+    status = MQTT_DeserializeAck( &packetInfo, NULL, &session, NULL, &propBuffer, &properties );
     TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
 
     /*Invalid property length*/
@@ -1116,7 +1116,7 @@ void test_MQTTV5_DeserializeConnackOnlyUserProperty( void )
         pIndexLocal = serializeutf_8pair( pIndexLocal );
     }
 
-    status = MQTT_DeserializeAck( &packetInfo, NULL, &session, NULL,  &propBuffer, &properties );
+    status = MQTT_DeserializeAck( &packetInfo, NULL, &session, NULL, &propBuffer, &properties );
     TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
 }
 
@@ -1773,10 +1773,10 @@ void test_MQTTV5_DeserializeAck_puback( void )
     /* Verify parameters */
     memset( &mqttPacketInfo, 0x00, sizeof( mqttPacketInfo ) );
     memset( &ackInfo, 0x00, sizeof( ackInfo ) );
-    memset( &properties, 0x00, sizeof( properties ) ); 
+    memset( &properties, 0x00, sizeof( properties ) );
 
-    properties.requestProblemInfo = requestProblem ; 
-    properties.maxPacketSize = maxPacketSize ; 
+    properties.requestProblemInfo = requestProblem;
+    properties.maxPacketSize = maxPacketSize;
 
     mqttPacketInfo.type = MQTT_PACKET_TYPE_PUBACK;
     status = MQTT_DeserializeAck( NULL, &packetIdentifier, NULL, &ackInfo, &propBuffer, &properties );
@@ -1794,12 +1794,12 @@ void test_MQTTV5_DeserializeAck_puback( void )
     status = MQTT_DeserializeAck( &mqttPacketInfo, &packetIdentifier, NULL, &ackInfo, &propBuffer, &properties );
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
 
-    properties.maxPacketSize = MQTT_MAX_PACKET_SIZE ; 
+    properties.maxPacketSize = MQTT_MAX_PACKET_SIZE;
     status = MQTT_DeserializeAck( &mqttPacketInfo, &packetIdentifier, NULL, NULL, &propBuffer, &properties );
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
 
     maxPacketSize = 200U;
-    properties.maxPacketSize = maxPacketSize ; 
+    properties.maxPacketSize = maxPacketSize;
     /* Packet identifier 0 is not valid (per spec). */
     buffer[ 0 ] = 0;
     buffer[ 1 ] = 0;
@@ -1837,7 +1837,7 @@ void test_MQTTV5_DeserializeAck_puback( void )
     TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
 
     requestProblem = true;
-    properties.requestProblemInfo = requestProblem ;
+    properties.requestProblemInfo = requestProblem;
     /*User properties not initialized.*/
     status = MQTT_DeserializeAck( &mqttPacketInfo, &packetIdentifier, NULL, &ackInfo, &propBuffer, &properties );
     TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
@@ -1893,8 +1893,8 @@ void test_MQTTV5_DeserializeAck_LogPuback()
     memset( &mqttPacketInfo, 0x00, sizeof( mqttPacketInfo ) );
     memset( &ackInfo, 0x00, sizeof( ackInfo ) );
     memset( &properties, 0x00, sizeof( properties ) );
-    properties.requestProblemInfo = requestProblem ;
-    properties.maxPacketSize = maxPacketSize ; 
+    properties.requestProblemInfo = requestProblem;
+    properties.maxPacketSize = maxPacketSize;
 
     MQTTPropBuilder_t propBuffer = { 0 };
     mqttPacketInfo.pRemainingData = buffer;
@@ -1958,8 +1958,8 @@ void test_MQTTV5_DeserializeAck_Pubrel()
     memset( &mqttPacketInfo, 0x00, sizeof( mqttPacketInfo ) );
     memset( &ackInfo, 0x00, sizeof( ackInfo ) );
     memset( &properties, 0x00, sizeof( properties ) );
-    properties.requestProblemInfo = requestProblem ;
-    properties.maxPacketSize = maxPacketSize ;
+    properties.requestProblemInfo = requestProblem;
+    properties.maxPacketSize = maxPacketSize;
 
     mqttPacketInfo.pRemainingData = buffer;
     mqttPacketInfo.type = MQTT_PACKET_TYPE_PUBREL;
@@ -2723,8 +2723,9 @@ void test_MQTTV5_suback( void )
 {
     MQTTStatus_t status;
     uint8_t * pIndex;
+
     memset( &properties, 0x00, sizeof( properties ) );
-    properties.maxPacketSize = MQTT_MAX_PACKET_SIZE ; 
+    properties.maxPacketSize = MQTT_MAX_PACKET_SIZE;
     uint8_t packetBuffer[ 23 ] =
     {
         0x90,             /* Fixed header: SUBACK type (0x90) */
@@ -2840,9 +2841,10 @@ void test_MQTTV5_DeserializeSuback( void )
     uint16_t packetIdentifier;
     MQTTStatus_t status = MQTTSuccess;
     MQTTPropBuilder_t propBuffer = { 0 };
-    uint8_t buffer[ 50 ] = { 0 }; 
-    memset( &properties, 0x00, sizeof( properties ) ); 
-    properties.maxPacketSize = MQTT_MAX_PACKET_SIZE ; 
+    uint8_t buffer[ 50 ] = { 0 };
+
+    memset( &properties, 0x00, sizeof( properties ) );
+    properties.maxPacketSize = MQTT_MAX_PACKET_SIZE;
 
     /* Bad remaining length. */
     mqttPacketInfo.type = MQTT_PACKET_TYPE_SUBACK;
@@ -2874,10 +2876,10 @@ void test_MQTTV5_DeserializeSuback( void )
     TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
 
     /*Max Packet Size lesser than suback packet size*/
-    properties.maxPacketSize = 1U; 
+    properties.maxPacketSize = 1U;
     status = MQTT_DeserializeAck( &mqttPacketInfo, &packetIdentifier, NULL, &subackReasonCodes, &propBuffer, &properties );
     TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
-    properties.maxPacketSize = MQTT_MAX_PACKET_SIZE ; 
+    properties.maxPacketSize = MQTT_MAX_PACKET_SIZE;
 
     /*Invalid Remaining Length*/
     mqttPacketInfo.remainingLength = 2;
@@ -3233,7 +3235,7 @@ void test_MQTT_DeserializeAck_pingresp( void )
     MQTTPacketInfo_t mqttPacketInfo;
     MQTTStatus_t status = MQTTSuccess;
 
-    properties.maxPacketSize = MQTT_MAX_PACKET_SIZE ; 
+    properties.maxPacketSize = MQTT_MAX_PACKET_SIZE;
 
     /* Bad remaining length. */
     ( void ) memset( &mqttPacketInfo, 0x00, sizeof( mqttPacketInfo ) );
@@ -5226,9 +5228,10 @@ void test_Mqtt_PropertyBuilder_Init( void )
 
 void test_decodeSubackPropertyLength( void )
 {
-    size_t propertyLength = 0 ; 
-    MQTTStatus_t status ; 
-    uint8_t buffer[10] = {0} ; 
+    size_t propertyLength = 0;
+    MQTTStatus_t status;
+    uint8_t buffer[ 10 ] = { 0 };
+
     buffer[ 0 ] = 0;
     buffer[ 1 ] = 1;
     buffer[ 2 ] = 0; /*Length of the properties is 0. */
@@ -5237,20 +5240,20 @@ void test_decodeSubackPropertyLength( void )
     buffer[ 5 ] = 0x02;
     buffer[ 6 ] = 0x80;
 
-    status = decodeSubackPropertyLength(&buffer[2], 7, &propertyLength); 
+    status = decodeSubackPropertyLength( &buffer[ 2 ], 7, &propertyLength );
     TEST_ASSERT_EQUAL( MQTTSuccess, status );
-    TEST_ASSERT_EQUAL_INT(1, propertyLength); 
+    TEST_ASSERT_EQUAL_INT( 1, propertyLength );
 
-    buffer[2] = 2 ; 
-    buffer[3] = MQTT_PAYLOAD_FORMAT_ID ; 
-    buffer[4] = 1 ; 
+    buffer[ 2 ] = 2;
+    buffer[ 3 ] = MQTT_PAYLOAD_FORMAT_ID;
+    buffer[ 4 ] = 1;
 
-    status = decodeSubackPropertyLength(&buffer[2], 7, &propertyLength); 
+    status = decodeSubackPropertyLength( &buffer[ 2 ], 7, &propertyLength );
     TEST_ASSERT_EQUAL( MQTTSuccess, status );
-    TEST_ASSERT_EQUAL_INT(3, propertyLength); 
+    TEST_ASSERT_EQUAL_INT( 3, propertyLength );
 
     /*Invalid remaining length. */
-    status = decodeSubackPropertyLength(&buffer[2], 1, &propertyLength); 
+    status = decodeSubackPropertyLength( &buffer[ 2 ], 1, &propertyLength );
     TEST_ASSERT_EQUAL( MQTTBadResponse, status );
 }
 /* ========================================================================== */

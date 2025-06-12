@@ -359,8 +359,8 @@ static MQTTStatus_t handleIncomingAck( MQTTContext_t * pContext,
  * #MQTTNeedMoreBytes if MQTT_ProcessLoop has received
  * incomplete data; it should be called again (probably after a delay);
  * #MQTTNoDataAvailable if no data available for transport recv;
- * #MQTTServerRefused if the server explicitly rejected the request, either in the CONNACK or a SUBACK. 
- * #MQTTEventCallbackFailed if the user defined event callback fails. 
+ * #MQTTServerRefused if the server explicitly rejected the request, either in the CONNACK or a SUBACK.
+ * #MQTTEventCallbackFailed if the user defined event callback fails.
  * #MQTTSuccess on success.
  */
 static MQTTStatus_t receiveSingleIteration( MQTTContext_t * pContext,
@@ -609,7 +609,7 @@ static MQTTStatus_t handleSuback( MQTTContext_t * pContext,
  * @param[in] pContext MQTT Connection context.
  * @param[in] pIncomingPacket Information of incoming packet
  *
- * @return #MQTTSuccess, #MQTTBadResponse, #MQTTBadParameter, #MQTTEventCallbackFailed, 
+ * @return #MQTTSuccess, #MQTTBadResponse, #MQTTBadParameter, #MQTTEventCallbackFailed,
  */
 static MQTTStatus_t handleIncomingDisconnect( MQTTContext_t * pContext,
                                               MQTTPacketInfo_t * pIncomingPacket );
@@ -4123,7 +4123,7 @@ MQTTStatus_t MQTT_GetSubAckStatusCodes( const MQTTPacketInfo_t * pSubackPacket,
                                         size_t * pPayloadSize )
 {
     MQTTStatus_t status = MQTTSuccess;
-    size_t propertyLength = 0 ; 
+    size_t propertyLength = 0;
 
     if( pSubackPacket == NULL )
     {
@@ -4170,8 +4170,8 @@ MQTTStatus_t MQTT_GetSubAckStatusCodes( const MQTTPacketInfo_t * pSubackPacket,
          * Therefore, we add 2 positions (PacketId) and the number of bytes the properties take for the starting address of the payload, and
          * subtract 2 bytes from the remaining length for the length of the payload.
          */
-        status = decodeSubackPropertyLength(&pSubackPacket->pRemainingData[sizeof( uint16_t )], pSubackPacket->remainingLength - sizeof( uint16_t ), &propertyLength ) ; 
-        *pPayloadStart = &pSubackPacket->pRemainingData[sizeof( uint16_t ) + propertyLength ]; 
+        status = decodeSubackPropertyLength( &pSubackPacket->pRemainingData[ sizeof( uint16_t ) ], pSubackPacket->remainingLength - sizeof( uint16_t ), &propertyLength );
+        *pPayloadStart = &pSubackPacket->pRemainingData[ sizeof( uint16_t ) + propertyLength ];
         *pPayloadSize = pSubackPacket->remainingLength - sizeof( uint16_t ) - propertyLength;
     }
 

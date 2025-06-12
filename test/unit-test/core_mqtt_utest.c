@@ -564,13 +564,16 @@ static uint8_t * MQTTV5_SerializeAckFixed_cb( uint8_t * pIndex,
     return pIndex;
 }
 
-static MQTTStatus_t decodeSubackPropertyLength_cb(uint8_t * pIndex, size_t remainingLength, size_t * subackPropertyLength,int numcallbacks)
+static MQTTStatus_t decodeSubackPropertyLength_cb( uint8_t * pIndex,
+                                                   size_t remainingLength,
+                                                   size_t * subackPropertyLength,
+                                                   int numcallbacks )
 {
-    ( void ) pIndex ; 
-    ( void ) remainingLength ; 
-    ( void ) numcallbacks ;
-    *subackPropertyLength = 1 ;  
-    return MQTTSuccess ; 
+    ( void ) pIndex;
+    ( void ) remainingLength;
+    ( void ) numcallbacks;
+    *subackPropertyLength = 1;
+    return MQTTSuccess;
 }
 
 MQTTStatus_t MQTT_SerializeAck_StubSuccess( const MQTTFixedBuffer_t * pFixedBuffer,
@@ -614,9 +617,9 @@ bool retrieveFunctionNotConnected( MQTTContext_t * pContext,
     ( void ) packetId;
     ( void ) pSerializedMqttVec;
     ( void ) pSerializedMqttVecLen;
-    static uint8_t buf[10] ; 
+    static uint8_t buf[ 10 ];
     pContext->connectStatus = MQTTNotConnected;
-    *pSerializedMqttVec = buf ; 
+    *pSerializedMqttVec = buf;
     *pSerializedMqttVecLen = 10;
 
     return true;
@@ -6439,7 +6442,7 @@ void test_MQTT_ProcessLoop_handleIncomingAck_Error_Paths1( void )
 
     /*Packet size is greater than the allowed maximum packet size.*/
 
-    context.connectProperties.serverMaxPacketSize = 1 ; 
+    context.connectProperties.serverMaxPacketSize = 1;
     context.connectStatus = MQTTConnected;
     modifyIncomingPacketStatus = MQTTSuccess;
     stateAfterDeserialize = MQTTPubRelSend;
@@ -6451,8 +6454,7 @@ void test_MQTT_ProcessLoop_handleIncomingAck_Error_Paths1( void )
     MQTT_UpdateStateAck_ReturnThruPtr_pNewState( &stateAfterDeserialize );
     MQTT_SerializeAck_ExpectAnyArgsAndReturn( MQTTSuccess );
     status = MQTT_ProcessLoop( &context );
-    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status);
-
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
 }
 
 void test_MQTT_ProcessLoop_handleIncomingAck_Error_Paths2( void )
@@ -8903,7 +8905,7 @@ void test_MQTT_GetSubAckStatusCodes( void )
     mqttPacketInfo.type = MQTT_PACKET_TYPE_SUBACK;
     mqttPacketInfo.pRemainingData = buffer;
     mqttPacketInfo.remainingLength = 7;
-    decodeSubackPropertyLength_Stub( decodeSubackPropertyLength_cb ); 
+    decodeSubackPropertyLength_Stub( decodeSubackPropertyLength_cb );
     status = MQTT_GetSubAckStatusCodes( &mqttPacketInfo, &pPayloadStart, &payloadSize );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
     TEST_ASSERT_EQUAL_PTR( &buffer[ 3 ], pPayloadStart );

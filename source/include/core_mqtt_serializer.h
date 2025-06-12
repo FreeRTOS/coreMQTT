@@ -795,7 +795,7 @@ typedef struct MQTTPacketInfo
  * if( status == MQTTSuccess )
  * {
  *      // The application should allocate or use a static #MQTTFixedBuffer_t
- *      // of size >= packetSize to serialize the subscribe request. 
+ *      // of size >= packetSize to serialize the subscribe request.
  * }
  * @endcode
  */
@@ -886,10 +886,10 @@ MQTTStatus_t MQTT_SerializeSubscribe( const MQTTSubscribeInfo_t * pSubscriptionL
  *
  * This function must be called before #MQTT_SerializeUnsubscribe in order to
  * get the size of the MQTT UNSUBSCRIBE packet that is generated from the list
- * of #MQTTSubscribeInfo_t and #MQTTPropBuilder_t (optional unsubscribe properties). 
+ * of #MQTTSubscribeInfo_t and #MQTTPropBuilder_t (optional unsubscribe properties).
  * The size of the #MQTTFixedBuffer_t supplied to #MQTT_SerializeUnsubscribe must be
- * at least @p pPacketSize. The provided @p pSubscriptionList is valid for serialization 
- * with #MQTT_SerializeUnsubscribe only if this function returns #MQTTSuccess. 
+ * at least @p pPacketSize. The provided @p pSubscriptionList is valid for serialization
+ * with #MQTT_SerializeUnsubscribe only if this function returns #MQTTSuccess.
  * The remaining length returned in @p pRemainingLength and the packet size returned
  * in @p pPacketSize are valid only if this function returns #MQTTSuccess.
  *
@@ -1331,7 +1331,7 @@ MQTTStatus_t MQTT_SerializePingreq( const MQTTFixedBuffer_t * pFixedBuffer );
  * @param[in] maxPacketSize Maximum packet size.
  * @param[in] topicAliasMax Maximum topic alias specified in the CONNECT packet.
  *
- * @return 
+ * @return
  * - #MQTTBadParameter if invalid parameters are passed
  * - #MQTTBadResponse if invalid packet is read
  * - #MQTTSuccess otherwise.
@@ -1571,7 +1571,7 @@ uint8_t * MQTT_SerializeUnsubscribeHeader( size_t remainingLength,
  * @brief Get the size and Remaining Length of an MQTT Version 5 CONNECT packet.
  *
  * This function must be called before #MQTT_SerializeConnect in order to get
- * the size of the MQTT CONNECT packet that is generated from #MQTTConnectInfo_t, #MQTTPublishInfo_t 
+ * the size of the MQTT CONNECT packet that is generated from #MQTTConnectInfo_t, #MQTTPublishInfo_t
  * and optional MQTTPropBuilder_t. The size of the #MQTTFixedBuffer_t supplied
  * to #MQTT_SerializeConnect must be at least @p pPacketSize. The provided
  * @p pConnectInfo and @p pWillInfo are valid for serialization with
@@ -1839,7 +1839,7 @@ MQTTStatus_t MQTT_GetPublishPacketSize( const MQTTPublishInfo_t * pPublishInfo,
  * @return Returns one of the following:
  * - #MQTTSuccess if the packet was successfully deserialized
  * - #MQTTBadParameter if invalid parameters are passed
- * - #MQTTServerRefused if the server explicitly rejected the request, either in the CONNACK or a SUBACK. 
+ * - #MQTTServerRefused if the server explicitly rejected the request, either in the CONNACK or a SUBACK.
  * - #MQTTBadResponse if the packet type is invalid or packet parsing fails
  *
  * <b>Example</b>
@@ -1851,10 +1851,8 @@ MQTTStatus_t MQTT_GetPublishPacketSize( const MQTTPublishInfo_t * pPublishInfo,
  * uint16_t packetId;
  * bool sessionPresent;
  * MQTTReasonCodeInfo_t reasonCode ; // Can be set to NULL if the incoming packet is CONNACK or PINGRESP
- * bool requestProblem = = pContext->connectProperties.requestProblemInfo ; // only relevant if the incoming packet is a PUBLISH Ack.
- * uint32_t maxPacketSize = pContext->connectProperties.maxPacketSize ;
  * MQTTPropBuilder_t propBuffer; // Can be set to NULL if the user does not want any incoming properties.
- * MQTTConnectProperties_t connectProperties = pContext->connectProperties;  // Can be set to NULL if the incoming packet is PUBLISH ACKs, SUBACK, UNSUBACK or PINGRESP
+ * MQTTConnectProperties_t connectProperties = pContext->connectProperties;  // Cannot be set to NULL.
  *
  * // Receive an incoming packet and populate all fields. The details are out of scope
  * // for this example.
@@ -1865,8 +1863,6 @@ MQTTStatus_t MQTT_GetPublishPacketSize( const MQTTPublishInfo_t * pPublishInfo,
  *                             &packetId,
  *                             &sessionPresent,
  *                             &reasonCode,
- *                             requestProblem,
- *                             maxPacketSize,
  *                             &propBuffer,
  *                             &connectProperties);
  * if(status == MQTTSuccess)
@@ -3065,7 +3061,7 @@ MQTTStatus_t MQTTPropertyBuilder_Init( MQTTPropBuilder_t * pPropertyBuilder,
  * @return #MQTTSuccess if the property length is successfully decoded;
  *         #MQTTBadResponse if the decoded property length is greater than the remaining length.
  */
-MQTTStatus_t decodeSubackPropertyLength(uint8_t * pIndex, size_t remainingLength, size_t * subackPropertyLength); 
+MQTTStatus_t decodeSubackPropertyLength(uint8_t * pIndex, size_t remainingLength, size_t * subackPropertyLength);
 /* *INDENT-OFF* */
 #ifdef __cplusplus
     }
