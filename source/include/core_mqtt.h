@@ -69,7 +69,6 @@ struct MQTTDeserializedInfo;
  * @brief An opaque structure provided by the library to the #MQTTStorePacketForRetransmit function when using #MQTTStorePacketForRetransmit.
  */
 typedef struct MQTTVec MQTTVec_t;
-struct MQTTPropBuilder;
 
 /**
  * @ingroup mqtt_callback_types
@@ -154,7 +153,14 @@ typedef uint32_t (* MQTTGetCurrentTimeFunc_t )( void );
  *
  * - #MQTTPropAdd_UserProp
  * - #MQTTPropAdd_ReasonString
- *
+ * @return 
+ * - #MQTTSuccess Event callback was able to process the packet
+ * - #MQTTEventCallbackFailed This is not an error code but just a code that tells 
+ *                            the user that the eventcallback was unable to process 
+ *                            a packet due to application specific reasons. 
+ *                            The application should recall the processloop after 
+ *                            making sure that it would be able to process the 
+ *                            received packet again.
  */
 typedef MQTTStatus_t (* MQTTEventCallback_t )( struct MQTTContext * pContext,
                                                struct MQTTPacketInfo * pPacketInfo,
@@ -1469,21 +1475,6 @@ size_t MQTT_GetBytesInMQTTVec( const MQTTVec_t * pVec );
 void MQTT_SerializeMQTTVec( uint8_t * pAllocatedMem,
                             const MQTTVec_t * pVec );
 /* @[declare_mqtt_serializemqttvec] */
-
-/**
- * @brief Initialize an MQTTConnectProperties_t.
- *
- * @note This function initializes the connect properties to default values.
- *
- * @param[in] pConnectProperties The connect properties to initialize.
- *
- * @return
- * - #MQTTBadParameter if pConnectProperties is NULL.
- * - #MQTTSuccess otherwise.
- */
-/* @[declare_mqtt_initconnect] */
-MQTTStatus_t MQTT_InitConnect( MQTTConnectProperties_t * pConnectProperties );
-/* @[declare_mqtt_initconnect] */
 
 /* *INDENT-OFF* */
 #ifdef __cplusplus

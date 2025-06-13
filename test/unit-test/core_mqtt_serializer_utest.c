@@ -742,8 +742,6 @@ void test_MQTTV5_DeserializeConnackOnlyStatus( void )
     packetInfo.remainingLength = 20;
     pIndex = &buffer[ 2 ];
     propertyLength = encodeRemainingLength( pIndex, 20971556356235 );
-    LogDebug( ( "Encoded size for length is %lu bytes.",
-                ( unsigned long ) propertyLength ) );
     status = MQTT_DeserializeAck( &packetInfo, NULL, &sessionPresent, NULL, &propBuffer, &properties );
     TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
 
@@ -5255,5 +5253,17 @@ void test_decodeSubackPropertyLength( void )
     /*Invalid remaining length. */
     status = decodeSubackPropertyLength( &buffer[ 2 ], 1, &propertyLength );
     TEST_ASSERT_EQUAL( MQTTBadResponse, status );
+}
+
+void test_MQTT_InitConnect( void )
+{
+    MQTTStatus_t status = MQTTSuccess;
+
+    status = MQTT_InitConnect( NULL );
+    TEST_ASSERT_EQUAL( MQTTBadParameter, status );
+
+    MQTTConnectProperties_t connectProperties;
+    status = MQTT_InitConnect( &connectProperties );
+    TEST_ASSERT_EQUAL( MQTTSuccess, status );
 }
 /* ========================================================================== */

@@ -43,7 +43,6 @@
 /* *INDENT-ON */
 
 #include "transport_interface.h"
-#include "core_mqtt_config_defaults.h"
 
 /* MQTT packet types. */
 
@@ -72,6 +71,156 @@
  * @brief The size of MQTT PUBACK, PUBREC, PUBREL, and PUBCOMP packets, per MQTT spec.
  */
 #define MQTT_PUBLISH_ACK_PACKET_SIZE    ( 4UL )
+
+#define MQTT_SUBSCRIBE_QOS1                    ( 0 ) /**< @brief MQTT SUBSCRIBE QoS1 flag. */
+#define MQTT_SUBSCRIBE_QOS2                    ( 1 ) /**< @brief MQTT SUBSCRIBE QoS2 flag. */
+#define MQTT_SUBSCRIBE_NO_LOCAL                ( 2 ) /**< @brief MQTT SUBSCRIBE no local flag. */
+#define MQTT_SUBSCRIBE_RETAIN_AS_PUBLISHED     ( 3 ) /**< @brief MQTT SUBSCRIBE retain as published flag. */
+#define MQTT_SUBSCRIBE_RETAIN_HANDLING1        ( 4 ) /**<@brief MQTT SUBSCRIBE Retain Handling Option 1 */
+#define MQTT_SUBSCRIBE_RETAIN_HANDLING2        ( 5 ) /**<@brief Retain Handling Option 2   -> in core_mqtt_serializer.c */
+
+/*CONNECT PROPERTIES*/
+
+/**
+* @brief Session expiry id.
+*/
+#define MQTT_SESSION_EXPIRY_ID      ( 0x11 )
+
+/**
+* @brief Receive maximum id.
+*/
+#define MQTT_RECEIVE_MAX_ID         ( 0x21 )
+
+/**
+* @brief Maximum packet size  id.
+*/
+#define MQTT_MAX_PACKET_SIZE_ID     ( 0x27 )
+
+/**
+* @brief Topic alias size id.
+*/
+#define MQTT_TOPIC_ALIAS_MAX_ID     ( 0x22 )
+
+/**
+* @brief Request response id.
+*/
+#define MQTT_REQUEST_RESPONSE_ID    ( 0x19 )
+
+/**
+* @brief Request problem id.
+*/
+#define MQTT_REQUEST_PROBLEM_ID     ( 0x17 )
+
+/**
+* @brief User property id.
+*/
+#define MQTT_USER_PROPERTY_ID       ( 0x26 )
+
+/**
+* @brief Authentication method id.
+*/
+#define MQTT_AUTH_METHOD_ID         ( 0x15 )
+
+/**
+* @brief  Authentication data id.
+*/
+#define MQTT_AUTH_DATA_ID           ( 0x16 )
+
+/*Publish PROPERTIES*/
+
+/**
+* @brief Will delay id.
+*/
+#define MQTT_WILL_DELAY_ID          ( 0x18 )
+
+/**
+* @brief Payload format id.
+*/
+#define MQTT_PAYLOAD_FORMAT_ID      ( 0x01 )
+
+/**
+* @brief Message Expiry id.
+*/
+#define MQTT_MSG_EXPIRY_ID          ( 0x02 )
+
+/**
+* @brief Content type id.
+*/
+#define MQTT_CONTENT_TYPE_ID        ( 0x03 )
+
+/**
+* @brief Response topic id.
+*/
+#define MQTT_RESPONSE_TOPIC_ID      ( 0x08 )
+
+/**
+* @brief Correlation data id.
+*/
+#define MQTT_CORRELATION_DATA_ID    ( 0x09 )
+
+/**
+* @brief Topic alias id.
+*/
+#define MQTT_TOPIC_ALIAS_ID         ( 0x23 )
+
+/*CONNACK PROPERTIES*/
+
+/**
+* @brief Max qos id.
+*/
+#define MQTT_MAX_QOS_ID              ( 0x24 )
+
+/**
+* @brief Retain available id.
+*/
+#define MQTT_RETAIN_AVAILABLE_ID     ( 0x25 )
+
+/**
+* @brief Assigned client identifier id.
+*/
+#define MQTT_ASSIGNED_CLIENT_ID      ( 0x12 )
+
+/**
+* @brief Reason string id.
+*/
+#define MQTT_REASON_STRING_ID        ( 0x1F )
+
+/**
+* @brief Wildcard available id.
+*/
+#define MQTT_WILDCARD_ID             ( 0x28 )
+
+/**
+* @brief Subscription available id.
+*/
+#define MQTT_SUB_AVAILABLE_ID        ( 0x29 )
+
+/**
+* @brief Shared subscription id.
+*/
+#define MQTT_SHARED_SUB_ID           ( 0x2A )
+
+/**
+* @brief Server keep alive id.
+*/
+#define MQTT_SERVER_KEEP_ALIVE_ID    ( 0x13 )
+
+/**
+* @brief Response information id.
+*/
+
+#define MQTT_RESPONSE_INFO_ID    ( 0x1A )
+
+/**
+* @brief Server reference  id.
+*/
+#define MQTT_SERVER_REF_ID       ( 0x1C )
+
+/**
+* @brief Subscription ID id
+*/
+#define MQTT_SUBSCRIPTION_ID_ID          ( 0x0B )
+
 
 /* Structures defined in this file. */
 struct MQTTFixedBuffer;
@@ -246,156 +395,25 @@ typedef enum MQTTSuccessFailReasonCode
 
 } MQTTSuccessFailReasonCode_t;
 
-
-#define MQTT_SUBSCRIBE_QOS1                    ( 0 ) /**< @brief MQTT SUBSCRIBE QoS1 flag. */
-#define MQTT_SUBSCRIBE_QOS2                    ( 1 ) /**< @brief MQTT SUBSCRIBE QoS2 flag. */
-#define MQTT_SUBSCRIBE_NO_LOCAL                ( 2 ) /**< @brief MQTT SUBSCRIBE no local flag. */
-#define MQTT_SUBSCRIBE_RETAIN_AS_PUBLISHED     ( 3 ) /**< @brief MQTT SUBSCRIBE retain as published flag. */
-#define MQTT_SUBSCRIBE_RETAIN_HANDLING1        ( 4 ) /**<@brief MQTT SUBSCRIBE Retain Handling Option 1 */
-#define MQTT_SUBSCRIBE_RETAIN_HANDLING2        ( 5 ) /**<@brief Retain Handling Option 2   -> in core_mqtt_serializer.c */
-
-/*CONNECT PROPERTIES*/
+/**
+ * @ingroup mqtt_enum_types
+ * @brief Retain Handling types.
+ */
+typedef enum MQTTRetainHandling{
+    retainSendOnSub = 0, /**< Send retained messages at the time of subscription. */
+    retainSendOnSubIfNotPresent = 1,  /**< Send retained messages at subscription only if subscription does not currently exist. */
+    retainDoNotSendonSub = 2 /**< Do not send retained messages at the time of subscription. */
+}MQTTRetainHandling_t;
 
 /**
-* @brief Session expiry id.
-*/
-#define MQTT_SESSION_EXPIRY_ID      ( 0x11 )
-
-/**
-* @brief Receive maximum id.
-*/
-#define MQTT_RECEIVE_MAX_ID         ( 0x21 )
-
-/**
-* @brief Maximum packet size  id.
-*/
-#define MQTT_MAX_PACKET_SIZE_ID     ( 0x27 )
-
-/**
-* @brief Topic alias size id.
-*/
-#define MQTT_TOPIC_ALIAS_MAX_ID     ( 0x22 )
-
-/**
-* @brief Request response id.
-*/
-#define MQTT_REQUEST_RESPONSE_ID    ( 0x19 )
-
-/**
-* @brief Request problem id.
-*/
-#define MQTT_REQUEST_PROBLEM_ID     ( 0x17 )
-
-/**
-* @brief User property id.
-*/
-#define MQTT_USER_PROPERTY_ID       ( 0x26 )
-
-/**
-* @brief Authentication method id.
-*/
-#define MQTT_AUTH_METHOD_ID         ( 0x15 )
-
-/**
-* @brief  Authentication data id.
-*/
-#define MQTT_AUTH_DATA_ID           ( 0x16 )
-
-/*Publish PROPERTIES*/
-
-/**
-* @brief Will delay id.
-*/
-#define MQTT_WILL_DELAY_ID          ( 0x18 )
-
-/**
-* @brief Payload format id.
-*/
-#define MQTT_PAYLOAD_FORMAT_ID      ( 0x01 )
-
-/**
-* @brief Message Expiry id.
-*/
-#define MQTT_MSG_EXPIRY_ID          ( 0x02 )
-
-/**
-* @brief Content type id.
-*/
-#define MQTT_CONTENT_TYPE_ID        ( 0x03 )
-
-/**
-* @brief Response topic id.
-*/
-#define MQTT_RESPONSE_TOPIC_ID      ( 0x08 )
-
-/**
-* @brief Correlation data id.
-*/
-#define MQTT_CORRELATION_DATA_ID    ( 0x09 )
-
-/**
-* @brief Topic alias id.
-*/
-#define MQTT_TOPIC_ALIAS_ID         ( 0x23 )
-
-/*CONNACK PROPERTIES*/
-
-/**
-* @brief Max qos id.
-*/
-#define MQTT_MAX_QOS_ID              ( 0x24 )
-
-/**
-* @brief Retain available id.
-*/
-#define MQTT_RETAIN_AVAILABLE_ID     ( 0x25 )
-
-/**
-* @brief Assigned client identifier id.
-*/
-#define MQTT_ASSIGNED_CLIENT_ID      ( 0x12 )
-
-/**
-* @brief Reason string id.
-*/
-#define MQTT_REASON_STRING_ID        ( 0x1F )
-
-/**
-* @brief Wildcard available id.
-*/
-#define MQTT_WILDCARD_ID             ( 0x28 )
-
-/**
-* @brief Subscription available id.
-*/
-#define MQTT_SUB_AVAILABLE_ID        ( 0x29 )
-
-/**
-* @brief Shared subscription id.
-*/
-#define MQTT_SHARED_SUB_ID           ( 0x2A )
-
-/**
-* @brief Server keep alive id.
-*/
-#define MQTT_SERVER_KEEP_ALIVE_ID    ( 0x13 )
-
-/**
-* @brief Response information id.
-*/
-
-#define MQTT_RESPONSE_INFO_ID    ( 0x1A )
-
-/**
-* @brief Server reference  id.
-*/
-#define MQTT_SERVER_REF_ID       ( 0x1C )
-
-/**
-* @brief Subscription ID id
-*/
-#define MQTT_SUBSCRIPTION_ID_ID          ( 0x0B )
-
+ * @ingroup mqtt_enum_types
+ * @brief MQTT Subscription packet types.
+ */
+typedef enum MQTTSubscriptionType
+{
+    MQTT_TYPE_SUBSCRIBE,  /**< @brief The type is a SUBSCRIBE packet. */
+    MQTT_TYPE_UNSUBSCRIBE /**< @brief The type is a UNSUBSCRIBE packet. */
+} MQTTSubscriptionType_t;
 
 /**
  * @ingroup mqtt_struct_types
@@ -456,27 +474,6 @@ typedef struct MQTTConnectInfo
      */
     uint16_t passwordLength;
 } MQTTConnectInfo_t;
-
-/**
- * @ingroup mqtt_enum_types
- * @brief Retain Handling types.
- */
-typedef enum MQTTRetainHandling{
-    retainSendOnSub = 0, /**< Send retained messages at the time of subscription. */
-    retainSendOnSubIfNotPresent = 1,  /**< Send retained messages at subscription only if subscription does not currently exist. */
-    retainDoNotSendonSub = 2 /**< Do not send retained messages at the time of subscription. */
-}MQTTRetainHandling_t;
-
-
-/**
- * @ingroup mqtt_enum_types
- * @brief MQTT Subscription packet types.
- */
-typedef enum MQTTSubscriptionType
-{
-    MQTT_TYPE_SUBSCRIBE,  /**< @brief The type is a SUBSCRIBE packet. */
-    MQTT_TYPE_UNSUBSCRIBE /**< @brief The type is a UNSUBSCRIBE packet. */
-} MQTTSubscriptionType_t;
 
 /**
  * @ingroup mqtt_struct_types
@@ -740,8 +737,9 @@ typedef struct MQTTPacketInfo
  * This function must be called before #MQTT_SerializeSubscribe in order to get
  * the size of the MQTT SUBSCRIBE packet that is generated from the list of
  * #MQTTSubscribeInfo_t and #MQTTPropBuilder_t (optional subscribe properties).
- * The size of the #MQTTFixedBuffer_t supplied to #MQTT_SerializeSubscribe must be at least @p pPacketSize. The provided
- * @p pSubscriptionList is valid for serialization with #MQTT_SerializeSubscribe
+ * The size of the #MQTTFixedBuffer_t supplied to #MQTT_SerializeSubscribe must 
+ * be at least @p pPacketSize. The provided @p pSubscriptionList is valid for 
+ * serialization with #MQTT_SerializeSubscribe
  * only if this function returns #MQTTSuccess. The remaining length returned in
  * @p pRemainingLength and the packet size returned in @p pPacketSize are valid
  * only if this function returns #MQTTSuccess.
@@ -848,7 +846,8 @@ MQTTStatus_t MQTT_GetSubscribePacketSize( const MQTTSubscribeInfo_t * pSubscript
  * // scope for this example.
  * packetId = getNewPacketId();
  *
- * // Assume subscriptionList and subscribeProperties have been initialized. Get the subscribe packet size.
+ * // Assume subscriptionList and subscribeProperties have been initialized. 
+ * Get the subscribe packet size.
  * status = MQTT_GetSubscribePacketSize(
  *      &subscriptionList[ 0 ], NUMBER_OF_SUBSCRIPTIONS, &subscribeProperties,
  *      &remainingLength, &packetSize
@@ -924,7 +923,12 @@ MQTTStatus_t MQTT_SerializeSubscribe( const MQTTSubscribeInfo_t * pSubscriptionL
  *
  * // Get the size requirement for the unsubscribe packet.
  * status = MQTT_GetUnsubscribePacketSize(
- *      &subscriptionList[ 0 ], NUMBER_OF_SUBSCRIPTIONS, &unsubscribeProperties, &remainingLength, &packetSize, maxPacketSize);
+ *      &subscriptionList[ 0 ], 
+ *      NUMBER_OF_SUBSCRIPTIONS, 
+ *      &unsubscribeProperties, 
+ *      &remainingLength, 
+ *      &packetSize, 
+ *      maxPacketSize);
  *
  * if( status == MQTTSuccess )
  * {
@@ -1379,7 +1383,8 @@ MQTTStatus_t MQTT_SerializePingreq( const MQTTFixedBuffer_t * pFixedBuffer );
  * // Deserialize the publish information if the incoming packet is a publish.
  * if( ( incomingPacket.type & 0xF0 ) == MQTT_PACKET_TYPE_PUBLISH )
  * {
- *      status = MQTT_DeserializePublish( &incomingPacket, &packetId, &publishInfo, &propBuffer, maxPacketSize, topicAliasMax );
+ *      status = MQTT_DeserializePublish( &incomingPacket, &packetId, &publishInfo, 
+ *                                        &propBuffer, maxPacketSize, topicAliasMax );
  *      if( status == MQTTSuccess )
  *      {
  *          // The deserialized publish information can now be used from `publishInfo`.
@@ -3063,6 +3068,24 @@ MQTTStatus_t MQTTPropertyBuilder_Init( MQTTPropBuilder_t * pPropertyBuilder,
  */
 MQTTStatus_t decodeSubackPropertyLength(uint8_t * pIndex, size_t remainingLength, size_t * subackPropertyLength);
 /* *INDENT-OFF* */
+
+/**
+ * @brief Initialize an MQTTConnectProperties_t.
+ *
+ * @note This function initializes the connect properties to default values.
+ *       This function should only be used if using only serializer function
+ *       throughout the connection. It is also important to only call this function 
+ *       before sending the connect packet. 
+ *
+ * @param[in] pConnectProperties The connect properties to initialize.
+ *
+ * @return
+ * - #MQTTBadParameter if pConnectProperties is NULL.
+ * - #MQTTSuccess otherwise.
+ */
+/* @[declare_mqtt_initconnect] */
+MQTTStatus_t MQTT_InitConnect( MQTTConnectProperties_t * pConnectProperties );
+/* @[declare_mqtt_initconnect] */
 #ifdef __cplusplus
     }
 #endif
