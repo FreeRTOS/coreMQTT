@@ -2170,17 +2170,17 @@ MQTTStatus_t MQTT_GetConnectPacketSize( const MQTTConnectInfo_t * pConnectInfo,
 
     if( status == MQTTSuccess )
     {
+        /* Add the length of the properties. */
         connectPacketSize += propertyLength;
         connectPacketSize += variableLengthEncodedSize( propertyLength );
+
         /* Add the length of the client identifier. */
         connectPacketSize += pConnectInfo->clientIdentifierLength + sizeof( uint16_t );
-
-        /* Add the lengths of the will properties if provided. */
     }
 
     if( status == MQTTSuccess )
     {
-        /* Add the lengths of the will message and topic name if provided. */
+        /* Add the lengths of the will message, topic name and properties if provided. */
         if( pWillInfo != NULL )
         {
             connectPacketSize += willPropertyLength;
