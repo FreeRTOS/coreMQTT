@@ -9,8 +9,8 @@
     </tr>
     <tr>
         <td>core_mqtt.c</td>
-        <td><center>4.9K</center></td>
-        <td><center>4.2K</center></td>
+        <td><center>7.2K</center></td>
+        <td><center>6.2K</center></td>
     </tr>
     <tr>
         <td>core_mqtt_state.c</td>
@@ -19,12 +19,12 @@
     </tr>
     <tr>
         <td>core_mqtt_serializer.c</td>
-        <td><center>2.9K</center></td>
-        <td><center>2.3K</center></td>
+        <td><center>11.5K</center></td>
+        <td><center>8.1K</center></td>
     </tr>
     <tr>
         <td><b>Total estimates</b></td>
-        <td><b><center>9.5K</center></b></td>
-        <td><b><center>7.8K</center></b></td>
+        <td><b><center>20.4K</center></b></td>
+        <td><b><center>15.6K</center></b></td>
     </tr>
 </table>
