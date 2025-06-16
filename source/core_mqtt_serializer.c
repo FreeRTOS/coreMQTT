@@ -7253,14 +7253,14 @@ MQTTStatus_t decodeSubackPropertyLength( uint8_t * pIndex,
 
     status = decodeVariableLength( pLocalIndex, remainingLength - sizeof( uint16_t ), &propertyLength );
 
-    if( propertyLength > ( remainingLength - sizeof( uint16_t ) ) )
-    {
-        status = MQTTBadResponse;
-    }
-
     if( status == MQTTSuccess )
     {
         *subackPropertyLength = ( propertyLength + variableLengthEncodedSize( propertyLength ) );
+
+        if( *subackPropertyLength > ( remainingLength - sizeof( uint16_t ) ) )
+        {
+            status = MQTTBadResponse;
+        }
     }
 
     return status;

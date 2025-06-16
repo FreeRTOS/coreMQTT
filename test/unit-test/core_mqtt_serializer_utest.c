@@ -5251,6 +5251,9 @@ void test_decodeSubackPropertyLength( void )
     TEST_ASSERT_EQUAL_INT( 3, propertyLength );
 
     /*Invalid remaining length. */
+    status = decodeSubackPropertyLength( &buffer[ 2 ], 2, &propertyLength );
+    TEST_ASSERT_EQUAL( MQTTBadResponse, status );
+
     status = decodeSubackPropertyLength( &buffer[ 2 ], 3, &propertyLength );
     TEST_ASSERT_EQUAL( MQTTBadResponse, status );
 }
