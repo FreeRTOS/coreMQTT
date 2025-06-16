@@ -87,12 +87,6 @@ static MQTTStatus_t validateSubscribeReturn = MQTTSuccess;
 #define MQTT_SAMPLE_KEEPALIVE_INTERVAL_S       ( 1U )
 
 /**
- * @brief Length of time spent for single test case with
- * multiple iterations spent in the process loop for coverage.
- */
-#define MQTT_SAMPLE_PROCESS_LOOP_TIMEOUT_MS    ( 1U )
-
-/**
  * @brief Zero timeout in the process loop implies one iteration.
  */
 #define MQTT_NO_TIMEOUT_MS                     ( 0U )
@@ -360,7 +354,7 @@ static uint32_t getTimeMockBigTimeStep( void )
  * @param[in] pPacketInfo Packet Info pointer for the incoming packet.
  * @param[in] pDeserializedInfo Deserialized information from the incoming packet.
  */
-static MQTTStatus_t eventCallback( MQTTContext_t * pContext,
+static bool eventCallback( MQTTContext_t * pContext,
                                    MQTTPacketInfo_t * pPacketInfo,
                                    MQTTDeserializedInfo_t * pDeserializedInfo,
                                    MQTTSuccessFailReasonCode_t * pReasonCode,
@@ -377,7 +371,7 @@ static MQTTStatus_t eventCallback( MQTTContext_t * pContext,
     /* Update the global state to indicate that event callback is invoked. */
     isEventCallbackInvoked = true;
     sendPropsBuffer->pBuffer = NULL;
-    return MQTTSuccess;
+    return true;
 }
 
 /**
@@ -391,7 +385,7 @@ static MQTTStatus_t eventCallback( MQTTContext_t * pContext,
 MQTTReasonCodeInfo_t GlobalAckInfo;
 
 
-static MQTTStatus_t eventCallback2( MQTTContext_t * pContext,
+static bool eventCallback2( MQTTContext_t * pContext,
                                     MQTTPacketInfo_t * pPacketInfo,
                                     MQTTDeserializedInfo_t * pDeserializedInfo,
                                     MQTTSuccessFailReasonCode_t * pReasonCode,
@@ -424,9 +418,9 @@ static MQTTStatus_t eventCallback2( MQTTContext_t * pContext,
     sendPropsBuffer->currentIndex = 13;
     isEventCallbackInvoked = true;
 
-    return MQTTSuccess;
+    return true;
 }
-static MQTTStatus_t eventCallback3( MQTTContext_t * pContext,
+static bool eventCallback3( MQTTContext_t * pContext,
                                     MQTTPacketInfo_t * pPacketInfo,
                                     MQTTDeserializedInfo_t * pDeserializedInfo,
                                     MQTTSuccessFailReasonCode_t * pReasonCode,
@@ -447,10 +441,10 @@ static MQTTStatus_t eventCallback3( MQTTContext_t * pContext,
     sendPropsBuffer->currentIndex = 0;
     pDeserializedInfo->packetIdentifier = 0;
 
-    return MQTTSuccess;
+    return true;
 }
 
-static MQTTStatus_t eventCallbackInvalidRC( MQTTContext_t * pContext,
+static bool eventCallbackInvalidRC( MQTTContext_t * pContext,
                                             MQTTPacketInfo_t * pPacketInfo,
                                             MQTTDeserializedInfo_t * pDeserializedInfo,
                                             MQTTSuccessFailReasonCode_t * pReasonCode,
@@ -486,7 +480,7 @@ static MQTTStatus_t eventCallbackInvalidRC( MQTTContext_t * pContext,
     sendPropsBuffer->currentIndex = 13;
     pDeserializedInfo->packetIdentifier = 0;
 
-    return MQTTSuccess;
+    return true;
 }
 
 /**
@@ -499,7 +493,7 @@ static MQTTStatus_t eventCallbackInvalidRC( MQTTContext_t * pContext,
  * @param[out] sendPropsBuffer Buffer to store properties for the outgoing packet.
  * @param[in] getPropsBuffer Buffer to get properties for the incoming packet.
  */
-static MQTTStatus_t eventCallback4( MQTTContext_t * pContext,
+static bool eventCallback4( MQTTContext_t * pContext,
                                     MQTTPacketInfo_t * pPacketInfo,
                                     MQTTDeserializedInfo_t * pDeserializedInfo,
                                     MQTTSuccessFailReasonCode_t * pReasonCode,
@@ -518,7 +512,7 @@ static MQTTStatus_t eventCallback4( MQTTContext_t * pContext,
     sendPropsBuffer->pBuffer = buf;
     sendPropsBuffer->currentIndex = 0;
 
-    return MQTTSuccess;
+    return true;
 }
 
 /**
@@ -531,7 +525,7 @@ static MQTTStatus_t eventCallback4( MQTTContext_t * pContext,
  * @param[out] sendPropsBuffer Buffer to store properties for the outgoing packet.
  * @param[in] getPropsBuffer Buffer to get properties for the incoming packet.
  */
-static MQTTStatus_t eventCallbackFail( MQTTContext_t * pContext,
+static bool eventCallbackFail( MQTTContext_t * pContext,
                                        MQTTPacketInfo_t * pPacketInfo,
                                        MQTTDeserializedInfo_t * pDeserializedInfo,
                                        MQTTSuccessFailReasonCode_t * pReasonCode,
@@ -545,7 +539,7 @@ static MQTTStatus_t eventCallbackFail( MQTTContext_t * pContext,
     ( void ) sendPropsBuffer;
     ( void ) getPropsBuffer;
     isEventCallbackInvoked = true;
-    return MQTTEventCallbackFailed;
+    return false;
 }
 
 
@@ -4404,7 +4398,6 @@ void test_MQTT_Disconnect_already_disconnected( void )
     /* Send failure with network error. */
     MQTT_GetDisconnectPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_GetDisconnectPacketSize_ReturnThruPtr_pPacketSize( &disconnectSize );
-    MQTT_ValidateDisconnectProperties_ExpectAnyArgsAndReturn( MQTTSuccess );
     status = MQTT_Disconnect( &mqttContext, NULL, MQTT_REASON_DISCONNECT_NORMAL_DISCONNECTION );
     TEST_ASSERT_EQUAL( MQTTStatusNotConnected, status );
 }
@@ -4431,16 +4424,9 @@ void test_MQTTV5_Disconnect()
     status = MQTT_Disconnect( &context, NULL, 0 );
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
 
-    /* / *Bad Parameters* / */
-    MQTT_GetDisconnectPacketSize_ExpectAnyArgsAndReturn( MQTTBadParameter );
-    status = MQTT_Disconnect( &context, NULL, 0 );
-    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
-
     MQTTPropBuilder_t propBuilder = { 0 };
-    uint8_t buf[ 500 ];
-    size_t bufLength = sizeof( buf );
+    uint8_t buf[ 10 ];
     propBuilder.pBuffer = buf;
-    propBuilder.bufferLength = bufLength;
 
     MQTT_GetDisconnectPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_ValidateDisconnectProperties_ExpectAnyArgsAndReturn( MQTTSuccess );
@@ -4452,7 +4438,6 @@ void test_MQTTV5_Disconnect()
     context.connectStatus = MQTTConnected;
     propBuilder.pBuffer = NULL;
     MQTT_GetDisconnectPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
-    MQTT_ValidateDisconnectProperties_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_SerializeDisconnectFixed_Stub( MQTTV5_SerializeDisconnectFixed_cb );
     status = MQTT_Disconnect( &context, &propBuilder, MQTT_REASON_DISCONNECT_NORMAL_DISCONNECTION );
     TEST_ASSERT_EQUAL( MQTTSuccess, status );
@@ -4463,7 +4448,6 @@ void test_MQTTV5_Disconnect()
     context.transportInterface.send = transportSendFailure;
     context.transportInterface.writev = NULL;
     MQTT_GetDisconnectPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
-    MQTT_ValidateDisconnectProperties_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_SerializeDisconnectFixed_Stub( MQTTV5_SerializeDisconnectFixed_cb );
     status = MQTT_Disconnect( &context, NULL, 0 );
     TEST_ASSERT_EQUAL_INT( MQTTSendFailed, status );
@@ -4499,7 +4483,6 @@ void test_MQTT_Disconnect2( void )
     /* Send failure with network error. */
     MQTT_GetDisconnectPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_GetDisconnectPacketSize_ReturnThruPtr_pPacketSize( &disconnectSize );
-    MQTT_ValidateDisconnectProperties_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_SerializeDisconnectFixed_Stub( MQTTV5_SerializeDisconnectFixed_cb );
     status = MQTT_Disconnect( &mqttContext, NULL, 0x00 );
     TEST_ASSERT_EQUAL( MQTTSendFailed, status );
@@ -4535,7 +4518,6 @@ void test_MQTT_Disconnect3( void )
 
     /* Send failure with timeout in calling transport send. */
     MQTT_GetDisconnectPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
-    MQTT_ValidateDisconnectProperties_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_SerializeDisconnectFixed_Stub( MQTTV5_SerializeDisconnectFixed_cb );
     status = MQTT_Disconnect( &mqttContext, NULL, 0x00 );
     TEST_ASSERT_EQUAL( MQTTSendFailed, status );
@@ -4627,7 +4609,6 @@ void test_MQTT_Disconnect4_status_disconnect_pending( void )
     mqttContext.transportInterface.send = mockSend;
     MQTT_GetDisconnectPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_GetDisconnectPacketSize_ReturnThruPtr_pPacketSize( &disconnectSize );
-    MQTT_ValidateDisconnectProperties_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_SerializeDisconnectFixed_Stub( MQTTV5_SerializeDisconnectFixed_cb );
     /* Write a disconnect packet into the buffer. */
     mqttBuffer[ 0 ] = MQTT_PACKET_TYPE_DISCONNECT;

@@ -228,10 +228,9 @@ struct MQTTConnectInfo;
 struct MQTTSubscribeInfo;
 struct MQTTPublishInfo;
 struct MQTTPacketInfo;
-struct MQTTSubscribeProperties ;
 struct MQTTConnectProperties;
 struct MQTTUserProperty;
-struct MQTTAuthInfo;
+
 /**
  * @ingroup mqtt_enum_types
  * @brief Return codes from MQTT functions.
@@ -1211,7 +1210,7 @@ MQTTStatus_t MQTT_SerializePublishHeader( const MQTTPublishInfo_t * pPublishInfo
 
 /**
  * @brief Serialize an MQTT PUBACK, PUBREC, PUBREL, or PUBCOMP into the given
- * buffer.
+ * buffer. These PUBLISH ACKS are serialized without reason codes or properties.
  *
  * @param[out] pFixedBuffer Buffer for packet serialization.
  * @param[in] packetType Byte of the corresponding packet fixed header per the
@@ -1357,9 +1356,9 @@ MQTTStatus_t MQTT_SerializePingreq( const MQTTFixedBuffer_t * pFixedBuffer );
  * MQTTPacketInfo_t incomingPacket;
  * MQTTPublishInfo_t publishInfo = { 0 };
  * MQTTPropBuilder_t propBuffer ;
- * uint32_t maxPacketSize;
  * uint16_t packetId;
- * uint16_t topicAliasMax ;
+ * uint32_t maxPacketSize = pContext->connectProperties.maxPacketSize; 
+ * uint16_t topicAliasMax = pContext->connectProperties.topicAliasMax;
  *
  * int32_t bytesRecvd;
  * // A buffer to hold remaining data of the incoming packet.
@@ -1915,12 +1914,9 @@ uint8_t* MQTT_SerializeAckFixed(uint8_t* pIndex,
 /** @endcond */
 
 /**
- * @brief Serialize an MQTT PUBLISH ACK packet into the given buffer.
+ * @brief Get the size of an outgoing PUBLISH ACK packet.
  *
- * The input #MQTTFixedBuffer_t.size must be at least as large as the size
- * returned by #MQTT_GetAckPacketSize.
- *
- * @note If reason code is success and property length is zero then #MQTT_SerializeAck can also be used.
+ * @note If no reason code is sent and property length is zero then #MQTT_SerializeAck can be used directly.
  *
  * @param[out]  pRemainingLength The remaining length of the packet to be serialized.
  * @param[out]  pPacketSize The size of the packet to be serialized.
@@ -2566,7 +2562,7 @@ MQTTStatus_t MQTT_ValidateDisconnectProperties( uint32_t connectSessionExpiry, c
 /* @[declare_mqtt_validatedisconnectproperties] */
 
 /**
- * @brief Validates the properties specified for an WILL Properties in the MQTT CONNECT packet.
+ * @brief Validates the properties specified for WILL Properties in the MQTT CONNECT packet.
  *
  * @param[in] pPropertyBuilder Pointer to the property builder structure containing will properties.
  *

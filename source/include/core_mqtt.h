@@ -154,15 +154,15 @@ typedef uint32_t (* MQTTGetCurrentTimeFunc_t )( void );
  * - #MQTTPropAdd_UserProp
  * - #MQTTPropAdd_ReasonString
  * @return 
- * - #MQTTSuccess Event callback was able to process the packet
- * - #MQTTEventCallbackFailed This is not an error code but just a code that tells 
- *                            the user that the eventcallback was unable to process 
- *                            a packet due to application specific reasons. 
- *                            The application should recall the processloop after 
- *                            making sure that it would be able to process the 
- *                            received packet again.
+ * - true Event callback was able to process the packet
+ * - false This is not an error but just a flag that tells 
+*          the user that the eventcallback was unable to process 
+*          a packet due to application specific reasons. 
+*          The application should recall the processloop after 
+*          making sure that it would be able to process the 
+*          received packet again.
  */
-typedef MQTTStatus_t (* MQTTEventCallback_t )( struct MQTTContext * pContext,
+typedef bool (* MQTTEventCallback_t )( struct MQTTContext * pContext,
                                                struct MQTTPacketInfo * pPacketInfo,
                                                struct MQTTDeserializedInfo * pDeserializedInfo,
                                                enum MQTTSuccessFailReasonCode * pReasonCode,
@@ -1365,7 +1365,17 @@ MQTTStatus_t MQTT_MatchTopic( const char * pTopicName,
  *  - 0x00 - Success - Maximum QoS 0
  *  - 0x01 - Success - Maximum QoS 1
  *  - 0x02 - Success - Maximum QoS 2
- *  - 0x80 - Failure
+ *  These are the reason codes when the server refuses the request-
+ *  - 0x80 - Topic Filter Refused
+ *  - 0x83 - Implementation specific error.
+ *  - 0x87 - Not authorized.
+ *  - 0x8F - Invalid Topic Filter.
+ *  - 0x91 - Packet identifier in use.
+ *  - 0x97 - Quota exceeded.
+ *  - 0x9E - Shared subscriptions not supported.
+ *  - 0xA1 - Subscription identifers not supported.
+ *  - 0xA2 - Wildcard subscriptions not supported.
+ *
  * Refer to #MQTTSubAckStatus_t for the status codes.
  *
  * @param[in] pSubackPacket The SUBACK packet whose payload is to be parsed.
@@ -1388,10 +1398,13 @@ MQTTStatus_t MQTT_MatchTopic( const char * pTopicName,
  *
  * // MQTT_GetSubAckStatusCodes is intended to be used from the application
  * // callback that is called by the library in MQTT_ProcessLoop or MQTT_ReceiveLoop.
- * void eventCallback(
+ * bool eventCallback(
  *      MQTTContext_t * pContext,
  *      MQTTPacketInfo_t * pPacketInfo,
  *      MQTTDeserializedInfo_t * pDeserializedInfo
+ *      MQTTSuccessFailReasonCode_t * pReasonCode,
+        MQTTPropBuilder_t * sendPropsBuffer,
+        MQTTPropBuilder_t * getPropsBuffer
  * )
  * {
  *      MQTTStatus_t status = MQTTSuccess;

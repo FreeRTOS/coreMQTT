@@ -92,7 +92,7 @@ static uint32_t getTime( void )
  * @param[in] pPacketInfo Packet Info pointer for the incoming packet.
  * @param[in] pDeserializedInfo Deserialized information from the incoming packet.
  */
-static MQTTStatus_t eventCallback( MQTTContext_t * pContext,
+static bool eventCallback( MQTTContext_t * pContext,
                                    MQTTPacketInfo_t * pPacketInfo,
                                    MQTTDeserializedInfo_t * pDeserializedInfo,
                                    MQTTSuccessFailReasonCode_t * pReasonCode,
@@ -106,7 +106,7 @@ static MQTTStatus_t eventCallback( MQTTContext_t * pContext,
     ( void ) sendPropsBuffer;
     ( void ) getPropsBuffer;
 
-    return MQTTSuccess;
+    return true;
 }
 
 static void resetPublishRecords( MQTTContext_t * pMqttContext )

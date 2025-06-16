@@ -1725,7 +1725,7 @@ static MQTTStatus_t handleIncomingPublish( MQTTContext_t * pContext,
         if( duplicatePublish == false )
         {
             if( pContext->appCallback( pContext, pIncomingPacket, &deserializedInfo, 
-                                       &reasonCode, &pContext->ackPropsBuffer, &propBuffer ) == MQTTEventCallbackFailed)
+                                       &reasonCode, &pContext->ackPropsBuffer, &propBuffer ) == false)
             {
                 status = MQTTEventCallbackFailed;
             }
@@ -1833,7 +1833,7 @@ static MQTTStatus_t handlePublishAcks( MQTTContext_t * pContext,
         reasonCode = MQTT_INVALID_REASON_CODE;
 
         if( appCallback( pContext, pIncomingPacket, &deserializedInfo, &reasonCode, 
-                         &pContext->ackPropsBuffer, &propBuffer ) == MQTTEventCallbackFailed )
+                         &pContext->ackPropsBuffer, &propBuffer ) == false )
         {
             status = MQTTEventCallbackFailed;
         }
@@ -1933,7 +1933,7 @@ static MQTTStatus_t handleIncomingAck( MQTTContext_t * pContext,
         deserializedInfo.pPublishInfo = NULL;
 
         if( appCallback( pContext, pIncomingPacket, &deserializedInfo, NULL, 
-                         &pContext->ackPropsBuffer, NULL ) == MQTTEventCallbackFailed )
+                         &pContext->ackPropsBuffer, NULL ) == false )
         {
             status = MQTTEventCallbackFailed;
         }
@@ -2320,7 +2320,7 @@ static MQTTStatus_t sendSubscribeWithoutCopy( MQTTContext_t * pContext,
 
             addSubscriptionOptions( pSubscriptionList[ subscriptionsSent ], subscriptionOptionsArray, currentOptionIndex );
 
-            pIterator->iov_base = &( subscriptionOptionsArray[ currentOptionIndex ] );
+            pIterator->iov_base = &( subscriptionOptionsArray[ currentOptionIndex % 3 ] );
             pIterator->iov_len = 1U;
             totalPacketLength += 1U;
             pIterator++;
@@ -2981,7 +2981,7 @@ static MQTTStatus_t receiveConnack( MQTTContext_t * pContext,
         deserializedInfo.deserializationResult = status;
 
         if( pContext->appCallback( pContext, pIncomingPacket, &deserializedInfo, 
-                                   NULL, &pContext->ackPropsBuffer, &propBuffer ) == MQTTEventCallbackFailed)
+                                   NULL, &pContext->ackPropsBuffer, &propBuffer ) == false)
         {
             status = MQTTEventCallbackFailed ; 
         }
@@ -3267,13 +3267,7 @@ MQTTStatus_t MQTT_InitStatefulQoS( MQTTContext_t * pContext,
 
         if( ( pBuffer != NULL ) && ( bufferLength != 0U ) )
         {
-            MQTTPropBuilder_t ackPropsBuffer;
-            status = MQTTPropertyBuilder_Init( &ackPropsBuffer, pBuffer, bufferLength );
-
-            if( status == MQTTSuccess )
-            {
-                pContext->ackPropsBuffer = ackPropsBuffer;
-            }
+            status = MQTTPropertyBuilder_Init( &pContext->ackPropsBuffer, pBuffer, bufferLength );
         }
         else
         {
@@ -3415,11 +3409,6 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
 
     incomingPacket.type = ( uint8_t ) 0;
 
-    if( ( pWillInfo != NULL ) && ( pWillPropertyBuilder != NULL ) )
-    {
-        status = MQTT_ValidateWillProperties( pWillPropertyBuilder );
-    }
-
     if( ( pContext == NULL ) || ( pConnectInfo == NULL ) || ( pSessionPresent == NULL ) )
     {
         LogError( ( "Argument cannot be NULL: pContext=%p, "
@@ -3428,6 +3417,11 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
                     ( void * ) pConnectInfo,
                     ( void * ) pSessionPresent ) );
         status = MQTTBadParameter;
+    }
+
+    if( ( status == MQTTSuccess ) && ( pWillInfo != NULL ) && ( pWillPropertyBuilder != NULL ) )
+    {
+        status = MQTT_ValidateWillProperties( pWillPropertyBuilder );
     }
 
     if( status == MQTTSuccess )
@@ -3506,7 +3500,12 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
         if( status == MQTTSuccess )
         {
             pContext->connectStatus = MQTTConnected;
-            /* Initialize keep-alive fields after a successful connection. */
+            /**
+             * Initialize the client's keep-alive timer using the Server Keep Alive value 
+             * received in the CONNACK. 
+             * This value overrides the client's original keep-alive setting, 
+             * as per MQTT v5 specification.
+             */
             pContext->keepAliveIntervalSec = pContext->connectProperties.serverKeepAlive;
             pContext->waitingForPingResp = false;
             pContext->pingReqSendTimeMs = 0U;
@@ -3671,15 +3670,15 @@ MQTTStatus_t MQTT_Publish( MQTTContext_t * pContext,
                                              pContext->connectProperties.serverMaxQos,
                                              topicAlias,
                                              pContext->connectProperties.serverMaxPacketSize );
+    }
 
-        if( status == MQTTSuccess )
-        {
-            status = MQTT_GetPublishPacketSize( pPublishInfo,
-                                                pPropertyBuilder,
-                                                &remainingLength,
-                                                &packetSize,
-                                                pContext->connectProperties.serverMaxPacketSize );
-        }
+    if( status == MQTTSuccess )
+    {
+        status = MQTT_GetPublishPacketSize( pPublishInfo,
+                                            pPropertyBuilder,
+                                            &remainingLength,
+                                            &packetSize,
+                                            pContext->connectProperties.serverMaxPacketSize );
     }
 
     if( status == MQTTSuccess )
@@ -3952,7 +3951,7 @@ MQTTStatus_t MQTT_Disconnect( MQTTContext_t * pContext,
                     ( unsigned long ) packetSize ) );
     }
 
-    if( status == MQTTSuccess )
+    if( ( status == MQTTSuccess ) && ( pPropertyBuilder != NULL ) && ( pPropertyBuilder->pBuffer != NULL ) )
     {
         status = MQTT_ValidateDisconnectProperties( pContext->connectProperties.sessionExpiry,
                                                     pPropertyBuilder );
@@ -4422,7 +4421,7 @@ static MQTTStatus_t handleSuback( MQTTContext_t * pContext,
 
         /* Invoke application callback to hand the buffer over to application */
         if( appCallback( pContext, pIncomingPacket, &deserializedInfo, NULL, 
-                         &pContext->ackPropsBuffer, &propBuffer ) == MQTTEventCallbackFailed )
+                         &pContext->ackPropsBuffer, &propBuffer ) == false )
         {
             status = MQTTEventCallbackFailed ; 
         }
@@ -4455,7 +4454,7 @@ static MQTTStatus_t handleIncomingDisconnect( MQTTContext_t * pContext,
     {
         deserializedInfo.pReasonCode = &reasonCode;
         if( pContext->appCallback( pContext, pIncomingPacket, &deserializedInfo, 
-                                   NULL, &pContext->ackPropsBuffer, &propBuffer ) == MQTTEventCallbackFailed )
+                                   NULL, &pContext->ackPropsBuffer, &propBuffer ) == false )
         {
             status = MQTTEventCallbackFailed ; 
         }
@@ -4870,7 +4869,7 @@ static MQTTStatus_t validateTopicFilter( const MQTTContext_t * pContext,
     if( ( pSubscriptionList[ iterator ].pTopicFilter == NULL ) || 
         ( pSubscriptionList[ iterator ].topicFilterLength == 0U ) )
     {
-        LogError( ( "Argument cannot be null : pTopicFilter or topicFilterLength cannot be zero. " ) );
+        LogError( ( "Invalid subscription at index %lu: Topic filter is NULL or has zero length.", iterator ) );
         status = MQTTBadParameter;
     }
 

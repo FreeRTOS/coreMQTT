@@ -5068,12 +5068,12 @@ void test_ValidateDisconnectProperties( void )
     MQTTStatus_t status = MQTTSuccess;
 
     status = MQTT_ValidateDisconnectProperties( 0, NULL );
-    TEST_ASSERT_EQUAL( MQTTSuccess, status );
+    TEST_ASSERT_EQUAL( MQTTBadParameter, status );
 
     MQTTPropBuilder_t propBuffer;
     propBuffer.pBuffer = NULL;
     status = MQTT_ValidateDisconnectProperties( 0, &propBuffer );
-    TEST_ASSERT_EQUAL( MQTTSuccess, status );
+    TEST_ASSERT_EQUAL( MQTTBadParameter, status );
 
     uint8_t buf[ 50 ];
     propBuffer.pBuffer = buf;
@@ -5144,12 +5144,12 @@ void test_ValidateWillProperties( void )
     MQTTStatus_t status = MQTTSuccess;
 
     status = MQTT_ValidateWillProperties( NULL );
-    TEST_ASSERT_EQUAL( MQTTSuccess, status );
+    TEST_ASSERT_EQUAL( MQTTBadParameter, status );
 
     MQTTPropBuilder_t propBuffer;
     propBuffer.pBuffer = NULL;
     status = MQTT_ValidateWillProperties( &propBuffer );
-    TEST_ASSERT_EQUAL( MQTTSuccess, status );
+    TEST_ASSERT_EQUAL( MQTTBadParameter, status );
 
     uint8_t buf[ 50 ];
     propBuffer.pBuffer = buf;
