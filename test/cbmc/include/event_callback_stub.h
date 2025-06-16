@@ -40,7 +40,7 @@
  * @param[in] pPacketInfo Information on the type of incoming MQTT packet.
  * @param[in] pDeserializedInfo Deserialized information from incoming packet.
  */
-void EventCallbackStub( MQTTContext_t * pContext,
+bool EventCallbackStub( MQTTContext_t * pContext,
                         MQTTPacketInfo_t * pPacketInfo,
                         MQTTDeserializedInfo_t * pDeserializedInfo,
                         enum MQTTSuccessFailReasonCode * pReasonCode,
