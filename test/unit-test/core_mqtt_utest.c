@@ -572,7 +572,7 @@ static MQTTStatus_t decodeSubackPropertyLength_cb( uint8_t * pIndex,
     return MQTTSuccess;
 }
 
-static MQTTStatus_t initConnectProperties_cb( MQTTConnectProperties_t * pConnectProperties, 
+static MQTTStatus_t initConnectProperties_cb( MQTTConnectionProperties_t * pConnectProperties, 
                                          int numcallbacks )
 {
     ( void ) numcallbacks; 
@@ -2379,7 +2379,7 @@ void test_MQTT_Connect_receiveConnack( void )
     MQTTStatus_t status;
     TransportInterface_t transport = { 0 };
     MQTTFixedBuffer_t networkBuffer = { 0 };
-    MQTTConnectProperties_t properties = { 0 };
+    MQTTConnectionProperties_t properties = { 0 };
     MQTTPacketInfo_t incomingPacket = { 0 };
 
     setupTransportInterface( &transport );
@@ -3418,7 +3418,7 @@ void test_MQTT_Publish( void )
 {
     MQTTContext_t mqttContext = { 0 };
     MQTTPublishInfo_t publishInfo = { 0 };
-    MQTTConnectProperties_t properties = { 0 };
+    MQTTConnectionProperties_t properties = { 0 };
     TransportInterface_t transport = { 0 };
     MQTTFixedBuffer_t networkBuffer = { 0 };
     MQTTStatus_t status;
@@ -3451,6 +3451,7 @@ void test_MQTT_Publish( void )
     size_t bufLength = sizeof( buf );
     propBuilder.pBuffer = buf;
     propBuilder.bufferLength = bufLength;
+    propBuilder.currentIndex = 2 ; 
 
     MQTT_ValidatePublishParams_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_GetPublishPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
@@ -6559,7 +6560,7 @@ void test_MQTT_ProcessLoop_handleIncomingAck_Error_Paths1( void )
 
     /*Packet size is greater than the allowed maximum packet size.*/
 
-    context.connectProperties.serverMaxPacketSize = 1;
+    context.connectionProperties.serverMaxPacketSize = 1;
     context.connectStatus = MQTTConnected;
     modifyIncomingPacketStatus = MQTTSuccess;
     stateAfterDeserialize = MQTTPubRelSend;
@@ -7335,7 +7336,7 @@ void test_MQTTV5_Subscribe_invalid_params( void )
 
     subscribeInfo.qos = 0;
     subscribeInfo.retainHandlingOption = 0;
-    context.connectProperties.isWildcardAvailable = 0U;
+    context.connectionProperties.isWildcardAvailable = 0U;
     subscribeInfo.pTopicFilter = "$share/abc/#";
     subscribeInfo.topicFilterLength = strlen( subscribeInfo.pTopicFilter );
     mqttStatus = MQTT_Subscribe( &context, &subscribeInfo, 1, MQTT_FIRST_VALID_PACKET_ID, NULL );
@@ -7343,15 +7344,15 @@ void test_MQTTV5_Subscribe_invalid_params( void )
 
     subscribeInfo.qos = 0;
     subscribeInfo.retainHandlingOption = 0;
-    context.connectProperties.isWildcardAvailable = 1U;
+    context.connectionProperties.isWildcardAvailable = 1U;
     subscribeInfo.pTopicFilter = "$share/abc/#";
-    context.connectProperties.isSharedAvailable = 0U;
+    context.connectionProperties.isSharedAvailable = 0U;
     subscribeInfo.topicFilterLength = strlen( subscribeInfo.pTopicFilter );
     mqttStatus = MQTT_Subscribe( &context, &subscribeInfo, 1, MQTT_FIRST_VALID_PACKET_ID, NULL );
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, mqttStatus );
 
     subscribeInfo.pTopicFilter = "$share/+/abc";
-    context.connectProperties.isSharedAvailable = 1U;
+    context.connectionProperties.isSharedAvailable = 1U;
     subscribeInfo.topicFilterLength = strlen( subscribeInfo.pTopicFilter );
     mqttStatus = MQTT_Subscribe( &context, &subscribeInfo, 1, MQTT_FIRST_VALID_PACKET_ID, NULL );
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, mqttStatus );
@@ -7359,7 +7360,7 @@ void test_MQTTV5_Subscribe_invalid_params( void )
     /* Test shared subscription with '#' in share name */
     subscribeInfo.pTopicFilter = "$share/group#name/topic";
     subscribeInfo.topicFilterLength = strlen( subscribeInfo.pTopicFilter );
-    context.connectProperties.isSharedAvailable = 1U;
+    context.connectionProperties.isSharedAvailable = 1U;
     mqttStatus = MQTT_Subscribe( &context, &subscribeInfo, 1, MQTT_FIRST_VALID_PACKET_ID, NULL );
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, mqttStatus );
 
@@ -7376,7 +7377,7 @@ void test_MQTTV5_Subscribe_invalid_params( void )
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, mqttStatus );
 
     /* Test topic filter with wildcard when wildcards are not supported */
-    context.connectProperties.isWildcardAvailable = 0U;
+    context.connectionProperties.isWildcardAvailable = 0U;
     subscribeInfo.pTopicFilter = "topic/#";
     subscribeInfo.topicFilterLength = strlen( subscribeInfo.pTopicFilter );
     mqttStatus = MQTT_Subscribe( &context, &subscribeInfo, 1, MQTT_FIRST_VALID_PACKET_ID, NULL );
@@ -7384,7 +7385,7 @@ void test_MQTTV5_Subscribe_invalid_params( void )
 
     /* Test topic filter with plus wildcard when wildcards are not supported */
 
-    context.connectProperties.isWildcardAvailable = 0U;
+    context.connectionProperties.isWildcardAvailable = 0U;
     subscribeInfo.pTopicFilter = "topic/+/abc";
     subscribeInfo.topicFilterLength = strlen( subscribeInfo.pTopicFilter );
     mqttStatus = MQTT_Subscribe( &context, &subscribeInfo, 1, MQTT_FIRST_VALID_PACKET_ID, NULL );
@@ -7472,7 +7473,7 @@ void test_MQTTV5_Subscribe_happy_path( void )
 
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
 
-    context.connectProperties.isWildcardAvailable = 0U;
+    context.connectionProperties.isWildcardAvailable = 0U;
     MQTT_ValidateSubscribeProperties_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_GetSubscribePacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_GetSubscribePacketSize_ReturnThruPtr_pPacketSize( &packetSize );
@@ -7638,7 +7639,7 @@ void test_MQTTV5_Subscribe_happy_path2( void )
 
     MQTT_InitConnect_ExpectAnyArgsAndReturn ( MQTTSuccess );
     mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
-    context.connectProperties.isSharedAvailable = 1; 
+    context.connectionProperties.isSharedAvailable = 1; 
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
     MQTTPropBuilder_t ackPropsBuffer;
     setupackPropsBuilder( &ackPropsBuffer );
@@ -7758,7 +7759,7 @@ void test_MQTTV5_Subscribe_happy_path3( void )
 
     MQTT_InitConnect_ExpectAnyArgsAndReturn ( MQTTSuccess );
     mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
-    context.connectProperties.isSharedAvailable = 1 ; 
+    context.connectionProperties.isSharedAvailable = 1 ; 
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
     MQTTPropBuilder_t ackPropsBuffer;
     setupackPropsBuilder( &ackPropsBuffer );
@@ -8052,7 +8053,7 @@ void test_MQTTV5_shared_subscriptions( void )
     setupNetworkBuffer( &networkBuffer );
     MQTT_InitConnect_ExpectAnyArgsAndReturn ( MQTTSuccess );
     mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
-    context.connectProperties.isSharedAvailable = 1 ; 
+    context.connectionProperties.isSharedAvailable = 1 ; 
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
     MQTTPropBuilder_t ackPropsBuffer;
     setupackPropsBuilder( &ackPropsBuffer );

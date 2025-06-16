@@ -29,7 +29,7 @@
 #include "core_mqtt.h"
 #include "mqtt_cbmc_state.h"
 
-MQTTStatus_t __CPROVER_file_local_core_mqtt_serializer_c_deserializeConnackProperties( MQTTConnectProperties_t * pConnackProperties,
+MQTTStatus_t __CPROVER_file_local_core_mqtt_serializer_c_deserializeConnackProperties( MQTTConnectionProperties_t * pConnackProperties,
                                                                                        size_t length,
                                                                                        uint8_t * pIndex,
                                                                                        MQTTPropBuilder_t * propBuffer )
@@ -65,7 +65,7 @@ void harness()
     bool * pSessionPresent;
     MQTTReasonCodeInfo_t * pReasonCode;
     MQTTPropBuilder_t * pPropertyBuilder;
-    MQTTConnectProperties_t * pConnectProperties;
+    MQTTConnectionProperties_t * pConnectProperties;
 
     pIncomingPacket = allocateMqttPacketInfo( NULL );
     __CPROVER_assume( isValidMqttPacketInfo( pIncomingPacket ) );
@@ -78,7 +78,7 @@ void harness()
     pPropertyBuilder = allocateMqttPropBuilder( NULL );
     __CPROVER_assume( isValidMqttPropBuilder( pPropertyBuilder ) );
 
-    pConnectProperties = malloc( sizeof( MQTTConnectProperties_t ) );
+    pConnectProperties = malloc( sizeof( MQTTConnectionProperties_t ) );
 
     MQTT_DeserializeAck( pIncomingPacket,
                          pPacketId,

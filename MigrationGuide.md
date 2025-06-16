@@ -430,7 +430,7 @@ if( status == MQTTSuccess )
 MQTTStatus_t status;
 MQTTConnectInfo_t connectInfo = { 0 };
 bool sessionPresent;
-MQTTPropBuilder_t connectProperties = { 0 };
+MQTTPropBuilder_t connectionProperties = { 0 };
 // This context is assumed to be initialized.
 MQTTContext_t * pContext;
 
@@ -441,13 +441,13 @@ connectInfo.pClientIdentifier = "clientId";
 connectInfo.clientIdentifierLength = strlen("clientId");
 
 // Initialize and add connect properties
-MQTTPropBuilder_t connectProperties ;
+MQTTPropBuilder_t connectionProperties ;
 uint8_t buf[500] ;
 size bufLength = sizeof(buf);
-MQTTPropertyBuilder_Init(&connectProperties, buf, bufLength) ;
+MQTTPropertyBuilder_Init(&connectionProperties, buf, bufLength) ;
 
 uint32_t sessionExpiryInterval = 100 ; // 100ms
-MQTTPropAdd_SessionExpiry(&connectProperties, sessionExpiryInterval );
+MQTTPropAdd_SessionExpiry(&connectionProperties, sessionExpiryInterval );
 
 // Can also use the will properties in a similar way.
 
@@ -456,7 +456,7 @@ status = MQTT_Connect( pContext,
                       NULL, /* No will message */
                       MQTT_TIMEOUT_MS,
                       &sessionPresent,
-                      &connectProperties,
+                      &connectionProperties,
                       NULL /* No will properties */ );
 if( status == MQTTSuccess )
 {
@@ -783,13 +783,13 @@ status = MQTT_GetConnectPacketSize(&connectInfo,
                                   &packetSize);
 
 // Option 2: With MQTT v5 properties
-MQTTPropBuilder_t connectProperties = { 0 };
+MQTTPropBuilder_t connectionProperties = { 0 };
 MQTTPropBuilder_t willProperties = { 0 };
 uint8_t connectPropBuffer[100];
 uint8_t willPropBuffer[100];
 
 // Initialize property builders
-MQTTPropertyBuilder_Init(&connectProperties,
+MQTTPropertyBuilder_Init(&connectionProperties,
                          connectPropBuffer,
                          sizeof(connectPropBuffer));
 MQTTPropertyBuilder_Init(&willProperties,
@@ -797,12 +797,12 @@ MQTTPropertyBuilder_Init(&willProperties,
                          sizeof(willPropBuffer));
 
 // Add properties as needed
-MQTTPropAdd_SessionExpiry(&connectProperties, 3600);
+MQTTPropAdd_SessionExpiry(&connectionProperties, 3600);
 MQTTPropAdd_WillDelayInterval(&willProperties, 60);
 
 status = MQTT_GetConnectPacketSize(&connectInfo,
                                   &willInfo,
-                                  &connectProperties,
+                                  &connectionProperties,
                                   &willProperties,
                                   &remainingLength,
                                   &packetSize);
@@ -873,7 +873,7 @@ MQTTPropAdd_PubTopicAlias(&publishProperties, 1);
 MQTTPropAdd_PubPayloadFormat(&publishProperties, 1);
 
 // Get max packet size from CONNACK properties
-uint32_t serverMaxPacketSize = pContext->connectProperties.serverMaxPacketSize; // Value from server
+uint32_t serverMaxPacketSize = pContext->connectionProperties.serverMaxPacketSize; // Value from server
 
 status = MQTT_GetPublishPacketSize(&publishInfo,
                                   &publishProperties,
@@ -941,7 +941,7 @@ MQTTPropertyBuilder_Init(&subscribeProperties,
 MQTTPropAdd_SubscribeId(&subscribeProperties, 1);
 
 // Get max packet size from CONNACK properties
-uint32_t serverMaxPacketSize = pContext->connectProperties.serverMaxPacketSize; // value from server
+uint32_t serverMaxPacketSize = pContext->connectionProperties.serverMaxPacketSize; // value from server
 
 status = MQTT_GetSubscribePacketSize(subscriptionList,
                                    1,
@@ -1017,7 +1017,7 @@ MQTTUserProperty_t userProperty = {
 MQTTPropAdd_UserProp(&unsubscribeProperties, &userProperty);
 
 // Get max packet size from CONNACK properties
-uint32_t serverMaxPacketSize = pContext->connectProperties.serverMaxPacketSize; // Value from server
+uint32_t serverMaxPacketSize = pContext->connectionProperties.serverMaxPacketSize; // Value from server
 
 status = MQTT_GetUnsubscribePacketSize(subscriptionList,
                                      2,
@@ -1050,7 +1050,7 @@ if(status == MQTTSuccess)
 // Variables used in this example.
 size_t remainingLength = 0;
 size_t packetSize = 0;
-uint32_t serverMaxPacketSize = pContext->connectProperties.serverMaxPacketSize ;
+uint32_t serverMaxPacketSize = pContext->connectionProperties.serverMaxPacketSize ;
 
 // Option 1: Without MQTT v5 properties and default reason code
 status = MQTT_GetDisconnectPacketSize(NULL,  // No disconnect properties
@@ -1160,13 +1160,13 @@ status = MQTT_SerializeConnect(&connectInfo,
                              remainingLength,
                              &fixedBuffer);
 // Option 2: With MQTT v5 properties
-MQTTPropBuilder_t connectProperties ;
+MQTTPropBuilder_t connectionProperties ;
 MQTTPropBuilder_t willProperties ;
 uint8_t connectPropBuffer[100];
 uint8_t willPropBuffer[100];
 
 // Initialize property builders
-MQTTPropertyBuilder_Init(&connectProperties,
+MQTTPropertyBuilder_Init(&connectionProperties,
                          connectPropBuffer,
                          sizeof(connectPropBuffer));
 MQTTPropertyBuilder_Init(&willProperties,
@@ -1174,8 +1174,8 @@ MQTTPropertyBuilder_Init(&willProperties,
                          sizeof(willPropBuffer));
 
 // Add connect properties
-MQTTPropAdd_SessionExpiry(&connectProperties, 3600);
-MQTTPropAdd_MaxPacketSize(&connectProperties, 1024);
+MQTTPropAdd_SessionExpiry(&connectionProperties, 3600);
+MQTTPropAdd_MaxPacketSize(&connectionProperties, 1024);
 
 // Add will properties if using will message
 MQTTPropAdd_WillDelayInterval(&willProperties, 60);
@@ -1183,7 +1183,7 @@ MQTTPropAdd_WillDelayInterval(&willProperties, 60);
 // Get remaining length first
 status = MQTT_GetConnectPacketSize(&connectInfo,
                                   &willInfo,
-                                  &connectProperties,
+                                  &connectionProperties,
                                   &willProperties,
                                   &remainingLength,
                                   &packetSize);
@@ -1191,7 +1191,7 @@ status = MQTT_GetConnectPacketSize(&connectInfo,
 // Serialize connect packet
 status = MQTT_SerializeConnect(&connectInfo,
                              &willInfo,
-                             &connectProperties,
+                             &connectionProperties,
                              &willProperties,
                              remainingLength,
                              &fixedBuffer);
@@ -1247,7 +1247,7 @@ MQTTFixedBuffer_t fixedBuffer;
 uint8_t buffer[BUFFER_SIZE];
 size_t remainingLength = 0;
 uint16_t packetId = 1;
-uint32_t maxPacketSize = pContext->connectProperties.serverMaxPacketSize ;
+uint32_t maxPacketSize = pContext->connectionProperties.serverMaxPacketSize ;
 
 // Configure publish info
 publishInfo.qos = MQTTQoS1;
@@ -1359,7 +1359,7 @@ uint8_t buffer[BUFFER_SIZE];
 size_t remainingLength = 0;
 size_t headerSize = 0;
 uint16_t packetId = 1;
-uint32_t maxPacketSize = pContext->connectProperties.serverMaxPacketSize;
+uint32_t maxPacketSize = pContext->connectionProperties.serverMaxPacketSize;
 
 // Configure publish info
 publishInfo.qos = MQTTQoS1;
@@ -1471,7 +1471,7 @@ MQTTFixedBuffer_t fixedBuffer;
 uint8_t buffer[BUFFER_SIZE];
 size_t remainingLength = 0;
 uint16_t packetId = 1;
-uint32_t maxPacketSize = pContext->connectProperties.serverMaxPacketSize ;
+uint32_t maxPacketSize = pContext->connectionProperties.serverMaxPacketSize ;
 
 // Configure subscription list
 subscriptionList[0].qos = MQTTQoS1;
@@ -1580,7 +1580,7 @@ MQTTFixedBuffer_t fixedBuffer;
 uint8_t buffer[BUFFER_SIZE];
 size_t remainingLength = 0;
 uint16_t packetId = 1;
-uint32_t maxPacketSize = pContext->connectProperties.serverMaxPacketSize ;
+uint32_t maxPacketSize = pContext->connectionProperties.serverMaxPacketSize ;
 
 // Configure unsubscribe list
 subscriptionList[0].pTopicFilter = "topic/1";
@@ -1672,7 +1672,7 @@ if(status == MQTTSuccess)
 MQTTFixedBuffer_t fixedBuffer;
 uint8_t buffer[BUFFER_SIZE];
 size_t remainingLength = 0;
-uint32_t maxPacketSize = pContext->connectProperties.serverMaxPacketSize ;
+uint32_t maxPacketSize = pContext->connectionProperties.serverMaxPacketSize ;
 
 // Configure fixed buffer
 fixedBuffer.pBuffer = buffer;
@@ -1756,8 +1756,8 @@ MQTTPacketInfo_t incomingPacket;
 MQTTPublishInfo_t publishInfo = { 0 };
 uint16_t packetId;
 
-uint16_t topicAliasMax = pContext->connectProperties.topicAliasMax ;
-uint32_t maxPacketSize = pContext->connectProperties.maxPacketSize ;
+uint16_t topicAliasMax = pContext->connectionProperties.topicAliasMax ;
+uint32_t maxPacketSize = pContext->connectionProperties.maxPacketSize ;
 
 // Option 1: Without MQTT v5 properties
 if((incomingPacket.type & 0xF0) == MQTT_PACKET_TYPE_PUBLISH)
@@ -1814,7 +1814,7 @@ if((incomingPacket.type & 0xF0) == MQTT_PACKET_TYPE_PUBLISH)
     }
 }
 ```
-* The `MQTT_DeserializeAck` function now includes support for MQTT v5 properties and reason codes with five additional parameters. Thus, the signature of `MQTT_DeserializeAck` changed from `MQTTStatus_t MQTT_DeserializeAck( const MQTTPacketInfo_t * pIncomingPacket, uint16_t * pPacketId, bool * pSessionPresent )` to `MQTTStatus_t MQTT_DeserializeAck( const MQTTPacketInfo_t * pIncomingPacket, uint16_t * pPacketId, bool * pSessionPresent, MQTTReasonCodeInfo_t * pReasonCode, bool requestProblem, uint32_t maxPacketSize, MQTTPropBuilder_t * propBuffer, MQTTConnectProperties_t * pConnectProperties )`. For example:
+* The `MQTT_DeserializeAck` function now includes support for MQTT v5 properties and reason codes with five additional parameters. Thus, the signature of `MQTT_DeserializeAck` changed from `MQTTStatus_t MQTT_DeserializeAck( const MQTTPacketInfo_t * pIncomingPacket, uint16_t * pPacketId, bool * pSessionPresent )` to `MQTTStatus_t MQTT_DeserializeAck( const MQTTPacketInfo_t * pIncomingPacket, uint16_t * pPacketId, bool * pSessionPresent, MQTTReasonCodeInfo_t * pReasonCode, bool requestProblem, uint32_t maxPacketSize, MQTTPropBuilder_t * propBuffer, MQTTConnectionProperties_t * pConnectProperties )`. For example:
 
 **Old Code Snippet**
 ```
@@ -1844,11 +1844,11 @@ MQTTPropBuilder_t propBuffer ; // Can be set to NULL if the user does not want a
 
 MQTTReasonCodeInfo_t reasonCode ; // Can be set to NULL if the incoming packet is CONNACK or PINGRESP
 
-MQTTConnectProperties_t connectProperties = pContext->connectProperties;  // Can be set to NULL if the incoming packet is PUBLISH ACKs, SUBACK, UNSUBACK or PINGRESP
+MQTTConnectionProperties_t connectionProperties = pContext->connectionProperties;  // Can be set to NULL if the incoming packet is PUBLISH ACKs, SUBACK, UNSUBACK or PINGRESP
 
-bool requestProblem = pContext->connectProperties.requestProblemInfo ; // only relevant if the incoming packet is a PUBLISH Ack.
+bool requestProblem = pContext->connectionProperties.requestProblemInfo ; // only relevant if the incoming packet is a PUBLISH Ack.
 
-uint32_t maxPacketSize = pContext->connectProperties.maxPacketSize ;
+uint32_t maxPacketSize = pContext->connectionProperties.maxPacketSize ;
 
 status = MQTT_DeserializeAck(&incomingPacket,
                             &packetId,
@@ -1857,7 +1857,7 @@ status = MQTT_DeserializeAck(&incomingPacket,
                             requestProblem,
                             maxPacketSize,
                             &propBuffer,
-                            &connectProperties);
+                            &connectionProperties);
 
 if(status == MQTTSuccess)
 {

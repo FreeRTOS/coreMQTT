@@ -374,9 +374,9 @@ typedef struct MQTTContext
     bool waitingForPingResp;       /**< @brief If the library is currently awaiting a PINGRESP. */
 
     /**
-     * @brief Connect and Connack Properties.
+     * @brief Persisent Connection Properties, populated in the CONNECT and the CONNACK. 
      */
-    MQTTConnectProperties_t connectProperties;
+    MQTTConnectionProperties_t connectionProperties;
 
     /**
      * @brief User defined API used to store outgoing publishes.

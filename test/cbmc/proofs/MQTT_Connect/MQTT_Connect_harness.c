@@ -61,7 +61,7 @@ static uint32_t ulGetTimeFunction( void )
 }
 
 MQTTStatus_t updateContextWithConnectProps( const MQTTPropBuilder_t * pPropBuilder,
-                                            MQTTConnectProperties_t * pConnectProperties )
+                                            MQTTConnectionProperties_t * pConnectProperties )
 {
     MQTTStatus_t status;
 
@@ -80,7 +80,7 @@ MQTTStatus_t MQTT_DeserializeAck( const MQTTPacketInfo_t * pIncomingPacket,
                                   bool * pSessionPresent,
                                   MQTTReasonCodeInfo_t * pReasonCode,
                                   MQTTPropBuilder_t * propBuffer,
-                                  MQTTConnectProperties_t * pConnectProperties )
+                                  MQTTConnectionProperties_t * pConnectProperties )
 {
     MQTTStatus_t result;
 

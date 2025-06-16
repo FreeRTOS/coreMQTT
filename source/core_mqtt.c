@@ -1485,7 +1485,7 @@ static MQTTStatus_t sendPublishAcksWithoutProperty( MQTTContext_t * pContext,
                                     packetTypeByte,
                                     packetId );
 
-        if( MQTT_PUBLISH_ACK_PACKET_SIZE > pContext->connectProperties.serverMaxPacketSize )
+        if( MQTT_PUBLISH_ACK_PACKET_SIZE > pContext->connectionProperties.serverMaxPacketSize )
         {
             LogError( ( "Packet size is greater than the allowed maximum packet size." ) );
             status = MQTTBadParameter;
@@ -1625,7 +1625,7 @@ static MQTTStatus_t handleIncomingPublish( MQTTContext_t * pContext,
     assert( pIncomingPacket != NULL );
     assert( pContext->appCallback != NULL );
 
-    status = MQTT_DeserializePublish( pIncomingPacket, &packetIdentifier, &publishInfo, &propBuffer, pContext->connectProperties.maxPacketSize, pContext->connectProperties.topicAliasMax );
+    status = MQTT_DeserializePublish( pIncomingPacket, &packetIdentifier, &publishInfo, &propBuffer, pContext->connectionProperties.maxPacketSize, pContext->connectionProperties.topicAliasMax );
     LogInfo( ( "De-serialized incoming PUBLISH packet: DeserializerResult=%s.",
                MQTT_Status_strerror( status ) ) );
 
@@ -1779,7 +1779,7 @@ static MQTTStatus_t handlePublishAcks( MQTTContext_t * pContext,
     ackType = getAckFromPacketType( pIncomingPacket->type );
 
     status = MQTT_DeserializeAck( pIncomingPacket, &packetIdentifier, NULL, 
-                                  &incomingReasonCode, &propBuffer, &pContext->connectProperties );
+                                  &incomingReasonCode, &propBuffer, &pContext->connectionProperties );
 
     LogInfo( ( "Ack packet deserialized with result: %s.",
                MQTT_Status_strerror( status ) ) );
@@ -1901,7 +1901,7 @@ static MQTTStatus_t handleIncomingAck( MQTTContext_t * pContext,
 
         case MQTT_PACKET_TYPE_PINGRESP:
             status = MQTT_DeserializeAck( pIncomingPacket, &packetIdentifier, NULL, 
-                                          NULL, NULL, &pContext->connectProperties );
+                                          NULL, NULL, &pContext->connectionProperties );
             invokeAppCallback = ( status == MQTTSuccess ) && !manageKeepAlive;
 
             if( ( status == MQTTSuccess ) && ( manageKeepAlive == true ) )
@@ -2488,7 +2488,7 @@ static MQTTStatus_t sendPublishWithoutCopy( MQTTContext_t * pContext,
     MQTTStatus_t status = MQTTSuccess;
     size_t ioVectorLength;
     size_t totalMessageLength;
-    size_t publishPropLength = 0;
+    size_t publishPropLength = 0U;
     bool dupFlagChanged = false;
 
     /* Bytes required to encode the packet ID in an MQTT header according to
@@ -2541,9 +2541,7 @@ static MQTTStatus_t sendPublishWithoutCopy( MQTTContext_t * pContext,
         totalMessageLength += sizeof( serializedPacketID );
     }
 
-    /*Serialize the fixed publish properties.*/
-
-    if( pPropertyBuilder != NULL )
+    if( ( pPropertyBuilder != NULL ) && ( pPropertyBuilder->pBuffer != NULL ) )
     {
         publishPropLength = pPropertyBuilder->currentIndex;
     }
@@ -2561,7 +2559,9 @@ static MQTTStatus_t sendPublishWithoutCopy( MQTTContext_t * pContext,
     iterator++;
     ioVectorLength++;
 
-    if( pPropertyBuilder != NULL )
+    /* Serialize the publish properties, if provided.*/
+
+    if( publishPropLength > 0U )
     {
         iterator->iov_base = pPropertyBuilder->pBuffer;
         iterator->iov_len = pPropertyBuilder->currentIndex;
@@ -2698,8 +2698,12 @@ static MQTTStatus_t sendConnectWithoutCopy( MQTTContext_t * pContext,
                                                    pWillInfo,
                                                    remainingLength );
 
-        /* Set value of serverKeepAlive to keepAlive value sent in the CONNECT packet. */
-        pContext->connectProperties.serverKeepAlive = pConnectInfo->keepAliveSeconds;
+        /**
+         * Set value of serverKeepAlive to keepAlive value sent in the CONNECT packet. 
+         * This value shall be overwritten if the broker also sends a Keep Alive Interval
+         * in the CONNACK.
+         */
+        pContext->connectionProperties.serverKeepAlive = pConnectInfo->keepAliveSeconds;
 
         iterator->iov_base = connectPacketHeader;
         /* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-182 */
@@ -2728,10 +2732,9 @@ static MQTTStatus_t sendConnectWithoutCopy( MQTTContext_t * pContext,
         iterator++;
         ioVectorLength++;
 
+        /* Serialize CONNECT properties, if present. */
         if( connectPropLen > 0U )
         {
-            /*Serialize the will properties*/
-
             iterator->iov_base = pPropertyBuilder->pBuffer;
             iterator->iov_len = pPropertyBuilder->currentIndex;
             totalMessageLength += iterator->iov_len;
@@ -2740,11 +2743,11 @@ static MQTTStatus_t sendConnectWithoutCopy( MQTTContext_t * pContext,
         }
 
         /*
-         * Updating Context with optional properties
+         * Update the context with properties that will persist for the entire connection.
          */
         if( connectPropLen > 0U )
         {
-            status = updateContextWithConnectProps( pPropertyBuilder, &pContext->connectProperties );
+            status = updateContextWithConnectProps( pPropertyBuilder, &pContext->connectionProperties );
         }
 
         /* Serialize the client ID. */
@@ -2781,7 +2784,7 @@ static MQTTStatus_t sendConnectWithoutCopy( MQTTContext_t * pContext,
 
             if( willPropsLen > 0U )
             {
-                /*Serialize the will properties*/
+                /*Serialize the will properties, if present.*/
 
                 iterator->iov_base = pWillPropertyBuilder->pBuffer;
                 iterator->iov_len = pWillPropertyBuilder->currentIndex;
@@ -2951,7 +2954,7 @@ static MQTTStatus_t receiveConnack( MQTTContext_t * pContext,
 
         /* Deserialize CONNACK. */
         status = MQTT_DeserializeAck( pIncomingPacket, NULL, pSessionPresent, NULL, 
-                                      &propBuffer, &pContext->connectProperties );
+                                      &propBuffer, &pContext->connectionProperties );
     }
 
     /* If a clean session is requested, a session present should not be set by
@@ -3154,7 +3157,7 @@ MQTTStatus_t MQTT_Init( MQTTContext_t * pContext,
                         const MQTTFixedBuffer_t * pNetworkBuffer )
 {
     MQTTStatus_t status = MQTTSuccess;
-    MQTTConnectProperties_t connectProperties;
+    MQTTConnectionProperties_t connectionProperties;
 
     /* Validate arguments. */
     if( ( pContext == NULL ) || ( pTransportInterface == NULL ) ||
@@ -3203,8 +3206,8 @@ MQTTStatus_t MQTT_Init( MQTTContext_t * pContext,
         pContext->nextPacketId = 1;
 
         /* Setting default connect properties in our application */
-        status = MQTT_InitConnect( &connectProperties );
-        pContext->connectProperties = connectProperties;
+        MQTT_InitConnect( &connectionProperties );
+        pContext->connectionProperties = connectionProperties;
     }
 
     return status;
@@ -3484,12 +3487,12 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
         if( status == MQTTSuccess )
         {
             pContext->incomingPublishRecordMaxCount = 
-               ( ( pContext->connectProperties.receiveMax < pContext->incomingPublishRecordMaxCount ) 
-                   ? ( pContext->connectProperties.receiveMax ) : ( pContext->incomingPublishRecordMaxCount ) );
+               ( ( pContext->connectionProperties.receiveMax < pContext->incomingPublishRecordMaxCount ) 
+                   ? ( pContext->connectionProperties.receiveMax ) : ( pContext->incomingPublishRecordMaxCount ) );
 
             pContext->outgoingPublishRecordMaxCount = 
-               ( ( pContext->connectProperties.serverReceiveMax < pContext->outgoingPublishRecordMaxCount ) 
-                  ? ( pContext->connectProperties.serverReceiveMax ) : ( pContext->outgoingPublishRecordMaxCount ) );
+               ( ( pContext->connectionProperties.serverReceiveMax < pContext->outgoingPublishRecordMaxCount ) 
+                  ? ( pContext->connectionProperties.serverReceiveMax ) : ( pContext->outgoingPublishRecordMaxCount ) );
         }
 
         if( ( status == MQTTSuccess ) && ( *pSessionPresent != true ) )
@@ -3506,7 +3509,7 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
              * This value overrides the client's original keep-alive setting, 
              * as per MQTT v5 specification.
              */
-            pContext->keepAliveIntervalSec = pContext->connectProperties.serverKeepAlive;
+            pContext->keepAliveIntervalSec = pContext->connectionProperties.serverKeepAlive;
             pContext->waitingForPingResp = false;
             pContext->pingReqSendTimeMs = 0U;
         }
@@ -3578,7 +3581,7 @@ MQTTStatus_t MQTT_Subscribe( MQTTContext_t * pContext,
 
     if( ( status == MQTTSuccess ) && ( pPropertyBuilder != NULL ) && ( pPropertyBuilder->pBuffer != NULL ) )
     {
-        status = MQTT_ValidateSubscribeProperties( pContext->connectProperties.isSubscriptionIdAvailable, 
+        status = MQTT_ValidateSubscribeProperties( pContext->connectionProperties.isSubscriptionIdAvailable, 
                                                    pPropertyBuilder );
     }
 
@@ -3590,7 +3593,7 @@ MQTTStatus_t MQTT_Subscribe( MQTTContext_t * pContext,
                                               pPropertyBuilder,
                                               &remainingLength,
                                               &packetSize,
-                                              pContext->connectProperties.serverMaxPacketSize );
+                                              pContext->connectionProperties.serverMaxPacketSize );
         LogError( ( "SUBSCRIBE packet size is %lu and remaining length is %lu.",
                     ( unsigned long ) packetSize,
                     ( unsigned long ) remainingLength ) );
@@ -3655,30 +3658,31 @@ MQTTStatus_t MQTT_Publish( MQTTContext_t * pContext,
     /* Validate arguments. */
     status = validatePublishParams( pContext, pPublishInfo, packetId );
 
+    /* Validate Publish Properties and extract Topic Alias from the properties. */
     if( ( status == MQTTSuccess ) && ( pPropertyBuilder != NULL ) && ( pPropertyBuilder->pBuffer != NULL ) )
     {
-        status = MQTT_ValidatePublishProperties( pContext->connectProperties.serverTopicAliasMax, 
+        status = MQTT_ValidatePublishProperties( pContext->connectionProperties.serverTopicAliasMax, 
                                                  pPropertyBuilder, &topicAlias );
     }
 
     if( status == MQTTSuccess )
     {
-        /* Get the remaining length and packet size.*/
-
+        /* Validate Publish Properties with the persistent Connection Properties. */
         status = MQTT_ValidatePublishParams( pPublishInfo,
-                                             pContext->connectProperties.retainAvailable,
-                                             pContext->connectProperties.serverMaxQos,
+                                             pContext->connectionProperties.retainAvailable,
+                                             pContext->connectionProperties.serverMaxQos,
                                              topicAlias,
-                                             pContext->connectProperties.serverMaxPacketSize );
+                                             pContext->connectionProperties.serverMaxPacketSize );
     }
 
     if( status == MQTTSuccess )
     {
+        /* Get the remaining length and packet size.*/
         status = MQTT_GetPublishPacketSize( pPublishInfo,
                                             pPropertyBuilder,
                                             &remainingLength,
                                             &packetSize,
-                                            pContext->connectProperties.serverMaxPacketSize );
+                                            pContext->connectionProperties.serverMaxPacketSize );
     }
 
     if( status == MQTTSuccess )
@@ -3887,7 +3891,7 @@ MQTTStatus_t MQTT_Unsubscribe( MQTTContext_t * pContext,
                                                 pPropertyBuilder,
                                                 &remainingLength,
                                                 &packetSize,
-                                                pContext->connectProperties.serverMaxPacketSize );
+                                                pContext->connectionProperties.serverMaxPacketSize );
         LogInfo( ( "UNSUBSCRIBE packet size is %lu and remaining length is %lu.",
                    ( unsigned long ) packetSize,
                    ( unsigned long ) remainingLength ) );
@@ -3945,7 +3949,7 @@ MQTTStatus_t MQTT_Disconnect( MQTTContext_t * pContext,
         status = MQTT_GetDisconnectPacketSize( pPropertyBuilder, 
                                                &remainingLength, 
                                                &packetSize, 
-                                               pContext->connectProperties.serverMaxPacketSize, 
+                                               pContext->connectionProperties.serverMaxPacketSize, 
                                                reasonCode );
         LogDebug( ( "MQTT DISCONNECT packet size is %lu.",
                     ( unsigned long ) packetSize ) );
@@ -3953,7 +3957,7 @@ MQTTStatus_t MQTT_Disconnect( MQTTContext_t * pContext,
 
     if( ( status == MQTTSuccess ) && ( pPropertyBuilder != NULL ) && ( pPropertyBuilder->pBuffer != NULL ) )
     {
-        status = MQTT_ValidateDisconnectProperties( pContext->connectProperties.sessionExpiry,
+        status = MQTT_ValidateDisconnectProperties( pContext->connectionProperties.sessionExpiry,
                                                     pPropertyBuilder );
     }
 
@@ -4407,7 +4411,7 @@ static MQTTStatus_t handleSuback( MQTTContext_t * pContext,
                                   NULL, 
                                   &ackInfo, 
                                   &propBuffer, 
-                                  &pContext->connectProperties );
+                                  &pContext->connectionProperties );
 
     LogInfo( ( "Ack packet deserialized with result: %s.",
                MQTT_Status_strerror( status ) ) );
@@ -4446,7 +4450,7 @@ static MQTTStatus_t handleIncomingDisconnect( MQTTContext_t * pContext,
     assert( pIncomingPacket != NULL );
 
     status = MQTT_DeserializeDisconnect( pIncomingPacket, 
-                                         pContext->connectProperties.maxPacketSize, 
+                                         pContext->connectionProperties.maxPacketSize, 
                                          &reasonCode, 
                                          &propBuffer );
 
@@ -4530,7 +4534,7 @@ static MQTTStatus_t sendPublishAcksWithProperty( MQTTContext_t * pContext,
     {
         status = MQTT_GetAckPacketSize( &remainingLength, 
                                         &packetSize, 
-                                        pContext->connectProperties.serverMaxPacketSize, 
+                                        pContext->connectionProperties.serverMaxPacketSize, 
                                         ackPropertyLength );
     }
 
@@ -4748,7 +4752,7 @@ static MQTTStatus_t validateSharedSubscriptions( const MQTTContext_t * pContext,
             LogError( ( "Protocol Error : noLocalOption cannot be 1 for shared subscriptions" ) );
             status = MQTTBadParameter;
         }
-        else if( pContext->connectProperties.isSharedAvailable == 0U )
+        else if( pContext->connectionProperties.isSharedAvailable == 0U )
         {
             LogError( ( "Protocol Error : Shared Subscriptions not allowed" ) );
             status = MQTTBadParameter;
@@ -4880,7 +4884,7 @@ static MQTTStatus_t validateTopicFilter( const MQTTContext_t * pContext,
             LogError( ( "Protocol Error : QoS cannot be greater than 2" ) );
             status = MQTTBadParameter;
         }
-        else if( checkWildcardSubscriptions( pContext->connectProperties.isWildcardAvailable, 
+        else if( checkWildcardSubscriptions( pContext->connectionProperties.isWildcardAvailable, 
                                              pSubscriptionList, 
                                              iterator ) )
         {

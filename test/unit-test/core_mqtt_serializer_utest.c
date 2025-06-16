@@ -182,7 +182,7 @@ struct NetworkContext
 #define MQTT_MAX_PACKET_SIZE    ( 268435460UL )
 
 /* Variables common to testcases */
-MQTTConnectProperties_t properties;
+MQTTConnectionProperties_t properties;
 MQTTUserProperty_t userProperty;
 MQTTPublishInfo_t publishInfo;
 MQTTConnectInfo_t connectInfo;
@@ -4368,7 +4368,7 @@ void test_updateContextWithConnectProps( void )
     MQTTStatus_t mqttStatus = MQTTSuccess;
     MQTTPropBuilder_t propBuilder;
     uint8_t buffer[ 50 ];
-    MQTTConnectProperties_t connectProps;
+    MQTTConnectionProperties_t connectProps;
     size_t bufLength = sizeof( buffer );
 
     propBuilder.pBuffer = buffer;
@@ -5251,7 +5251,7 @@ void test_decodeSubackPropertyLength( void )
     TEST_ASSERT_EQUAL_INT( 3, propertyLength );
 
     /*Invalid remaining length. */
-    status = decodeSubackPropertyLength( &buffer[ 2 ], 1, &propertyLength );
+    status = decodeSubackPropertyLength( &buffer[ 2 ], 3, &propertyLength );
     TEST_ASSERT_EQUAL( MQTTBadResponse, status );
 }
 
@@ -5262,8 +5262,8 @@ void test_MQTT_InitConnect( void )
     status = MQTT_InitConnect( NULL );
     TEST_ASSERT_EQUAL( MQTTBadParameter, status );
 
-    MQTTConnectProperties_t connectProperties;
-    status = MQTT_InitConnect( &connectProperties );
+    MQTTConnectionProperties_t connectionProperties;
+    status = MQTT_InitConnect( &connectionProperties );
     TEST_ASSERT_EQUAL( MQTTSuccess, status );
 }
 /* ========================================================================== */

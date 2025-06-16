@@ -47,12 +47,12 @@
 
 void harness()
 {
-    MQTTConnectProperties_t * pConnectProperties;
+    MQTTConnectionProperties_t * pConnectProperties;
     size_t propertyLength;
     MQTTPropBuilder_t * propBuffer;
     uint8_t * packetBytes;
 
-    pConnectProperties = malloc( sizeof( MQTTConnectProperties_t ) );
+    pConnectProperties = malloc( sizeof( MQTTConnectionProperties_t ) );
     __CPROVER_assume( pConnectProperties != NULL );
 
     propBuffer = allocateMqttPropBuilder( NULL );

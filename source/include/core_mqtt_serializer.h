@@ -626,7 +626,7 @@ typedef struct MQTTConnectProperties
     uint16_t serverKeepAlive;
 
 
-} MQTTConnectProperties_t;
+} MQTTConnectionProperties_t;
 
  /**
  * @ingroup mqtt_struct_types
@@ -1160,7 +1160,7 @@ MQTTStatus_t MQTT_SerializePublishHeaderWithoutTopic( const MQTTPublishInfo_t * 
  * size_t remainingLength = 0, packetSize = 0, headerSize = 0;
  * uint16_t packetId;
  * int32_t bytesSent;
- * uint32_t maxPacketSize = pContext->connectProperties.serverMaxPacketSize;
+ * uint32_t maxPacketSize = pContext->connectionProperties.serverMaxPacketSize;
  *
  * fixedBuffer.pBuffer = buffer;
  * fixedBuffer.size = BUFFER_SIZE;
@@ -1357,8 +1357,8 @@ MQTTStatus_t MQTT_SerializePingreq( const MQTTFixedBuffer_t * pFixedBuffer );
  * MQTTPublishInfo_t publishInfo = { 0 };
  * MQTTPropBuilder_t propBuffer ;
  * uint16_t packetId;
- * uint32_t maxPacketSize = pContext->connectProperties.maxPacketSize; 
- * uint16_t topicAliasMax = pContext->connectProperties.topicAliasMax;
+ * uint32_t maxPacketSize = pContext->connectionProperties.maxPacketSize; 
+ * uint16_t topicAliasMax = pContext->connectionProperties.topicAliasMax;
  *
  * int32_t bytesRecvd;
  * // A buffer to hold remaining data of the incoming packet.
@@ -1600,7 +1600,7 @@ uint8_t * MQTT_SerializeUnsubscribeHeader( size_t remainingLength,
  * MQTTStatus_t status;
  * MQTTConnectInfo_t connectInfo = { 0 };
  * MQTTPublishInfo_t willInfo = { 0 };
- * MQTTPropBuilder_t connectProperties = { 0 };
+ * MQTTPropBuilder_t connectionProperties = { 0 };
  * MQTTPropBuilder_t willProperties = { 0 };
  * size_t remainingLength = 0, packetSize = 0;
  *
@@ -1611,14 +1611,14 @@ uint8_t * MQTT_SerializeUnsubscribeHeader( size_t remainingLength,
  * initializeWillInfo( &willInfo );
  *
  * // Initialize connect properties and will properties, the details are out of scope for this example.
- * initializeConnectProperties( &connectProperties );
+ * initializeConnectProperties( &connectionProperties );
  * initializeWillProperties( &willProperties );
  *
  * // Get the size requirement for the connect packet.
  * status = MQTT_GetConnectPacketSize(
  *      &connectInfo,
  *      &willInfo,
- *      &connectProperties,
+ *      &connectionProperties,
  *      &willProperties,
  *      &remainingLength,
  *      &packetSize
@@ -1668,7 +1668,7 @@ MQTTStatus_t MQTT_GetConnectPacketSize( const MQTTConnectInfo_t * pConnectInfo,
  * MQTTStatus_t status;
  * MQTTConnectInfo_t connectInfo = { 0 };
  * MQTTPublishInfo_t willInfo = { 0 };
- * MQTTPropBuilder_t connectProperties = { 0 };
+ * MQTTPropBuilder_t connectionProperties = { 0 };
  * MQTTPropBuilder_t willProperties = { 0 };
  * MQTTFixedBuffer_t fixedBuffer;
  * uint8_t buffer[ BUFFER_SIZE ];
@@ -1680,7 +1680,7 @@ MQTTStatus_t MQTT_GetConnectPacketSize( const MQTTConnectInfo_t * pConnectInfo,
  * // Assume connectInfo, willInfo, and properties are initialized.
  * // Get the size requirement for the connect packet.
  * status = MQTT_GetConnectPacketSize(
- *      &connectInfo, &willInfo, &connectProperties, &willProperties,
+ *      &connectInfo, &willInfo, &connectionProperties, &willProperties,
  *      &remainingLength, &packetSize
  * );
  * assert( status == MQTTSuccess );
@@ -1690,7 +1690,7 @@ MQTTStatus_t MQTT_GetConnectPacketSize( const MQTTConnectInfo_t * pConnectInfo,
  * status = MQTT_SerializeConnect(
  *      &connectInfo,
  *      &willInfo,
- *      &connectProperties,
+ *      &connectionProperties,
  *      &willProperties,
  *      remainingLength,
  *      &fixedBuffer
@@ -1856,7 +1856,7 @@ MQTTStatus_t MQTT_GetPublishPacketSize( const MQTTPublishInfo_t * pPublishInfo,
  * bool sessionPresent;
  * MQTTReasonCodeInfo_t reasonCode ; // Can be set to NULL if the incoming packet is CONNACK or PINGRESP
  * MQTTPropBuilder_t propBuffer; // Can be set to NULL if the user does not want any incoming properties.
- * MQTTConnectProperties_t connectProperties = pContext->connectProperties;  // Cannot be set to NULL.
+ * MQTTConnectionProperties_t connectionProperties = pContext->connectionProperties;  // Cannot be set to NULL.
  *
  * // Receive an incoming packet and populate all fields. The details are out of scope
  * // for this example.
@@ -1868,7 +1868,7 @@ MQTTStatus_t MQTT_GetPublishPacketSize( const MQTTPublishInfo_t * pPublishInfo,
  *                             &sessionPresent,
  *                             &reasonCode,
  *                             &propBuffer,
- *                             &connectProperties);
+ *                             &connectionProperties);
  * if(status == MQTTSuccess)
  * {s
  *     // Ack information is now available.
@@ -1881,7 +1881,7 @@ MQTTStatus_t MQTT_DeserializeAck( const MQTTPacketInfo_t * pIncomingPacket,
                                 bool * pSessionPresent,
                                 MQTTReasonCodeInfo_t * pReasonCode,
                                 MQTTPropBuilder_t * propBuffer,
-                                MQTTConnectProperties_t * pConnectProperties );
+                                MQTTConnectionProperties_t * pConnectProperties );
 /* @[declare_mqtt_deserializeack] */
 
 /**
@@ -2145,13 +2145,13 @@ MQTTStatus_t MQTT_DeserializeDisconnect(const MQTTPacketInfo_t* pPacket,
  * // Variables used in this example.
  * MQTTStatus_t status;
  * MQTTPropBuilder_t propBuilder = { 0 };
- * MQTTConnectProperties_t connectProperties = { 0 };
+ * MQTTConnectionProperties_t connectionProperties = { 0 };
  *
  * // Initialize property builder with desired properties
  * // ...
  *
  * // Update connect properties
- * status = updateContextWithConnectProps(&propBuilder, &connectProperties);
+ * status = updateContextWithConnectProps(&propBuilder, &connectionProperties);
  *
  * if(status == MQTTSuccess)
  * {
@@ -2160,7 +2160,7 @@ MQTTStatus_t MQTT_DeserializeDisconnect(const MQTTPacketInfo_t* pPacket,
  * @endcode
  */
 
-MQTTStatus_t updateContextWithConnectProps(const MQTTPropBuilder_t* pPropBuilder, MQTTConnectProperties_t* pConnectProperties);
+MQTTStatus_t updateContextWithConnectProps(const MQTTPropBuilder_t* pPropBuilder, MQTTConnectionProperties_t* pConnectProperties);
 
 
 /**
@@ -3066,7 +3066,7 @@ MQTTStatus_t decodeSubackPropertyLength(uint8_t * pIndex, size_t remainingLength
 /* *INDENT-OFF* */
 
 /**
- * @brief Initialize an MQTTConnectProperties_t.
+ * @brief Initialize an MQTTConnectionProperties_t.
  *
  * @note This function initializes the connect properties to default values.
  *       This function should only be used if using only serializer function
@@ -3080,7 +3080,7 @@ MQTTStatus_t decodeSubackPropertyLength(uint8_t * pIndex, size_t remainingLength
  * - #MQTTSuccess otherwise.
  */
 /* @[declare_mqtt_initconnect] */
-MQTTStatus_t MQTT_InitConnect( MQTTConnectProperties_t * pConnectProperties );
+MQTTStatus_t MQTT_InitConnect( MQTTConnectionProperties_t * pConnectProperties );
 /* @[declare_mqtt_initconnect] */
 #ifdef __cplusplus
     }
