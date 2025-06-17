@@ -1,7 +1,7 @@
-MQTT_Disconnect proof
+MQTT_IncomingGetNextProp proof
 ==============
 
-This directory contains a memory safety proof for MQTT_Disconnect.
+This directory contains a memory safety proof for MQTT_IncomingGetNextProp.
 
 To run the proof.
 * Add cbmc, goto-cc, goto-instrument, goto-analyzer, and cbmc-viewer

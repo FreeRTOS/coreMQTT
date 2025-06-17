@@ -1,7 +1,7 @@
-MQTT_DeserializePublish proof
+DeserializePublishProperties proof
 ==============
 
-This directory contains a memory safety proof for MQTT_DeserializePublish.
+This directory contains a memory safety proof for DeserializePublishProperties.
 
 To run the proof.
 * Add cbmc, goto-cc, goto-instrument, goto-analyzer, and cbmc-viewer

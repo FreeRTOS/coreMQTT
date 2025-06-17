@@ -1,7 +1,7 @@
-MQTT_Disconnect proof
+MQTTPropGet_PubTopicAlias proof
 ==============
 
-This directory contains a memory safety proof for MQTT_Disconnect.
+This directory contains a memory safety proof for MQTTPropGet_PubTopicAlias.
 
 To run the proof.
 * Add cbmc, goto-cc, goto-instrument, goto-analyzer, and cbmc-viewer

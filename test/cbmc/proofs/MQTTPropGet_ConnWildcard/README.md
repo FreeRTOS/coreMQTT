@@ -1,7 +1,7 @@
-MQTT_Disconnect proof
+MQTTPropGet_ConnWildcard proof
 ==============
 
-This directory contains a memory safety proof for MQTT_Disconnect.
+This directory contains a memory safety proof for MQTTPropGet_ConnWildcard.
 
 To run the proof.
 * Add cbmc, goto-cc, goto-instrument, goto-analyzer, and cbmc-viewer

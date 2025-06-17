@@ -213,48 +213,4 @@ void harness()
     __CPROVER_assume( timeoutMs < MQTT_RECEIVE_TIMEOUT );
 
     MQTT_Connect( pContext, pConnectInfo, pWillInfo, timeoutMs, pSessionPresent, pPropertyBuilder, willPropsBuilder );
-
-    /* MQTTStatus_t status = MQTTSuccess; */
-    /* MQTTContext_t pContext = {0}; */
-    /* MQTTConnectInfo_t pConnectInfo = {0}; */
-    /* MQTTPublishInfo_t pWillInfo = {0}; */
-    /* MqttPropBuilder_t pPropertyBuilder = {0}; */
-    /* MqttPropBuilder_t willPropsBuilder = {0}; */
-    /* TransportInterface_t pTransportInterface = {0}; */
-    /* MQTTFixedBuffer_t pNetworkBuffer = {0}; */
-    /* uint8_t buffer[100]; */
-    /* uint32_t timeoutMs; */
-    /* bool pSessionPresent; */
-
-    /* pTransportInterface.recv = NetworkInterfaceReceiveStub; */
-    /* pTransportInterface.send = NetworkInterfaceSendStub; */
-    /* pTransportInterface.writev = NULL; */
-
-    /* pNetworkBuffer.pBuffer = buffer; */
-    /* pNetworkBuffer.size = 100; */
-
-    /* status = MQTT_Init( &pContext, */
-    /*                     &pTransportInterface, */
-    /*                     GetCurrentTimeStub, */
-    /*                     EventCallbackStub, */
-    /*                     &pNetworkBuffer ); */
-
-    /* if( status == MQTTSuccess ) */
-    /* { */
-    /*     pContext.getTime = ulGetTimeFunction; */
-    /*     pConnectInfo.cleanSession = true; */
-
-    /*     / * The client identifier is used to uniquely identify this MQTT client to */
-    /*         * the MQTT broker. In a production device the identifier can be something */
-    /*         * unique, such as a device serial number. * / */
-    /*     pConnectInfo.pClientIdentifier = "lollmao"; */
-    /*     pConnectInfo.clientIdentifierLength = 7U; */
-
-    /*     / * Set MQTT keep-alive period. If the application does not send packets at an interval less than */
-    /*         * the keep-alive period, the MQTT library will send PINGREQ packets. * / */
-    /*     pConnectInfo.keepAliveSeconds = 60; */
-
-    /*     MQTT_Connect( &pContext, &pConnectInfo, NULL, 60U, &pSessionPresent, NULL, NULL ); */
-    /*     __CPROVER_assert(0, "DEBUG TILL HERE"); */
-    /* } */
 }
