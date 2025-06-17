@@ -97,6 +97,13 @@
  */
 #define MQTT_PUBLISH_ACK_PACKET_SIZE_WITH_REASON    ( 3UL )
 
+/**
+ * @brief Minimum number of bytes in the CONNACK Packet.
+ * CONNECT Acknowledge Flags    0 + 1 = 1 
+ * CONNECT Reason Code            + 1 = 2
+ * Property Length byte (min)     + 1 = 3
+ */
+#define MQTT_PACKET_CONNACK_MINIMUM_SIZE                   (3U)
 
 /**
  * @brief Position of the properties for the fieldSet. 
@@ -458,8 +465,8 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp );
 /**
  * @brief Validate the length and decode a user property.
  *
- * @param[out] pPropertyLength  Size of the length.
- * @param[out] pIndex Pointer to the current index of the buffer.
+ * @param[in, out] pPropertyLength  Value of the remaining property length.
+ * @param[in, out] pIndex Pointer to the current index in the buffer.
  *
  * @return #MQTTSuccess, #MQTTBadResponse
  **/
@@ -472,7 +479,7 @@ static MQTTStatus_t decodeAndDiscard( size_t * pPropertyLength,
  * Uses the algorithm provided in the spec.
  *
  * @param[in] pBuffer Pointer to the buffer.
- * @param[in] bufferLength Length of the buffer.
+ * @param[in] bufferLength Length of the remaining buffer.
  * @param[out] pLength Decoded variable length
  *
  * @return #MQTTSuccess if variable length and paramters are valid else #MQTTBadResponse.
@@ -512,9 +519,9 @@ static MQTTStatus_t logConnackResponse( uint8_t responseCode );
  * @brief Validate the length and decode a 4 byte value.
  *
  * @param[out] pProperty To store the decoded property.
- * @param[out] pPropertyLength  Size of the length.
- * @param[out] pUsed Whether the property is decoded befire.
- * @param[out]  pIndex Pointer to the current index of the buffer.
+ * @param[in, out] pPropertyLength  Value of the remaining property length.
+ * @param[in, out] pUsed Whether the property is decoded before.
+ * @param[in, out] pIndex Pointer to the current index of the buffer.
  *
  * @return #MQTTSuccess, #MQTTBadResponse
  **/
@@ -527,9 +534,9 @@ static MQTTStatus_t decodeuint32_t( uint32_t * pProperty,
  * @brief Validate the length and decode a 2 byte value.
  *
  * @param[out] pProperty To store the decoded property.
- * @param[out] pPropertyLength  Size of the length.
- * @param[out] pUsed Whether the property is decoded befire.
- * @param[out]  pIndex Pointer to the current index of the buffer.
+ * @param[in, out] pPropertyLength  Value of the remaining property length.
+ * @param[in, out] pUsed Whether the property is decoded before.
+ * @param[in, out]  pIndex Pointer to the current index of the buffer.
  *
  * @return #MQTTSuccess, #MQTTBadResponse
  **/
@@ -543,9 +550,9 @@ static MQTTStatus_t decodeuint16_t( uint16_t * pProperty,
  * @brief Validate the length and decode a 1 byte value.
  *
  * @param[out] pProperty To store the decoded property.
- * @param[out] pPropertyLength  Size of the length.
- * @param[out] pUsed Whether the property is decoded befire.
- * @param[out]  pIndex Pointer to the current index of the buffer.
+ * @param[in, out] pPropertyLength  Value of the remaining property length.
+ * @param[in, out] pUsed Whether the property is decoded before.
+ * @param[in, out]  pIndex Pointer to the current index of the buffer.
  *
  * @return #MQTTSuccess, #MQTTBadResponse
  **/
@@ -559,9 +566,9 @@ static MQTTStatus_t decodeuint8_t( uint8_t * pProperty,
  *
  * @param[out] pProperty To store the decoded string.
  * @param[out] pLength  Size of the decoded utf-8 string.
- * @param[out] pPropertyLength  Size of the length.
- * @param[out] pUsed Whether the property is decoded before.
- * @param[out]  pIndex Pointer to the current index of the buffer.
+ * @param[in, out] pPropertyLength  Value of the remaining property length.
+ * @param[in, out] pUsed Whether the property is decoded before.
+ * @param[in, out]  pIndex Pointer to the current index of the buffer.
  *
  * @return #MQTTSuccess, #MQTTBadResponse
  **/
@@ -575,8 +582,8 @@ static MQTTStatus_t decodeutf_8( const char ** pProperty,
  * @brief Validate the length and decode the connack properties.
  *
  * @param[out] pConnackProperties To store the decoded property.
- * @param[out] length  Length of the property.
- * @param[out]  pIndex Pointer to the current index of the buffer.
+ * @param[in] length  Length of the properties.
+ * @param[in] pIndex Pointer to the start of the properties.
  * @param[out] propBuffer Pointer to the property buffer.
  *
  * @return #MQTTSuccess, #MQTTBadResponse
@@ -615,8 +622,8 @@ static MQTTStatus_t logSimpleAckResponse( uint8_t reasonCode,
  * @brief Validate the length and decode the publish ack properties.
  *
  * @param[out] propBuffer To store the decoded property.
- * @param[out] pIndex Pointer to the current index of the buffer.
- * @param[out] remainingLength Remaining length of the incoming packet.
+ * @param[in] pIndex Pointer to the current index of the buffer.
+ * @param[in] remainingLength Remaining length of the incoming packet.
  *
  *
  * @return #MQTTSuccess, #MQTTBadResponse.
@@ -696,7 +703,7 @@ static MQTTStatus_t deserializeDisconnectProperties( uint8_t * pIndex,
  *
  * @param[out] pPublishInfo Pointer to #MQTTPublishInfo_t where output is
  * written.
- * @param[in] propBuffer Pointer to the property buffer.
+ * @param[out] propBuffer Pointer to the property buffer.
  * @param[in] pIndex Pointer to the start of the properties.
  * @param[in] topicAliasMax Maximum allowed Topic Alias.
  * @param[in] remainingLength Remaining length of the incoming packet.
@@ -713,9 +720,9 @@ static MQTTStatus_t deserializePublishProperties( MQTTPublishInfo_t * pPublishIn
 /**
  * @brief Validate the length and decode a utf_8 string
  *
- * @param[out] pPropertyLength  Size of the length.
- * @param[out] pUsed Whether the property is decoded before.
- * @param[out] pIndex Pointer to the current index of the buffer.
+ * @param[in, out] pPropertyLength Value of the remaining property length.
+ * @param[in, out] pUsed Whether the property is decoded before.
+ * @param[in, out] pIndex Pointer to the current index of the buffer.
  *
  * @return #MQTTSuccess, #MQTTBadResponse
  **/
@@ -726,9 +733,9 @@ static MQTTStatus_t decodeAndDiscardutf_8( size_t * pPropertyLength,
 /**
  * @brief Validate the length and decode a uint8_t
  *
- * @param[out] pPropertyLength  Size of the length.
- * @param[out] pUsed Whether the property is decoded before.
- * @param[out] pIndex Pointer to the current index of the buffer.
+ * @param[in, out] pPropertyLength  Value of the remaining property length.
+ * @param[in, out] pUsed Whether the property is decoded before.
+ * @param[in, out] pIndex Pointer to the current index of the buffer.
  *
  * @return #MQTTSuccess, #MQTTBadResponse
  **/
@@ -739,9 +746,9 @@ static MQTTStatus_t decodeAndDiscard_uint8( size_t * pPropertyLength,
 /**
  * @brief Validate the length and decode a uint32_t
  *
- * @param[out] pPropertyLength  Size of the length.
- * @param[out] pUsed Whether the property is decoded before.
- * @param[out] pIndex Pointer to the current index of the buffer.
+ * @param[in, out] pPropertyLength Value of the remaining property length.
+ * @param[in, out] pUsed Whether the property is decoded before.
+ * @param[in, out] pIndex Pointer to the current index of the buffer.
  *
  * @return #MQTTSuccess, #MQTTBadResponse
  **/
@@ -766,8 +773,8 @@ static MQTTStatus_t readSubackStatus( size_t statusCount,
  *
  * @param[out] pProperty To store the decoded string.
  * @param[out] pLength  Size of the decoded binary string.
- * @param[out] pPropertyLength  Size of the length.
- * @param[out]  pIndex Pointer to the current index of the buffer.
+ * @param[in, out] pPropertyLength Value of the remaining property length.
+ * @param[in, out]  pIndex Pointer to the current index of the buffer.
  *
  * @return #MQTTSuccess, #MQTTBadResponse
  **/
@@ -795,7 +802,7 @@ static uint8_t * encodeBinaryData( uint8_t * pDestination,
  * @param[out] pConnackProperties To store the deserialized connack properties.
  * @param[in]  pIncomingPacket #MQTTPacketInfo_t containing the buffer.
  * @param[out]  pSessionPresent Whether a previous session was present.
- * @param[in]  propBuffer MQTTPropBuilder_t to store the deserialized properties.
+ * @param[out]  propBuffer MQTTPropBuilder_t to store the deserialized properties.
  *
  * @return #MQTTBadParameter, #MQTTBadResponse, #MQTTSuccess, #MQTTServerRefused
  */
@@ -808,10 +815,10 @@ MQTTStatus_t deserializeConnack( MQTTConnectionProperties_t * pConnackProperties
  * @brief Deserialize an MQTT SUBACK / UNSUBACK packet.
  *
  * @param[in]  incomingPacket #MQTTPacketInfo_t containing the buffer.
- * @param[in]  pPacketId The packet ID obtained from the buffer.
- * @param[in]  subackReasonCodes Struct to store reason code(s) from the acknowledgment packet.
+ * @param[out]  pPacketId The packet ID obtained from the buffer.
+ * @param[out]  subackReasonCodes Struct to store reason code(s) from the acknowledgment packet.
  *                               Contains the success/failure status of the corresponding request.
- * @param[in]  propBuffer MQTTPropBuilder_t to store the deserialized properties.
+ * @param[out]  propBuffer MQTTPropBuilder_t to store the deserialized properties.
  *
  * @return #MQTTBadParameter, #MQTTBadResponse, #MQTTSuccess, #MQTTServerRefused
  */
@@ -3389,7 +3396,8 @@ static MQTTStatus_t validateConnackParams( const MQTTPacketInfo_t * pIncomingPac
 
     pRemainingData = pIncomingPacket->pRemainingData;
 
-    if( pIncomingPacket->remainingLength < 3 )
+    /* Remaining Length of the CONNACK cannot be less than 3. */
+    if( pIncomingPacket->remainingLength < MQTT_PACKET_CONNACK_MINIMUM_SIZE )
     {
         LogError( ( "Incomplete Connack received" ) );
 
@@ -3398,6 +3406,7 @@ static MQTTStatus_t validateConnackParams( const MQTTPacketInfo_t * pIncomingPac
 
     if( status == MQTTSuccess )
     {
+        /* Reserved bits in CONNACK must be 0. */
         if( ( pRemainingData[ 0 ] | 0x01U ) != 0x01U )
         {
             LogError( ( "Reserved bits in CONNACK incorrect." ) );

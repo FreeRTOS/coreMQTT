@@ -502,8 +502,8 @@ MQTTStatus_t MQTT_Init( MQTTContext_t * pContext,
  * publishes.
  * @param[in] incomingPublishCount Maximum number of records which can be kept in the memory
  * pointed to by @p pIncomingPublishRecords.
- * @param[in] pBuffer Pointer to memory which will be used to store properties of outgoing publish-ACKS.
- * @param[in] bufferLength Length of the buffer pointed to by @p pBuffer.
+ * @param[in] ackPropsBuf Pointer to memory which will be used to store properties of outgoing publish-ACKS.
+ * @param[in] ackPropsBufLength Length of the buffer pointed to by @p pBuffer.
  * @return #MQTTBadParameter if invalid parameters are passed;
  * #MQTTSuccess otherwise.
  *
@@ -549,9 +549,9 @@ MQTTStatus_t MQTT_Init( MQTTContext_t * pContext,
  *      // We do not expect any incoming publishes in this example, therefore the incoming
  *      // publish pointer is NULL and the count is zero.
  *      // The buffer is used to store properties of outgoing publish-ACKS.
- *      uint8_t pBuffer[ 500 ];
- *      size_t bufferLength = 500 ;
- *      status = MQTT_InitStatefulQoS( &mqttContext, outgoingPublishes, outgoingPublishCount, NULL, 0 , pBuffer, bufferLength );
+ *      uint8_t ackPropsBuf[ 500 ];
+ *      size_t ackPropsBufLength = 500 ;
+ *      status = MQTT_InitStatefulQoS( &mqttContext, outgoingPublishes, outgoingPublishCount, NULL, 0 , ackPropsBuf, ackPropsBufLength );
  *
  *      // Now QoS1 and/or QoS2 publishes can be sent with this context.
  * }
@@ -563,8 +563,8 @@ MQTTStatus_t MQTT_InitStatefulQoS( MQTTContext_t * pContext,
                                    size_t outgoingPublishCount,
                                    MQTTPubAckInfo_t * pIncomingPublishRecords,
                                    size_t incomingPublishCount,
-                                   uint8_t * pBuffer,
-                                   size_t bufferLength );
+                                   uint8_t * ackPropsBuf,
+                                   size_t ackPropsBufLength );
 /* @[declare_mqtt_initstatefulqos] */
 
 /**

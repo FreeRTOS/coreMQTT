@@ -3220,8 +3220,8 @@ MQTTStatus_t MQTT_InitStatefulQoS( MQTTContext_t * pContext,
                                    size_t outgoingPublishCount,
                                    MQTTPubAckInfo_t * pIncomingPublishRecords,
                                    size_t incomingPublishCount,
-                                   uint8_t * pBuffer,
-                                   size_t bufferLength )
+                                   uint8_t * ackPropsBuf,
+                                   size_t ackPropsBufLength )
 {
     MQTTStatus_t status = MQTTSuccess;
 
@@ -3268,9 +3268,9 @@ MQTTStatus_t MQTT_InitStatefulQoS( MQTTContext_t * pContext,
         pContext->outgoingPublishRecordMaxCount = outgoingPublishCount;
         pContext->outgoingPublishRecords = pOutgoingPublishRecords;
 
-        if( ( pBuffer != NULL ) && ( bufferLength != 0U ) )
+        if( ( ackPropsBuf != NULL ) && ( ackPropsBufLength != 0U ) )
         {
-            status = MQTTPropertyBuilder_Init( &pContext->ackPropsBuffer, pBuffer, bufferLength );
+            status = MQTTPropertyBuilder_Init( &pContext->ackPropsBuffer, ackPropsBuf, ackPropsBufLength );
         }
         else
         {
@@ -3486,13 +3486,15 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
          **/
         if( status == MQTTSuccess )
         {
-            pContext->incomingPublishRecordMaxCount = 
-               ( ( pContext->connectionProperties.receiveMax < pContext->incomingPublishRecordMaxCount ) 
-                   ? ( pContext->connectionProperties.receiveMax ) : ( pContext->incomingPublishRecordMaxCount ) );
+            if( pContext->connectionProperties.receiveMax < pContext->incomingPublishRecordMaxCount )
+            {
+                pContext->incomingPublishRecordMaxCount = pContext->connectionProperties.receiveMax;
+            }
 
-            pContext->outgoingPublishRecordMaxCount = 
-               ( ( pContext->connectionProperties.serverReceiveMax < pContext->outgoingPublishRecordMaxCount ) 
-                  ? ( pContext->connectionProperties.serverReceiveMax ) : ( pContext->outgoingPublishRecordMaxCount ) );
+            if( pContext->connectionProperties.serverReceiveMax < pContext->outgoingPublishRecordMaxCount )
+            {
+                pContext->outgoingPublishRecordMaxCount = pContext->connectionProperties.serverReceiveMax;
+            }
         }
 
         if( ( status == MQTTSuccess ) && ( *pSessionPresent != true ) )
