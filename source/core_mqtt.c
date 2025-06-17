@@ -4202,11 +4202,14 @@ MQTTStatus_t MQTT_GetSubAckStatusCodes( const MQTTPacketInfo_t * pSubackPacket,
          * subtract 2 bytes from the remaining length for the length of the payload.
          */
         status = decodeSubackPropertyLength( &pSubackPacket->pRemainingData[ sizeof( uint16_t ) ], 
-                                             pSubackPacket->remainingLength - sizeof( uint16_t ), 
+                                             pSubackPacket->remainingLength, 
                                              &propertyLength );
 
-        *pPayloadStart = &pSubackPacket->pRemainingData[ sizeof( uint16_t ) + propertyLength ];
-        *pPayloadSize = pSubackPacket->remainingLength - sizeof( uint16_t ) - propertyLength;
+        if( status == MQTTSuccess )
+        {
+            *pPayloadStart = &pSubackPacket->pRemainingData[ sizeof( uint16_t ) + propertyLength ];
+            *pPayloadSize = pSubackPacket->remainingLength - sizeof( uint16_t ) - propertyLength;
+        }
     }
 
     return status;
