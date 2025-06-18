@@ -93,11 +93,11 @@ static uint32_t getTime( void )
  * @param[in] pDeserializedInfo Deserialized information from the incoming packet.
  */
 static bool eventCallback( MQTTContext_t * pContext,
-                                   MQTTPacketInfo_t * pPacketInfo,
-                                   MQTTDeserializedInfo_t * pDeserializedInfo,
-                                   MQTTSuccessFailReasonCode_t * pReasonCode,
-                                   MQTTPropBuilder_t * sendPropsBuffer,
-                                   MQTTPropBuilder_t * getPropsBuffer )
+                           MQTTPacketInfo_t * pPacketInfo,
+                           MQTTDeserializedInfo_t * pDeserializedInfo,
+                           MQTTSuccessFailReasonCode_t * pReasonCode,
+                           MQTTPropBuilder_t * sendPropsBuffer,
+                           MQTTPropBuilder_t * getPropsBuffer )
 {
     ( void ) pContext;
     ( void ) pPacketInfo;

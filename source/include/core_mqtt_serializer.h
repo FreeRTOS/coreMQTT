@@ -736,8 +736,8 @@ typedef struct MQTTPacketInfo
  * This function must be called before #MQTT_SerializeSubscribe in order to get
  * the size of the MQTT SUBSCRIBE packet that is generated from the list of
  * #MQTTSubscribeInfo_t and #MQTTPropBuilder_t (optional subscribe properties).
- * The size of the #MQTTFixedBuffer_t supplied to #MQTT_SerializeSubscribe must 
- * be at least @p pPacketSize. The provided @p pSubscriptionList is valid for 
+ * The size of the #MQTTFixedBuffer_t supplied to #MQTT_SerializeSubscribe must
+ * be at least @p pPacketSize. The provided @p pSubscriptionList is valid for
  * serialization with #MQTT_SerializeSubscribe
  * only if this function returns #MQTTSuccess. The remaining length returned in
  * @p pRemainingLength and the packet size returned in @p pPacketSize are valid
@@ -845,7 +845,7 @@ MQTTStatus_t MQTT_GetSubscribePacketSize( const MQTTSubscribeInfo_t * pSubscript
  * // scope for this example.
  * packetId = getNewPacketId();
  *
- * // Assume subscriptionList and subscribeProperties have been initialized. 
+ * // Assume subscriptionList and subscribeProperties have been initialized.
  * Get the subscribe packet size.
  * status = MQTT_GetSubscribePacketSize(
  *      &subscriptionList[ 0 ], NUMBER_OF_SUBSCRIPTIONS, &subscribeProperties,
@@ -922,11 +922,11 @@ MQTTStatus_t MQTT_SerializeSubscribe( const MQTTSubscribeInfo_t * pSubscriptionL
  *
  * // Get the size requirement for the unsubscribe packet.
  * status = MQTT_GetUnsubscribePacketSize(
- *      &subscriptionList[ 0 ], 
- *      NUMBER_OF_SUBSCRIPTIONS, 
- *      &unsubscribeProperties, 
- *      &remainingLength, 
- *      &packetSize, 
+ *      &subscriptionList[ 0 ],
+ *      NUMBER_OF_SUBSCRIPTIONS,
+ *      &unsubscribeProperties,
+ *      &remainingLength,
+ *      &packetSize,
  *      maxPacketSize);
  *
  * if( status == MQTTSuccess )
@@ -1357,7 +1357,7 @@ MQTTStatus_t MQTT_SerializePingreq( const MQTTFixedBuffer_t * pFixedBuffer );
  * MQTTPublishInfo_t publishInfo = { 0 };
  * MQTTPropBuilder_t propBuffer ;
  * uint16_t packetId;
- * uint32_t maxPacketSize = pContext->connectionProperties.maxPacketSize; 
+ * uint32_t maxPacketSize = pContext->connectionProperties.maxPacketSize;
  * uint16_t topicAliasMax = pContext->connectionProperties.topicAliasMax;
  *
  * int32_t bytesRecvd;
@@ -1382,7 +1382,7 @@ MQTTStatus_t MQTT_SerializePingreq( const MQTTFixedBuffer_t * pFixedBuffer );
  * // Deserialize the publish information if the incoming packet is a publish.
  * if( ( incomingPacket.type & 0xF0 ) == MQTT_PACKET_TYPE_PUBLISH )
  * {
- *      status = MQTT_DeserializePublish( &incomingPacket, &packetId, &publishInfo, 
+ *      status = MQTT_DeserializePublish( &incomingPacket, &packetId, &publishInfo,
  *                                        &propBuffer, maxPacketSize, topicAliasMax );
  *      if( status == MQTTSuccess )
  *      {
@@ -3070,8 +3070,8 @@ MQTTStatus_t decodeSubackPropertyLength(uint8_t * pIndex, size_t remainingLength
  *
  * @note This function initializes the connect properties to default values.
  *       This function should only be used if using only serializer function
- *       throughout the connection. It is also important to only call this function 
- *       before sending the connect packet. 
+ *       throughout the connection. It is also important to only call this function
+ *       before sending the connect packet.
  *
  * @param[in] pConnectProperties The connect properties to initialize.
  *

@@ -153,21 +153,21 @@ typedef uint32_t (* MQTTGetCurrentTimeFunc_t )( void );
  *
  * - #MQTTPropAdd_UserProp
  * - #MQTTPropAdd_ReasonString
- * @return 
+ * @return
  * - true Event callback was able to process the packet
- * - false This is not an error but just a flag that tells 
-*          the user that the eventcallback was unable to process 
-*          a packet due to application specific reasons. 
-*          The application should recall the processloop after 
-*          making sure that it would be able to process the 
-*          received packet again.
+ * - false This is not an error but just a flag that tells
+ *          the user that the eventcallback was unable to process
+ *          a packet due to application specific reasons.
+ *          The application should recall the processloop after
+ *          making sure that it would be able to process the
+ *          received packet again.
  */
 typedef bool (* MQTTEventCallback_t )( struct MQTTContext * pContext,
-                                               struct MQTTPacketInfo * pPacketInfo,
-                                               struct MQTTDeserializedInfo * pDeserializedInfo,
-                                               enum MQTTSuccessFailReasonCode * pReasonCode,
-                                               struct MQTTPropBuilder * sendPropsBuffer,
-                                               struct MQTTPropBuilder * getPropsBuffer );
+                                       struct MQTTPacketInfo * pPacketInfo,
+                                       struct MQTTDeserializedInfo * pDeserializedInfo,
+                                       enum MQTTSuccessFailReasonCode * pReasonCode,
+                                       struct MQTTPropBuilder * sendPropsBuffer,
+                                       struct MQTTPropBuilder * getPropsBuffer );
 
 /**
  * @brief User defined callback used to store outgoing publishes. Used to track any publish
@@ -374,7 +374,7 @@ typedef struct MQTTContext
     bool waitingForPingResp;       /**< @brief If the library is currently awaiting a PINGRESP. */
 
     /**
-     * @brief Persistent Connection Properties, populated in the CONNECT and the CONNACK. 
+     * @brief Persistent Connection Properties, populated in the CONNECT and the CONNACK.
      */
     MQTTConnectionProperties_t connectionProperties;
 
@@ -1403,8 +1403,8 @@ MQTTStatus_t MQTT_MatchTopic( const char * pTopicName,
  *      MQTTPacketInfo_t * pPacketInfo,
  *      MQTTDeserializedInfo_t * pDeserializedInfo
  *      MQTTSuccessFailReasonCode_t * pReasonCode,
-        MQTTPropBuilder_t * sendPropsBuffer,
-        MQTTPropBuilder_t * getPropsBuffer
+ *      MQTTPropBuilder_t * sendPropsBuffer,
+ *      MQTTPropBuilder_t * getPropsBuffer
  * )
  * {
  *      MQTTStatus_t status = MQTTSuccess;
