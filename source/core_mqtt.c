@@ -1625,7 +1625,13 @@ static MQTTStatus_t handleIncomingPublish( MQTTContext_t * pContext,
     assert( pIncomingPacket != NULL );
     assert( pContext->appCallback != NULL );
 
-    status = MQTT_DeserializePublish( pIncomingPacket, &packetIdentifier, &publishInfo, &propBuffer, pContext->connectionProperties.maxPacketSize, pContext->connectionProperties.topicAliasMax );
+    status = MQTT_DeserializePublish( pIncomingPacket, 
+                                      &packetIdentifier, 
+                                      &publishInfo, 
+                                      &propBuffer, 
+                                      pContext->connectionProperties.maxPacketSize, 
+                                      pContext->connectionProperties.topicAliasMax );
+
     LogInfo( ( "De-serialized incoming PUBLISH packet: DeserializerResult=%s.",
                MQTT_Status_strerror( status ) ) );
 
@@ -1745,7 +1751,10 @@ static MQTTStatus_t handleIncomingPublish( MQTTContext_t * pContext,
             }
             else
             {
-                status = sendPublishAcksWithProperty( pContext, packetIdentifier, publishRecordState, reasonCode );
+                status = sendPublishAcksWithProperty( pContext, 
+                                                      packetIdentifier, 
+                                                      publishRecordState, 
+                                                      reasonCode );
             }
         }
     }
@@ -1778,8 +1787,12 @@ static MQTTStatus_t handlePublishAcks( MQTTContext_t * pContext,
 
     ackType = getAckFromPacketType( pIncomingPacket->type );
 
-    status = MQTT_DeserializeAck( pIncomingPacket, &packetIdentifier, NULL, 
-                                  &incomingReasonCode, &propBuffer, &pContext->connectionProperties );
+    status = MQTT_DeserializeAck( pIncomingPacket, 
+                                  &packetIdentifier, 
+                                  NULL, 
+                                  &incomingReasonCode, 
+                                  &propBuffer, 
+                                  &pContext->connectionProperties );
 
     LogInfo( ( "Ack packet deserialized with result: %s.",
                MQTT_Status_strerror( status ) ) );
@@ -1847,12 +1860,15 @@ static MQTTStatus_t handlePublishAcks( MQTTContext_t * pContext,
             if( ( ackPropsAdded == false ) && ( reasonCode == MQTT_INVALID_REASON_CODE ) )
             {
                 status = sendPublishAcksWithoutProperty( pContext,
-                                          packetIdentifier,
-                                          publishRecordState );
+                                                         packetIdentifier,
+                                                         publishRecordState );
             }
             else
             {
-                status = sendPublishAcksWithProperty( pContext, packetIdentifier, publishRecordState, reasonCode );
+                status = sendPublishAcksWithProperty( pContext, 
+                                                      packetIdentifier, 
+                                                      publishRecordState, 
+                                                      reasonCode );
             }
         }
     }
@@ -1900,8 +1916,13 @@ static MQTTStatus_t handleIncomingAck( MQTTContext_t * pContext,
             break;
 
         case MQTT_PACKET_TYPE_PINGRESP:
-            status = MQTT_DeserializeAck( pIncomingPacket, &packetIdentifier, NULL, 
-                                          NULL, NULL, &pContext->connectionProperties );
+            status = MQTT_DeserializeAck( pIncomingPacket, 
+                                          &packetIdentifier, 
+                                          NULL, 
+                                          NULL, 
+                                          NULL, 
+                                          &pContext->connectionProperties );
+
             invokeAppCallback = ( status == MQTTSuccess ) && !manageKeepAlive;
 
             if( ( status == MQTTSuccess ) && ( manageKeepAlive == true ) )
@@ -2318,9 +2339,11 @@ static MQTTStatus_t sendSubscribeWithoutCopy( MQTTContext_t * pContext,
 
             /* Lastly, send the subscription options. */
 
-            addSubscriptionOptions( pSubscriptionList[ subscriptionsSent ], subscriptionOptionsArray, currentOptionIndex );
+            addSubscriptionOptions( pSubscriptionList[ subscriptionsSent ], 
+                                    subscriptionOptionsArray, 
+                                    currentOptionIndex );
 
-            pIterator->iov_base = &( subscriptionOptionsArray[ currentOptionIndex % 3 ] );
+            pIterator->iov_base = &( subscriptionOptionsArray[ currentOptionIndex ] );
             pIterator->iov_len = 1U;
             totalPacketLength += 1U;
             pIterator++;
@@ -2333,7 +2356,7 @@ static MQTTStatus_t sendSubscribeWithoutCopy( MQTTContext_t * pContext,
 
         if( sendMessageVector( pContext, pIoVector, ioVectorLength ) != ( int32_t ) totalPacketLength )
         {
-            LogError( ( "Error in sending SUBSCRIBE/UNSUBSCRIBE packet" ) );
+            LogError( ( "Error in sending SUBSCRIBE packet" ) );
             status = MQTTSendFailed;
         }
 
@@ -2343,6 +2366,8 @@ static MQTTStatus_t sendSubscribeWithoutCopy( MQTTContext_t * pContext,
         ioVectorLength = 0U;
         /* Reset the packet length for the next potential loop iteration. */
         totalPacketLength = 0U;
+        /* Reset index of the subscriptionOptionsArray for the next potential loop iteration. */
+        currentOptionIndex = 0U; 
     }
 
     return status;
@@ -2953,8 +2978,12 @@ static MQTTStatus_t receiveConnack( MQTTContext_t * pContext,
         pIncomingPacket->pRemainingData = pContext->networkBuffer.pBuffer;
 
         /* Deserialize CONNACK. */
-        status = MQTT_DeserializeAck( pIncomingPacket, NULL, pSessionPresent, NULL, 
-                                      &propBuffer, &pContext->connectionProperties );
+        status = MQTT_DeserializeAck( pIncomingPacket,
+                                      NULL, 
+                                      pSessionPresent, 
+                                      NULL, 
+                                      &propBuffer, 
+                                      &pContext->connectionProperties );
     }
 
     /* If a clean session is requested, a session present should not be set by
@@ -4196,11 +4225,19 @@ MQTTStatus_t MQTT_GetSubAckStatusCodes( const MQTTPacketInfo_t * pSubackPacket,
     }
     else
     {
-        /* According to the MQTT 5.0 protocol specification, the "Remaining Length" field is a
-         * length of the variable header (Packet ID and property length) plus the length of the payload.
-         * Therefore, we add 2 positions (PacketId) and the number of bytes the properties take for the starting address of the payload, and
-         * subtract 2 bytes from the remaining length for the length of the payload.
-         */
+        /* According to the MQTT 5.0 specification, the "Remaining Length" field represents the 
+        * combined length of the variable header and the payload. In a SUBACK packet, the variable 
+        * header consists of the Packet Identifier (2 bytes) followed by the properties.
+        *
+        * To locate the start of the payload:
+        * - Skip the 2-byte Packet Identifier.
+        * - Then skip the properties, whose total length is decoded using the 
+        *   decodeSubackPropertyLength() function.
+        *
+        * The payload starts immediately after the properties. 
+        * Its size is calculated by subtracting the size of the variable header 
+        * (2 bytes for Packet ID + property length) from the remaining length.
+        */
         status = decodeSubackPropertyLength( &pSubackPacket->pRemainingData[ sizeof( uint16_t ) ], 
                                              pSubackPacket->remainingLength, 
                                              &propertyLength );

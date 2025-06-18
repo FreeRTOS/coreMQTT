@@ -374,7 +374,7 @@ typedef struct MQTTContext
     bool waitingForPingResp;       /**< @brief If the library is currently awaiting a PINGRESP. */
 
     /**
-     * @brief Persisent Connection Properties, populated in the CONNECT and the CONNACK. 
+     * @brief Persistent Connection Properties, populated in the CONNECT and the CONNACK. 
      */
     MQTTConnectionProperties_t connectionProperties;
 
@@ -1373,7 +1373,7 @@ MQTTStatus_t MQTT_MatchTopic( const char * pTopicName,
  *  - 0x91 - Packet identifier in use.
  *  - 0x97 - Quota exceeded.
  *  - 0x9E - Shared subscriptions not supported.
- *  - 0xA1 - Subscription identifers not supported.
+ *  - 0xA1 - Subscription identifiers not supported.
  *  - 0xA2 - Wildcard subscriptions not supported.
  *
  * Refer to #MQTTSubAckStatus_t for the status codes.

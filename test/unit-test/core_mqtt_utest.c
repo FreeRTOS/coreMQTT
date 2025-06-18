@@ -9062,6 +9062,13 @@ void test_MQTT_GetSubAckStatusCodes( void )
     mqttPacketInfo.type = MQTT_PACKET_TYPE_SUBACK;
     mqttPacketInfo.pRemainingData = buffer;
     mqttPacketInfo.remainingLength = 7;
+
+    /* decodeSubackProperties fails. */
+    decodeSubackPropertyLength_ExpectAnyArgsAndReturn( MQTTBadParameter ); 
+    status = MQTT_GetSubAckStatusCodes( &mqttPacketInfo, &pPayloadStart, &payloadSize );
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+
+    /* decodeSubackProperties succeeds. */
     decodeSubackPropertyLength_Stub( decodeSubackPropertyLength_cb );
     status = MQTT_GetSubAckStatusCodes( &mqttPacketInfo, &pPayloadStart, &payloadSize );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
@@ -9100,6 +9107,8 @@ void test_MQTT_GetSubAckStatusCodes( void )
     mqttPacketInfo.type = MQTT_PACKET_TYPE_SUBACK;
     status = MQTT_GetSubAckStatusCodes( &mqttPacketInfo, &pPayloadStart, &payloadSize );
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+
+
 }
 
 /**
