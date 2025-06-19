@@ -226,15 +226,15 @@
 #define MQTT_REMAINING_LENGTH_INVALID        ( ( size_t ) 268435456 )
 
 /**
- * This macro serializes a 32-bit unsigned integer (`val`) into 4 bytes at the 
+ * This macro serializes a 32-bit unsigned integer (`val`) into 4 bytes at the
  * specified memory location (`addr`).
  */
-#define WRITE_UINT32( addr, val )                                   \
-    {                                                               \
-        ( addr )[ 3 ] = ( uint8_t ) ( ( ( val ) >>  0 ) & 0xFFU );   \
-        ( addr )[ 2 ] = ( uint8_t ) ( ( ( val ) >>  8 ) & 0xFFU );   \
-        ( addr )[ 1 ] = ( uint8_t ) ( ( ( val ) >> 16 ) & 0xFFU );   \
-        ( addr )[ 0 ] = ( uint8_t ) ( ( ( val ) >> 24 ) & 0xFFU );   \
+#define WRITE_UINT32( addr, val )                                  \
+    {                                                              \
+        ( addr )[ 3 ] = ( uint8_t ) ( ( ( val ) >> 0 ) & 0xFFU );  \
+        ( addr )[ 2 ] = ( uint8_t ) ( ( ( val ) >> 8 ) & 0xFFU );  \
+        ( addr )[ 1 ] = ( uint8_t ) ( ( ( val ) >> 16 ) & 0xFFU ); \
+        ( addr )[ 0 ] = ( uint8_t ) ( ( ( val ) >> 24 ) & 0xFFU ); \
     }
 /*-----------------------------------------------------------*/
 
@@ -1781,9 +1781,9 @@ static MQTTStatus_t deserializeSuback( const MQTTPacketInfo_t * incomingPacket,
 
     if( ( status == MQTTSuccess ) && ( incomingPacket->remainingLength > 4U ) )
     {
-        status = deserializeSubackProperties( pPropBuffer, 
-                                              pIndex, 
-                                              &propertyLength, 
+        status = deserializeSubackProperties( pPropBuffer,
+                                              pIndex,
+                                              &propertyLength,
                                               incomingPacket->remainingLength );
     }
 
@@ -4684,7 +4684,7 @@ static MQTTStatus_t deserializeSubackProperties( MQTTPropBuilder_t * pPropBuffer
         {
             case MQTT_REASON_STRING_ID:
                 status = decodeutf_8( &pReasonString, &reasonStringLength, &propertyLength,
-                                        &reasonString, &pLocalIndex );
+                                      &reasonString, &pLocalIndex );
                 break;
 
             case MQTT_USER_PROPERTY_ID:
@@ -4760,8 +4760,8 @@ MQTTStatus_t MQTT_DeserializeAck( const MQTTPacketInfo_t * pIncomingPacket,
         LogError( ( "Max packet size cannot be 0." ) );
         status = MQTTBadParameter;
     }
-    else if( ( pIncomingPacket->remainingLength + 
-               variableLengthEncodedSize( pIncomingPacket->remainingLength ) + 
+    else if( ( pIncomingPacket->remainingLength +
+               variableLengthEncodedSize( pIncomingPacket->remainingLength ) +
                1U ) > maxPacketSize )
     {
         LogError( ( "Packet Size cannot be greater than max packet size. " ) );
@@ -4773,18 +4773,18 @@ MQTTStatus_t MQTT_DeserializeAck( const MQTTPacketInfo_t * pIncomingPacket,
         switch( pIncomingPacket->type )
         {
             case MQTT_PACKET_TYPE_CONNACK:
-                status = deserializeConnack( pConnectProperties, 
-                                             pIncomingPacket, 
-                                             pSessionPresent, 
+                status = deserializeConnack( pConnectProperties,
+                                             pIncomingPacket,
+                                             pSessionPresent,
                                              pPropBuffer );
                 break;
 
             case MQTT_PACKET_TYPE_PUBACK:
             case MQTT_PACKET_TYPE_PUBREC:
-                status = deserializeSimpleAck( pIncomingPacket, 
-                                               pPacketId, 
+                status = deserializeSimpleAck( pIncomingPacket,
+                                               pPacketId,
                                                pReasonCode,
-                                               pConnectProperties->requestProblemInfo, 
+                                               pConnectProperties->requestProblemInfo,
                                                pPropBuffer );
 
                 if( ( status == MQTTSuccess ) && ( pIncomingPacket->remainingLength > 2U ) )
@@ -4796,10 +4796,10 @@ MQTTStatus_t MQTT_DeserializeAck( const MQTTPacketInfo_t * pIncomingPacket,
 
             case MQTT_PACKET_TYPE_PUBREL:
             case MQTT_PACKET_TYPE_PUBCOMP:
-                status = deserializeSimpleAck( pIncomingPacket, 
-                                               pPacketId, 
+                status = deserializeSimpleAck( pIncomingPacket,
+                                               pPacketId,
                                                pReasonCode,
-                                               pConnectProperties->requestProblemInfo, 
+                                               pConnectProperties->requestProblemInfo,
                                                pPropBuffer );
 
                 if( ( status == MQTTSuccess ) && ( pIncomingPacket->remainingLength > 2U ) )
@@ -5085,7 +5085,7 @@ MQTTStatus_t MQTTPropAdd_SubscribeId( MQTTPropBuilder_t * pPropertyBuilder,
         LogError( ( "Subscription Id already set" ) );
         status = MQTTBadParameter;
     }
-    else if( ( pPropertyBuilder->currentIndex + sizeof( uint8_t ) + 
+    else if( ( pPropertyBuilder->currentIndex + sizeof( uint8_t ) +
                variableLengthEncodedSize( subscriptionId ) ) > pPropertyBuilder->bufferLength )
     {
         LogError( ( "Buffer too small to add subscription id" ) );
@@ -5229,7 +5229,7 @@ MQTTStatus_t MQTTPropAdd_SessionExpiry( MQTTPropBuilder_t * pPropertyBuilder,
         pIndex = &pPropertyBuilder->pBuffer[ pPropertyBuilder->currentIndex ];
         *pIndex = MQTT_SESSION_EXPIRY_ID;
         pIndex++;
-        WRITE_UINT32( &(pIndex[0]), sessionExpiry ); 
+        WRITE_UINT32( &( pIndex[ 0 ] ), sessionExpiry );
         UINT32_SET_BIT( pPropertyBuilder->fieldSet, MQTT_SESSION_EXPIRY_INTERVAL_POS );
         pPropertyBuilder->currentIndex += 5U;
     }
@@ -5316,7 +5316,7 @@ MQTTStatus_t MQTTPropAdd_ConnMaxPacketSize( MQTTPropBuilder_t * pPropertyBuilder
         pIndex = &pPropertyBuilder->pBuffer[ pPropertyBuilder->currentIndex ];
         *pIndex = MQTT_MAX_PACKET_SIZE_ID;
         pIndex++;
-        WRITE_UINT32( &(pIndex[0]), maxPacketSize ); 
+        WRITE_UINT32( &( pIndex[ 0 ] ), maxPacketSize );
         UINT32_SET_BIT( pPropertyBuilder->fieldSet, MQTT_MAX_PACKET_SIZE_POS );
         pPropertyBuilder->currentIndex += 5U;
     }
@@ -5624,7 +5624,7 @@ MQTTStatus_t MQTTPropAdd_PubMessageExpiry( MQTTPropBuilder_t * pPropertyBuilder,
         pIndex = &pPropertyBuilder->pBuffer[ pPropertyBuilder->currentIndex ];
         *pIndex = MQTT_MSG_EXPIRY_ID;
         pIndex++;
-        WRITE_UINT32( &(pIndex[0]), messageExpiry ); 
+        WRITE_UINT32( &( pIndex[ 0 ] ), messageExpiry );
         UINT32_SET_BIT( pPropertyBuilder->fieldSet, MQTT_MESSAGE_EXPIRY_INTERVAL_POS );
         pPropertyBuilder->currentIndex += 5U;
     }
@@ -5667,7 +5667,7 @@ MQTTStatus_t MQTTPropAdd_WillDelayInterval( MQTTPropBuilder_t * pPropertyBuilder
         pIndex = &pPropertyBuilder->pBuffer[ pPropertyBuilder->currentIndex ];
         *pIndex = MQTT_WILL_DELAY_ID;
         pIndex++;
-        WRITE_UINT32( &(pIndex[0]), willDelayInterval ); 
+        WRITE_UINT32( &( pIndex[ 0 ] ), willDelayInterval );
         UINT32_SET_BIT( pPropertyBuilder->fieldSet, MQTT_WILL_DELAY_POS );
         pPropertyBuilder->currentIndex += 5U;
     }
