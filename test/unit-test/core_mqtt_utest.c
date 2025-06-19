@@ -358,19 +358,19 @@ static bool eventCallback( MQTTContext_t * pContext,
                            MQTTPacketInfo_t * pPacketInfo,
                            MQTTDeserializedInfo_t * pDeserializedInfo,
                            MQTTSuccessFailReasonCode_t * pReasonCode,
-                           MQTTPropBuilder_t * sendPropsBuffer,
-                           MQTTPropBuilder_t * getPropsBuffer )
+                           MQTTPropBuilder_t * pSendPropsBuffer,
+                           MQTTPropBuilder_t * pGetPropsBuffer )
 {
     ( void ) pContext;
     ( void ) pPacketInfo;
     ( void ) pDeserializedInfo;
     ( void ) pReasonCode;
-    ( void ) sendPropsBuffer;
-    ( void ) getPropsBuffer;
+    ( void ) pSendPropsBuffer;
+    ( void ) pGetPropsBuffer;
 
     /* Update the global state to indicate that event callback is invoked. */
     isEventCallbackInvoked = true;
-    sendPropsBuffer->pBuffer = NULL;
+    pSendPropsBuffer->pBuffer = NULL;
     return true;
 }
 
@@ -389,13 +389,13 @@ static bool eventCallback2( MQTTContext_t * pContext,
                             MQTTPacketInfo_t * pPacketInfo,
                             MQTTDeserializedInfo_t * pDeserializedInfo,
                             MQTTSuccessFailReasonCode_t * pReasonCode,
-                            MQTTPropBuilder_t * sendPropsBuffer,
-                            MQTTPropBuilder_t * getPropsBuffer )
+                            MQTTPropBuilder_t * pSendPropsBuffer,
+                            MQTTPropBuilder_t * pGetPropsBuffer )
 {
     ( void ) pContext;
     ( void ) pPacketInfo;
     ( void ) pDeserializedInfo;
-    ( void ) getPropsBuffer;
+    ( void ) pGetPropsBuffer;
 
 
     uint8_t buf[ 13 ];
@@ -414,8 +414,8 @@ static bool eventCallback2( MQTTContext_t * pContext,
     buf[ 12 ] = 'e';
 
     *pReasonCode = MQTT_REASON_PUBREC_SUCCESS;
-    sendPropsBuffer->pBuffer = buf;
-    sendPropsBuffer->currentIndex = 13;
+    pSendPropsBuffer->pBuffer = buf;
+    pSendPropsBuffer->currentIndex = 13;
     isEventCallbackInvoked = true;
 
     return true;
@@ -424,21 +424,21 @@ static bool eventCallback3( MQTTContext_t * pContext,
                             MQTTPacketInfo_t * pPacketInfo,
                             MQTTDeserializedInfo_t * pDeserializedInfo,
                             MQTTSuccessFailReasonCode_t * pReasonCode,
-                            MQTTPropBuilder_t * sendPropsBuffer,
-                            MQTTPropBuilder_t * getPropsBuffer )
+                            MQTTPropBuilder_t * pSendPropsBuffer,
+                            MQTTPropBuilder_t * pGetPropsBuffer )
 {
     ( void ) pContext;
     ( void ) pPacketInfo;
     ( void ) pDeserializedInfo;
     ( void ) pReasonCode;
-    ( void ) sendPropsBuffer;
-    ( void ) getPropsBuffer;
+    ( void ) pSendPropsBuffer;
+    ( void ) pGetPropsBuffer;
 
     isEventCallbackInvoked = true;
 
     *pReasonCode = MQTT_REASON_PUBREC_NO_MATCHING_SUBSCRIBERS;
-    sendPropsBuffer->pBuffer = NULL;
-    sendPropsBuffer->currentIndex = 0;
+    pSendPropsBuffer->pBuffer = NULL;
+    pSendPropsBuffer->currentIndex = 0;
     pDeserializedInfo->packetIdentifier = 0;
 
     return true;
@@ -448,15 +448,15 @@ static bool eventCallbackInvalidRC( MQTTContext_t * pContext,
                                     MQTTPacketInfo_t * pPacketInfo,
                                     MQTTDeserializedInfo_t * pDeserializedInfo,
                                     MQTTSuccessFailReasonCode_t * pReasonCode,
-                                    MQTTPropBuilder_t * sendPropsBuffer,
-                                    MQTTPropBuilder_t * getPropsBuffer )
+                                    MQTTPropBuilder_t * pSendPropsBuffer,
+                                    MQTTPropBuilder_t * pGetPropsBuffer )
 {
     ( void ) pContext;
     ( void ) pPacketInfo;
     ( void ) pDeserializedInfo;
     ( void ) pReasonCode;
-    ( void ) sendPropsBuffer;
-    ( void ) getPropsBuffer;
+    ( void ) pSendPropsBuffer;
+    ( void ) pGetPropsBuffer;
 
     isEventCallbackInvoked = true;
 
@@ -476,8 +476,8 @@ static bool eventCallbackInvalidRC( MQTTContext_t * pContext,
     buf[ 11 ] = 0x01;
     buf[ 12 ] = 'e';
 
-    sendPropsBuffer->pBuffer = buf;
-    sendPropsBuffer->currentIndex = 13;
+    pSendPropsBuffer->pBuffer = buf;
+    pSendPropsBuffer->currentIndex = 13;
     pDeserializedInfo->packetIdentifier = 0;
 
     return true;
@@ -490,27 +490,27 @@ static bool eventCallbackInvalidRC( MQTTContext_t * pContext,
  * @param[in] pPacketInfo Packet Info pointer for the incoming packet.
  * @param[in] pDeserializedInfo Deserialized information from the incoming packet.\
  * @param[out] pReasonCode Reason code for the event.
- * @param[out] sendPropsBuffer Buffer to store properties for the outgoing packet.
- * @param[in] getPropsBuffer Buffer to get properties for the incoming packet.
+ * @param[out] pSendPropsBuffer Buffer to store properties for the outgoing packet.
+ * @param[in] pGetPropsBuffer Buffer to get properties for the incoming packet.
  */
 static bool eventCallback4( MQTTContext_t * pContext,
                             MQTTPacketInfo_t * pPacketInfo,
                             MQTTDeserializedInfo_t * pDeserializedInfo,
                             MQTTSuccessFailReasonCode_t * pReasonCode,
-                            MQTTPropBuilder_t * sendPropsBuffer,
-                            MQTTPropBuilder_t * getPropsBuffer )
+                            MQTTPropBuilder_t * pSendPropsBuffer,
+                            MQTTPropBuilder_t * pGetPropsBuffer )
 {
     ( void ) pContext;
     ( void ) pPacketInfo;
     ( void ) pDeserializedInfo;
-    ( void ) getPropsBuffer;
+    ( void ) pGetPropsBuffer;
     uint8_t buf[ 10 ];
 
     /* Update the global state to indicate that event callback is invoked. */
     *pReasonCode = MQTT_REASON_PUBREL_PACKET_IDENTIFIER_NOT_FOUND;
     isEventCallbackInvoked = true;
-    sendPropsBuffer->pBuffer = buf;
-    sendPropsBuffer->currentIndex = 0;
+    pSendPropsBuffer->pBuffer = buf;
+    pSendPropsBuffer->currentIndex = 0;
 
     return true;
 }
@@ -522,22 +522,22 @@ static bool eventCallback4( MQTTContext_t * pContext,
  * @param[in] pPacketInfo Packet Info pointer for the incoming packet.
  * @param[in] pDeserializedInfo Deserialized information from the incoming packet.
  * @param[out] pReasonCode Reason code for the event.
- * @param[out] sendPropsBuffer Buffer to store properties for the outgoing packet.
- * @param[in] getPropsBuffer Buffer to get properties for the incoming packet.
+ * @param[out] pSendPropsBuffer Buffer to store properties for the outgoing packet.
+ * @param[in] pGetPropsBuffer Buffer to get properties for the incoming packet.
  */
 static bool eventCallbackFail( MQTTContext_t * pContext,
                                MQTTPacketInfo_t * pPacketInfo,
                                MQTTDeserializedInfo_t * pDeserializedInfo,
                                MQTTSuccessFailReasonCode_t * pReasonCode,
-                               MQTTPropBuilder_t * sendPropsBuffer,
-                               MQTTPropBuilder_t * getPropsBuffer )
+                               MQTTPropBuilder_t * pSendPropsBuffer,
+                               MQTTPropBuilder_t * pGetPropsBuffer )
 {
     ( void ) pContext;
     ( void ) pPacketInfo;
     ( void ) pDeserializedInfo;
     ( void ) pReasonCode;
-    ( void ) sendPropsBuffer;
-    ( void ) getPropsBuffer;
+    ( void ) pSendPropsBuffer;
+    ( void ) pGetPropsBuffer;
     isEventCallbackInvoked = true;
     return false;
 }

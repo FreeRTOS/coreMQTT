@@ -104,8 +104,8 @@ typedef uint32_t (* MQTTGetCurrentTimeFunc_t )( void );
  * @param[in] pPacketInfo Information on the type of incoming MQTT packet.
  * @param[in] pDeserializedInfo Deserialized information from incoming packet.
  * @param[out] pReasonCode Reason code for the incoming packet.
- * @param[out] sendPropsBuffer Properties to be sent in the outgoing packet.
- * @param[in] getPropsBuffer Properties to be received in the incoming packet.
+ * @param[out] pSendPropsBuffer Properties to be sent in the outgoing packet.
+ * @param[in] pGetPropsBuffer Properties to be received in the incoming packet.
  *
  * @note Get optional properties of incoming packets by calling these functions:
  *
@@ -166,8 +166,8 @@ typedef bool (* MQTTEventCallback_t )( struct MQTTContext * pContext,
                                        struct MQTTPacketInfo * pPacketInfo,
                                        struct MQTTDeserializedInfo * pDeserializedInfo,
                                        enum MQTTSuccessFailReasonCode * pReasonCode,
-                                       struct MQTTPropBuilder * sendPropsBuffer,
-                                       struct MQTTPropBuilder * getPropsBuffer );
+                                       struct MQTTPropBuilder * pSendPropsBuffer,
+                                       struct MQTTPropBuilder * pGetPropsBuffer );
 
 /**
  * @brief User defined callback used to store outgoing publishes. Used to track any publish
@@ -502,7 +502,7 @@ MQTTStatus_t MQTT_Init( MQTTContext_t * pContext,
  * publishes.
  * @param[in] incomingPublishCount Maximum number of records which can be kept in the memory
  * pointed to by @p pIncomingPublishRecords.
- * @param[in] ackPropsBuf Pointer to memory which will be used to store properties of outgoing publish-ACKS.
+ * @param[in] pAckPropsBuf Pointer to memory which will be used to store properties of outgoing publish-ACKS.
  * @param[in] ackPropsBufLength Length of the buffer pointed to by @p pBuffer.
  * @return #MQTTBadParameter if invalid parameters are passed;
  * #MQTTSuccess otherwise.
@@ -563,7 +563,7 @@ MQTTStatus_t MQTT_InitStatefulQoS( MQTTContext_t * pContext,
                                    size_t outgoingPublishCount,
                                    MQTTPubAckInfo_t * pIncomingPublishRecords,
                                    size_t incomingPublishCount,
-                                   uint8_t * ackPropsBuf,
+                                   uint8_t * pAckPropsBuf,
                                    size_t ackPropsBufLength );
 /* @[declare_mqtt_initstatefulqos] */
 
@@ -1403,8 +1403,8 @@ MQTTStatus_t MQTT_MatchTopic( const char * pTopicName,
  *      MQTTPacketInfo_t * pPacketInfo,
  *      MQTTDeserializedInfo_t * pDeserializedInfo
  *      MQTTSuccessFailReasonCode_t * pReasonCode,
- *      MQTTPropBuilder_t * sendPropsBuffer,
- *      MQTTPropBuilder_t * getPropsBuffer
+ *      MQTTPropBuilder_t * pSendPropsBuffer,
+ *      MQTTPropBuilder_t * pGetPropsBuffer
  * )
  * {
  *      MQTTStatus_t status = MQTTSuccess;

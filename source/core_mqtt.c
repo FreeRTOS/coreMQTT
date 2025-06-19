@@ -534,8 +534,6 @@ static bool matchTopicFilter( const char * pTopicName,
                               const char * pTopicFilter,
                               uint16_t topicFilterLength );
 
-
-
 /**
  * @brief Send acks for received QoS 1/2 publishes with properties.
  *
@@ -677,14 +675,14 @@ static MQTTStatus_t sendUnsubscribeWithoutCopy( MQTTContext_t * pContext,
 /**
  * @brief Add subscription options to the options array.
  *
- * @param[in] pSubscriptionInfo MQTT subscription information.
- * @param[out] subscriptionOptionsArray Array to store subscription options.
+ * @param[in] subscriptionInfo MQTT subscription information.
+ * @param[out] pSubscriptionOptionsArray Array to store subscription options.
  * @param[in] currentOptionIndex Current index in the options array.
  *
  * @note This function does not return a status as it performs a direct array update.
  */
-static void addSubscriptionOptions( const MQTTSubscribeInfo_t pSubscriptionInfo,
-                                    uint8_t * subscriptionOptionsArray,
+static void addSubscriptionOptions( const MQTTSubscribeInfo_t subscriptionInfo,
+                                    uint8_t * pSubscriptionOptionsArray,
                                     size_t currentOptionIndex );
 
 /**
@@ -3249,7 +3247,7 @@ MQTTStatus_t MQTT_InitStatefulQoS( MQTTContext_t * pContext,
                                    size_t outgoingPublishCount,
                                    MQTTPubAckInfo_t * pIncomingPublishRecords,
                                    size_t incomingPublishCount,
-                                   uint8_t * ackPropsBuf,
+                                   uint8_t * pAckPropsBuf,
                                    size_t ackPropsBufLength )
 {
     MQTTStatus_t status = MQTTSuccess;
@@ -3297,9 +3295,9 @@ MQTTStatus_t MQTT_InitStatefulQoS( MQTTContext_t * pContext,
         pContext->outgoingPublishRecordMaxCount = outgoingPublishCount;
         pContext->outgoingPublishRecords = pOutgoingPublishRecords;
 
-        if( ( ackPropsBuf != NULL ) && ( ackPropsBufLength != 0U ) )
+        if( ( pAckPropsBuf != NULL ) && ( ackPropsBufLength != 0U ) )
         {
-            status = MQTTPropertyBuilder_Init( &pContext->ackPropsBuffer, ackPropsBuf, ackPropsBufLength );
+            status = MQTTPropertyBuilder_Init( &pContext->ackPropsBuffer, pAckPropsBuf, ackPropsBufLength );
         }
         else
         {
@@ -4825,18 +4823,18 @@ static MQTTStatus_t validateSharedSubscriptions( const MQTTContext_t * pContext,
 
 /*-----------------------------------------------------------*/
 
-static void addSubscriptionOptions( const MQTTSubscribeInfo_t pSubscriptionInfo,
-                                    uint8_t * subscriptionOptionsArray,
+static void addSubscriptionOptions( const MQTTSubscribeInfo_t subscriptionInfo,
+                                    uint8_t * pSubscriptionOptionsArray,
                                     size_t currentOptionIndex )
 {
     uint8_t subscriptionOptions = 0U;
 
-    if( pSubscriptionInfo.qos == MQTTQoS1 )
+    if( subscriptionInfo.qos == MQTTQoS1 )
     {
         LogInfo( ( "Adding QoS as QoS 1 in SUBSCRIBE payload" ) );
         UINT8_SET_BIT( subscriptionOptions, MQTT_SUBSCRIBE_QOS1 );
     }
-    else if( pSubscriptionInfo.qos == MQTTQoS2 )
+    else if( subscriptionInfo.qos == MQTTQoS2 )
     {
         LogInfo( ( "Adding QoS as QoS 2 in SUBSCRIBE payload" ) );
         UINT8_SET_BIT( subscriptionOptions, MQTT_SUBSCRIBE_QOS2 );
@@ -4846,7 +4844,7 @@ static void addSubscriptionOptions( const MQTTSubscribeInfo_t pSubscriptionInfo,
         LogInfo( ( "Adding QoS as QoS 0 in SUBSCRIBE payload" ) );
     }
 
-    if( pSubscriptionInfo.noLocalOption )
+    if( subscriptionInfo.noLocalOption )
     {
         LogInfo( ( "Adding noLocalOption in SUBSCRIBE payload" ) );
         UINT8_SET_BIT( subscriptionOptions, MQTT_SUBSCRIBE_NO_LOCAL );
@@ -4856,7 +4854,7 @@ static void addSubscriptionOptions( const MQTTSubscribeInfo_t pSubscriptionInfo,
         LogDebug( ( "Adding noLocalOption as 0 in SUBSCRIBE payload" ) );
     }
 
-    if( pSubscriptionInfo.retainAsPublishedOption )
+    if( subscriptionInfo.retainAsPublishedOption )
     {
         LogInfo( ( " retainAsPublishedOption in SUBSCRIBE payload" ) );
         UINT8_SET_BIT( subscriptionOptions, MQTT_SUBSCRIBE_RETAIN_AS_PUBLISHED );
@@ -4866,11 +4864,11 @@ static void addSubscriptionOptions( const MQTTSubscribeInfo_t pSubscriptionInfo,
         LogDebug( ( "retainAsPublishedOption as 0 in SUBSCRIBE payload" ) );
     }
 
-    if( pSubscriptionInfo.retainHandlingOption == retainSendOnSub )
+    if( subscriptionInfo.retainHandlingOption == retainSendOnSub )
     {
         LogInfo( ( "Send Retain messages at the time of subscribe" ) );
     }
-    else if( pSubscriptionInfo.retainHandlingOption == retainSendOnSubIfNotPresent )
+    else if( subscriptionInfo.retainHandlingOption == retainSendOnSubIfNotPresent )
     {
         LogInfo( ( "Send retained messages at subscribe only if the subscription does not currently exist" ) );
         UINT8_SET_BIT( subscriptionOptions, MQTT_SUBSCRIBE_RETAIN_HANDLING1 );
@@ -4881,7 +4879,7 @@ static void addSubscriptionOptions( const MQTTSubscribeInfo_t pSubscriptionInfo,
         UINT8_SET_BIT( subscriptionOptions, MQTT_SUBSCRIBE_RETAIN_HANDLING2 );
     }
 
-    subscriptionOptionsArray[ currentOptionIndex ] = subscriptionOptions;
+    pSubscriptionOptionsArray[ currentOptionIndex ] = subscriptionOptions;
 }
 
 /*-----------------------------------------------------------*/

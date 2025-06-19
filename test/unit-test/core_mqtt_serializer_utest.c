@@ -2793,10 +2793,9 @@ void test_MQTTV5_suback( void )
     status = MQTT_DeserializeAck( &subackPacket, &packetIdentifier, NULL, &subackReasonCodes, NULL, &properties );
     TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
 
-    subackPacket.remainingLength = 5;
-    packetBufferNoProperties[ 4 ] = 1;    /* Set property length to 1 byte */
-    packetBufferNoProperties[ 5 ] = 0x00;
-    packetBufferNoProperties[ 6 ] = 0x00; /* Set reason code to 0x00 (Success) */
+    subackPacket.remainingLength = 4;
+    packetBufferNoProperties[ 4 ] = 0;    /* Set property length to 0 bytes */
+    packetBufferNoProperties[ 5 ] = 0x00; /* Set reason code to 0x00 (Success) */
     status = MQTT_DeserializeAck( &subackPacket, &packetIdentifier, NULL, &subackReasonCodes, NULL, &properties );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
 }

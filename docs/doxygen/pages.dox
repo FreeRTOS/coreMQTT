@@ -84,6 +84,7 @@ these low-level functions can be used directly:
 - @ref mqtt_deserializeack_function <br>
 - @ref mqtt_deserializedisconnect_function <br>
 - @ref mqtt_getincomingpackettypeandlength_function <br>
+- @ref mqtt_initconnect_function <br>
 
 @section mqtt_sessions Sessions and State
 
@@ -219,7 +220,7 @@ Serializer functions of the MQTT library:<br><br>
 @subpage mqtt_deserializeack_function <br>
 @subpage mqtt_deserializedisconnect_function <br>
 @subpage mqtt_getincomingpackettypeandlength_function <br>
-
+@subpage mqtt_initconnect_function <br>
 
 Property Add functions:<br><br>
 @subpage mqttpropadd_subscribeid_function <br>
@@ -583,6 +584,10 @@ Property Get functions:<br><br>
 @page mqtt_incominggetnextprop_function MQTT_IncomingGetNextProp
 @snippet core_mqtt_serializer.h declare_mqtt_incominggetnextprop
 @copydoc MQTT_IncomingGetNextProp
+
+@page mqtt_initconnect_function MQTT_InitConnect
+@snippet core_mqtt_serializer.h declare_mqtt_initconnect
+@copydoc MQTT_InitConnect
 
 */
 

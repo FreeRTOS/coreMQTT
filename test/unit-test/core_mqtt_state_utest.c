@@ -96,15 +96,15 @@ static bool eventCallback( MQTTContext_t * pContext,
                            MQTTPacketInfo_t * pPacketInfo,
                            MQTTDeserializedInfo_t * pDeserializedInfo,
                            MQTTSuccessFailReasonCode_t * pReasonCode,
-                           MQTTPropBuilder_t * sendPropsBuffer,
-                           MQTTPropBuilder_t * getPropsBuffer )
+                           MQTTPropBuilder_t * pSendPropsBuffer,
+                           MQTTPropBuilder_t * pGetPropsBuffer )
 {
     ( void ) pContext;
     ( void ) pPacketInfo;
     ( void ) pDeserializedInfo;
     ( void ) pReasonCode;
-    ( void ) sendPropsBuffer;
-    ( void ) getPropsBuffer;
+    ( void ) pSendPropsBuffer;
+    ( void ) pGetPropsBuffer;
 
     return true;
 }

@@ -239,7 +239,7 @@ With coreMQTT versions >=v3.0.0, there are some breaking changes that need to be
 
 ### Breaking Changes
 
-* The `MQTTEventCallback_t` function signature used in `MQTT_Init` has changed to support MQTT v5 properties and reason codes. The signature changed from `void (* MQTTEventCallback_t)( struct MQTTContext * pContext, struct MQTTPacketInfo * pPacketInfo, struct MQTTDeserializedInfo * pDeserializedInfo )` to `void (* MQTTEventCallback_t)( struct MQTTContext * pContext, struct MQTTPacketInfo * pPacketInfo, struct MQTTDeserializedInfo * pDeserializedInfo, enum MQTTSuccessFailReasonCode * pReasonCode, struct MQTTPropBuilder * sendPropsBuffer, struct MQTTPropBuilder * getPropsBuffer )`. For example:
+* The `MQTTEventCallback_t` function signature used in `MQTT_Init` has changed to support MQTT v5 properties and reason codes. The signature changed from `void (* MQTTEventCallback_t)( struct MQTTContext * pContext, struct MQTTPacketInfo * pPacketInfo, struct MQTTDeserializedInfo * pDeserializedInfo )` to `void (* MQTTEventCallback_t)( struct MQTTContext * pContext, struct MQTTPacketInfo * pPacketInfo, struct MQTTDeserializedInfo * pDeserializedInfo, enum MQTTSuccessFailReasonCode * pReasonCode, struct MQTTPropBuilder * pSendPropsBuffer, struct MQTTPropBuilder * pGetPropsBuffer )`. For example:
 
 **Old Code Snippet**:
 ```
@@ -277,8 +277,8 @@ static void eventCallback(
     MQTTPacketInfo_t * pPacketInfo,
     MQTTDeserializedInfo_t * pDeserializedInfo,
     MQTTSuccessFailReasonCode * pReasonCode,
-    MQTTPropBuilder_t * sendPropsBuffer,
-    MQTTPropBuilder_t * getPropsBuffer )
+    MQTTPropBuilder_t * pSendPropsBuffer,
+    MQTTPropBuilder_t * pGetPropsBuffer )
 {
     /* Handle incoming publish. The lower 4 bits of the publish packet
      * type is used for the dup, QoS, and retain flags. Hence masking
@@ -289,7 +289,7 @@ static void eventCallback(
 
         /* Access publish properties if needed */
         uint16_t topicAlias;
-        if( MQTTPropGet_PubTopicAlias( getPropsBuffer, &topicAlias ) == MQTTSuccess )
+        if( MQTTPropGet_PubTopicAlias( pGetPropsBuffer, &topicAlias ) == MQTTSuccess )
         {
             /* Handle topic alias */
         }
@@ -301,7 +301,7 @@ static void eventCallback(
         /* Add properties to outgoing ack packets if needed */
         if( pPacketInfo->type == MQTT_PACKET_TYPE_PUBACK )
         {
-            MQTTPropAdd_ReasonString( sendPropsBuffer, "Success", 7 );
+            MQTTPropAdd_ReasonString( pSendPropsBuffer, "Success", 7 );
         }
     }
 }

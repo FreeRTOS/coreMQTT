@@ -1835,7 +1835,7 @@ MQTTStatus_t MQTT_GetPublishPacketSize( const MQTTPublishInfo_t * pPublishInfo,
  *                            For other packet types: this parameter is ignored.
  * @param[out] pReasonCode Struct to store reason code(s) from the acknowledgment packet.
  *                        Contains the success/failure status of the corresponding request.
- * @param[out] propBuffer Struct to store the deserialized acknowledgment properties.
+ * @param[out] pPropBuffer Struct to store the deserialized acknowledgment properties.
  *                       Will contain any MQTT v5.0 properties included in the ack packet.
  * @param[in,out] pConnectProperties Struct to store the deserialized connect/connack properties.
  *                                   This parameter cannot be NULL.
@@ -1880,7 +1880,7 @@ MQTTStatus_t MQTT_DeserializeAck( const MQTTPacketInfo_t * pIncomingPacket,
                                 uint16_t * pPacketId,
                                 bool * pSessionPresent,
                                 MQTTReasonCodeInfo_t * pReasonCode,
-                                MQTTPropBuilder_t * propBuffer,
+                                MQTTPropBuilder_t * pPropBuffer,
                                 MQTTConnectionProperties_t * pConnectProperties );
 /* @[declare_mqtt_deserializeack] */
 
@@ -2085,7 +2085,7 @@ uint8_t * MQTT_SerializeDisconnectFixed(uint8_t * pIndex,
  * @param[in] pPacket #MQTTPacketInfo_t containing the buffer.
  * @param[in] maxPacketSize Maximum packet size allowed by the client.
  * @param[out] pDisconnectInfo Struct containing disconnect reason code
- * @param[out] propBuffer MQTTPropBuilder_t to store the deserialized properties.
+ * @param[out] pPropBuffer MQTTPropBuilder_t to store the deserialized properties.
  *
  * @return #MQTTBadParameter, #MQTTBadResponse or #MQTTSuccess.
  *
@@ -2120,7 +2120,7 @@ uint8_t * MQTT_SerializeDisconnectFixed(uint8_t * pIndex,
 MQTTStatus_t MQTT_DeserializeDisconnect(const MQTTPacketInfo_t* pPacket,
                                           uint32_t maxPacketSize,
                                           MQTTReasonCodeInfo_t* pDisconnectInfo,
-                                          MQTTPropBuilder_t* propBuffer);
+                                          MQTTPropBuilder_t* pPropBuffer);
 /* @[declare_mqtt_deserializedisconnect] */
 
 
@@ -3069,7 +3069,7 @@ MQTTStatus_t decodeSubackPropertyLength(uint8_t * pIndex, size_t remainingLength
  * @brief Initialize an MQTTConnectionProperties_t.
  *
  * @note This function initializes the connect properties to default values.
- *       This function should only be used if using only serializer function
+ *       This function should only be used if using only serializer functions
  *       throughout the connection. It is also important to only call this function
  *       before sending the connect packet.
  *
