@@ -705,7 +705,7 @@ static MQTTStatus_t deserializeSubackProperties( MQTTPropBuilder_t * pPropBuffer
  * #MQTTBadResponse if the DISCONNECT packet is invalid.
  */
 static MQTTStatus_t deserializeDisconnectProperties( uint8_t * pIndex,
-                                                     size_t propertyLength );
+                                                     size_t disconnectPropertyLength );
 
 /**
  * @brief Deserialize properties in the PUBLISH packet received from the server.
@@ -1554,8 +1554,8 @@ MQTTStatus_t deserializeConnack( MQTTConnectionProperties_t * pConnackProperties
     if( ( status == MQTTSuccess ) || ( status == MQTTServerRefused ) )
     {
         pVariableHeader = pIncomingPacket->pRemainingData;
-        pVariableHeader = &pVariableHeader[ 2 * ( sizeof( uint8_t ) ) ];
-        status = decodeVariableLength( pVariableHeader, pIncomingPacket->remainingLength - 2, &propertyLength );
+        pVariableHeader = &pVariableHeader[ 2U * ( sizeof( uint8_t ) ) ];
+        status = decodeVariableLength( pVariableHeader, pIncomingPacket->remainingLength - 2U, &propertyLength );
     }
 
     /*Validate the packet size if max packet size is set*/
@@ -3476,6 +3476,7 @@ static MQTTStatus_t decodeVariableLength( const uint8_t * pBuffer,
     size_t bytesDecoded = 0;
     size_t expectedSize = 0;
     uint8_t encodedByte = 0;
+    size_t localBufferLength = bufferLength;
     MQTTStatus_t status = MQTTSuccess;
 
     /* This algorithm is copied from the MQTT 5.0 spec. */
@@ -3491,13 +3492,13 @@ static MQTTStatus_t decodeVariableLength( const uint8_t * pBuffer,
         }
         else
         {
-            if( bufferLength > 0 )
+            if( localBufferLength > 0U )
             {
                 encodedByte = pBuffer[ bytesDecoded ];
                 remainingLength += ( ( size_t ) encodedByte & 0x7FU ) * multiplier;
                 multiplier *= 128U;
                 bytesDecoded++;
-                bufferLength--;
+                localBufferLength--;
             }
             else
             {
@@ -3982,7 +3983,7 @@ static MQTTStatus_t decodeAckProperties( MQTTPropBuilder_t * pPropBuffer,
     bool reasonString = false;
 
     /*Decode the property length*/
-    status = decodeVariableLength( pLocalIndex, remainingLength - 3, &propertyLength );
+    status = decodeVariableLength( pLocalIndex, remainingLength - 3U, &propertyLength );
 
     if( status == MQTTSuccess )
     {
@@ -4161,7 +4162,7 @@ static MQTTStatus_t deserializePublishProperties( MQTTPublishInfo_t * pPublishIn
     /*Decode Property Length */
     remainingLengthForProperties = remainingLength;
     remainingLengthForProperties -= pPublishInfo->topicNameLength + sizeof( uint16_t );
-    remainingLengthForProperties -= ( pPublishInfo->qos > 0 ) ? sizeof( uint16_t ) : 0;
+    remainingLengthForProperties -= ( pPublishInfo->qos > MQTTQoS0 ) ? sizeof( uint16_t ) : 0U;
 
     status = decodeVariableLength( pLocalIndex, remainingLengthForProperties, &propertyLength );
     pPublishInfo->propertyLength = propertyLength;
@@ -4660,7 +4661,7 @@ static MQTTStatus_t deserializeSubackProperties( MQTTPropBuilder_t * pPropBuffer
     uint16_t reasonStringLength;
     bool reasonString = false;
 
-    status = decodeVariableLength( pLocalIndex, remainingLength - 2, &propertyLength );
+    status = decodeVariableLength( pLocalIndex, remainingLength - 2U, &propertyLength );
     *pSubackPropertyLength = propertyLength;
 
     if( status == MQTTSuccess )
@@ -4983,7 +4984,7 @@ MQTTStatus_t MQTT_DeserializeDisconnect( const MQTTPacketInfo_t * pPacket,
         if( ( pPacket->remainingLength > 1U ) )
         {
             /*Extract the property length.*/
-            status = decodeVariableLength( pIndex, pPacket->remainingLength - 1, &propertyLength );
+            status = decodeVariableLength( pIndex, pPacket->remainingLength - 1U, &propertyLength );
 
             if( status == MQTTSuccess )
             {
@@ -5015,36 +5016,38 @@ MQTTStatus_t MQTT_DeserializeDisconnect( const MQTTPacketInfo_t * pPacket,
 /*-----------------------------------------------------------*/
 
 static MQTTStatus_t deserializeDisconnectProperties( uint8_t * pIndex,
-                                                     size_t propertyLength )
+                                                     size_t disconnectPropertyLength )
 {
     MQTTStatus_t status = MQTTSuccess;
+    uint8_t * pLocalIndex = pIndex;
     const char * pReasonString;
     uint16_t reasonStringLength;
     const char * pServerRef;
     uint16_t pServerRefLength;
+    size_t propertyLength = disconnectPropertyLength;
 
     while( ( propertyLength > 0U ) && ( status == MQTTSuccess ) )
     {
         /*Decode the property id.*/
-        uint8_t propertyId = *pIndex;
+        uint8_t propertyId = *pLocalIndex;
         bool reasonString = false;
         bool serverRef = false;
-        pIndex = &pIndex[ 1 ];
+        pLocalIndex = &pLocalIndex[ 1 ];
         propertyLength -= sizeof( uint8_t );
 
         /*Validate the property id and decode accordingly.*/
         switch( propertyId )
         {
             case MQTT_REASON_STRING_ID:
-                status = decodeutf_8( &pReasonString, &reasonStringLength, &propertyLength, &reasonString, &pIndex );
+                status = decodeutf_8( &pReasonString, &reasonStringLength, &propertyLength, &reasonString, &pLocalIndex );
                 break;
 
             case MQTT_USER_PROPERTY_ID:
-                status = decodeAndDiscard( &propertyLength, &pIndex );
+                status = decodeAndDiscard( &propertyLength, &pLocalIndex );
                 break;
 
             case MQTT_SERVER_REF_ID:
-                status = decodeutf_8( &pServerRef, &pServerRefLength, &propertyLength, &serverRef, &pIndex );
+                status = decodeutf_8( &pServerRef, &pServerRefLength, &propertyLength, &serverRef, &pLocalIndex );
                 break;
 
             default:
@@ -7251,12 +7254,12 @@ MQTTStatus_t MQTTPropertyBuilder_Init( MQTTPropBuilder_t * pPropertyBuilder,
 
 /*-----------------------------------------------------------*/
 
-MQTTStatus_t decodeSubackPropertyLength( uint8_t * pIndex,
+MQTTStatus_t decodeSubackPropertyLength( const uint8_t * pIndex,
                                          size_t remainingLength,
                                          size_t * subackPropertyLength )
 {
     MQTTStatus_t status;
-    uint8_t * pLocalIndex = pIndex;
+    const uint8_t * pLocalIndex = pIndex;
     size_t propertyLength = 0U;
 
     status = decodeVariableLength( pLocalIndex, remainingLength - sizeof( uint16_t ), &propertyLength );

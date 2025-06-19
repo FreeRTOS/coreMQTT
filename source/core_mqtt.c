@@ -3233,8 +3233,11 @@ MQTTStatus_t MQTT_Init( MQTTContext_t * pContext,
         pContext->nextPacketId = 1;
 
         /* Setting default connect properties in our application */
-        MQTT_InitConnect( &connectionProperties );
-        pContext->connectionProperties = connectionProperties;
+        status = MQTT_InitConnect( &connectionProperties );
+        if( status == MQTTSuccess )
+        {
+            pContext->connectionProperties = connectionProperties;
+        }
     }
 
     return status;
@@ -4775,12 +4778,12 @@ static MQTTStatus_t validateSharedSubscriptions( const MQTTContext_t * pContext,
     const char * shareNameEnd;
     const char * shareNameStart;
 
-    isSharedSub = ( isSharedSub ) && ( ( strncmp( pSubscriptionList[ iterator ].pTopicFilter, "$share/", 7 ) ) == 0 );
+    isSharedSub = ( isSharedSub ) && ( ( strncmp( pSubscriptionList[ iterator ].pTopicFilter, "$share/", 7U ) ) == 0 );
 
     if( isSharedSub )
     {
-        shareNameStart = &( pSubscriptionList[ iterator ].pTopicFilter[ 7 ] );
-        shareNameEnd = memchr( shareNameStart, ( int32_t ) '/', topicFilterLength - 7 );
+        shareNameStart = &( pSubscriptionList[ iterator ].pTopicFilter[ 7U ] );
+        shareNameEnd = memchr( shareNameStart, ( int32_t ) '/', ( size_t ) topicFilterLength - 7U );
 
         if( ( shareNameEnd == NULL ) ||
             ( shareNameEnd == &( pSubscriptionList[ iterator ].pTopicFilter[ 7 ] ) ) )
@@ -4798,7 +4801,7 @@ static MQTTStatus_t validateSharedSubscriptions( const MQTTContext_t * pContext,
             LogError( ( "Protocol Error : Shared Subscriptions not allowed" ) );
             status = MQTTBadParameter;
         }
-        else if( shareNameEnd == &( pSubscriptionList[ iterator ].pTopicFilter[ topicFilterLength - 1 ] ) )
+        else if( shareNameEnd == &( pSubscriptionList[ iterator ].pTopicFilter[ topicFilterLength - 1U ] ) )
         {
             LogError( ( "Protocol Error : Topic filter after share name is missing" ) );
             status = MQTTBadParameter;

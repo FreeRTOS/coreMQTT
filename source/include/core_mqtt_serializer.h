@@ -3062,7 +3062,7 @@ MQTTStatus_t MQTTPropertyBuilder_Init( MQTTPropBuilder_t * pPropertyBuilder,
  * @return #MQTTSuccess if the property length is successfully decoded;
  *         #MQTTBadResponse if the decoded property length is greater than the remaining length.
  */
-MQTTStatus_t decodeSubackPropertyLength(uint8_t * pIndex, size_t remainingLength, size_t * subackPropertyLength);
+MQTTStatus_t decodeSubackPropertyLength( const uint8_t * pIndex, size_t remainingLength, size_t * subackPropertyLength );
 /* *INDENT-OFF* */
 
 /**
