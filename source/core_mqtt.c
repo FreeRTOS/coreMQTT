@@ -3234,6 +3234,7 @@ MQTTStatus_t MQTT_Init( MQTTContext_t * pContext,
 
         /* Setting default connect properties in our application */
         status = MQTT_InitConnect( &connectionProperties );
+
         if( status == MQTTSuccess )
         {
             pContext->connectionProperties = connectionProperties;

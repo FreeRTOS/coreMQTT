@@ -699,7 +699,7 @@ static MQTTStatus_t deserializeSubackProperties( MQTTPropBuilder_t * pPropBuffer
  * @brief Deserialize properties in the DISCONNECT packet received from the server.
  *
  * @param[in] pIndex Pointer to the start of the properties.
- * @param[in] propertyLength Length of the properties in the DISCONNECT packet.
+ * @param[in] disconnectPropertyLength Length of the properties in the DISCONNECT packet.
  *
  * @return #MQTTSuccess if DISCONNECT is valid;
  * #MQTTBadResponse if the DISCONNECT packet is invalid.
