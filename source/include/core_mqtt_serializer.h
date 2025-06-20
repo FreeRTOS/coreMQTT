@@ -3063,7 +3063,6 @@ MQTTStatus_t MQTTPropertyBuilder_Init( MQTTPropBuilder_t * pPropertyBuilder,
  *         #MQTTBadResponse if the decoded property length is greater than the remaining length.
  */
 MQTTStatus_t decodeSubackPropertyLength( const uint8_t * pIndex, size_t remainingLength, size_t * subackPropertyLength );
-/* *INDENT-OFF* */
 
 /**
  * @brief Initialize an MQTTConnectionProperties_t.
@@ -3082,6 +3081,8 @@ MQTTStatus_t decodeSubackPropertyLength( const uint8_t * pIndex, size_t remainin
 /* @[declare_mqtt_initconnect] */
 MQTTStatus_t MQTT_InitConnect( MQTTConnectionProperties_t * pConnectProperties );
 /* @[declare_mqtt_initconnect] */
+
+/* *INDENT-OFF* */
 #ifdef __cplusplus
     }
 #endif

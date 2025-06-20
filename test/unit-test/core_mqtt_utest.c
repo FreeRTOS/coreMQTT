@@ -560,7 +560,7 @@ static uint8_t * MQTTV5_SerializeAckFixed_cb( uint8_t * pIndex,
     return pIndex;
 }
 
-static MQTTStatus_t decodeSubackPropertyLength_cb( uint8_t * pIndex,
+static MQTTStatus_t decodeSubackPropertyLength_cb( const uint8_t * pIndex,
                                                    size_t remainingLength,
                                                    size_t * subackPropertyLength,
                                                    int numcallbacks )
