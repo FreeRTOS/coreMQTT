@@ -37,13 +37,24 @@ void harness()
     size_t packetSize;
     MQTTFixedBuffer_t * pFixedBuffer;
     size_t * pHeaderSize;
+    MQTTPropBuilder_t * pPublishProperties;
     MQTTStatus_t status = MQTTSuccess;
+    uint32_t maxPacketSize;
 
     pPublishInfo = allocateMqttPublishInfo( NULL );
     __CPROVER_assume( isValidMqttPublishInfo( pPublishInfo ) );
 
     pFixedBuffer = allocateMqttFixedBuffer( NULL );
     __CPROVER_assume( isValidMqttFixedBuffer( pFixedBuffer ) );
+
+    pPublishProperties = allocateMqttPropBuilder( NULL );
+
+    if( pPublishProperties != NULL )
+    {
+        __CPROVER_assume( pPublishProperties->currentIndex >= 0 );
+        __CPROVER_assume( pPublishProperties->currentIndex < pPublishProperties->bufferLength );
+        __CPROVER_assume( pPublishProperties->fieldSet >= 0 );
+    }
 
     /* Allocate space for a returned header size to get coverage of a possibly
      * NULL input. */
@@ -61,8 +72,10 @@ void harness()
          * MQTTFixedBuffer_t. MQTT_SerializeConnect() will use the remainingLength
          * to recalculate the packetSize. */
         status = MQTT_GetPublishPacketSize( pPublishInfo,
+                                            pPublishProperties,
                                             &remainingLength,
-                                            &packetSize );
+                                            &packetSize,
+                                            maxPacketSize );
     }
 
     if( status == MQTTSuccess )
@@ -70,6 +83,7 @@ void harness()
         /* For coverage it is expected that a NULL pPublishInfo could
          * reach this function. */
         MQTT_SerializePublishHeader( pPublishInfo,
+                                     pPublishProperties,
                                      packetId,
                                      remainingLength,
                                      pFixedBuffer,

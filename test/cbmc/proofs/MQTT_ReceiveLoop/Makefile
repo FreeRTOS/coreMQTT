@@ -29,6 +29,8 @@ INCLUDES +=
 # These functions have their memory saftey proven in other harnesses.
 REMOVE_FUNCTION_BODY += MQTT_DeserializeAck
 REMOVE_FUNCTION_BODY += MQTT_SerializeAck
+REMOVE_FUNCTION_BODY += MQTT_DeserializePublish
+REMOVE_FUNCTION_BODY += MQTT_DeserializeDisconnect
 REMOVE_FUNCTION_BODY += memmove # Use stub
 
 # The loops below are unwound once more than the exclusive timeout bound.
