@@ -1,8 +1,8 @@
-## coreMQTT version v2.x Migration Guide
+# coreMQTT version v2.x Migration Guide
 
 With coreMQTT versions >=v2.x, there are some breaking changes that need to be addressed when upgrading.
 
-### Breaking Changes
+## Breaking Changes
 
 * The `MQTT_ProcessLoop` function no longer uses a timeout as this led to unavoidable busy-waiting. Thus, the signature of `MQTT_ProcessLoop` changed from `MQTTStatus_t MQTT_ProcessLoop( MQTTContext_t * pContext, uint32_t timeoutMs )`  to  `MQTTStatus_t MQTT_ProcessLoop( MQTTContext_t * pContext )`. Additionally, `MQTT_ProcessLoop` can now return `MQTTNeedMoreBytes`. A return of `MQTTNeedMoreBytes` means that `MQTT_ProcessLoop` received only a part of an MQTT packet and will need to be called again (probably after a bit of delay) in order to finish receiving the MQTT packet. Thus, to migrate, simply remove the timeout from the `MQTT_ProcessLoop` call and additionally check for if `MQTTNeedMoreBytes` has been returned when checking the status of `MQTT_ProcessLoop`. For example:
 
@@ -229,90 +229,113 @@ if( status == MQTTSuccess )
 
 * For coreMQTT version >=v2.1.0, the `MQTT_SEND_RETRY_TIMEOUT_MS` macro configuration has been deprecated. It has been replaced with `MQTT_SEND_TIMEOUT_MS`. `MQTT_SEND_RETRY_TIMEOUT_MS` was formerly used to timeout sending an MQTT packet after the transport `send` function failed to transmit any bytes for too long. This timeout would reset each time the transport `send` function sent any bytes, leading to the actual timeout scaling with the number of bytes being sent. In other words, the maximum time for sending a packet was variable. In order to remedy this, the `MQTT_SEND_RETRY_TIMEOUT_MS` macro was replaced with `MQTT_SEND_TIMEOUT_MS`. `MQTT_SEND_TIMEOUT_MS` now sets the maximum duration that coreMQTT will attempt to send an MQTT packet, leading to more consistent timeout behavior across various APIs and packet lengths.
 
-### Additional Changes
+## Additional Changes
 
-* The `MQTT_CancelCallback` function has been added to allow a program to prevent the event callback from being called when receiving an ACK for a sent packet. For example, if a program sends a publish with packet ID 2 and QoS > 0 using `MQTT_Publish`, the program could then call `MQTT_CancelCallback` on packet ID 2 to prevent coreMQTT from calling the event callback when it receives the `PUBACK` for packet ID 2.
+* The `MQTT_CancelCallback` function has been added to allow a program to prevent the event callback from being called when receiving an ACK for a sent packet. For example, if a program sends a publish with packet ID 2 and QoS > 0 using `MQTT_Publish`, the program could then call `MQTT_CancelCallback` on packet ID 2 to prevent coreMQTT from calling the event callback when it receives the `PUBACK` for packet ID 2. 
 
-## coreMQTT version >=v3.0.0 Migration Guide
+# coreMQTT version >=v3.0.0 Migration Guide
 
 With coreMQTT versions >=v3.0.0, there are some breaking changes that need to be addressed when upgrading.
 
-### Breaking Changes
+## Breaking Changes
 
-* The `MQTTEventCallback_t` function signature used in `MQTT_Init` has changed to support MQTT v5 properties and reason codes. The signature changed from `void (* MQTTEventCallback_t)( struct MQTTContext * pContext, struct MQTTPacketInfo * pPacketInfo, struct MQTTDeserializedInfo * pDeserializedInfo )` to `void (* MQTTEventCallback_t)( struct MQTTContext * pContext, struct MQTTPacketInfo * pPacketInfo, struct MQTTDeserializedInfo * pDeserializedInfo, enum MQTTSuccessFailReasonCode * pReasonCode, struct MQTTPropBuilder * pSendPropsBuffer, struct MQTTPropBuilder * pGetPropsBuffer )`. For example:
+* The `MQTTEventCallback_t` function signature used in `MQTT_Init` has changed to support MQTT v5 properties and reason codes. The signature changed 
 
-**Old Code Snippet**:
-```
-// Callback function implementation
-static void eventCallback(
-    MQTTContext_t * pContext,
-    MQTTPacketInfo_t * pPacketInfo,
-    MQTTDeserializedInfo_t * pDeserializedInfo )
-{
-    /* Handle incoming publish. The lower 4 bits of the publish packet
-     * type is used for the dup, QoS, and retain flags. Hence masking
-     * out the lower bits to check if the packet is publish. */
-    if( ( pPacketInfo->type & 0xF0U ) == MQTT_PACKET_TYPE_PUBLISH )
+    from 
+
+    ```c
+    void (* MQTTEventCallback_t)( struct MQTTContext * pContext, 
+                                  struct MQTTPacketInfo * pPacketInfo, 
+                                  struct MQTTDeserializedInfo * pDeserializedInfo )
+    ```
+
+    to 
+
+    ```c
+    void (* MQTTEventCallback_t)( struct MQTTContext * pContext, 
+                                  struct MQTTPacketInfo * pPacketInfo, 
+                                  struct MQTTDeserializedInfo * pDeserializedInfo, 
+                                  enum MQTTSuccessFailReasonCode * pReasonCode, 
+                                  struct MQTTPropBuilder * pSendPropsBuffer, 
+                                  struct MQTTPropBuilder * pGetPropsBuffer )
+    ```
+    For example:
+
+    **Old Code Snippet**:
+
+    ```c
+    // Callback function implementation
+    static void eventCallback(
+        MQTTContext_t * pContext,
+        MQTTPacketInfo_t * pPacketInfo,
+        MQTTDeserializedInfo_t * pDeserializedInfo )
     {
-        /* Handle incoming publish. */
-    }
-    else
-    {
-        /* Handle other packets. */
-    }
-}
-
-// MQTT_Init call
-status = MQTT_Init( &mqttContext,
-                    &transport,
-                    getTimeMs,
-                    eventCallback,
-                    &fixedBuffer );
-```
-**New Code Snippet**:
-```
-// Callback function implementation
-static void eventCallback(
-    MQTTContext_t * pContext,
-    MQTTPacketInfo_t * pPacketInfo,
-    MQTTDeserializedInfo_t * pDeserializedInfo,
-    MQTTSuccessFailReasonCode * pReasonCode,
-    MQTTPropBuilder_t * pSendPropsBuffer,
-    MQTTPropBuilder_t * pGetPropsBuffer )
-{
-    /* Handle incoming publish. The lower 4 bits of the publish packet
-     * type is used for the dup, QoS, and retain flags. Hence masking
-     * out the lower bits to check if the packet is publish. */
-    if( ( pPacketInfo->type & 0xF0U ) == MQTT_PACKET_TYPE_PUBLISH )
-    {
-        /* Handle incoming publish. */
-
-        /* Access publish properties if needed */
-        uint16_t topicAlias;
-        if( MQTTPropGet_PubTopicAlias( pGetPropsBuffer, &topicAlias ) == MQTTSuccess )
+        /* Handle incoming publish. The lower 4 bits of the publish packet
+        * type is used for the dup, QoS, and retain flags. Hence masking
+        * out the lower bits to check if the packet is publish. */
+        if( ( pPacketInfo->type & 0xF0U ) == MQTT_PACKET_TYPE_PUBLISH )
         {
-            /* Handle topic alias */
+            /* Handle incoming publish. */
+        }
+        else
+        {
+            /* Handle other packets. */
         }
     }
-    else
-    {
-        /* Handle other packets. */
 
-        /* Add properties to outgoing ack packets if needed */
-        if( pPacketInfo->type == MQTT_PACKET_TYPE_PUBACK )
+    // MQTT_Init call
+    status = MQTT_Init( &mqttContext,
+                        &transport,
+                        getTimeMs,
+                        eventCallback,
+                        &fixedBuffer );
+    ```
+
+    **New Code Snippet**:
+    
+    ```c
+    // Callback function implementation
+    static void eventCallback(
+        MQTTContext_t * pContext,
+        MQTTPacketInfo_t * pPacketInfo,
+        MQTTDeserializedInfo_t * pDeserializedInfo,
+        MQTTSuccessFailReasonCode * pReasonCode,
+        MQTTPropBuilder_t * pSendPropsBuffer,
+        MQTTPropBuilder_t * pGetPropsBuffer )
+    {
+        /* Handle incoming publish. The lower 4 bits of the publish packet
+        * type is used for the dup, QoS, and retain flags. Hence masking
+        * out the lower bits to check if the packet is publish. */
+        if( ( pPacketInfo->type & 0xF0U ) == MQTT_PACKET_TYPE_PUBLISH )
         {
-            MQTTPropAdd_ReasonString( pSendPropsBuffer, "Success", 7 );
+            /* Handle incoming publish. */
+
+            /* Access publish properties if needed */
+            uint16_t topicAlias;
+            if( MQTTPropGet_PubTopicAlias( pGetPropsBuffer, &topicAlias ) == MQTTSuccess )
+            {
+                /* Handle topic alias */
+            }
+        }
+        else
+        {
+            /* Handle other packets. */
+
+            /* Add properties to outgoing ack packets if needed */
+            if( pPacketInfo->type == MQTT_PACKET_TYPE_PUBACK )
+            {
+                MQTTPropAdd_ReasonString( pSendPropsBuffer, "Success", 7 );
+            }
         }
     }
-}
 
-// MQTT_Init call
-status = MQTT_Init( &mqttContext,
-                    &transport,
-                    getTimeMs,
-                    eventCallback,
-                    &fixedBuffer );
-```
+    // MQTT_Init call
+    status = MQTT_Init( &mqttContext,
+                        &transport,
+                        getTimeMs,
+                        eventCallback,
+                        &fixedBuffer );
+    ```
 * The `MQTT_InitStatefulQoS` function now includes support for MQTT v5 properties in outgoing publish acknowledgments with two additional parameters. Thus, the signature of `MQTT_InitStatefulQoS` changed from `MQTTStatus_t MQTT_InitStatefulQoS( MQTTContext_t * pContext, MQTTPubAckInfo_t * pOutgoingPublishRecords, size_t outgoingPublishCount, MQTTPubAckInfo_t * pIncomingPublishRecords, size_t incomingPublishCount )` to `MQTTStatus_t MQTT_InitStatefulQoS( MQTTContext_t * pContext, MQTTPubAckInfo_t * pOutgoingPublishRecords, size_t outgoingPublishCount, MQTTPubAckInfo_t * pIncomingPublishRecords, size_t incomingPublishCount, uint8_t * pBuffer, size_t bufferLength )`. The new parameters can be set to NULL and 0 respectively if not using MQTT v5 properties in publish acknowledgments. For example:
 
 **Old Code Snippet**:
