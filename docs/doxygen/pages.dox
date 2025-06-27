@@ -56,6 +56,28 @@ The MQTT library expects the application to provide implementations for the foll
     </tr>
 </table>
 
+Apart from these, users can optionally define the following callbacks if they wish to use library's mechanism to resend
+unacknowledged publish packets on a persistent session reconnection.
+
+<table>
+    <tr>
+        <td><b>Function Pointer</b></td>
+        <td><b>Use</b></td>
+    </tr>
+    <tr>
+        <td>@ref MQTTStorePacketForRetransmit</td>
+        <td>Storing an outgoing publish packet. </td>
+    </tr>
+    <tr>
+        <td>@ref MQTTRetrievePacketForRetransmit</td>
+        <td>Retreiving the stored publish packet for retransmission.</td>
+    </tr>
+    <tr>
+        <td>@ref MQTTClearPacketForRetransmit</td>
+        <td>Removing the stored copy of a publish packet</td>
+    </tr>
+</table>
+
 @section mqtt_serializers Serializers and Deserializers
 
 The managed MQTT API in @ref core_mqtt.h uses a set of serialization and deserialization functions
@@ -95,10 +117,12 @@ These states are stored in the pointers pointed to by @ref MQTTContext_t.outgoin
 This library does not store any subscription information, nor any information for QoS 0 publishes.
 
 When resuming a persistent session, the client library will resend PUBRELs for all PUBRECs that had been received
-for incomplete outgoing QoS 2 publishes. If the broker does not resume the session, then all state information
+for incomplete outgoing QoS 2 publishes. If the optional retransmission callbacks are defined then the library will also
+resend any unacknowledged QoS>0 publishes. If the broker does not resume the session, then all state information
 in the client will be reset.
 
-@note The library stores only the <i>state</i> of incomplete publishes and not the publish payloads. It is the responsibility of the user application to save publish payloads until the publish is complete.
+@note The library stores only the <i>state</i> of incomplete publishes and not the publish payloads. If the retransmission
+callbacks are not defined then, it is the responsibility of the user application to save publish payloads until the publish is complete.
 If a persistent session is resumed, then @ref mqtt_publishtoresend_function should be called to obtain the
 packet identifiers of incomplete publishes, followed by a call to @ref mqtt_publish_function to resend the
 unacknowledged publish.
@@ -113,13 +137,12 @@ The exception is @ref mqtt_connect_function; since a MQTT session cannot be cons
 the function waits until the CONNACK is received.
 
 @subsection mqtt_receivetimeout Runtime Timeouts passed to MQTT library
-@ref mqtt_connect_function accepts a timeout parameter for packet reception.<br>
-For the @ref mqtt_connect_function, if this value is set to 0, then instead of a time-based loop, it will attempt to call the transport receive function up to a maximum number of retries,
+@ref mqtt_connect_function accepts a timeout parameter for packet reception. If this value is set to 0, then instead of a time-based loop, it will attempt to call the transport receive function up to a maximum number of retries,
 which is defined by @ref MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT.
 
 For @ref mqtt_processloop_function and @ref mqtt_receiveloop_function, the timeout functionality is handled by the user application. It is up to the user to define the number of times these functions will be called, provided that there are no network errors.
-A single call to the function consists of an attempt to receive all available bytes from the network, and if the read was successful, then attempt(s) to receive the rest of the packet (with retry attempts governed by @ref MQTT_RECV_POLLING_TIMEOUT_MS), followed by the deserialization of the received packet.
-After this a call to application callback is invoked, followed by sending acknowledgement response, if needed
+A single call to the function consists of an attempt to receive all available bytes from the network. If the read was successful, attempt(s) to receive the rest of the packet (with retry attempts governed by @ref MQTT_RECV_POLLING_TIMEOUT_MS) are made.
+This is followed by the deserialization of the received packet. After this a the application callback is invoked, followed by sending acknowledgement response, if needed
 (with retry attempts governed by @ref MQTT_SEND_TIMEOUT_MS).
 If the first read did not succeed, then instead the library checks if a ping request needs to be sent (only for the process loop).
 
@@ -133,7 +156,8 @@ See the below diagrams for a representation of the above flows:
 The MQTT standard specifies a keep-alive mechanism to detect half-open or otherwise unusable network connections.
 An MQTT client will send periodic ping requests (PINGREQ) to the server if the connection is idle. The MQTT server must respond to ping requests with a ping response (PINGRESP).
 
-In this library, @ref mqtt_processloop_function handles sending of PINGREQs and processing corresponding PINGRESPs to comply with the keep-alive interval set in @ref MQTTContext_t.keepAliveIntervalSec.
+In this library, @ref mqtt_processloop_function handles sending of PINGREQs and processing corresponding PINGRESPs to comply with the keep-alive interval. The value of the keep alive interval is the one set in @ref MQTTContext_t.keepAliveIntervalSec
+unless the server had sent a Server Keep Alive property in the CONNACK packet, in which case the Server Keep Alive value will be used.
 
 The standard does not specify the time duration within which the server has to respond to a ping request, noting only a "reasonable amount of time". If the response to a ping request is not received within @ref MQTT_PINGRESP_TIMEOUT_MS, this library assumes that the connection is dead.
 
@@ -181,9 +205,16 @@ Some configuration settings are C pre-processor constants, and some are function
 
 /**
 @page mqtt_functions Functions
-@brief Primary functions of the MQTT library:<br><br>
+@brief The functions of the MQTT Library are categorised as follows
+- @subpage mqtt_primaryfunctions
+- @subpage mqtt_serializerfunctions
+- @subpage mqtt_propertyaddfunctions
+- @subpage mqtt_propertygetfunctions
+
+@page mqtt_primaryfunctions Primary functions
 @subpage mqtt_init_function <br>
-@subpage mqttpropertybuilder_init_function <br>
+@subpage mqtt_initstatefulqos_function <br>
+@subpage mqtt_initretransmits_function <br>
 @subpage mqtt_connect_function <br>
 @subpage mqtt_subscribe_function <br>
 @subpage mqtt_publish_function <br>
@@ -197,7 +228,8 @@ Some configuration settings are C pre-processor constants, and some are function
 @subpage mqtt_status_strerror_function <br>
 @subpage mqtt_publishtoresend_function <br><br>
 
-Serializer functions of the MQTT library:<br><br>
+@page mqtt_serializerfunctions Serializer functions
+@subpage mqttpropertybuilder_init_function <br>
 @subpage mqtt_getconnectpacketsize_function <br>
 @subpage mqtt_serializeconnect_function <br>
 @subpage mqtt_getsubscribepacketsize_function <br>
@@ -222,7 +254,7 @@ Serializer functions of the MQTT library:<br><br>
 @subpage mqtt_getincomingpackettypeandlength_function <br>
 @subpage mqtt_initconnect_function <br>
 
-Property Add functions:<br><br>
+@page mqtt_propertyaddfunctions Property Add functions
 @subpage mqttpropadd_subscribeid_function <br>
 @subpage mqttpropadd_userprop_function <br>
 @subpage mqttpropadd_sessionexpiry_function <br>
@@ -242,7 +274,7 @@ Property Add functions:<br><br>
 @subpage mqttpropadd_pubcontenttype_function <br>
 @subpage mqttpropadd_reasonstring_function <br>
 
-Property Get functions:<br><br>
+@page mqtt_propertygetfunctions Property Get functions
 @subpage mqtt_incominggetnextprop_function <br>
 @subpage mqttpropget_pubtopicalias_function <br>
 @subpage mqttpropget_pubpayloadformat_function <br>
@@ -272,6 +304,14 @@ Property Get functions:<br><br>
 @page mqtt_init_function MQTT_Init
 @snippet core_mqtt.h declare_mqtt_init
 @copydoc MQTT_Init
+
+@page mqtt_initstatefulqos_function MQTT_InitStatefulQoS
+@snippet core_mqtt.h declare_mqtt_initstatefulqos
+@copydoc MQTT_InitStatefulQoS
+
+@page mqtt_initretransmits_function MQTT_InitRetransmits
+@snippet core_mqtt.h declare_mqtt_initretransmits
+@copydoc MQTT_InitRetransmits
 
 @page mqtt_connect_function MQTT_Connect
 @snippet core_mqtt.h declare_mqtt_connect
