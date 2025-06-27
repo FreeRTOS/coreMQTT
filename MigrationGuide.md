@@ -33,7 +33,7 @@
         * [Updated `MQTT_DeserializePublish` API](#updated-mqtt_deserializepublish-api)
         * [Updated `MQTT_DeserializeAck` API](#updated-mqtt_deserializeack-api)
 
-    
+
 
 
 ## coreMQTT version v2.x Migration Guide
@@ -44,9 +44,9 @@ With coreMQTT versions >=v2.x, there are some breaking changes that need to be a
 
 #### Updated `MQTT_ProcessLoop` API
 
-The `MQTT_ProcessLoop` function no longer uses a timeout as this led to unavoidable busy-waiting. Thus, the signature of `MQTT_ProcessLoop` changed 
+The `MQTT_ProcessLoop` function no longer uses a timeout as this led to unavoidable busy-waiting. Thus, the signature of `MQTT_ProcessLoop` changed
 
-from 
+from
 ```c
 MQTTStatus_t MQTT_ProcessLoop( MQTTContext_t * pContext, uint32_t timeoutMs )
 ```
@@ -108,16 +108,16 @@ while( true )
 ```
 #### Updated `MQTT_ReceiveLoop` API
 
-The `MQTT_ReceiveLoop` function no longer uses a timeout as this led to unavoidable busy-waiting. Thus, the signature of `MQTT_ReceiveLoop` changed 
+The `MQTT_ReceiveLoop` function no longer uses a timeout as this led to unavoidable busy-waiting. Thus, the signature of `MQTT_ReceiveLoop` changed
 
-from 
+from
 ```c
 MQTTStatus_t MQTT_ReceiveLoop( MQTTContext_t * pContext, uint32_t timeoutMs )
-```  
+```
 to
 ```c
 MQTTStatus_t MQTT_ReceiveLoop( MQTTContext_t * pContext )
-``` 
+```
 
 Additionally, `MQTT_ReceiveLoop` can now return `MQTTNeedMoreBytes`. A return of `MQTTNeedMoreBytes` means that `MQTT_ReceiveLoop` received only a part of an MQTT packet and will need to be called again (probably after a bit of delay) in order to finish receiving the MQTT packet. Thus, to migrate, simply remove the timeout from the `MQTT_ReceiveLoop` call and additionally check for if `MQTTNeedMoreBytes` has been returned when checking the status of `MQTT_ReceiveLoop`. For example:
 
@@ -299,7 +299,7 @@ For coreMQTT version >=v2.1.0, the `MQTT_SEND_RETRY_TIMEOUT_MS` macro configurat
 
 #### New API `MQTT_CancelCallback`
 
-The `MQTT_CancelCallback` function has been added to allow a program to prevent the event callback from being called when receiving an ACK for a sent packet. For example, if a program sends a publish with packet ID 2 and QoS > 0 using `MQTT_Publish`, the program could then call `MQTT_CancelCallback` on packet ID 2 to prevent coreMQTT from calling the event callback when it receives the `PUBACK` for packet ID 2. 
+The `MQTT_CancelCallback` function has been added to allow a program to prevent the event callback from being called when receiving an ACK for a sent packet. For example, if a program sends a publish with packet ID 2 and QoS > 0 using `MQTT_Publish`, the program could then call `MQTT_CancelCallback` on packet ID 2 to prevent coreMQTT from calling the event callback when it receives the `PUBACK` for packet ID 2.
 
 ## coreMQTT version >=v3.0.0 Migration Guide
 
@@ -309,24 +309,24 @@ With coreMQTT versions >=v3.0.0, there are some breaking changes that need to be
 
 #### Updated `MQTTEventCallback_t` Callback Function
 
-The `MQTTEventCallback_t` function signature used in `MQTT_Init` has changed to support MQTT v5 properties and reason codes. The signature changed 
+The `MQTTEventCallback_t` function signature used in `MQTT_Init` has changed to support MQTT v5 properties and reason codes. The signature changed
 
-from 
+from
 
 ```c
-void (* MQTTEventCallback_t)( struct MQTTContext * pContext, 
-                                struct MQTTPacketInfo * pPacketInfo, 
+void (* MQTTEventCallback_t)( struct MQTTContext * pContext,
+                                struct MQTTPacketInfo * pPacketInfo,
                                 struct MQTTDeserializedInfo * pDeserializedInfo )
 ```
 
-to 
+to
 
 ```c
-void (* MQTTEventCallback_t)( struct MQTTContext * pContext, 
-                                struct MQTTPacketInfo * pPacketInfo, 
-                                struct MQTTDeserializedInfo * pDeserializedInfo, 
-                                enum MQTTSuccessFailReasonCode * pReasonCode, 
-                                struct MQTTPropBuilder * pSendPropsBuffer, 
+void (* MQTTEventCallback_t)( struct MQTTContext * pContext,
+                                struct MQTTPacketInfo * pPacketInfo,
+                                struct MQTTDeserializedInfo * pDeserializedInfo,
+                                enum MQTTSuccessFailReasonCode * pReasonCode,
+                                struct MQTTPropBuilder * pSendPropsBuffer,
                                 struct MQTTPropBuilder * pGetPropsBuffer )
 ```
 For example:
@@ -409,29 +409,29 @@ status = MQTT_Init( &mqttContext,
 
 #### Updated `MQTT_InitStatefulQoS` API
 
-The `MQTT_InitStatefulQoS` function now includes support for MQTT v5 properties in outgoing publish acknowledgments with two additional parameters. Thus, the signature of `MQTT_InitStatefulQoS` changed 
+The `MQTT_InitStatefulQoS` function now includes support for MQTT v5 properties in outgoing publish acknowledgments with two additional parameters. Thus, the signature of `MQTT_InitStatefulQoS` changed
 
-from 
+from
 
 ```c
-MQTTStatus_t MQTT_InitStatefulQoS( MQTTContext_t * pContext, MQTTPubAckInfo_t * pOutgoingPublishRecords, 
-                                    size_t outgoingPublishCount, 
-                                    MQTTPubAckInfo_t * pIncomingPublishRecords, 
+MQTTStatus_t MQTT_InitStatefulQoS( MQTTContext_t * pContext, MQTTPubAckInfo_t * pOutgoingPublishRecords,
+                                    size_t outgoingPublishCount,
+                                    MQTTPubAckInfo_t * pIncomingPublishRecords,
                                     size_t incomingPublishCount )
 ```
 
-to 
+to
 
 ```c
-MQTTStatus_t MQTT_InitStatefulQoS( MQTTContext_t * pContext, 
-                                    MQTTPubAckInfo_t * pOutgoingPublishRecords, 
-                                    size_t outgoingPublishCount, 
-                                    MQTTPubAckInfo_t * pIncomingPublishRecords, 
+MQTTStatus_t MQTT_InitStatefulQoS( MQTTContext_t * pContext,
+                                    MQTTPubAckInfo_t * pOutgoingPublishRecords,
+                                    size_t outgoingPublishCount,
+                                    MQTTPubAckInfo_t * pIncomingPublishRecords,
                                     size_t incomingPublishCount,
-                                    uint8_t * pAckPropsBuf, 
-                                    size_t ackPropsBufLength ) 
+                                    uint8_t * pAckPropsBuf,
+                                    size_t ackPropsBufLength )
 ```
-The new parameters can be set to NULL and 0 respectively if not using MQTT v5 properties in publish acknowledgments. 
+The new parameters can be set to NULL and 0 respectively if not using MQTT v5 properties in publish acknowledgments.
 
 For example:
 
@@ -491,26 +491,26 @@ if( status == MQTTSuccess )
 
 #### Updated `MQTT_Connect` API
 
-The `MQTT_Connect` function now includes MQTT v5 property support with two additional parameters. Thus, the signature of `MQTT_Connect` changed 
+The `MQTT_Connect` function now includes MQTT v5 property support with two additional parameters. Thus, the signature of `MQTT_Connect` changed
 
-from 
+from
 
 ```c
-MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext, 
-                            const MQTTConnectInfo_t * pConnectInfo, 
-                            const MQTTPublishInfo_t * pWillInfo, 
-                            uint32_t timeoutMs, 
+MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
+                            const MQTTConnectInfo_t * pConnectInfo,
+                            const MQTTPublishInfo_t * pWillInfo,
+                            uint32_t timeoutMs,
                             bool * pSessionPresent )
 ```
-to 
+to
 
 ```c
-MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext, 
-                            const MQTTConnectInfo_t * pConnectInfo, 
-                            const MQTTPublishInfo_t * pWillInfo, 
-                            uint32_t timeoutMs, 
-                            bool * pSessionPresent, 
-                            const MQTTPropBuilder_t * pPropertyBuilder, 
+MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
+                            const MQTTConnectInfo_t * pConnectInfo,
+                            const MQTTPublishInfo_t * pWillInfo,
+                            uint32_t timeoutMs,
+                            bool * pSessionPresent,
+                            const MQTTPropBuilder_t * pPropertyBuilder,
                             const MQTTPropBuilder_t * pWillPropertyBuilder )`.
 ```
 
@@ -612,27 +612,27 @@ if( status == MQTTSuccess )
 
 #### Updated `MQTT_Subscribe` API
 
-The `MQTT_Subscribe` function now includes support for MQTT v5 properties with an additional parameter. Thus, the signature of `MQTT_Subscribe` changed 
+The `MQTT_Subscribe` function now includes support for MQTT v5 properties with an additional parameter. Thus, the signature of `MQTT_Subscribe` changed
 
-from 
+from
 
 ```c
-MQTTStatus_t MQTT_Subscribe( MQTTContext_t * pContext, 
-                                const MQTTSubscribeInfo_t * pSubscriptionList, 
-                                size_t subscriptionCount, 
+MQTTStatus_t MQTT_Subscribe( MQTTContext_t * pContext,
+                                const MQTTSubscribeInfo_t * pSubscriptionList,
+                                size_t subscriptionCount,
                                 uint16_t packetId )
 ```
 
-to 
+to
 
 ```c
-MQTTStatus_t MQTT_Subscribe( MQTTContext_t * pContext, 
-                                const MQTTSubscribeInfo_t * pSubscriptionList, 
-                                size_t subscriptionCount, 
-                                uint16_t packetId, 
+MQTTStatus_t MQTT_Subscribe( MQTTContext_t * pContext,
+                                const MQTTSubscribeInfo_t * pSubscriptionList,
+                                size_t subscriptionCount,
+                                uint16_t packetId,
                                 const MQTTPropBuilder_t * pPropertyBuilder )
 ```
-The new parameter can be set to NULL if not using MQTT v5 properties. 
+The new parameter can be set to NULL if not using MQTT v5 properties.
 
 For example:
 
@@ -709,25 +709,25 @@ if(status == MQTTSuccess)
 
 #### Updated `MQTT_Publish` API
 
-The `MQTT_Publish` function now includes support for MQTT v5 properties with an additional parameter. Thus, the signature of `MQTT_Publish` changed 
+The `MQTT_Publish` function now includes support for MQTT v5 properties with an additional parameter. Thus, the signature of `MQTT_Publish` changed
 
-from 
+from
 
 ```c
-MQTTStatus_t MQTT_Publish( MQTTContext_t * pContext, 
-                            const MQTTPublishInfo_t * pPublishInfo, 
+MQTTStatus_t MQTT_Publish( MQTTContext_t * pContext,
+                            const MQTTPublishInfo_t * pPublishInfo,
                             uint16_t packetId )
 ```
 
-to 
+to
 
 ```c
-MQTTStatus_t MQTT_Publish( MQTTContext_t * pContext, 
-                            const MQTTPublishInfo_t * pPublishInfo, 
-                            uint16_t packetId, 
+MQTTStatus_t MQTT_Publish( MQTTContext_t * pContext,
+                            const MQTTPublishInfo_t * pPublishInfo,
+                            uint16_t packetId,
                             const MQTTPropBuilder_t * pPropertyBuilder )
 ```
-The new parameter can be set to NULL if not using MQTT v5 properties. 
+The new parameter can be set to NULL if not using MQTT v5 properties.
 
 For example:
 
@@ -806,27 +806,27 @@ if(status == MQTTSuccess)
 
 #### Updated `MQTT_Unsubscribe` API
 
-The `MQTT_Unsubscribe` function now includes support for MQTT v5 properties with an additional parameter. Thus, the signature of `MQTT_Unsubscribe` changed 
+The `MQTT_Unsubscribe` function now includes support for MQTT v5 properties with an additional parameter. Thus, the signature of `MQTT_Unsubscribe` changed
 
-from 
+from
 
 ```c
-MQTTStatus_t MQTT_Unsubscribe( MQTTContext_t * pContext, 
-                                const MQTTSubscribeInfo_t * pSubscriptionList, 
-                                size_t subscriptionCount, 
+MQTTStatus_t MQTT_Unsubscribe( MQTTContext_t * pContext,
+                                const MQTTSubscribeInfo_t * pSubscriptionList,
+                                size_t subscriptionCount,
                                 uint16_t packetId )
 ```
 
-to 
+to
 
 ```c
-MQTTStatus_t MQTT_Unsubscribe( MQTTContext_t * pContext, 
-                                const MQTTSubscribeInfo_t * pSubscriptionList, 
-                                size_t subscriptionCount, 
-                                uint16_t packetId, 
+MQTTStatus_t MQTT_Unsubscribe( MQTTContext_t * pContext,
+                                const MQTTSubscribeInfo_t * pSubscriptionList,
+                                size_t subscriptionCount,
+                                uint16_t packetId,
                                 const MQTTPropBuilder_t * pPropertyBuilder )
 ```
-The new parameter can be set to NULL if not using MQTT v5 properties. 
+The new parameter can be set to NULL if not using MQTT v5 properties.
 
 For example:
 
@@ -909,22 +909,22 @@ if(status == MQTTSuccess)
 
 #### Updated `MQTT_Disconnect` API
 
-The `MQTT_Disconnect` function now includes support for MQTT v5 properties and reason codes with two additional parameters. Thus, the signature of `MQTT_Disconnect` changed 
+The `MQTT_Disconnect` function now includes support for MQTT v5 properties and reason codes with two additional parameters. Thus, the signature of `MQTT_Disconnect` changed
 
-from 
+from
 
 ```c
 MQTTStatus_t MQTT_Disconnect( MQTTContext_t * pContext )
 ```
 
-to 
+to
 
 ```c
-MQTTStatus_t MQTT_Disconnect( MQTTContext_t * pContext, 
-                                const MQTTPropBuilder_t * pPropertyBuilder, 
+MQTTStatus_t MQTT_Disconnect( MQTTContext_t * pContext,
+                                const MQTTPropBuilder_t * pPropertyBuilder,
                                 MQTTSuccessFailReasonCode_t reasonCode )
 ```
-The new parameters can be set to NULL and 0 respectively if not using MQTT v5 features. 
+The new parameters can be set to NULL and 0 respectively if not using MQTT v5 features.
 
 For example:
 
@@ -975,28 +975,28 @@ if(status == MQTTSuccess)
 ```
 #### Updated `MQTT_GetConnectPacketSize` API
 
-The `MQTT_GetConnectPacketSize` function now includes support for MQTT v5 properties with two additional parameters. Thus, the signature of `MQTT_GetConnectPacketSize` changed 
+The `MQTT_GetConnectPacketSize` function now includes support for MQTT v5 properties with two additional parameters. Thus, the signature of `MQTT_GetConnectPacketSize` changed
 
-from 
+from
 
 ```c
-MQTTStatus_t MQTT_GetConnectPacketSize( const MQTTConnectInfo_t * pConnectInfo, 
-                                        const MQTTPublishInfo_t * pWillInfo, 
-                                        size_t * pRemainingLength, 
+MQTTStatus_t MQTT_GetConnectPacketSize( const MQTTConnectInfo_t * pConnectInfo,
+                                        const MQTTPublishInfo_t * pWillInfo,
+                                        size_t * pRemainingLength,
                                         size_t * pPacketSize )
 ```
 
-to 
+to
 
 ```c
-MQTTStatus_t MQTT_GetConnectPacketSize( const MQTTConnectInfo_t * pConnectInfo, 
-                                        const MQTTPublishInfo_t * pWillInfo, 
-                                        const MQTTPropBuilder_t *pConnectProperties, 
-                                        const MQTTPropBuilder_t *pWillProperties, 
-                                        size_t * pRemainingLength, 
+MQTTStatus_t MQTT_GetConnectPacketSize( const MQTTConnectInfo_t * pConnectInfo,
+                                        const MQTTPublishInfo_t * pWillInfo,
+                                        const MQTTPropBuilder_t *pConnectProperties,
+                                        const MQTTPropBuilder_t *pWillProperties,
+                                        size_t * pRemainingLength,
                                         size_t * pPacketSize )
 ```
-The new parameters can be set to NULL if not using MQTT v5 properties. 
+The new parameters can be set to NULL if not using MQTT v5 properties.
 
 For example:
 
@@ -1079,26 +1079,26 @@ if(status == MQTTSuccess)
 
 #### Updated `MQTT_GetPublishPacketSize` API
 
-The `MQTT_GetPublishPacketSize` function now includes support for MQTT v5 properties and maximum packet size with two additional parameters. Thus, the signature of `MQTT_GetPublishPacketSize` changed 
+The `MQTT_GetPublishPacketSize` function now includes support for MQTT v5 properties and maximum packet size with two additional parameters. Thus, the signature of `MQTT_GetPublishPacketSize` changed
 
-from 
+from
 
 ```c
-MQTTStatus_t MQTT_GetPublishPacketSize( const MQTTPublishInfo_t * pPublishInfo, 
-                                        size_t * pRemainingLength, 
+MQTTStatus_t MQTT_GetPublishPacketSize( const MQTTPublishInfo_t * pPublishInfo,
+                                        size_t * pRemainingLength,
                                         size_t * pPacketSize )
 ```
 
 to
 
 ```c
-MQTTStatus_t MQTT_GetPublishPacketSize( const MQTTPublishInfo_t * pPublishInfo, 
-                                        const MQTTPropBuilder_t * pPublishProperties, 
-                                        size_t * pRemainingLength, 
-                                        size_t * pPacketSize, 
+MQTTStatus_t MQTT_GetPublishPacketSize( const MQTTPublishInfo_t * pPublishInfo,
+                                        const MQTTPropBuilder_t * pPublishProperties,
+                                        size_t * pRemainingLength,
+                                        size_t * pPacketSize,
                                         uint32_t maxPacketSize )
 ```
-The new parameters include support for MQTT v5 properties and server-imposed packet size limitations. 
+The new parameters include support for MQTT v5 properties and server-imposed packet size limitations.
 
 For example:
 
@@ -1177,25 +1177,25 @@ if(status == MQTTSuccess)
 
 #### Updated `MQTT_GetSubscribePacketSize` API
 
-The `MQTT_GetSubscribePacketSize` function now includes support for MQTT v5 properties and maximum packet size with two additional parameters. Thus, the signature of `MQTT_GetSubscribePacketSize` changed 
+The `MQTT_GetSubscribePacketSize` function now includes support for MQTT v5 properties and maximum packet size with two additional parameters. Thus, the signature of `MQTT_GetSubscribePacketSize` changed
 
-from 
+from
 
 ```c
-MQTTStatus_t MQTT_GetSubscribePacketSize( const MQTTSubscribeInfo_t * pSubscriptionList, 
-                                            size_t subscriptionCount, 
-                                            size_t * pRemainingLength, 
+MQTTStatus_t MQTT_GetSubscribePacketSize( const MQTTSubscribeInfo_t * pSubscriptionList,
+                                            size_t subscriptionCount,
+                                            size_t * pRemainingLength,
                                             size_t * pPacketSize )
 ```
 
-to 
+to
 
 ```c
-MQTTStatus_t MQTT_GetSubscribePacketSize( const MQTTSubscribeInfo_t * pSubscriptionList, 
-                                            size_t subscriptionCount, 
-                                            const MQTTPropBuilder_t * pSubscribeProperties, 
-                                            size_t * pRemainingLength, 
-                                            size_t * pPacketSize, 
+MQTTStatus_t MQTT_GetSubscribePacketSize( const MQTTSubscribeInfo_t * pSubscriptionList,
+                                            size_t subscriptionCount,
+                                            const MQTTPropBuilder_t * pSubscribeProperties,
+                                            size_t * pRemainingLength,
+                                            size_t * pPacketSize,
                                             uint32_t maxPacketSize )
 ```
 `pSubscribeProperties` can be set to NULL if no properties are sent in the SUBSCRIBE packet.
@@ -1273,25 +1273,25 @@ if(status == MQTTSuccess)
 
 #### Updated `MQTT_GetUnsubscribePacketSize` API
 
-The `MQTT_GetUnsubscribePacketSize` function now includes support for MQTT v5 properties with two additional parameters. Thus, the signature of `MQTT_GetUnsubscribePacketSize` changed 
+The `MQTT_GetUnsubscribePacketSize` function now includes support for MQTT v5 properties with two additional parameters. Thus, the signature of `MQTT_GetUnsubscribePacketSize` changed
 
-from 
+from
 
 ```c
-MQTTStatus_t MQTT_GetUnsubscribePacketSize( const MQTTSubscribeInfo_t * pSubscriptionList, 
-                                            size_t subscriptionCount, 
-                                            size_t * pRemainingLength, 
+MQTTStatus_t MQTT_GetUnsubscribePacketSize( const MQTTSubscribeInfo_t * pSubscriptionList,
+                                            size_t subscriptionCount,
+                                            size_t * pRemainingLength,
                                             size_t * pPacketSize )
 ```
 
-to 
+to
 
 ```c
-MQTTStatus_t MQTT_GetUnsubscribePacketSize( const MQTTSubscribeInfo_t * pSubscriptionList, 
-                                            size_t subscriptionCount, 
-                                            const MQTTPropBuilder_t * pUnsubscribeProperties, 
-                                            size_t * pRemainingLength, 
-                                            size_t * pPacketSize, 
+MQTTStatus_t MQTT_GetUnsubscribePacketSize( const MQTTSubscribeInfo_t * pSubscriptionList,
+                                            size_t subscriptionCount,
+                                            const MQTTPropBuilder_t * pUnsubscribeProperties,
+                                            size_t * pRemainingLength,
+                                            size_t * pPacketSize,
                                             uint32_t maxPacketSize )
 ```
 `pUnsubscribeProperties` can be set to NULL if no properties are sent in the UNSUBSCRIBE packet.
@@ -1375,25 +1375,25 @@ if(status == MQTTSuccess)
 
 #### Updated `MQTT_GetDisconnectPacketSize` API
 
-The `MQTT_GetDisconnectPacketSize` function now includes support for MQTT v5 properties and reason code validation with four additional parameters. Thus, the signature of `MQTT_GetDisconnectPacketSize` changed 
+The `MQTT_GetDisconnectPacketSize` function now includes support for MQTT v5 properties and reason code validation with four additional parameters. Thus, the signature of `MQTT_GetDisconnectPacketSize` changed
 
-from 
+from
 
 ```c
-MQTTStatus_t MQTT_GetDisconnectPacketSize( size_t * pPacketSize ) 
+MQTTStatus_t MQTT_GetDisconnectPacketSize( size_t * pPacketSize )
 ```
 
-to 
+to
 
 ```c
-MQTTStatus_t MQTT_GetDisconnectPacketSize( const MQTTPropBuilder_t * pDisconnectProperties, 
-                                            size_t * pRemainingLength, 
-                                            size_t * pPacketSize, 
-                                            uint32_t maxPacketSize, 
+MQTTStatus_t MQTT_GetDisconnectPacketSize( const MQTTPropBuilder_t * pDisconnectProperties,
+                                            size_t * pRemainingLength,
+                                            size_t * pPacketSize,
+                                            uint32_t maxPacketSize,
                                             MQTTSuccessFailReasonCode_t reasonCode )
 ```
 
-`pDisconnectProperties` can be set to NULL if no properties are sent in the DISCONNECT packet. 
+`pDisconnectProperties` can be set to NULL if no properties are sent in the DISCONNECT packet.
 
 For example:
 
@@ -1453,28 +1453,28 @@ if(status == MQTTSuccess)
 
 #### Updated `MQTT_SerializeConnect` API
 
-The `MQTT_SerializeConnect` function now includes support for MQTT v5 properties with two additional parameters. Thus, the signature of `MQTT_SerializeConnect` changed 
+The `MQTT_SerializeConnect` function now includes support for MQTT v5 properties with two additional parameters. Thus, the signature of `MQTT_SerializeConnect` changed
 
-from 
+from
 
 ```c
-MQTTStatus_t MQTT_SerializeConnect( const MQTTConnectInfo_t * pConnectInfo, 
-                                    const MQTTPublishInfo_t * pWillInfo, 
-                                    size_t remainingLength, 
+MQTTStatus_t MQTT_SerializeConnect( const MQTTConnectInfo_t * pConnectInfo,
+                                    const MQTTPublishInfo_t * pWillInfo,
+                                    size_t remainingLength,
                                     const MQTTFixedBuffer_t * pFixedBuffer )
 ```
 
-to 
+to
 
 ```c
-MQTTStatus_t MQTT_SerializeConnect( const MQTTConnectInfo_t * pConnectInfo, 
-                                    const MQTTPublishInfo_t * pWillInfo, 
-                                    const MQTTPropBuilder_t * pConnectProperties, 
-                                    const MQTTPropBuilder_t * pWillProperties, 
-                                    size_t remainingLength, 
+MQTTStatus_t MQTT_SerializeConnect( const MQTTConnectInfo_t * pConnectInfo,
+                                    const MQTTPublishInfo_t * pWillInfo,
+                                    const MQTTPropBuilder_t * pConnectProperties,
+                                    const MQTTPropBuilder_t * pWillProperties,
+                                    size_t remainingLength,
                                     const MQTTFixedBuffer_t * pFixedBuffer )
 ```
-`pConnectProperties` and `pWillProperties` can be set to NULL if these are not being used. 
+`pConnectProperties` and `pWillProperties` can be set to NULL if these are not being used.
 
 For example:
 
@@ -1594,24 +1594,24 @@ if(status == MQTTSuccess)
 
 #### Updated `MQTT_SerializePublish` API
 
-The `MQTT_SerializePublish` function now includes support for MQTT v5 properties with an additional parameter. Thus, the signature of `MQTT_SerializePublish` changed 
+The `MQTT_SerializePublish` function now includes support for MQTT v5 properties with an additional parameter. Thus, the signature of `MQTT_SerializePublish` changed
 
-from 
+from
 
 ```c
 MQTTStatus_t MQTT_SerializePublish( const MQTTPublishInfo_t * pPublishInfo,
-                                    uint16_t packetId, 
-                                    size_t remainingLength, 
+                                    uint16_t packetId,
+                                    size_t remainingLength,
                                     const MQTTFixedBuffer_t * pFixedBuffer )
 ```
 
-to 
+to
 
 ```c
-MQTTStatus_t MQTT_SerializePublish( const MQTTPublishInfo_t * pPublishInfo, 
-                                    const MQTTPropBuilder_t * pPublishProperties, 
-                                    uint16_t packetId, 
-                                    size_t remainingLength, 
+MQTTStatus_t MQTT_SerializePublish( const MQTTPublishInfo_t * pPublishInfo,
+                                    const MQTTPropBuilder_t * pPublishProperties,
+                                    uint16_t packetId,
+                                    size_t remainingLength,
                                     const MQTTFixedBuffer_t * pFixedBuffer )
 ```
 `pPublishProperties` can be set to NULL if not used.
@@ -1726,29 +1726,29 @@ if(status == MQTTSuccess)
 
 #### Updated `MQTT_SerializePublishHeader` API
 
-The `MQTT_SerializePublishHeader` function now includes support for MQTT v5 properties with an additional parameter. Thus, the signature of `MQTT_SerializePublishHeader` changed 
+The `MQTT_SerializePublishHeader` function now includes support for MQTT v5 properties with an additional parameter. Thus, the signature of `MQTT_SerializePublishHeader` changed
 
-from 
+from
 
 ```c
-MQTTStatus_t MQTT_SerializePublishHeader( const MQTTPublishInfo_t * pPublishInfo, 
-                                            uint16_t packetId, 
-                                            size_t remainingLength, 
-                                            const MQTTFixedBuffer_t * pFixedBuffer, 
+MQTTStatus_t MQTT_SerializePublishHeader( const MQTTPublishInfo_t * pPublishInfo,
+                                            uint16_t packetId,
+                                            size_t remainingLength,
+                                            const MQTTFixedBuffer_t * pFixedBuffer,
                                             size_t * pHeaderSize )
 ```
 
-to 
+to
 
 ```c
-MQTTStatus_t MQTT_SerializePublishHeader( const MQTTPublishInfo_t * pPublishInfo, 
-                                            const MQTTPropBuilder_t * pPublishProperties, 
-                                            uint16_t packetId, 
-                                            size_t remainingLength, 
-                                            const MQTTFixedBuffer_t * pFixedBuffer, 
+MQTTStatus_t MQTT_SerializePublishHeader( const MQTTPublishInfo_t * pPublishInfo,
+                                            const MQTTPropBuilder_t * pPublishProperties,
+                                            uint16_t packetId,
+                                            size_t remainingLength,
+                                            const MQTTFixedBuffer_t * pFixedBuffer,
                                             size_t * pHeaderSize )
 ```
-`pPublishInfo` can be set to NULL if not used. 
+`pPublishInfo` can be set to NULL if not used.
 
 For example:
 
@@ -1869,29 +1869,29 @@ if(status == MQTTSuccess)
 
 #### Updated `MQTT_SerializeSubscribe` API
 
-The `MQTT_SerializeSubscribe` function now includes support for MQTT v5 properties with an additional parameter. Thus, the signature of `MQTT_SerializeSubscribe` changed 
+The `MQTT_SerializeSubscribe` function now includes support for MQTT v5 properties with an additional parameter. Thus, the signature of `MQTT_SerializeSubscribe` changed
 
-from 
+from
 
 ```c
-MQTTStatus_t MQTT_SerializeSubscribe( const MQTTSubscribeInfo_t * pSubscriptionList, 
-                                        size_t subscriptionCount, 
-                                        uint16_t packetId, 
-                                        size_t remainingLength, 
+MQTTStatus_t MQTT_SerializeSubscribe( const MQTTSubscribeInfo_t * pSubscriptionList,
+                                        size_t subscriptionCount,
+                                        uint16_t packetId,
+                                        size_t remainingLength,
                                         const MQTTFixedBuffer_t * pFixedBuffer )
 ```
 
-to 
+to
 
 ```c
-MQTTStatus_t MQTT_SerializeSubscribe( const MQTTSubscribeInfo_t * pSubscriptionList, 
-                                        size_t subscriptionCount, 
-                                        const MQTTPropBuilder_t * pSubscribeProperties, 
-                                        uint16_t packetId, 
-                                        size_t remainingLength, 
+MQTTStatus_t MQTT_SerializeSubscribe( const MQTTSubscribeInfo_t * pSubscriptionList,
+                                        size_t subscriptionCount,
+                                        const MQTTPropBuilder_t * pSubscribeProperties,
+                                        uint16_t packetId,
+                                        size_t remainingLength,
                                         const MQTTFixedBuffer_t * pFixedBuffer )
 ```
-`pSubscribeProperties` can be set to NULL if not used. 
+`pSubscribeProperties` can be set to NULL if not used.
 
 For example:
 
@@ -2006,29 +2006,29 @@ if(status == MQTTSuccess)
 
 #### Updated `MQTT_SerializeUnsubscribe` API
 
-The `MQTT_SerializeUnsubscribe` function now includes support for MQTT v5 properties with an additional parameter. Thus, the signature of `MQTT_SerializeUnsubscribe` changed 
+The `MQTT_SerializeUnsubscribe` function now includes support for MQTT v5 properties with an additional parameter. Thus, the signature of `MQTT_SerializeUnsubscribe` changed
 
-from 
+from
 
 ```c
-MQTTStatus_t MQTT_SerializeUnsubscribe( const MQTTSubscribeInfo_t * pSubscriptionList, 
-                                        size_t subscriptionCount, 
-                                        uint16_t packetId, 
-                                        size_t remainingLength, 
+MQTTStatus_t MQTT_SerializeUnsubscribe( const MQTTSubscribeInfo_t * pSubscriptionList,
+                                        size_t subscriptionCount,
+                                        uint16_t packetId,
+                                        size_t remainingLength,
                                         const MQTTFixedBuffer_t * pFixedBuffer )
 ```
 
-to 
+to
 
 ```c
-MQTTStatus_t MQTT_SerializeUnsubscribe( const MQTTSubscribeInfo_t * pSubscriptionList, 
-                                        size_t subscriptionCount, 
+MQTTStatus_t MQTT_SerializeUnsubscribe( const MQTTSubscribeInfo_t * pSubscriptionList,
+                                        size_t subscriptionCount,
                                         const MQTTPropBuilder_t * pUnsubscribeProperties,
-                                        uint16_t packetId, 
-                                        size_t remainingLength, 
+                                        uint16_t packetId,
+                                        size_t remainingLength,
                                         const MQTTFixedBuffer_t * pFixedBuffer )
 ```
-`pUnsubscribeProperties` can be set to NULL if not used. 
+`pUnsubscribeProperties` can be set to NULL if not used.
 
 For example:
 
@@ -2144,23 +2144,23 @@ if(status == MQTTSuccess)
 
 #### Updated `MQTT_SerializeDisconnect` API
 
-The `MQTT_SerializeDisconnect` function now includes support for MQTT v5 properties and reason codes with three additional parameters. Thus, the signature of `MQTT_SerializeDisconnect` changed 
+The `MQTT_SerializeDisconnect` function now includes support for MQTT v5 properties and reason codes with three additional parameters. Thus, the signature of `MQTT_SerializeDisconnect` changed
 
-from 
+from
 
 ```c
 MQTTStatus_t MQTT_SerializeDisconnect( const MQTTFixedBuffer_t * pFixedBuffer )
 ```
 
-to 
+to
 
 ```c
-MQTTStatus_t MQTT_SerializeDisconnect( const MQTTPropBuilder_t *pDisconnectProperties, 
-                                        MQTTSuccessFailReasonCode_t reasonCode, 
-                                        size_t remainingLength, 
+MQTTStatus_t MQTT_SerializeDisconnect( const MQTTPropBuilder_t *pDisconnectProperties,
+                                        MQTTSuccessFailReasonCode_t reasonCode,
+                                        size_t remainingLength,
                                         const MQTTFixedBuffer_t * pFixedBuffer )
 ```
-`pDisconnectProperties` can be set to NULL if not used. 
+`pDisconnectProperties` can be set to NULL if not used.
 
 For example:
 
@@ -2244,24 +2244,24 @@ if(status == MQTTSuccess)
 
 #### Updated `MQTT_DeserializePublish` API
 
-The `MQTT_DeserializePublish` function now includes support for MQTT v5 properties with three additional parameters. Thus, the signature of `MQTT_DeserializePublish` changed 
+The `MQTT_DeserializePublish` function now includes support for MQTT v5 properties with three additional parameters. Thus, the signature of `MQTT_DeserializePublish` changed
 
-from 
+from
 
 ```c
-MQTTStatus_t MQTT_DeserializePublish( const MQTTPacketInfo_t * pIncomingPacket, 
-                                        uint16_t * pPacketId, 
+MQTTStatus_t MQTT_DeserializePublish( const MQTTPacketInfo_t * pIncomingPacket,
+                                        uint16_t * pPacketId,
                                         MQTTPublishInfo_t * pPublishInfo )
 ```
 
-to 
+to
 
 ```c
-MQTTStatus_t MQTT_DeserializePublish( const MQTTPacketInfo_t * pIncomingPacket, 
-                                        uint16_t * pPacketId, 
-                                        MQTTPublishInfo_t * pPublishInfo, 
-                                        MQTTPropBuilder_t * propBuffer, 
-                                        uint32_t maxPacketSize, 
+MQTTStatus_t MQTT_DeserializePublish( const MQTTPacketInfo_t * pIncomingPacket,
+                                        uint16_t * pPacketId,
+                                        MQTTPublishInfo_t * pPublishInfo,
+                                        MQTTPropBuilder_t * propBuffer,
+                                        uint32_t maxPacketSize,
                                         uint16_t topicAliasMax )
 ```
 For example:
@@ -2356,25 +2356,25 @@ if((incomingPacket.type & 0xF0) == MQTT_PACKET_TYPE_PUBLISH)
 
 #### Updated `MQTT_DeserializeAck` API
 
-The `MQTT_DeserializeAck` function now includes support for MQTT v5 properties and reason codes with five additional parameters. Thus, the signature of `MQTT_DeserializeAck` changed 
+The `MQTT_DeserializeAck` function now includes support for MQTT v5 properties and reason codes with five additional parameters. Thus, the signature of `MQTT_DeserializeAck` changed
 
-from 
+from
 
 ```c
 
-MQTTStatus_t MQTT_DeserializeAck( const MQTTPacketInfo_t * pIncomingPacket, 
+MQTTStatus_t MQTT_DeserializeAck( const MQTTPacketInfo_t * pIncomingPacket,
                                     uint16_t * pPacketId,
                                     bool * pSessionPresent )
 ```
 
-to 
+to
 
 ```c
-MQTTStatus_t MQTT_DeserializeAck( const MQTTPacketInfo_t * pIncomingPacket, 
-                                    uint16_t * pPacketId, 
-                                    bool * pSessionPresent, 
-                                    MQTTReasonCodeInfo_t * pReasonCode, 
-                                    MQTTPropBuilder_t * propBuffer, 
+MQTTStatus_t MQTT_DeserializeAck( const MQTTPacketInfo_t * pIncomingPacket,
+                                    uint16_t * pPacketId,
+                                    bool * pSessionPresent,
+                                    MQTTReasonCodeInfo_t * pReasonCode,
+                                    MQTTPropBuilder_t * propBuffer,
                                     MQTTConnectionProperties_t * pConnectProperties )
 ```
 For example:
