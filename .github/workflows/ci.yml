@@ -213,7 +213,8 @@ jobs:
       - name: Set up CBMC runner
         uses: FreeRTOS/CI-CD-Github-Actions/set_up_cbmc_runner@main
         with:
-          cbmc_version: "6.3.1"
+          cbmc_version: 6.3.1
+          cbmc_viewer_version: latest
       - name: Run CBMC
         uses: FreeRTOS/CI-CD-Github-Actions/run_cbmc@main
         with:

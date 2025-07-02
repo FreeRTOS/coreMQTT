@@ -298,6 +298,8 @@ jobs:
           add_release: "true"
 
   create-release:
+    permissions:
+      id-token: write
     needs:
       - create-zip
       - deploy-doxygen
@@ -332,4 +334,9 @@ jobs:
           asset_path: ./${{ env.repository_zip_name }}
           asset_name: ${{ env.repository_zip_name }}
           asset_content_type: application/zip
-  
+
+      - name: Backup Release Asset
+        uses: FreeRTOS/CI-CD-Github-Actions/artifact-backup@main
+        with:
+          artifact_path: ./${{ env.repository_zip_name }}
+          release_tag: ${{ github.event.inputs.version_number }}
