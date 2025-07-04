@@ -38,6 +38,8 @@ void harness()
     size_t packetSize;
     MQTTFixedBuffer_t * pFixedBuffer;
     MQTTStatus_t status = MQTTSuccess;
+    MQTTPropBuilder_t * pSubscribeProperties;
+    uint32_t maxPacketSize;
 
     /* Please see the default bound description on SUBSCRIPTION_COUNT_MAX in
      * mqtt_cbmc_state.c for more information. */
@@ -48,6 +50,15 @@ void harness()
 
     pFixedBuffer = allocateMqttFixedBuffer( NULL );
     __CPROVER_assume( isValidMqttFixedBuffer( pFixedBuffer ) );
+
+    pSubscribeProperties = allocateMqttPropBuilder( NULL );
+
+    if( pSubscribeProperties != NULL )
+    {
+        __CPROVER_assume( pSubscribeProperties->currentIndex >= 0 );
+        __CPROVER_assume( pSubscribeProperties->currentIndex < pSubscribeProperties->bufferLength );
+        __CPROVER_assume( pSubscribeProperties->fieldSet >= 0 );
+    }
 
     /* Before calling MQTT_SerializeSubscribe() it is up to the application to
      * make sure that the information in the list of MQTTSubscribeInfo_t can fit
@@ -62,8 +73,10 @@ void harness()
          * to recalculate the packetSize. */
         status = MQTT_GetSubscribePacketSize( pSubscriptionList,
                                               subscriptionCount,
+                                              pSubscribeProperties,
                                               &remainingLength,
-                                              &packetSize );
+                                              &packetSize,
+                                              maxPacketSize );
     }
 
     if( status == MQTTSuccess )
@@ -72,6 +85,7 @@ void harness()
          * reach this function. */
         MQTT_SerializeSubscribe( pSubscriptionList,
                                  subscriptionCount,
+                                 pSubscribeProperties,
                                  packetId,
                                  remainingLength,
                                  pFixedBuffer );

@@ -23,14 +23,17 @@ HARNESS_ENTRY=harness
 HARNESS_FILE=MQTT_SerializeDisconnect_harness
 PROOF_UID=MQTT_SerializeDisconnect
 
-DEFINES +=
+MAX_TOPIC_NAME_FILTER_LENGTH=10
+
+DEFINES += -DMAX_TOPIC_NAME_FILTER_LENGTH=$(MAX_TOPIC_NAME_FILTER_LENGTH)
 INCLUDES +=
 
-REMOVE_FUNCTION_BODY +=
-UNWINDSET +=
+REMOVE_FUNCTION_BODY += MQTT_GetIncomingPacketTypeAndLength
+UNWINDSET += encodeVariableLength.0:5
 
 PROOF_SOURCES += $(PROOFDIR)/$(HARNESS_FILE).c
 PROOF_SOURCES += $(SRCDIR)/test/cbmc/sources/mqtt_cbmc_state.c
 PROJECT_SOURCES += $(SRCDIR)/source/core_mqtt_serializer.c
+PROJECT_SOURCES += $(SRCDIR)/source/core_mqtt_utils.c
 
 include ../Makefile.common

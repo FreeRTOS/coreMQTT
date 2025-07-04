@@ -25,7 +25,7 @@ PROOF_UID=MQTT_Connect
 
 # Please see test/cbmc/stubs/network_interface_subs.c for
 # more information on MAX_NETWORK_SEND_TRIES.
-MAX_NETWORK_SEND_TRIES=3
+MAX_NETWORK_SEND_TRIES=4
 # Bound on the timeout in receiveConnack. This timeout is bounded because
 # memory saftey can be proven in a only a few iteration of the MQTT operations.
 # Each iteration will try to receive a single packet in its entirety. With a
@@ -40,7 +40,7 @@ MAX_NETWORK_RECV_TRIES=4
 # information on these defines.
 MQTT_STATE_ARRAY_MAX_COUNT=11
 MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT=3
-CONNECT_PACKET_VECTORS = 12
+CONNECT_PACKET_VECTORS = 16
 DEFINES += -DMQTT_RECEIVE_TIMEOUT=$(MQTT_RECEIVE_TIMEOUT)
 DEFINES += -DMAX_NETWORK_SEND_TRIES=$(MAX_NETWORK_SEND_TRIES)
 DEFINES += -DMAX_NETWORK_RECV_TRIES=$(MAX_NETWORK_RECV_TRIES)
@@ -53,6 +53,9 @@ REMOVE_FUNCTION_BODY += MQTT_ProcessLoop
 REMOVE_FUNCTION_BODY += MQTT_ReceiveLoop
 REMOVE_FUNCTION_BODY += __CPROVER_file_local_core_mqtt_c_handleIncomingPublish
 REMOVE_FUNCTION_BODY += __CPROVER_file_local_core_mqtt_c_handleKeepAlive
+REMOVE_FUNCTION_BODY += updateContextWithConnectProps
+REMOVE_FUNCTION_BODY += MQTT_ValidateWillProperties
+REMOVE_FUNCTION_BODY += MQTT_DeserializeAck
 #REMOVE_FUNCTION_BODY += __CPROVER_file_local_core_mqtt_c_sendMessageVector
 #REMOVE_FUNCTION_BODY += __CPROVER_file_local_core_mqtt_c_sendBuffer
 
@@ -72,7 +75,7 @@ UNWINDSET += __CPROVER_file_local_core_mqtt_c_sendBuffer.0:$(MAX_NETWORK_SEND_TR
 # The loops are unwound 5 times because these functions divides a size_t
 # variable by 128 until it reaches zero to stop the loop.
 # log128(SIZE_MAX) = 4.571...
-UNWINDSET += __CPROVER_file_local_core_mqtt_serializer_c_encodeRemainingLength.0:5
+UNWINDSET += encodeVariableLength.0:5
 UNWINDSET += __CPROVER_file_local_core_mqtt_serializer_c_getRemainingLength.0:5
 # This loop will run for the maximum number of publishes pending
 # acknowledgements plus one. This value is set in
@@ -90,6 +93,7 @@ PROOF_SOURCES += $(SRCDIR)/test/cbmc/stubs/event_callback_stub.c
 PROJECT_SOURCES += $(SRCDIR)/source/core_mqtt.c
 PROJECT_SOURCES += $(SRCDIR)/source/core_mqtt_serializer.c
 PROJECT_SOURCES += $(SRCDIR)/source/core_mqtt_state.c
+PROJECT_SOURCES += $(SRCDIR)/source/core_mqtt_utils.c
 
 EXPENSIVE = true
 

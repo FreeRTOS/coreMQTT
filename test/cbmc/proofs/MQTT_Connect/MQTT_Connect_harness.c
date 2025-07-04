@@ -30,6 +30,10 @@
 #include "mqtt_cbmc_state.h"
 #include "core_mqtt_config_defaults.h"
 
+#include "network_interface_stubs.h"
+#include "get_time_stub.h"
+#include "event_callback_stub.h"
+
 /**
  * @brief Implement a get time function to return timeout after certain
  * iterations have been made in the code. This ensures that we do not hit
@@ -43,7 +47,8 @@ static uint32_t ulGetTimeFunction( void )
 {
     static uint32_t systemTime = 0;
 
-    if( systemTime >= MAX_NETWORK_SEND_TRIES )
+    if( systemTime >= ( ( MAX_NETWORK_SEND_TRIES * 2 ) + 1 ) )
+    /* if( systemTime >= MAX_NETWORK_SEND_TRIES ) */
     {
         systemTime = systemTime + MQTT_SEND_TIMEOUT_MS + 1;
     }
@@ -55,11 +60,40 @@ static uint32_t ulGetTimeFunction( void )
     return systemTime;
 }
 
+MQTTStatus_t updateContextWithConnectProps( const MQTTPropBuilder_t * pPropBuilder,
+                                            MQTTConnectionProperties_t * pConnectProperties )
+{
+    MQTTStatus_t status;
+
+    return status;
+}
+
+MQTTStatus_t MQTT_ValidateWillProperties( const MQTTPropBuilder_t * pPropertyBuilder )
+{
+    MQTTStatus_t status;
+
+    return status;
+}
+
+MQTTStatus_t MQTT_DeserializeAck( const MQTTPacketInfo_t * pIncomingPacket,
+                                  uint16_t * pPacketId,
+                                  bool * pSessionPresent,
+                                  MQTTReasonCodeInfo_t * pReasonCode,
+                                  MQTTPropBuilder_t * propBuffer,
+                                  MQTTConnectionProperties_t * pConnectProperties )
+{
+    MQTTStatus_t result;
+
+    return result;
+}
+
 void harness()
 {
     MQTTContext_t * pContext;
     MQTTConnectInfo_t * pConnectInfo;
     MQTTPublishInfo_t * pWillInfo;
+    MQTTPropBuilder_t * pPropertyBuilder;
+    MQTTPropBuilder_t * willPropsBuilder;
     uint32_t timeoutMs;
     size_t totalMessageLength = 0U;
     bool * pSessionPresent;
@@ -144,6 +178,30 @@ void harness()
         totalMessageLength += pWillInfo->payloadLength;
     }
 
+    pPropertyBuilder = allocateMqttPropBuilder( NULL );
+
+    if( pPropertyBuilder != NULL )
+    {
+        __CPROVER_assume( pPropertyBuilder->currentIndex >= 0 );
+        __CPROVER_assume( pPropertyBuilder->currentIndex < pPropertyBuilder->bufferLength );
+        __CPROVER_assume( pPropertyBuilder->fieldSet >= 0 );
+    }
+
+    __CPROVER_assume( isValidMqttPropBuilder( pPropertyBuilder ) );
+
+    willPropsBuilder = allocateMqttPropBuilder( NULL );
+
+    if( willPropsBuilder != NULL )
+    {
+        __CPROVER_assume( willPropsBuilder->currentIndex >= 0 );
+        __CPROVER_assume( willPropsBuilder->currentIndex < willPropsBuilder->bufferLength );
+        __CPROVER_assume( willPropsBuilder->fieldSet >= 0 );
+
+        totalMessageLength += willPropsBuilder->currentIndex;
+    }
+
+    __CPROVER_assume( isValidMqttPropBuilder( willPropsBuilder ) );
+
     /* 128^4 is the length imposed by the MQTT spec. */
     __CPROVER_assume( totalMessageLength <= 268435456 );
 
@@ -154,5 +212,5 @@ void harness()
      * safety can be proven in only a few iterations. */
     __CPROVER_assume( timeoutMs < MQTT_RECEIVE_TIMEOUT );
 
-    MQTT_Connect( pContext, pConnectInfo, pWillInfo, timeoutMs, pSessionPresent );
+    MQTT_Connect( pContext, pConnectInfo, pWillInfo, timeoutMs, pSessionPresent, pPropertyBuilder, willPropsBuilder );
 }
