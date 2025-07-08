@@ -242,7 +242,7 @@ typedef enum MQTTStatus
     MQTTNoMemory,                   /**< A provided buffer was too small. */
     MQTTSendFailed,                 /**< The transport send function failed. */
     MQTTRecvFailed,                 /**< The transport receive function failed. */
-    MQTTBadResponse,                /**< An invalid packet was received from the server. */
+    MQTTBadResponse,                /**< An invalid packet was received from the server. It is recommended that application closes the connection.  */
     MQTTServerRefused,              /**< The server refused a CONNECT or SUBSCRIBE. */
     MQTTNoDataAvailable,            /**< No data available from the transport interface. */
     MQTTIllegalState,               /**< An illegal state in the state record. */

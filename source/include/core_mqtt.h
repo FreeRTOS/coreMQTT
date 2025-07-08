@@ -1180,7 +1180,8 @@ MQTTStatus_t MQTT_Disconnect( MQTTContext_t * pContext,
  * @return #MQTTBadParameter if context is NULL;<br>
  * #MQTTRecvFailed if a network error occurs during reception;<br>
  * #MQTTSendFailed if a network error occurs while sending an ACK or PINGREQ;<br>
- * #MQTTBadResponse if an invalid packet is received;<br>
+ * #MQTTBadResponse if an invalid packet is received. It is recommended that the application calls
+ * #MQTT_Disconnect and re-connects with a clean session;<br>
  * #MQTTKeepAliveTimeout if the server has not sent a PINGRESP before
  * #MQTT_PINGRESP_TIMEOUT_MS milliseconds;<br>
  * #MQTTIllegalState if an incoming QoS 1/2 publish or ack causes an
@@ -1189,7 +1190,7 @@ MQTTStatus_t MQTT_Disconnect( MQTTContext_t * pContext,
  * incomplete data; it should be called again (probably after a delay);<br>
  * #MQTTStatusNotConnected if the connection is not established yet and a PING
  * or an ACK is being sent.<br>
- * #MQTTStatusDisconnectPending if the user is expected to call MQTT_Disconnect
+ * #MQTTStatusDisconnectPending if the user is expected to call #MQTT_Disconnect
  * before calling any other API<br>
  * #MQTTEventCallbackFailed if the user provided #MQTTEventCallback_t callback fails to process the received packet;<br>
  * #MQTTSuccess on success.<br>
@@ -1243,7 +1244,8 @@ MQTTStatus_t MQTT_ProcessLoop( MQTTContext_t * pContext );
  * @return #MQTTBadParameter if context is NULL;<br>
  * #MQTTRecvFailed if a network error occurs during reception;<br>
  * #MQTTSendFailed if a network error occurs while sending an ACK or PINGREQ;<br>
- * #MQTTBadResponse if an invalid packet is received;<br>
+ * #MQTTBadResponse if an invalid packet is received. It is recommended that the application calls
+ * #MQTT_Disconnect and re-connects with a clean session;<br>
  * #MQTTKeepAliveTimeout if the server has not sent a PINGRESP before
  * #MQTT_PINGRESP_TIMEOUT_MS milliseconds;<br>
  * #MQTTIllegalState if an incoming QoS 1/2 publish or ack causes an
@@ -1252,7 +1254,7 @@ MQTTStatus_t MQTT_ProcessLoop( MQTTContext_t * pContext );
  * incomplete data; it should be called again (probably after a delay);<br>
  * #MQTTStatusNotConnected if the connection is not established yet and a PING
  * or an ACK is being sent.<br>
- * #MQTTStatusDisconnectPending if the user is expected to call MQTT_Disconnect
+ * #MQTTStatusDisconnectPending if the user is expected to call #MQTT_Disconnect
  * before calling any other API<br>
  * #MQTTEventCallbackFailed if the user provided #MQTTEventCallback_t callback fails to process the received packet;<br>
  * #MQTTSuccess on success.<br>
