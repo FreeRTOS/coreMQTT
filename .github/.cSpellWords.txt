@@ -52,4 +52,12 @@ Werror
 Wextra
 Wsign
 Wunused
+mqttpropadd
+mqttpropget
+pubsubscriptionid
+mqttpropertybuilder
+MQTTV
+subscribeid
 DCOV
+mqtteventcallback
+

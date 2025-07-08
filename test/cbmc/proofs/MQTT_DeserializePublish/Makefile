@@ -26,11 +26,14 @@ PROOF_UID=MQTT_DeserializePublish
 DEFINES +=
 INCLUDES +=
 
-REMOVE_FUNCTION_BODY +=
-UNWINDSET +=
+# These functions have their memory saftey proven in other harnesses.
+REMOVE_FUNCTION_BODY += __CPROVER_file_local_core_mqtt_serializer_c_deserializePublishProperties
+
+UNWINDSET += __CPROVER_file_local_core_mqtt_serializer_c_decodeVariableLength.0:5
 
 PROOF_SOURCES += $(PROOFDIR)/$(HARNESS_FILE).c
 PROOF_SOURCES += $(SRCDIR)/test/cbmc/sources/mqtt_cbmc_state.c
+PROJECT_SOURCES += $(SRCDIR)/source/core_mqtt.c
 PROJECT_SOURCES += $(SRCDIR)/source/core_mqtt_serializer.c
 
 include ../Makefile.common

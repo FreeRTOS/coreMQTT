@@ -29,6 +29,10 @@
 #include "core_mqtt.h"
 #include "mqtt_cbmc_state.h"
 
+/* Here we constraint the length of the properties to 25 bytes.
+ */
+#define MAX_PROPERTY_LENGTH    ( 25U )
+
 void harness()
 {
     MQTTConnectInfo_t * pConnectInfo;
@@ -37,6 +41,8 @@ void harness()
     MQTTFixedBuffer_t * pFixedBuffer;
     size_t packetSize;
     MQTTStatus_t status = MQTTSuccess;
+    MQTTPropBuilder_t * pConnectProperties;
+    MQTTPropBuilder_t * pWillProperties;
 
     pConnectInfo = allocateMqttConnectInfo( NULL );
     __CPROVER_assume( isValidMqttConnectInfo( pConnectInfo ) );
@@ -46,6 +52,28 @@ void harness()
 
     pFixedBuffer = allocateMqttFixedBuffer( NULL );
     __CPROVER_assume( isValidMqttFixedBuffer( pFixedBuffer ) );
+
+    pConnectProperties = allocateMqttPropBuilder( NULL );
+
+    if( pConnectProperties != NULL )
+    {
+        __CPROVER_assume( pConnectProperties->bufferLength >= 0 );
+        __CPROVER_assume( pConnectProperties->bufferLength <= MAX_PROPERTY_LENGTH );
+        __CPROVER_assume( pConnectProperties->currentIndex >= 0 );
+        __CPROVER_assume( pConnectProperties->currentIndex < pConnectProperties->bufferLength );
+        __CPROVER_assume( pConnectProperties->fieldSet >= 0 );
+    }
+
+    pWillProperties = allocateMqttPropBuilder( NULL );
+
+    if( pWillProperties != NULL )
+    {
+        __CPROVER_assume( pWillProperties->bufferLength >= 0 );
+        __CPROVER_assume( pWillProperties->bufferLength <= MAX_PROPERTY_LENGTH );
+        __CPROVER_assume( pWillProperties->currentIndex >= 0 );
+        __CPROVER_assume( pWillProperties->currentIndex < pWillProperties->bufferLength );
+        __CPROVER_assume( pWillProperties->fieldSet >= 0 );
+    }
 
     /* Before calling MQTT_SerializeConnect() it is up to the application to make
      * sure that the information in MQTTConnectInfo_t and MQTTPublishInfo_t can
@@ -60,6 +88,8 @@ void harness()
          * to recalculate the packetSize. */
         status = MQTT_GetConnectPacketSize( pConnectInfo,
                                             pWillInfo,
+                                            pConnectProperties,
+                                            pWillProperties,
                                             &remainingLength,
                                             &packetSize );
     }
@@ -68,6 +98,6 @@ void harness()
     {
         /* For coverage, it is expected that a NULL pConnectInfo will reach this
          * function. */
-        MQTT_SerializeConnect( pConnectInfo, pWillInfo, remainingLength, pFixedBuffer );
+        MQTT_SerializeConnect( pConnectInfo, pWillInfo, pConnectProperties, pWillProperties, remainingLength, pFixedBuffer );
     }
 }

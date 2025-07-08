@@ -54,11 +54,20 @@ static uint32_t ulGetTimeFunction( void )
 
     return systemTime;
 }
+MQTTStatus_t MQTT_ValidatePublishProperties( uint16_t serverTopicAliasMax,
+                                             const MQTTPropBuilder_t * propBuilder,
+                                             uint16_t * topicAlias )
+{
+    MQTTStatus_t status;
+
+    return status;
+}
 
 void harness()
 {
     MQTTContext_t * pContext;
     MQTTPublishInfo_t * pPublishInfo;
+    MQTTPropBuilder_t * propBuffer;
     uint16_t packetId;
 
     pContext = allocateMqttContext( NULL );
@@ -72,5 +81,8 @@ void harness()
     pPublishInfo = allocateMqttPublishInfo( NULL );
     __CPROVER_assume( isValidMqttPublishInfo( pPublishInfo ) );
 
-    MQTT_Publish( pContext, pPublishInfo, packetId );
+    propBuffer = allocateMqttPropBuilder( NULL );
+    __CPROVER_assume( isValidMqttPropBuilder( propBuffer ) );
+
+    MQTT_Publish( pContext, pPublishInfo, packetId, propBuffer );
 }

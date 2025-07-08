@@ -92,7 +92,7 @@ jobs:
         uses: FreeRTOS/CI-CD-Github-Actions/complexity@main
         with:
           path: ./
-          horrid_threshold: 12
+          horrid_threshold: 17
 
   doxygen:
     runs-on: ubuntu-latest

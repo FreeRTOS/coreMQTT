@@ -30,9 +30,12 @@
 #include "core_mqtt.h"
 #include "event_callback_stub.h"
 
-void EventCallbackStub( MQTTContext_t * pContext,
+bool EventCallbackStub( MQTTContext_t * pContext,
                         MQTTPacketInfo_t * pPacketInfo,
-                        MQTTDeserializedInfo_t * pDeserializedInfo )
+                        MQTTDeserializedInfo_t * pDeserializedInfo,
+                        enum MQTTSuccessFailReasonCode * pReasonCode,
+                        struct MqttPropBuilder * pSendPropsBuffer,
+                        struct MqttPropBuilder * pGetPropsBuffer )
 {
     __CPROVER_assert( pContext != NULL,
                       "EventCallbackStub pContext is not NULL" );

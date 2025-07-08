@@ -92,13 +92,21 @@ static uint32_t getTime( void )
  * @param[in] pPacketInfo Packet Info pointer for the incoming packet.
  * @param[in] pDeserializedInfo Deserialized information from the incoming packet.
  */
-static void eventCallback( MQTTContext_t * pContext,
+static bool eventCallback( MQTTContext_t * pContext,
                            MQTTPacketInfo_t * pPacketInfo,
-                           MQTTDeserializedInfo_t * pDeserializedInfo )
+                           MQTTDeserializedInfo_t * pDeserializedInfo,
+                           MQTTSuccessFailReasonCode_t * pReasonCode,
+                           MQTTPropBuilder_t * pSendPropsBuffer,
+                           MQTTPropBuilder_t * pGetPropsBuffer )
 {
     ( void ) pContext;
     ( void ) pPacketInfo;
     ( void ) pDeserializedInfo;
+    ( void ) pReasonCode;
+    ( void ) pSendPropsBuffer;
+    ( void ) pGetPropsBuffer;
+
+    return true;
 }
 
 static void resetPublishRecords( MQTTContext_t * pMqttContext )
@@ -171,14 +179,15 @@ void test_MQTT_ReserveState( void )
 
     MQTTPubAckInfo_t incomingRecords[ MQTT_STATE_ARRAY_MAX_COUNT ] = { 0 };
     MQTTPubAckInfo_t outgoingRecords[ MQTT_STATE_ARRAY_MAX_COUNT ] = { 0 };
-
+    uint8_t ackPropsBuf[ 500 ];
+    size_t ackPropsBufLength = sizeof( ackPropsBuf );
     status = MQTT_Init( &mqttContext, &transport,
                         getTime, eventCallback, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTSuccess, status );
 
     status = MQTT_InitStatefulQoS( &mqttContext,
                                    outgoingRecords, MQTT_STATE_ARRAY_MAX_COUNT,
-                                   incomingRecords, MQTT_STATE_ARRAY_MAX_COUNT );
+                                   incomingRecords, MQTT_STATE_ARRAY_MAX_COUNT, ackPropsBuf, ackPropsBufLength );
     TEST_ASSERT_EQUAL( MQTTSuccess, status );
 
     /* QoS 0 returns success. */
@@ -379,13 +388,16 @@ void test_MQTT_ReserveState_compactRecords( void )
     MQTTPubAckInfo_t incomingRecords[ MQTT_STATE_ARRAY_MAX_COUNT ] = { 0 };
     MQTTPubAckInfo_t outgoingRecords[ MQTT_STATE_ARRAY_MAX_COUNT ] = { 0 };
 
+    uint8_t ackPropsBuf[ 500 ];
+    size_t ackPropsBufLength = sizeof( ackPropsBuf );
+
     status = MQTT_Init( &mqttContext, &transport,
                         getTime, eventCallback, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTSuccess, status );
 
     status = MQTT_InitStatefulQoS( &mqttContext,
                                    outgoingRecords, MQTT_STATE_ARRAY_MAX_COUNT,
-                                   incomingRecords, MQTT_STATE_ARRAY_MAX_COUNT );
+                                   incomingRecords, MQTT_STATE_ARRAY_MAX_COUNT, ackPropsBuf, ackPropsBufLength );
     TEST_ASSERT_EQUAL( MQTTSuccess, status );
 
     /* Consider the state of the array with 2 states. 1 indicates a non empty
@@ -555,13 +567,16 @@ void test_MQTT_UpdateStatePublish( void )
     MQTTPubAckInfo_t incomingRecords[ MQTT_STATE_ARRAY_MAX_COUNT ] = { 0 };
     MQTTPubAckInfo_t outgoingRecords[ MQTT_STATE_ARRAY_MAX_COUNT ] = { 0 };
 
+    uint8_t ackPropsBuf[ 500 ];
+    size_t ackPropsBufLength = sizeof( ackPropsBuf );
+
     status = MQTT_Init( &mqttContext, &transport,
                         getTime, eventCallback, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTSuccess, status );
 
     status = MQTT_InitStatefulQoS( &mqttContext,
                                    outgoingRecords, MQTT_STATE_ARRAY_MAX_COUNT,
-                                   incomingRecords, MQTT_STATE_ARRAY_MAX_COUNT );
+                                   incomingRecords, MQTT_STATE_ARRAY_MAX_COUNT, ackPropsBuf, ackPropsBufLength );
     TEST_ASSERT_EQUAL( MQTTSuccess, status );
 
     /* QoS 0. */
@@ -764,14 +779,15 @@ void test_MQTT_UpdateStateAck( void )
 
     MQTTPubAckInfo_t incomingRecords[ MQTT_STATE_ARRAY_MAX_COUNT ] = { 0 };
     MQTTPubAckInfo_t outgoingRecords[ MQTT_STATE_ARRAY_MAX_COUNT ] = { 0 };
-
+    uint8_t ackPropsBuf[ 500 ];
+    size_t ackPropsBufLength = sizeof( ackPropsBuf );
     status = MQTT_Init( &mqttContext, &transport,
                         getTime, eventCallback, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTSuccess, status );
 
     status = MQTT_InitStatefulQoS( &mqttContext,
                                    outgoingRecords, MQTT_STATE_ARRAY_MAX_COUNT,
-                                   incomingRecords, MQTT_STATE_ARRAY_MAX_COUNT );
+                                   incomingRecords, MQTT_STATE_ARRAY_MAX_COUNT, ackPropsBuf, ackPropsBufLength );
     TEST_ASSERT_EQUAL( MQTTSuccess, status );
 
     /* NULL parameters. */
@@ -959,13 +975,16 @@ void test_MQTT_AckToResend( void )
     transport.recv = transportRecvSuccess;
     transport.send = transportSendSuccess;
 
+    uint8_t ackPropsBuf[ 500 ];
+    size_t ackPropsBufLength = sizeof( ackPropsBuf );
+
     status = MQTT_Init( &mqttContext, &transport,
                         getTime, eventCallback, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTSuccess, status );
 
     status = MQTT_InitStatefulQoS( &mqttContext,
                                    outgoingRecords, MQTT_STATE_ARRAY_MAX_COUNT,
-                                   incomingRecords, MQTT_STATE_ARRAY_MAX_COUNT );
+                                   incomingRecords, MQTT_STATE_ARRAY_MAX_COUNT, ackPropsBuf, ackPropsBufLength );
     TEST_ASSERT_EQUAL( MQTTSuccess, status );
 
     /* Invalid parameters. */
@@ -1054,14 +1073,15 @@ void test_MQTT_PublishToResend( void )
     transport.send = transportSendSuccess;
 
     MQTTFixedBuffer_t networkBuffer = { 0 };
-
+    uint8_t ackPropsBuf[ 500 ];
+    size_t ackPropsBufLength = sizeof( ackPropsBuf );
     status = MQTT_Init( &mqttContext, &transport,
                         getTime, eventCallback, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTSuccess, status );
 
     status = MQTT_InitStatefulQoS( &mqttContext,
                                    outgoingRecords, MQTT_STATE_ARRAY_MAX_COUNT,
-                                   incomingRecords, MQTT_STATE_ARRAY_MAX_COUNT );
+                                   incomingRecords, MQTT_STATE_ARRAY_MAX_COUNT, ackPropsBuf, ackPropsBufLength );
     TEST_ASSERT_EQUAL( MQTTSuccess, status );
 
 

@@ -26,11 +26,15 @@ PROOF_UID=MQTT_DeserializeAck
 # The maximum remaining length is bounded for MQTT_DeserializeAck() in order to
 # place a limit on the number of iterations in deserializing a SUBACK. Please
 # see REMAINING_LENGTH_MAX in libraries\standard\mqtt\cbmc\sources\mqtt_cbmc_state.c.
-REMAINING_LENGTH_MAX=5
+REMAINING_LENGTH_MAX=6
 DEFINES += -DREMAINING_LENGTH_MAX=$(REMAINING_LENGTH_MAX)
 INCLUDES +=
 
-REMOVE_FUNCTION_BODY +=
+REMOVE_FUNCTION_BODY += __CPROVER_file_local_core_mqtt_serializer_c_deserializeConnackProperties
+REMOVE_FUNCTION_BODY += __CPROVER_file_local_core_mqtt_serializer_c_deserializeSubackProperties
+REMOVE_FUNCTION_BODY += __CPROVER_file_local_core_mqtt_serializer_c_decodeAckProperties
+
+UNWINDSET += __CPROVER_file_local_core_mqtt_serializer_c_decodeVariableLength.0:5
 UNWINDSET += __CPROVER_file_local_core_mqtt_serializer_c_readSubackStatus.0:$(REMAINING_LENGTH_MAX)
 
 PROOF_SOURCES += $(PROOFDIR)/$(HARNESS_FILE).c

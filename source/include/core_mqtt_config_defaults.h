@@ -73,7 +73,7 @@
  * @brief Maximum number of vectors in subscribe and unsubscribe packet.
  */
 #ifndef MQTT_SUB_UNSUB_MAX_VECTORS
-    #define MQTT_SUB_UNSUB_MAX_VECTORS    ( 4U )
+    #define MQTT_SUB_UNSUB_MAX_VECTORS    ( 6U )
 #endif
 
 /**

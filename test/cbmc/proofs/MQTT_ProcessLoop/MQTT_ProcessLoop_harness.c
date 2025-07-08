@@ -31,7 +31,32 @@
 
 MQTTStatus_t MQTT_DeserializeAck( const MQTTPacketInfo_t * pIncomingPacket,
                                   uint16_t * pPacketId,
-                                  bool * pSessionPresent )
+                                  bool * pSessionPresent,
+                                  MQTTReasonCodeInfo_t * pReasonCode,
+                                  MQTTPropBuilder_t * propBuffer,
+                                  MQTTConnectionProperties_t * pConnectProperties )
+{
+    MQTTStatus_t result;
+
+    return result;
+}
+
+MQTTStatus_t MQTT_DeserializePublish( const MQTTPacketInfo_t * pIncomingPacket,
+                                      uint16_t * pPacketId,
+                                      MQTTPublishInfo_t * pPublishInfo,
+                                      MQTTPropBuilder_t * propBuffer,
+                                      uint32_t maxPacketSize,
+                                      uint16_t topicAliasMax )
+{
+    MQTTStatus_t result;
+
+    return result;
+}
+
+MQTTStatus_t MQTT_DeserializeDisconnect( const MQTTPacketInfo_t * pPacket,
+                                         uint32_t maxPacketSize,
+                                         MQTTReasonCodeInfo_t * pDisconnectInfo,
+                                         MQTTPropBuilder_t * propBuffer )
 {
     MQTTStatus_t result;
 

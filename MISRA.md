@@ -37,3 +37,8 @@ _Ref 18.2.1_
   to be subtracted from the index. It is manually verified that the index will always be
   within bounds of the array. However, Coverity is flagging this as a deviation. Thus, we
   are suppressing it.
+
+#### Rule 10.5
+
+_Ref 10.5.1_
+- MISRA C-2012 Rule 10.5 states that the value of an expression should not be cast to an inappropriate essential type. In this library, reason codes are input as bytes and processed accordingly. A byte representing the reason code is cast to an enumerated type that is also based on uint8_t. It is verified that the values will always fall within the valid range of the enumeration, and the underlying type of the enumeration is compatible. Thus, this cast is considered safe.

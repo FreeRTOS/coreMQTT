@@ -63,7 +63,7 @@ int32_t NetworkInterfaceReceiveStub( NetworkContext_t * pNetworkContext,
      * more than bytesToRecv. */
     __CPROVER_assume( bytesOrError <= ( int32_t ) bytesToRecv );
 
-    if( tries < ( MAX_NETWORK_RECV_TRIES - 1 ) )
+    if( tries < ( MAX_NETWORK_RECV_TRIES - 1U ) )
     {
         tries++;
     }
