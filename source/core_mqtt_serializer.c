@@ -1706,7 +1706,7 @@ MQTTStatus_t MQTT_GetConnectPacketSize( const MQTTConnectInfo_t * pConnectInfo,
                     ( void * ) pPacketSize ) );
         status = MQTTBadParameter;
     }
-    else if( ( pConnectInfo->clientIdentifierLength == 0U ) ^ ( ( pConnectInfo->pClientIdentifier == NULL )  || ( *( pConnectInfo->pClientIdentifier ) == '\0' ) ) )
+    else if( ( pConnectInfo->clientIdentifierLength == 0U ) ^ ( ( pConnectInfo->pClientIdentifier == NULL ) || ( *( pConnectInfo->pClientIdentifier ) == '\0' ) ) )
     {
         LogError( ( "Client ID length and value mismatch." ) );
         status = MQTTBadParameter;
