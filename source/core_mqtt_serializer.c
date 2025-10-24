@@ -1706,9 +1706,14 @@ MQTTStatus_t MQTT_GetConnectPacketSize( const MQTTConnectInfo_t * pConnectInfo,
                     ( void * ) pPacketSize ) );
         status = MQTTBadParameter;
     }
-    else if( ( pConnectInfo->clientIdentifierLength == 0U ) || ( pConnectInfo->pClientIdentifier == NULL ) )
+    else if( ( pConnectInfo->clientIdentifierLength == 0U ) ^ ( ( pConnectInfo->pClientIdentifier == NULL )  || ( *( pConnectInfo->pClientIdentifier ) == '\0' ) ) )
     {
-        LogError( ( "Mqtt_GetConnectPacketSize() client identifier must be set." ) );
+        LogError( ( "Client ID length and value mismatch." ) );
+        status = MQTTBadParameter;
+    }
+    else if( ( pConnectInfo->clientIdentifierLength == 0U ) && ( pConnectInfo->cleanSession == false ) )
+    {
+        LogError( ( "Zero-length client identifier requires cleanSession=true per MQTT 3.1.1." ) );
         status = MQTTBadParameter;
     }
     else if( ( pWillInfo != NULL ) && ( pWillInfo->payloadLength > ( size_t ) UINT16_MAX ) )
