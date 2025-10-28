@@ -463,10 +463,58 @@ void test_MQTT_GetConnectPacketSize( void )
     status = MQTT_GetConnectPacketSize( &connectInfo, NULL, &remainingLength, &packetSize );
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
 
+    /* Verify NULL client identifier with provided non-zero length fails. */
     connectInfo.pClientIdentifier = NULL;
     connectInfo.clientIdentifierLength = CLIENT_IDENTIFIER_LENGTH;
+    connectInfo.cleanSession = true;
     status = MQTT_GetConnectPacketSize( &connectInfo, NULL, &remainingLength, &packetSize );
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+
+    /* Verify empty string client ID with provided non-zero length fails. */
+    connectInfo.pClientIdentifier = "";
+    connectInfo.clientIdentifierLength = 99U;
+    connectInfo.cleanSession = true;
+    status = MQTT_GetConnectPacketSize( &connectInfo, NULL, &remainingLength, &packetSize );
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+
+    /* Verify zero-length client identifier must have clean session. */
+    connectInfo.pClientIdentifier = NULL;
+    connectInfo.clientIdentifierLength = 0U;
+    connectInfo.cleanSession = false;
+    status = MQTT_GetConnectPacketSize( &connectInfo, NULL, &remainingLength, &packetSize );
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+
+    /* Verify zero-length client identifier must have clean session. */
+    connectInfo.pClientIdentifier = "";
+    connectInfo.clientIdentifierLength = 0U;
+    connectInfo.cleanSession = false;
+    status = MQTT_GetConnectPacketSize( &connectInfo, NULL, &remainingLength, &packetSize );
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+
+    /* NULL client ID and client ID length of 0 is treated as zero-length identifier */
+    connectInfo.pClientIdentifier = NULL;
+    connectInfo.clientIdentifierLength = 0U;
+    connectInfo.cleanSession = true;
+    connectInfo.pUserName = NULL;
+    connectInfo.pPassword = NULL;
+    status = MQTT_GetConnectPacketSize( &connectInfo, NULL, &remainingLength, &packetSize );
+    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
+    /* Make sure remaining size returned is 12. */
+    TEST_ASSERT_EQUAL_INT( 12, remainingLength );
+    /* Make sure packet size is 14. */
+    TEST_ASSERT_EQUAL_INT( 14, packetSize );
+
+    /* Empty string client ID and client ID length of 0 is treated as zero-length identifier */
+    connectInfo.pClientIdentifier = "";
+    connectInfo.clientIdentifierLength = 0U;
+    connectInfo.pUserName = NULL;
+    connectInfo.pPassword = NULL;
+    status = MQTT_GetConnectPacketSize( &connectInfo, NULL, &remainingLength, &packetSize );
+    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
+    /* Make sure remaining size returned is 12. */
+    TEST_ASSERT_EQUAL_INT( 12, remainingLength );
+    /* Make sure packet size is 14. */
+    TEST_ASSERT_EQUAL_INT( 14, packetSize );
 
     /* Test a will message payload length that is too large. */
     memset( &connectInfo, 0x0, sizeof( connectInfo ) );
