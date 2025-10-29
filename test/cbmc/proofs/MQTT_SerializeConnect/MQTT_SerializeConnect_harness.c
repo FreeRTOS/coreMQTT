@@ -39,7 +39,11 @@ void harness()
     MQTTStatus_t status = MQTTSuccess;
 
     pConnectInfo = allocateMqttConnectInfo( NULL );
-    __CPROVER_assume( isValidMqttConnectInfo( pConnectInfo ) );
+
+    /* Avoid a malloc(0U) which causes dereference errors */
+    if ( pConnectInfo->clientIdentifierLength == 0U ) {
+        pConnectInfo->pClientIdentifier = NULL;
+    }
 
     pWillInfo = allocateMqttPublishInfo( NULL );
     __CPROVER_assume( isValidMqttPublishInfo( pWillInfo ) );
