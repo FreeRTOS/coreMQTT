@@ -41,7 +41,8 @@ void harness()
     pConnectInfo = allocateMqttConnectInfo( NULL );
 
     /* Avoid a malloc(0U) which causes dereference errors */
-    if ( pConnectInfo->clientIdentifierLength == 0U ) {
+    if( ( pConnectInfo != NULL ) && ( pConnectInfo->clientIdentifierLength == 0U ) )
+    {
         pConnectInfo->pClientIdentifier = NULL;
     }
 
