@@ -97,6 +97,14 @@
 #define MQTT_MAX_REMAINING_LENGTH                   ( 268435455UL )
 
 /**
+ * @brief Per the MQTT spec, the max packet size can be of max remaining length + 5 bytes.
+ * Fixed header 
+ *    MQTT packet type nibble + MQTT flags nibble             1
+ *    Maximum bytes used to encode the remaining length       4
+ */
+#define MQTT_MAX_PACKET_SIZE                        ( MQTT_MAX_REMAINING_LENGTH + 5U )
+
+/**
  * @brief Set a bit in an 8-bit unsigned integer.
  */
 #define UINT8_SET_BIT( x, position )      ( ( x ) = ( uint8_t ) ( ( x ) | ( 0x01U << ( position ) ) ) )
@@ -2703,6 +2711,39 @@ MQTTStatus_t MQTT_ProcessIncomingPacketTypeAndLength( const uint8_t * pBuffer,
                         ( unsigned int ) pIncomingPacket->type ) );
             status = MQTTBadResponse;
         }
+    }
+
+    return status;
+}
+
+/*-----------------------------------------------------------*/
+
+MQTTStatus_t MQTT_InitConnect( MQTTConnectionProperties_t * pConnectProperties )
+{
+    MQTTStatus_t status = MQTTSuccess;
+
+    if( pConnectProperties == NULL )
+    {
+        LogError( ( "pConnectProperties cannot be NULL." ) );
+        status = MQTTBadParameter;
+    }
+    else
+    {
+        pConnectProperties->receiveMax = UINT16_MAX;
+        pConnectProperties->maxPacketSize = MQTT_MAX_PACKET_SIZE;
+        pConnectProperties->requestProblemInfo = true;
+        pConnectProperties->serverReceiveMax = UINT16_MAX;
+        pConnectProperties->serverMaxQos = 2U;
+        pConnectProperties->serverMaxPacketSize = MQTT_MAX_PACKET_SIZE;
+        pConnectProperties->isWildcardAvailable = 1U;
+        pConnectProperties->isSubscriptionIdAvailable = 1U;
+        pConnectProperties->isSharedAvailable = 1U;
+        pConnectProperties->sessionExpiry = 0U;
+        pConnectProperties->topicAliasMax = 0U;
+        pConnectProperties->requestResponseInfo = false;
+        pConnectProperties->retainAvailable = 1U;
+        pConnectProperties->serverTopicAliasMax = 0U;
+        pConnectProperties->serverKeepAlive = UINT16_MAX;
     }
 
     return status;

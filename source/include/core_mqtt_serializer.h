@@ -271,6 +271,103 @@ typedef struct MQTTPacketInfo
 } MQTTPacketInfo_t;
 
 /**
+ * @ingroup mqtt_struct_types
+ * @brief Property builder for MQTT packets.
+ */
+typedef struct MQTTPropBuilder
+{
+    uint8_t * pBuffer;           /**< @brief Pointer to the buffer for storing properties. */
+    size_t bufferLength;         /**< @brief Total length of the buffer available for properties. */
+    size_t currentIndex;         /**< @brief Current position in the buffer where next property will be written. */
+    uint32_t fieldSet;           /**< @brief Bitfield tracking which properties have been added. */
+} MQTTPropBuilder_t;
+
+/**
+* @ingroup mqtt_struct_types
+* @brief Struct to hold connect and connack properties.
+*/
+typedef struct MQTTConnectProperties
+{
+     /**
+     * @brief Four Byte Integer representing the Session Expiry Interval in seconds.
+     */
+    uint32_t sessionExpiry;
+
+     /**
+     * @brief Maximum number of unacknowledged PUBLISH packets client is willing to receive.
+     */
+    uint16_t receiveMax;
+
+     /**
+     * @brief Four Byte Integer representing the Maximum Packet Size the Client is willing to accept.
+     */
+    uint32_t maxPacketSize;
+
+     /**
+     * @brief Two Byte Integer representing the Topic Alias Maximum value.
+     */
+    uint16_t topicAliasMax;
+
+     /**
+     * @brief  A value of 0 indicates that the Server MUST NOT return Response Information.
+     */
+    bool  requestResponseInfo;
+
+     /**
+     * @brief The Client uses this value to indicate whether the Reason String or User Properties
+     *  are sent in the case of failures
+     */
+    bool  requestProblemInfo;
+
+    /**
+     * @brief Maximum number of unacknowledged PUBLISH packets server is willing to receive.
+     */
+    uint16_t serverReceiveMax;
+
+     /**
+     * @brief  Max qos supported by the server.
+     */
+    uint8_t serverMaxQos;
+
+     /**
+     * @brief Byte declares whether the Server supports retained messages.
+     */
+    uint8_t retainAvailable;
+
+     /**
+     * @brief Four Byte Integer representing the Maximum Packet Size the Server is willing to accept.
+     */
+    uint32_t serverMaxPacketSize;
+
+     /**
+     * @brief Two Byte Integer representing the Topic Alias Maximum value.
+     */
+    uint16_t serverTopicAliasMax;
+
+     /**
+     * @brief Whether wildcard subscription is available.
+     */
+    uint8_t isWildcardAvailable;
+
+     /**
+     * @brief Whether the Server supports Subscription Identifiers.
+     */
+    uint8_t isSubscriptionIdAvailable;
+
+     /**
+     * @brief Whether the Server supports Shared Subscription.
+     */
+    uint8_t isSharedAvailable;
+
+     /**
+     * @brief Keep Alive value given by the server.
+     */
+    uint16_t serverKeepAlive;
+
+
+} MQTTConnectionProperties_t;
+
+/**
  * @brief Get the size and Remaining Length of an MQTT CONNECT packet.
  *
  * This function must be called before #MQTT_SerializeConnect in order to get
@@ -1304,6 +1401,24 @@ uint8_t * MQTT_SerializeUnsubscribeHeader( size_t remainingLength,
                                            uint8_t * pIndex,
                                            uint16_t packetId );
 /** @endcond */
+
+/**
+ * @brief Initialize an MQTTConnectionProperties_t.
+ *
+ * @note This function initializes the connect properties to default values.
+ *       This function should only be used if using only serializer functions
+ *       throughout the connection. It is also important to only call this function
+ *       before sending the connect packet.
+ *
+ * @param[in] pConnectProperties The connect properties to initialize.
+ *
+ * @return
+ * - #MQTTBadParameter if pConnectProperties is NULL.
+ * - #MQTTSuccess otherwise.
+ */
+/* @[declare_mqtt_initconnect] */
+MQTTStatus_t MQTT_InitConnect( MQTTConnectionProperties_t * pConnectProperties );
+/* @[declare_mqtt_initconnect] */
 
 /* *INDENT-OFF* */
 #ifdef __cplusplus

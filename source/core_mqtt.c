@@ -35,22 +35,6 @@
 /* Include config defaults header to get default values of configs. */
 #include "core_mqtt_config_defaults.h"
 
-#ifndef MQTT_PRE_SEND_HOOK
-
-/**
- * @brief Hook called before a 'send' operation is executed.
- */
-    #define MQTT_PRE_SEND_HOOK( pContext )
-#endif /* !MQTT_PRE_SEND_HOOK */
-
-#ifndef MQTT_POST_SEND_HOOK
-
-/**
- * @brief Hook called after the 'send' operation is complete.
- */
-    #define MQTT_POST_SEND_HOOK( pContext )
-#endif /* !MQTT_POST_SEND_HOOK */
-
 #ifndef MQTT_PRE_STATE_UPDATE_HOOK
 
 /**
@@ -78,7 +62,7 @@
  * @brief Number of vectors required to encode one topic filter in a subscribe
  * request. Three vectors are required as there are three fields in the
  * subscribe request namely:
- * 1. Topic filter length; 2. Topic filter; and 3. QoS in this order.
+ * 1. Topic filter length; 2. Topic filter; and 3. Subscription options in this order.
  */
 #define CORE_MQTT_SUBSCRIBE_PER_TOPIC_VECTOR_LENGTH      ( 3U )
 
@@ -2735,9 +2719,13 @@ MQTTStatus_t MQTT_Init( MQTTContext_t * pContext,
         pContext->getTime = getTimeFunction;
         pContext->appCallback = userCallback;
         pContext->networkBuffer = *pNetworkBuffer;
+        pContext->ackPropsBuffer.pBuffer = NULL;
 
         /* Zero is not a valid packet ID per MQTT spec. Start from 1. */
         pContext->nextPacketId = 1;
+
+        /* Setting default connect properties in our application */
+        status = MQTT_InitConnect( &( pContext->connectionProperties ) );
     }
 
     return status;

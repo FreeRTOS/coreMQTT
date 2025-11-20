@@ -260,6 +260,11 @@ typedef struct MQTTContext
     MQTTFixedBuffer_t networkBuffer;
 
     /**
+     * @brief The buffer used to store properties for outgoing ack packets.
+     */
+    MQTTPropBuilder_t ackPropsBuffer;
+
+    /**
      * @brief The next available ID for outgoing MQTT packets.
      */
     uint16_t nextPacketId;
@@ -304,6 +309,11 @@ typedef struct MQTTContext
     uint16_t keepAliveIntervalSec; /**< @brief Keep Alive interval. */
     uint32_t pingReqSendTimeMs;    /**< @brief Timestamp of the last sent PINGREQ. */
     bool waitingForPingResp;       /**< @brief If the library is currently awaiting a PINGRESP. */
+
+    /**
+     * @brief Persistent Connection Properties, populated in the CONNECT and the CONNACK.
+     */
+    MQTTConnectionProperties_t connectionProperties;
 
     /**
      * @brief User defined API used to store outgoing publishes.
@@ -358,8 +368,8 @@ typedef struct MQTTDeserializedInfo
  *     for the entire lifetime of the @p pContext and must not be used by another context and/or
  *     application.
  *
- * @return #MQTTBadParameter if invalid parameters are passed;
- * #MQTTSuccess otherwise.
+ * @return #MQTTBadParameter if invalid parameters are passed;<br>
+ * #MQTTSuccess otherwise.<br>
  *
  * <b>Example</b>
  * @code{c}
