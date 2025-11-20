@@ -2737,7 +2737,9 @@ MQTTStatus_t MQTT_InitStatefulQoS( MQTTContext_t * pContext,
                                    MQTTPubAckInfo_t * pOutgoingPublishRecords,
                                    size_t outgoingPublishCount,
                                    MQTTPubAckInfo_t * pIncomingPublishRecords,
-                                   size_t incomingPublishCount )
+                                   size_t incomingPublishCount,
+                                   uint8_t * pAckPropsBuf,
+                                   size_t ackPropsBufLength )
 {
     MQTTStatus_t status = MQTTSuccess;
 
@@ -2783,6 +2785,16 @@ MQTTStatus_t MQTT_InitStatefulQoS( MQTTContext_t * pContext,
         pContext->incomingPublishRecords = pIncomingPublishRecords;
         pContext->outgoingPublishRecordMaxCount = outgoingPublishCount;
         pContext->outgoingPublishRecords = pOutgoingPublishRecords;
+
+        if( ( pAckPropsBuf != NULL ) && ( ackPropsBufLength != 0U ) )
+        {
+            status = MQTTPropertyBuilder_Init( &pContext->ackPropsBuffer, pAckPropsBuf, ackPropsBufLength );
+        }
+        else
+        {
+            pContext->ackPropsBuffer.pBuffer = NULL;
+            pContext->ackPropsBuffer.bufferLength = 0;
+        }
     }
 
     return status;

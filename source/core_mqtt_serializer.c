@@ -2750,3 +2750,31 @@ MQTTStatus_t MQTT_InitConnect( MQTTConnectionProperties_t * pConnectProperties )
 }
 
 /*-----------------------------------------------------------*/
+
+MQTTStatus_t MQTTPropertyBuilder_Init( MQTTPropBuilder_t * pPropertyBuilder,
+                                       uint8_t * buffer,
+                                       size_t length )
+{
+    MQTTStatus_t status = MQTTSuccess;
+
+    if( ( pPropertyBuilder == NULL ) || ( buffer == NULL ) || ( length == 0U ) )
+    {
+        LogError( ( "Invalid arguments passed to MQTTPropertyBuilder_Init. "
+                    "pPropertyBuilder must be non-NULL; "
+                    "buffer must be non-NULL; "
+                    "and length must be non-zero. " ) );
+        status = MQTTBadParameter;
+    }
+
+    if( status == MQTTSuccess )
+    {
+        pPropertyBuilder->pBuffer = buffer;
+        pPropertyBuilder->currentIndex = 0;
+        pPropertyBuilder->bufferLength = length;
+        pPropertyBuilder->fieldSet = 0; /* 0 means no field is set. */
+    }
+
+    return status;
+}
+
+/*-----------------------------------------------------------*/

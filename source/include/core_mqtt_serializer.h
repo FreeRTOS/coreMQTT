@@ -1420,6 +1420,23 @@ uint8_t * MQTT_SerializeUnsubscribeHeader( size_t remainingLength,
 MQTTStatus_t MQTT_InitConnect( MQTTConnectionProperties_t * pConnectProperties );
 /* @[declare_mqtt_initconnect] */
 
+/**
+ * @brief Initialize the property builder.
+ *
+ * @param[out] pPropertyBuilder Property builder to initialize.
+ * @param[in] buffer Buffer to store the properties.
+ * @param[in] length Length of the buffer.
+ *
+ * @return
+ * - #MQTTBadParameter if invalid parameters are passed.
+ * - #MQTTSuccess otherwise.
+ */
+/* @[declare_mqttpropertybuilder_init] */
+MQTTStatus_t MQTTPropertyBuilder_Init( MQTTPropBuilder_t * pPropertyBuilder,
+                                        uint8_t * buffer,
+                                        size_t length );
+/* @[declare_mqttpropertybuilder_init] */
+
 /* *INDENT-OFF* */
 #ifdef __cplusplus
     }

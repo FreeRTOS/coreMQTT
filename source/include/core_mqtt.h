@@ -438,9 +438,10 @@ MQTTStatus_t MQTT_Init( MQTTContext_t * pContext,
  * publishes.
  * @param[in] incomingPublishCount Maximum number of records which can be kept in the memory
  * pointed to by @p pIncomingPublishRecords.
- *
- * @return #MQTTBadParameter if invalid parameters are passed;
- * #MQTTSuccess otherwise.
+ * @param[in] pAckPropsBuf Pointer to memory which will be used to store properties of outgoing publish-ACKS.
+ * @param[in] ackPropsBufLength Length of the buffer pointed to by @p pBuffer.
+ * @return #MQTTBadParameter if invalid parameters are passed;<br>
+ * #MQTTSuccess otherwise.<br>
  *
  * <b>Example</b>
  * @code{c}
@@ -483,7 +484,16 @@ MQTTStatus_t MQTT_Init( MQTTContext_t * pContext,
  * {
  *      // We do not expect any incoming publishes in this example, therefore the incoming
  *      // publish pointer is NULL and the count is zero.
- *      status = MQTT_InitStatefulQoS( &mqttContext, outgoingPublishes, outgoingPublishCount, NULL, 0 );
+ *      // The buffer is used to store properties of outgoing publish-ACKS.
+ *      uint8_t ackPropsBuf[ 500 ];
+ *      size_t ackPropsBufLength = sizeof( ackPropsBuf );
+ *      status = MQTT_InitStatefulQoS( &mqttContext,
+ *                                     outgoingPublishes,
+ *                                     outgoingPublishCount,
+ *                                     NULL,
+ *                                     0,
+ *                                     ackPropsBuf,
+ *                                     ackPropsBufLength );
  *
  *      // Now QoS1 and/or QoS2 publishes can be sent with this context.
  * }
@@ -494,7 +504,9 @@ MQTTStatus_t MQTT_InitStatefulQoS( MQTTContext_t * pContext,
                                    MQTTPubAckInfo_t * pOutgoingPublishRecords,
                                    size_t outgoingPublishCount,
                                    MQTTPubAckInfo_t * pIncomingPublishRecords,
-                                   size_t incomingPublishCount );
+                                   size_t incomingPublishCount,
+                                   uint8_t * pAckPropsBuf,
+                                   size_t ackPropsBufLength );
 /* @[declare_mqtt_initstatefulqos] */
 
 /**
