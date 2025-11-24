@@ -93,19 +93,81 @@ typedef uint32_t (* MQTTGetCurrentTimeFunc_t )( void );
 /**
  * @ingroup mqtt_callback_types
  * @brief Application callback for receiving incoming publishes and incoming
- * acks.
+ * acks, as well as adding properties to outgoing publish acks.
  *
  * @note This callback will be called only if packets are deserialized with a
  * result of #MQTTSuccess or #MQTTServerRefused. The latter can be obtained
- * when deserializing a SUBACK, indicating a broker's rejection of a subscribe.
+ * when deserializing a SUBACK indicating a broker's rejection of a subscribe,
+ * or a CONNACK indicating a broker's rejection of a connection.
  *
  * @param[in] pContext Initialized MQTT context.
  * @param[in] pPacketInfo Information on the type of incoming MQTT packet.
  * @param[in] pDeserializedInfo Deserialized information from incoming packet.
+ * @param[out] pReasonCode Reason code for the incoming packet.
+ * @param[out] pSendPropsBuffer Properties to be sent in the outgoing packet.
+ * @param[in] pGetPropsBuffer Properties to be received in the incoming packet.
+ *
+ * @note Get optional properties of incoming packets by calling these functions:
+ *
+ *
+ * - Connack Properties:
+ *  - #MQTTPropGet_SessionExpiry
+ *  - #MQTTPropGet_ConnReceiveMax
+ *  - #MQTTPropGet_ConnMaxQos
+ *  - #MQTTPropGet_ConnRetainAvailable
+ *  - #MQTTPropGet_ConnMaxPacketSize
+ *  - #MQTTPropGet_ConnClientId
+ *  - #MQTTPropGet_ConnTopicAliasMax
+ *  - #MQTTPropGet_ReasonString
+ *  - #MQTTPropGet_UserProp
+ *  - #MQTTPropGet_ConnWildcard
+ *  - #MQTTPropGet_ConnSubId
+ *  - #MQTTPropGet_ConnSharedSubAvailable
+ *  - #MQTTPropGet_ConnServerKeepAlive
+ *  - #MQTTPropGet_ConnResponseInfo
+ *  - #MQTTPropGet_ServerRef
+ *  - #MQTTPropGet_ConnAuthMethod
+ *  - #MQTTPropGet_ConnAuthData
+ *
+ * - Publish Properties:
+ *  - #MQTTPropGet_PubTopicAlias
+ *  - #MQTTPropGet_PubPayloadFormatIndicator
+ *  - #MQTTPropGet_PubResponseTopic
+ *  - #MQTTPropGet_PubCorrelationData
+ *  - #MQTTPropGet_PubMessageExpiryInterval
+ *  - #MQTTPropGet_PubContentType
+ *  - #MQTTPropGet_PubSubscriptionId
+ *  - #MQTTPropGet_UserProp
+ *
+ * - Ack Properties (PUBACK, PUBREC, PUBREL, PUBCOMP, SUBACK, UNSUBACK):
+ *  - #MQTTPropGet_ReasonString
+ *  - #MQTTPropGet_UserProp
+ *
+ * - Disconnect Properties:
+ *  - #MQTTPropGet_SessionExpiry
+ *  - #MQTTPropGet_ReasonString
+ *  - #MQTTPropGet_UserProp
+ *  - #MQTTPropGet_ServerRef
+ *
+ * @note Add optional properties to outgoing publish ack packets by calling these functions:
+ *
+ * - #MQTTPropAdd_UserProp
+ * - #MQTTPropAdd_ReasonString
+ * @return
+ * - true Event callback was able to process the packet
+ * - false This is not an error but just a flag that tells
+ *          the user that the eventcallback was unable to process
+ *          a packet due to application specific reasons.
+ *          The application should recall the processloop after
+ *          making sure that it would be able to process the
+ *          received packet again.
  */
-typedef void (* MQTTEventCallback_t )( struct MQTTContext * pContext,
+typedef bool (* MQTTEventCallback_t )( struct MQTTContext * pContext,
                                        struct MQTTPacketInfo * pPacketInfo,
-                                       struct MQTTDeserializedInfo * pDeserializedInfo );
+                                       struct MQTTDeserializedInfo * pDeserializedInfo,
+                                       enum MQTTSuccessFailReasonCode * pReasonCode,
+                                       struct MQTTPropBuilder * pSendPropsBuffer,
+                                       struct MQTTPropBuilder * pGetPropsBuffer );
 
 /**
  * @brief User defined callback used to store outgoing publishes. Used to track any publish
@@ -646,23 +708,27 @@ MQTTStatus_t MQTT_CheckConnectStatus( const MQTTContext_t * pContext );
  * @param[in] timeoutMs Maximum time in milliseconds to wait for a CONNACK packet.
  * A zero timeout makes use of the retries for receiving CONNACK as configured with
  * #MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT.
+ * @param[in] pPropertyBuilder Properties to be sent in the outgoing packet.
+ * @param[in] pWillPropertyBuilder Will Properties to be sent in the outgoing packet.
  * @param[out] pSessionPresent This value will be set to true if a previous session
  * was present; otherwise it will be set to false. It is only relevant if not
  * establishing a clean session.
  *
- * @return #MQTTNoMemory if the #MQTTContext_t.networkBuffer is too small to
- * hold the MQTT packet;
- * #MQTTBadParameter if invalid parameters are passed;
- * #MQTTSendFailed if transport send failed;
- * #MQTTRecvFailed if transport receive failed for CONNACK;
+ * @return
+ * #MQTTBadParameter if invalid parameters are passed;<br>
+ * #MQTTSendFailed if transport send failed;<br>
+ * #MQTTRecvFailed if transport receive failed for CONNACK;<br>
  * #MQTTNoDataAvailable if no data available to receive in transport until
- * the @p timeoutMs for CONNACK;
- * #MQTTStatusConnected if the connection is already established
+ * the @p timeoutMs for CONNACK;<br>
+ * #MQTTStatusConnected if the connection is already established<br>
  * #MQTTStatusDisconnectPending if the user is expected to call MQTT_Disconnect
- * before calling any other API
- * MQTTPublishRetrieveFailed if on an unclean session connection, the copied
- * publishes are not retrieved successfully for retransmission
- * #MQTTSuccess otherwise.
+ * before calling any other API<br>
+ * #MQTTPublishRetrieveFailed if on an unclean session connection, the copied
+ * publishes are not retrieved successfully for retransmission<br>
+ * #MQTTBadResponse if the received CONNACK packet is malformed<br>
+ * #MQTTServerRefused if the server refuses the connection in the CONNACK.<br>
+ * #MQTTEventCallbackFailed if the user defined callback fails.<br>
+ * #MQTTSuccess otherwise.<br>
  *
  * @note This API may spend more time than provided in the timeoutMS parameters in
  * certain conditions as listed below:
@@ -681,6 +747,28 @@ MQTTStatus_t MQTT_CheckConnectStatus( const MQTTContext_t * pContext );
  *    the API makes one more network receive call in an attempt to receive the remaining
  *    2 bytes. In the worst case, it can happen that the remaining 2 bytes are never
  *    received and this API will end up spending timeoutMs + transport receive timeout.
+ *
+ * Functions to add optional properties to the CONNECT packet are:
+ *
+ * Connect Properties:
+ * - #MQTTPropAdd_SessionExpiry
+ * - #MQTTPropAdd_ConnReceiveMax
+ * - #MQTTPropAdd_ConnMaxPacketSize
+ * - #MQTTPropAdd_ConnTopicAliasMax
+ * - #MQTTPropAdd_ConnRequestRespInfo
+ * - #MQTTPropAdd_ConnRequestProbInfo
+ * - #MQTTPropAdd_UserProp
+ * - #MQTTPropAdd_ConnAuthMethod
+ * - #MQTTPropAdd_ConnAuthData
+ *
+ * Will Properties:
+ * - #MQTTPropAdd_WillDelayInterval
+ * - #MQTTPropAdd_PubPayloadFormat
+ * - #MQTTPropAdd_PubMessageExpiry
+ * - #MQTTPropAdd_PubResponseTopic
+ * - #MQTTPropAdd_PubCorrelationData
+ * - #MQTTPropAdd_PubContentType
+ * - #MQTTPropAdd_UserProp
  *
  * <b>Example</b>
  * @code{c}
@@ -707,6 +795,15 @@ MQTTStatus_t MQTT_CheckConnectStatus( const MQTTContext_t * pContext );
  * connectInfo.userNameLength = strlen( connectInfo.pUserName );
  * connectInfo.pPassword = "somePassword";
  * connectInfo.passwordLength = strlen( connectInfo.pPassword );
+ *  // Optional properties to be sent in the CONNECT packet.
+ * MQTTPropBuilder_t connectPropsBuilder;
+ * uint8_t connectPropsBuffer[ 100 ];
+ * size_t connectPropsBufferLength = sizeof( connectPropsBuffer );
+ * status = MQTTPropertyBuilder_Init( &connectPropsBuilder, connectPropsBuffer, connectPropsBufferLength );
+ *
+ *   // Set a property in the connectPropsBuilder
+ * uint32_t maxPacketSize = 100 ;
+ * status = MQTTPropAdd_ConnMaxPacketSize(&connectPropsBuilder, maxPacketSize);
  *
  * // The last will and testament is optional, it will be published by the broker
  * // should this client disconnect without sending a DISCONNECT packet.
@@ -715,9 +812,17 @@ MQTTStatus_t MQTT_CheckConnectStatus( const MQTTContext_t * pContext );
  * willInfo.topicNameLength = strlen( willInfo.pTopicName );
  * willInfo.pPayload = "LWT Message";
  * willInfo.payloadLength = strlen( "LWT Message" );
+ *  // Optional Will Properties to be sent in the CONNECT packet.
+ * MQTTPropBuilder_t willPropsBuilder;
+ * uint8_t willPropsBuffer[ 100 ];
+ * size_t willPropsBufferLength = sizeof( willPropsBuffer );
+ * status = MQTTPropertyBuilder_Init( &willPropsBuilder, willPropsBuffer, willPropsBufferLength );
+ *
+ * // Set a property in the willPropsBuilder
+ * status = MQTTPropAdd_PubPayloadFormat( &willPropsBuilder, 1);
  *
  * // Send the connect packet. Use 100 ms as the timeout to wait for the CONNACK packet.
- * status = MQTT_Connect( pContext, &connectInfo, &willInfo, 100, &sessionPresent );
+ * status = MQTT_Connect( pContext, &connectInfo, &willInfo, 100, &sessionPresent, &connectPropsBuilder, &willPropsBuilder );
  *
  * if( status == MQTTSuccess )
  * {
@@ -733,7 +838,9 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
                            const MQTTConnectInfo_t * pConnectInfo,
                            const MQTTPublishInfo_t * pWillInfo,
                            uint32_t timeoutMs,
-                           bool * pSessionPresent );
+                           bool * pSessionPresent,
+                           const MQTTPropBuilder_t * pPropertyBuilder,
+                           const MQTTPropBuilder_t * pWillPropertyBuilder );
 /* @[declare_mqtt_connect] */
 
 /**

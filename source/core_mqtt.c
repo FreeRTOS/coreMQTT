@@ -107,12 +107,13 @@ static int32_t sendBuffer( MQTTContext_t * pContext,
 /**
  * @brief Sends MQTT connect without copying the users data into any buffer.
  *
- * @brief param[in] pContext Initialized MQTT context.
- * @brief param[in] pConnectInfo MQTT CONNECT packet information.
- * @brief param[in] pWillInfo Last Will and Testament. Pass NULL if Last Will and
+ * @param[in] pContext Initialized MQTT context.
+ * @param[in] pConnectInfo MQTT CONNECT packet information.
+ * @param[in] pWillInfo Last Will and Testament. Pass NULL if Last Will and
  * Testament is not used.
- * @brief param[in] remainingLength the length of the connect packet.
- *
+ * @param[in] remainingLength the length of the connect packet.
+ * @param[in] pPropertyBuilder Property builder containing CONNECT properties.
+ * @param[in] pWillPropertyBuilder Property builder containing Last Will And Testament properties.
  * @note This operation may call the transport send function
  * repeatedly to send bytes over the network until either:
  * 1. The requested number of bytes @a remainingLength have been sent.
@@ -122,12 +123,14 @@ static int32_t sendBuffer( MQTTContext_t * pContext,
  *                    OR
  * 3. There is an error in sending data over the network.
  *
- * @return #MQTTSendFailed or #MQTTSuccess.
+ * @return #MQTTSendFailed, #MQTTBadParameter, #MQTTBadResponse or #MQTTSuccess.
  */
 static MQTTStatus_t sendConnectWithoutCopy( MQTTContext_t * pContext,
                                             const MQTTConnectInfo_t * pConnectInfo,
                                             const MQTTPublishInfo_t * pWillInfo,
-                                            size_t remainingLength );
+                                            size_t remainingLength,
+                                            const MQTTPropBuilder_t * pPropertyBuilder,
+                                            const MQTTPropBuilder_t * pWillPropertyBuilder );
 
 /**
  * @brief Sends the vector array passed through the parameters over the network.
@@ -1537,9 +1540,13 @@ static MQTTStatus_t handleIncomingPublish( MQTTContext_t * pContext,
          * duplicate incoming publishes. */
         if( duplicatePublish == false )
         {
+            /* TODO: Fix the callback params - will be handled with receive path. */
             pContext->appCallback( pContext,
                                    pIncomingPacket,
-                                   &deserializedInfo );
+                                   &deserializedInfo,
+                                   NULL,
+                                   NULL,
+                                   NULL );
         }
 
         /* Send PUBACK or PUBREC if necessary. */
@@ -1616,9 +1623,10 @@ static MQTTStatus_t handlePublishAcks( MQTTContext_t * pContext,
         deserializedInfo.deserializationResult = status;
         deserializedInfo.pPublishInfo = NULL;
 
+        /* TODO: Fix the callback params - will be handled with receive path. */
         /* Invoke application callback to hand the buffer over to application
          * before sending acks. */
-        appCallback( pContext, pIncomingPacket, &deserializedInfo );
+        appCallback( pContext, pIncomingPacket, &deserializedInfo, NULL, NULL, NULL );
 
         /* Send PUBREL or PUBCOMP if necessary. */
         status = sendPublishAcks( pContext,
@@ -1700,7 +1708,9 @@ static MQTTStatus_t handleIncomingAck( MQTTContext_t * pContext,
         deserializedInfo.packetIdentifier = packetIdentifier;
         deserializedInfo.deserializationResult = status;
         deserializedInfo.pPublishInfo = NULL;
-        appCallback( pContext, pIncomingPacket, &deserializedInfo );
+
+        /* TODO: Fix the callback params - will be handled with receive path. */
+        appCallback( pContext, pIncomingPacket, &deserializedInfo, NULL, NULL, NULL );
         /* In case a SUBACK indicated refusal, reset the status to continue the loop. */
         status = MQTTSuccess;
     }
@@ -2252,41 +2262,56 @@ static MQTTStatus_t sendPublishWithoutCopy( MQTTContext_t * pContext,
 static MQTTStatus_t sendConnectWithoutCopy( MQTTContext_t * pContext,
                                             const MQTTConnectInfo_t * pConnectInfo,
                                             const MQTTPublishInfo_t * pWillInfo,
-                                            size_t remainingLength )
+                                            size_t remainingLength,
+                                            const MQTTPropBuilder_t * pPropertyBuilder,
+                                            const MQTTPropBuilder_t * pWillPropertyBuilder )
 {
     MQTTStatus_t status = MQTTSuccess;
     TransportOutVector_t * iterator;
     size_t ioVectorLength = 0U;
     size_t totalMessageLength = 0U;
+    size_t connectPropLen = 0U;
     int32_t bytesSentOrError;
     uint8_t * pIndex;
-    uint8_t serializedClientIDLength[ 2 ];
-    uint8_t serializedTopicLength[ 2 ];
-    uint8_t serializedPayloadLength[ 2 ];
-    uint8_t serializedUsernameLength[ 2 ];
-    uint8_t serializedPasswordLength[ 2 ];
+    uint8_t serializedClientIDLength[ 2U ];
+    uint8_t serializedTopicLength[ 2U ];
+    uint8_t serializedPayloadLength[ 2U ];
+    uint8_t serializedUsernameLength[ 2U ];
+    uint8_t serializedPasswordLength[ 2U ];
+
+    /**
+     * Maximum number of bytes to send the Property Length.
+     * Property Length  0 + 4 = 4
+     */
+    uint8_t propertyLength[ 4U ];
+    uint8_t willPropertyLength[ 4U ];
     size_t vectorsAdded;
 
-    /* Maximum number of bytes required by the 'fixed' part of the CONNECT
+    /* Maximum number of bytes required by the fixed part of the CONNECT
      * packet header according to the MQTT specification.
-     * MQTT Control Byte      0 + 1 = 1
-     * Remaining length (max)   + 4 = 5
-     * Protocol Name Length     + 2 = 7
-     * Protocol Name (MQTT)     + 4 = 11
-     * Protocol level           + 1 = 12
-     * Connect flags            + 1 = 13
-     * Keep alive               + 2 = 15 */
+     * MQTT Control Byte          0 + 1 = 1
+     * Remaining length (max)       + 4 = 5
+     * Protocol Name Length         + 2 = 7
+     * Protocol Name (MQTT)         + 4 = 11
+     * Protocol level               + 1 = 12
+     * Connect flags                + 1 = 13
+     * Keep alive                   + 2 = 15
+     */
+
     uint8_t connectPacketHeader[ 15U ];
 
     /* The maximum vectors required to encode and send a connect packet. The
      * breakdown is shown below.
      * Fixed header      0 + 1 = 1
-     * Client ID           + 2 = 3
-     * Will topic          + 2 = 5
-     * Will payload        + 2 = 7
-     * Username            + 2 = 9
-     * Password            + 2 = 11 */
-    TransportOutVector_t pIoVector[ 11U ];
+     * Connect Properties  + 2 = 3
+     * Client ID           + 2 = 5
+     * Will Properties     + 2 = 7
+     * Will topic          + 2 = 9
+     * Will payload        + 2 = 11
+     * Username            + 2 = 13
+     * Password            + 2 = 15
+     */
+    TransportOutVector_t pIoVector[ 15U ];
 
     iterator = pIoVector;
     pIndex = connectPacketHeader;
@@ -2304,9 +2329,13 @@ static MQTTStatus_t sendConnectWithoutCopy( MQTTContext_t * pContext,
                                                    pWillInfo,
                                                    remainingLength );
 
-        assert( ( ( size_t ) ( pIndex - connectPacketHeader ) ) <= sizeof( connectPacketHeader ) );
+        /**
+         * Set value of serverKeepAlive to keepAlive value sent in the CONNECT packet.
+         * This value shall be overwritten if the broker also sends a Keep Alive Interval
+         * in the CONNACK.
+         */
+        pContext->connectionProperties.serverKeepAlive = pConnectInfo->keepAliveSeconds;
 
-        /* The header gets sent first. */
         iterator->iov_base = connectPacketHeader;
         /* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-182 */
         /* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-108 */
@@ -2316,6 +2345,41 @@ static MQTTStatus_t sendConnectWithoutCopy( MQTTContext_t * pContext,
         totalMessageLength += iterator->iov_len;
         iterator++;
         ioVectorLength++;
+
+        if( ( pPropertyBuilder != NULL ) && ( pPropertyBuilder->pBuffer != NULL ) )
+        {
+            connectPropLen = pPropertyBuilder->currentIndex;
+        }
+
+        pIndex = propertyLength;
+        pIndex = encodeVariableLength( propertyLength, connectPropLen );
+        iterator->iov_base = propertyLength;
+        /* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-182 */
+        /* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-108 */
+        /* coverity[misra_c_2012_rule_18_2_violation] */
+        /* coverity[misra_c_2012_rule_10_8_violation] */
+        iterator->iov_len = ( size_t ) ( pIndex - propertyLength );
+        totalMessageLength += iterator->iov_len;
+        iterator++;
+        ioVectorLength++;
+
+        /* Serialize CONNECT properties, if present. */
+        if( connectPropLen > 0U )
+        {
+            iterator->iov_base = pPropertyBuilder->pBuffer;
+            iterator->iov_len = pPropertyBuilder->currentIndex;
+            totalMessageLength += iterator->iov_len;
+            iterator++;
+            ioVectorLength++;
+        }
+
+        /*
+         * Update the context with properties that will persist for the entire connection.
+         */
+        if( connectPropLen > 0U )
+        {
+            status = updateContextWithConnectProps( pPropertyBuilder, &pContext->connectionProperties );
+        }
 
         /* Serialize the client ID. */
         vectorsAdded = addEncodedStringToVector( serializedClientIDLength,
@@ -2330,6 +2394,36 @@ static MQTTStatus_t sendConnectWithoutCopy( MQTTContext_t * pContext,
 
         if( pWillInfo != NULL )
         {
+            size_t willPropsLen = 0U;
+
+            if( ( pWillPropertyBuilder != NULL ) && ( pWillPropertyBuilder->pBuffer != NULL ) )
+            {
+                willPropsLen = pWillPropertyBuilder->currentIndex;
+            }
+
+            pIndex = willPropertyLength;
+            pIndex = encodeVariableLength( willPropertyLength, willPropsLen );
+            iterator->iov_base = willPropertyLength;
+            /* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-182 */
+            /* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-108 */
+            /* coverity[misra_c_2012_rule_18_2_violation] */
+            /* coverity[misra_c_2012_rule_10_8_violation] */
+            iterator->iov_len = ( size_t ) ( pIndex - willPropertyLength );
+            totalMessageLength += iterator->iov_len;
+            iterator++;
+            ioVectorLength++;
+
+            if( willPropsLen > 0U )
+            {
+                /*Serialize the will properties, if present.*/
+
+                iterator->iov_base = pWillPropertyBuilder->pBuffer;
+                iterator->iov_len = pWillPropertyBuilder->currentIndex;
+                totalMessageLength += iterator->iov_len;
+                iterator++;
+                ioVectorLength++;
+            }
+
             /* Serialize the topic. */
             vectorsAdded = addEncodedStringToVector( serializedTopicLength,
                                                      pWillInfo->pTopicName,
@@ -2340,7 +2434,6 @@ static MQTTStatus_t sendConnectWithoutCopy( MQTTContext_t * pContext,
             /* Update the iterator to point to the next empty slot. */
             iterator = &iterator[ vectorsAdded ];
             ioVectorLength += vectorsAdded;
-
 
             /* Serialize the payload. Payload of last will and testament can be NULL. */
             vectorsAdded = addEncodedStringToVector( serializedPayloadLength,
@@ -2406,6 +2499,8 @@ static MQTTStatus_t receiveConnack( MQTTContext_t * pContext,
     uint32_t entryTimeMs = 0U, remainingTimeMs = 0U, timeTakenMs = 0U;
     bool breakFromLoop = false;
     uint16_t loopCount = 0U;
+    MQTTDeserializedInfo_t deserializedInfo;
+    MQTTPropBuilder_t propBuffer = { 0 };
 
     assert( pContext != NULL );
     assert( pIncomingPacket != NULL );
@@ -2441,7 +2536,7 @@ static MQTTStatus_t receiveConnack( MQTTContext_t * pContext,
         }
         else
         {
-            breakFromLoop = loopCount >= MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT;
+            breakFromLoop = ( loopCount >= MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT );
             loopCount++;
         }
 
@@ -2489,7 +2584,10 @@ static MQTTStatus_t receiveConnack( MQTTContext_t * pContext,
         pIncomingPacket->pRemainingData = pContext->networkBuffer.pBuffer;
 
         /* Deserialize CONNACK. */
-        status = MQTT_DeserializeAck( pIncomingPacket, NULL, pSessionPresent );
+        status = MQTT_DeserializeConnAck( pIncomingPacket,
+                                          pSessionPresent,
+                                          &propBuffer,
+                                          &pContext->connectionProperties );
     }
 
     /* If a clean session is requested, a session present should not be set by
@@ -2512,6 +2610,17 @@ static MQTTStatus_t receiveConnack( MQTTContext_t * pContext,
     {
         LogError( ( "CONNACK recv failed with status = %s.",
                     MQTT_Status_strerror( status ) ) );
+    }
+
+    if( ( status == MQTTSuccess ) || ( status == MQTTServerRefused ) )
+    {
+        deserializedInfo.deserializationResult = status;
+
+        if( pContext->appCallback( pContext, pIncomingPacket, &deserializedInfo,
+                                   NULL, &pContext->ackPropsBuffer, &propBuffer ) == false )
+        {
+            status = MQTTEventCallbackFailed;
+        }
     }
 
     return status;
@@ -2919,14 +3028,14 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
                            const MQTTConnectInfo_t * pConnectInfo,
                            const MQTTPublishInfo_t * pWillInfo,
                            uint32_t timeoutMs,
-                           bool * pSessionPresent )
+                           bool * pSessionPresent,
+                           const MQTTPropBuilder_t * pPropertyBuilder,
+                           const MQTTPropBuilder_t * pWillPropertyBuilder )
 {
     size_t remainingLength = 0UL, packetSize = 0UL;
     MQTTStatus_t status = MQTTSuccess;
     MQTTPacketInfo_t incomingPacket = { 0 };
     MQTTConnectionStatus_t connectStatus;
-
-    incomingPacket.type = ( uint8_t ) 0;
 
     if( ( pContext == NULL ) || ( pConnectInfo == NULL ) || ( pSessionPresent == NULL ) )
     {
@@ -2938,11 +3047,27 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
         status = MQTTBadParameter;
     }
 
+    if( ( status == MQTTSuccess ) && ( pWillInfo != NULL ) && ( pWillPropertyBuilder != NULL ) )
+    {
+        status = MQTT_ValidateWillProperties( pWillPropertyBuilder );
+    }
+
+    if( ( status == MQTTSuccess ) && ( pPropertyBuilder != NULL ) )
+    {
+        bool isRequestProblemInfoSet;
+        status = MQTT_ValidateConnectProperties( pPropertyBuilder, &isRequestProblemInfoSet );
+
+        // Update the field in the context so that it can be gated on.
+        pContext->connectionProperties.requestProblemInfo = isRequestProblemInfoSet;
+    }
+
     if( status == MQTTSuccess )
     {
         /* Get MQTT connect packet size and remaining length. */
         status = MQTT_GetConnectPacketSize( pConnectInfo,
                                             pWillInfo,
+                                            pPropertyBuilder,
+                                            pWillPropertyBuilder,
                                             &remainingLength,
                                             &packetSize );
         /* coverity[sensitive_data_leak] */
@@ -2967,8 +3092,13 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
             status = sendConnectWithoutCopy( pContext,
                                              pConnectInfo,
                                              pWillInfo,
-                                             remainingLength );
+                                             remainingLength,
+                                             pPropertyBuilder,
+                                             pWillPropertyBuilder );
         }
+
+        /* TODO: As part of CONNECT/CONNACK setup, there can be AUTH packets sent.
+         * It is not dealt with currently. */
 
         /* Read CONNACK from transport layer. */
         if( status == MQTTSuccess )
@@ -2980,6 +3110,29 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
                                      pSessionPresent );
         }
 
+        /**
+         * Update the maximum number of concurrent incoming and outgoing PUBLISH records
+         * based on MQTT 5.0 Receive Maximum property :
+         *
+         * - For incoming publishes: Use the minimum between the client's configured receive maximum
+         *   (In the MQTT_Init function) and the receive maximum value sent in CONNECT properties
+         *
+         * - For outgoing publishes: Use the minimum between the client's configured maximum
+         *   (In the MQTT_Init function) and the server's receive maximum value received in CONNACK properties
+         **/
+        if( status == MQTTSuccess )
+        {
+            if( pContext->connectionProperties.receiveMax < pContext->incomingPublishRecordMaxCount )
+            {
+                pContext->incomingPublishRecordMaxCount = pContext->connectionProperties.receiveMax;
+            }
+
+            if( pContext->connectionProperties.serverReceiveMax < pContext->outgoingPublishRecordMaxCount )
+            {
+                pContext->outgoingPublishRecordMaxCount = pContext->connectionProperties.serverReceiveMax;
+            }
+        }
+
         if( ( status == MQTTSuccess ) && ( *pSessionPresent != true ) )
         {
             status = handleCleanSession( pContext );
@@ -2988,8 +3141,14 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
         if( status == MQTTSuccess )
         {
             pContext->connectStatus = MQTTConnected;
-            /* Initialize keep-alive fields after a successful connection. */
-            pContext->keepAliveIntervalSec = pConnectInfo->keepAliveSeconds;
+
+            /**
+             * Initialize the client's keep-alive timer using the Server Keep Alive value
+             * received in the CONNACK.
+             * This value overrides the client's original keep-alive setting,
+             * as per MQTT v5 specification.
+             */
+            pContext->keepAliveIntervalSec = pContext->connectionProperties.serverKeepAlive;
             pContext->waitingForPingResp = false;
             pContext->pingReqSendTimeMs = 0U;
         }
