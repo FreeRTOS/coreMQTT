@@ -393,7 +393,7 @@ static MQTTStatus_t readSubackStatus( size_t statusCount,
  *
  * @return #MQTTBadParameter, #MQTTBadResponse, #MQTTSuccess, #MQTTServerRefused
  */
-static MQTTStatus_t deserializeSuback( const MQTTPacketInfo_t * incomingPacket,
+static MQTTStatus_t deserializeSubUnsubAck( const MQTTPacketInfo_t * incomingPacket,
                                        uint16_t * pPacketId,
                                        MQTTReasonCodeInfo_t * pReasonCodes,
                                        MQTTPropBuilder_t * pPropBuffer );
@@ -480,7 +480,7 @@ static MQTTStatus_t deserializeConnackProperties( MQTTConnectionProperties_t * p
  * #MQTTBadResponse if SUBACK is invalid.
  *
  */
-static MQTTStatus_t deserializeSubackProperties( MQTTPropBuilder_t * pPropBuffer,
+static MQTTStatus_t deserializeSubUnsubAckProperties( MQTTPropBuilder_t * pPropBuffer,
                                                  uint8_t * pIndex,
                                                  size_t * pSubackPropertyLength,
                                                  size_t remainingLength );
@@ -1475,6 +1475,8 @@ static MQTTStatus_t calculateSubscriptionPacketSize( const MQTTSubscribeInfo_t *
     MQTTStatus_t status = MQTTSuccess;
 
     assert( pSubscriptionList != NULL );
+    assert( pRemainingLength != NULL );
+    assert( pPacketSize != NULL );
     assert( subscriptionCount != 0U );
 
     /* 2 byte packet id. */
@@ -1509,6 +1511,12 @@ static MQTTStatus_t calculateSubscriptionPacketSize( const MQTTSubscribeInfo_t *
     if( status == MQTTSuccess )
     {
         *pRemainingLength = packetSize;
+
+        /* This is the total packet size which is the sum of:
+         * Remaining Length +
+         * Bytes required to encode the remaining length +
+         * 1 byte MQTT header
+         */
         packetSize += 1U + variableLengthEncodedSize( packetSize );
         *pPacketSize = packetSize;
     }
@@ -1519,7 +1527,8 @@ static MQTTStatus_t calculateSubscriptionPacketSize( const MQTTSubscribeInfo_t *
         status = MQTTBadParameter;
     }
 
-    LogDebug( ( "Subscription packet remaining length=%lu and packet size=%lu.",
+    LogDebug( ( "%s packet remaining length=%lu and packet size=%lu.",
+                ( subscriptionType == MQTT_TYPE_SUBSCRIBE ) ? "SUBSCRIBE" : "UNSUBSCRIBE",
                 ( unsigned long ) *pRemainingLength,
                 ( unsigned long ) *pPacketSize ) );
     return status;
@@ -1612,7 +1621,7 @@ static MQTTStatus_t readSubackStatus( size_t statusCount,
 
 /*-----------------------------------------------------------*/
 
-static MQTTStatus_t deserializeSuback( const MQTTPacketInfo_t * incomingPacket,
+static MQTTStatus_t deserializeSubUnsubAck( const MQTTPacketInfo_t * incomingPacket,
                                        uint16_t * pPacketId,
                                        MQTTReasonCodeInfo_t * pReasonCodes,
                                        MQTTPropBuilder_t * pPropBuffer )
@@ -1657,10 +1666,10 @@ static MQTTStatus_t deserializeSuback( const MQTTPacketInfo_t * incomingPacket,
 
     if( ( status == MQTTSuccess ) && ( incomingPacket->remainingLength > 4U ) )
     {
-        status = deserializeSubackProperties( pPropBuffer,
-                                              pIndex,
-                                              &propertyLength,
-                                              incomingPacket->remainingLength );
+        status = deserializeSubUnsubAckProperties( pPropBuffer,
+                                                   pIndex,
+                                                   &propertyLength,
+                                                   incomingPacket->remainingLength );
     }
 
     if( status == MQTTSuccess )
@@ -2185,7 +2194,7 @@ static MQTTStatus_t deserializeConnackProperties( MQTTConnectionProperties_t * p
 
 /*-----------------------------------------------------------*/
 
-static MQTTStatus_t deserializeSubackProperties( MQTTPropBuilder_t * pPropBuffer,
+static MQTTStatus_t deserializeSubUnsubAckProperties( MQTTPropBuilder_t * pPropBuffer,
                                                  uint8_t * pIndex,
                                                  size_t * pSubackPropertyLength,
                                                  size_t remainingLength )
@@ -3093,10 +3102,18 @@ MQTTStatus_t MQTT_SerializeSubscribe( const MQTTSubscribeInfo_t * pSubscriptionL
 
 MQTTStatus_t MQTT_GetUnsubscribePacketSize( const MQTTSubscribeInfo_t * pSubscriptionList,
                                             size_t subscriptionCount,
+                                            const MQTTPropBuilder_t * pUnsubscribeProperties,
                                             size_t * pRemainingLength,
-                                            size_t * pPacketSize )
+                                            size_t * pPacketSize,
+                                            uint32_t maxPacketSize )
 {
     MQTTStatus_t status = MQTTSuccess;
+    size_t propertyLength = 0U;
+
+    if( ( pUnsubscribeProperties != NULL ) && ( pUnsubscribeProperties->pBuffer != NULL ) )
+    {
+        propertyLength = pUnsubscribeProperties->currentIndex;
+    }
 
     /* Validate parameters. */
     if( ( pSubscriptionList == NULL ) || ( pRemainingLength == NULL ) ||
@@ -3121,9 +3138,55 @@ MQTTStatus_t MQTT_GetUnsubscribePacketSize( const MQTTSubscribeInfo_t * pSubscri
                                                   subscriptionCount,
                                                   pRemainingLength,
                                                   pPacketSize,
-                                                  0, // TODO: Fix this with MQTT_UNSUB
-                                                  0, // TODO: Fix this with MQTT_UNSUB
+                                                  propertyLength,
+                                                  maxPacketSize,
                                                   MQTT_TYPE_UNSUBSCRIBE );
+    }
+
+    return status;
+}
+
+/*-----------------------------------------------------------*/
+
+MQTTStatus_t MQTT_ValidateUnsubscribeProperties( const MQTTPropBuilder_t * pPropertyBuilder )
+{
+    MQTTStatus_t status = MQTTSuccess;
+    uint32_t propertyLength = 0U;
+    uint8_t * pIndex = NULL;
+
+
+    if( ( pPropertyBuilder != NULL ) && ( pPropertyBuilder->pBuffer != NULL ) )
+    {
+        propertyLength = pPropertyBuilder->currentIndex;
+        pIndex = pPropertyBuilder->pBuffer;
+    }
+
+    while( ( propertyLength > 0U ) && ( status == MQTTSuccess ) )
+    {
+        uint8_t propertyId = *pIndex;
+        pIndex = &pIndex[ 1 ];
+        propertyLength -= sizeof( uint8_t );
+
+        switch( propertyId )
+        {
+            case MQTT_USER_PROPERTY_ID:
+            {
+                const char * key, *value;
+                uint16_t keyLength, valueLength;
+                status = decodeUserProp( &key, &keyLength, &value, &valueLength, &propertyLength, &pIndex );
+                if( status == MQTTSuccess )
+                {
+                    LogTrace( ( "Processing User Property %.*s:%.*s",
+                                (int) keyLength, key,
+                                (int) valueLength, value ) );
+                }
+            }
+                break;
+
+            default:
+                status = MQTTBadParameter;
+                break;
+        }
     }
 
     return status;
@@ -3687,10 +3750,10 @@ MQTTStatus_t MQTT_DeserializeAck( const MQTTPacketInfo_t * pIncomingPacket,
         status = MQTTBadParameter;
     }
     /* Pointer for packet identifier cannot be NULL for packets other than
-     * CONNACK and PINGRESP. */
+     * CONNACK and PINGRESP. This function must not be called for CONNACK
+     * handling and thus only PINGRESP is checked below. */
     else if( ( pPacketId == NULL ) &&
-             ( ( pIncomingPacket->type != MQTT_PACKET_TYPE_CONNACK ) &&
-               ( pIncomingPacket->type != MQTT_PACKET_TYPE_PINGRESP ) ) )
+             ( pIncomingPacket->type != MQTT_PACKET_TYPE_PINGRESP ) )
     {
         LogError( ( "pPacketId cannot be NULL for packet type %02x.",
                     ( unsigned int ) pIncomingPacket->type ) );
@@ -3735,7 +3798,7 @@ MQTTStatus_t MQTT_DeserializeAck( const MQTTPacketInfo_t * pIncomingPacket,
 
             case MQTT_PACKET_TYPE_SUBACK:
             case MQTT_PACKET_TYPE_UNSUBACK:
-                status = deserializeSuback( pIncomingPacket, pPacketId, pReasonCode, pPropBuffer );
+                status = deserializeSubUnsubAck( pIncomingPacket, pPacketId, pReasonCode, pPropBuffer );
                 break;
 
             case MQTT_PACKET_TYPE_PINGRESP:
@@ -4337,6 +4400,7 @@ MQTTStatus_t MQTT_ValidateSubscribeProperties( bool isSubscriptionIdAvailable,
     uint32_t propertyLength = 0U;
     uint8_t * pLocalIndex = NULL;
     uint32_t subscriptionId = 0;
+    bool subscriptionIDIncluded = false;
 
     if( ( propBuilder == NULL ) || ( propBuilder->pBuffer == NULL ) )
     {
@@ -4357,17 +4421,38 @@ MQTTStatus_t MQTT_ValidateSubscribeProperties( bool isSubscriptionIdAvailable,
         switch( propertyId )
         {
             case MQTT_SUBSCRIPTION_ID_ID:
-
-                status = decodeVariableLength( pLocalIndex, propertyLength, &subscriptionId );
-
-                if( status == MQTTSuccess )
                 {
-                    propertyLength -= variableLengthEncodedSize( subscriptionId );
-
-                    if( isSubscriptionIdAvailable == false )
+                    if( subscriptionIDIncluded == true )
                     {
-                        LogError( ( "Protocol Error : Subscription Id not available" ) );
                         status = MQTTBadParameter;
+                        LogError( ( "Subscription ID included. Protocol Error to include twice." ) );
+                    }
+
+                    if( status == MQTTSuccess )
+                    {
+                        status = decodeVariableLength( pLocalIndex, propertyLength, &subscriptionId );
+                    }
+
+                    if( status == MQTTSuccess )
+                    {
+                        propertyLength -= variableLengthEncodedSize( subscriptionId );
+
+                        if( isSubscriptionIdAvailable == false )
+                        {
+                            LogError( ( "Protocol Error : Subscription Id not available" ) );
+                            status = MQTTBadParameter;
+                        }
+                        else if( subscriptionId == 0 )
+                        {
+                            LogError( ( "Protocol Error : Subscription Id value set to 0" ) );
+                            status = MQTTBadParameter;
+                        }
+                        else
+                        {
+                            subscriptionIDIncluded = true;
+                            LogTrace( ( "Processing subscription ID %" PRIu32,
+                                        subscriptionId ) );
+                        }
                     }
                 }
                 break;
@@ -4377,6 +4462,12 @@ MQTTStatus_t MQTT_ValidateSubscribeProperties( bool isSubscriptionIdAvailable,
                     const char *key, *value;
                     uint16_t keyLength, valueLength;
                     status = decodeUserProp( &key, &keyLength, &value, &valueLength, &propertyLength, &pLocalIndex );
+                    if( status == MQTTSuccess )
+                    {
+                        LogTrace( ( "Processing User Property %.*s:%.*s",
+                                    (int) keyLength, key,
+                                    (int) valueLength, value ) );
+                    }
                 }
                 break;
 
@@ -4402,12 +4493,12 @@ MQTTStatus_t MQTT_ValidatePublishProperties( uint16_t serverTopicAliasMax,
 
     if( ( propBuilder == NULL ) || ( propBuilder->pBuffer == NULL ) )
     {
-        LogError( ( "Property Builder is NULL. " ) );
+        LogError( ( "Property Builder is NULL." ) );
         status = MQTTBadParameter;
     }
     else if( topicAlias == NULL )
     {
-        LogError( ( "Topic Alias is NULL" ) );
+        LogError( ( "Topic Alias is NULL." ) );
         status = MQTTBadParameter;
     }
     else
