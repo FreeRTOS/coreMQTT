@@ -1013,17 +1013,19 @@ MQTTStatus_t MQTT_SerializeSubscribe( const MQTTSubscribeInfo_t * pSubscriptionL
  *
  * This function must be called before #MQTT_SerializeUnsubscribe in order to
  * get the size of the MQTT UNSUBSCRIBE packet that is generated from the list
- * of #MQTTSubscribeInfo_t. The size of the #MQTTFixedBuffer_t supplied
- * to #MQTT_SerializeUnsubscribe must be at least @p pPacketSize. The provided
- * @p pSubscriptionList is valid for serialization with #MQTT_SerializeUnsubscribe
- * only if this function returns #MQTTSuccess. The remaining length returned in
- * @p pRemainingLength and the packet size returned in @p pPacketSize are valid
- * only if this function returns #MQTTSuccess.
+ * of #MQTTSubscribeInfo_t and #MQTTPropBuilder_t (optional unsubscribe properties).
+ * The size of the #MQTTFixedBuffer_t supplied to #MQTT_SerializeUnsubscribe must be
+ * at least @p pPacketSize. The provided @p pSubscriptionList is valid for serialization
+ * with #MQTT_SerializeUnsubscribe only if this function returns #MQTTSuccess.
+ * The remaining length returned in @p pRemainingLength and the packet size returned
+ * in @p pPacketSize are valid only if this function returns #MQTTSuccess.
  *
  * @param[in] pSubscriptionList List of MQTT subscription info.
  * @param[in] subscriptionCount The number of elements in pSubscriptionList.
+ * @param[in] pUnsubscribeProperties MQTT UNSUBSCRIBE properties builder. Pass NULL if not used.
  * @param[out] pRemainingLength The Remaining Length of the MQTT UNSUBSCRIBE packet.
  * @param[out] pPacketSize The total size of the MQTT UNSUBSCRIBE packet.
+ * @param[in] maxPacketSize Maximum packet size.
  *
  * @return #MQTTBadParameter if the packet would exceed the size allowed by the
  * MQTT spec; #MQTTSuccess otherwise.
@@ -1035,27 +1037,40 @@ MQTTStatus_t MQTT_SerializeSubscribe( const MQTTSubscribeInfo_t * pSubscriptionL
  * MQTTStatus_t status;
  * MQTTSubscribeInfo_t subscriptionList[ NUMBER_OF_SUBSCRIPTIONS ] = { 0 };
  * size_t remainingLength = 0, packetSize = 0;
+ * MQTTPropBuilder_t unsubscribeProperties = { 0 };
+ * size_t maxPacketSize = 0;
+ *
+ * // Initialize maxPacketSize. The details are out of scope for this example.
+ * initializeMaxPacketSize( &maxPacketSize );
  *
  * // Initialize the subscribe info. The details are out of scope for this example.
  * initializeSubscribeInfo( &subscriptionList[ 0 ] );
  *
+ * //Initialize the property buffer. The details are out of scope for this example.
+ * initializePropertyBuffer( &unsubscribeProperties );
+ *
  * // Get the size requirement for the unsubscribe packet.
  * status = MQTT_GetUnsubscribePacketSize(
- *      &subscriptionList[ 0 ], NUMBER_OF_SUBSCRIPTIONS, &remainingLength, &packetSize
- * );
+ *      &subscriptionList[ 0 ],
+ *      NUMBER_OF_SUBSCRIPTIONS,
+ *      &unsubscribeProperties,
+ *      &remainingLength,
+ *      &packetSize,
+ *      maxPacketSize);
  *
  * if( status == MQTTSuccess )
  * {
- *      // The application should allocate or use a static #MQTTFixedBuffer_t
- *      // of size >= packetSize to serialize the unsubscribe request.
+ *      // The unsubscribe packet can now be sent to the broker.
  * }
  * @endcode
  */
 /* @[declare_mqtt_getunsubscribepacketsize] */
-MQTTStatus_t MQTT_GetUnsubscribePacketSize( const MQTTSubscribeInfo_t * pSubscriptionList,
+MQTTStatus_t MQTT_GetUnsubscribePacketSize( const MQTTSubscribeInfo_t* pSubscriptionList,
                                             size_t subscriptionCount,
-                                            size_t * pRemainingLength,
-                                            size_t * pPacketSize );
+                                            const MQTTPropBuilder_t * pUnsubscribeProperties,
+                                            size_t* pRemainingLength,
+                                            size_t* pPacketSize,
+                                            uint32_t maxPacketSize);
 /* @[declare_mqtt_getunsubscribepacketsize] */
 
 /**
@@ -1622,7 +1637,7 @@ MQTTStatus_t MQTT_DeserializePublish( const MQTTPacketInfo_t* pIncomingPacket,
 /* @[declare_mqtt_deserializepublish] */
 
 /**
- * @brief Deserialize an MQTT PUBACK, PUBREC, PUBREL, PUBCOMP, SUBACK, UNSUBACK, PINGRESP or CONNACK.
+ * @brief Deserialize an MQTT PUBACK, PUBREC, PUBREL, PUBCOMP, SUBACK, UNSUBACK, or PINGRESP.
  *
  * @param[in] pIncomingPacket #MQTTPacketInfo_t containing the buffer.
  * @param[out] pPacketId The packet ID obtained from the buffer.
@@ -2857,6 +2872,18 @@ MQTTStatus_t MQTT_ValidatePublishParams(const MQTTPublishInfo_t* pPublishInfo,
 /* @[declare_mqtt_validatepublishackproperties] */
 MQTTStatus_t MQTT_ValidatePublishAckProperties( const MQTTPropBuilder_t * pPropertyBuilder );
 /* @[declare_mqtt_validatepublishackproperties] */
+
+/**
+ * @brief Validates the properties specified for an MQTT UNSUBSCRIBE packet.
+ *
+ * @param[in] pPropertyBuilder Pointer to the property builder structure containing unsubscribe properties.
+ *
+ * @return Returns one of the following:
+ * - #MQTTSuccess , #MQTTBadParameter or #MQTTBadResponse.
+ */
+/* @[declare_mqtt_validateunsubscribeproperties] */
+MQTTStatus_t MQTT_ValidateUnsubscribeProperties( const MQTTPropBuilder_t * pPropertyBuilder);
+/* @[declare_mqtt_validateunsubscribeproperties] */
 
 /**
  * @brief Get the size of an outgoing PUBLISH ACK packet.
