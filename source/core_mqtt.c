@@ -2215,7 +2215,7 @@ static MQTTStatus_t handleIncomingAck( MQTTContext_t * pContext,
             break;
 
         case MQTT_PACKET_TYPE_PINGRESP:
-            /* TODO: Fix the call here. Should be done with PING. */
+            /* PINGRESP has no payload. Thus reason code and properties are NULL. */
             status = MQTT_DeserializeAck( pIncomingPacket,
                                           &packetIdentifier,
                                           NULL,
