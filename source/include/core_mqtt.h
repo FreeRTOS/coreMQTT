@@ -1110,19 +1110,57 @@ MQTTStatus_t MQTT_Unsubscribe( MQTTContext_t * pContext,
 /* @[declare_mqtt_unsubscribe] */
 
 /**
- * @brief Disconnect an MQTT session.
+ * @brief Sends MQTT DISCONNECT for a given reason code
  *
  * @param[in] pContext Initialized and connected MQTT context.
+ * @param[in] pPropertyBuilder Properties to be sent in the outgoing packet.
+ * @param[in] pReasonCode Optional reason code to be sent in the DISCONNECT packet.
+ *                If NULL, then no reason code is sent.
  *
- * @return #MQTTNoMemory if the #MQTTContext_t.networkBuffer is too small to
- * hold the MQTT packet;
- * #MQTTBadParameter if invalid parameters are passed;
- * #MQTTSendFailed if transport send failed;
- * #MQTTStatusNotConnected if the connection is already disconnected
- * #MQTTSuccess otherwise.
+ * @return
+ * #MQTTBadParameter if invalid parameters are passed;<br>
+ * #MQTTBadResponse if invalid properties are parsed;<br>
+ * #MQTTSendFailed if transport send failed;<br>
+ * #MQTTStatusNotConnected if the connection is not established yet and a PING
+ * or an ACK is being sent.<br>
+ * #MQTTStatusDisconnectPending if the user is expected to call MQTT_Disconnect
+ * before calling any other API<br>
+ * #MQTTSuccess otherwise.<br>
+ *
+ * Functions to add optional properties to the DISCONNECT packet are:
+ *
+ * - #MQTTPropAdd_SessionExpiry
+ * - #MQTTPropAdd_ReasonString
+ * - #MQTTPropAdd_UserProp
+ *
+ * <b>Example</b>
+ * @code{c}
+ *
+ * // Variables used in this example.
+ * MQTTStatus_t status;
+ * // This context is assumed to be initialized and connected.
+ * MQTTContext_t * pContext;
+ * // Optional properties to be sent in the DISCONNECT packet.
+ * MQTTPropBuilder_t propertyBuilder;
+ * uint8_t propertyBuffer[ 100 ];
+ * size_t propertyBufferLength = sizeof( propertyBuffer );
+ * status = MQTTPropertyBuilder_Init( &propertyBuilder, propertyBuffer, propertyBufferLength );
+ *
+ * // Set a property in the propertyBuilder
+ * status = MQTTPropAdd_ReasonString( &propertyBuilder, "Disconnecting", 12);
+ *
+ * status = MQTT_Disconnect( pContext, &propertyBuilder, MQTT_REASON_DISCONNECT_NORMAL_DISCONNECTION );
+ *
+ * if( status == MQTTSuccess )
+ * {
+ *      // The DISCONNECT packet was sent successfully. The connection is now closed.
+ * }
+ * @endcode
  */
 /* @[declare_mqtt_disconnect] */
-MQTTStatus_t MQTT_Disconnect( MQTTContext_t * pContext );
+MQTTStatus_t MQTT_Disconnect( MQTTContext_t * pContext,
+                              const MQTTPropBuilder_t * pPropertyBuilder,
+                              MQTTSuccessFailReasonCode_t * pReasonCode );
 /* @[declare_mqtt_disconnect] */
 
 /**

@@ -425,4 +425,7 @@ uint8_t * serializeAckFixed( uint8_t* pIndex,
                              size_t remainingLength,
                              MQTTSuccessFailReasonCode_t reasonCode );
 
+uint8_t * serializeDisconnectFixed( uint8_t * pIndex,
+                                    MQTTSuccessFailReasonCode_t * pReasonCode,
+                                    size_t remainingLength );
 #endif

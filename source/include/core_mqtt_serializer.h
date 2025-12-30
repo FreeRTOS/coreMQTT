@@ -1425,37 +1425,61 @@ MQTTStatus_t MQTT_SerializeAck( const MQTTFixedBuffer_t * pFixedBuffer,
 /**
  * @brief Get the size of an MQTT DISCONNECT packet.
  *
+ * @param[in] pDisconnectProperties MQTT DISCONNECT properties builder. Pass NULL if
+ *                     not used.
+ * @param[out] pRemainingLength The Remaining Length of the MQTT DISCONNECT packet.
  * @param[out] pPacketSize The size of the MQTT DISCONNECT packet.
+ * @param[in] maxPacketSize Maximum packet size allowed by the server.
+ * @param[in] pReasonCode The reason code for the disconnect. Pass NULL if not used -
+ *                     only valid if the properties are NULL too.
  *
- * @return #MQTTSuccess, or #MQTTBadParameter if @p pPacketSize is NULL.
+ * @return #MQTTSuccess, or #MQTTBadParameter if parameters are invalid
  *
  * <b>Example</b>
  * @code{c}
  *
  * // Variables used in this example.
  * MQTTStatus_t status;
+ * size_t remainingLength = 0;
  * size_t packetSize = 0;
+ * uint32_t maxPacketSize;
+ * MQTTPropBuilder_t disconnectProperties ;
+ * MQTTSuccessFailReasonCode_t reasonCode;
  *
+ * //Set property builder. The details are out of scope for this example.
+ * initializePropertyBuilder( &disconnectProperties );
+ *
+ * //Set the parameters.
  * // Get the size requirement for the disconnect packet.
- * status = MQTT_GetDisconnectPacketSize( &packetSize );
- * assert( status == MQTTSuccess );
- * assert( packetSize == 2 );
+ * status = MQTT_GetDisconnectPacketSize( &disconnectProperties, &remainingLength,&packetSize,maxPacketSize, reasonCode );
  *
- * // The application should allocate or use a static #MQTTFixedBuffer_t of
- * // size >= 2 to serialize the disconnect packet.
- *
+ * if( status == MQTTSuccess )
+ * {
+ *      // Send the disconnect packet.
+ * }
  * @endcode
  */
 /* @[declare_mqtt_getdisconnectpacketsize] */
-MQTTStatus_t MQTT_GetDisconnectPacketSize( size_t * pPacketSize );
+MQTTStatus_t MQTT_GetDisconnectPacketSize(  const MQTTPropBuilder_t * pDisconnectProperties,
+                                            size_t* pRemainingLength,
+                                            size_t* pPacketSize,
+                                            uint32_t maxPacketSize,
+                                            MQTTSuccessFailReasonCode_t * pReasonCode );
 /* @[declare_mqtt_getdisconnectpacketsize] */
 
 /**
  * @brief Serialize an MQTT DISCONNECT packet into the given buffer.
  *
  * The input #MQTTFixedBuffer_t.size must be at least as large as the size
- * returned by #MQTT_GetDisconnectPacketSize.
+ * returned by #MQTT_GetDisconnectPacketSize. This function should only be called
+ * after #MQTT_GetDisconnectPacketSize to ensure proper buffer sizing.
  *
+ * @param[in] pDisconnectProperties MQTT v5.0 properties for the DISCONNECT packet. Can be NULL
+ * if no properties are needed.
+ * @param[in] pReasonCode The reason code for the disconnect. For MQTT v5.0, this indicates
+ * why the connection is being terminated. If this is NULL, then the pDisconnectProperties must
+ * be NULL as well.
+ * @param[in] remainingLength Remaining Length provided by #MQTT_GetDisconnectPacketSize.
  * @param[out] pFixedBuffer Buffer for packet serialization.
  *
  * @return #MQTTNoMemory if pFixedBuffer is too small to hold the MQTT packet;
@@ -1468,18 +1492,26 @@ MQTTStatus_t MQTT_GetDisconnectPacketSize( size_t * pPacketSize );
  * // Variables used in this example.
  * MQTTStatus_t status;
  * MQTTFixedBuffer_t fixedBuffer;
+ * MQTTPropBuilder_t disconnectProperties = { 0 };
  * uint8_t buffer[ BUFFER_SIZE ];
+ * size_t remainingLength = 0, packetSize = 0;
  *
  * fixedBuffer.pBuffer = buffer;
  * fixedBuffer.size = BUFFER_SIZE;
  *
  * // Get the disconnect packet size.
- * status = MQTT_GetDisconnectPacketSize( &packetSize );
+ * status = MQTT_GetDisconnectPacketSize( &disconnectProperties,
+ *                                        MQTT_REASON_DISCONNECT_NORMAL_DISCONNECTION,
+ *                                        &remainingLength,
+ *                                        &packetSize );
  * assert( status == MQTTSuccess );
  * assert( packetSize <= BUFFER_SIZE );
  *
  * // Serialize the disconnect into the fixed buffer.
- * status = MQTT_SerializeDisconnect( &fixedBuffer );
+ * status = MQTT_SerializeDisconnect( &disconnectProperties,
+ *                                   MQTT_REASON_DISCONNECT_NORMAL_DISCONNECTION,
+ *                                   remainingLength,
+ *                                   &fixedBuffer );
  *
  * if( status == MQTTSuccess )
  * {
@@ -1488,7 +1520,10 @@ MQTTStatus_t MQTT_GetDisconnectPacketSize( size_t * pPacketSize );
  * @endcode
  */
 /* @[declare_mqtt_serializedisconnect] */
-MQTTStatus_t MQTT_SerializeDisconnect( const MQTTFixedBuffer_t * pFixedBuffer );
+MQTTStatus_t MQTT_SerializeDisconnect( const MQTTPropBuilder_t *pDisconnectProperties,
+                                       MQTTSuccessFailReasonCode_t * pReasonCode,
+                                       size_t remainingLength,
+                                       const MQTTFixedBuffer_t * pFixedBuffer );
 /* @[declare_mqtt_serializedisconnect] */
 
 /**
@@ -2928,6 +2963,22 @@ MQTTStatus_t MQTT_GetAckPacketSize(size_t* pRemainingLength,
     uint32_t maxPacketSize,
     size_t ackPropertyLength);
 /* @[declare_mqtt_getackpacketsize] */
+
+/**
+ * @brief Validates the properties specified for an MQTT DISCONNECT packet.
+ *
+ * @param[in] connectSessionExpiry The session expiry interval that was specified
+ *                                in the CONNECT packet. Used to validate that the
+ *                                DISCONNECT session expiry is not non-zero while
+ *                                connectSessionExpiry is zero.
+ * @param[in] pPropertyBuilder Pointer to the property builder structure containing subscribe properties.
+ *
+ * @return Returns one of the following:
+ * - #MQTTSuccess , #MQTTBadParameter or #MQTTBadResponse.
+ */
+/* @[declare_mqtt_validatedisconnectproperties] */
+MQTTStatus_t MQTT_ValidateDisconnectProperties( uint32_t connectSessionExpiry, const MQTTPropBuilder_t * pPropertyBuilder);
+/* @[declare_mqtt_validatedisconnectproperties] */
 
 /* *INDENT-OFF* */
 #ifdef __cplusplus

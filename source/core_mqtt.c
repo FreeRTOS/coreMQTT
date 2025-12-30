@@ -686,6 +686,25 @@ static MQTTStatus_t sendPublishAcksWithProperty( MQTTContext_t * pContext,
 static MQTTStatus_t validatePublishAckReasonCode( MQTTSuccessFailReasonCode_t reasonCode,
                                                   uint8_t packetType );
 
+/**
+ * @brief Send the disconnect packet without copying the reason code and properties in
+ * the buffer.
+ *
+ * @param[in] pContext MQTT Connection context.
+ * @param[in] pReasonCode Optional reason code to be sent in the Disconnect packet.
+ * @param[in] remainingLength Remaining length of the packet.
+ * @param[in] pPropertyBuilder MQTT Disconnect property builder.
+ *
+ *
+ * @return #MQTTSendFailed if transport send during resend failed;
+ * #MQTTSuccess otherwise.
+ */
+
+static MQTTStatus_t sendDisconnectWithoutCopy( MQTTContext_t * pContext,
+                                               MQTTSuccessFailReasonCode_t * pReasonCode,
+                                               size_t remainingLength,
+                                               const MQTTPropBuilder_t * pPropertyBuilder );
+
 /*-----------------------------------------------------------*/
 
 static bool matchEndWildcardsSpecialCases( const char * pTopicFilter,
@@ -3704,6 +3723,102 @@ static MQTTStatus_t handleSubUnsubAck( MQTTContext_t * pContext,
 
 /*-----------------------------------------------------------*/
 
+static MQTTStatus_t sendDisconnectWithoutCopy( MQTTContext_t * pContext,
+                                               MQTTSuccessFailReasonCode_t * pReasonCode,
+                                               size_t remainingLength,
+                                               const MQTTPropBuilder_t * pPropertyBuilder )
+{
+    int32_t bytesSentOrError;
+    size_t ioVectorLength = 0U;
+    size_t totalMessageLength = 0U;
+    size_t disconnectPropLen = 0U;
+    MQTTStatus_t status = MQTTSuccess;
+
+    /* Maximum number of bytes required by the fixed size part of the CONNECT
+     * packet header according to the MQTT specification.
+     * MQTT Control Byte      0 + 1 = 1
+     * Remaining length (max)   + 4 = 5
+     * Reason Code              + 1 = 6
+     *
+     * Note that the reason code is not actually 'fixed'. But it avoids much
+     * calculation and potential TCP/TLS overhead in some implementations later
+     * at the cost of one byte on the stack.
+     */
+    uint8_t fixedHeader[ 6U ];
+
+    /**
+     * Maximum number of bytes to send the Property Length.
+     * Property Length  0 + 4 = 4
+     */
+    uint8_t propertyLength[ 4U ];
+
+    /* The maximum vectors required to encode and send a disconnect packet. The
+     * breakdown is shown below.
+     * disconnect Header    0 + 1 = 1
+     * Property Length        + 1 = 2
+     * Optional Properties    + 1 = 3
+     * */
+    TransportOutVector_t pIoVector[ 3U ];
+
+    uint8_t * pIndex = fixedHeader;
+    TransportOutVector_t * iterator = pIoVector;
+
+    assert( pContext != NULL );
+    if( pPropertyBuilder != NULL )
+    {
+        assert( pReasonCode != NULL );
+    }
+
+    /* Only for fixed size fields. */
+    pIndex = serializeDisconnectFixed( pIndex, pReasonCode, remainingLength );
+    iterator->iov_base = fixedHeader;
+    /* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-182 */
+    /* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-108 */
+    /* coverity[misra_c_2012_rule_18_2_violation] */
+    /* coverity[misra_c_2012_rule_10_8_violation] */
+    iterator->iov_len = ( size_t ) ( pIndex - fixedHeader );
+    totalMessageLength += iterator->iov_len;
+    iterator++;
+    ioVectorLength++;
+
+    if( ( pPropertyBuilder != NULL ) && ( pPropertyBuilder->pBuffer != NULL ) )
+    {
+        disconnectPropLen = pPropertyBuilder->currentIndex;
+    }
+
+    pIndex = encodeVariableLength( propertyLength, disconnectPropLen );
+    iterator->iov_base = propertyLength;
+    /* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-182 */
+    /* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-108 */
+    /* coverity[misra_c_2012_rule_18_2_violation] */
+    /* coverity[misra_c_2012_rule_10_8_violation] */
+    iterator->iov_len = ( size_t ) ( pIndex - propertyLength );
+    totalMessageLength += iterator->iov_len;
+    iterator++;
+    ioVectorLength++;
+
+    if( disconnectPropLen > 0U )
+    {
+        iterator->iov_base = pPropertyBuilder->pBuffer;
+        iterator->iov_len = pPropertyBuilder->currentIndex;
+        totalMessageLength += iterator->iov_len;
+        iterator++;
+        ioVectorLength++;
+    }
+
+    bytesSentOrError = sendMessageVector( pContext, pIoVector, ioVectorLength );
+
+    if( bytesSentOrError != ( int32_t ) totalMessageLength )
+    {
+        status = MQTTSendFailed;
+        LogError( ( "Failed to send disconnect packet." ) );
+    }
+
+    return status;
+}
+
+/*-----------------------------------------------------------*/
+
 MQTTStatus_t MQTT_Init( MQTTContext_t * pContext,
                         const TransportInterface_t * pTransportInterface,
                         MQTTGetCurrentTimeFunc_t getTimeFunction,
@@ -4491,17 +4606,14 @@ MQTTStatus_t MQTT_Unsubscribe( MQTTContext_t * pContext,
 
 /*-----------------------------------------------------------*/
 
-MQTTStatus_t MQTT_Disconnect( MQTTContext_t * pContext )
+MQTTStatus_t MQTT_Disconnect( MQTTContext_t * pContext,
+                              const MQTTPropBuilder_t * pPropertyBuilder,
+                              MQTTSuccessFailReasonCode_t * pReasonCode )
 {
     size_t packetSize = 0U;
-    int32_t sendResult = 0;
+    size_t remainingLength = 0U;
     MQTTStatus_t status = MQTTSuccess;
-    MQTTFixedBuffer_t localBuffer;
-    uint8_t disconnectPacket[ 2U ];
     MQTTConnectionStatus_t connectStatus;
-
-    localBuffer.pBuffer = disconnectPacket;
-    localBuffer.size = 2U;
 
     /* Validate arguments. */
     if( pContext == NULL )
@@ -4509,19 +4621,28 @@ MQTTStatus_t MQTT_Disconnect( MQTTContext_t * pContext )
         LogError( ( "pContext cannot be NULL." ) );
         status = MQTTBadParameter;
     }
-
-    if( status == MQTTSuccess )
+    else if( ( pReasonCode == NULL ) && ( pPropertyBuilder != NULL ) )
     {
-        /* Get MQTT DISCONNECT packet size. */
-        status = MQTT_GetDisconnectPacketSize( &packetSize );
-        LogDebug( ( "MQTT DISCONNECT packet size is %lu.",
-                    ( unsigned long ) packetSize ) );
+        LogError( ( "Reason code must be provided if the properties are non-NULL." ) );
+        status = MQTTBadParameter;
     }
 
     if( status == MQTTSuccess )
     {
-        /* Serialize MQTT DISCONNECT packet. */
-        status = MQTT_SerializeDisconnect( &localBuffer );
+        /* Get MQTT DISCONNECT packet size. */
+        status = MQTT_GetDisconnectPacketSize( pPropertyBuilder,
+                                               &remainingLength,
+                                               &packetSize,
+                                               pContext->connectionProperties.serverMaxPacketSize,
+                                               pReasonCode );
+        LogDebug( ( "MQTT DISCONNECT packet size is %lu.",
+                    ( unsigned long ) packetSize ) );
+    }
+
+    if( ( status == MQTTSuccess ) && ( pPropertyBuilder != NULL ) && ( pPropertyBuilder->pBuffer != NULL ) )
+    {
+        status = MQTT_ValidateDisconnectProperties( pContext->connectionProperties.sessionExpiry,
+                                                    pPropertyBuilder );
     }
 
     if( status == MQTTSuccess )
@@ -4547,23 +4668,8 @@ MQTTStatus_t MQTT_Disconnect( MQTTContext_t * pContext )
 
             LogError( ( "MQTT Connection Disconnected Successfully" ) );
 
-            /* Here we do not use vectors as the disconnect packet has fixed fields
-             * which do not reside in user provided buffers. Thus, it can be sent
-             * using a simple send call. */
-            sendResult = sendBuffer( pContext,
-                                     localBuffer.pBuffer,
-                                     packetSize );
-
-            if( sendResult < ( int32_t ) packetSize )
-            {
-                LogError( ( "Transport send failed for DISCONNECT packet." ) );
-                status = MQTTSendFailed;
-            }
-            else
-            {
-                LogDebug( ( "Sent %ld bytes of DISCONNECT packet.",
-                            ( long int ) sendResult ) );
-            }
+            status = sendDisconnectWithoutCopy( pContext, pReasonCode,
+                                                remainingLength, pPropertyBuilder );
         }
 
         MQTT_POST_STATE_UPDATE_HOOK( pContext );
