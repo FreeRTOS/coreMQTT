@@ -389,3 +389,29 @@ uint8_t * serializeAckFixed( uint8_t * pIndex,
 }
 
 /*-----------------------------------------------------------*/
+
+uint8_t * serializeDisconnectFixed( uint8_t * pIndex,
+                                    MQTTSuccessFailReasonCode_t * pReasonCode,
+                                    size_t remainingLength )
+{
+    uint8_t * pIndexLocal = pIndex;
+
+    assert( pIndex != NULL );
+    /* The first byte in the publish ack packet is the control packet type. */
+    *pIndexLocal = MQTT_PACKET_TYPE_DISCONNECT;
+    pIndexLocal++;
+
+    /* After the packet type fixed header has remaining length. */
+    pIndexLocal = encodeVariableLength( pIndexLocal, remainingLength );
+    
+    if( pReasonCode != NULL )
+    {
+        /* Encode the reason code. */
+        *pIndexLocal = ( uint8_t ) *pReasonCode;
+        pIndexLocal++;
+    }
+
+    return pIndexLocal;
+}
+
+/*-----------------------------------------------------------*/

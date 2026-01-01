@@ -540,6 +540,18 @@ static MQTTStatus_t deserializePublishProperties( MQTTPublishInfo_t * pPublishIn
                                                   uint16_t topicAliasMax,
                                                   size_t remainingLength );
 
+/**
+ * @brief Prints and validates the appropriate message for the Disconnect response code if logs
+ * are enabled.
+ *
+ * @param[in] reasonCode MQTT Verion 5 standard DISCONNECT response code.
+ * @param[in] incoming To differentiate between outgoing and incoming disconnect.
+ *
+ * @return #MQTTSuccess, #MQTTBadParameter and #MQTTBadResponse.
+ */
+static MQTTStatus_t validateDisconnectResponse( MQTTSuccessFailReasonCode_t reasonCode,
+                                                bool incoming );
+
 /*-----------------------------------------------------------*/
 
 static size_t remainingLengthEncodedSize( size_t length )
@@ -2908,6 +2920,81 @@ static MQTTStatus_t decodePubAckProperties( MQTTPropBuilder_t * pPropBuffer,
 
 /*-----------------------------------------------------------*/
 
+static MQTTStatus_t validateDisconnectResponse( MQTTSuccessFailReasonCode_t reasonCode,
+                                                bool incoming )
+{
+    MQTTStatus_t status;
+
+    /*Validate the reason code.*/
+    /* coverity[misra_c_2012_rule_10_5_violation] */
+    switch( reasonCode )
+    {
+        case MQTT_REASON_DISCONNECT_DISCONNECT_WITH_WILL_MESSAGE:
+
+            if( incoming == true )
+            {
+                status = MQTTBadResponse;
+            }
+            else
+            {
+                status = MQTTSuccess;
+            }
+
+            break;
+
+        case MQTT_REASON_DISCONNECT_NORMAL_DISCONNECTION:
+        case MQTT_REASON_DISCONNECT_UNSPECIFIED_ERROR:
+        case MQTT_REASON_DISCONNECT_MALFORMED_PACKET:
+        case MQTT_REASON_DISCONNECT_PROTOCOL_ERROR:
+        case MQTT_REASON_DISCONNECT_IMPLEMENTATION_SPECIFIC_ERROR:
+        case MQTT_REASON_DISCONNECT_TOPIC_NAME_INVALID:
+        case MQTT_REASON_DISCONNECT_RECEIVE_MAXIMUM_EXCEEDED:
+        case MQTT_REASON_DISCONNECT_TOPIC_ALIAS_INVALID:
+        case MQTT_REASON_DISCONNECT_PACKET_TOO_LARGE:
+        case MQTT_REASON_DISCONNECT_MESSAGE_RATE_TOO_HIGH:
+        case MQTT_REASON_DISCONNECT_QUOTA_EXCEEDED:
+        case MQTT_REASON_DISCONNECT_ADMINISTRATIVE_ACTION:
+        case MQTT_REASON_DISCONNECT_PAYLOAD_FORMAT_INVALID:
+            status = MQTTSuccess;
+            break;
+
+        case MQTT_REASON_DISCONNECT_NOT_AUTHORIZED:
+        case MQTT_REASON_DISCONNECT_SERVER_BUSY:
+        case MQTT_REASON_DISCONNECT_SERVER_SHUTTING_DOWN:
+        case MQTT_REASON_DISCONNECT_KEEP_ALIVE_TIMEOUT:
+        case MQTT_REASON_DISCONNECT_SESSION_TAKEN_OVER:
+        case MQTT_REASON_DISCONNECT_TOPIC_FILTER_INVALID:
+        case MQTT_REASON_DISCONNECT_RETAIN_NOT_SUPPORTED:
+        case MQTT_REASON_DISCONNECT_QOS_NOT_SUPPORTED:
+        case MQTT_REASON_DISCONNECT_USE_ANOTHER_SERVER:
+        case MQTT_REASON_DISCONNECT_SERVER_MOVED:
+        case MQTT_REASON_DISCONNECT_MAXIMUM_CONNECT_TIME:
+        case MQTT_REASON_DISCONNECT_SHARED_SUBSCRIPTIONS_NOT_SUPPORTED:
+        case MQTT_REASON_DISCONNECT_WILDCARD_SUBSCRIPTIONS_NOT_SUPPORTED:
+        case MQTT_REASON_DISCONNECT_SUBSCRIPTION_IDENTIFIERS_NOT_SUPPORTED:
+        case MQTT_REASON_DISCONNECT_BAD_AUTHENTICATION_METHOD:
+
+            if( incoming == true )
+            {
+                status = MQTTSuccess;
+            }
+            else
+            {
+                status = MQTTBadParameter;
+            }
+
+            break;
+
+        default:
+            status = MQTTBadResponse;
+            break;
+    }
+
+    return status;
+}
+
+/*-----------------------------------------------------------*/
+
 MQTTStatus_t MQTT_SerializeConnect( const MQTTConnectInfo_t * pConnectInfo,
                                     const MQTTPublishInfo_t * pWillInfo,
                                     size_t remainingLength,
@@ -3268,7 +3355,7 @@ MQTTStatus_t MQTT_GetPublishPacketSize( const MQTTPublishInfo_t * pPublishInfo,
 }
 
 /*-----------------------------------------------------------*/
-
+/* TODO: Fix all the serialization functions to accept properties. */
 MQTTStatus_t MQTT_SerializePublish( const MQTTPublishInfo_t * pPublishInfo,
                                     uint16_t packetId,
                                     size_t remainingLength,
@@ -3492,19 +3579,95 @@ MQTTStatus_t MQTT_SerializeAck( const MQTTFixedBuffer_t * pFixedBuffer,
 
 /*-----------------------------------------------------------*/
 
-MQTTStatus_t MQTT_GetDisconnectPacketSize( size_t * pPacketSize )
+MQTTStatus_t MQTT_GetDisconnectPacketSize( const MQTTPropBuilder_t * pDisconnectProperties,
+                                           size_t * pRemainingLength,
+                                           size_t * pPacketSize,
+                                           uint32_t maxPacketSize,
+                                           MQTTSuccessFailReasonCode_t * pReasonCode )
 {
     MQTTStatus_t status = MQTTSuccess;
+    size_t length = 0U;
+    size_t packetSize = 0U;
+    size_t propertyLength = 0U;
 
-    if( pPacketSize == NULL )
+    if( ( pDisconnectProperties != NULL ) && ( pDisconnectProperties->pBuffer != NULL ) )
     {
-        LogError( ( "pPacketSize is NULL." ) );
+        propertyLength = pDisconnectProperties->currentIndex;
+    }
+
+    /* Validate the arguments. */
+    if( ( pReasonCode == NULL ) && ( pDisconnectProperties != NULL ) )
+    {
+        LogError( ( "Reason code must be specified if the properties are non-NULL." ) );
         status = MQTTBadParameter;
+    }
+    else if( ( pRemainingLength == NULL ) || ( pPacketSize == NULL ) )
+    {
+        LogError( ( "Argument cannot be NULL:"
+                    "pRemainingLength=%p, pPacketSize=%p.",
+                    ( void * ) pRemainingLength,
+                    ( void * ) pPacketSize ) );
+        status = MQTTBadParameter;
+    }
+    else if( maxPacketSize == 0U )
+    {
+        LogError( ( "Max packet size cannot be zero." ) );
+        status = MQTTBadParameter;
+    }
+    else if( ( pReasonCode != NULL ) && ( validateDisconnectResponse( *pReasonCode, false ) != MQTTSuccess ) )
+    {
+        LogError( ( "Invalid reason code." ) );
+        status = MQTTBadParameter;
+    }
+    else if ( pReasonCode != NULL )
+    {
+        /* Reason code. */
+        length += 1U;
     }
     else
     {
-        /* MQTT DISCONNECT packets always have the same size. */
-        *pPacketSize = MQTT_DISCONNECT_PACKET_SIZE;
+        /* No reason code provided. No need to update the length. */
+    }
+
+    if( status == MQTTSuccess )
+    {
+        /* Validate the length. The sum of:
+         * Bytes required to encode the properties +
+         * Actual properties +
+         * Optional reason code (which is depicted by length)
+         * 
+         * Must be less than the maximum allowed remaining length.
+         */
+        if( ( propertyLength + variableLengthEncodedSize( propertyLength ) + length ) < MQTT_MAX_REMAINING_LENGTH )
+        {
+            length += variableLengthEncodedSize( propertyLength ) + propertyLength;
+            *pRemainingLength = length;
+        }
+        else
+        {
+            LogError( ( "The properties + reason code cannot fit in MQTT_MAX_REMAINING_LENGTH bytes." ) );
+            status = MQTTBadParameter;
+        }
+    }
+
+    if( status == MQTTSuccess )
+    {
+        /* Packet size should be less than max allowed by the server. It is calculated as:
+         * MQTT Disconnect header byte +
+         * Bytes required to encode the remaining length +
+         * The remaining length (which includes properties and error code).
+         */
+        packetSize = 1U + variableLengthEncodedSize( length ) + length;
+
+        if( packetSize > maxPacketSize )
+        {
+            LogError( ( "Packet Size greater than Max Packet Size specified in the CONNACK" ) );
+            status = MQTTBadParameter;
+        }
+        else
+        {
+            *pPacketSize = packetSize;
+        }
     }
 
     return status;
@@ -3512,9 +3675,20 @@ MQTTStatus_t MQTT_GetDisconnectPacketSize( size_t * pPacketSize )
 
 /*-----------------------------------------------------------*/
 
-MQTTStatus_t MQTT_SerializeDisconnect( const MQTTFixedBuffer_t * pFixedBuffer )
+MQTTStatus_t MQTT_SerializeDisconnect( const MQTTPropBuilder_t * pDisconnectProperties,
+                                       MQTTSuccessFailReasonCode_t * pReasonCode,
+                                       size_t remainingLength,
+                                       const MQTTFixedBuffer_t * pFixedBuffer )
 {
     MQTTStatus_t status = MQTTSuccess;
+    uint8_t * pIndex = NULL;
+    size_t packetSize = 0;
+    size_t propertyLength = 0;
+
+    if( ( pDisconnectProperties != NULL ) && ( pDisconnectProperties->pBuffer != NULL ) )
+    {
+        propertyLength = pDisconnectProperties->currentIndex;
+    }
 
     /* Validate arguments. */
     if( pFixedBuffer == NULL )
@@ -3527,27 +3701,45 @@ MQTTStatus_t MQTT_SerializeDisconnect( const MQTTFixedBuffer_t * pFixedBuffer )
         LogError( ( "pFixedBuffer->pBuffer cannot be NULL." ) );
         status = MQTTBadParameter;
     }
+    else if( ( pReasonCode == NULL ) && ( pDisconnectProperties != NULL ) )
+    {
+        LogError( ( "Reason code must be provided if the properties are non-NULL." ) );
+        status = MQTTBadParameter;
+    }
     else
     {
-        /* Empty else MISRA 15.7 */
+        /* Length of serialized packet = First byte
+         *                                + Length of encoded remaining length
+         *                                + Remaining length. */
+        packetSize = 1U + variableLengthEncodedSize( remainingLength ) + remainingLength;
     }
 
     if( status == MQTTSuccess )
     {
-        if( pFixedBuffer->size < MQTT_DISCONNECT_PACKET_SIZE )
+        if( pFixedBuffer->size < packetSize )
         {
             LogError( ( "Buffer size of %lu is not sufficient to hold "
                         "serialized DISCONNECT packet of size of %lu.",
                         ( unsigned long ) pFixedBuffer->size,
-                        MQTT_DISCONNECT_PACKET_SIZE ) );
+                        ( unsigned long ) packetSize ) );
             status = MQTTNoMemory;
         }
     }
 
     if( status == MQTTSuccess )
     {
-        pFixedBuffer->pBuffer[ 0 ] = MQTT_PACKET_TYPE_DISCONNECT;
-        pFixedBuffer->pBuffer[ 1 ] = MQTT_DISCONNECT_REMAINING_LENGTH;
+        pIndex = pFixedBuffer->pBuffer;
+        pIndex = serializeDisconnectFixed( pIndex,
+                                           pReasonCode,
+                                           remainingLength );
+
+        pIndex = encodeVariableLength( pIndex, propertyLength );
+
+        if( propertyLength > 0U )
+        {
+            ( void ) memcpy( ( void * ) pIndex, ( const void * ) pDisconnectProperties->pBuffer, propertyLength );
+            pIndex = &pIndex[ propertyLength ];
+        }
     }
 
     return status;
@@ -4738,6 +4930,75 @@ MQTTStatus_t MQTT_GetAckPacketSize( size_t * pRemainingLength,
         else
         {
             *pPacketSize = packetSize;
+        }
+    }
+
+    return status;
+}
+
+/*-----------------------------------------------------------*/
+
+MQTTStatus_t MQTT_ValidateDisconnectProperties( uint32_t connectSessionExpiry,
+                                                const MQTTPropBuilder_t * pPropertyBuilder )
+{
+    MQTTStatus_t status = MQTTSuccess;
+    uint32_t propertyLength = 0U;
+    uint8_t * pIndex = NULL;
+    uint32_t sessionExpiry;
+
+    if( ( pPropertyBuilder == NULL ) || ( pPropertyBuilder->pBuffer == NULL ) )
+    {
+        LogError( ( "Arguments cannot be NULL : pPropertyBuilder=%p.", ( void * ) pPropertyBuilder ) );
+        status = MQTTBadParameter;
+    }
+    else
+    {
+        propertyLength = pPropertyBuilder->currentIndex;
+        pIndex = pPropertyBuilder->pBuffer;
+    }
+
+    while( ( propertyLength > 0U ) && ( status == MQTTSuccess ) )
+    {
+        uint8_t propertyId = *pIndex;
+        bool used = false;
+        pIndex = &pIndex[ 1 ];
+        propertyLength -= sizeof( uint8_t );
+
+        switch( propertyId )
+        {
+            case MQTT_SESSION_EXPIRY_ID:
+                status = decodeUint32t( &sessionExpiry, &propertyLength, &used, &pIndex );
+
+                if( status == MQTTSuccess )
+                {
+                    if( ( connectSessionExpiry == 0U ) && ( sessionExpiry != 0U ) )
+                    {
+                        status = MQTTBadParameter;
+                        LogError( ( "Disconnect Session Expiry non-zero while Connect Session Expiry was zero. " ) );
+                    }
+                }
+
+                break;
+
+            case MQTT_REASON_STRING_ID:
+                {
+                    const char *pProperty;
+                    uint16_t length;
+                    status = decodeUtf8( &pProperty, &length, &propertyLength, &used, &pIndex );
+                }
+                break;
+
+            case MQTT_USER_PROPERTY_ID:
+                {
+                    const char * key, *value;
+                    uint16_t keyLength, valueLength;
+                    status = decodeUserProp( &key, &keyLength, &value, &valueLength, &propertyLength, &pIndex );
+                }
+                break;
+
+            default:
+                status = MQTTBadParameter;
+                break;
         }
     }
 
