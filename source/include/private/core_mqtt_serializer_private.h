@@ -205,6 +205,14 @@
  */
 #define MQTT_USER_PROP_POS  ( 28 )
 
+/* MQTT CONNECT flags. */
+#define MQTT_CONNECT_FLAG_CLEAN                     ( 1 ) /**< @brief Clean session. */
+#define MQTT_CONNECT_FLAG_WILL                      ( 2 ) /**< @brief Will present. */
+#define MQTT_CONNECT_FLAG_WILL_QOS1                 ( 3 ) /**< @brief Will QoS 1. */
+#define MQTT_CONNECT_FLAG_WILL_QOS2                 ( 4 ) /**< @brief Will QoS 2. */
+#define MQTT_CONNECT_FLAG_WILL_RETAIN               ( 5 ) /**< @brief Will retain. */
+#define MQTT_CONNECT_FLAG_PASSWORD                  ( 6 ) /**< @brief Password present. */
+#define MQTT_CONNECT_FLAG_USERNAME                  ( 7 ) /**< @brief User name present. */
 
 /**
  * @brief Macro for decoding a 4-byte unsigned int from a sequence of bytes.
@@ -408,6 +416,19 @@ MQTTStatus_t decodeVariableLength( const uint8_t * pBuffer,
                                    uint32_t * pLength );
 
 /**
+ * @brief Encodes the remaining length of the packet using the variable length
+ * encoding scheme provided in the MQTT v3.1.1 specification.
+ *
+ * @param[out] pDestination The destination buffer to store the encoded remaining
+ * length.
+ * @param[in] length The remaining length to encode.
+ *
+ * @return The location of the byte following the encoded value.
+ */
+uint8_t * encodeRemainingLength( uint8_t * pDestination,
+                                 size_t length );
+
+/**
  * @brief Serialize the fixed size part of the ack packet header.
  *
  * @param[out] pIndex Pointer to the buffer where the header is to
@@ -428,4 +449,55 @@ uint8_t * serializeAckFixed( uint8_t* pIndex,
 uint8_t * serializeDisconnectFixed( uint8_t * pIndex,
                                     MQTTSuccessFailReasonCode_t * pReasonCode,
                                     size_t remainingLength );
+
+/**
+ * @fn uint8_t * serializeConnectFixedHeader( uint8_t * pIndex, const MQTTConnectInfo_t * pConnectInfo, const MQTTPublishInfo_t * pWillInfo, size_t remainingLength );
+ * @brief Serialize the fixed part of the connect packet header.
+ *
+ * @param[out] pIndex Pointer to the buffer where the header is to
+ * be serialized.
+ * @param[in] pConnectInfo The connect information.
+ * @param[in] pWillInfo The last will and testament information.
+ * @param[in] remainingLength The remaining length of the packet to be
+ * serialized.
+ *
+ * @return A pointer to the end of the encoded string.
+ */
+uint8_t * serializeConnectFixedHeader( uint8_t * pIndex,
+                                       const MQTTConnectInfo_t * pConnectInfo,
+                                       const MQTTPublishInfo_t * pWillInfo,
+                                       size_t remainingLength );
+
+/**
+ * @fn  uint8_t * serializeSubscribeHeader( size_t remainingLength, uint8_t * pIndex, uint16_t packetId );
+ * @brief Serialize the fixed part of the subscribe packet header.
+ *
+ * @param[in] remainingLength The remaining length of the packet to be
+ * serialized.
+ * @param[in] pIndex Pointer to the buffer where the header is to
+ * be serialized.
+ * @param[in] packetId The packet ID to be serialized.
+ *
+ * @return A pointer to the end of the encoded string.
+ */
+uint8_t * serializeSubscribeHeader( size_t remainingLength,
+                                    uint8_t * pIndex,
+                                    uint16_t packetId );
+
+/**
+ * @fn uint8_t * serializeUnsubscribeHeader( size_t remainingLength, uint8_t * pIndex, uint16_t packetId );
+ * @brief Serialize the fixed part of the unsubscribe packet header.
+ *
+ * @param[in] remainingLength The remaining length of the packet to be
+ * serialized.
+ * @param[in] pIndex Pointer to the buffer where the header is to
+ * be serialized.
+ * @param[in] packetId The packet ID to be serialized.
+ *
+ * @return A pointer to the end of the encoded string.
+ */
+uint8_t * serializeUnsubscribeHeader( size_t remainingLength,
+                                      uint8_t * pIndex,
+                                      uint16_t packetId );
+
 #endif

@@ -37,6 +37,11 @@
 /* Include config defaults header to get default values of configs. */
 #include "core_mqtt_config_defaults.h"
 
+/**
+ * @brief Version 5 has the value 5.
+ */
+#define MQTT_VERSION_5                              ( 5U )
+
 /*-----------------------------------------------------------*/
 
 size_t variableLengthEncodedSize( uint32_t length )
@@ -365,6 +370,39 @@ MQTTStatus_t decodeVariableLength( const uint8_t * pBuffer,
 
 /*-----------------------------------------------------------*/
 
+uint8_t * encodeRemainingLength( uint8_t * pDestination,
+                                 size_t length )
+{
+    uint8_t lengthByte;
+    uint8_t * pLengthEnd = NULL;
+    size_t remainingLength = length;
+
+    assert( pDestination != NULL );
+
+    pLengthEnd = pDestination;
+
+    /* This algorithm is copied from the MQTT v3.1.1 spec. */
+    do
+    {
+        lengthByte = ( uint8_t ) ( remainingLength % 128U );
+        remainingLength = remainingLength / 128U;
+
+        /* Set the high bit of this byte, indicating that there's more data. */
+        if( remainingLength > 0U )
+        {
+            UINT8_SET_BIT( lengthByte, 7 );
+        }
+
+        /* Output a single encoded byte. */
+        *pLengthEnd = lengthByte;
+        pLengthEnd++;
+    } while( remainingLength > 0U );
+
+    return pLengthEnd;
+}
+
+/*-----------------------------------------------------------*/
+
 uint8_t * serializeAckFixed( uint8_t * pIndex,
                              uint8_t packetType,
                              uint16_t packetId,
@@ -386,6 +424,136 @@ uint8_t * serializeAckFixed( uint8_t * pIndex,
     *pIndexLocal = ( uint8_t ) reasonCode;
     pIndexLocal++;
     return pIndexLocal;
+}
+
+/*-----------------------------------------------------------*/
+
+uint8_t * serializeConnectFixedHeader( uint8_t * pIndex,
+                                       const MQTTConnectInfo_t * pConnectInfo,
+                                       const MQTTPublishInfo_t * pWillInfo,
+                                       size_t remainingLength )
+{
+    uint8_t * pIndexLocal = pIndex;
+    uint8_t connectFlags = 0U;
+
+    /* The first byte in the CONNECT packet is the control packet type. */
+    *pIndexLocal = MQTT_PACKET_TYPE_CONNECT;
+    pIndexLocal++;
+
+    /* The remaining length of the CONNECT packet is encoded starting from the
+     * second byte. The remaining length does not include the length of the fixed
+     * header or the encoding of the remaining length. */
+    pIndexLocal = encodeVariableLength( pIndexLocal, remainingLength );
+
+    /* The string "MQTT" is placed at the beginning of the CONNECT packet's variable
+     * header. This string is 4 bytes long. */
+    pIndexLocal = encodeString( pIndexLocal, "MQTT", 4 );
+
+    /* The MQTT protocol version is the second field of the variable header. */
+
+    *pIndexLocal = MQTT_VERSION_5;
+
+    pIndexLocal++;
+
+    /* Set the clean session flag if needed. */
+    if( pConnectInfo->cleanSession == true )
+    {
+        UINT8_SET_BIT( connectFlags, MQTT_CONNECT_FLAG_CLEAN );
+    }
+
+    /* Set the flags for username and password if provided. */
+    if( pConnectInfo->pUserName != NULL )
+    {
+        UINT8_SET_BIT( connectFlags, MQTT_CONNECT_FLAG_USERNAME );
+    }
+
+    if( pConnectInfo->pPassword != NULL )
+    {
+        UINT8_SET_BIT( connectFlags, MQTT_CONNECT_FLAG_PASSWORD );
+    }
+
+    /* Set will flag if a Last Will and Testament is provided. */
+    if( pWillInfo != NULL )
+    {
+        UINT8_SET_BIT( connectFlags, MQTT_CONNECT_FLAG_WILL );
+
+        /* Flags only need to be changed for Will QoS 1 or 2. */
+        if( pWillInfo->qos == MQTTQoS1 )
+        {
+            UINT8_SET_BIT( connectFlags, MQTT_CONNECT_FLAG_WILL_QOS1 );
+        }
+        else if( pWillInfo->qos == MQTTQoS2 )
+        {
+            UINT8_SET_BIT( connectFlags, MQTT_CONNECT_FLAG_WILL_QOS2 );
+        }
+        else
+        {
+            /* Empty else MISRA 15.7 */
+        }
+
+        if( pWillInfo->retain == true )
+        {
+            UINT8_SET_BIT( connectFlags, MQTT_CONNECT_FLAG_WILL_RETAIN );
+        }
+    }
+
+    *pIndexLocal = connectFlags;
+    pIndexLocal++;
+
+    /* Write the 2 bytes of the keep alive interval into the CONNECT packet. */
+    pIndexLocal[ 0 ] = UINT16_HIGH_BYTE( pConnectInfo->keepAliveSeconds );
+    pIndexLocal[ 1 ] = UINT16_LOW_BYTE( pConnectInfo->keepAliveSeconds );
+    pIndexLocal = &pIndexLocal[ 2 ];
+
+    return pIndexLocal;
+}
+
+/*-----------------------------------------------------------*/
+
+uint8_t * serializeSubscribeHeader( size_t remainingLength,
+                                    uint8_t * pIndex,
+                                    uint16_t packetId )
+{
+    uint8_t * pIterator = pIndex;
+
+    /* The first byte in SUBSCRIBE is the packet type. */
+    *pIterator = MQTT_PACKET_TYPE_SUBSCRIBE;
+    pIterator++;
+
+    /* Encode the "Remaining length" starting from the second byte. */
+    pIterator = encodeRemainingLength( pIterator, remainingLength );
+
+    /* Place the packet identifier into the SUBSCRIBE packet. */
+    pIterator[ 0 ] = UINT16_HIGH_BYTE( packetId );
+    pIterator[ 1 ] = UINT16_LOW_BYTE( packetId );
+    /* Advance the pointer. */
+    pIterator = &pIterator[ 2 ];
+
+    return pIterator;
+}
+
+/*-----------------------------------------------------------*/
+
+uint8_t * serializeUnsubscribeHeader( size_t remainingLength,
+                                      uint8_t * pIndex,
+                                      uint16_t packetId )
+{
+    uint8_t * pIterator = pIndex;
+
+    /* The first byte in UNSUBSCRIBE is the packet type. */
+    *pIterator = MQTT_PACKET_TYPE_UNSUBSCRIBE;
+    pIterator++;
+
+    /* Encode the "Remaining length" starting from the second byte. */
+    pIterator = encodeRemainingLength( pIterator, remainingLength );
+
+    /* Place the packet identifier into the SUBSCRIBE packet. */
+    pIterator[ 0 ] = UINT16_HIGH_BYTE( packetId );
+    pIterator[ 1 ] = UINT16_LOW_BYTE( packetId );
+    /* Increment the pointer. */
+    pIterator = &pIterator[ 2 ];
+
+    return pIterator;
 }
 
 /*-----------------------------------------------------------*/

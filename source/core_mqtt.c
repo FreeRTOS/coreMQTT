@@ -2592,7 +2592,7 @@ static MQTTStatus_t sendSubscribeWithoutCopy( MQTTContext_t * pContext,
     pIndex = subscribeHeader;
     pIterator = pIoVector;
 
-    pIndex = MQTT_SerializeSubscribeHeader( remainingLength, pIndex, packetId );
+    pIndex = serializeSubscribeHeader( remainingLength, pIndex, packetId );
 
     pIterator->iov_base = subscribeHeader;
     /* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-182 */
@@ -2732,7 +2732,7 @@ static MQTTStatus_t sendUnsubscribeWithoutCopy( MQTTContext_t * pContext,
     pIndex = unsubscribeHeader;
     pIterator = pIoVector;
 
-    pIndex = MQTT_SerializeUnsubscribeHeader( remainingLength, pIndex, packetId );
+    pIndex = serializeUnsubscribeHeader( remainingLength, pIndex, packetId );
 
     pIterator->iov_base = unsubscribeHeader;
     /* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-182 */
@@ -3032,10 +3032,10 @@ static MQTTStatus_t sendConnectWithoutCopy( MQTTContext_t * pContext,
     }
     else
     {
-        pIndex = MQTT_SerializeConnectFixedHeader( pIndex,
-                                                   pConnectInfo,
-                                                   pWillInfo,
-                                                   remainingLength );
+        pIndex = serializeConnectFixedHeader( pIndex,
+                                              pConnectInfo,
+                                              pWillInfo,
+                                              remainingLength );
 
         /**
          * Set value of serverKeepAlive to keepAlive value sent in the CONNECT packet.
