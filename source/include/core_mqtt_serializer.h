@@ -949,11 +949,11 @@ MQTTStatus_t MQTT_SerializeConnect( const MQTTConnectInfo_t * pConnectInfo,
  */
 /* @[declare_mqtt_getsubscribepacketsize] */
 MQTTStatus_t MQTT_GetSubscribePacketSize( const MQTTSubscribeInfo_t * pSubscriptionList,
-                                            size_t subscriptionCount,
-                                            const MQTTPropBuilder_t * pSubscribeProperties,
-                                            size_t * pRemainingLength,
-                                            size_t * pPacketSize,
-                                            uint32_t maxPacketSize );
+                                          size_t subscriptionCount,
+                                          const MQTTPropBuilder_t * pSubscribeProperties,
+                                          size_t * pRemainingLength,
+                                          size_t * pPacketSize,
+                                          uint32_t maxPacketSize );
 /* @[declare_mqtt_getsubscribepacketsize] */
 
 /**
@@ -1431,6 +1431,11 @@ MQTTStatus_t MQTT_SerializePublishHeader( const MQTTPublishInfo_t * pPublishInfo
  * @param[in] packetType Byte of the corresponding packet fixed header per the
  * MQTT spec.
  * @param[in] packetId Packet ID of the publish.
+ * @param[in] pAckProperties Optional properties to be added to the ACK packet.
+ * @param[in] pReasonCode Optional reason code to be added to the ACK packet.
+ * 
+ * @note If any properties are provided to the function to be added to the ack
+ * packet, then a reason code must be provided as well.
  *
  * @return #MQTTBadParameter, #MQTTNoMemory, or #MQTTSuccess.
  *
@@ -1455,8 +1460,8 @@ MQTTStatus_t MQTT_SerializePublishHeader( const MQTTPublishInfo_t * pPublishInfo
  * // The byte representing a packet of type ACK. This function accepts PUBACK, PUBREC, PUBREL, or PUBCOMP.
  * packetType = MQTT_PACKET_TYPE_PUBACK;
  *
- * // Serialize the publish acknowledgment into the fixed buffer.
- * status = MQTT_SerializeAck( &fixedBuffer, packetType, packetId );
+ * // Serialize the publish acknowledgment into the fixed buffer without any properties or reason code.
+ * status = MQTT_SerializeAck( &fixedBuffer, packetType, packetId, NULL, NULL );
  *
  * if( status == MQTTSuccess )
  * {
@@ -1467,7 +1472,9 @@ MQTTStatus_t MQTT_SerializePublishHeader( const MQTTPublishInfo_t * pPublishInfo
 /* @[declare_mqtt_serializeack] */
 MQTTStatus_t MQTT_SerializeAck( const MQTTFixedBuffer_t * pFixedBuffer,
                                 uint8_t packetType,
-                                uint16_t packetId );
+                                uint16_t packetId,
+                                const MQTTPropBuilder_t * pAckProperties,
+                                MQTTSuccessFailReasonCode_t * pReasonCode );
 /* @[declare_mqtt_serializeack] */
 
 /**
@@ -1508,11 +1515,11 @@ MQTTStatus_t MQTT_SerializeAck( const MQTTFixedBuffer_t * pFixedBuffer,
  * @endcode
  */
 /* @[declare_mqtt_getdisconnectpacketsize] */
-MQTTStatus_t MQTT_GetDisconnectPacketSize(  const MQTTPropBuilder_t * pDisconnectProperties,
-                                            size_t* pRemainingLength,
-                                            size_t* pPacketSize,
-                                            uint32_t maxPacketSize,
-                                            MQTTSuccessFailReasonCode_t * pReasonCode );
+MQTTStatus_t MQTT_GetDisconnectPacketSize( const MQTTPropBuilder_t * pDisconnectProperties,
+                                           size_t * pRemainingLength,
+                                           size_t * pPacketSize,
+                                           uint32_t maxPacketSize,
+                                           MQTTSuccessFailReasonCode_t * pReasonCode );
 /* @[declare_mqtt_getdisconnectpacketsize] */
 
 /**
@@ -1713,8 +1720,8 @@ MQTTStatus_t MQTT_SerializePingreq( const MQTTFixedBuffer_t * pFixedBuffer );
 /* @[declare_mqtt_deserializepublish] */
 MQTTStatus_t MQTT_DeserializePublish( const MQTTPacketInfo_t* pIncomingPacket,
                                       uint16_t* pPacketId,
-                                      MQTTPublishInfo_t* pPublishInfo,
-                                      MQTTPropBuilder_t* propBuffer,
+                                      MQTTPublishInfo_t * pPublishInfo,
+                                      MQTTPropBuilder_t * propBuffer,
                                       uint32_t maxPacketSize,
                                       uint16_t topicAliasMax );
 /* @[declare_mqtt_deserializepublish] */
@@ -1765,10 +1772,10 @@ MQTTStatus_t MQTT_DeserializePublish( const MQTTPacketInfo_t* pIncomingPacket,
  */
 /* @[declare_mqtt_deserializeack] */
 MQTTStatus_t MQTT_DeserializeAck( const MQTTPacketInfo_t * pIncomingPacket,
-                                uint16_t * pPacketId,
-                                MQTTReasonCodeInfo_t * pReasonCode,
-                                MQTTPropBuilder_t * pPropBuffer,
-                                MQTTConnectionProperties_t * pConnectProperties );
+                                  uint16_t * pPacketId,
+                                  MQTTReasonCodeInfo_t * pReasonCode,
+                                  MQTTPropBuilder_t * pPropBuffer,
+                                  MQTTConnectionProperties_t * pConnectProperties );
 /* @[declare_mqtt_deserializeack] */
 
 /**
@@ -1890,7 +1897,7 @@ MQTTStatus_t MQTT_ProcessIncomingPacketTypeAndLength( const uint8_t * pBuffer,
  * #MQTTBadParameter for invalid parameters
  */
  /* @[declare_mqtt_updateduplicatepublishflag] */
-MQTTStatus_t MQTT_UpdateDuplicatePublishFlag( uint8_t * pHeader , bool set);
+MQTTStatus_t MQTT_UpdateDuplicatePublishFlag( uint8_t * pHeader , bool set );
 /* @[declare_mqtt_updateduplicatepublishflag] */
 
 /**
@@ -1924,8 +1931,8 @@ MQTTStatus_t MQTT_InitConnect( MQTTConnectionProperties_t * pConnectProperties )
  */
 /* @[declare_mqttpropertybuilder_init] */
 MQTTStatus_t MQTTPropertyBuilder_Init( MQTTPropBuilder_t * pPropertyBuilder,
-                                        uint8_t * buffer,
-                                        size_t length );
+                                       uint8_t * buffer,
+                                       size_t length );
 /* @[declare_mqttpropertybuilder_init] */
 
 /**
