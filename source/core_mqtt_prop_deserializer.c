@@ -55,6 +55,7 @@ static inline MQTTStatus_t checkPropBuilderParams( MQTTPropBuilder_t * mqttPropB
                                                    uint32_t * currentIndex )
 {
     MQTTStatus_t status = MQTTSuccess;
+
     if( ( mqttPropBuilder == NULL ) || ( mqttPropBuilder->pBuffer == NULL ) ||
         ( currentIndex == NULL ) )
     {
@@ -70,6 +71,7 @@ static inline MQTTStatus_t checkPropBuilderParams( MQTTPropBuilder_t * mqttPropB
     {
         /* Nothing to do. All good. */
     }
+
     return status;
 }
 
@@ -104,8 +106,9 @@ static MQTTStatus_t getPropUint8( MQTTPropBuilder_t * pPropertyBuilder,
 
             status = decodeUint8t( property,
                                    &remainingPropLength,
-                                   &( bool ){ false },
+                                   &( bool ) { false },
                                    &pLocalIndex );
+
             if( status == MQTTSuccess )
             {
                 *currentIndex = ( size_t ) ( pLocalIndex - pPropertyBuilder->pBuffer );
@@ -117,6 +120,7 @@ static MQTTStatus_t getPropUint8( MQTTPropBuilder_t * pPropertyBuilder,
             status = MQTTBadParameter;
         }
     }
+
     return status;
 }
 
@@ -153,8 +157,9 @@ static MQTTStatus_t getPropUint16( MQTTPropBuilder_t * pPropertyBuilder,
 
             status = decodeUint16t( property,
                                     &remainingPropLength,
-                                    &( bool ){ false },
+                                    &( bool ) { false },
                                     &pLocalIndex );
+
             if( status == MQTTSuccess )
             {
                 /* Move the index to the end of the property. */
@@ -167,6 +172,7 @@ static MQTTStatus_t getPropUint16( MQTTPropBuilder_t * pPropertyBuilder,
             status = MQTTBadParameter;
         }
     }
+
     return status;
 }
 
@@ -177,7 +183,8 @@ static MQTTStatus_t getPropUint32( MQTTPropBuilder_t * pPropertyBuilder,
                                    uint8_t propertyId,
                                    uint32_t * property )
 {
-    MQTTStatus_t status = checkPropBuilderParams(pPropertyBuilder, currentIndex);
+    MQTTStatus_t status = checkPropBuilderParams( pPropertyBuilder, currentIndex );
+
     if( status != MQTTSuccess )
     {
         LogError( ( "Property type is invalid." ) );
@@ -202,8 +209,9 @@ static MQTTStatus_t getPropUint32( MQTTPropBuilder_t * pPropertyBuilder,
 
             status = decodeUint32t( property,
                                     &remainingPropLength,
-                                    &( bool ){ false },
+                                    &( bool ) { false },
                                     &pLocalIndex );
+
             if( status == MQTTSuccess )
             {
                 /* Move the index to the end of the property. */
@@ -216,6 +224,7 @@ static MQTTStatus_t getPropUint32( MQTTPropBuilder_t * pPropertyBuilder,
             status = MQTTBadParameter;
         }
     }
+
     return status;
 }
 
@@ -227,7 +236,7 @@ static MQTTStatus_t getPropUtf8( MQTTPropBuilder_t * pPropertyBuilder,
                                  const char ** property,
                                  uint16_t * propertyLength )
 {
-    MQTTStatus_t status = checkPropBuilderParams(pPropertyBuilder, currentIndex);
+    MQTTStatus_t status = checkPropBuilderParams( pPropertyBuilder, currentIndex );
 
     if( status != MQTTSuccess )
     {
@@ -252,8 +261,9 @@ static MQTTStatus_t getPropUtf8( MQTTPropBuilder_t * pPropertyBuilder,
             status = decodeUtf8( property,
                                  propertyLength,
                                  &remainingPropLength,
-                                 &( bool ){ false },
+                                 &( bool ) { false },
                                  &pLocalIndex );
+
             if( status == MQTTSuccess )
             {
                 *currentIndex = ( size_t ) ( pLocalIndex - pPropertyBuilder->pBuffer );
@@ -265,6 +275,7 @@ static MQTTStatus_t getPropUtf8( MQTTPropBuilder_t * pPropertyBuilder,
             status = MQTTBadParameter;
         }
     }
+
     return status;
 }
 
@@ -290,7 +301,7 @@ MQTTStatus_t MQTT_GetNextPropertyType( MQTTPropBuilder_t * pPropertyBuilder,
         *property = pPropertyBuilder->pBuffer[ *currentIndex ];
 
         switch( *property )
-        {        
+        {
             case MQTT_SESSION_EXPIRY_ID:
             case MQTT_RECEIVE_MAX_ID:
             case MQTT_MAX_PACKET_SIZE_ID:
@@ -326,6 +337,7 @@ MQTTStatus_t MQTT_GetNextPropertyType( MQTTPropBuilder_t * pPropertyBuilder,
                 break;
         }
     }
+
     return status;
 }
 /*-----------------------------------------------------------*/
@@ -364,6 +376,7 @@ MQTTStatus_t MQTTPropGet_UserProp( MQTTPropBuilder_t * pPropertyBuilder,
                                      &pUserProperty->valueLength,
                                      &remainingPropLength,
                                      &pLocalIndex );
+
             if( status == MQTTSuccess )
             {
                 /* Move the index to the end of the property. */
@@ -376,6 +389,7 @@ MQTTStatus_t MQTTPropGet_UserProp( MQTTPropBuilder_t * pPropertyBuilder,
             status = MQTTBadParameter;
         }
     }
+
     return status;
 }
 
@@ -385,7 +399,7 @@ MQTTStatus_t MQTTPropGet_SessionExpiry( MQTTPropBuilder_t * pPropertyBuilder,
                                         uint32_t * currentIndex,
                                         uint32_t * pSessionExpiry )
 {
-    return getPropUint32( pPropertyBuilder, currentIndex, MQTT_SESSION_EXPIRY_ID, pSessionExpiry);
+    return getPropUint32( pPropertyBuilder, currentIndex, MQTT_SESSION_EXPIRY_ID, pSessionExpiry );
 }
 
 /*-----------------------------------------------------------*/
@@ -393,7 +407,7 @@ MQTTStatus_t MQTTPropGet_SessionExpiry( MQTTPropBuilder_t * pPropertyBuilder,
 MQTTStatus_t MQTTPropGet_ReceiveMax( MQTTPropBuilder_t * pPropertyBuilder,
                                      uint32_t * currentIndex,
                                      uint16_t * pReceiveMax )
-{   
+{
     return getPropUint16( pPropertyBuilder, currentIndex, MQTT_RECEIVE_MAX_ID, pReceiveMax );
 }
 
@@ -421,7 +435,7 @@ MQTTStatus_t MQTTPropGet_MaxPacketSize( MQTTPropBuilder_t * pPropertyBuilder,
                                         uint32_t * currentIndex,
                                         uint32_t * pMaxPacketSize )
 {
-    return getPropUint32( pPropertyBuilder, currentIndex, MQTT_SESSION_EXPIRY_ID, pMaxPacketSize);
+    return getPropUint32( pPropertyBuilder, currentIndex, MQTT_SESSION_EXPIRY_ID, pMaxPacketSize );
 }
 
 /*-----------------------------------------------------------*/
@@ -468,7 +482,7 @@ MQTTStatus_t MQTTPropGet_SubsIdAvailable( MQTTPropBuilder_t * pPropertyBuilder,
                                           uint32_t * currentIndex,
                                           uint8_t * pSubsIdAvailable )
 {
-    return getPropUint8(pPropertyBuilder, currentIndex, MQTT_SUB_AVAILABLE_ID, pSubsIdAvailable);
+    return getPropUint8( pPropertyBuilder, currentIndex, MQTT_SUB_AVAILABLE_ID, pSubsIdAvailable );
 }
 
 /*-----------------------------------------------------------*/
@@ -477,7 +491,7 @@ MQTTStatus_t MQTTPropGet_SharedSubAvailable( MQTTPropBuilder_t * pPropertyBuilde
                                              uint32_t * currentIndex,
                                              uint8_t * pSharedSubAvailable )
 {
-    return getPropUint8(pPropertyBuilder, currentIndex, MQTT_SHARED_SUB_ID, pSharedSubAvailable);
+    return getPropUint8( pPropertyBuilder, currentIndex, MQTT_SHARED_SUB_ID, pSharedSubAvailable );
 }
 
 /*-----------------------------------------------------------*/
@@ -535,7 +549,7 @@ MQTTStatus_t MQTTPropGet_PayloadFormatIndicator( MQTTPropBuilder_t * pPropertyBu
                                                  uint32_t * currentIndex,
                                                  uint8_t * pPayloadFormat )
 {
-    return getPropUint8(pPropertyBuilder, currentIndex, MQTT_PAYLOAD_FORMAT_ID, pPayloadFormat);
+    return getPropUint8( pPropertyBuilder, currentIndex, MQTT_PAYLOAD_FORMAT_ID, pPayloadFormat );
 }
 
 /*-----------------------------------------------------------*/
@@ -582,7 +596,7 @@ MQTTStatus_t MQTTPropGet_SubscriptionId( MQTTPropBuilder_t * pPropertyBuilder,
                                          uint32_t * currentIndex,
                                          uint32_t * pSubscriptionId )
 {
-    MQTTStatus_t status = checkPropBuilderParams(pPropertyBuilder, currentIndex);
+    MQTTStatus_t status = checkPropBuilderParams( pPropertyBuilder, currentIndex );
 
     if( status != MQTTSuccess )
     {
@@ -605,7 +619,7 @@ MQTTStatus_t MQTTPropGet_SubscriptionId( MQTTPropBuilder_t * pPropertyBuilder,
             pLocalIndex++;
 
             status = decodeVariableLength( pLocalIndex, remainingPropLength, pSubscriptionId );
-            
+
             if( status == MQTTSuccess )
             {
                 size_t encodedSize = variableLengthEncodedSize( *pSubscriptionId );
@@ -619,15 +633,16 @@ MQTTStatus_t MQTTPropGet_SubscriptionId( MQTTPropBuilder_t * pPropertyBuilder,
             status = MQTTBadParameter;
         }
     }
+
     return status;
 }
 
 /*-----------------------------------------------------------*/
 
 MQTTStatus_t MQTTPropGet_ContentType( MQTTPropBuilder_t * pPropertyBuilder,
-                                         uint32_t * currentIndex,
-                                         const char ** pContentType,
-                                         uint16_t * pContentTypeLength )
+                                      uint32_t * currentIndex,
+                                      const char ** pContentType,
+                                      uint16_t * pContentTypeLength )
 {
     return getPropUtf8( pPropertyBuilder, currentIndex, MQTT_CONTENT_TYPE_ID, pContentType, pContentTypeLength );
 }

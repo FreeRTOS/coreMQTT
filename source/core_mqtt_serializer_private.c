@@ -40,7 +40,7 @@
 /**
  * @brief Version 5 has the value 5.
  */
-#define MQTT_VERSION_5                              ( 5U )
+#define MQTT_VERSION_5    ( 5U )
 
 /*-----------------------------------------------------------*/
 
@@ -176,6 +176,7 @@ MQTTStatus_t decodeUint32t( uint32_t * pProperty,
         {
             *pProperty = UINT32_DECODE( pLocalIndex );
         }
+
         pLocalIndex = &pLocalIndex[ sizeof( uint32_t ) ];
         *pUsed = true;
         *pPropertyLength -= sizeof( uint32_t );
@@ -211,6 +212,7 @@ MQTTStatus_t decodeUint16t( uint16_t * pProperty,
         {
             *pProperty = UINT16_DECODE( pLocalIndex );
         }
+
         pLocalIndex = &pLocalIndex[ sizeof( uint16_t ) ];
         *pUsed = true;
         *pPropertyLength -= sizeof( uint16_t );
@@ -571,7 +573,7 @@ uint8_t * serializeDisconnectFixed( uint8_t * pIndex,
 
     /* After the packet type fixed header has remaining length. */
     pIndexLocal = encodeVariableLength( pIndexLocal, remainingLength );
-    
+
     if( pReasonCode != NULL )
     {
         /* Encode the reason code. */
