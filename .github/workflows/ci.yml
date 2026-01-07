@@ -10,7 +10,7 @@ on:
   push:
     branches: ["**"]
   pull_request:
-    branches: [main]
+    branches: [main, MQTTv5-reviewed-changes]
   workflow_dispatch:
 
 jobs:

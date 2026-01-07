@@ -25,7 +25,7 @@
 /**
  * @file core_mqtt_serializer_private.h
  * @brief Declares the private functions/macros to be used with serialization and
- * desriealization by the core_mqtt library.
+ * deserialization by the core_mqtt library.
  */
 #ifndef CORE_MQTT_SERIALIZER_PRIVATE_H
 #define CORE_MQTT_SERIALIZER_PRIVATE_H
