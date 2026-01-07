@@ -1466,9 +1466,12 @@ static MQTTStatus_t sendPublishAcks( MQTTContext_t * pContext,
     {
         packetType = getAckFromPacketType( packetTypeByte );
 
+        /* TODO: check whether this should be sent with user properties and/or reason code. */
         status = MQTT_SerializeAck( &localBuffer,
                                     packetTypeByte,
-                                    packetId );
+                                    packetId,
+                                    NULL,
+                                    NULL );
 
         if( status == MQTTSuccess )
         {
@@ -1618,7 +1621,9 @@ static MQTTStatus_t sendPublishAcksWithoutProperty( MQTTContext_t * pContext,
 
         status = MQTT_SerializeAck( &localBuffer,
                                     packetTypeByte,
-                                    packetId );
+                                    packetId,
+                                    NULL,
+                                    NULL );
 
         if( MQTT_PUBLISH_ACK_PACKET_SIZE > pContext->connectionProperties.serverMaxPacketSize )
         {
@@ -1645,8 +1650,8 @@ static MQTTStatus_t sendPublishAcksWithoutProperty( MQTTContext_t * pContext,
                     /* Here, we are not using the vector approach for efficiency. There is just one buffer
                     * to be sent which can be achieved with a normal send call. */
                     sendResult = sendBuffer( pContext,
-                                            localBuffer.pBuffer,
-                                            MQTT_PUBLISH_ACK_PACKET_SIZE );
+                                             localBuffer.pBuffer,
+                                             MQTT_PUBLISH_ACK_PACKET_SIZE );
 
                     if( sendResult < ( int32_t ) MQTT_PUBLISH_ACK_PACKET_SIZE )
                     {
@@ -1664,10 +1669,10 @@ static MQTTStatus_t sendPublishAcksWithoutProperty( MQTTContext_t * pContext,
             MQTT_PRE_STATE_UPDATE_HOOK( pContext );
             {
                 status = MQTT_UpdateStateAck( pContext,
-                                            packetId,
-                                            packetType,
-                                            MQTT_SEND,
-                                            &newState );
+                                              packetId,
+                                              packetType,
+                                              MQTT_SEND,
+                                              &newState );
             }
             MQTT_POST_STATE_UPDATE_HOOK( pContext );
 
@@ -2921,7 +2926,7 @@ static MQTTStatus_t sendPublishWithoutCopy( MQTTContext_t * pContext,
         totalMessageLength += pPublishInfo->payloadLength;
     }
 
-    /* store a copy of the publish for retransmission purposes */
+    /* Store a copy of the publish for retransmission purposes. */
     if( ( pPublishInfo->qos > MQTTQoS0 ) &&
         ( pContext->storeFunction != NULL ) )
     {

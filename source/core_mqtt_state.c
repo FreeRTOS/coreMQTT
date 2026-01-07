@@ -1097,7 +1097,7 @@ uint16_t MQTT_PubrelToResend( const MQTTContext_t * pMqttContext,
     else
     {
         /* PUBREL for packets in state #MQTTPubCompPending and #MQTTPubRelSend
-         * would need to be resent when a session is reestablished.*/
+         * would need to be resent when a session is reestablished. */
         UINT16_SET_BIT( searchStates, MQTTPubCompPending );
         UINT16_SET_BIT( searchStates, MQTTPubRelSend );
         packetId = stateSelect( pMqttContext, searchStates, pCursor );

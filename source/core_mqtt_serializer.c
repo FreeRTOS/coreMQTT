@@ -127,12 +127,6 @@
 #define MQTT_PACKET_PINGRESP_REMAINING_LENGTH       ( 0U )
 
 /**
- * @ingroup mqtt_constants
- * @brief The size of MQTT PUBACK, PUBREC, PUBREL, and PUBCOMP packets with reason code, packet id.
- */
-#define MQTT_PUBLISH_ACK_PACKET_SIZE_WITH_REASON    ( 3UL )
-
-/**
  * @brief Minimum number of bytes in the CONNACK Packet.
  * CONNECT Acknowledge Flags    0 + 1 = 1
  * CONNECT Reason Code            + 1 = 2
@@ -532,6 +526,122 @@ static MQTTStatus_t deserializePublishProperties( MQTTPublishInfo_t * pPublishIn
  */
 static MQTTStatus_t validateDisconnectResponse( MQTTSuccessFailReasonCode_t reasonCode,
                                                 bool incoming );
+
+/**
+ * @brief Validates the reason codes for the given ACK packet type.
+ *
+ * @param[in] ackPacketType ACK packet type for which the reason code is being added.
+ * @param[in] reasonCode The reason code being added to the ACK packet type.
+ *
+ * @return #MQTTSuccess or #MQTTBadParameter.
+ */
+static MQTTStatus_t validateReasonCodeForAck( uint8_t ackPacketType,
+                                              MQTTSuccessFailReasonCode_t reasonCode );
+
+/**
+ * @brief Returns the packet size of an ACK packet.
+ *
+ * @param[in] pAckProperties Non-NULL properties to be added to the ack packet.
+ * @param[in] pReasonCode Non-NULL reason code being added to the ACK packet type.
+ *
+ * @return The length of the ACK packet.
+ */
+static uint32_t getAckPacketSize( const MQTTPropBuilder_t * pAckProperties,
+                                  MQTTSuccessFailReasonCode_t * pReasonCode );
+
+/*-----------------------------------------------------------*/
+
+static uint32_t getAckPacketSize( const MQTTPropBuilder_t * pAckProperties,
+                                  MQTTSuccessFailReasonCode_t * pReasonCode )
+{
+    assert( pReasonCode != NULL );
+    assert( pAckProperties != NULL );
+    uint32_t packetSize = 0;
+
+    /* 1 byte for reason code. */
+    packetSize += 1U;
+
+    /* Space taken to encode the property length and the properties themselves. */
+    packetSize += variableLengthEncodedSize( pAckProperties->currentIndex );
+    packetSize += pAckProperties->currentIndex;
+
+    /* Space taken to encode the remaining length. */
+    packetSize += variableLengthEncodedSize( packetSize );
+
+    /* ACK packet header   1 byte
+     * Packet ID         + 2 bytes */
+    packetSize += 3U;
+
+    return packetSize;
+}
+
+/*-----------------------------------------------------------*/
+
+static MQTTStatus_t validateReasonCodeForAck( uint8_t ackPacketType,
+                                              MQTTSuccessFailReasonCode_t reasonCode )
+{
+    MQTTStatus_t status = MQTTSuccess;
+
+    switch ( ackPacketType )
+    {
+        case MQTT_PACKET_TYPE_PUBACK:
+            if( ( reasonCode != MQTT_REASON_PUBACK_SUCCESS ) &&
+                ( reasonCode != MQTT_REASON_PUBACK_NO_MATCHING_SUBSCRIBERS ) &&
+                ( reasonCode != MQTT_REASON_PUBACK_UNSPECIFIED_ERROR ) &&
+                ( reasonCode != MQTT_REASON_PUBACK_IMPLEMENTATION_SPECIFIC_ERROR ) &&
+                ( reasonCode != MQTT_REASON_PUBACK_NOT_AUTHORIZED ) &&
+                ( reasonCode != MQTT_REASON_PUBACK_TOPIC_NAME_INVALID ) &&
+                ( reasonCode != MQTT_REASON_PUBACK_PACKET_IDENTIFIER_IN_USE ) &&
+                ( reasonCode != MQTT_REASON_PUBACK_QUOTA_EXCEEDED ) &&
+                ( reasonCode != MQTT_REASON_PUBACK_PAYLOAD_FORMAT_INVALID ) )
+            {
+                LogError( ( "Invalid reason code for PUBACK." ) );
+                status = MQTTBadParameter;
+            }
+            break;
+
+        case MQTT_PACKET_TYPE_PUBREC:
+            if( ( reasonCode != MQTT_REASON_PUBREC_SUCCESS ) &&
+                ( reasonCode != MQTT_REASON_PUBREC_NO_MATCHING_SUBSCRIBERS ) &&
+                ( reasonCode != MQTT_REASON_PUBREC_UNSPECIFIED_ERROR ) &&
+                ( reasonCode != MQTT_REASON_PUBREC_IMPLEMENTATION_SPECIFIC_ERROR ) &&
+                ( reasonCode != MQTT_REASON_PUBREC_NOT_AUTHORIZED ) &&
+                ( reasonCode != MQTT_REASON_PUBREC_TOPIC_NAME_INVALID ) &&
+                ( reasonCode != MQTT_REASON_PUBREC_PACKET_IDENTIFIER_IN_USE ) &&
+                ( reasonCode != MQTT_REASON_PUBREC_QUOTA_EXCEEDED ) &&
+                ( reasonCode != MQTT_REASON_PUBREC_PAYLOAD_FORMAT_INVALID ) )
+            {
+                LogError( ( "Invalid reason code for PUBREC." ) );
+                status = MQTTBadParameter;
+            }
+            break;
+
+        case MQTT_PACKET_TYPE_PUBREL:
+            if( ( reasonCode != MQTT_REASON_PUBREL_SUCCESS ) &&
+                ( reasonCode != MQTT_REASON_PUBREL_PACKET_IDENTIFIER_NOT_FOUND ) )
+            {
+                LogError( ( "Invalid reason code for PUBREL." ) );
+                status = MQTTBadParameter;
+            }
+            break;
+
+        case MQTT_PACKET_TYPE_PUBCOMP:
+            if( ( reasonCode != MQTT_REASON_PUBCOMP_SUCCESS ) &&
+                ( reasonCode != MQTT_REASON_PUBCOMP_PACKET_IDENTIFIER_NOT_FOUND) )
+            {
+                LogError( ( "Invalid reason code for PUBCOMP." ) );
+                status = MQTTBadParameter;
+            }
+            break;
+
+        default:
+            LogError( ( "Unknown ACK packet type: %" PRIu8 ".", ackPacketType ) );
+            status = MQTTBadParameter;
+            break;
+    }
+
+    return status;
+}
 
 /*-----------------------------------------------------------*/
 
@@ -3481,11 +3591,11 @@ MQTTStatus_t MQTT_SerializePublishHeader( const MQTTPublishInfo_t * pPublishInfo
 
 /*-----------------------------------------------------------*/
 
-/* TODO: All ACK packets now have properties and reason codes and reason strings.
- * That is to be added. */
 MQTTStatus_t MQTT_SerializeAck( const MQTTFixedBuffer_t * pFixedBuffer,
                                 uint8_t packetType,
-                                uint16_t packetId )
+                                uint16_t packetId,
+                                const MQTTPropBuilder_t * pAckProperties,
+                                MQTTSuccessFailReasonCode_t * pReasonCode )
 {
     MQTTStatus_t status = MQTTSuccess;
 
@@ -3510,6 +3620,16 @@ MQTTStatus_t MQTT_SerializeAck( const MQTTFixedBuffer_t * pFixedBuffer,
         LogError( ( "Packet ID cannot be 0." ) );
         status = MQTTBadParameter;
     }
+    else if( ( pReasonCode == NULL ) && ( pAckProperties != NULL ) )
+    {
+        LogError( ( "A reason code must be provided if there are properties." ) );
+        status = MQTTBadParameter;
+    }
+    else if( ( pReasonCode != NULL ) && ( validateReasonCodeForAck( packetType, *pReasonCode ) != MQTTSuccess ) )
+    {
+        LogError( ( "Invalid reason code for the ACK type." ) );
+        status = MQTTBadParameter;
+    }
     else
     {
         switch( packetType )
@@ -3523,6 +3643,35 @@ MQTTStatus_t MQTT_SerializeAck( const MQTTFixedBuffer_t * pFixedBuffer,
                 pFixedBuffer->pBuffer[ 1 ] = MQTT_PACKET_SIMPLE_ACK_REMAINING_LENGTH;
                 pFixedBuffer->pBuffer[ 2 ] = UINT16_HIGH_BYTE( packetId );
                 pFixedBuffer->pBuffer[ 3 ] = UINT16_LOW_BYTE( packetId );
+
+                if( pReasonCode != NULL )
+                {
+                    if( pFixedBuffer->size < ( MQTT_PUBLISH_ACK_PACKET_SIZE + 1U ) )
+                    {
+                        LogError( ( "Not enough space for reason code." ) );
+                        status = MQTTBadParameter;
+                    }
+                    else
+                    {
+                        pFixedBuffer->pBuffer[ 4 ] = *pReasonCode;
+
+                        if( ( pAckProperties == NULL ) || ( pAckProperties->pBuffer == NULL ) )
+                        {
+                            /* No properties to be added. */
+                        }
+                        /* Size is calculated as PUBACK + 1 byte for reason code + properties. */
+                        else if( pFixedBuffer->size <
+                                    getAckPacketSize( pAckProperties, pReasonCode ) )
+                        {
+                            LogError( ( "Not enough space in the buffer to encode properties." ) );
+                            status = MQTTBadParameter;
+                        }
+                        else
+                        {
+                            memcpy( &pFixedBuffer->pBuffer[ 5 ], pAckProperties->pBuffer, pAckProperties->currentIndex );
+                        }
+                    }
+                }
                 break;
 
             default:
@@ -4851,7 +5000,7 @@ MQTTStatus_t MQTT_GetAckPacketSize( size_t * pRemainingLength,
 
     propertyLength = ackPropertyLength;
 
-    /*Validate the parameters.*/
+    /* Validate the parameters. */
     if( ( pRemainingLength == NULL ) || ( pPacketSize == NULL ) )
     {
         status = MQTTBadParameter;
@@ -4862,7 +5011,8 @@ MQTTStatus_t MQTT_GetAckPacketSize( size_t * pRemainingLength,
     }
     else
     {
-        length += MQTT_PUBLISH_ACK_PACKET_SIZE_WITH_REASON;
+        /* 1 byte Reason code + 2 byte Packet Identifier. */
+        length += 3U;
 
         length += variableLengthEncodedSize( propertyLength ) + propertyLength;
 
@@ -4879,6 +5029,8 @@ MQTTStatus_t MQTT_GetAckPacketSize( size_t * pRemainingLength,
 
     if( status == MQTTSuccess )
     {
+        /* Length of variable header + 1 byte ACK header +
+         * bytes required to encode the remaining length. */
         packetSize = length + 1U + variableLengthEncodedSize( length );
 
         if( packetSize > maxPacketSize )
