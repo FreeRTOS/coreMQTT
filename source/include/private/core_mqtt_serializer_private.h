@@ -446,6 +446,15 @@ uint8_t * serializeAckFixed( uint8_t * pIndex,
                              size_t remainingLength,
                              MQTTSuccessFailReasonCode_t reasonCode );
 
+/**
+ * @brief Serialize the fixed size part of the disconnect packet header.
+ *
+ * @param[out] pIndex Pointer to the buffer where the header is to be serialized.
+ * @param[in] pReasonCode Reason code for the disconnect packet.
+ * @param[in] remainingLength Remaining length of the disconnect packet.
+ *
+ * @return A pointer to the end of the encoded string.
+ */
 uint8_t * serializeDisconnectFixed( uint8_t * pIndex,
                                     MQTTSuccessFailReasonCode_t * pReasonCode,
                                     size_t remainingLength );

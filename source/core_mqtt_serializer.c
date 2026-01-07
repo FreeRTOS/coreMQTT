@@ -550,6 +550,20 @@ static MQTTStatus_t validateReasonCodeForAck( uint8_t ackPacketType,
 static uint32_t getAckPacketSize( const MQTTPropBuilder_t * pAckProperties,
                                   MQTTSuccessFailReasonCode_t * pReasonCode );
 
+/**
+ * @brief Validate if a reason code is valid for CONNACK packets.
+ *
+ * This function checks if the provided reason code is a valid CONNACK
+ * reason code according to the MQTT v5 specification.
+ *
+ * @param[in] reasonCode The reason code to validate.
+ *
+ * @return #MQTTSuccess if the reason code is valid for CONNACK;
+ * #MQTTServerRefused if the reason code indicates server refusal;
+ * #MQTTBadResponse if the reason code is invalid.
+ */
+static inline MQTTStatus_t isValidConnackReasonCode( uint8_t reasonCode );
+
 /*-----------------------------------------------------------*/
 
 static uint32_t getAckPacketSize( const MQTTPropBuilder_t * pAckProperties,

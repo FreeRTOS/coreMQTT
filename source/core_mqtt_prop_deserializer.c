@@ -38,8 +38,8 @@
 #include "core_mqtt_config_defaults.h"
 
 /**
- * @brief Checks the parameters to #MQTT_PropertyReader_t and
- * #MQTT_GetNextPropertyType.
+ * @brief Checks the parameters to all the internal/external 'get' property
+ * functions.
  *
  * @param[in] mqttPropBuilder The property builder struct.
  * @param[in] currentIndex The index of the property in the buffer.
@@ -48,6 +48,88 @@
  */
 static inline MQTTStatus_t checkPropBuilderParams( MQTTPropBuilder_t * mqttPropBuilder,
                                                    uint32_t * currentIndex );
+
+/**
+ * @brief Get a uint8 property value from the property builder.
+ *
+ * This function extracts a uint8 property value from the property builder
+ * at the specified index and validates that it matches the expected property ID.
+ *
+ * @param[in] pPropertyBuilder Pointer to the property builder containing the properties.
+ * @param[in,out] currentIndex Pointer to the current index in the property buffer.
+ *                             Updated to point past the property on success.
+ * @param[in] propertyId Expected property ID to validate against.
+ * @param[out] property Pointer to store the extracted uint8 property value.
+ *
+ * @return #MQTTSuccess if the property is successfully extracted;
+ * #MQTTBadParameter if parameters are invalid or property ID doesn't match.
+ */
+static MQTTStatus_t getPropUint8( MQTTPropBuilder_t * pPropertyBuilder,
+                                  uint32_t * currentIndex,
+                                  uint8_t propertyId,
+                                  uint8_t * property );
+
+/**
+ * @brief Get a uint16 property value from the property builder.
+ *
+ * This function extracts a uint16 property value from the property builder
+ * at the specified index and validates that it matches the expected property ID.
+ *
+ * @param[in] pPropertyBuilder Pointer to the property builder containing the properties.
+ * @param[in,out] currentIndex Pointer to the current index in the property buffer.
+ *                             Updated to point past the property on success.
+ * @param[in] propertyId Expected property ID to validate against.
+ * @param[out] property Pointer to store the extracted uint16 property value.
+ *
+ * @return #MQTTSuccess if the property is successfully extracted;
+ * #MQTTBadParameter if parameters are invalid or property ID doesn't match.
+ */
+static MQTTStatus_t getPropUint16( MQTTPropBuilder_t * pPropertyBuilder,
+                                   uint32_t * currentIndex,
+                                   uint8_t propertyId,
+                                   uint16_t * property );
+
+/**
+ * @brief Get a uint32 property value from the property builder.
+ *
+ * This function extracts a uint32 property value from the property builder
+ * at the specified index and validates that it matches the expected property ID.
+ *
+ * @param[in] pPropertyBuilder Pointer to the property builder containing the properties.
+ * @param[in,out] currentIndex Pointer to the current index in the property buffer.
+ *                             Updated to point past the property on success.
+ * @param[in] propertyId Expected property ID to validate against.
+ * @param[out] property Pointer to store the extracted uint32 property value.
+ *
+ * @return #MQTTSuccess if the property is successfully extracted;
+ * #MQTTBadParameter if parameters are invalid or property ID doesn't match.
+ */
+static MQTTStatus_t getPropUint32( MQTTPropBuilder_t * pPropertyBuilder,
+                                   uint32_t * currentIndex,
+                                   uint8_t propertyId,
+                                   uint32_t * property );
+
+/**
+ * @brief Get a UTF-8 string property value from the property builder.
+ *
+ * This function extracts a UTF-8 string property value from the property builder
+ * at the specified index and validates that it matches the expected property ID.
+ *
+ * @param[in] pPropertyBuilder Pointer to the property builder containing the properties.
+ * @param[in,out] currentIndex Pointer to the current index in the property buffer.
+ *                             Updated to point past the property on success.
+ * @param[in] propertyId Expected property ID to validate against.
+ * @param[out] property Pointer to store the extracted UTF-8 string pointer.
+ * @param[out] propertyLength Pointer to store the length of the extracted string.
+ *
+ * @return #MQTTSuccess if the property is successfully extracted;
+ * #MQTTBadParameter if parameters are invalid or property ID doesn't match.
+ */
+static MQTTStatus_t getPropUtf8( MQTTPropBuilder_t * pPropertyBuilder,
+                                 uint32_t * currentIndex,
+                                 uint8_t propertyId,
+                                 const char ** property,
+                                 uint16_t * propertyLength );
 
 /*-----------------------------------------------------------*/
 

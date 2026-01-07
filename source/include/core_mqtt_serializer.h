@@ -1332,10 +1332,12 @@ MQTTStatus_t MQTT_SerializePublish( const MQTTPublishInfo_t * pPublishInfo,
  *
  * @return #MQTTSuccess if the serialization is successful. Otherwise, #MQTTBadParameter.
  */
+/* @[declare_mqtt_serializepublishheaderwithouttopic] */
 MQTTStatus_t MQTT_SerializePublishHeaderWithoutTopic( const MQTTPublishInfo_t * pPublishInfo,
                                                       size_t remainingLength,
                                                       uint8_t * pBuffer,
                                                       size_t * headerSize );
+/* @[declare_mqtt_serializepublishheaderwithouttopic] */
 
 /**
  * @brief Serialize an MQTT PUBLISH packet header in the given buffer.
@@ -1990,7 +1992,7 @@ MQTTStatus_t MQTT_ValidateConnectProperties( const MQTTPropBuilder_t * pProperty
  * size_t subscriptionId = 12345;
  *
  * // Add Subscription Identifier to property builder
- * status = MQTTPropAdd_SubscribeId(&propertyBuilder, subscriptionId);
+ * status = MQTTPropAdd_SubscriptionId(&propertyBuilder, subscriptionId);
  *
  * if(status == MQTTSuccess)
  * {
@@ -2003,11 +2005,11 @@ MQTTStatus_t MQTT_ValidateConnectProperties( const MQTTPropBuilder_t * pProperty
  *       will be returned in matched PUBLISH packets.
  */
 
-/* @[declare_mqttpropadd_subscribeid] */
-MQTTStatus_t MQTTPropAdd_SubscribeId( MQTTPropBuilder_t* pPropertyBuilder,
-                                      uint32_t subscriptionId,
-                                      const uint8_t * pOptionalMqttPacketType );
-/* @[declare_mqttpropadd_subscribeid] */
+/* @[declare_mqttpropadd_subscriptionid] */
+MQTTStatus_t MQTTPropAdd_SubscriptionId( MQTTPropBuilder_t* pPropertyBuilder,
+                                         uint32_t subscriptionId,
+                                         const uint8_t * pOptionalMqttPacketType );
+/* @[declare_mqttpropadd_subscriptionid] */
 
 /**
  * @brief Adds User Property to the MQTT property builder.
@@ -2038,6 +2040,8 @@ MQTTStatus_t MQTTPropAdd_UserProp( MQTTPropBuilder_t* pPropertyBuilder,
  *
  * @param[out] pPropertyBuilder   Pointer to the property builder structure.
  * @param[in]  sessionExpiry     The Session Expiry Interval in seconds.
+ * @param[in]  pOptionalMqttPacketType Optional MQTT packet type for validation.
+ *                                     Can be NULL to skip packet type validation.
  *
  * @return Returns one of the following:
  * - #MQTTSuccess if the Session Expiry Interval was successfully added
@@ -2476,9 +2480,11 @@ MQTTStatus_t MQTT_GetNextPropertyType( MQTTPropBuilder_t * mqttPropBuilder,
  * @return #MQTTSuccess if property is retrieved successfully;
  * #MQTTBadParameter if invalid parameters are passed.
  */
+/* @[declare_mqttpropget_userprop] */
 MQTTStatus_t MQTTPropGet_UserProp( MQTTPropBuilder_t * pPropertyBuilder,
                                    uint32_t * currentIndex,
                                    MQTTUserProperty_t * pUserProperty );
+/* @[declare_mqttpropget_userprop] */
 
 /**
  * @brief Get Session Expiry Interval property from property builder.
@@ -2490,9 +2496,11 @@ MQTTStatus_t MQTTPropGet_UserProp( MQTTPropBuilder_t * pPropertyBuilder,
  * @return #MQTTSuccess if property is retrieved successfully;
  * #MQTTBadParameter if invalid parameters are passed.
  */
+/* @[declare_mqttpropget_sessionexpiry] */
 MQTTStatus_t MQTTPropGet_SessionExpiry( MQTTPropBuilder_t * pPropertyBuilder,
                                         uint32_t * currentIndex,
                                         uint32_t * pSessionExpiry );
+/* @[declare_mqttpropget_sessionexpiry] */
 
 /**
  * @brief Get Receive Maximum property from property builder.
@@ -2504,9 +2512,11 @@ MQTTStatus_t MQTTPropGet_SessionExpiry( MQTTPropBuilder_t * pPropertyBuilder,
  * @return #MQTTSuccess if property is retrieved successfully;
  * #MQTTBadParameter if invalid parameters are passed.
  */
+/* @[declare_mqttpropget_receivemax] */
 MQTTStatus_t MQTTPropGet_ReceiveMax( MQTTPropBuilder_t * pPropertyBuilder,
                                      uint32_t * currentIndex,
                                      uint16_t * pReceiveMax );
+/* @[declare_mqttpropget_receivemax] */
 
 /**
  * @brief Get Maximum QoS property from property builder.
@@ -2518,9 +2528,11 @@ MQTTStatus_t MQTTPropGet_ReceiveMax( MQTTPropBuilder_t * pPropertyBuilder,
  * @return #MQTTSuccess if property is retrieved successfully;
  * #MQTTBadParameter if invalid parameters are passed.
  */
+/* @[declare_mqttpropget_maxqos] */
 MQTTStatus_t MQTTPropGet_MaxQos( MQTTPropBuilder_t * pPropertyBuilder,
                                  uint32_t * currentIndex,
                                  uint8_t * pMaxQos );
+/* @[declare_mqttpropget_maxqos] */
 
 /**
  * @brief Get Retain Available property from property builder.
@@ -2532,9 +2544,11 @@ MQTTStatus_t MQTTPropGet_MaxQos( MQTTPropBuilder_t * pPropertyBuilder,
  * @return #MQTTSuccess if property is retrieved successfully;
  * #MQTTBadParameter if invalid parameters are passed.
  */
+/* @[declare_mqttpropget_retainavailable] */
 MQTTStatus_t MQTTPropGet_RetainAvailable( MQTTPropBuilder_t * pPropertyBuilder,
                                           uint32_t * currentIndex,
                                           uint8_t * pRetainAvailable );
+/* @[declare_mqttpropget_retainavailable] */
 
 /**
  * @brief Get Maximum Packet Size property from property builder.
@@ -2546,9 +2560,11 @@ MQTTStatus_t MQTTPropGet_RetainAvailable( MQTTPropBuilder_t * pPropertyBuilder,
  * @return #MQTTSuccess if property is retrieved successfully;
  * #MQTTBadParameter if invalid parameters are passed.
  */
+/* @[declare_mqttpropget_maxpacketsize] */
 MQTTStatus_t MQTTPropGet_MaxPacketSize( MQTTPropBuilder_t * pPropertyBuilder,
                                         uint32_t * currentIndex,
                                         uint32_t * pMaxPacketSize );
+/* @[declare_mqttpropget_maxpacketsize] */
 
 /**
  * @brief Get Assigned Client Identifier property from property builder.
@@ -2561,10 +2577,12 @@ MQTTStatus_t MQTTPropGet_MaxPacketSize( MQTTPropBuilder_t * pPropertyBuilder,
  * @return #MQTTSuccess if property is retrieved successfully;
  * #MQTTBadParameter if invalid parameters are passed.
  */
+/* @[declare_mqttpropget_assignedclientid] */
 MQTTStatus_t MQTTPropGet_AssignedClientId( MQTTPropBuilder_t * pPropertyBuilder,
                                            uint32_t * currentIndex,
                                            const char ** pClientId,
                                            uint16_t * pClientIdLength );
+/* @[declare_mqttpropget_assignedclientid] */
 
 /**
  * @brief Get Topic Alias Maximum property from property builder.
@@ -2576,9 +2594,11 @@ MQTTStatus_t MQTTPropGet_AssignedClientId( MQTTPropBuilder_t * pPropertyBuilder,
  * @return #MQTTSuccess if property is retrieved successfully;
  * #MQTTBadParameter if invalid parameters are passed.
  */
+/* @[declare_mqttpropget_topicaliasmax] */
 MQTTStatus_t MQTTPropGet_TopicAliasMax( MQTTPropBuilder_t * pPropertyBuilder,
                                         uint32_t * currentIndex,
                                         uint16_t * pTopicAliasMax );
+/* @[declare_mqttpropget_topicaliasmax] */
 
 /**
  * @brief Get Reason String property from property builder.
@@ -2591,10 +2611,12 @@ MQTTStatus_t MQTTPropGet_TopicAliasMax( MQTTPropBuilder_t * pPropertyBuilder,
  * @return #MQTTSuccess if property is retrieved successfully;
  * #MQTTBadParameter if invalid parameters are passed.
  */
+/* @[declare_mqttpropget_reasonstring] */
 MQTTStatus_t MQTTPropGet_ReasonString( MQTTPropBuilder_t * pPropertyBuilder,
                                        uint32_t * currentIndex,
                                        const char ** pReasonString,
                                        uint16_t * pReasonStringLength );
+/* @[declare_mqttpropget_reasonstring] */
 
 /**
  * @brief Get Wildcard Subscription Available property from property builder.
@@ -2606,9 +2628,11 @@ MQTTStatus_t MQTTPropGet_ReasonString( MQTTPropBuilder_t * pPropertyBuilder,
  * @return #MQTTSuccess if property is retrieved successfully;
  * #MQTTBadParameter if invalid parameters are passed.
  */
+/* @[declare_mqttpropget_wildcardid] */
 MQTTStatus_t MQTTPropGet_WildcardId( MQTTPropBuilder_t * pPropertyBuilder,
                                      uint32_t * currentIndex,
                                      uint8_t * pWildcardAvailable );
+/* @[declare_mqttpropget_wildcardid] */
 
 /**
  * @brief Get Subscription Identifier Available property from property builder.
@@ -2620,9 +2644,11 @@ MQTTStatus_t MQTTPropGet_WildcardId( MQTTPropBuilder_t * pPropertyBuilder,
  * @return #MQTTSuccess if property is retrieved successfully;
  * #MQTTBadParameter if invalid parameters are passed.
  */
+/* @[declare_mqttpropget_subsidavailable] */
 MQTTStatus_t MQTTPropGet_SubsIdAvailable( MQTTPropBuilder_t * pPropertyBuilder,
                                           uint32_t * currentIndex,
                                           uint8_t * pSubsIdAvailable );
+/* @[declare_mqttpropget_subsidavailable] */
 
 /**
  * @brief Get Shared Subscription Available property from property builder.
@@ -2634,9 +2660,11 @@ MQTTStatus_t MQTTPropGet_SubsIdAvailable( MQTTPropBuilder_t * pPropertyBuilder,
  * @return #MQTTSuccess if property is retrieved successfully;
  * #MQTTBadParameter if invalid parameters are passed.
  */
+/* @[declare_mqttpropget_sharedsubavailable] */
 MQTTStatus_t MQTTPropGet_SharedSubAvailable( MQTTPropBuilder_t * pPropertyBuilder,
                                              uint32_t * currentIndex,
                                              uint8_t * pSharedSubAvailable );
+/* @[declare_mqttpropget_sharedsubavailable] */
 
 /**
  * @brief Get Server Keep Alive property from property builder.
@@ -2648,9 +2676,11 @@ MQTTStatus_t MQTTPropGet_SharedSubAvailable( MQTTPropBuilder_t * pPropertyBuilde
  * @return #MQTTSuccess if property is retrieved successfully;
  * #MQTTBadParameter if invalid parameters are passed.
  */
+/* @[declare_mqttpropget_serverkeepalive] */
 MQTTStatus_t MQTTPropGet_ServerKeepAlive( MQTTPropBuilder_t * pPropertyBuilder,
                                           uint32_t * currentIndex,
                                           uint16_t * pServerKeepAlive );
+/* @[declare_mqttpropget_serverkeepalive] */
 
 /**
  * @brief Get Response Information property from property builder.
@@ -2663,10 +2693,12 @@ MQTTStatus_t MQTTPropGet_ServerKeepAlive( MQTTPropBuilder_t * pPropertyBuilder,
  * @return #MQTTSuccess if property is retrieved successfully;
  * #MQTTBadParameter if invalid parameters are passed.
  */
+/* @[declare_mqttpropget_responseinfo] */
 MQTTStatus_t MQTTPropGet_ResponseInfo( MQTTPropBuilder_t * pPropertyBuilder,
                                        uint32_t * currentIndex,
                                        const char ** pResponseInfo,
                                        uint16_t * pResponseInfoLength );
+/* @[declare_mqttpropget_responseinfo] */
 
 /**
  * @brief Get Server Reference property from property builder.
@@ -2679,10 +2711,12 @@ MQTTStatus_t MQTTPropGet_ResponseInfo( MQTTPropBuilder_t * pPropertyBuilder,
  * @return #MQTTSuccess if property is retrieved successfully;
  * #MQTTBadParameter if invalid parameters are passed.
  */
+/* @[declare_mqttpropget_serverref] */
 MQTTStatus_t MQTTPropGet_ServerRef( MQTTPropBuilder_t * pPropertyBuilder,
                                     uint32_t * currentIndex,
                                     const char ** pServerRef,
                                     uint16_t * pServerRefLength );
+/* @[declare_mqttpropget_serverref] */
 
 /**
  * @brief Get Authentication Method property from property builder.
@@ -2695,10 +2729,12 @@ MQTTStatus_t MQTTPropGet_ServerRef( MQTTPropBuilder_t * pPropertyBuilder,
  * @return #MQTTSuccess if property is retrieved successfully;
  * #MQTTBadParameter if invalid parameters are passed.
  */
+/* @[declare_mqttpropget_authmethod] */
 MQTTStatus_t MQTTPropGet_AuthMethod( MQTTPropBuilder_t * pPropertyBuilder,
                                      uint32_t * currentIndex,
                                      const char ** pAuthMethod,
                                      uint16_t * pAuthMethodLen );
+/* @[declare_mqttpropget_authmethod] */
 
 /**
  * @brief Get Authentication Data property from property builder.
@@ -2711,10 +2747,12 @@ MQTTStatus_t MQTTPropGet_AuthMethod( MQTTPropBuilder_t * pPropertyBuilder,
  * @return #MQTTSuccess if property is retrieved successfully;
  * #MQTTBadParameter if invalid parameters are passed.
  */
+/* @[declare_mqttpropget_authdata] */
 MQTTStatus_t MQTTPropGet_AuthData( MQTTPropBuilder_t * pPropertyBuilder,
                                    uint32_t * currentIndex,
                                    const char ** pAuthData,
                                    uint16_t * pAuthDataLen );
+/* @[declare_mqttpropget_authdata] */
 
 /**
  * @brief Get Payload Format Indicator property from property builder.
@@ -2726,9 +2764,11 @@ MQTTStatus_t MQTTPropGet_AuthData( MQTTPropBuilder_t * pPropertyBuilder,
  * @return #MQTTSuccess if property is retrieved successfully;
  * #MQTTBadParameter if invalid parameters are passed.
  */
+/* @[declare_mqttpropget_payloadformatindicator] */
 MQTTStatus_t MQTTPropGet_PayloadFormatIndicator( MQTTPropBuilder_t * pPropertyBuilder,
                                                   uint32_t * currentIndex,
                                                   uint8_t * pPayloadFormat );
+/* @[declare_mqttpropget_payloadformatindicator] */
 
 /**
  * @brief Get Message Expiry Interval property from property builder.
@@ -2740,9 +2780,11 @@ MQTTStatus_t MQTTPropGet_PayloadFormatIndicator( MQTTPropBuilder_t * pPropertyBu
  * @return #MQTTSuccess if property is retrieved successfully;
  * #MQTTBadParameter if invalid parameters are passed.
  */
+/* @[declare_mqttpropget_messageexpiryinterval] */
 MQTTStatus_t MQTTPropGet_MessageExpiryInterval( MQTTPropBuilder_t * pPropertyBuilder,
                                                 uint32_t * currentIndex,
                                                 uint32_t * pMessageExpiry );
+/* @[declare_mqttpropget_messageexpiryinterval] */
 
 /**
  * @brief Get Topic Alias property from property builder.
@@ -2754,9 +2796,11 @@ MQTTStatus_t MQTTPropGet_MessageExpiryInterval( MQTTPropBuilder_t * pPropertyBui
  * @return #MQTTSuccess if property is retrieved successfully;
  * #MQTTBadParameter if invalid parameters are passed.
  */
+/* @[declare_mqttpropget_topicalias] */
 MQTTStatus_t MQTTPropGet_TopicAlias( MQTTPropBuilder_t * pPropertyBuilder,
                                      uint32_t * currentIndex,
                                      uint16_t * pTopicAlias );
+/* @[declare_mqttpropget_topicalias] */
 
 /**
  * @brief Get Response Topic property from property builder.
@@ -2769,10 +2813,12 @@ MQTTStatus_t MQTTPropGet_TopicAlias( MQTTPropBuilder_t * pPropertyBuilder,
  * @return #MQTTSuccess if property is retrieved successfully;
  * #MQTTBadParameter if invalid parameters are passed.
  */
+/* @[declare_mqttpropget_responsetopic] */
 MQTTStatus_t MQTTPropGet_ResponseTopic( MQTTPropBuilder_t * pPropertyBuilder,
                                         uint32_t * currentIndex,
                                         const char ** pResponseTopic,
                                         uint16_t * pResponseTopicLength );
+/* @[declare_mqttpropget_responsetopic] */
 
 /**
  * @brief Get Correlation Data property from property builder.
@@ -2785,10 +2831,12 @@ MQTTStatus_t MQTTPropGet_ResponseTopic( MQTTPropBuilder_t * pPropertyBuilder,
  * @return #MQTTSuccess if property is retrieved successfully;
  * #MQTTBadParameter if invalid parameters are passed.
  */
+/* @[declare_mqttpropget_correlationdata] */
 MQTTStatus_t MQTTPropGet_CorrelationData( MQTTPropBuilder_t * pPropertyBuilder,
                                           uint32_t * currentIndex,
                                           const char ** pCorrelationData,
                                           uint16_t * pCorrelationDataLength );
+/* @[declare_mqttpropget_correlationdata] */
 
 /**
  * @brief Get Subscription Identifier property from property builder.
@@ -2800,25 +2848,34 @@ MQTTStatus_t MQTTPropGet_CorrelationData( MQTTPropBuilder_t * pPropertyBuilder,
  * @return #MQTTSuccess if property is retrieved successfully;
  * #MQTTBadParameter if invalid parameters are passed.
  */
+/* @[declare_mqttpropget_subscriptionid] */
 MQTTStatus_t MQTTPropGet_SubscriptionId( MQTTPropBuilder_t * pPropertyBuilder,
                                             uint32_t * currentIndex,
                                             uint32_t * pSubscriptionId );
+/* @[declare_mqttpropget_subscriptionid] */
 
 /**
- * @brief Get Content Type property from property builder.
+ * @brief Get the Content Type property from the property builder.
  *
- * @param[in] pPropertyBuilder Property builder to get property from.
- * @param[in,out] currentIndex Current index in the property builder buffer. Updated to next property on success.
- * @param[out] pContentType Pointer to store the content type string.
- * @param[out] pContentTypeLength Pointer to store the content type length.
+ * This function extracts the Content Type property value from the property builder
+ * at the specified index. The Content Type property describes the content of the
+ * Application Message.
  *
- * @return #MQTTSuccess if property is retrieved successfully;
- * #MQTTBadParameter if invalid parameters are passed.
+ * @param[in] pPropertyBuilder Pointer to the property builder containing the properties.
+ * @param[in,out] currentIndex Pointer to the current index in the property buffer.
+ *                             Updated to point past the property on success.
+ * @param[out] pContentType Pointer to store the extracted Content Type string.
+ * @param[out] pContentTypeLength Pointer to store the length of the Content Type string.
+ *
+ * @return #MQTTSuccess if the property is successfully extracted;
+ * #MQTTBadParameter if parameters are invalid or property is not Content Type.
  */
-MQTTStatus_t MQTTPropGet_PubContentType( MQTTPropBuilder_t * pPropertyBuilder,
-                                         uint32_t * currentIndex,
-                                         const char ** pContentType,
-                                         uint16_t * pContentTypeLength );
+/* @[declare_mqttpropget_contenttype] */
+MQTTStatus_t MQTTPropGet_ContentType( MQTTPropBuilder_t * pPropertyBuilder,
+                                      uint32_t * currentIndex,
+                                      const char ** pContentType,
+                                      uint16_t * pContentTypeLength );
+/* @[declare_mqttpropget_contenttype] */
 
 /**
  * @brief Validates the properties of a PUBLISH packet.
