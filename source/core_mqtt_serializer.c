@@ -94,7 +94,7 @@
 
 /**
  * @brief Per the MQTT spec, the max packet size can be of max remaining length + 5 bytes.
- * Fixed header 
+ * Fixed header
  *    MQTT packet type nibble + MQTT flags nibble             1
  *    Maximum bytes used to encode the remaining length       4
  */
@@ -105,7 +105,7 @@
  *
  * Includes two bytes for topic name length and one byte for topic name.
  */
-#define MQTT_MIN_PUBLISH_REMAINING_LENGTH_QOS0    ( 3U )
+#define MQTT_MIN_PUBLISH_REMAINING_LENGTH_QOS0      ( 3U )
 
 /**
  * @brief A PINGREQ packet is always 2 bytes in size, defined by MQTT 5.0 spec.
@@ -369,9 +369,9 @@ static MQTTStatus_t readSubackStatus( size_t statusCount,
  * @return #MQTTBadParameter, #MQTTBadResponse, #MQTTSuccess, #MQTTServerRefused
  */
 static MQTTStatus_t deserializeSubUnsubAck( const MQTTPacketInfo_t * incomingPacket,
-                                       uint16_t * pPacketId,
-                                       MQTTReasonCodeInfo_t * pReasonCodes,
-                                       MQTTPropBuilder_t * pPropBuffer );
+                                            uint16_t * pPacketId,
+                                            MQTTReasonCodeInfo_t * pReasonCodes,
+                                            MQTTPropBuilder_t * pPropBuffer );
 
 /**
  * @brief Deserialize a PUBLISH packet received from the server.
@@ -456,9 +456,9 @@ static MQTTStatus_t deserializeConnackProperties( MQTTConnectionProperties_t * p
  *
  */
 static MQTTStatus_t deserializeSubUnsubAckProperties( MQTTPropBuilder_t * pPropBuffer,
-                                                 uint8_t * pIndex,
-                                                 size_t * pSubackPropertyLength,
-                                                 size_t remainingLength );
+                                                      uint8_t * pIndex,
+                                                      size_t * pSubackPropertyLength,
+                                                      size_t remainingLength );
 
 /**
  * @brief Deserialize an PUBACK, PUBREC, PUBREL, or PUBCOMP packet.
@@ -479,6 +479,7 @@ static MQTTStatus_t deserializePubAcks( const MQTTPacketInfo_t * pAck,
                                         MQTTReasonCodeInfo_t * pReasonCode,
                                         bool requestProblem,
                                         MQTTPropBuilder_t * pPropBuffer );
+
 /**
  * @brief Validate the length and decode the publish ack properties.
  *
@@ -582,9 +583,10 @@ static MQTTStatus_t validateReasonCodeForAck( uint8_t ackPacketType,
 {
     MQTTStatus_t status = MQTTSuccess;
 
-    switch ( ackPacketType )
+    switch( ackPacketType )
     {
         case MQTT_PACKET_TYPE_PUBACK:
+
             if( ( reasonCode != MQTT_REASON_PUBACK_SUCCESS ) &&
                 ( reasonCode != MQTT_REASON_PUBACK_NO_MATCHING_SUBSCRIBERS ) &&
                 ( reasonCode != MQTT_REASON_PUBACK_UNSPECIFIED_ERROR ) &&
@@ -598,9 +600,11 @@ static MQTTStatus_t validateReasonCodeForAck( uint8_t ackPacketType,
                 LogError( ( "Invalid reason code for PUBACK." ) );
                 status = MQTTBadParameter;
             }
+
             break;
 
         case MQTT_PACKET_TYPE_PUBREC:
+
             if( ( reasonCode != MQTT_REASON_PUBREC_SUCCESS ) &&
                 ( reasonCode != MQTT_REASON_PUBREC_NO_MATCHING_SUBSCRIBERS ) &&
                 ( reasonCode != MQTT_REASON_PUBREC_UNSPECIFIED_ERROR ) &&
@@ -614,24 +618,29 @@ static MQTTStatus_t validateReasonCodeForAck( uint8_t ackPacketType,
                 LogError( ( "Invalid reason code for PUBREC." ) );
                 status = MQTTBadParameter;
             }
+
             break;
 
         case MQTT_PACKET_TYPE_PUBREL:
+
             if( ( reasonCode != MQTT_REASON_PUBREL_SUCCESS ) &&
                 ( reasonCode != MQTT_REASON_PUBREL_PACKET_IDENTIFIER_NOT_FOUND ) )
             {
                 LogError( ( "Invalid reason code for PUBREL." ) );
                 status = MQTTBadParameter;
             }
+
             break;
 
         case MQTT_PACKET_TYPE_PUBCOMP:
+
             if( ( reasonCode != MQTT_REASON_PUBCOMP_SUCCESS ) &&
-                ( reasonCode != MQTT_REASON_PUBCOMP_PACKET_IDENTIFIER_NOT_FOUND) )
+                ( reasonCode != MQTT_REASON_PUBCOMP_PACKET_IDENTIFIER_NOT_FOUND ) )
             {
                 LogError( ( "Invalid reason code for PUBCOMP." ) );
                 status = MQTTBadParameter;
             }
+
             break;
 
         default:
@@ -1399,6 +1408,7 @@ static inline MQTTStatus_t isValidConnackReasonCode( uint8_t reasonCode )
         case ( uint8_t ) MQTT_REASON_CONNACK_CONNECTION_RATE_EXCEEDED:
             status = MQTTSuccess;
             break;
+
         default:
             LogError( ( "Invalid reason code received." ) );
             status = MQTTBadResponse;
@@ -1496,9 +1506,9 @@ static MQTTStatus_t validateConnackParams( const MQTTPacketInfo_t * pIncomingPac
 /*-----------------------------------------------------------*/
 
 static MQTTStatus_t deserializeConnack( MQTTConnectionProperties_t * pConnackProperties,
-                                 const MQTTPacketInfo_t * pIncomingPacket,
-                                 bool * pSessionPresent,
-                                 MQTTPropBuilder_t * pPropBuffer )
+                                        const MQTTPacketInfo_t * pIncomingPacket,
+                                        bool * pSessionPresent,
+                                        MQTTPropBuilder_t * pPropBuffer )
 {
     MQTTStatus_t status = MQTTSuccess;
     uint32_t propertyLength = 0U;
@@ -1707,9 +1717,9 @@ static MQTTStatus_t readSubackStatus( size_t statusCount,
 /*-----------------------------------------------------------*/
 
 static MQTTStatus_t deserializeSubUnsubAck( const MQTTPacketInfo_t * incomingPacket,
-                                       uint16_t * pPacketId,
-                                       MQTTReasonCodeInfo_t * pReasonCodes,
-                                       MQTTPropBuilder_t * pPropBuffer )
+                                            uint16_t * pPacketId,
+                                            MQTTReasonCodeInfo_t * pReasonCodes,
+                                            MQTTPropBuilder_t * pPropBuffer )
 {
     MQTTStatus_t status = MQTTSuccess;
     uint8_t * pIndex = NULL;
@@ -2019,17 +2029,20 @@ static MQTTStatus_t deserializeConnackProperties( MQTTConnectionProperties_t * p
             /* In absence of this property, the value in the connect packet is used. */
             case MQTT_SESSION_EXPIRY_ID:
                 status = decodeUint32t( &pConnackProperties->sessionExpiry, &propertyLength,
-                                         &sessionExpiry, &pVariableHeader );
+                                        &sessionExpiry, &pVariableHeader );
+
                 if( status == MQTTSuccess )
                 {
-                    LogDebug( ( "Session expiry from server: %" PRIu32 , pConnackProperties->sessionExpiry ) );
+                    LogDebug( ( "Session expiry from server: %" PRIu32, pConnackProperties->sessionExpiry ) );
                     UINT32_SET_BIT( pPropBuffer->fieldSet, MQTT_SESSION_EXPIRY_INTERVAL_POS );
                 }
+
                 break;
 
             case MQTT_RECEIVE_MAX_ID:
                 status = decodeUint16t( &pConnackProperties->serverReceiveMax, &propertyLength,
-                                         &serverReceiveMax, &pVariableHeader );
+                                        &serverReceiveMax, &pVariableHeader );
+
                 if( status == MQTTSuccess )
                 {
                     /* Receive max cannot be 0. */
@@ -2044,12 +2057,14 @@ static MQTTStatus_t deserializeConnackProperties( MQTTConnectionProperties_t * p
                         UINT32_SET_BIT( pPropBuffer->fieldSet, MQTT_RECEIVE_MAXIMUM_POS );
                     }
                 }
+
                 break;
 
             case MQTT_MAX_QOS_ID:
                 status = decodeUint8t( &pConnackProperties->serverMaxQos, &propertyLength,
-                                        &maxQos, &pVariableHeader );
-                if( status == MQTTSuccess ) 
+                                       &maxQos, &pVariableHeader );
+
+                if( status == MQTTSuccess )
                 {
                     /* Protocol error for this value to be anything else except 0 or 1. */
                     if( pConnackProperties->serverMaxQos > 1U )
@@ -2064,12 +2079,14 @@ static MQTTStatus_t deserializeConnackProperties( MQTTConnectionProperties_t * p
                         UINT32_SET_BIT( pPropBuffer->fieldSet, MQTT_MAX_QOS_POS );
                     }
                 }
+
                 break;
 
             case MQTT_RETAIN_AVAILABLE_ID:
                 status = decodeUint8t( &pConnackProperties->retainAvailable, &propertyLength,
-                                        &retain, &pVariableHeader );
-                if(status == MQTTSuccess )
+                                       &retain, &pVariableHeader );
+
+                if( status == MQTTSuccess )
                 {
                     /* Protocol error for this value to be anything else except 0 or 1. */
                     if( pConnackProperties->retainAvailable > 1U )
@@ -2084,11 +2101,13 @@ static MQTTStatus_t deserializeConnackProperties( MQTTConnectionProperties_t * p
                         UINT32_SET_BIT( pPropBuffer->fieldSet, MQTT_RETAIN_AVAILABLE_POS );
                     }
                 }
+
                 break;
 
             case MQTT_MAX_PACKET_SIZE_ID:
                 status = decodeUint32t( &pConnackProperties->serverMaxPacketSize, &propertyLength,
-                                         &maxPacket, &pVariableHeader );
+                                        &maxPacket, &pVariableHeader );
+
                 if( status == MQTTSuccess )
                 {
                     /* Protocol error for this value to be 0. */
@@ -2103,29 +2122,35 @@ static MQTTStatus_t deserializeConnackProperties( MQTTConnectionProperties_t * p
                         UINT32_SET_BIT( pPropBuffer->fieldSet, MQTT_MAX_PACKET_SIZE_POS );
                     }
                 }
+
                 break;
 
             case MQTT_ASSIGNED_CLIENT_ID:
                 status = decodeUtf8( &data, &dataLength, &propertyLength, &clientId, &pVariableHeader );
+
                 if( status == MQTTSuccess )
                 {
                     LogDebug( ( "Assigned client ID: %.*s", ( int ) dataLength, data ) );
                     UINT32_SET_BIT( pPropBuffer->fieldSet, MQTT_ASSIGNED_CLIENT_ID_POS );
                 }
+
                 break;
 
             case MQTT_TOPIC_ALIAS_MAX_ID:
                 status = decodeUint16t( &pConnackProperties->serverTopicAliasMax, &propertyLength,
-                                         &topicAlias, &pVariableHeader );
+                                        &topicAlias, &pVariableHeader );
+
                 if( status == MQTTSuccess )
                 {
                     LogDebug( ( "Topic alias max ID: %" PRIu16, pConnackProperties->serverTopicAliasMax ) );
                     UINT32_SET_BIT( pPropBuffer->fieldSet, MQTT_TOPIC_ALIAS_MAX_POS );
                 }
+
                 break;
 
             case MQTT_REASON_STRING_ID:
                 status = decodeUtf8( &data, &dataLength, &propertyLength, &reasonString, &pVariableHeader );
+
                 if( status == MQTTSuccess )
                 {
                     /* Proper uses for the reason string in the Client would include using this information
@@ -2133,24 +2158,27 @@ static MQTTStatus_t deserializeConnackProperties( MQTTConnectionProperties_t * p
                     LogInfo( ( "Reason string from server: %.*s", dataLength, data ) );
                     UINT32_SET_BIT( pPropBuffer->fieldSet, MQTT_REASON_STRING_POS );
                 }
+
                 break;
 
             case MQTT_USER_PROPERTY_ID:
-                {
-                    const char * key, *value;
-                    uint16_t keyLength, valueLength;
-                    status = decodeUserProp( &key, &keyLength, &value, &valueLength, &propertyLength, &pVariableHeader );
-                    if( status == MQTTSuccess )
-                    {
-                        LogDebug( ( "User property: %.*s : %.*s", ( int ) keyLength, key, ( int ) valueLength, value ) );
-                        UINT32_SET_BIT( pPropBuffer->fieldSet, MQTT_USER_PROP_POS );
-                    }
-                }
-                break;
+               {
+                   const char * key, * value;
+                   uint16_t keyLength, valueLength;
+                   status = decodeUserProp( &key, &keyLength, &value, &valueLength, &propertyLength, &pVariableHeader );
+
+                   if( status == MQTTSuccess )
+                   {
+                       LogDebug( ( "User property: %.*s : %.*s", ( int ) keyLength, key, ( int ) valueLength, value ) );
+                       UINT32_SET_BIT( pPropBuffer->fieldSet, MQTT_USER_PROP_POS );
+                   }
+               }
+               break;
 
             case MQTT_WILDCARD_ID:
                 status = decodeUint8t( &pConnackProperties->isWildcardAvailable, &propertyLength,
-                                        &wildcard, &pVariableHeader );
+                                       &wildcard, &pVariableHeader );
+
                 if( status == MQTTSuccess )
                 {
                     /* Protocol error for this value to be anything except 0 or 1. */
@@ -2166,11 +2194,13 @@ static MQTTStatus_t deserializeConnackProperties( MQTTConnectionProperties_t * p
                         UINT32_SET_BIT( pPropBuffer->fieldSet, MQTT_WILDCARD_SUBSCRIPTION_AVAILABLE_POS );
                     }
                 }
+
                 break;
 
             case MQTT_SUB_AVAILABLE_ID:
                 status = decodeUint8t( &pConnackProperties->isSubscriptionIdAvailable, &propertyLength,
-                                        &subId, &pVariableHeader );
+                                       &subId, &pVariableHeader );
+
                 if( status == MQTTSuccess )
                 {
                     /* Protocol error for this value to be anything except 0 or 1. */
@@ -2186,11 +2216,13 @@ static MQTTStatus_t deserializeConnackProperties( MQTTConnectionProperties_t * p
                         UINT32_SET_BIT( pPropBuffer->fieldSet, MQTT_SUBSCRIPTION_ID_AVAILABLE_POS );
                     }
                 }
+
                 break;
 
             case MQTT_SHARED_SUB_ID:
                 status = decodeUint8t( &pConnackProperties->isSharedAvailable, &propertyLength,
                                        &sharedsub, &pVariableHeader );
+
                 if( status == MQTTSuccess )
                 {
                     /* Protocol error for this value to be anything except 0 or 1. */
@@ -2206,20 +2238,24 @@ static MQTTStatus_t deserializeConnackProperties( MQTTConnectionProperties_t * p
                         UINT32_SET_BIT( pPropBuffer->fieldSet, MQTT_SHARED_SUBSCRIPTION_AVAILABLE_POS );
                     }
                 }
+
                 break;
 
             case MQTT_SERVER_KEEP_ALIVE_ID:
                 status = decodeUint16t( &pConnackProperties->serverKeepAlive, &propertyLength,
-                                         &keepAlive, &pVariableHeader );
+                                        &keepAlive, &pVariableHeader );
+
                 if( status == MQTTSuccess )
                 {
                     LogDebug( ( "Server keep alive: %d", ( int ) pConnackProperties->serverKeepAlive ) );
                     UINT32_SET_BIT( pPropBuffer->fieldSet, MQTT_SERVER_KEEP_ALIVE_POS );
                 }
+
                 break;
 
             case MQTT_RESPONSE_INFO_ID:
                 status = decodeUtf8( &data, &dataLength, &propertyLength, &responseInfo, &pVariableHeader );
+
                 if( status == MQTTSuccess )
                 {
                     /* Protocol error to send response information if the client has not requested it. */
@@ -2234,35 +2270,42 @@ static MQTTStatus_t deserializeConnackProperties( MQTTConnectionProperties_t * p
                         UINT32_SET_BIT( pPropBuffer->fieldSet, MQTT_RESPONSE_INFORMATION_POS );
                     }
                 }
+
                 break;
 
             case MQTT_SERVER_REF_ID:
                 status = decodeUtf8( &data, &dataLength, &propertyLength, &serverReference, &pVariableHeader );
+
                 if( status == MQTTSuccess )
                 {
                     LogDebug( ( "Server reference: %.*s", dataLength, data ) );
                     UINT32_SET_BIT( pPropBuffer->fieldSet, MQTT_SERVER_REFERENCE_POS );
                 }
+
                 break;
 
             case MQTT_AUTH_METHOD_ID:
                 status = decodeUtf8( &data, &dataLength, &propertyLength, &authMethod, &pVariableHeader );
+
                 if( status == MQTTSuccess )
                 {
                     LogDebug( ( "Authentication method received: %.*s", dataLength, data ) );
                     UINT32_SET_BIT( pPropBuffer->fieldSet, MQTT_AUTHENTICATION_METHOD_POS );
                 }
+
                 /* TODO: AUTH method should be returned to the application to allow the
                  * authentication to complete. */
                 break;
 
             case MQTT_AUTH_DATA_ID:
                 status = decodeUtf8( &data, &dataLength, &propertyLength, &authData, &pVariableHeader );
+
                 if( status == MQTTSuccess )
                 {
                     LogDebug( ( "Auth data received: %.*s", dataLength, data ) );
                     UINT32_SET_BIT( pPropBuffer->fieldSet, MQTT_AUTHENTICATION_DATA_POS );
                 }
+
                 /* TODO: AUTH Data should be returned to the application to allow the
                  * authentication to complete. */
                 break;
@@ -2280,9 +2323,9 @@ static MQTTStatus_t deserializeConnackProperties( MQTTConnectionProperties_t * p
 /*-----------------------------------------------------------*/
 
 static MQTTStatus_t deserializeSubUnsubAckProperties( MQTTPropBuilder_t * pPropBuffer,
-                                                 uint8_t * pIndex,
-                                                 size_t * pSubackPropertyLength,
-                                                 size_t remainingLength )
+                                                      uint8_t * pIndex,
+                                                      size_t * pSubackPropertyLength,
+                                                      size_t remainingLength )
 {
     MQTTStatus_t status = MQTTSuccess;
     uint32_t propertyLength = 0U;
@@ -2316,6 +2359,7 @@ static MQTTStatus_t deserializeSubUnsubAckProperties( MQTTPropBuilder_t * pPropB
             case MQTT_REASON_STRING_ID:
                 status = decodeUtf8( &pReasonString, &reasonStringLength, &propertyLength,
                                      &reasonString, &pLocalIndex );
+
                 if( status == MQTTSuccess )
                 {
                     if( pReasonString )
@@ -2324,18 +2368,19 @@ static MQTTStatus_t deserializeSubUnsubAckProperties( MQTTPropBuilder_t * pPropB
                                    ( int ) reasonStringLength, pReasonString ) );
                     }
                 }
+
                 break;
 
             case MQTT_USER_PROPERTY_ID:
-            {
-                const char *propertyKey;
-                uint16_t propertyKeyLen;
-                const char *propertyValue;
-                uint16_t propertyValueLen;
-                status = decodeUserProp( &propertyKey, &propertyKeyLen, &propertyValue,
-                                         &propertyValueLen, &propertyLength, &pLocalIndex );
-            }
-                break;
+               {
+                   const char * propertyKey;
+                   uint16_t propertyKeyLen;
+                   const char * propertyValue;
+                   uint16_t propertyValueLen;
+                   status = decodeUserProp( &propertyKey, &propertyKeyLen, &propertyValue,
+                                            &propertyValueLen, &propertyLength, &pLocalIndex );
+               }
+               break;
 
             default:
                 status = MQTTBadResponse;
@@ -2494,23 +2539,25 @@ static MQTTStatus_t deserializePublishProperties( MQTTPublishInfo_t * pPublishIn
         switch( propertyId )
         {
             case MQTT_PAYLOAD_FORMAT_ID:
-                {
-                    uint8_t property;
-                    status = decodeUint8t( &property, &propertyLength, &payloadFormatIndicator, &pLocalIndex );
-                    if( status == MQTTSuccess )
-                    {
-                        /* Payload format must only be 0 or 1. */
-                        if( property > 1 )
-                        {
-                            status = MQTTBadResponse;
-                            LogError( ( "Payload Format Indicator is not 0x00. " ) );
-                        }
-                    }
-                }
-            break;
+               {
+                   uint8_t property;
+                   status = decodeUint8t( &property, &propertyLength, &payloadFormatIndicator, &pLocalIndex );
+
+                   if( status == MQTTSuccess )
+                   {
+                       /* Payload format must only be 0 or 1. */
+                       if( property > 1 )
+                       {
+                           status = MQTTBadResponse;
+                           LogError( ( "Payload Format Indicator is not 0x00. " ) );
+                       }
+                   }
+               }
+               break;
 
             case MQTT_TOPIC_ALIAS_ID:
                 status = decodeUint16t( &topicAliasVal, &propertyLength, &topicAlias, &pLocalIndex );
+
                 if( status == MQTTSuccess )
                 {
                     if( topicAliasVal == 0 )
@@ -2519,38 +2566,39 @@ static MQTTStatus_t deserializePublishProperties( MQTTPublishInfo_t * pPublishIn
                         LogError( ( "Topic Alias value of 0 is not permitted." ) );
                     }
                 }
+
                 break;
 
             case MQTT_RESPONSE_TOPIC_ID:
-                {
-                    const char *pProperty;
-                    uint16_t length;
-                    status = decodeUtf8( &pProperty, &length, &propertyLength, &responseTopic, &pLocalIndex );
-                }
-                break;
+               {
+                   const char * pProperty;
+                   uint16_t length;
+                   status = decodeUtf8( &pProperty, &length, &propertyLength, &responseTopic, &pLocalIndex );
+               }
+               break;
 
             case MQTT_CORRELATION_DATA_ID:
-                {
-                    const char *pProperty;
-                    uint16_t length;
-                    status = decodeUtf8( &pProperty, &length, &propertyLength, &correlationData, &pLocalIndex );
-                }
-                break;
+               {
+                   const char * pProperty;
+                   uint16_t length;
+                   status = decodeUtf8( &pProperty, &length, &propertyLength, &correlationData, &pLocalIndex );
+               }
+               break;
 
             case MQTT_MSG_EXPIRY_ID:
-                {
-                    uint32_t property;
-                    status = decodeUint32t( &property, &propertyLength, &messageExpiryInterval, &pLocalIndex);
-                }
-                break;
+               {
+                   uint32_t property;
+                   status = decodeUint32t( &property, &propertyLength, &messageExpiryInterval, &pLocalIndex );
+               }
+               break;
 
             case MQTT_CONTENT_TYPE_ID:
-                {
-                    const char *pProperty;
-                    uint16_t length;
-                    status = decodeUtf8( &pProperty, &length, &propertyLength, &contentType, &pLocalIndex );
-                }
-                break;
+               {
+                   const char * pProperty;
+                   uint16_t length;
+                   status = decodeUtf8( &pProperty, &length, &propertyLength, &contentType, &pLocalIndex );
+               }
+               break;
 
             case MQTT_SUBSCRIPTION_ID_ID:
                 status = decodeVariableLength( pLocalIndex, propertyLength, &subscriptionId );
@@ -2564,19 +2612,19 @@ static MQTTStatus_t deserializePublishProperties( MQTTPublishInfo_t * pPublishIn
                 break;
 
             case MQTT_USER_PROPERTY_ID:
-                {
-                    const char *pPropertyKey;
-                    uint16_t propertyKeyLen;
-                    const char *pPropertyValue;
-                    uint16_t propertyValueLen;
-                    status = decodeUserProp( &pPropertyKey,
-                                             &propertyKeyLen,
-                                             &pPropertyValue, 
-                                             &propertyValueLen, 
-                                             &propertyLength,
-                                             &pLocalIndex );
-                }
-                break;
+               {
+                   const char * pPropertyKey;
+                   uint16_t propertyKeyLen;
+                   const char * pPropertyValue;
+                   uint16_t propertyValueLen;
+                   status = decodeUserProp( &pPropertyKey,
+                                            &propertyKeyLen,
+                                            &pPropertyValue,
+                                            &propertyValueLen,
+                                            &propertyLength,
+                                            &pLocalIndex );
+               }
+               break;
 
             default:
                 status = MQTTBadResponse;
@@ -2679,54 +2727,54 @@ MQTTStatus_t updateContextWithConnectProps( const MQTTPropBuilder_t * pPropBuild
                      * in the CONNACK.
                      */
                     status = decodeUint32t( &pConnectProperties->sessionExpiry, &propertyLength,
-                                             &sessionExpiry, &pIndex );
+                                            &sessionExpiry, &pIndex );
                     break;
 
                 case MQTT_RECEIVE_MAX_ID:
                     status = decodeUint16t( &pConnectProperties->receiveMax, &propertyLength,
-                                             &receiveMax, &pIndex );
+                                            &receiveMax, &pIndex );
                     break;
 
                 case MQTT_MAX_PACKET_SIZE_ID:
                     status = decodeUint32t( &pConnectProperties->maxPacketSize, &propertyLength,
-                                             &maxPacket, &pIndex );
+                                            &maxPacket, &pIndex );
                     break;
 
                 case MQTT_TOPIC_ALIAS_MAX_ID:
                     status = decodeUint16t( &pConnectProperties->topicAliasMax, &propertyLength,
-                                             &topicAlias, &pIndex );
+                                            &topicAlias, &pIndex );
                     break;
 
                 case MQTT_REQUEST_PROBLEM_ID:
                 case MQTT_REQUEST_RESPONSE_ID:
-                    {
-                        uint8_t property;
-                        /* TODO: should this go in the context? */
-                        status = decodeUint8t( &property, &propertyLength, &used, &pIndex );
-                    }
-                    break;
+                   {
+                       uint8_t property;
+                       /* TODO: should this go in the context? */
+                       status = decodeUint8t( &property, &propertyLength, &used, &pIndex );
+                   }
+                   break;
 
                 case MQTT_AUTH_DATA_ID:
                 case MQTT_AUTH_METHOD_ID:
-                    {
-                        const char * data;
-                        uint16_t dataLength;
-                        status = decodeUtf8( &data, &dataLength, &propertyLength, &used, &pIndex );
-                    }
-                    break;
+                   {
+                       const char * data;
+                       uint16_t dataLength;
+                       status = decodeUtf8( &data, &dataLength, &propertyLength, &used, &pIndex );
+                   }
+                   break;
 
                 case MQTT_USER_PROPERTY_ID:
-                    {
-                        const char *key, *value;
-                        uint16_t keyLength, valueLength;
-                        status = decodeUserProp( &key,
+                   {
+                       const char * key, * value;
+                       uint16_t keyLength, valueLength;
+                       status = decodeUserProp( &key,
                                                 &keyLength,
                                                 &value,
                                                 &valueLength,
                                                 &propertyLength,
                                                 &pIndex );
-                    }
-                    break;
+                   }
+                   break;
 
                 default:
                     status = MQTTBadParameter;
@@ -2909,27 +2957,27 @@ static MQTTStatus_t decodePubAckProperties( MQTTPropBuilder_t * pPropBuffer,
         switch( propertyId )
         {
             case MQTT_REASON_STRING_ID:
-            {
-                const char *pProperty;
-                uint16_t length;
-                status = decodeUtf8( &pProperty, &length, &propertyLength, &reasonString, &pLocalIndex );
-                break;
-            }
+               {
+                   const char * pProperty;
+                   uint16_t length;
+                   status = decodeUtf8( &pProperty, &length, &propertyLength, &reasonString, &pLocalIndex );
+                   break;
+               }
 
             case MQTT_USER_PROPERTY_ID:
-            {
-                const char *pPropertyKey;
-                uint16_t propertyKeyLen;
-                const char *pPropertyValue;
-                uint16_t propertyValueLen;
-                status = decodeUserProp( &pPropertyKey,
-                                         &propertyKeyLen,
-                                         &pPropertyValue,
-                                         &propertyValueLen,
-                                         &propertyLength,
-                                         &pLocalIndex );
-                break;
-            }
+               {
+                   const char * pPropertyKey;
+                   uint16_t propertyKeyLen;
+                   const char * pPropertyValue;
+                   uint16_t propertyValueLen;
+                   status = decodeUserProp( &pPropertyKey,
+                                            &propertyKeyLen,
+                                            &pPropertyValue,
+                                            &propertyValueLen,
+                                            &propertyLength,
+                                            &pLocalIndex );
+                   break;
+               }
 
             default:
                 status = MQTTBadResponse;
@@ -3303,18 +3351,19 @@ MQTTStatus_t MQTT_ValidateUnsubscribeProperties( const MQTTPropBuilder_t * pProp
         switch( propertyId )
         {
             case MQTT_USER_PROPERTY_ID:
-            {
-                const char * key, *value;
-                uint16_t keyLength, valueLength;
-                status = decodeUserProp( &key, &keyLength, &value, &valueLength, &propertyLength, &pIndex );
-                if( status == MQTTSuccess )
-                {
-                    LogTrace( ( "Processing User Property %.*s:%.*s",
-                                (int) keyLength, key,
-                                (int) valueLength, value ) );
-                }
-            }
-                break;
+               {
+                   const char * key, * value;
+                   uint16_t keyLength, valueLength;
+                   status = decodeUserProp( &key, &keyLength, &value, &valueLength, &propertyLength, &pIndex );
+
+                   if( status == MQTTSuccess )
+                   {
+                       LogTrace( ( "Processing User Property %.*s:%.*s",
+                                   ( int ) keyLength, key,
+                                   ( int ) valueLength, value ) );
+                   }
+               }
+               break;
 
             default:
                 status = MQTTBadParameter;
@@ -3661,7 +3710,7 @@ MQTTStatus_t MQTT_SerializeAck( const MQTTFixedBuffer_t * pFixedBuffer,
                         }
                         /* Size is calculated as PUBACK + 1 byte for reason code + properties. */
                         else if( pFixedBuffer->size <
-                                    getAckPacketSize( pAckProperties, pReasonCode ) )
+                                 getAckPacketSize( pAckProperties, pReasonCode ) )
                         {
                             LogError( ( "Not enough space in the buffer to encode properties." ) );
                             status = MQTTBadParameter;
@@ -3672,6 +3721,7 @@ MQTTStatus_t MQTT_SerializeAck( const MQTTFixedBuffer_t * pFixedBuffer,
                         }
                     }
                 }
+
                 break;
 
             default:
@@ -3727,7 +3777,7 @@ MQTTStatus_t MQTT_GetDisconnectPacketSize( const MQTTPropBuilder_t * pDisconnect
         LogError( ( "Invalid reason code." ) );
         status = MQTTBadParameter;
     }
-    else if ( pReasonCode != NULL )
+    else if( pReasonCode != NULL )
     {
         /* Reason code. */
         length += 1U;
@@ -3743,7 +3793,7 @@ MQTTStatus_t MQTT_GetDisconnectPacketSize( const MQTTPropBuilder_t * pDisconnect
          * Bytes required to encode the properties +
          * Actual properties +
          * Optional reason code (which is depicted by length)
-         * 
+         *
          * Must be less than the maximum allowed remaining length.
          */
         if( ( propertyLength + variableLengthEncodedSize( propertyLength ) + length ) < MQTT_MAX_REMAINING_LENGTH )
@@ -4049,6 +4099,7 @@ MQTTStatus_t MQTT_DeserializeAck( const MQTTPacketInfo_t * pIncomingPacket,
         LogError( ( "Please use MQTT_DeserializeConnAck for CONNACK packet." ) );
         status = MQTTBadParameter;
     }
+
     /* Pointer for packet identifier cannot be NULL for packets other than
      * CONNACK and PINGRESP. This function must not be called for CONNACK
      * handling and thus only PINGRESP is checked below. */
@@ -4059,6 +4110,7 @@ MQTTStatus_t MQTT_DeserializeAck( const MQTTPacketInfo_t * pIncomingPacket,
                     ( unsigned int ) pIncomingPacket->type ) );
         status = MQTTBadParameter;
     }
+
     /* Pointer for remaining data cannot be NULL for packets other
      * than PINGRESP. */
     else if( ( pIncomingPacket->pRemainingData == NULL ) &&
@@ -4363,6 +4415,7 @@ MQTTStatus_t MQTT_ValidateWillProperties( const MQTTPropBuilder_t * pPropertyBui
         switch( propertyId )
         {
             case MQTT_WILL_DELAY_ID:
+
                 if( UINT32_CHECK_BIT( propertyBitMask, MQTT_WILL_DELAY_POS ) != true )
                 {
                     status = decodeUint32t( NULL, &propertyLength, &used, &pIndex );
@@ -4373,34 +4426,37 @@ MQTTStatus_t MQTT_ValidateWillProperties( const MQTTPropBuilder_t * pPropertyBui
                     LogError( ( "Will Delay Interval included more than once in the properties." ) );
                     status = MQTTBadParameter;
                 }
+
                 break;
 
             case MQTT_PAYLOAD_FORMAT_ID:
-                {
-                    uint8_t property;
-                    if( UINT32_CHECK_BIT( propertyBitMask, MQTT_PAYLOAD_FORMAT_INDICATOR_POS ) != true )
-                    {
-                        status = decodeUint8t( &property, &propertyLength, &used, &pIndex );
-                        UINT32_SET_BIT( propertyBitMask, MQTT_PAYLOAD_FORMAT_INDICATOR_POS );
-                    }
-                    else
-                    {
-                        LogError( ( "Pauload format indicator included more than once in the properties." ) );
-                        status = MQTTBadParameter;
-                    }
+               {
+                   uint8_t property;
 
-                    if( status == MQTTSuccess )
-                    {
-                        if( ( property != 0 ) && ( property != 1 ) )
-                        {
-                            LogError( ( "Payload Format can only be 0 or 1 in will properties." ) );
-                            status = MQTTBadParameter;
-                        }
-                    }
-                }
-                break;
+                   if( UINT32_CHECK_BIT( propertyBitMask, MQTT_PAYLOAD_FORMAT_INDICATOR_POS ) != true )
+                   {
+                       status = decodeUint8t( &property, &propertyLength, &used, &pIndex );
+                       UINT32_SET_BIT( propertyBitMask, MQTT_PAYLOAD_FORMAT_INDICATOR_POS );
+                   }
+                   else
+                   {
+                       LogError( ( "Pauload format indicator included more than once in the properties." ) );
+                       status = MQTTBadParameter;
+                   }
+
+                   if( status == MQTTSuccess )
+                   {
+                       if( ( property != 0 ) && ( property != 1 ) )
+                       {
+                           LogError( ( "Payload Format can only be 0 or 1 in will properties." ) );
+                           status = MQTTBadParameter;
+                       }
+                   }
+               }
+               break;
 
             case MQTT_MSG_EXPIRY_ID:
+
                 if( UINT32_CHECK_BIT( propertyBitMask, MQTT_MESSAGE_EXPIRY_INTERVAL_POS ) != true )
                 {
                     status = decodeUint32t( NULL, &propertyLength, &used, &pIndex );
@@ -4411,9 +4467,11 @@ MQTTStatus_t MQTT_ValidateWillProperties( const MQTTPropBuilder_t * pPropertyBui
                     LogError( ( "Message Expiry Interval included more than once in the properties." ) );
                     status = MQTTBadParameter;
                 }
+
                 break;
 
             case MQTT_CONTENT_TYPE_ID:
+
                 if( UINT32_CHECK_BIT( propertyBitMask, MQTT_CONTENT_TYPE_POS ) != true )
                 {
                     status = decodeUtf8( &data, &dataLength, &propertyLength, &used, &pIndex );
@@ -4424,9 +4482,11 @@ MQTTStatus_t MQTT_ValidateWillProperties( const MQTTPropBuilder_t * pPropertyBui
                     LogError( ( "Content Type included more than once in the properties." ) );
                     status = MQTTBadParameter;
                 }
+
                 break;
 
             case MQTT_RESPONSE_TOPIC_ID:
+
                 if( UINT32_CHECK_BIT( propertyBitMask, MQTT_RESPONSE_TOPIC_POS ) != true )
                 {
                     status = decodeUtf8( &data, &dataLength, &propertyLength, &used, &pIndex );
@@ -4437,9 +4497,11 @@ MQTTStatus_t MQTT_ValidateWillProperties( const MQTTPropBuilder_t * pPropertyBui
                     LogError( ( "Response topic included more than once in the properties." ) );
                     status = MQTTBadParameter;
                 }
+
                 break;
 
             case MQTT_CORRELATION_DATA_ID:
+
                 if( UINT32_CHECK_BIT( propertyBitMask, MQTT_CORRELATION_DATA_POS ) != true )
                 {
                     status = decodeUtf8( &data, &dataLength, &propertyLength, &used, &pIndex );
@@ -4450,20 +4512,21 @@ MQTTStatus_t MQTT_ValidateWillProperties( const MQTTPropBuilder_t * pPropertyBui
                     LogError( ( "Corelation Data included more than once in the properties." ) );
                     status = MQTTBadParameter;
                 }
+
                 break;
 
             case MQTT_USER_PROPERTY_ID:
-                {
-                    const char * key, *value;
-                    uint16_t keyLength, valueLength;
-                    status = decodeUserProp( &key,
-                                             &keyLength,
-                                             &value,
-                                             &valueLength,
-                                             &propertyLength,
-                                             &pIndex );
-                }
-                break;
+               {
+                   const char * key, * value;
+                   uint16_t keyLength, valueLength;
+                   status = decodeUserProp( &key,
+                                            &keyLength,
+                                            &value,
+                                            &valueLength,
+                                            &propertyLength,
+                                            &pIndex );
+               }
+               break;
 
             default:
                 status = MQTTBadParameter;
@@ -4483,7 +4546,7 @@ MQTTStatus_t MQTT_ValidateConnectProperties( const MQTTPropBuilder_t * pProperty
     uint32_t propertyLength = 0U;
     uint8_t * pIndex = NULL;
 
-    if( ( pPropertyBuilder == NULL ) || 
+    if( ( pPropertyBuilder == NULL ) ||
         ( pPropertyBuilder->pBuffer == NULL ) ||
         ( isRequestProblemInfoSet == NULL ) )
     {
@@ -4504,13 +4567,14 @@ MQTTStatus_t MQTT_ValidateConnectProperties( const MQTTPropBuilder_t * pProperty
         bool used = false;
         const char * data;
         uint16_t dataLength;
-            
+
         pIndex = &pIndex[ 1 ];
         propertyLength -= sizeof( uint8_t );
 
         switch( propertyId )
         {
             case MQTT_SESSION_EXPIRY_ID:
+
                 if( UINT32_CHECK_BIT( propertyBitMask, MQTT_SESSION_EXPIRY_INTERVAL_POS ) != true )
                 {
                     status = decodeUint32t( NULL, &propertyLength, &used, &pIndex );
@@ -4521,9 +4585,11 @@ MQTTStatus_t MQTT_ValidateConnectProperties( const MQTTPropBuilder_t * pProperty
                     LogError( ( "Session Expiry Interval included more than once in the properties." ) );
                     status = MQTTBadParameter;
                 }
+
                 break;
 
             case MQTT_RECEIVE_MAX_ID:
+
                 if( UINT32_CHECK_BIT( propertyBitMask, MQTT_RECEIVE_MAXIMUM_POS ) != true )
                 {
                     uint16_t receiveMax;
@@ -4544,9 +4610,11 @@ MQTTStatus_t MQTT_ValidateConnectProperties( const MQTTPropBuilder_t * pProperty
                     LogError( ( "Receive Maximum included more than once in the properties." ) );
                     status = MQTTBadParameter;
                 }
+
                 break;
 
             case MQTT_MAX_PACKET_SIZE_ID:
+
                 if( UINT32_CHECK_BIT( propertyBitMask, MQTT_MAX_PACKET_SIZE_POS ) != true )
                 {
                     uint32_t maxPacketSize;
@@ -4567,9 +4635,11 @@ MQTTStatus_t MQTT_ValidateConnectProperties( const MQTTPropBuilder_t * pProperty
                     LogError( ( "Maximum Packet Size included more than once in the properties." ) );
                     status = MQTTBadParameter;
                 }
+
                 break;
 
             case MQTT_TOPIC_ALIAS_MAX_ID:
+
                 if( UINT32_CHECK_BIT( propertyBitMask, MQTT_TOPIC_ALIAS_MAX_POS ) != true )
                 {
                     status = decodeUint16t( NULL, &propertyLength, &used, &pIndex );
@@ -4580,9 +4650,11 @@ MQTTStatus_t MQTT_ValidateConnectProperties( const MQTTPropBuilder_t * pProperty
                     LogError( ( "Topic Alias Maximum included more than once in the properties." ) );
                     status = MQTTBadParameter;
                 }
+
                 break;
 
             case MQTT_REQUEST_RESPONSE_ID:
+
                 if( UINT32_CHECK_BIT( propertyBitMask, MQTT_REQUEST_RESPONSE_INFO_POS ) != true )
                 {
                     uint8_t requestResponseInfo;
@@ -4603,9 +4675,11 @@ MQTTStatus_t MQTT_ValidateConnectProperties( const MQTTPropBuilder_t * pProperty
                     LogError( ( "Request Response Information included more than once in the properties." ) );
                     status = MQTTBadParameter;
                 }
+
                 break;
 
             case MQTT_REQUEST_PROBLEM_ID:
+
                 if( UINT32_CHECK_BIT( propertyBitMask, MQTT_REQUEST_PROBLEM_INFO_POS ) != true )
                 {
                     uint8_t requestProblemInfo;
@@ -4630,9 +4704,11 @@ MQTTStatus_t MQTT_ValidateConnectProperties( const MQTTPropBuilder_t * pProperty
                     LogError( ( "Request Problem Information included more than once in the properties." ) );
                     status = MQTTBadParameter;
                 }
+
                 break;
 
             case MQTT_AUTH_METHOD_ID:
+
                 if( UINT32_CHECK_BIT( propertyBitMask, MQTT_AUTHENTICATION_METHOD_POS ) != true )
                 {
                     status = decodeUtf8( &data, &dataLength, &propertyLength, &used, &pIndex );
@@ -4643,9 +4719,11 @@ MQTTStatus_t MQTT_ValidateConnectProperties( const MQTTPropBuilder_t * pProperty
                     LogError( ( "Authentication Method included more than once in the properties." ) );
                     status = MQTTBadParameter;
                 }
+
                 break;
 
             case MQTT_AUTH_DATA_ID:
+
                 if( UINT32_CHECK_BIT( propertyBitMask, MQTT_AUTHENTICATION_DATA_POS ) != true )
                 {
                     status = decodeUtf8( &data, &dataLength, &propertyLength, &used, &pIndex );
@@ -4656,20 +4734,21 @@ MQTTStatus_t MQTT_ValidateConnectProperties( const MQTTPropBuilder_t * pProperty
                     LogError( ( "Authentication Data included more than once in the properties." ) );
                     status = MQTTBadParameter;
                 }
+
                 break;
 
             case MQTT_USER_PROPERTY_ID:
-                {
-                    const char * key, * value;
-                    uint16_t keyLength, valueLength;
-                    status = decodeUserProp( &key,
-                                             &keyLength,
-                                             &value,
-                                             &valueLength,
-                                             &propertyLength,
-                                             &pIndex );
-                }
-                break;
+               {
+                   const char * key, * value;
+                   uint16_t keyLength, valueLength;
+                   status = decodeUserProp( &key,
+                                            &keyLength,
+                                            &value,
+                                            &valueLength,
+                                            &propertyLength,
+                                            &pIndex );
+               }
+               break;
 
             default:
                 LogError( ( "Invalid property ID 0x%02x in CONNECT properties.", propertyId ) );
@@ -4678,9 +4757,9 @@ MQTTStatus_t MQTT_ValidateConnectProperties( const MQTTPropBuilder_t * pProperty
         }
     }
 
-    if(status == MQTTSuccess )
+    if( status == MQTTSuccess )
     {
-        if( ( UINT32_CHECK_BIT( propertyBitMask, MQTT_AUTHENTICATION_DATA_POS ) == true ) && 
+        if( ( UINT32_CHECK_BIT( propertyBitMask, MQTT_AUTHENTICATION_DATA_POS ) == true ) &&
             ( UINT32_CHECK_BIT( propertyBitMask, MQTT_AUTHENTICATION_METHOD_POS ) != true ) )
         {
             LogError( ( "Authentication data added but no authentication method present in CONNECT properties." ) );
@@ -4721,55 +4800,56 @@ MQTTStatus_t MQTT_ValidateSubscribeProperties( bool isSubscriptionIdAvailable,
         switch( propertyId )
         {
             case MQTT_SUBSCRIPTION_ID_ID:
+
+                if( subscriptionIDIncluded == true )
                 {
-                    if( subscriptionIDIncluded == true )
+                    status = MQTTBadParameter;
+                    LogError( ( "Subscription ID included. Protocol Error to include twice." ) );
+                }
+
+                if( status == MQTTSuccess )
+                {
+                    status = decodeVariableLength( pLocalIndex, propertyLength, &subscriptionId );
+                }
+
+                if( status == MQTTSuccess )
+                {
+                    propertyLength -= variableLengthEncodedSize( subscriptionId );
+
+                    if( isSubscriptionIdAvailable == false )
                     {
+                        LogError( ( "Protocol Error : Subscription Id not available" ) );
                         status = MQTTBadParameter;
-                        LogError( ( "Subscription ID included. Protocol Error to include twice." ) );
                     }
-
-                    if( status == MQTTSuccess )
+                    else if( subscriptionId == 0 )
                     {
-                        status = decodeVariableLength( pLocalIndex, propertyLength, &subscriptionId );
+                        LogError( ( "Protocol Error : Subscription Id value set to 0" ) );
+                        status = MQTTBadParameter;
                     }
-
-                    if( status == MQTTSuccess )
+                    else
                     {
-                        propertyLength -= variableLengthEncodedSize( subscriptionId );
-
-                        if( isSubscriptionIdAvailable == false )
-                        {
-                            LogError( ( "Protocol Error : Subscription Id not available" ) );
-                            status = MQTTBadParameter;
-                        }
-                        else if( subscriptionId == 0 )
-                        {
-                            LogError( ( "Protocol Error : Subscription Id value set to 0" ) );
-                            status = MQTTBadParameter;
-                        }
-                        else
-                        {
-                            subscriptionIDIncluded = true;
-                            LogTrace( ( "Processing subscription ID %" PRIu32,
-                                        subscriptionId ) );
-                        }
+                        subscriptionIDIncluded = true;
+                        LogTrace( ( "Processing subscription ID %" PRIu32,
+                                    subscriptionId ) );
                     }
                 }
+
                 break;
 
             case MQTT_USER_PROPERTY_ID:
-                {
-                    const char *key, *value;
-                    uint16_t keyLength, valueLength;
-                    status = decodeUserProp( &key, &keyLength, &value, &valueLength, &propertyLength, &pLocalIndex );
-                    if( status == MQTTSuccess )
-                    {
-                        LogTrace( ( "Processing User Property %.*s:%.*s",
-                                    (int) keyLength, key,
-                                    (int) valueLength, value ) );
-                    }
-                }
-                break;
+               {
+                   const char * key, * value;
+                   uint16_t keyLength, valueLength;
+                   status = decodeUserProp( &key, &keyLength, &value, &valueLength, &propertyLength, &pLocalIndex );
+
+                   if( status == MQTTSuccess )
+                   {
+                       LogTrace( ( "Processing User Property %.*s:%.*s",
+                                   ( int ) keyLength, key,
+                                   ( int ) valueLength, value ) );
+                   }
+               }
+               break;
 
             default:
                 status = MQTTBadParameter;
@@ -4817,56 +4897,56 @@ MQTTStatus_t MQTT_ValidatePublishProperties( uint16_t serverTopicAliasMax,
         switch( propertyId )
         {
             case MQTT_PAYLOAD_FORMAT_ID:
-            {
-                uint8_t property;
-                status = decodeUint8t( &property, &propertyLength, &used, &pLocalIndex );
-            }
-                break;
+               {
+                   uint8_t property;
+                   status = decodeUint8t( &property, &propertyLength, &used, &pLocalIndex );
+               }
+               break;
 
             case MQTT_MSG_EXPIRY_ID:
-            {
-                uint32_t property;
-                status = decodeUint32t( &property, &propertyLength, &used, &pLocalIndex );
-                break;
-            }
+               {
+                   uint32_t property;
+                   status = decodeUint32t( &property, &propertyLength, &used, &pLocalIndex );
+                   break;
+               }
 
             case MQTT_CONTENT_TYPE_ID:
             case MQTT_CORRELATION_DATA_ID:
             case MQTT_RESPONSE_TOPIC_ID:
-            {
-                const char *pProperty;
-                uint16_t length;
-                status = decodeUtf8( &pProperty, &length, &propertyLength, &used, &pLocalIndex );
-                break;
-            }
+               {
+                   const char * pProperty;
+                   uint16_t length;
+                   status = decodeUtf8( &pProperty, &length, &propertyLength, &used, &pLocalIndex );
+                   break;
+               }
 
             case MQTT_TOPIC_ALIAS_ID:
-            {
-                uint16_t property;
-                status = decodeUint16t( &property, &propertyLength, &topicAliasBool, &pLocalIndex );
+               {
+                   uint16_t property;
+                   status = decodeUint16t( &property, &propertyLength, &topicAliasBool, &pLocalIndex );
 
-                if( ( status == MQTTSuccess ) && ( serverTopicAliasMax < *topicAlias ) )
-                {
-                    LogError( ( "Protocol Error: Topic Alias greater than Topic Alias Max" ) );
-                    status = MQTTBadParameter;
-                }
-            }
-                break;
+                   if( ( status == MQTTSuccess ) && ( serverTopicAliasMax < *topicAlias ) )
+                   {
+                       LogError( ( "Protocol Error: Topic Alias greater than Topic Alias Max" ) );
+                       status = MQTTBadParameter;
+                   }
+               }
+               break;
 
             case MQTT_USER_PROPERTY_ID:
-            {
-                const char *pPropertyKey;
-                uint16_t propertyKeyLen;
-                const char *pPropertyValue;
-                uint16_t propertyValueLen;
-                status = decodeUserProp( &pPropertyKey,
-                                         &propertyKeyLen,
-                                         &pPropertyValue,
-                                         &propertyValueLen,
-                                         &propertyLength,
-                                         &pLocalIndex );
-            }
-                break;
+               {
+                   const char * pPropertyKey;
+                   uint16_t propertyKeyLen;
+                   const char * pPropertyValue;
+                   uint16_t propertyValueLen;
+                   status = decodeUserProp( &pPropertyKey,
+                                            &propertyKeyLen,
+                                            &pPropertyValue,
+                                            &propertyValueLen,
+                                            &propertyLength,
+                                            &pLocalIndex );
+               }
+               break;
 
             default:
                 status = MQTTBadParameter;
@@ -4957,25 +5037,25 @@ MQTTStatus_t MQTT_ValidatePublishAckProperties( const MQTTPropBuilder_t * pPrope
         switch( propertyId )
         {
             case MQTT_REASON_STRING_ID:
-                {
-                    const char *pProperty;
-                    uint16_t length;
-                    status = decodeUtf8( &pProperty, &length, &propertyLength, &used, &pIndex );
-                }
-                break;
+               {
+                   const char * pProperty;
+                   uint16_t length;
+                   status = decodeUtf8( &pProperty, &length, &propertyLength, &used, &pIndex );
+               }
+               break;
 
             case MQTT_USER_PROPERTY_ID:
-                {
-                    const char * key, *value;
-                    uint16_t keyLength, valueLength;
-                    status = decodeUserProp( &key,
-                                             &keyLength,
-                                             &value,
-                                             &valueLength,
-                                             &propertyLength,
-                                             &pIndex );
-                }
-                break;
+               {
+                   const char * key, * value;
+                   uint16_t keyLength, valueLength;
+                   status = decodeUserProp( &key,
+                                            &keyLength,
+                                            &value,
+                                            &valueLength,
+                                            &propertyLength,
+                                            &pIndex );
+               }
+               break;
 
             default:
                 status = MQTTBadParameter;
@@ -5092,20 +5172,20 @@ MQTTStatus_t MQTT_ValidateDisconnectProperties( uint32_t connectSessionExpiry,
                 break;
 
             case MQTT_REASON_STRING_ID:
-                {
-                    const char *pProperty;
-                    uint16_t length;
-                    status = decodeUtf8( &pProperty, &length, &propertyLength, &used, &pIndex );
-                }
-                break;
+               {
+                   const char * pProperty;
+                   uint16_t length;
+                   status = decodeUtf8( &pProperty, &length, &propertyLength, &used, &pIndex );
+               }
+               break;
 
             case MQTT_USER_PROPERTY_ID:
-                {
-                    const char * key, *value;
-                    uint16_t keyLength, valueLength;
-                    status = decodeUserProp( &key, &keyLength, &value, &valueLength, &propertyLength, &pIndex );
-                }
-                break;
+               {
+                   const char * key, * value;
+                   uint16_t keyLength, valueLength;
+                   status = decodeUserProp( &key, &keyLength, &value, &valueLength, &propertyLength, &pIndex );
+               }
+               break;
 
             default:
                 status = MQTTBadParameter;

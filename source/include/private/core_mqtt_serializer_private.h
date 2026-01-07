@@ -47,163 +47,163 @@
  * @brief Defines the position of the **Subscription Identifier**
  * property in the `fieldSet` bitfield of the `MQTTPropBuilder_t` struct.
  */
-#define MQTT_SUBSCRIPTION_ID_POS             ( 1 )
+#define MQTT_SUBSCRIPTION_ID_POS                    ( 1 )
 
 /**
  * @brief Defines the position of the **Session Expiry Interval**
  * property in the `fieldSet` bitfield of the `MQTTPropBuilder_t` struct.
  */
-#define MQTT_SESSION_EXPIRY_INTERVAL_POS     ( 2 )
+#define MQTT_SESSION_EXPIRY_INTERVAL_POS            ( 2 )
 
 /**
  * @brief Defines the position of the **Receive Maximum**
  * property in the `fieldSet` bitfield of the `MQTTPropBuilder_t` struct.
  */
-#define MQTT_RECEIVE_MAXIMUM_POS             ( 3 )
+#define MQTT_RECEIVE_MAXIMUM_POS                    ( 3 )
 
 /**
  * @brief Defines the position of the **Maximum Packet Size**
  * property in the `fieldSet` bitfield of the `MQTTPropBuilder_t` struct.
  */
-#define MQTT_MAX_PACKET_SIZE_POS             ( 4 )
+#define MQTT_MAX_PACKET_SIZE_POS                    ( 4 )
 
 /**
  * @brief Defines the position of the **Topic Alias Maximum**
  * property in the `fieldSet` bitfield of the `MQTTPropBuilder_t` struct.
  */
-#define MQTT_TOPIC_ALIAS_MAX_POS             ( 5 )
+#define MQTT_TOPIC_ALIAS_MAX_POS                    ( 5 )
 
 /**
  * @brief Defines the position of the **Request Response Information**
  * property in the `fieldSet` bitfield of the `MQTTPropBuilder_t` struct.
  */
-#define MQTT_REQUEST_RESPONSE_INFO_POS       ( 6 )
+#define MQTT_REQUEST_RESPONSE_INFO_POS              ( 6 )
 
 /**
  * @brief Defines the position of the **Request Problem Information**
  * property in the `fieldSet` bitfield of the `MQTTPropBuilder_t` struct.
  */
-#define MQTT_REQUEST_PROBLEM_INFO_POS        ( 7 )
+#define MQTT_REQUEST_PROBLEM_INFO_POS               ( 7 )
 
 /**
  * @brief Defines the position of the **Authentication Method**
  * property in the `fieldSet` bitfield of the `MQTTPropBuilder_t` struct.
  */
-#define MQTT_AUTHENTICATION_METHOD_POS       ( 9 )
+#define MQTT_AUTHENTICATION_METHOD_POS              ( 9 )
 
 /**
  * @brief Defines the position of the **Authentication Data**
  * property in the `fieldSet` bitfield of the `MQTTPropBuilder_t` struct.
  */
-#define MQTT_AUTHENTICATION_DATA_POS         ( 10 )
+#define MQTT_AUTHENTICATION_DATA_POS                ( 10 )
 
 /**
  * @brief Defines the position of the **Payload Format Indicator**
  * property in the `fieldSet` bitfield of the `MQTTPropBuilder_t` struct.
  */
-#define MQTT_PAYLOAD_FORMAT_INDICATOR_POS    ( 11 )
+#define MQTT_PAYLOAD_FORMAT_INDICATOR_POS           ( 11 )
 
 /**
  * @brief Defines the position of the **Message Expiry Interval**
  * property in the `fieldSet` bitfield of the `MQTTPropBuilder_t` struct.
  */
-#define MQTT_MESSAGE_EXPIRY_INTERVAL_POS     ( 12 )
+#define MQTT_MESSAGE_EXPIRY_INTERVAL_POS            ( 12 )
 
 /**
  * @brief Defines the position of the **Topic Alias**
  * property in the `fieldSet` bitfield of the `MQTTPropBuilder_t` struct.
  */
-#define MQTT_TOPIC_ALIAS_POS                 ( 13 )
+#define MQTT_TOPIC_ALIAS_POS                        ( 13 )
 
 /**
  * @brief Defines the position of the **Response Topic**
  * property in the `fieldSet` bitfield of the `MQTTPropBuilder_t` struct.
  */
-#define MQTT_RESPONSE_TOPIC_POS              ( 14 )
+#define MQTT_RESPONSE_TOPIC_POS                     ( 14 )
 
 /**
  * @brief Defines the position of the **Correlation Data**
  * property in the `fieldSet` bitfield of the `MQTTPropBuilder_t` struct.
  */
-#define MQTT_CORRELATION_DATA_POS            ( 15 )
+#define MQTT_CORRELATION_DATA_POS                   ( 15 )
 
 /**
  * @brief Defines the position of the **Content Type**
  * property in the `fieldSet` bitfield of the `MQTTPropBuilder_t` struct.
  */
-#define MQTT_CONTENT_TYPE_POS                ( 16 )
+#define MQTT_CONTENT_TYPE_POS                       ( 16 )
 
 /**
  * @brief Defines the position of the **Reason String**
  * property in the `fieldSet` bitfield of the `MQTTPropBuilder_t` struct.
  */
-#define MQTT_REASON_STRING_POS               ( 17 )
+#define MQTT_REASON_STRING_POS                      ( 17 )
 
 /**
  * @brief Defines the position of the **Will Delay Interval**
  * property in the `fieldSet` bitfield of the `MQTTPropBuilder_t` struct.
  */
-#define MQTT_WILL_DELAY_POS                  ( 18 )
+#define MQTT_WILL_DELAY_POS                         ( 18 )
 
 /**
  * @brief Defines the position of the **Assigned Client Identifier**
  * property in the `fieldSet` bitfield of the `MQTTPropBuilder_t` struct.
  */
-#define MQTT_ASSIGNED_CLIENT_ID_POS          ( 19 )
+#define MQTT_ASSIGNED_CLIENT_ID_POS                 ( 19 )
 
 /**
  * @brief Defines the position of the **Server Keep Alive**
  * property in the `fieldSet` bitfield of the `MQTTPropBuilder_t` struct.
  */
-#define MQTT_SERVER_KEEP_ALIVE_POS           ( 20 )
+#define MQTT_SERVER_KEEP_ALIVE_POS                  ( 20 )
 
 /**
  * @brief Defines the position of the **Response Information**
  * property in the `fieldSet` bitfield of the `MQTTPropBuilder_t` struct.
  */
-#define MQTT_RESPONSE_INFORMATION_POS        ( 21 )
+#define MQTT_RESPONSE_INFORMATION_POS               ( 21 )
 
 /**
  * @brief Defines the position of the **Server Reference**
  * property in the `fieldSet` bitfield of the `MQTTPropBuilder_t` struct.
  */
-#define MQTT_SERVER_REFERENCE_POS            ( 22 )
+#define MQTT_SERVER_REFERENCE_POS                   ( 22 )
 
 /**
  * @brief Defines the position of the **Maximum QoS**
  * property in the `fieldSet` bitfield of the `MQTTPropBuilder_t` struct.
  */
-#define MQTT_MAX_QOS_POS                 ( 23 )
+#define MQTT_MAX_QOS_POS                            ( 23 )
 
 /**
  * @brief Defines the position of the **Retain Available**
  * property in the `fieldSet` bitfield of the `MQTTPropBuilder_t` struct.
  */
-#define MQTT_RETAIN_AVAILABLE_POS            ( 24 )
+#define MQTT_RETAIN_AVAILABLE_POS                   ( 24 )
 
 /**
  * @brief Defines the position of the **Wildcard Subscription Available**
  * property in the `fieldSet` bitfield of the `MQTTPropBuilder_t` struct.
  */
-#define MQTT_WILDCARD_SUBSCRIPTION_AVAILABLE_POS  ( 25 )
+#define MQTT_WILDCARD_SUBSCRIPTION_AVAILABLE_POS    ( 25 )
 
 /**
  * @brief Defines the position of the **Subscription Identifier Available**
  * property in the `fieldSet` bitfield of the `MQTTPropBuilder_t` struct.
  */
-#define MQTT_SUBSCRIPTION_ID_AVAILABLE_POS   ( 26 )
+#define MQTT_SUBSCRIPTION_ID_AVAILABLE_POS          ( 26 )
 
 /**
  * @brief Defines the position of the **Shared Subscription Available**
  * property in the `fieldSet` bitfield of the `MQTTPropBuilder_t` struct.
  */
-#define MQTT_SHARED_SUBSCRIPTION_AVAILABLE_POS  ( 27 )
+#define MQTT_SHARED_SUBSCRIPTION_AVAILABLE_POS      ( 27 )
 
 /**
  * @brief Defines the position of the **User property**
  * in the `fieldSet` bitfield of the `MQTTPropBuilder_t` struct.
  */
-#define MQTT_USER_PROP_POS  ( 28 )
+#define MQTT_USER_PROP_POS                          ( 28 )
 
 /* MQTT CONNECT flags. */
 #define MQTT_CONNECT_FLAG_CLEAN                     ( 1 ) /**< @brief Clean session. */
@@ -287,14 +287,14 @@
  * @param[in] position Which bit to check.
  */
 #define UINT32_CHECK_BIT( x, position ) \
-    ( ( ( uint32_t ) ( x ) &( ( uint32_t ) 0x01U << ( position ) ) ) == ( ( uint32_t ) 0x01U << ( position ) ) )
+    ( ( ( uint32_t ) ( x ) & ( ( uint32_t ) 0x01U << ( position ) ) ) == ( ( uint32_t ) 0x01U << ( position ) ) )
 
 /**
  * @brief A value that represents an invalid remaining length.
  *
  * This value is greater than what is allowed by the MQTT specification.
  */
-#define MQTT_REMAINING_LENGTH_INVALID        ( ( size_t ) 268435456 )
+#define MQTT_REMAINING_LENGTH_INVALID    ( ( size_t ) 268435456 )
 
 /**
  * @brief Retrieve the size of the remaining length if it were to be encoded.
@@ -315,8 +315,8 @@ size_t variableLengthEncodedSize( uint32_t length );
  * @return A pointer to the end of the encoded string.
  */
 uint8_t * encodeString( uint8_t * pDestination,
-                               const char * pSource,
-                               uint16_t sourceLength );
+                        const char * pSource,
+                        uint16_t sourceLength );
 
 /**
  * @brief Validate the length and decode a user property.
@@ -330,12 +330,12 @@ uint8_t * encodeString( uint8_t * pDestination,
  *
  * @return #MQTTSuccess, #MQTTBadResponse
  **/
- MQTTStatus_t decodeUserProp( const char ** pPropertyKey,
-                              uint16_t * pPropertyKeyLen,
-                              const char ** pPropertyValue,
-                              uint16_t * pPropertyValueLen,
-                              uint32_t * pPropertyLength,
-                              uint8_t ** pIndex );
+MQTTStatus_t decodeUserProp( const char ** pPropertyKey,
+                             uint16_t * pPropertyKeyLen,
+                             const char ** pPropertyValue,
+                             uint16_t * pPropertyValueLen,
+                             uint32_t * pPropertyLength,
+                             uint8_t ** pIndex );
 
 /**
  * @brief Validate the length and decode a 4 byte value.
@@ -440,7 +440,7 @@ uint8_t * encodeRemainingLength( uint8_t * pDestination,
  *
  * @return A pointer to the end of the encoded string.
  */
-uint8_t * serializeAckFixed( uint8_t* pIndex,
+uint8_t * serializeAckFixed( uint8_t * pIndex,
                              uint8_t packetType,
                              uint16_t packetId,
                              size_t remainingLength,
@@ -500,4 +500,4 @@ uint8_t * serializeUnsubscribeHeader( size_t remainingLength,
                                       uint8_t * pIndex,
                                       uint16_t packetId );
 
-#endif
+#endif /* ifndef CORE_MQTT_SERIALIZER_PRIVATE_H */

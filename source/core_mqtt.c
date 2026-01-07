@@ -643,7 +643,7 @@ static void addSubscriptionOptions( const MQTTSubscribeInfo_t subscriptionInfo,
  * @return #MQTTSuccess, #MQTTServerRefused, #MQTTBadResponse, #MQTTBadParameter, #MQTTEventCallbackFailed.
  */
 static MQTTStatus_t handleSubUnsubAck( MQTTContext_t * pContext,
-                                  MQTTPacketInfo_t * pIncomingPacket );
+                                       MQTTPacketInfo_t * pIncomingPacket );
 
 /**
  * @brief Send acks for received QoS 1/2 publishes. This function is used to send
@@ -1648,7 +1648,7 @@ static MQTTStatus_t sendPublishAcksWithoutProperty( MQTTContext_t * pContext,
                                 ( unsigned int ) packetTypeByte, ( unsigned short ) packetId ) );
 
                     /* Here, we are not using the vector approach for efficiency. There is just one buffer
-                    * to be sent which can be achieved with a normal send call. */
+                     * to be sent which can be achieved with a normal send call. */
                     sendResult = sendBuffer( pContext,
                                              localBuffer.pBuffer,
                                              MQTT_PUBLISH_ACK_PACKET_SIZE );
@@ -1849,10 +1849,10 @@ static MQTTStatus_t sendPublishAcksWithProperty( MQTTContext_t * pContext,
             MQTT_PRE_STATE_UPDATE_HOOK( pContext );
             {
                 status = MQTT_UpdateStateAck( pContext,
-                                            packetId,
-                                            packetType,
-                                            MQTT_SEND,
-                                            &newState );
+                                              packetId,
+                                              packetType,
+                                              MQTT_SEND,
+                                              &newState );
             }
             MQTT_POST_STATE_UPDATE_HOOK( pContext );
 
@@ -2122,10 +2122,10 @@ static MQTTStatus_t handlePublishAcks( MQTTContext_t * pContext,
         MQTT_PRE_STATE_UPDATE_HOOK( pContext );
         {
             status = MQTT_UpdateStateAck( pContext,
-                                        packetIdentifier,
-                                        ackType,
-                                        MQTT_RECEIVE,
-                                        &publishRecordState );
+                                          packetIdentifier,
+                                          ackType,
+                                          MQTT_RECEIVE,
+                                          &publishRecordState );
         }
         MQTT_POST_STATE_UPDATE_HOOK( pContext );
 
@@ -2310,7 +2310,8 @@ static MQTTStatus_t receiveSingleIteration( MQTTContext_t * pContext,
     LogTrace( ( "Remaining buffer capacity: %ld",
                 ( long int ) ( pContext->networkBuffer.size - pContext->index ) ) );
 
-    do{
+    do
+    {
         if( recvBytes < 0 )
         {
             /* The receive function has failed. Bubble up the error up to the user. */
@@ -2332,12 +2333,12 @@ static MQTTStatus_t receiveSingleIteration( MQTTContext_t * pContext,
             LogDebug( ( "No data available from the network." ) );
 
             /* No more bytes available since the last read and neither is anything in
-            * the buffer. */
+             * the buffer. */
             status = MQTTNoDataAvailable;
         }
 
         /* Either something was received, or there is still data to be processed in the
-        * buffer, or both. */
+         * buffer, or both. */
         else
         {
             /* Update the number of bytes in the MQTT fixed buffer. */
@@ -2347,8 +2348,8 @@ static MQTTStatus_t receiveSingleIteration( MQTTContext_t * pContext,
             recvBytes = 0;
 
             status = MQTT_ProcessIncomingPacketTypeAndLength( pContext->networkBuffer.pBuffer,
-                                                            &( pContext->index ),
-                                                            &incomingPacket );
+                                                              &( pContext->index ),
+                                                              &incomingPacket );
 
             totalMQTTPacketLength = incomingPacket.remainingLength + incomingPacket.headerLength;
         }
@@ -2362,7 +2363,7 @@ static MQTTStatus_t receiveSingleIteration( MQTTContext_t * pContext,
                 MQTTStatus_t statusCopy = status;
 
                 /* Assign status so an error can be bubbled up to application,
-                * but reset it on success. */
+                 * but reset it on success. */
                 status = handleKeepAlive( pContext );
 
                 if( status == MQTTSuccess )
@@ -2382,7 +2383,7 @@ static MQTTStatus_t receiveSingleIteration( MQTTContext_t * pContext,
         if( ( status == MQTTNeedMoreBytes ) || ( status == MQTTNoDataAvailable ) )
         {
             /* Do nothing as there is nothing to be processed right now. The proper
-            * error code will be bubbled up to the user. */
+             * error code will be bubbled up to the user. */
         }
         /* Any other error code. */
         else if( status != MQTTSuccess )
@@ -2394,10 +2395,11 @@ static MQTTStatus_t receiveSingleIteration( MQTTContext_t * pContext,
         else if( totalMQTTPacketLength > pContext->networkBuffer.size )
         {
             LogWarn( ( "Incoming packet size is bigger than MQTT buffer size. Discarding!" ) );
+
             /* Discard the packet from the receive buffer and drain the pending
-            * data from the socket buffer. */
+             * data from the socket buffer. */
             status = discardStoredPacket( pContext,
-                                        &incomingPacket );
+                                          &incomingPacket );
         }
         /* If the total packet is of more length than the bytes we have available. */
         else if( totalMQTTPacketLength > pContext->index )
@@ -2415,7 +2417,7 @@ static MQTTStatus_t receiveSingleIteration( MQTTContext_t * pContext,
             incomingPacket.pRemainingData = &pContext->networkBuffer.pBuffer[ incomingPacket.headerLength ];
 
             /* PUBLISH packets allow flags in the lower four bits. For other
-            * packet types, they are reserved. */
+             * packet types, they are reserved. */
             if( ( incomingPacket.type & 0xF0U ) == MQTT_PACKET_TYPE_PUBLISH )
             {
                 status = handleIncomingPublish( pContext, &incomingPacket );
@@ -2425,7 +2427,7 @@ static MQTTStatus_t receiveSingleIteration( MQTTContext_t * pContext,
                 status = handleIncomingAck( pContext, &incomingPacket, manageKeepAlive );
 
                 /* TODO: decide what to do when the app callback has failed.
-                * Should the packet be re-sent to the app? */
+                 * Should the packet be re-sent to the app? */
             }
 
             /* Update the index to reflect the remaining bytes in the buffer.  */
@@ -2433,8 +2435,8 @@ static MQTTStatus_t receiveSingleIteration( MQTTContext_t * pContext,
 
             /* Move the remaining bytes to the front of the buffer. */
             ( void ) memmove( pContext->networkBuffer.pBuffer,
-                            &( pContext->networkBuffer.pBuffer[ totalMQTTPacketLength ] ),
-                            pContext->index );
+                              &( pContext->networkBuffer.pBuffer[ totalMQTTPacketLength ] ),
+                              pContext->index );
 
             if( status == MQTTSuccess )
             {
@@ -3769,6 +3771,7 @@ static MQTTStatus_t sendDisconnectWithoutCopy( MQTTContext_t * pContext,
     TransportOutVector_t * iterator = pIoVector;
 
     assert( pContext != NULL );
+
     if( pPropertyBuilder != NULL )
     {
         assert( pReasonCode != NULL );
@@ -4102,7 +4105,7 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
         bool isRequestProblemInfoSet;
         status = MQTT_ValidateConnectProperties( pPropertyBuilder, &isRequestProblemInfoSet );
 
-        // Update the field in the context so that it can be gated on.
+        /* Update the field in the context so that it can be gated on. */
         pContext->connectionProperties.requestProblemInfo = isRequestProblemInfoSet;
     }
 
@@ -5016,6 +5019,7 @@ void MQTT_SerializeMQTTVec( uint8_t * pAllocatedMem,
 const char * MQTT_GetPacketTypeString( uint8_t packetType )
 {
     char * retVal;
+
     if( ( packetType & 0xF0U ) == MQTT_PACKET_TYPE_PUBLISH )
     {
         retVal = "PUBLISH";
@@ -5027,45 +5031,59 @@ const char * MQTT_GetPacketTypeString( uint8_t packetType )
             case MQTT_PACKET_TYPE_CONNECT:
                 retVal = "CONNECT";
                 break;
+
             case MQTT_PACKET_TYPE_CONNACK:
                 retVal = "CONNACK";
                 break;
+
             case MQTT_PACKET_TYPE_PUBACK:
                 retVal = "PUBACK";
                 break;
+
             case MQTT_PACKET_TYPE_PUBREC:
                 retVal = "PUBREC";
                 break;
+
             case MQTT_PACKET_TYPE_PUBREL:
                 retVal = "PUBREL";
                 break;
+
             case MQTT_PACKET_TYPE_PUBCOMP:
                 retVal = "PUBCOMP";
                 break;
+
             case MQTT_PACKET_TYPE_SUBSCRIBE:
                 retVal = "SUBSCRIBE";
                 break;
+
             case MQTT_PACKET_TYPE_SUBACK:
                 retVal = "SUBACK";
                 break;
+
             case MQTT_PACKET_TYPE_UNSUBSCRIBE:
                 retVal = "UNSUBSCRIBE";
                 break;
+
             case MQTT_PACKET_TYPE_UNSUBACK:
                 retVal = "UNSUBACK";
                 break;
+
             case MQTT_PACKET_TYPE_PINGREQ:
                 retVal = "PINGREQ";
                 break;
+
             case MQTT_PACKET_TYPE_PINGRESP:
                 retVal = "PINGRESP";
                 break;
+
             case MQTT_PACKET_TYPE_DISCONNECT:
                 retVal = "DISCONNECT";
                 break;
+
             case MQTT_PACKET_TYPE_AUTH:
                 retVal = "AUTH";
                 break;
+
             default:
                 retVal = "UNKNOWN";
                 break;

@@ -46,11 +46,13 @@
  *
  * @return Whether the property is allowed for the packet type.
  */
-static bool isValidPropertyInPacketType( const uint8_t * mqttPacketType, uint8_t propBitLocation );
+static bool isValidPropertyInPacketType( const uint8_t * mqttPacketType,
+                                         uint8_t propBitLocation );
 
 /*-----------------------------------------------------------*/
 
-static bool isValidPropertyInPacketType( const uint8_t * mqttPacketType, uint8_t propBitLocation )
+static bool isValidPropertyInPacketType( const uint8_t * mqttPacketType,
+                                         uint8_t propBitLocation )
 {
     bool isAllowed = false;
     uint32_t allowedPropertiesMask = 0U;
@@ -58,6 +60,7 @@ static bool isValidPropertyInPacketType( const uint8_t * mqttPacketType, uint8_t
     switch( *mqttPacketType )
     {
         case MQTT_PACKET_TYPE_CONNECT:
+
             /* CONNECT properties:
              * - Session Expiry Interval
              * - Receive Maximum
@@ -81,6 +84,7 @@ static bool isValidPropertyInPacketType( const uint8_t * mqttPacketType, uint8_t
             break;
 
         case MQTT_PACKET_TYPE_CONNACK:
+
             /* CONNACK properties:
              * - Session Expiry Interval
              * - Receive Maximum
@@ -120,6 +124,7 @@ static bool isValidPropertyInPacketType( const uint8_t * mqttPacketType, uint8_t
             break;
 
         case MQTT_PACKET_TYPE_PUBLISH:
+
             /* PUBLISH properties:
              * - Payload Format Indicator
              * - Message Expiry Interval
@@ -144,6 +149,7 @@ static bool isValidPropertyInPacketType( const uint8_t * mqttPacketType, uint8_t
         case MQTT_PACKET_TYPE_PUBREC:
         case MQTT_PACKET_TYPE_PUBREL:
         case MQTT_PACKET_TYPE_PUBCOMP:
+
             /* PUBACK, PUBREC, PUBREL, PUBCOMP properties:
              * - Reason String
              * - User Property
@@ -153,6 +159,7 @@ static bool isValidPropertyInPacketType( const uint8_t * mqttPacketType, uint8_t
             break;
 
         case MQTT_PACKET_TYPE_SUBSCRIBE:
+
             /* SUBSCRIBE properties:
              * - Subscription Identifier
              * - User Property
@@ -162,6 +169,7 @@ static bool isValidPropertyInPacketType( const uint8_t * mqttPacketType, uint8_t
             break;
 
         case MQTT_PACKET_TYPE_SUBACK:
+
             /* SUBACK properties:
              * - Reason String
              * - User Property
@@ -171,6 +179,7 @@ static bool isValidPropertyInPacketType( const uint8_t * mqttPacketType, uint8_t
             break;
 
         case MQTT_PACKET_TYPE_UNSUBSCRIBE:
+
             /* UNSUBSCRIBE properties:
              * - User Property
              */
@@ -178,6 +187,7 @@ static bool isValidPropertyInPacketType( const uint8_t * mqttPacketType, uint8_t
             break;
 
         case MQTT_PACKET_TYPE_UNSUBACK:
+
             /* UNSUBACK properties:
              * - Reason String
              * - User Property
@@ -187,6 +197,7 @@ static bool isValidPropertyInPacketType( const uint8_t * mqttPacketType, uint8_t
             break;
 
         case MQTT_PACKET_TYPE_DISCONNECT:
+
             /* DISCONNECT properties:
              * - Session Expiry Interval
              * - Reason String
@@ -201,11 +212,13 @@ static bool isValidPropertyInPacketType( const uint8_t * mqttPacketType, uint8_t
 
         case MQTT_PACKET_TYPE_PINGREQ:
         case MQTT_PACKET_TYPE_PINGRESP:
+
             /* PINGREQ and PINGRESP have no properties section.
              * allowedPropertiesMask remains 0. */
             break;
-        
+
         case MQTT_PACKET_TYPE_AUTH:
+
             /* AUTH properties:
              * - Authentication Method
              * - Authentication Data
@@ -576,12 +589,13 @@ MQTTStatus_t MQTTPropAdd_UserProp( MQTTPropBuilder_t * pPropertyBuilder,
         LogError( ( "User property not allowed in %d packet type.", *pOptionalMqttPacketType ) );
         status = MQTTBadParameter;
     }
+
     /*
-       User property is encoded as a key-value pair of UTF-8 strings.
-       2-bytes for string length of key + key length +
-       2-bytes for string length of value + value length +
-       1 byte for property identifier.
-    */
+     * User property is encoded as a key-value pair of UTF-8 strings.
+     * 2-bytes for string length of key + key length +
+     * 2-bytes for string length of value + value length +
+     * 1 byte for property identifier.
+     */
     else if( ( pPropertyBuilder->currentIndex +
                sizeof( uint16_t ) + userProperty->keyLength +
                sizeof( uint16_t ) + userProperty->valueLength +
@@ -664,7 +678,7 @@ MQTTStatus_t MQTTPropAdd_MaxPacketSize( MQTTPropBuilder_t * pPropertyBuilder,
                                         const uint8_t * pOptionalMqttPacketType )
 {
     MQTTStatus_t status = MQTTSuccess;
-    
+
     if( maxPacketSize == 0U )
     {
         LogError( ( "Max packet size cannot be set to 0." ) );

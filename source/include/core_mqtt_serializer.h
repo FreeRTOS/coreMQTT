@@ -1433,7 +1433,7 @@ MQTTStatus_t MQTT_SerializePublishHeader( const MQTTPublishInfo_t * pPublishInfo
  * @param[in] packetId Packet ID of the publish.
  * @param[in] pAckProperties Optional properties to be added to the ACK packet.
  * @param[in] pReasonCode Optional reason code to be added to the ACK packet.
- * 
+ *
  * @note If any properties are provided to the function to be added to the ack
  * packet, then a reason code must be provided as well.
  *
