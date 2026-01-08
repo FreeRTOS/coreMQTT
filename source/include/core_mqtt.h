@@ -112,31 +112,31 @@ typedef uint32_t (* MQTTGetCurrentTimeFunc_t )( void );
  *
  * - Connack Properties:
  *  - #MQTTPropGet_SessionExpiry
- *  - #MQTTPropGet_ConnReceiveMax
- *  - #MQTTPropGet_ConnMaxQos
- *  - #MQTTPropGet_ConnRetainAvailable
- *  - #MQTTPropGet_ConnMaxPacketSize
- *  - #MQTTPropGet_ConnClientId
- *  - #MQTTPropGet_ConnTopicAliasMax
+ *  - #MQTTPropGet_ReceiveMax
+ *  - #MQTTPropGet_MaxQos
+ *  - #MQTTPropGet_RetainAvailable
+ *  - #MQTTPropGet_MaxPacketSize
+ *  - #MQTTPropGet_AssignedClientId
+ *  - #MQTTPropGet_TopicAliasMax
  *  - #MQTTPropGet_ReasonString
  *  - #MQTTPropGet_UserProp
- *  - #MQTTPropGet_ConnWildcard
- *  - #MQTTPropGet_ConnSubId
- *  - #MQTTPropGet_ConnSharedSubAvailable
- *  - #MQTTPropGet_ConnServerKeepAlive
- *  - #MQTTPropGet_ConnResponseInfo
+ *  - #MQTTPropGet_WildcardId
+ *  - #MQTTPropGet_SubsIdAvailable
+ *  - #MQTTPropGet_SharedSubAvailable
+ *  - #MQTTPropGet_ServerKeepAlive
+ *  - #MQTTPropGet_ResponseInfo
  *  - #MQTTPropGet_ServerRef
- *  - #MQTTPropGet_ConnAuthMethod
- *  - #MQTTPropGet_ConnAuthData
+ *  - #MQTTPropGet_AuthMethod
+ *  - #MQTTPropGet_AuthData
  *
  * - Publish Properties:
- *  - #MQTTPropGet_PubTopicAlias
- *  - #MQTTPropGet_PubPayloadFormatIndicator
- *  - #MQTTPropGet_PubResponseTopic
- *  - #MQTTPropGet_PubCorrelationData
- *  - #MQTTPropGet_PubMessageExpiryInterval
- *  - #MQTTPropGet_PubContentType
- *  - #MQTTPropGet_PubSubscriptionId
+ *  - #MQTTPropGet_TopicAlias
+ *  - #MQTTPropGet_PayloadFormatIndicator
+ *  - #MQTTPropGet_ResponseTopic
+ *  - #MQTTPropGet_CorrelationData
+ *  - #MQTTPropGet_MessageExpiryInterval
+ *  - #MQTTPropGet_ContentType
+ *  - #MQTTPropGet_SubscriptionId
  *  - #MQTTPropGet_UserProp
  *
  * - Ack Properties (PUBACK, PUBREC, PUBREL, PUBCOMP, SUBACK, UNSUBACK):
@@ -753,22 +753,22 @@ MQTTStatus_t MQTT_CheckConnectStatus( const MQTTContext_t * pContext );
  *
  * Connect Properties:
  * - #MQTTPropAdd_SessionExpiry
- * - #MQTTPropAdd_ConnReceiveMax
- * - #MQTTPropAdd_ConnMaxPacketSize
- * - #MQTTPropAdd_ConnTopicAliasMax
- * - #MQTTPropAdd_ConnRequestRespInfo
- * - #MQTTPropAdd_ConnRequestProbInfo
+ * - #MQTTPropAdd_ReceiveMax
+ * - #MQTTPropAdd_MaxPacketSize
+ * - #MQTTPropAdd_TopicAliasMax
+ * - #MQTTPropAdd_RequestRespInfo
+ * - #MQTTPropAdd_RequestProbInfo
  * - #MQTTPropAdd_UserProp
- * - #MQTTPropAdd_ConnAuthMethod
- * - #MQTTPropAdd_ConnAuthData
+ * - #MQTTPropAdd_AuthMethod
+ * - #MQTTPropAdd_AuthData
  *
  * Will Properties:
  * - #MQTTPropAdd_WillDelayInterval
- * - #MQTTPropAdd_PubPayloadFormat
- * - #MQTTPropAdd_PubMessageExpiry
- * - #MQTTPropAdd_PubResponseTopic
- * - #MQTTPropAdd_PubCorrelationData
- * - #MQTTPropAdd_PubContentType
+ * - #MQTTPropAdd_PayloadFormat
+ * - #MQTTPropAdd_MessageExpiry
+ * - #MQTTPropAdd_ResponseTopic
+ * - #MQTTPropAdd_CorrelationData
+ * - #MQTTPropAdd_ContentType
  * - #MQTTPropAdd_UserProp
  *
  * <b>Example</b>
@@ -865,7 +865,7 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
  *
  * Functions to add optional properties to the SUBSCRIBE packet are:
  *
- * - #MQTTPropAdd_SubscribeId
+ * - #MQTTPropAdd_SubscriptionId
  * - #MQTTPropAdd_UserProp
  *
  * <b>Example</b>
@@ -894,7 +894,7 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
  * size_t propertyBufferLength = sizeof( propertyBuffer );
  * status = MQTTPropertyBuilder_Init( &propertyBuilder, propertyBuffer, propertyBufferLength );
  *
- * status = MQTTPropAdd_SubscribeId(&propertyBuilder, 1);
+ * status = MQTTPropAdd_SubscriptionId(&propertyBuilder, 1);
  *
  * // Obtain a new packet id for the subscription.
  * packetId = MQTT_GetPacketId( pContext );
@@ -940,12 +940,12 @@ MQTTStatus_t MQTT_Subscribe( MQTTContext_t * pContext,
  *
  * Functions to add optional properties to the PUBLISH packet are:
  *
- * - #MQTTPropAdd_PubPayloadFormat
- * - #MQTTPropAdd_PubMessageExpiry
- * - #MQTTPropAdd_PubTopicAlias
- * - #MQTTPropAdd_PubResponseTopic
- * - #MQTTPropAdd_PubCorrelationData
- * - #MQTTPropAdd_PubContentType
+ * - #MQTTPropAdd_PayloadFormat
+ * - #MQTTPropAdd_MessageExpiry
+ * - #MQTTPropAdd_TopicAlias
+ * - #MQTTPropAdd_ResponseTopic
+ * - #MQTTPropAdd_CorrelationData
+ * - #MQTTPropAdd_ContentType
  * - #MQTTPropAdd_UserProp
  *
  * <b>Example</b>

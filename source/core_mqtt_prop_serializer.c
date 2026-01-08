@@ -49,6 +49,100 @@
 static bool isValidPropertyInPacketType( const uint8_t * mqttPacketType,
                                          uint8_t propBitLocation );
 
+/**
+ * @brief Add a uint8 property to the property builder.
+ *
+ * This function adds a uint8 property to the property builder with validation
+ * for packet type compatibility and buffer space.
+ *
+ * @param[in,out] pPropertyBuilder Pointer to the property builder to add the property to.
+ * @param[in] property The uint8 property value to add.
+ * @param[in] propId The property ID for this property.
+ * @param[in] fieldPosition The bit position in the fieldSet for duplicate checking.
+ * @param[in] pOptionalMqttPacketType Optional MQTT packet type for validation.
+ *                                    Can be NULL to skip packet type validation.
+ *
+ * @return #MQTTSuccess if the property is successfully added;
+ * #MQTTBadParameter if parameters are invalid;
+ * #MQTTNoMemory if insufficient buffer space.
+ */
+static MQTTStatus_t addPropUint8( MQTTPropBuilder_t * pPropertyBuilder,
+                                  uint8_t property,
+                                  uint8_t propId,
+                                  uint8_t fieldPosition,
+                                  const uint8_t * pOptionalMqttPacketType );
+
+/**
+ * @brief Add a uint16 property to the property builder.
+ *
+ * This function adds a uint16 property to the property builder with validation
+ * for packet type compatibility and buffer space.
+ *
+ * @param[in,out] pPropertyBuilder Pointer to the property builder to add the property to.
+ * @param[in] property The uint16 property value to add.
+ * @param[in] propId The property ID for this property.
+ * @param[in] fieldPosition The bit position in the fieldSet for duplicate checking.
+ * @param[in] pOptionalMqttPacketType Optional MQTT packet type for validation.
+ *                                    Can be NULL to skip packet type validation.
+ *
+ * @return #MQTTSuccess if the property is successfully added;
+ * #MQTTBadParameter if parameters are invalid;
+ * #MQTTNoMemory if insufficient buffer space.
+ */
+static MQTTStatus_t addPropUint16( MQTTPropBuilder_t * pPropertyBuilder,
+                                   uint16_t property,
+                                   uint8_t propId,
+                                   uint8_t fieldPosition,
+                                   const uint8_t * pOptionalMqttPacketType );
+
+/**
+ * @brief Add a uint32 property to the property builder.
+ *
+ * This function adds a uint32 property to the property builder with validation
+ * for packet type compatibility and buffer space.
+ *
+ * @param[in,out] pPropertyBuilder Pointer to the property builder to add the property to.
+ * @param[in] property The uint32 property value to add.
+ * @param[in] propId The property ID for this property.
+ * @param[in] fieldPosition The bit position in the fieldSet for duplicate checking.
+ * @param[in] pOptionalMqttPacketType Optional MQTT packet type for validation.
+ *                                    Can be NULL to skip packet type validation.
+ *
+ * @return #MQTTSuccess if the property is successfully added;
+ * #MQTTBadParameter if parameters are invalid;
+ * #MQTTNoMemory if insufficient buffer space.
+ */
+static MQTTStatus_t addPropUint32( MQTTPropBuilder_t * pPropertyBuilder,
+                                   uint32_t property,
+                                   uint8_t propId,
+                                   uint8_t fieldPosition,
+                                   const uint8_t * pOptionalMqttPacketType );
+
+/**
+ * @brief Add a UTF-8 string property to the property builder.
+ *
+ * This function adds a UTF-8 string property to the property builder with validation
+ * for packet type compatibility and buffer space.
+ *
+ * @param[in,out] pPropertyBuilder Pointer to the property builder to add the property to.
+ * @param[in] property The UTF-8 string property value to add.
+ * @param[in] propertyLength The length of the UTF-8 string property.
+ * @param[in] propId The property ID for this property.
+ * @param[in] fieldPosition The bit position in the fieldSet for duplicate checking.
+ * @param[in] pOptionalMqttPacketType Optional MQTT packet type for validation.
+ *                                    Can be NULL to skip packet type validation.
+ *
+ * @return #MQTTSuccess if the property is successfully added;
+ * #MQTTBadParameter if parameters are invalid;
+ * #MQTTNoMemory if insufficient buffer space.
+ */
+static MQTTStatus_t addPropUtf8( MQTTPropBuilder_t * pPropertyBuilder,
+                                 const char * property,
+                                 uint16_t propertyLength,
+                                 uint8_t propId,
+                                 uint8_t fieldPosition,
+                                 const uint8_t * pOptionalMqttPacketType );
+
 /*-----------------------------------------------------------*/
 
 static bool isValidPropertyInPacketType( const uint8_t * mqttPacketType,
@@ -492,9 +586,9 @@ static MQTTStatus_t addPropUtf8( MQTTPropBuilder_t * pPropertyBuilder,
 
 /*-----------------------------------------------------------*/
 
-MQTTStatus_t MQTTPropAdd_SubscribeId( MQTTPropBuilder_t * pPropertyBuilder,
-                                      uint32_t subscriptionId,
-                                      const uint8_t * pOptionalMqttPacketType )
+MQTTStatus_t MQTTPropAdd_SubscriptionId( MQTTPropBuilder_t * pPropertyBuilder,
+                                         uint32_t subscriptionId,
+                                         const uint8_t * pOptionalMqttPacketType )
 {
     MQTTStatus_t status = MQTTSuccess;
     uint8_t * pIndex;

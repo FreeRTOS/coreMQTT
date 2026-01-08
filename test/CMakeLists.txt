@@ -26,8 +26,8 @@ if( ${PROJECT_SOURCE_DIR} STREQUAL ${PROJECT_BINARY_DIR} )
 endif()
 
 # Set global path variables.
-get_filename_component(__MODULE_ROOT_DIR "${CMAKE_CURRENT_LIST_DIR}/.." ABSOLUTE)
-set(MODULE_ROOT_DIR ${__MODULE_ROOT_DIR} CACHE INTERNAL "coreMQTT repository root.")
+get_filename_component( __MODULE_ROOT_DIR "${CMAKE_CURRENT_LIST_DIR}/.." ABSOLUTE )
+set( MODULE_ROOT_DIR ${__MODULE_ROOT_DIR} CACHE INTERNAL "coreMQTT repository root." )
 
 # Configure options to always show in CMake GUI.
 option( BUILD_CLONE_SUBMODULES
@@ -47,8 +47,8 @@ if( COV_ANALYSIS )
 
     # Target for Coverity analysis that builds the library.
     add_library( coverity_analysis
-                ${MQTT_SOURCES}
-                ${MQTT_SERIALIZER_SOURCES} )
+                 ${MQTT_SOURCES}
+                 ${MQTT_SERIALIZER_SOURCES} )
 
     # Build MQTT library target without custom config dependency.
     target_compile_definitions( coverity_analysis PUBLIC MQTT_DO_NOT_USE_CUSTOM_CONFIG=1 )

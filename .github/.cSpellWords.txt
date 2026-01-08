@@ -28,6 +28,10 @@ misra
 Misra
 MISRA
 MQTT
+mqttpropadd
+mqttpropertybuilder
+mqttpropget
+MQTTV
 mypy
 nondet
 Nondet
@@ -37,6 +41,7 @@ pytest
 pyyaml
 serializemqttvec
 sinclude
+subscriptionid
 UNACKED
 unpadded
 Unpadded
