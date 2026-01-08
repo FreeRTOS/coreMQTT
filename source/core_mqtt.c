@@ -705,6 +705,17 @@ static MQTTStatus_t sendDisconnectWithoutCopy( MQTTContext_t * pContext,
                                                size_t remainingLength,
                                                const MQTTPropBuilder_t * pPropertyBuilder );
 
+/**
+ * @brief Handle Incoming Disconnect
+ *
+ * @param[in] pContext MQTT Connection context.
+ * @param[in] pIncomingPacket Information of incoming packet
+ *
+ * @return #MQTTSuccess, #MQTTBadResponse, #MQTTBadParameter, #MQTTEventCallbackFailed,
+ */
+static MQTTStatus_t handleIncomingDisconnect( MQTTContext_t * pContext,
+                                              MQTTPacketInfo_t * pIncomingPacket );
+
 /*-----------------------------------------------------------*/
 
 static bool matchEndWildcardsSpecialCases( const char * pTopicFilter,
@@ -719,7 +730,7 @@ static bool matchEndWildcardsSpecialCases( const char * pTopicFilter,
     /* Check if the topic filter has 2 remaining characters and it ends in
      * "/#". This check handles the case to match filter "sport/#" with topic
      * "sport". The reason is that the '#' wildcard represents the parent and
-     * any number of child levels in the topic name.*/
+     * any number of child levels in the topic name. */
     if( ( topicFilterLength >= 3U ) &&
         ( filterIndex == ( topicFilterLength - 3U ) ) &&
         ( pTopicFilter[ filterIndex + 1U ] == '/' ) &&
@@ -771,7 +782,7 @@ static bool matchWildcards( const char * pTopicName,
     nameIndex = *pNameIndex;
 
     /* Wild card in a topic filter is only valid either at the starting position
-     * or when it is preceded by a '/'.*/
+     * or when it is preceded by a '/'. */
     locationIsValidForWildcard = ( *pFilterIndex == 0u ) ||
                                  ( pTopicFilter[ *pFilterIndex - 1U ] == '/' );
 
@@ -826,7 +837,7 @@ static bool matchWildcards( const char * pTopicName,
             /* If we have reached here, the the loop terminated on the
              * ( nameIndex < topicNameLength) condition, which means that have
              * reached past the end of the topic name, and thus, we decrement the
-             * index to the last character in the topic name.*/
+             * index to the last character in the topic name. */
             /* coverity[integer_overflow] */
             nameIndex -= 1;
         }
@@ -2287,6 +2298,39 @@ static MQTTStatus_t handleIncomingAck( MQTTContext_t * pContext,
 
 /*-----------------------------------------------------------*/
 
+static MQTTStatus_t handleIncomingDisconnect( MQTTContext_t * pContext,
+                                              MQTTPacketInfo_t * pIncomingPacket )
+{
+    MQTTStatus_t status = MQTTSuccess;
+    MQTTDeserializedInfo_t deserializedInfo = { 0 };
+    MQTTPropBuilder_t propBuffer = { 0 };
+    MQTTReasonCodeInfo_t reasonCode = { 0 };
+
+    assert( pContext != NULL );
+    assert( pContext->appCallback != NULL );
+    assert( pIncomingPacket != NULL );
+
+    status = MQTT_DeserializeDisconnect( pIncomingPacket,
+                                         pContext->connectionProperties.maxPacketSize,
+                                         &reasonCode,
+                                         &propBuffer );
+
+    if( status == MQTTSuccess )
+    {
+        deserializedInfo.pReasonCode = &reasonCode;
+
+        if( pContext->appCallback( pContext, pIncomingPacket, &deserializedInfo,
+                                   NULL, &pContext->ackPropsBuffer, &propBuffer ) == false )
+        {
+            status = MQTTEventCallbackFailed;
+        }
+    }
+
+    return status;
+}
+
+/*-----------------------------------------------------------*/
+
 static MQTTStatus_t receiveSingleIteration( MQTTContext_t * pContext,
                                             bool manageKeepAlive )
 {
@@ -2421,6 +2465,36 @@ static MQTTStatus_t receiveSingleIteration( MQTTContext_t * pContext,
             if( ( incomingPacket.type & 0xF0U ) == MQTT_PACKET_TYPE_PUBLISH )
             {
                 status = handleIncomingPublish( pContext, &incomingPacket );
+            }
+            else if( incomingPacket.type == MQTT_PACKET_TYPE_DISCONNECT )
+            {
+                status = handleIncomingDisconnect( pContext, &incomingPacket );
+
+                if( status == MQTTSuccess )
+                {
+                    LogInfo( ( "Disconnected from the broker." ) );
+                }
+                else if( status != MQTTEventCallbackFailed )
+                {
+                    /* Incoming packet is malformed at this stage. */
+                    MQTTSuccessFailReasonCode_t reason = MQTT_REASON_DISCONNECT_MALFORMED_PACKET;
+                    status = MQTT_Disconnect( pContext, NULL, &reason );
+
+                    if( status != MQTTSuccess )
+                    {
+                        LogError( ( "Failed to send disconnect following a malformed disconnect "
+                                    "from the server. coreMQTT will forcefully disconnect now." ) );
+                    }
+                }
+                else /* At this point the callback has failed. */
+                {
+                    /* TODO: If handling fails, the packet should be
+                     * resent to the application or not? */
+                }
+
+                MQTT_PRE_STATE_UPDATE_HOOK( pContext );
+                pContext->connectStatus = MQTTNotConnected;
+                MQTT_POST_STATE_UPDATE_HOOK( pContext );
             }
             else
             {
@@ -2907,7 +2981,7 @@ static MQTTStatus_t sendPublishWithoutCopy( MQTTContext_t * pContext,
     iterator++;
     ioVectorLength++;
 
-    /* Serialize the publish properties, if provided.*/
+    /* Serialize the publish properties, if provided. */
 
     if( publishPropLength > 0U )
     {
@@ -3130,7 +3204,7 @@ static MQTTStatus_t sendConnectWithoutCopy( MQTTContext_t * pContext,
 
             if( willPropsLen > 0U )
             {
-                /*Serialize the will properties, if present.*/
+                /* Serialize the will properties, if present. */
 
                 iterator->iov_base = pWillPropertyBuilder->pBuffer;
                 iterator->iov_len = pWillPropertyBuilder->currentIndex;
@@ -4274,7 +4348,7 @@ MQTTStatus_t MQTT_Subscribe( MQTTContext_t * pContext,
 
     if( status == MQTTSuccess )
     {
-        /* Get the remaining length and packet size.*/
+        /* Get the remaining length and packet size. */
         status = MQTT_GetSubscribePacketSize( pSubscriptionList,
                                               subscriptionCount,
                                               pPropertyBuilder,
@@ -4364,7 +4438,7 @@ MQTTStatus_t MQTT_Publish( MQTTContext_t * pContext,
 
     if( status == MQTTSuccess )
     {
-        /* Get the remaining length and packet size.*/
+        /* Get the remaining length and packet size. */
         status = MQTT_GetPublishPacketSize( pPublishInfo,
                                             pPropertyBuilder,
                                             &remainingLength,
@@ -4572,7 +4646,7 @@ MQTTStatus_t MQTT_Unsubscribe( MQTTContext_t * pContext,
 
     if( status == MQTTSuccess )
     {
-        /* Get the remaining length and packet size.*/
+        /* Get the remaining length and packet size. */
         status = MQTT_GetUnsubscribePacketSize( pSubscriptionList,
                                                 subscriptionCount,
                                                 pPropertyBuilder,
@@ -4814,7 +4888,7 @@ MQTTStatus_t MQTT_MatchTopic( const char * pTopicName,
         if( matchStatus == false )
         {
             /* If an exact match was not found, match against wildcard characters in
-             * topic filter.*/
+             * topic filter. */
 
             /* Determine if topic filter starts with a wildcard. */
             topicFilterStartsWithWildcard = ( pTopicFilter[ 0 ] == '+' ) ||
@@ -4888,7 +4962,7 @@ MQTTStatus_t MQTT_GetSubAckStatusCodes( const MQTTPacketInfo_t * pSubackPacket,
         /* According to the MQTT 3.1.1 protocol specification, the "Remaining Length" field is a
          * length of the variable header (2 bytes) plus the length of the payload.
          * Therefore, we add 2 positions for the starting address of the payload, and
-         * subtract 2 bytes from the remaining length for the length of the payload.*/
+         * subtract 2 bytes from the remaining length for the length of the payload. */
         *pPayloadStart = &pSubackPacket->pRemainingData[ sizeof( uint16_t ) ];
         *pPayloadSize = pSubackPacket->remainingLength - sizeof( uint16_t );
     }

@@ -564,6 +564,20 @@ static uint32_t getAckPacketSize( const MQTTPropBuilder_t * pAckProperties,
  */
 static inline MQTTStatus_t isValidConnackReasonCode( uint8_t reasonCode );
 
+/**
+ * @brief Validate properties in the DISCONNECT packet received from the server.
+ *
+ * @note Incoming properties are different than the ones the client can send.
+ *
+ * @param[in] pIndex Pointer to the start of the properties.
+ * @param[in] disconnectPropertyLength Length of the properties in the DISCONNECT packet.
+ *
+ * @return #MQTTSuccess if DISCONNECT is valid;
+ * #MQTTBadResponse if the DISCONNECT packet is invalid.
+ */
+static MQTTStatus_t validateIncomingDisconnectProperties( uint8_t * pIndex,
+                                                          uint32_t disconnectPropertyLength );
+
 /*-----------------------------------------------------------*/
 
 static uint32_t getAckPacketSize( const MQTTPropBuilder_t * pAckProperties,
@@ -1606,7 +1620,7 @@ static MQTTStatus_t calculateSubscriptionPacketSize( const MQTTSubscribeInfo_t *
 
     /* At this point, the "Remaining length" has been calculated. Return error
      * if the "Remaining length" exceeds what is allowed by MQTT 5. Otherwise,
-     * set the output parameter.*/
+     * set the output parameter. */
     if( packetSize > MQTT_MAX_REMAINING_LENGTH )
     {
         LogError( ( "Subscribe packet size %lu exceeds %d. "
@@ -2515,7 +2529,7 @@ static MQTTStatus_t deserializePublishProperties( MQTTPublishInfo_t * pPublishIn
     bool correlationData = false;
     uint16_t topicAliasVal;
 
-    /*Decode Property Length */
+    /* Decode Property Length. */
     remainingLengthForProperties = remainingLength;
     remainingLengthForProperties -= pPublishInfo->topicNameLength + sizeof( uint16_t );
     remainingLengthForProperties -= ( pPublishInfo->qos > MQTTQoS0 ) ? sizeof( uint16_t ) : 0U;
@@ -2963,7 +2977,7 @@ static MQTTStatus_t decodePubAckProperties( MQTTPropBuilder_t * pPropBuffer,
 
     while( ( propertyLength > 0U ) && ( status == MQTTSuccess ) )
     {
-        /*Decode the property id.*/
+        /* Decode the property id. */
         uint8_t propertyId = *pLocalIndex;
         pLocalIndex = &pLocalIndex[ 1 ];
         propertyLength -= sizeof( uint8_t );
@@ -3009,7 +3023,7 @@ static MQTTStatus_t validateDisconnectResponse( MQTTSuccessFailReasonCode_t reas
 {
     MQTTStatus_t status;
 
-    /*Validate the reason code.*/
+    /* Validate the reason code. */
     /* coverity[misra_c_2012_rule_10_5_violation] */
     switch( reasonCode )
     {
@@ -5209,3 +5223,151 @@ MQTTStatus_t MQTT_ValidateDisconnectProperties( uint32_t connectSessionExpiry,
 
     return status;
 }
+
+/*-----------------------------------------------------------*/
+
+MQTTStatus_t MQTT_DeserializeDisconnect( const MQTTPacketInfo_t * pPacket,
+                                         uint32_t maxPacketSize,
+                                         MQTTReasonCodeInfo_t * pDisconnectInfo,
+                                         MQTTPropBuilder_t * pPropBuffer )
+{
+    MQTTStatus_t status = MQTTSuccess;
+    uint8_t * pIndex = NULL;
+    uint32_t propertyLength = 0U;
+
+    /* Validate the arguments. */
+    if( ( pPacket == NULL ) || ( pPacket->pRemainingData == NULL ) )
+    {
+        status = MQTTBadParameter;
+    }
+    else if( pDisconnectInfo == NULL )
+    {
+        status = MQTTBadParameter;
+    }
+    else if( maxPacketSize == 0U )
+    {
+        status = MQTTBadParameter;
+    }
+
+    /* Packet size should not be more than the max allowed by the client.
+     * The length is calculated as: Remaining length +
+     *       Bytes required to encode the remaining length +
+     *       The disconnect header of 1 byte.
+     */
+    else if( ( pPacket->remainingLength + variableLengthEncodedSize( pPacket->remainingLength ) + 1U ) > maxPacketSize )
+    {
+        status = MQTTBadResponse;
+    }
+    else if( pPacket->remainingLength == 0U )
+    {
+        /* No properties or reason code provided. Nothing to do. */
+    }
+    else
+    {
+        /* Extract the reason code. */
+        pIndex = pPacket->pRemainingData;
+        pDisconnectInfo->reasonCode = pIndex;
+        pDisconnectInfo->reasonCodeLength = 1U;
+        pIndex++;
+
+        /* Validate the reason code. */
+        status = validateDisconnectResponse( *pDisconnectInfo->reasonCode, true );
+    }
+
+    if( status == MQTTSuccess )
+    {
+        if( ( pPacket->remainingLength > 1U ) )
+        {
+            /* Extract the property length. */
+            status = decodeVariableLength( pIndex, pPacket->remainingLength - 1U, &propertyLength );
+
+            if( status == MQTTSuccess )
+            {
+                pIndex = &pIndex[ variableLengthEncodedSize( propertyLength ) ];
+
+                if( pPropBuffer != NULL )
+                {
+                    pPropBuffer->bufferLength = propertyLength;
+                    pPropBuffer->pBuffer = pIndex;
+                }
+
+                /* Validate the remaining length. It must only have the reason code
+                 * and the properties and the bytes needed to encode the property length. */
+                if( pPacket->remainingLength != ( propertyLength + variableLengthEncodedSize( propertyLength ) + 1U ) )
+                {
+                    LogError( ( "Remaining length doesn't match the expected size." ) );
+                    status = MQTTBadResponse;
+                }
+            }
+            else
+            {
+                LogError( ( "Failed to decode the property length. Malformed packet." ) );
+                status = MQTTBadResponse;
+            }
+        }
+    }
+
+    if( status == MQTTSuccess )
+    {
+        status = validateIncomingDisconnectProperties( pIndex, propertyLength );
+
+        if( status != MQTTSuccess )
+        {
+            LogError( ( "Failed to validate disconnect properties." ) );
+        }
+    }
+
+    return status;
+}
+
+/*-----------------------------------------------------------*/
+
+static MQTTStatus_t validateIncomingDisconnectProperties( uint8_t * pIndex,
+                                                          uint32_t disconnectPropertyLength )
+{
+    MQTTStatus_t status = MQTTSuccess;
+    uint8_t * pLocalIndex = pIndex;
+    const char * pReasonString;
+    uint16_t reasonStringLength;
+    const char * pServerRef;
+    uint16_t pServerRefLength;
+    uint32_t propertyLength = disconnectPropertyLength;
+
+    while( ( propertyLength > 0U ) && ( status == MQTTSuccess ) )
+    {
+        /* Decode the property id. */
+        uint8_t propertyId = *pLocalIndex;
+        bool reasonString = false;
+        bool serverRef = false;
+        pLocalIndex = &pLocalIndex[ 1 ];
+        propertyLength -= sizeof( uint8_t );
+
+        /* Validate the property id and decode accordingly. */
+        switch( propertyId )
+        {
+            case MQTT_REASON_STRING_ID:
+                status = decodeUtf8( &pReasonString, &reasonStringLength, &propertyLength, &reasonString, &pLocalIndex );
+                break;
+
+            case MQTT_USER_PROPERTY_ID:
+               {
+                   const char * key, * value;
+                   uint16_t keyLength, valueLength;
+                   status = decodeUserProp( &key, &keyLength, &value, &valueLength, &propertyLength, &pLocalIndex );
+               }
+               break;
+
+            case MQTT_SERVER_REF_ID:
+                status = decodeUtf8( &pServerRef, &pServerRefLength, &propertyLength, &serverRef, &pLocalIndex );
+                break;
+
+            default:
+                status = MQTTBadResponse;
+                break;
+        }
+    }
+
+    return status;
+}
+
+/*-----------------------------------------------------------*/
