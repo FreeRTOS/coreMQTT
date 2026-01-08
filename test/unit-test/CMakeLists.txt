@@ -10,12 +10,14 @@ set(project_name "core_mqtt")
 list(APPEND mock_list
             "${MODULE_ROOT_DIR}/source/include/core_mqtt_serializer.h"
             "${MODULE_ROOT_DIR}/source/include/core_mqtt_state.h"
+            "${MODULE_ROOT_DIR}/source/include/private/core_mqtt_serializer_private.h"
         )
 # list the directories your mocks need
 list(APPEND mock_include_list
             .
             ${CMAKE_CURRENT_LIST_DIR}/logging
             ${MQTT_INCLUDE_PUBLIC_DIRS}
+            "${MODULE_ROOT_DIR}/source/include/private"
         )
 #list the definitions of your mocks to control what to be included
 list(APPEND mock_define_list
@@ -42,6 +44,7 @@ list(APPEND real_include_directories
 list(APPEND test_include_directories
             .
             ${MQTT_INCLUDE_PUBLIC_DIRS}
+            "${MODULE_ROOT_DIR}/source/include/private"
         )
 
 # =============================  (end edit)  ===================================
@@ -62,14 +65,16 @@ create_real_library(${real_name}
                     "${mock_name}"
         )
 
+list(APPEND utest_dep_list
+            ${real_name}
+        )
+
 list(APPEND utest_link_list
             -l${mock_name}
             lib${real_name}.a
         )
 
-list(APPEND utest_dep_list
-            ${real_name}
-        )
+
 
 set(utest_name "${project_name}_utest")
 set(utest_source "${project_name}_utest.c")
@@ -100,6 +105,22 @@ create_test(${utest_name}
 # mqtt_serializer_utest
 set(utest_name "${project_name}_serializer_utest")
 set(utest_source "${project_name}_serializer_utest.c")
+
+set(utest_link_list "")
+list(APPEND utest_link_list
+            lib${real_name}.a
+        )
+
+create_test(${utest_name}
+            ${utest_source}
+            "${utest_link_list}"
+            "${utest_dep_list}"
+            "${test_include_directories}"
+        )
+
+# mqtt_prop_serializer_utest
+set(utest_name "${project_name}_prop_serializer_utest")
+set(utest_source "${project_name}_prop_serializer_utest.c")
 
 set(utest_link_list "")
 list(APPEND utest_link_list

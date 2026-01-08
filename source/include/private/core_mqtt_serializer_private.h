@@ -294,7 +294,13 @@
  *
  * This value is greater than what is allowed by the MQTT specification.
  */
-#define MQTT_REMAINING_LENGTH_INVALID    ( ( size_t ) 268435456 )
+#define MQTT_REMAINING_LENGTH_INVALID    ( ( uint32_t ) 268435456U )
+
+/**
+ * @brief A value that represents the maximum value which can fit in a
+ * variable byte integer.
+ */
+#define MAX_VARIABLE_LENGTH_INT_VALUE    ( ( uint32_t ) 268435455U )
 
 /**
  * @brief Retrieve the size of the remaining length if it were to be encoded.

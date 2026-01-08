@@ -147,7 +147,7 @@ static inline MQTTStatus_t checkPropBuilderParams( MQTTPropBuilder_t * mqttPropB
     else if( *currentIndex >= mqttPropBuilder->currentIndex )
     {
         LogWarn( ( "Index out of bounds." ) );
-        status = MQTTNoDataAvailable;
+        status = MQTTEndOfProperties;
     }
     else
     {
@@ -183,12 +183,13 @@ static MQTTStatus_t getPropUint8( MQTTPropBuilder_t * pPropertyBuilder,
         {
             uint8_t * pLocalIndex = ( uint8_t * ) &pPropertyBuilder->pBuffer[ *currentIndex ];
             uint32_t remainingPropLength = ( uint32_t ) ( pPropertyBuilder->currentIndex - *currentIndex - 1U );
+            bool tempBool = false;
 
             pLocalIndex++;
 
             status = decodeUint8t( property,
                                    &remainingPropLength,
-                                   &( bool ) { false },
+                                   &tempBool,
                                    &pLocalIndex );
 
             if( status == MQTTSuccess )
@@ -233,13 +234,14 @@ static MQTTStatus_t getPropUint16( MQTTPropBuilder_t * pPropertyBuilder,
             uint8_t * pLocalIndex = ( uint8_t * ) &pPropertyBuilder->pBuffer[ *currentIndex ];
             /* Remaining properties = Total properties - current location in the buffer - 1 ( for property ID ). */
             uint32_t remainingPropLength = ( uint32_t ) ( pPropertyBuilder->currentIndex - *currentIndex - 1U );
+            bool tempBool = false;
 
             /* Move index to the beginning of the key. */
             pLocalIndex++;
 
             status = decodeUint16t( property,
                                     &remainingPropLength,
-                                    &( bool ) { false },
+                                    &tempBool,
                                     &pLocalIndex );
 
             if( status == MQTTSuccess )
@@ -285,13 +287,14 @@ static MQTTStatus_t getPropUint32( MQTTPropBuilder_t * pPropertyBuilder,
             uint8_t * pLocalIndex = ( uint8_t * ) &pPropertyBuilder->pBuffer[ *currentIndex ];
             /* Remaining properties = Total properties - current location in the buffer - 1 ( for property ID ). */
             uint32_t remainingPropLength = ( uint32_t ) ( pPropertyBuilder->currentIndex - *currentIndex - 1U );
+            bool tempBool = false;
 
             /* Move index to the beginning of the key. */
             pLocalIndex++;
 
             status = decodeUint32t( property,
                                     &remainingPropLength,
-                                    &( bool ) { false },
+                                    &tempBool,
                                     &pLocalIndex );
 
             if( status == MQTTSuccess )
@@ -337,13 +340,14 @@ static MQTTStatus_t getPropUtf8( MQTTPropBuilder_t * pPropertyBuilder,
         {
             uint8_t * pLocalIndex = ( uint8_t * ) &pPropertyBuilder->pBuffer[ *currentIndex ];
             uint32_t remainingPropLength = ( uint32_t ) ( pPropertyBuilder->currentIndex - *currentIndex - 1U );
+            bool tempBool = false;
 
             pLocalIndex++;
 
             status = decodeUtf8( property,
                                  propertyLength,
                                  &remainingPropLength,
-                                 &( bool ) { false },
+                                 &tempBool,
                                  &pLocalIndex );
 
             if( status == MQTTSuccess )
@@ -517,7 +521,7 @@ MQTTStatus_t MQTTPropGet_MaxPacketSize( MQTTPropBuilder_t * pPropertyBuilder,
                                         uint32_t * currentIndex,
                                         uint32_t * pMaxPacketSize )
 {
-    return getPropUint32( pPropertyBuilder, currentIndex, MQTT_SESSION_EXPIRY_ID, pMaxPacketSize );
+    return getPropUint32( pPropertyBuilder, currentIndex, MQTT_MAX_PACKET_SIZE_ID, pMaxPacketSize );
 }
 
 /*-----------------------------------------------------------*/
@@ -640,7 +644,7 @@ MQTTStatus_t MQTTPropGet_MessageExpiryInterval( MQTTPropBuilder_t * pPropertyBui
                                                 uint32_t * currentIndex,
                                                 uint32_t * pMessageExpiry )
 {
-    return getPropUint32( pPropertyBuilder, currentIndex, MQTT_SESSION_EXPIRY_ID, pMessageExpiry );
+    return getPropUint32( pPropertyBuilder, currentIndex, MQTT_MSG_EXPIRY_ID, pMessageExpiry );
 }
 
 /*-----------------------------------------------------------*/

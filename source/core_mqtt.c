@@ -2388,9 +2388,6 @@ static MQTTStatus_t receiveSingleIteration( MQTTContext_t * pContext,
             /* Update the number of bytes in the MQTT fixed buffer. */
             pContext->index += ( size_t ) recvBytes;
 
-            /* Reset this value so that it will not be counted in the next iteration. */
-            recvBytes = 0;
-
             status = MQTT_ProcessIncomingPacketTypeAndLength( pContext->networkBuffer.pBuffer,
                                                               &( pContext->index ),
                                                               &incomingPacket );
@@ -2421,6 +2418,10 @@ static MQTTStatus_t receiveSingleIteration( MQTTContext_t * pContext,
                                 MQTT_Status_strerror( status ) ) );
                 }
             }
+        }
+        else
+        {
+            recvBytes = 0;
         }
 
         /* Check whether there is data available before processing the packet further. */
@@ -2485,6 +2486,10 @@ static MQTTStatus_t receiveSingleIteration( MQTTContext_t * pContext,
                         LogError( ( "Failed to send disconnect following a malformed disconnect "
                                     "from the server. coreMQTT will forcefully disconnect now." ) );
                     }
+                    else
+                    {
+                        status = MQTTStatusNotConnected;
+                    }
                 }
                 else /* At this point the callback has failed. */
                 {
@@ -2504,16 +2509,16 @@ static MQTTStatus_t receiveSingleIteration( MQTTContext_t * pContext,
                  * Should the packet be re-sent to the app? */
             }
 
-            /* Update the index to reflect the remaining bytes in the buffer.  */
-            pContext->index -= totalMQTTPacketLength;
-
-            /* Move the remaining bytes to the front of the buffer. */
-            ( void ) memmove( pContext->networkBuffer.pBuffer,
-                              &( pContext->networkBuffer.pBuffer[ totalMQTTPacketLength ] ),
-                              pContext->index );
-
             if( status == MQTTSuccess )
             {
+                /* Update the index to reflect the remaining bytes in the buffer.  */
+                pContext->index -= totalMQTTPacketLength;
+
+                /* Move the remaining bytes to the front of the buffer. */
+                ( void ) memmove( pContext->networkBuffer.pBuffer,
+                                  &( pContext->networkBuffer.pBuffer[ totalMQTTPacketLength ] ),
+                                  pContext->index );
+
                 pContext->lastPacketRxTime = pContext->getTime();
             }
         }
@@ -3140,7 +3145,6 @@ static MQTTStatus_t sendConnectWithoutCopy( MQTTContext_t * pContext,
             connectPropLen = pPropertyBuilder->currentIndex;
         }
 
-        pIndex = propertyLength;
         pIndex = encodeVariableLength( propertyLength, connectPropLen );
         iterator->iov_base = propertyLength;
         /* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-182 */
@@ -4748,7 +4752,7 @@ MQTTStatus_t MQTT_Disconnect( MQTTContext_t * pContext,
             pContext->index = 0;
             ( void ) memset( pContext->networkBuffer.pBuffer, 0, pContext->networkBuffer.size );
 
-            LogError( ( "MQTT Connection Disconnected Successfully" ) );
+            LogInfo( ( "MQTT Connection Disconnected Successfully" ) );
 
             status = sendDisconnectWithoutCopy( pContext, pReasonCode,
                                                 remainingLength, pPropertyBuilder );
