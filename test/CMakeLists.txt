@@ -101,7 +101,7 @@ if( UNITTEST )
     add_custom_target( coverage
         COMMAND ${CMAKE_COMMAND} -DCMOCK_DIR=${CMOCK_DIR}
         -P ${MODULE_ROOT_DIR}/tools/cmock/coverage.cmake
-        DEPENDS cmock unity core_mqtt_utest core_mqtt_serializer_utest core_mqtt_state_utest
+        DEPENDS cmock unity core_mqtt_prop_serializer_utest core_mqtt_utest core_mqtt_serializer_utest core_mqtt_state_utest
         WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
     )
 endif()

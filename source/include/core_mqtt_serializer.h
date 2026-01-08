@@ -469,7 +469,7 @@ typedef struct MQTTPacketInfo
 typedef struct MQTTPropBuilder
 {
     uint8_t * pBuffer;           /**< @brief Pointer to the buffer for storing properties. */
-    size_t bufferLength;         /**< @brief Total length of the buffer available for properties. */
+    uint32_t bufferLength;         /**< @brief Total length of the buffer available for properties. */
     uint32_t currentIndex;       /**< @brief Current position in the buffer where next property will be written. */
     uint32_t fieldSet;           /**< @brief Bitfield tracking which properties have been added. */
 } MQTTPropBuilder_t;
@@ -2850,8 +2850,8 @@ MQTTStatus_t MQTTPropGet_CorrelationData( MQTTPropBuilder_t * pPropertyBuilder,
  */
 /* @[declare_mqttpropget_subscriptionid] */
 MQTTStatus_t MQTTPropGet_SubscriptionId( MQTTPropBuilder_t * pPropertyBuilder,
-                                            uint32_t * currentIndex,
-                                            uint32_t * pSubscriptionId );
+                                         uint32_t * currentIndex,
+                                         uint32_t * pSubscriptionId );
 /* @[declare_mqttpropget_subscriptionid] */
 
 /**

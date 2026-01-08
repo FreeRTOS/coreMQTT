@@ -175,6 +175,15 @@ static bool isValidPropertyInPacketType( const uint8_t * mqttPacketType,
             UINT32_SET_BIT( allowedPropertiesMask, MQTT_USER_PROP_POS );
             UINT32_SET_BIT( allowedPropertiesMask, MQTT_AUTHENTICATION_METHOD_POS );
             UINT32_SET_BIT( allowedPropertiesMask, MQTT_AUTHENTICATION_DATA_POS );
+
+            /* Will properties. */
+            UINT32_SET_BIT( allowedPropertiesMask, MQTT_WILL_DELAY_POS );
+            UINT32_SET_BIT( allowedPropertiesMask, MQTT_PAYLOAD_FORMAT_INDICATOR_POS );
+            UINT32_SET_BIT( allowedPropertiesMask, MQTT_MESSAGE_EXPIRY_INTERVAL_POS );
+            UINT32_SET_BIT( allowedPropertiesMask, MQTT_CONTENT_TYPE_POS );
+            UINT32_SET_BIT( allowedPropertiesMask, MQTT_RESPONSE_TOPIC_POS );
+            UINT32_SET_BIT( allowedPropertiesMask, MQTT_CORRELATION_DATA_POS );
+
             break;
 
         case MQTT_PACKET_TYPE_CONNACK:
@@ -598,6 +607,11 @@ MQTTStatus_t MQTTPropAdd_SubscriptionId( MQTTPropBuilder_t * pPropertyBuilder,
         LogError( ( "Subscription Id cannot be 0 for subscribe properties: Protocol Error." ) );
         status = MQTTBadParameter;
     }
+    else if( subscriptionId > MAX_VARIABLE_LENGTH_INT_VALUE )
+    {
+        LogError( ( "Subscription Id cannot be greater than 268435455: Protocol Error." ) );
+        status = MQTTBadParameter;
+    }
     else if( pPropertyBuilder == NULL )
     {
         LogError( ( "Argument pPropertyBuilder cannot be NULL." ) );
@@ -855,7 +869,22 @@ MQTTStatus_t MQTTPropAdd_AuthData( MQTTPropBuilder_t * pPropertyBuilder,
 {
     MQTTStatus_t status = MQTTSuccess;
 
-    if( UINT32_CHECK_BIT( pPropertyBuilder->fieldSet, MQTT_AUTHENTICATION_METHOD_POS ) == false )
+    if( pPropertyBuilder == NULL )
+    {
+        LogError( ( "pPropertyBuilder cannot be NULL" ) );
+        status = MQTTBadParameter;
+    }
+    else if( pPropertyBuilder->pBuffer == NULL )
+    {
+        LogError( ( "pPropertyBuilder->pBuffer cannot be NULL" ) );
+        status = MQTTBadParameter;
+    }
+    else if( authData == NULL )
+    {
+        LogError( ( "authData cannot be NULL" ) );
+        status = MQTTBadParameter;
+    }
+    else if( UINT32_CHECK_BIT( pPropertyBuilder->fieldSet, MQTT_AUTHENTICATION_METHOD_POS ) == false )
     {
         LogError( ( "Auth method must be added before authentication data. "
                     "Not a protocol violation but a practice enforced by coreMQTT." ) );
@@ -945,13 +974,35 @@ MQTTStatus_t MQTTPropAdd_ResponseTopic( MQTTPropBuilder_t * pPropertyBuilder,
                                         uint16_t responseTopicLength,
                                         const uint8_t * pOptionalMqttPacketType )
 {
-    /* No restriction and hence no additional checks on the response topic. */
-    return addPropUtf8( pPropertyBuilder,
-                        responseTopic,
-                        responseTopicLength,
-                        MQTT_RESPONSE_TOPIC_ID,
-                        MQTT_RESPONSE_TOPIC_POS,
-                        pOptionalMqttPacketType );
+    MQTTStatus_t status;
+
+    if( responseTopic == NULL )
+    {
+        LogError( ( "Arguments cannot be NULL : responseTopic=%p.", ( void * ) responseTopic ) );
+        status = MQTTBadParameter;
+    }
+    else if( responseTopicLength == 0U )
+    {
+        LogError( ( "Response Topic Length cannot be 0" ) );
+        status = MQTTBadParameter;
+    }
+    else if( ( memchr( ( void * ) responseTopic, ( int ) '#', responseTopicLength ) != NULL ) ||
+             ( memchr( ( void * ) responseTopic, ( int ) '+', responseTopicLength ) != NULL ) )
+    {
+        LogError( ( "Protocol Error : Response Topic contains wildcards (such as # or +)." ) );
+        status = MQTTBadParameter;
+    }
+    else
+    {
+        status = addPropUtf8( pPropertyBuilder,
+                              responseTopic,
+                              responseTopicLength,
+                              MQTT_RESPONSE_TOPIC_ID,
+                              MQTT_RESPONSE_TOPIC_POS,
+                              pOptionalMqttPacketType );
+    }
+
+    return status;
 }
 
 /*-----------------------------------------------------------*/

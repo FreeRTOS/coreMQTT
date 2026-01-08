@@ -88,7 +88,6 @@ uint8_t * encodeString( uint8_t * pDestination,
     uint8_t * pBuffer = NULL;
 
     assert( pDestination != NULL );
-    assert( pSource != NULL );
 
     pBuffer = pDestination;
 
@@ -248,11 +247,6 @@ MQTTStatus_t decodeUint8t( uint8_t * pProperty,
         pLocalIndex = &pLocalIndex[ sizeof( uint8_t ) ];
         *pUsed = true;
         *pPropertyLength -= sizeof( uint8_t );
-
-        if( *pProperty > 1U )
-        {
-            status = MQTTBadResponse;
-        }
     }
 
     *pIndex = pLocalIndex;
