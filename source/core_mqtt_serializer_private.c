@@ -416,13 +416,13 @@ uint8_t * serializeAckFixed( uint8_t * pIndex,
     /* The first byte in the publish ack packet is the control packet type. */
     *pIndexLocal = packetType;
     pIndexLocal++;
-    /*After the packet type fixed header has remaining length.*/
+    /* After the packet type fixed header has remaining length. */
     pIndexLocal = encodeVariableLength( pIndexLocal, remainingLength );
-    /*Encode the packet id.*/
+    /* Encode the packet id. */
     pIndexLocal[ 0 ] = UINT16_HIGH_BYTE( packetId );
     pIndexLocal[ 1 ] = UINT16_LOW_BYTE( packetId );
     pIndexLocal = &pIndexLocal[ 2 ];
-    /*We are now sending the ack.*/
+    /* We are now sending the ack. */
     *pIndexLocal = ( uint8_t ) reasonCode;
     pIndexLocal++;
     return pIndexLocal;

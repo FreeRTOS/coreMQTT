@@ -3024,6 +3024,50 @@ MQTTStatus_t MQTT_GetAckPacketSize(size_t* pRemainingLength,
 MQTTStatus_t MQTT_ValidateDisconnectProperties( uint32_t connectSessionExpiry, const MQTTPropBuilder_t * pPropertyBuilder);
 /* @[declare_mqtt_validatedisconnectproperties] */
 
+/**
+ * @brief Deserialize an MQTT Disconnect packet.
+ *
+ * @param[in] pPacket #MQTTPacketInfo_t containing the buffer.
+ * @param[in] maxPacketSize Maximum packet size allowed by the client.
+ * @param[out] pDisconnectInfo Struct containing disconnect reason code
+ * @param[out] pPropBuffer MQTTPropBuilder_t to store the deserialized properties.
+ *
+ * @return #MQTTBadParameter, #MQTTBadResponse or #MQTTSuccess.
+ *
+ * <b>Example</b>
+ * @code{c}
+ *
+ * // Variables used in this example.
+ * MQTTStatus_t status;
+ * MQTTPacketInfo_t incomingPacket;
+ * MQTTReasonCodeInfo_t disconnectInfo;
+ * uint32_t maxPacketSize;
+ * MQTTPropBuilder_t propBuffer; // Assume this is initialized properly
+ * // Receive an incoming packet and populate all fields. The details are out of scope
+ * // for this example.
+ * receiveIncomingPacket( &incomingPacket );
+ *
+ * // Deserialize disconnect information.
+ * if( ( incomingPacket.type) == MQTT_PACKET_TYPE_DISCONNECT )
+ * {
+ *      status = MQTT_DeserializeDisconnect(&incomingPacket,
+ *                                           maxPacketSize,
+ *                                           &disconnectInfo,
+ *                                           &propBuffer);
+ *      if( status == MQTTSuccess )
+ *      {
+ *          // Disconnect information is available.
+ *      }
+ * }
+ * @endcode
+ */
+/* @[declare_mqtt_deserializedisconnect] */
+MQTTStatus_t MQTT_DeserializeDisconnect( const MQTTPacketInfo_t * pPacket,
+                                         uint32_t maxPacketSize,
+                                         MQTTReasonCodeInfo_t * pDisconnectInfo,
+                                         MQTTPropBuilder_t * pPropBuffer );
+/* @[declare_mqtt_deserializedisconnect] */
+
 /* *INDENT-OFF* */
 #ifdef __cplusplus
     }
