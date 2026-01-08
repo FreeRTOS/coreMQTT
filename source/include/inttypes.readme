@@ -1,0 +1,25 @@
+#if !defined(_INTTYPES_H_)
+#define _INTTYPES_H_
+
+
+/*******************************************************************************
+ * This file contains the definitions specified in inttypes.h. It is provided to
+ * allow the library to be built using compilers that do not provide their own
+ * inttypes.h defintion.
+ *
+ * To use this file:
+ *
+ *    1) Copy this file into a directory that is in your compiler's include path.
+ *       The directory must be part of the include path for system header files,
+ *       for example passed using gcc's "-I" or "-isystem" options.
+ *
+ *    2) Rename the copied file inttypes.h.
+ *
+ */
+
+/* This might cause some warnings. But this will lead to no loss of data. */
+#define PRIu8         "u"
+#define PRIu16        "u"
+#define PRIu32        "u"
+
+#endif

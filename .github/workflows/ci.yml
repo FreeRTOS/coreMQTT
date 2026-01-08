@@ -154,6 +154,7 @@ jobs:
           mkdir -p override-include
           cp source/include/stdbool.readme override-include/stdbool.h
           cp source/include/stdint.readme override-include/stdint.h
+          cp source/include/inttypes.readme override-include/inttypes.h
 
           # Build using the custom headers
           cmake -S test -B build/ \
