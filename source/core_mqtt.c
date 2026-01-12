@@ -4918,6 +4918,7 @@ MQTTStatus_t MQTT_GetSubAckStatusCodes( const MQTTPacketInfo_t * pSubackPacket,
                                         size_t * pPayloadSize )
 {
     MQTTStatus_t status = MQTTSuccess;
+    uint32_t propertyLength = 0;
 
     if( pSubackPacket == NULL )
     {
@@ -4948,23 +4949,39 @@ MQTTStatus_t MQTT_GetSubAckStatusCodes( const MQTTPacketInfo_t * pSubackPacket,
         status = MQTTBadParameter;
     }
 
-    /* A SUBACK must have a remaining length of at least 3 to accommodate the
-     * packet identifier and at least 1 return code. */
-    else if( pSubackPacket->remainingLength < 3U )
+    /* A SUBACK must have a remaining length of at least 4 to accommodate the
+     * packet identifier, atleast 1 byte for the property length and at least 1 return code. */
+    else if( pSubackPacket->remainingLength < 4U )
     {
         LogError( ( "Invalid parameter: Packet remaining length is invalid: "
-                    "Should be greater than 2 for SUBACK packet: InputRemainingLength=%lu",
+                    "Should be greater than or equal to 4 for SUBACK packet: InputRemainingLength=%lu",
                     ( unsigned long ) pSubackPacket->remainingLength ) );
         status = MQTTBadParameter;
     }
     else
     {
-        /* According to the MQTT 3.1.1 protocol specification, the "Remaining Length" field is a
-         * length of the variable header (2 bytes) plus the length of the payload.
-         * Therefore, we add 2 positions for the starting address of the payload, and
-         * subtract 2 bytes from the remaining length for the length of the payload. */
-        *pPayloadStart = &pSubackPacket->pRemainingData[ sizeof( uint16_t ) ];
-        *pPayloadSize = pSubackPacket->remainingLength - sizeof( uint16_t );
+        /* According to the MQTT 5.0 specification, the "Remaining Length" field represents the
+         * combined length of the variable header and the payload. In a SUBACK packet, the variable
+         * header consists of the Packet Identifier (2 bytes) followed by the properties.
+         *
+         * To locate the start of the payload:
+         * - Skip the 2-byte Packet Identifier.
+         * - Then skip the properties, whose total length is decoded using the
+         *   decodeSubackPropertyLength() function.
+         *
+         * The payload starts immediately after the properties.
+         * Its size is calculated by subtracting the size of the variable header
+         * (2 bytes for Packet ID + property length) from the remaining length.
+         */
+        status = decodeSubackPropertyLength( &pSubackPacket->pRemainingData[ sizeof( uint16_t ) ],
+                                             pSubackPacket->remainingLength,
+                                             &propertyLength );
+
+        if( status == MQTTSuccess )
+        {
+            *pPayloadStart = &pSubackPacket->pRemainingData[ sizeof( uint16_t ) + propertyLength ];
+            *pPayloadSize = pSubackPacket->remainingLength - sizeof( uint16_t ) - propertyLength;
+        }
     }
 
     return status;
