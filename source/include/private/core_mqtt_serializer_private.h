@@ -447,6 +447,20 @@ uint8_t * serializeAckFixed( uint8_t * pIndex,
                              MQTTSuccessFailReasonCode_t reasonCode );
 
 /**
+ * @brief Decodes the property length field in a SUBACK packet.
+ *
+ * @param[in] pIndex Pointer to the start of the properties in the SUBACK packet.
+ * @param[in] remainingLength The remaining length of the MQTT packet being parsed, without Packet ID.
+ * @param[out] subackPropertyLength The decoded property length including the size of its encoded representation.
+ *
+ * @return #MQTTSuccess if the property length is successfully decoded;
+ *         #MQTTBadResponse if the decoded property length is greater than the remaining length.
+ */
+MQTTStatus_t decodeSubackPropertyLength( const uint8_t * pIndex,
+                                         uint32_t remainingLength,
+                                         uint32_t * subackPropertyLength );
+
+/**
  * @brief Serialize the fixed size part of the disconnect packet header.
  *
  * @param[out] pIndex Pointer to the buffer where the header is to be serialized.

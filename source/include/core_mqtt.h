@@ -1361,7 +1361,17 @@ MQTTStatus_t MQTT_MatchTopic( const char * pTopicName,
  *  - 0x00 - Success - Maximum QoS 0
  *  - 0x01 - Success - Maximum QoS 1
  *  - 0x02 - Success - Maximum QoS 2
- *  - 0x80 - Failure
+ *  These are the reason codes when the server refuses the request-
+ *  - 0x80 - Topic Filter Refused
+ *  - 0x83 - Implementation specific error.
+ *  - 0x87 - Not authorized.
+ *  - 0x8F - Invalid Topic Filter.
+ *  - 0x91 - Packet identifier in use.
+ *  - 0x97 - Quota exceeded.
+ *  - 0x9E - Shared subscriptions not supported.
+ *  - 0xA1 - Subscription identifiers not supported.
+ *  - 0xA2 - Wildcard subscriptions not supported.
+ *
  * Refer to #MQTTSubAckStatus_t for the status codes.
  *
  * @param[in] pSubackPacket The SUBACK packet whose payload is to be parsed.
@@ -1372,8 +1382,8 @@ MQTTStatus_t MQTT_MatchTopic( const char * pTopicName,
  * SUBACK status is present in the packet.
  *
  * @return Returns one of the following:
- * - #MQTTBadParameter if the input SUBACK packet is invalid.
- * - #MQTTSuccess if parsing the payload was successful.
+ * - #MQTTBadParameter if the input SUBACK packet is invalid.<br>
+ * - #MQTTSuccess if parsing the payload was successful.<br>
  *
  * <b>Example</b>
  * @code{c}
@@ -1384,10 +1394,13 @@ MQTTStatus_t MQTT_MatchTopic( const char * pTopicName,
  *
  * // MQTT_GetSubAckStatusCodes is intended to be used from the application
  * // callback that is called by the library in MQTT_ProcessLoop or MQTT_ReceiveLoop.
- * void eventCallback(
+ * bool eventCallback(
  *      MQTTContext_t * pContext,
  *      MQTTPacketInfo_t * pPacketInfo,
  *      MQTTDeserializedInfo_t * pDeserializedInfo
+ *      MQTTSuccessFailReasonCode_t * pReasonCode,
+ *      MQTTPropBuilder_t * pSendPropsBuffer,
+ *      MQTTPropBuilder_t * pGetPropsBuffer
  * )
  * {
  *      MQTTStatus_t status = MQTTSuccess;

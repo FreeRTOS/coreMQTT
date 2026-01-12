@@ -585,3 +585,28 @@ uint8_t * serializeDisconnectFixed( uint8_t * pIndex,
 }
 
 /*-----------------------------------------------------------*/
+
+MQTTStatus_t decodeSubackPropertyLength( const uint8_t * pIndex,
+                                         uint32_t remainingLength,
+                                         uint32_t * subackPropertyLength )
+{
+    MQTTStatus_t status;
+    const uint8_t * pLocalIndex = pIndex;
+    uint32_t propertyLength = 0U;
+
+    status = decodeVariableLength( pLocalIndex, remainingLength - sizeof( uint16_t ), &propertyLength );
+
+    if( status == MQTTSuccess )
+    {
+        *subackPropertyLength = ( propertyLength + variableLengthEncodedSize( propertyLength ) );
+
+        if( *subackPropertyLength > ( remainingLength - sizeof( uint16_t ) ) )
+        {
+            status = MQTTBadResponse;
+        }
+    }
+
+    return status;
+}
+
+/*-----------------------------------------------------------*/
