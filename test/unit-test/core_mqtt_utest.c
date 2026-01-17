@@ -1857,7 +1857,7 @@ void test_MQTT_InitRetransmits_Invalid_Params( void )
 static uint8_t * serializeConnectFixedHeader_cb( uint8_t * pIndex,
                                                  const MQTTConnectInfo_t * pConnectInfo,
                                                  const MQTTPublishInfo_t * pWillInfo,
-                                                 size_t remainingLength,
+                                                 uint32_t remainingLength,
                                                  int numcallbacks )
 {
     ( void ) pConnectInfo;
@@ -1880,8 +1880,8 @@ void test_MQTT_Connect_sendConnect_already_connected( void )
     MQTTStatus_t status;
     TransportInterface_t transport = { 0 };
     MQTTFixedBuffer_t networkBuffer = { 0 };
-    size_t remainingLength;
-    size_t packetSize;
+    uint32_t remainingLength;
+    uint32_t packetSize;
 
     memset( &mqttContext, 0x0, sizeof( mqttContext ) );
     MQTT_InitConnect_Stub( initConnectProperties_cb );
@@ -1914,8 +1914,8 @@ void test_MQTT_Connect_sendConnect_disconnect_pending( void )
     MQTTStatus_t status;
     TransportInterface_t transport = { 0 };
     MQTTFixedBuffer_t networkBuffer = { 0 };
-    size_t remainingLength;
-    size_t packetSize;
+    uint32_t remainingLength;
+    uint32_t packetSize;
 
     memset( &mqttContext, 0x0, sizeof( mqttContext ) );
     MQTT_InitConnect_Stub( initConnectProperties_cb );
@@ -1947,8 +1947,8 @@ void test_MQTT_Connect_sendConnect_writev_error( void )
     MQTTStatus_t status;
     TransportInterface_t transport = { 0 };
     MQTTFixedBuffer_t networkBuffer = { 0 };
-    size_t remainingLength;
-    size_t packetSize;
+    uint32_t remainingLength;
+    uint32_t packetSize;
 
     setupTransportInterface( &transport );
     transport.writev = transportWritevError;
@@ -1989,8 +1989,8 @@ void test_MQTT_Connect_sendConnect1( void )
     MQTTStatus_t status;
     TransportInterface_t transport = { 0 };
     MQTTFixedBuffer_t networkBuffer = { 0 };
-    size_t remainingLength;
-    size_t packetSize;
+    uint32_t remainingLength;
+    uint32_t packetSize;
 
     setupTransportInterface( &transport );
     transport.writev = NULL;
@@ -2028,8 +2028,8 @@ void test_MQTT_Connect_WillInfoWrong( void )
     MQTTStatus_t status;
     TransportInterface_t transport = { 0 };
     MQTTFixedBuffer_t networkBuffer = { 0 };
-    size_t remainingLength;
-    size_t packetSize;
+    uint32_t remainingLength;
+    uint32_t packetSize;
     MQTTPublishInfo_t willInfo;
 
     setupTransportInterface( &transport );
@@ -2067,8 +2067,8 @@ void test_MQTT_Connect_sendConnect2( void )
     MQTTStatus_t status;
     TransportInterface_t transport = { 0 };
     MQTTFixedBuffer_t networkBuffer = { 0 };
-    size_t remainingLength;
-    size_t packetSize;
+    uint32_t remainingLength;
+    uint32_t packetSize;
 
     setupTransportInterface( &transport );
     transport.writev = NULL;
@@ -2113,8 +2113,8 @@ void test_MQTT_Connect_ProperWIllInfo( void )
     MQTTStatus_t status;
     TransportInterface_t transport = { 0 };
     MQTTFixedBuffer_t networkBuffer = { 0 };
-    size_t remainingLength;
-    size_t packetSize;
+    uint32_t remainingLength;
+    uint32_t packetSize;
     MQTTPublishInfo_t willInfo;
 
     setupTransportInterface( &transport );
@@ -2171,8 +2171,8 @@ void test_MQTT_Connect_ProperWIllInfoWithNoPayload( void )
     MQTTStatus_t status;
     TransportInterface_t transport = { 0 };
     MQTTFixedBuffer_t networkBuffer = { 0 };
-    size_t remainingLength;
-    size_t packetSize;
+    uint32_t remainingLength;
+    uint32_t packetSize;
     MQTTPublishInfo_t willInfo;
 
     setupTransportInterface( &transport );
@@ -2228,8 +2228,8 @@ void test_MQTT_Connect_ProperWIllInfoWithPayloadButZeroLength( void )
     MQTTStatus_t status;
     TransportInterface_t transport = { 0 };
     MQTTFixedBuffer_t networkBuffer = { 0 };
-    size_t remainingLength;
-    size_t packetSize;
+    uint32_t remainingLength;
+    uint32_t packetSize;
     MQTTPublishInfo_t willInfo;
 
     setupTransportInterface( &transport );
@@ -2339,8 +2339,8 @@ void test_MQTT_Connect_sendConnect5( void )
     MQTTStatus_t status;
     TransportInterface_t transport = { 0 };
     MQTTFixedBuffer_t networkBuffer = { 0 };
-    size_t remainingLength;
-    size_t packetSize;
+    uint32_t remainingLength;
+    uint32_t packetSize;
 
     setupTransportInterface( &transport );
     setupNetworkBuffer( &networkBuffer );
@@ -10178,8 +10178,8 @@ void test_eventCallbackFailed4( void )
     MQTTStatus_t status;
     TransportInterface_t transport = { 0 };
     MQTTFixedBuffer_t networkBuffer = { 0 };
-    size_t packetSize;
-    size_t remainingLength;
+    uint32_t packetSize;
+    uint32_t remainingLength;
 
     setupTransportInterface( &transport );
     setupNetworkBuffer( &networkBuffer );

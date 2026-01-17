@@ -23,21 +23,22 @@ HARNESS_ENTRY=harness
 HARNESS_FILE=MQTT_SerializeConnect_harness
 PROOF_UID=MQTT_SerializeConnect
 
-DEFINES +=
 INCLUDES +=
 
 # This function does not coincide with the call graph of MQTT_Serialize, but is
 # found by CBMC during processing in logs/MQTT_Connect_harness3.txt. We remove
 # the function body to improve coverage accuracy.
 REMOVE_FUNCTION_BODY += MQTT_GetIncomingPacketTypeAndLength
+REMOVE_FUNCTION_BODY += encodeString
 
-# The encodeRemainingLength loop is unwound 5 times because encodeRemainingLength()
+# The encodeVariableLength loop is unwound 5 times because encodeVariableLength()
 # divides a size_t variable by 128 until it reaches zero to stop the loop.
 # log128(SIZE_MAX) = 4.571...
-UNWINDSET += __CPROVER_file_local_core_mqtt_serializer_c_encodeRemainingLength.0:5
+UNWINDSET += encodeVariableLength.0:5
 
 PROOF_SOURCES += $(PROOFDIR)/$(HARNESS_FILE).c
 PROOF_SOURCES += $(SRCDIR)/test/cbmc/sources/mqtt_cbmc_state.c
 PROJECT_SOURCES += $(SRCDIR)/source/core_mqtt_serializer.c
+PROJECT_SOURCES += $(SRCDIR)/source/core_mqtt_serializer_private.c
 
 include ../Makefile.common

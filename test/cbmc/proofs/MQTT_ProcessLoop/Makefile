@@ -47,6 +47,8 @@ INCLUDES +=
 # These functions have their memory saftey proven in other harnesses.
 REMOVE_FUNCTION_BODY += MQTT_Ping
 REMOVE_FUNCTION_BODY += MQTT_DeserializeAck
+REMOVE_FUNCTION_BODY += MQTT_DeserializePublish
+REMOVE_FUNCTION_BODY += MQTT_DeserializeDisconnect
 REMOVE_FUNCTION_BODY += MQTT_SerializeAck
 REMOVE_FUNCTION_BODY += memmove # Use stub
 
@@ -67,6 +69,7 @@ UNWINDSET += __CPROVER_file_local_core_mqtt_serializer_c_processRemainingLength.
 # test/cbmc/include/core_mqtt_config.h.
 UNWINDSET += __CPROVER_file_local_core_mqtt_state_c_addRecord.0:$(MQTT_STATE_ARRAY_MAX_COUNT)
 UNWINDSET += __CPROVER_file_local_core_mqtt_state_c_findInRecord.0:$(MQTT_STATE_ARRAY_MAX_COUNT)
+UNWINDSET += __CPROVER_file_local_core_mqtt_c_receiveSingleIteration.0:5
 
 PROOF_SOURCES += $(PROOFDIR)/$(HARNESS_FILE).c
 PROOF_SOURCES += $(SRCDIR)/test/cbmc/sources/mqtt_cbmc_state.c
@@ -76,6 +79,7 @@ PROOF_SOURCES += $(SRCDIR)/test/cbmc/stubs/event_callback_stub.c
 PROOF_SOURCES += $(SRCDIR)/test/cbmc/stubs/memmove.c
 PROJECT_SOURCES += $(SRCDIR)/source/core_mqtt.c
 PROJECT_SOURCES += $(SRCDIR)/source/core_mqtt_serializer.c
+PROJECT_SOURCES += $(SRCDIR)/source/core_mqtt_serializer_private.c
 PROJECT_SOURCES += $(SRCDIR)/source/core_mqtt_state.c
 
 EXPENSIVE = true

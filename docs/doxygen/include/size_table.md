@@ -19,7 +19,7 @@
     </tr>
     <tr>
         <td>core_mqtt_serializer.c</td>
-        <td><center>8.7K</center></td>
+        <td><center>8.8K</center></td>
         <td><center>7.2K</center></td>
     </tr>
     <tr>
@@ -39,7 +39,7 @@
     </tr>
     <tr>
         <td><b>Total estimates</b></td>
-        <td><b><center>21.1K</center></b></td>
+        <td><b><center>21.2K</center></b></td>
         <td><b><center>17.8K</center></b></td>
     </tr>
 </table>

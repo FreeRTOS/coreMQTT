@@ -242,7 +242,7 @@ static void serializeConnectPacket( const MQTTConnectInfo_t * pConnectInfo,
                                     const MQTTPublishInfo_t * pWillInfo,
                                     const MQTTPropBuilder_t * pConnectProperties,
                                     const MQTTPropBuilder_t * pWillProperties,
-                                    size_t remainingLength,
+                                    uint32_t remainingLength,
                                     const MQTTFixedBuffer_t * pFixedBuffer );
 
 /**
@@ -960,7 +960,7 @@ MQTTStatus_t MQTT_SerializePublishHeaderWithoutTopic( const MQTTPublishInfo_t * 
         pIndex++;
 
         /* The "Remaining length" is encoded from the second byte. */
-        pIndex = encodeRemainingLength( pIndex, remainingLength );
+        pIndex = encodeVariableLength( pIndex, remainingLength );
 
         /* The first byte of a UTF-8 string is the high byte of the string length. */
         *pIndex = UINT16_HIGH_BYTE( pPublishInfo->topicNameLength );
@@ -1894,6 +1894,22 @@ static MQTTStatus_t validateSubscriptionSerializeParams( const MQTTSubscribeInfo
                         ( unsigned long ) packetSize ) );
             status = MQTTNoMemory;
         }
+
+        if( status == MQTTSuccess )
+        {
+            size_t it;
+
+            for( it = 0; it < subscriptionCount; it++ )
+            {
+                /* Check whether the topic filter and the topic filter length are non-zero. */
+                if( ( pSubscriptionList[ it ].pTopicFilter == NULL ) || ( pSubscriptionList[ it ].topicFilterLength == 0 ) )
+                {
+                    LogError( ( "Topic filter length must be non-zero and the topic filter must be non-NULL." ) );
+                    status = MQTTBadParameter;
+                    break;
+                }
+            }
+        }
     }
 
     return status;
@@ -2590,7 +2606,7 @@ static void serializeConnectPacket( const MQTTConnectInfo_t * pConnectInfo,
                                     const MQTTPublishInfo_t * pWillInfo,
                                     const MQTTPropBuilder_t * pConnectProperties,
                                     const MQTTPropBuilder_t * pWillProperties,
-                                    size_t remainingLength,
+                                    uint32_t remainingLength,
                                     const MQTTFixedBuffer_t * pFixedBuffer )
 {
     uint8_t * pIndex = NULL;
@@ -2839,39 +2855,6 @@ static MQTTStatus_t deserializePublishProperties( MQTTPublishInfo_t * pPublishIn
 
 /*-----------------------------------------------------------*/
 
-uint8_t * encodeVariableLength( uint8_t * pDestination,
-                                uint32_t length )
-{
-    uint8_t lengthByte;
-    uint8_t * pLengthEnd = NULL;
-    uint32_t remainingLength = length;
-
-    assert( pDestination != NULL );
-
-    pLengthEnd = pDestination;
-
-    /* This algorithm is copied from the MQTT 5.0 spec. */
-    do
-    {
-        lengthByte = ( uint8_t ) ( remainingLength % 128U );
-        remainingLength = remainingLength / 128U;
-
-        /* Set the high bit of this byte, indicating that there's more data. */
-        if( remainingLength > 0U )
-        {
-            UINT8_SET_BIT( lengthByte, 7 );
-        }
-
-        /* Output a single encoded byte. */
-        *pLengthEnd = lengthByte;
-        pLengthEnd++;
-    } while( remainingLength > 0U );
-
-    return pLengthEnd;
-}
-
-/*-----------------------------------------------------------*/
-
 MQTTStatus_t updateContextWithConnectProps( const MQTTPropBuilder_t * pPropBuilder,
                                             MQTTConnectionProperties_t * pConnectProperties )
 {
@@ -2985,16 +2968,16 @@ MQTTStatus_t MQTT_GetConnectPacketSize( const MQTTConnectInfo_t * pConnectInfo,
                                         const MQTTPublishInfo_t * pWillInfo,
                                         const MQTTPropBuilder_t * pConnectProperties,
                                         const MQTTPropBuilder_t * pWillProperties,
-                                        size_t * pRemainingLength,
-                                        size_t * pPacketSize )
+                                        uint32_t * pRemainingLength,
+                                        uint32_t * pPacketSize )
 {
     MQTTStatus_t status = MQTTSuccess;
-    size_t remainingLength;
+    uint32_t remainingLength;
     size_t propertyLength = 0U;
     size_t willPropertyLength = 0U;
 
     /* The CONNECT packet will always include a 10-byte variable header without connect properties. */
-    size_t connectPacketSize = MQTT_PACKET_CONNECT_HEADER_SIZE;
+    uint32_t connectPacketSize = MQTT_PACKET_CONNECT_HEADER_SIZE;
 
     /* Validate arguments. */
     if( ( pConnectInfo == NULL ) || ( pRemainingLength == NULL ) ||
@@ -3262,11 +3245,11 @@ MQTTStatus_t MQTT_SerializeConnect( const MQTTConnectInfo_t * pConnectInfo,
                                     const MQTTPublishInfo_t * pWillInfo,
                                     const MQTTPropBuilder_t * pConnectProperties,
                                     const MQTTPropBuilder_t * pWillProperties,
-                                    size_t remainingLength,
+                                    uint32_t remainingLength,
                                     const MQTTFixedBuffer_t * pFixedBuffer )
 {
     MQTTStatus_t status = MQTTSuccess;
-    size_t connectPacketSize = 0;
+    uint32_t connectPacketSize = 0;
 
     /* Validate arguments. */
     if( ( pConnectInfo == NULL ) || ( pFixedBuffer == NULL ) )
@@ -4190,6 +4173,11 @@ MQTTStatus_t MQTT_DeserializePublish( const MQTTPacketInfo_t * pIncomingPacket,
                     "pIncomingPacket->pRemainingData is NULL." ) );
         status = MQTTBadParameter;
     }
+    else if( pIncomingPacket->remainingLength >= MQTT_REMAINING_LENGTH_INVALID )
+    {
+        LogError( ( "Remaining length cannot be larger than MQTT maximum (268435456)." ) );
+        status = MQTTBadParameter;
+    }
     else if( ( pIncomingPacket->remainingLength +
                variableLengthEncodedSize( pIncomingPacket->remainingLength ) +
                1U ) > maxPacketSize )
@@ -4573,6 +4561,15 @@ MQTTStatus_t MQTTPropertyBuilder_Init( MQTTPropBuilder_t * pPropertyBuilder,
                     "and length must be non-zero. " ) );
         status = MQTTBadParameter;
     }
+    else if( length >= MQTT_REMAINING_LENGTH_INVALID )
+    {
+        LogError( ( "The length must be less than max MQTT packet size (268435456)." ) );
+        status = MQTTBadParameter;
+    }
+    else
+    {
+        /* Nothing to do. All values are valid. */
+    }
 
     if( status == MQTTSuccess )
     {
@@ -4595,6 +4592,10 @@ MQTTStatus_t MQTT_ValidateWillProperties( const MQTTPropBuilder_t * pPropertyBui
     uint32_t propertyBitMask = 0;
 
     if( ( pPropertyBuilder == NULL ) || ( pPropertyBuilder->pBuffer == NULL ) )
+    {
+        status = MQTTBadParameter;
+    }
+    else if( pPropertyBuilder->currentIndex >= MQTT_REMAINING_LENGTH_INVALID )
     {
         status = MQTTBadParameter;
     }
@@ -5409,15 +5410,23 @@ MQTTStatus_t MQTT_DeserializeDisconnect( const MQTTPacketInfo_t * pPacket,
     /* Validate the arguments. */
     if( ( pPacket == NULL ) || ( pPacket->pRemainingData == NULL ) )
     {
+        LogError( ( "pPacket and pPacket->pRemainingData must not be NULL." ) );
         status = MQTTBadParameter;
     }
     else if( pDisconnectInfo == NULL )
     {
+        LogError( ( "pDisconnectInfo must not be NULL." ) );
         status = MQTTBadParameter;
     }
     else if( maxPacketSize == 0U )
     {
+        LogError( ( "maxPacketSize must not be 0." ) );
         status = MQTTBadParameter;
+    }
+    else if( pPacket->remainingLength >= MQTT_REMAINING_LENGTH_INVALID )
+    {
+        LogError( ( "pPacket->remainingLength must be less than 268435456." ) );
+        status = MQTTBadResponse;
     }
 
     /* Packet size should not be more than the max allowed by the client.

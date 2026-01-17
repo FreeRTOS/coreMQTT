@@ -127,6 +127,9 @@ MQTTStatus_t decodeUserProp( const char ** pPropertyKey,
     uint16_t valueLength = 0U;
     bool used = false;
 
+    assert( pIndex != NULL );
+    assert( pPropertyLength != NULL );
+
     /* Decode the user property key using decodeUtf8. */
     status = decodeUtf8( &pKey, &keyLength, pPropertyLength, &used, pIndex );
 
@@ -158,6 +161,10 @@ MQTTStatus_t decodeUint32t( uint32_t * pProperty,
 {
     uint8_t * pLocalIndex = *pIndex;
     MQTTStatus_t status = MQTTSuccess;
+
+    assert( pIndex != NULL );
+    assert( pPropertyLength != NULL );
+    assert( pUsed != NULL );
 
     /* Protocol error to include the same property twice. */
     if( *pUsed == true )
@@ -195,6 +202,10 @@ MQTTStatus_t decodeUint16t( uint16_t * pProperty,
     uint8_t * pLocalIndex = *pIndex;
     MQTTStatus_t status = MQTTSuccess;
 
+    assert( pIndex != NULL );
+    assert( pPropertyLength != NULL );
+    assert( pUsed != NULL );
+
     /* Protocol error to include the same property twice. */
     if( *pUsed == true )
     {
@@ -231,6 +242,10 @@ MQTTStatus_t decodeUint8t( uint8_t * pProperty,
     uint8_t * pLocalIndex = *pIndex;
     MQTTStatus_t status = MQTTSuccess;
 
+    assert( pIndex != NULL );
+    assert( pPropertyLength != NULL );
+    assert( pUsed != NULL );
+
     /* Protocol error to include the same property twice. */
     if( *pUsed == true )
     {
@@ -243,7 +258,11 @@ MQTTStatus_t decodeUint8t( uint8_t * pProperty,
     }
     else
     {
-        *pProperty = *pLocalIndex;
+        if( pProperty != NULL )
+        {
+            *pProperty = *pLocalIndex;
+        }
+
         pLocalIndex = &pLocalIndex[ sizeof( uint8_t ) ];
         *pUsed = true;
         *pPropertyLength -= sizeof( uint8_t );
@@ -263,6 +282,11 @@ MQTTStatus_t decodeUtf8( const char ** pProperty,
 {
     uint8_t * pLocalIndex = *pIndex;
     MQTTStatus_t status = MQTTSuccess;
+    uint16_t length;
+
+    assert( pIndex != NULL );
+    assert( pPropertyLength != NULL );
+    assert( pUsed != NULL );
 
     /* Protocol error to include the same property twice. */
     if( *pUsed == true )
@@ -276,19 +300,24 @@ MQTTStatus_t decodeUtf8( const char ** pProperty,
     }
     else
     {
-        *pLength = UINT16_DECODE( pLocalIndex );
+        length = UINT16_DECODE( pLocalIndex );
         pLocalIndex = &pLocalIndex[ sizeof( uint16_t ) ];
         *pPropertyLength -= sizeof( uint16_t );
 
-        if( *pPropertyLength < *pLength )
+        if( *pPropertyLength < length )
         {
             status = MQTTBadResponse;
         }
         else
         {
-            *pProperty = ( const char * ) pLocalIndex;
-            pLocalIndex = &pLocalIndex[ *pLength ];
-            *pPropertyLength -= *pLength;
+            if( ( pProperty != NULL ) && ( pLength != NULL ) )
+            {
+                *pProperty = ( const char * ) pLocalIndex;
+                *pLength = length;
+            }
+
+            pLocalIndex = &pLocalIndex[ length ];
+            *pPropertyLength -= length;
             *pUsed = true;
         }
     }
@@ -309,6 +338,9 @@ MQTTStatus_t decodeVariableLength( const uint8_t * pBuffer,
     uint8_t encodedByte = 0;
     size_t localBufferLength = bufferLength;
     MQTTStatus_t status = MQTTSuccess;
+
+    assert( pLength != NULL );
+    assert( pBuffer != NULL );
 
     /* This algorithm is copied from the MQTT 5.0 spec. */
     do
@@ -366,18 +398,18 @@ MQTTStatus_t decodeVariableLength( const uint8_t * pBuffer,
 
 /*-----------------------------------------------------------*/
 
-uint8_t * encodeRemainingLength( uint8_t * pDestination,
-                                 size_t length )
+uint8_t * encodeVariableLength( uint8_t * pDestination,
+                                uint32_t length )
 {
     uint8_t lengthByte;
     uint8_t * pLengthEnd = NULL;
-    size_t remainingLength = length;
+    uint32_t remainingLength = length;
 
     assert( pDestination != NULL );
 
     pLengthEnd = pDestination;
 
-    /* This algorithm is copied from the MQTT v3.1.1 spec. */
+    /* This algorithm is copied from the MQTT 5.0 spec. */
     do
     {
         lengthByte = ( uint8_t ) ( remainingLength % 128U );
@@ -427,7 +459,7 @@ uint8_t * serializeAckFixed( uint8_t * pIndex,
 uint8_t * serializeConnectFixedHeader( uint8_t * pIndex,
                                        const MQTTConnectInfo_t * pConnectInfo,
                                        const MQTTPublishInfo_t * pWillInfo,
-                                       size_t remainingLength )
+                                       uint32_t remainingLength )
 {
     uint8_t * pIndexLocal = pIndex;
     uint8_t connectFlags = 0U;
@@ -517,7 +549,7 @@ uint8_t * serializeSubscribeHeader( size_t remainingLength,
     pIterator++;
 
     /* Encode the "Remaining length" starting from the second byte. */
-    pIterator = encodeRemainingLength( pIterator, remainingLength );
+    pIterator = encodeVariableLength( pIterator, remainingLength );
 
     /* Place the packet identifier into the SUBSCRIBE packet. */
     pIterator[ 0 ] = UINT16_HIGH_BYTE( packetId );
@@ -541,7 +573,7 @@ uint8_t * serializeUnsubscribeHeader( size_t remainingLength,
     pIterator++;
 
     /* Encode the "Remaining length" starting from the second byte. */
-    pIterator = encodeRemainingLength( pIterator, remainingLength );
+    pIterator = encodeVariableLength( pIterator, remainingLength );
 
     /* Place the packet identifier into the SUBSCRIBE packet. */
     pIterator[ 0 ] = UINT16_HIGH_BYTE( packetId );

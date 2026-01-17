@@ -52,6 +52,10 @@
     #define REMAINING_LENGTH_MAX    CBMC_MAX_OBJECT_SIZE
 #endif
 
+#ifndef MAX_TOPIC_NAME_FILTER_LENGTH
+    #define MAX_TOPIC_NAME_FILTER_LENGTH    10
+#endif
+
 /**
  * @brief Determines the maximum number of MQTT PUBLISH messages, pending
  * acknowledgement at a time, that are supported for incoming and outgoing
@@ -148,9 +152,36 @@ MQTTConnectInfo_t * allocateMqttConnectInfo( MQTTConnectInfo_t * pConnectInfo )
 
     if( pConnectInfo != NULL )
     {
-        pConnectInfo->pClientIdentifier = malloc( pConnectInfo->clientIdentifierLength );
-        pConnectInfo->pUserName = malloc( pConnectInfo->userNameLength );
-        pConnectInfo->pPassword = malloc( pConnectInfo->passwordLength );
+        if( pConnectInfo->clientIdentifierLength != 0 )
+        {
+            pConnectInfo->pClientIdentifier = malloc( pConnectInfo->clientIdentifierLength );
+        }
+        else
+        {
+            /* 0 length malloc cannot be handled by the library properly. */
+
+            /* TODO: Fix this in the lib so that it branches on the length field instead
+             * of the string being NULL or non-NULL. */
+            pConnectInfo->pClientIdentifier = NULL;
+        }
+
+        if( pConnectInfo->userNameLength != 0 )
+        {
+            pConnectInfo->pUserName = malloc( pConnectInfo->userNameLength );
+        }
+        else
+        {
+            pConnectInfo->pUserName = NULL;
+        }
+
+        if( pConnectInfo->passwordLength != 0 )
+        {
+            pConnectInfo->pPassword = malloc( pConnectInfo->passwordLength );
+        }
+        else
+        {
+            pConnectInfo->pPassword = NULL;
+        }
     }
 
     return pConnectInfo;
@@ -191,6 +222,63 @@ bool isValidMqttFixedBuffer( const MQTTFixedBuffer_t * pFixedBuffer )
     return isValid;
 }
 
+MQTTPropBuilder_t * allocateMqttPropBuilder( MQTTPropBuilder_t * pPropBuilder )
+{
+    uint8_t * buffer;
+    size_t length;
+    size_t nonDetDurrentIndex;
+    uint32_t nonDetFieldSet;
+    MQTTStatus_t status;
+
+    if( pPropBuilder == NULL )
+    {
+        pPropBuilder = malloc( sizeof( MQTTPropBuilder_t ) );
+    }
+
+    if( pPropBuilder != NULL )
+    {
+        __CPROVER_assume( length > 0 );
+
+        /* This buffer is used to store packet properties. The property length
+         * is a variable length integer and hence will have a max value of REMAINING_LENGTH_MAX */
+        __CPROVER_assume( length < REMAINING_LENGTH_MAX );
+
+        buffer = malloc( length );
+
+        /* It is a part of the API contract to call MQTTPropertyBuilder_Init before  */
+        status = MQTTPropertyBuilder_Init( pPropBuilder, buffer, length );
+
+        __CPROVER_assume( status == MQTTSuccess );
+
+        __CPROVER_assume( nonDetDurrentIndex >= 0 );
+        __CPROVER_assume( nonDetDurrentIndex < length );
+
+        pPropBuilder->currentIndex = nonDetDurrentIndex;
+        pPropBuilder->fieldSet = nonDetFieldSet;
+    }
+
+    if( status != MQTTSuccess )
+    {
+        pPropBuilder = NULL;
+    }
+
+    return pPropBuilder;
+}
+
+bool isValidMqttPropBuilder( const MQTTPropBuilder_t * pPropBuilder )
+{
+    bool isValid = true;
+
+    if( pPropBuilder != NULL )
+    {
+        isValid = isValid && pPropBuilder->currentIndex >= 0;
+        isValid = isValid && pPropBuilder->fieldSet >= 0;
+        isValid = ( pPropBuilder->currentIndex == 0 ) == ( pPropBuilder->fieldSet == 0 );
+    }
+
+    return isValid;
+}
+
 MQTTSubscribeInfo_t * allocateMqttSubscriptionList( MQTTSubscribeInfo_t * pSubscriptionList,
                                                     size_t subscriptionCount )
 {
@@ -203,6 +291,8 @@ MQTTSubscribeInfo_t * allocateMqttSubscriptionList( MQTTSubscribeInfo_t * pSubsc
     {
         for( int i = 0; i < subscriptionCount; i++ )
         {
+            __CPROVER_assume( pSubscriptionList[ i ].topicFilterLength < MAX_TOPIC_NAME_FILTER_LENGTH );
+
             pSubscriptionList[ i ].pTopicFilter = malloc( pSubscriptionList[ i ].topicFilterLength );
         }
     }
@@ -225,6 +315,7 @@ MQTTContext_t * allocateMqttContext( MQTTContext_t * pContext )
     MQTTStatus_t status = MQTTSuccess;
     MQTTPubAckInfo_t * pOutgoingAckList;
     MQTTPubAckInfo_t * pIncomingAckList;
+    MQTTConnectionStatus_t nonDetConnectStatus;
     size_t outgoingAckListSize;
     size_t incomingAckListSize;
 
@@ -280,6 +371,10 @@ MQTTContext_t * allocateMqttContext( MQTTContext_t * pContext )
                             GetCurrentTimeStub,
                             EventCallbackStub,
                             pNetworkBuffer );
+
+        /* This is to make sure that the API's are called with all possible
+         * connection status values */
+        pContext->connectStatus = nonDetConnectStatus;
     }
 
     /* If the MQTTContext_t initialization failed, then set the context to NULL
@@ -350,4 +445,35 @@ MQTTVec_t * allocateMqttVec( MQTTVec_t * mqttVec )
     mqttVec->vectorLen = vecLen;
 
     return mqttVec;
+}
+
+size_t variableLengthEncodedSizeForProof( size_t length )
+{
+    size_t encodedSize;
+
+    /* Determine how many bytes are needed to encode length.
+     * The values below are taken from the MQTT 3.1.1 spec. */
+
+    /* 1 byte is needed to encode lengths between 0 and 127. */
+    if( length < 128U )
+    {
+        encodedSize = 1U;
+    }
+    /* 2 bytes are needed to encode lengths between 128 and 16,383. */
+    else if( length < 16384U )
+    {
+        encodedSize = 2U;
+    }
+    /* 3 bytes are needed to encode lengths between 16,384 and 2,097,151. */
+    else if( length < 2097152U )
+    {
+        encodedSize = 3U;
+    }
+    /* 4 bytes are needed to encode lengths between 2,097,152 and 268,435,455. */
+    else
+    {
+        encodedSize = 4U;
+    }
+
+    return encodedSize;
 }
