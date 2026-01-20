@@ -64,5 +64,8 @@ void harness()
     packetBytes = malloc( propertyLength + variableLengthEncodedSizeForProof( propertyLength ) );
     __CPROVER_assume( packetBytes != NULL );
 
-    __CPROVER_file_local_core_mqtt_serializer_c_deserializeConnackProperties( pConnectProperties, propertyLength, packetBytes, propBuffer );
+    __CPROVER_file_local_core_mqtt_serializer_c_deserializeConnackProperties( pConnectProperties,
+                                                                              propertyLength,
+                                                                              packetBytes,
+                                                                              propBuffer );
 }

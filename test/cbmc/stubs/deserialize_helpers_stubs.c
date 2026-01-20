@@ -40,97 +40,103 @@
  */
 #define MAX_LENGTH_OF_SINGLE_PROPERTY    ( 2 * MAX_UTF_8_STRING_LENGTH + 4 )
 
-MQTTStatus_t updatePointer( size_t * pPropertyLength )
+static MQTTStatus_t updatePointer( uint32_t * pPropertyLength, uint8_t ** pIndex )
 {
     MQTTStatus_t status = MQTTSuccess;
-    size_t length = *pPropertyLength;
+    uint32_t length = *pPropertyLength;
 
-    size_t decrement = ( length < MAX_LENGTH_OF_SINGLE_PROPERTY ) ? length : MAX_LENGTH_OF_SINGLE_PROPERTY;
+    uint32_t decrement = ( length < MAX_LENGTH_OF_SINGLE_PROPERTY ) ? length : MAX_LENGTH_OF_SINGLE_PROPERTY;
 
     *pPropertyLength -= decrement;
+    *pIndex += decrement;
 
     return status;
 }
 
 /*-----------------------------------------------------------*/
 
-MQTTStatus_t __CPROVER_file_local_core_mqtt_serializer_c_decodeAndDiscard( size_t * pPropertyLength,
-                                                                           uint8_t ** pIndex )
+MQTTStatus_t decodeUserProp( const char ** pPropertyKey,
+                             uint16_t * pPropertyKeyLen,
+                             const char ** pPropertyValue,
+                             uint16_t * pPropertyValueLen,
+                             uint32_t * pPropertyLength,
+                             uint8_t ** pIndex )
 {
-    return updatePointer( pPropertyLength );
+    if( nondet_bool() )
+    {
+        return updatePointer( pPropertyLength, pIndex );
+    }
+    else
+    {
+        return MQTTBadResponse;
+    }
 }
 
 /*-----------------------------------------------------------*/
 
-MQTTStatus_t __CPROVER_file_local_core_mqtt_serializer_c_decodeAndDiscardutf_8( size_t * pPropertyLength,
-                                                                                bool * pUsed,
-                                                                                uint8_t ** pIndex )
+MQTTStatus_t decodeUtf8( const char ** pProperty,
+                         uint16_t * pLength,
+                         uint32_t * pPropertyLength,
+                         bool * pUsed,
+                         uint8_t ** pIndex )
 {
-    return updatePointer( pPropertyLength );
+    if( nondet_bool() )
+    {
+        return updatePointer( pPropertyLength, pIndex );
+    }
+    else
+    {
+        return MQTTBadResponse;
+    }
 }
 
 /*-----------------------------------------------------------*/
 
-MQTTStatus_t __CPROVER_file_local_core_mqtt_serializer_c_decodeAndDiscard_uint8( size_t * pPropertyLength,
-                                                                                 uint8_t ** pIndex )
+MQTTStatus_t decodeUint16t( uint16_t * pProperty,
+                            uint32_t * pPropertyLength,
+                            bool * pUsed,
+                            uint8_t ** pIndex )
 {
-    return updatePointer( pPropertyLength );
-}
-
-/*-----------------------------------------------------------*/
-MQTTStatus_t __CPROVER_file_local_core_mqtt_serializer_c_decodeAndDiscard_uint32( size_t * pPropertyLength,
-                                                                                  uint8_t ** pIndex )
-{
-    return updatePointer( pPropertyLength );
-}
-
-/*-----------------------------------------------------------*/
-
-MQTTStatus_t __CPROVER_file_local_core_mqtt_serializer_c_decodeuint32_t( uint32_t * pProperty,
-                                                                         size_t * pPropertyLength,
-                                                                         bool * pUsed,
-                                                                         uint8_t ** pIndex )
-{
-    return updatePointer( pPropertyLength );
+    if( nondet_bool() )
+    {
+        return updatePointer( pPropertyLength, pIndex );
+    }
+    else
+    {
+        return MQTTBadResponse;
+    }
 }
 
 /*-----------------------------------------------------------*/
 
-MQTTStatus_t __CPROVER_file_local_core_mqtt_serializer_c_decodeuint16_t( uint16_t * pProperty,
-                                                                         size_t * pPropertyLength,
-                                                                         bool * pUsed,
-                                                                         uint8_t ** pIndex )
+MQTTStatus_t decodeUint32t( uint32_t * pProperty,
+                            uint32_t * pPropertyLength,
+                            bool * pUsed,
+                            uint8_t ** pIndex )
 {
-    return updatePointer( pPropertyLength );
+    if( nondet_bool() )
+    {
+        return updatePointer( pPropertyLength, pIndex );
+    }
+    else
+    {
+        return MQTTBadResponse;
+    }
 }
 
 /*-----------------------------------------------------------*/
 
-MQTTStatus_t __CPROVER_file_local_core_mqtt_serializer_c_decodeuint8_t( uint8_t * pProperty,
-                                                                        size_t * pPropertyLength,
-                                                                        bool * pUsed,
-                                                                        uint8_t ** pIndex )
+MQTTStatus_t decodeUint8t( uint8_t * pProperty,
+                           uint32_t * pPropertyLength,
+                           bool * pUsed,
+                           uint8_t ** pIndex )
 {
-    return updatePointer( pPropertyLength );
-}
-
-/*-----------------------------------------------------------*/
-
-MQTTStatus_t __CPROVER_file_local_core_mqtt_serializer_c_decodeutf_8( const char ** pProperty,
-                                                                      uint16_t * pLength,
-                                                                      size_t * pPropertyLength,
-                                                                      bool * pUsed,
-                                                                      uint8_t ** pIndex )
-{
-    return updatePointer( pPropertyLength );
-}
-
-/*-----------------------------------------------------------*/
-
-MQTTStatus_t __CPROVER_file_local_core_mqtt_serializer_c_decodeBinaryData( const void ** pProperty,
-                                                                           uint16_t * pLength,
-                                                                           size_t * pPropertyLength,
-                                                                           uint8_t ** pIndex )
-{
-    return updatePointer( pPropertyLength );
+    if( nondet_bool() )
+    {
+        return updatePointer( pPropertyLength, pIndex );
+    }
+    else
+    {
+        return MQTTBadResponse;
+    }
 }

@@ -4573,6 +4573,15 @@ MQTTStatus_t MQTTPropertyBuilder_Init( MQTTPropBuilder_t * pPropertyBuilder,
                     "and length must be non-zero. " ) );
         status = MQTTBadParameter;
     }
+    else if( length >= MQTT_REMAINING_LENGTH_INVALID )
+    {
+        LogError( ( "The length must be less than max MQTT packet size (268435456)." ) );
+        status = MQTTBadParameter;
+    }
+    else
+    {
+        /* Nothing to do. All values are valid. */
+    }
 
     if( status == MQTTSuccess )
     {
