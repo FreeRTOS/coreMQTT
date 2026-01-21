@@ -34,6 +34,7 @@ void harness()
     MQTTPropBuilder_t * propBuffer;
     char ** pReasonString;
     uint16_t * reasonStringLength;
+    uint32_t currentIndex;
 
     propBuffer = allocateMqttPropBuilder( NULL );
     __CPROVER_assume( isValidMqttPropBuilder( propBuffer ) );
@@ -48,5 +49,5 @@ void harness()
     pReasonString = malloc( sizeof( char * ) );
     reasonStringLength = malloc( sizeof( uint16_t ) );
 
-    MQTTPropGet_ReasonString( propBuffer, pReasonString, reasonStringLength );
+    MQTTPropGet_ReasonString( propBuffer, &currentIndex, pReasonString, reasonStringLength );
 }
