@@ -27,12 +27,14 @@
  * @brief Implements the proof harness for MQTT_Disconnect function.
  */
 #include "core_mqtt.h"
+#include "core_mqtt_serializer.h"
 #include "mqtt_cbmc_state.h"
 
 void harness()
 {
     MQTTPropBuilder_t * propBuffer;
     uint8_t * propertyId;
+    uint32_t * currentIndex = malloc( sizeof( uint32_t ) );
 
     propBuffer = allocateMqttPropBuilder( NULL );
     __CPROVER_assume( isValidMqttPropBuilder( propBuffer ) );
@@ -46,5 +48,5 @@ void harness()
 
     propertyId = malloc( sizeof( uint8_t ) );
 
-    MQTT_IncomingGetNextProp( propBuffer, propertyId );
+    MQTT_GetNextPropertyType( propBuffer, currentIndex, propertyId );
 }

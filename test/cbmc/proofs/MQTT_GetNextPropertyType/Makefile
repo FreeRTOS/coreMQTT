@@ -20,8 +20,8 @@
 #
 
 HARNESS_ENTRY=harness
-HARNESS_FILE=MQTT_IncomingGetNextProp_harness
-PROOF_UID=MQTT_IncomingGetNextProp
+HARNESS_FILE=MQTT_GetNextPropertyType_harness
+PROOF_UID=MQTT_GetNextPropertyType
 
 DEFINES +=
 INCLUDES +=
@@ -33,5 +33,6 @@ UNWINDSET +=
 PROOF_SOURCES += $(PROOFDIR)/$(HARNESS_FILE).c
 PROOF_SOURCES += $(SRCDIR)/test/cbmc/sources/mqtt_cbmc_state.c
 PROJECT_SOURCES += $(SRCDIR)/source/core_mqtt_serializer.c
+PROJECT_SOURCES += $(SRCDIR)/source/core_mqtt_prop_deserializer.c
 
 include ../Makefile.common
