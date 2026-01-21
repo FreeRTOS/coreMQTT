@@ -63,7 +63,15 @@ void harness()
 
     __CPROVER_assume( *buffer != NULL );
 
-    decodeUserProp( length, buffer );
+    const char * pPropertyKey, * pPropertyValue;
+    uint16_t PropertyKeyLen, PropertyValueLen;
+
+    decodeUserProp( &pPropertyKey,
+                    &PropertyKeyLen,
+                    &pPropertyValue,
+                    &PropertyValueLen,
+                    length,
+                    buffer );
 
     /*-----------------------------------------------------------*/
 
@@ -88,7 +96,13 @@ void harness()
 
     __CPROVER_assume( *buffer != NULL );
 
-    decodeUtf8( length, used, buffer );
+    const char * pProperty;
+    uint16_t PropertyLen;
+    decodeUtf8( &pProperty,
+                &PropertyLen,
+                length,
+                used,
+                buffer );
 
     /*-----------------------------------------------------------*/
 
@@ -113,8 +127,11 @@ void harness()
 
     __CPROVER_assume( *buffer != NULL );
 
-    decodeUint8t( length, used, buffer );
-
+    uint8_t * u8Prop = malloc( sizeof( uint8_t ) );
+    decodeUint8t( u8Prop,
+                  length,
+                  used,
+                  buffer );
 
     /*-----------------------------------------------------------*/
 
@@ -139,7 +156,11 @@ void harness()
 
     __CPROVER_assume( *buffer != NULL );
 
-    decodeUint32t( length, used, buffer );
+    uint32_t * u32Property = malloc( sizeof( uint32_t ) );
+    decodeUint32t( u32Property,
+                   length,
+                   used,
+                   buffer );
 
     /*-----------------------------------------------------------*/
 
@@ -168,129 +189,9 @@ void harness()
 
     __CPROVER_assume( *buffer != NULL );
 
-    decodeUint16t( property_uint32_t, length, used, buffer );
-
-    /*-----------------------------------------------------------*/
-
-    property_uint16_t = malloc( sizeof( uint16_t ) );
-
-    __CPROVER_assume( property_uint16_t != NULL );
-
-    length = malloc( sizeof( size_t ) );
-
-    __CPROVER_assume( length != NULL );
-    __CPROVER_assume( *length >= 0 );
-
-    /* This buffer is used to store packet properties. The property length
-     *  is a variable length integer and hence will have a max value of REMAINING_LENGTH_MAX */
-    __CPROVER_assume( *length < REMAINING_LENGTH_MAX );
-
-    used = malloc( sizeof( bool ) );
-
-    __CPROVER_assume( used != NULL );
-
-    buffer = malloc( sizeof( uint8_t * ) );
-
-    __CPROVER_assume( buffer != NULL );
-
-    *buffer = malloc( *length );
-
-    __CPROVER_assume( *buffer != NULL );
-
-
-
-    /*-----------------------------------------------------------*/
-
-    property_uint8_t = malloc( sizeof( uint8_t ) );
-
-    __CPROVER_assume( property_uint8_t != NULL );
-
-    length = malloc( sizeof( size_t ) );
-
-    __CPROVER_assume( length != NULL );
-    __CPROVER_assume( *length >= 0 );
-
-    /* This buffer is used to store packet properties. The property length
-     *  is a variable length integer and hence will have a max value of REMAINING_LENGTH_MAX */
-    __CPROVER_assume( *length < REMAINING_LENGTH_MAX );
-
-    used = malloc( sizeof( bool ) );
-
-    __CPROVER_assume( used != NULL );
-
-    buffer = malloc( sizeof( uint8_t * ) );
-
-    __CPROVER_assume( buffer != NULL );
-
-    *buffer = malloc( *length );
-
-    __CPROVER_assume( *buffer != NULL );
-
-    __CPROVER_file_local_core_mqtt_serializer_c_decodeuint8_t( property_uint8_t, length, used, buffer );
-
-    /*-----------------------------------------------------------*/
-
-    property_utf_8 = malloc( sizeof( char * ) );
-
-    __CPROVER_assume( property_utf_8 != NULL );
-
-    property_length = malloc( sizeof( uint16_t ) );
-
-    __CPROVER_assume( property_length != NULL );
-
-    length = malloc( sizeof( size_t ) );
-
-    __CPROVER_assume( length != NULL );
-    __CPROVER_assume( *length >= 0 );
-
-    /* This buffer is used to store packet properties. The property length
-     *  is a variable length integer and hence will have a max value of REMAINING_LENGTH_MAX */
-    __CPROVER_assume( *length < REMAINING_LENGTH_MAX );
-
-    used = malloc( sizeof( bool ) );
-
-    __CPROVER_assume( used != NULL );
-
-    buffer = malloc( sizeof( uint8_t * ) );
-
-    __CPROVER_assume( buffer != NULL );
-
-    *buffer = malloc( *length );
-
-    __CPROVER_assume( *buffer != NULL );
-
-    __CPROVER_file_local_core_mqtt_serializer_c_decodeutf_8( property_utf_8, property_length, length, used, buffer );
-
-    /*-----------------------------------------------------------*/
-
-    property_binary = malloc( sizeof( char * ) );
-
-    __CPROVER_assume( property_binary != NULL );
-
-    property_length = malloc( sizeof( uint16_t ) );
-
-    __CPROVER_assume( property_length != NULL );
-
-    length = malloc( sizeof( size_t ) );
-
-    __CPROVER_assume( length != NULL );
-    __CPROVER_assume( *length >= 0 );
-
-    /* This buffer is used to store packet properties. The property length
-     *  is a variable length integer and hence will have a max value of REMAINING_LENGTH_MAX */
-    __CPROVER_assume( *length < REMAINING_LENGTH_MAX );
-
-    used = malloc( sizeof( bool ) );
-
-    __CPROVER_assume( used != NULL );
-
-    buffer = malloc( sizeof( uint8_t * ) );
-
-    __CPROVER_assume( buffer != NULL );
-
-    *buffer = malloc( *length );
-
-    __CPROVER_assume( *buffer != NULL );
-
-    __CPROVER_file_local_core_mqtt_serializer_c_decodeutf_8( property_binary, property_length, length, used, buffer );
+    uint16_t * u16Property = malloc( sizeof( uint16_t ) );
+    decodeUint16t( u16Property,
+                   length,
+                   used,
+                   buffer );
 }

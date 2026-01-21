@@ -127,6 +127,9 @@ MQTTStatus_t decodeUserProp( const char ** pPropertyKey,
     uint16_t valueLength = 0U;
     bool used = false;
 
+    assert( pIndex != NULL );
+    assert( pPropertyLength != NULL );
+
     /* Decode the user property key using decodeUtf8. */
     status = decodeUtf8( &pKey, &keyLength, pPropertyLength, &used, pIndex );
 
@@ -158,6 +161,10 @@ MQTTStatus_t decodeUint32t( uint32_t * pProperty,
 {
     uint8_t * pLocalIndex = *pIndex;
     MQTTStatus_t status = MQTTSuccess;
+
+    assert( pIndex != NULL );
+    assert( pPropertyLength != NULL );
+    assert( pUsed != NULL );
 
     /* Protocol error to include the same property twice. */
     if( *pUsed == true )
@@ -195,6 +202,10 @@ MQTTStatus_t decodeUint16t( uint16_t * pProperty,
     uint8_t * pLocalIndex = *pIndex;
     MQTTStatus_t status = MQTTSuccess;
 
+    assert( pIndex != NULL );
+    assert( pPropertyLength != NULL );
+    assert( pUsed != NULL );
+
     /* Protocol error to include the same property twice. */
     if( *pUsed == true )
     {
@@ -231,6 +242,10 @@ MQTTStatus_t decodeUint8t( uint8_t * pProperty,
     uint8_t * pLocalIndex = *pIndex;
     MQTTStatus_t status = MQTTSuccess;
 
+    assert( pIndex != NULL );
+    assert( pPropertyLength != NULL );
+    assert( pUsed != NULL );
+
     /* Protocol error to include the same property twice. */
     if( *pUsed == true )
     {
@@ -243,7 +258,11 @@ MQTTStatus_t decodeUint8t( uint8_t * pProperty,
     }
     else
     {
-        *pProperty = *pLocalIndex;
+        if( pProperty != NULL )
+        {
+            *pProperty = *pLocalIndex;
+        }
+
         pLocalIndex = &pLocalIndex[ sizeof( uint8_t ) ];
         *pUsed = true;
         *pPropertyLength -= sizeof( uint8_t );
@@ -263,6 +282,11 @@ MQTTStatus_t decodeUtf8( const char ** pProperty,
 {
     uint8_t * pLocalIndex = *pIndex;
     MQTTStatus_t status = MQTTSuccess;
+    uint16_t length;
+
+    assert( pIndex != NULL );
+    assert( pPropertyLength != NULL );
+    assert( pUsed != NULL );
 
     /* Protocol error to include the same property twice. */
     if( *pUsed == true )
@@ -276,19 +300,24 @@ MQTTStatus_t decodeUtf8( const char ** pProperty,
     }
     else
     {
-        *pLength = UINT16_DECODE( pLocalIndex );
+        length = UINT16_DECODE( pLocalIndex );
         pLocalIndex = &pLocalIndex[ sizeof( uint16_t ) ];
         *pPropertyLength -= sizeof( uint16_t );
 
-        if( *pPropertyLength < *pLength )
+        if( *pPropertyLength < length )
         {
             status = MQTTBadResponse;
         }
         else
         {
-            *pProperty = ( const char * ) pLocalIndex;
-            pLocalIndex = &pLocalIndex[ *pLength ];
-            *pPropertyLength -= *pLength;
+            if( ( pProperty != NULL ) && ( pLength != NULL ) )
+            {
+                *pProperty = ( const char * ) pLocalIndex;
+                *pLength = length;
+            }
+
+            pLocalIndex = &pLocalIndex[ length ];
+            *pPropertyLength -= length;
             *pUsed = true;
         }
     }
@@ -309,6 +338,9 @@ MQTTStatus_t decodeVariableLength( const uint8_t * pBuffer,
     uint8_t encodedByte = 0;
     size_t localBufferLength = bufferLength;
     MQTTStatus_t status = MQTTSuccess;
+
+    assert( pLength != NULL );
+    assert( pBuffer != NULL );
 
     /* This algorithm is copied from the MQTT 5.0 spec. */
     do
