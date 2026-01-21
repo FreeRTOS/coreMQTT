@@ -34,6 +34,7 @@ void harness()
     MQTTPropBuilder_t * propBuffer;
     char ** pServerRef;
     uint16_t * serverRefLength;
+    uint32_t currentIndex;
 
     propBuffer = allocateMqttPropBuilder( NULL );
     __CPROVER_assume( isValidMqttPropBuilder( propBuffer ) );
@@ -48,5 +49,5 @@ void harness()
     pServerRef = malloc( sizeof( char * ) );
     serverRefLength = malloc( sizeof( uint16_t ) );
 
-    MQTTPropGet_ServerRef( propBuffer, pServerRef, serverRefLength );
+    MQTTPropGet_ServerRef( propBuffer, &currentIndex, pServerRef, serverRefLength );
 }
