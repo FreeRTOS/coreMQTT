@@ -44,6 +44,7 @@ UNWINDSET += __CPROVER_file_local_core_mqtt_state_c_findInRecord.0:$(MQTT_STATE_
 # divides a size_t variable by 128 until it reaches zero to stop the loop.
 # log128(SIZE_MAX) = 4.571...
 UNWINDSET += encodeVariableLength.0:5
+UNWINDSET += encodeRemainingLength.0:5
 UNWINDSET += __CPROVER_file_local_core_mqtt_c_sendMessageVector.0:${PUBLISH_PACKET_VECTORS}
 UNWINDSET += __CPROVER_file_local_core_mqtt_c_sendMessageVector.1:${PUBLISH_PACKET_VECTORS}
 UNWINDSET += __CPROVER_file_local_core_mqtt_c_sendMessageVector.2:${PUBLISH_PACKET_VECTORS}
