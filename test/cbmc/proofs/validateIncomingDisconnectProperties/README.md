@@ -1,7 +1,7 @@
-DeserializeDisconnectProperties proof
+validateIncomingDisconnectProperties proof
 ==============
 
-This directory contains a memory safety proof for DeserializeDisconnectProperties.
+This directory contains a memory safety proof for validateIncomingDisconnectProperties.
 
 To run the proof.
 * Add cbmc, goto-cc, goto-instrument, goto-analyzer, and cbmc-viewer

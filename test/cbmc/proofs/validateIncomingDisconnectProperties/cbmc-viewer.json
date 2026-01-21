@@ -2,6 +2,6 @@
   [
 
   ],
-  "proof-name": "MQTT_DeserializePublish",
+  "proof-name": "validateIncomingDisconnectProperties",
   "proof-root": "test/cbmc"
 }

@@ -52,5 +52,5 @@ void harness()
     packetBytes = malloc( propertyLength );
     __CPROVER_assume( packetBytes != NULL );
 
-    __CPROVER_file_local_core_mqtt_serializer_c_deserializeDisconnectProperties( packetBytes, propertyLength );
+    __CPROVER_file_local_core_mqtt_serializer_c_validateIncomingDisconnectProperties( packetBytes, propertyLength );
 }

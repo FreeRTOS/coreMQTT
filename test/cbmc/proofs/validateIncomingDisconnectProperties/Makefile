@@ -23,8 +23,8 @@ MQTT_INCOMING_MAX_PROPERTIES=14
 MAX_UTF_8_STRING_LENGTH=10
 
 HARNESS_ENTRY=harness
-HARNESS_FILE=DeserializeDisconnectProperties_harness
-PROOF_UID=DeserializeDisconnectProperties
+HARNESS_FILE=validateIncomingDisconnectProperties_harness
+PROOF_UID=validateIncomingDisconnectProperties
 
 DEFINES += -DMAX_UTF_8_STRING_LENGTH=$(MAX_UTF_8_STRING_LENGTH)
 INCLUDES +=
@@ -35,7 +35,7 @@ REMOVE_FUNCTION_BODY += decodeUtf8
 REMOVE_FUNCTION_BODY += decodeUint8t
 REMOVE_FUNCTION_BODY += decodeUint32t
 
-UNWINDSET += __CPROVER_file_local_core_mqtt_serializer_c_deserializeDisconnectProperties.0:$(MQTT_INCOMING_MAX_PROPERTIES)
+UNWINDSET += __CPROVER_file_local_core_mqtt_serializer_c_validateIncomingDisconnectProperties.0:$(MQTT_INCOMING_MAX_PROPERTIES)
 
 PROOF_SOURCES += $(PROOFDIR)/$(HARNESS_FILE).c
 PROOF_SOURCES += $(SRCDIR)/test/cbmc/sources/mqtt_cbmc_state.c
