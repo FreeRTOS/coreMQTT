@@ -2396,7 +2396,7 @@ static MQTTStatus_t receiveSingleIteration( MQTTContext_t * pContext,
         }
 
         /* No data was received, check for keep alive timeout. */
-        if( recvBytes == 0 )
+        if( ( status == MQTTSuccess ) && ( recvBytes == 0 ) )
         {
             if( manageKeepAlive == true )
             {
