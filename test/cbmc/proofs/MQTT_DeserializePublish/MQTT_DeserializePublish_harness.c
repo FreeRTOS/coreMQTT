@@ -28,6 +28,7 @@
  */
 
 #include "core_mqtt.h"
+#include "private/core_mqtt_serializer_private.h"
 #include "mqtt_cbmc_state.h"
 
 MQTTStatus_t __CPROVER_file_local_core_mqtt_serializer_c_deserializePublishProperties( MQTTPublishInfo_t * pPublishInfo,
@@ -45,7 +46,7 @@ MQTTStatus_t __CPROVER_file_local_core_mqtt_serializer_c_deserializePublishPrope
     remainingLengthForProperties -= pPublishInfo->topicNameLength + sizeof( uint16_t );
     remainingLengthForProperties -= ( pPublishInfo->qos > 0 ) ? sizeof( uint16_t ) : 0;
 
-    status = __CPROVER_file_local_core_mqtt_serializer_c_decodeVariableLength( pLocalIndex, remainingLengthForProperties, &propertyLength );
+    status = decodeVariableLength( pLocalIndex, remainingLengthForProperties, &propertyLength );
     pPublishInfo->propertyLength = propertyLength;
 
     if( ( status == MQTTSuccess ) &&

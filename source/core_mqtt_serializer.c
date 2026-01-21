@@ -4208,6 +4208,11 @@ MQTTStatus_t MQTT_DeserializePublish( const MQTTPacketInfo_t * pIncomingPacket,
                     "pIncomingPacket->pRemainingData is NULL." ) );
         status = MQTTBadParameter;
     }
+    else if( pIncomingPacket->remainingLength >= MQTT_REMAINING_LENGTH_INVALID )
+    {
+        LogError( ( "Remaining length cannot be larger than MQTT maximum (268435456)." ) );
+        status = MQTTBadParameter;
+    }
     else if( ( pIncomingPacket->remainingLength +
                variableLengthEncodedSize( pIncomingPacket->remainingLength ) +
                1U ) > maxPacketSize )
