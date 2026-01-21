@@ -67,7 +67,7 @@ void harness()
 {
     MQTTContext_t * pContext;
     MQTTPropBuilder_t * propBuffer;
-    MQTTSuccessFailReasonCode_t reasonCode;
+    MQTTSuccessFailReasonCode_t * reasonCode = malloc( sizeof( MQTTSuccessFailReasonCode_t ) );
 
     pContext = allocateMqttContext( NULL );
     __CPROVER_assume( isValidMqttContext( pContext ) );
