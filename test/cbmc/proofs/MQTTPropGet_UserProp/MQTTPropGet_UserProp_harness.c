@@ -32,10 +32,8 @@
 void harness()
 {
     MQTTPropBuilder_t * propBuffer;
-    char ** pUserPropKey;
-    uint16_t * pUserPropKeyLen;
-    char ** pUserPropVal;
-    uint16_t * pUserPropValLen;
+    uint32_t currentIndex;
+    MQTTUserProperty_t pUserProperty;
 
     propBuffer = allocateMqttPropBuilder( NULL );
     __CPROVER_assume( isValidMqttPropBuilder( propBuffer ) );
@@ -47,10 +45,7 @@ void harness()
         __CPROVER_assume( propBuffer->fieldSet >= 0 );
     }
 
-    pUserPropKey = malloc( sizeof( char * ) );
-    pUserPropKeyLen = malloc( sizeof( uint16_t ) );
-    pUserPropVal = malloc( sizeof( char * ) );
-    pUserPropValLen = malloc( sizeof( uint16_t ) );
-
-    MQTTPropGet_UserProp( propBuffer, pUserPropKey, pUserPropKeyLen, pUserPropVal, pUserPropValLen );
+    MQTTPropGet_UserProp( propBuffer,
+                          &currentIndex,
+                          &pUserProperty );
 }
