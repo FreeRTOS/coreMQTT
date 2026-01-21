@@ -35,11 +35,8 @@ REMOVE_FUNCTION_BODY += decodeUtf8
 REMOVE_FUNCTION_BODY += decodeUint8t
 REMOVE_FUNCTION_BODY += decodeUint32t
 
-
-
-
 UNWINDSET += encodeVariableLength.0:5
-UNWINDSET += __CPROVER_file_local_core_mqtt_serializer_c_decodeVariableLength.0:5
+UNWINDSET += decodeVariableLength.0:5
 UNWINDSET += __CPROVER_file_local_core_mqtt_serializer_c_deserializePublishProperties.0:$(MQTT_INCOMING_PUBLISH_MAX_PROPERTIES)
 
 PROOF_SOURCES += $(PROOFDIR)/$(HARNESS_FILE).c
@@ -47,5 +44,6 @@ PROOF_SOURCES += $(SRCDIR)/test/cbmc/sources/mqtt_cbmc_state.c
 PROOF_SOURCES += $(SRCDIR)/test/cbmc/stubs/deserialize_helpers_stubs.c
 PROJECT_SOURCES += $(SRCDIR)/source/core_mqtt.c
 PROJECT_SOURCES += $(SRCDIR)/source/core_mqtt_serializer.c
+PROJECT_SOURCES += $(SRCDIR)/source/core_mqtt_serializer_private.c
 
 include ../Makefile.common
