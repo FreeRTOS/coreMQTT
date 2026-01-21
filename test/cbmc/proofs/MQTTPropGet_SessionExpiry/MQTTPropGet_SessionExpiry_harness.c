@@ -33,6 +33,7 @@ void harness()
 {
     MQTTPropBuilder_t * propBuffer;
     uint32_t * sessionExpiry;
+    uint32_t currentIndex;
 
     propBuffer = allocateMqttPropBuilder( NULL );
     __CPROVER_assume( isValidMqttPropBuilder( propBuffer ) );
@@ -46,5 +47,5 @@ void harness()
 
     sessionExpiry = malloc( sizeof( uint32_t ) );
 
-    MQTTPropGet_SessionExpiry( propBuffer, sessionExpiry );
+    MQTTPropGet_SessionExpiry( propBuffer, &currentIndex, sessionExpiry );
 }
