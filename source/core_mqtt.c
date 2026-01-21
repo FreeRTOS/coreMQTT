@@ -4957,6 +4957,11 @@ MQTTStatus_t MQTT_GetSubAckStatusCodes( const MQTTPacketInfo_t * pSubackPacket,
                     ( unsigned long ) pSubackPacket->remainingLength ) );
         status = MQTTBadParameter;
     }
+    else if( pSubackPacket->remainingLength > MQTT_REMAINING_LENGTH_INVALID )
+    {
+        LogError( ( "Remaining length cannot be larger than MQTT maximum (268435456)." ) );
+        status = MQTTBadParameter;
+    }
     else
     {
         /* According to the MQTT 5.0 specification, the "Remaining Length" field represents the
