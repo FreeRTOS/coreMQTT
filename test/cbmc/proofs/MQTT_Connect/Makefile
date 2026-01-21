@@ -55,9 +55,8 @@ REMOVE_FUNCTION_BODY += __CPROVER_file_local_core_mqtt_c_handleIncomingPublish
 REMOVE_FUNCTION_BODY += __CPROVER_file_local_core_mqtt_c_handleKeepAlive
 REMOVE_FUNCTION_BODY += updateContextWithConnectProps
 REMOVE_FUNCTION_BODY += MQTT_ValidateWillProperties
-REMOVE_FUNCTION_BODY += MQTT_DeserializeAck
-#REMOVE_FUNCTION_BODY += __CPROVER_file_local_core_mqtt_c_sendMessageVector
-#REMOVE_FUNCTION_BODY += __CPROVER_file_local_core_mqtt_c_sendBuffer
+REMOVE_FUNCTION_BODY += MQTT_DeserializeConnAck
+REMOVE_FUNCTION_BODY += serializeConnectFixedHeader
 
 # The loop below is unwound once more than the timeout. The loop below uses
 # the user passed in timeout to break the loop.
@@ -92,7 +91,9 @@ PROOF_SOURCES += $(SRCDIR)/test/cbmc/stubs/get_time_stub.c
 PROOF_SOURCES += $(SRCDIR)/test/cbmc/stubs/event_callback_stub.c
 PROJECT_SOURCES += $(SRCDIR)/source/core_mqtt.c
 PROJECT_SOURCES += $(SRCDIR)/source/core_mqtt_serializer.c
+PROJECT_SOURCES += $(SRCDIR)/source/core_mqtt_serializer_private.c
 PROJECT_SOURCES += $(SRCDIR)/source/core_mqtt_state.c
+PROJECT_SOURCES += $(SRCDIR)/test/cbmc/stubs/deserialize_helpers_stubs.c
 
 EXPENSIVE = true
 

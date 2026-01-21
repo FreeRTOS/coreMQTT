@@ -31,7 +31,6 @@
 
 MQTTStatus_t MQTT_DeserializeAck( const MQTTPacketInfo_t * pIncomingPacket,
                                   uint16_t * pPacketId,
-                                  bool * pSessionPresent,
                                   MQTTReasonCodeInfo_t * pReasonCode,
                                   MQTTPropBuilder_t * propBuffer,
                                   MQTTConnectionProperties_t * pConnectProperties )

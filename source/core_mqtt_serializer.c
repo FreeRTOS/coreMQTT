@@ -3013,6 +3013,18 @@ MQTTStatus_t MQTT_GetConnectPacketSize( const MQTTConnectInfo_t * pConnectInfo,
         LogError( ( "Client ID length and value mismatch." ) );
         status = MQTTBadParameter;
     }
+    else if( ( pConnectInfo->clientIdentifierLength > UINT16_MAX ) ||
+             ( pConnectInfo->userNameLength > UINT16_MAX ) ||
+             ( pConnectInfo->passwordLength > UINT16_MAX ) )
+    {
+        LogError( ( "Client ID, userName and password length cannot be greater than %d. "
+                    "Client ID: %lu, User name len: %lu, Password len: %lu"
+                    UINT16_MAX,
+                    ( unsigned long ) pConnectInfo->clientIdentifierLength,
+                    ( unsigned long ) pConnectInfo->userNameLength,
+                    ( unsigned long ) pConnectInfo->passwordLength ) );
+        status = MQTTBadParameter;
+    }
     else if( ( pWillInfo != NULL ) && ( pWillInfo->payloadLength > ( size_t ) UINT16_MAX ) )
     {
         /* The MQTTPublishInfo_t is reused for the will message. The payload
@@ -3022,6 +3034,12 @@ MQTTStatus_t MQTT_GetConnectPacketSize( const MQTTConnectInfo_t * pConnectInfo,
                     "pWillInfo->payloadLength=%lu.",
                     UINT16_MAX,
                     ( unsigned long ) pWillInfo->payloadLength ) );
+        status = MQTTBadParameter;
+    }
+    else if( ( pWillInfo != NULL ) && ( pWillInfo->topicNameLength > ( size_t ) UINT16_MAX ) )
+    {
+        LogError( ( "The Will topic length must not exceed %d.",
+                    UINT16_MAX ) );
         status = MQTTBadParameter;
     }
     else
@@ -4604,6 +4622,10 @@ MQTTStatus_t MQTT_ValidateWillProperties( const MQTTPropBuilder_t * pPropertyBui
     uint32_t propertyBitMask = 0;
 
     if( ( pPropertyBuilder == NULL ) || ( pPropertyBuilder->pBuffer == NULL ) )
+    {
+        status = MQTTBadParameter;
+    }
+    else if( pPropertyBuilder->currentIndex >= MQTT_REMAINING_LENGTH_INVALID )
     {
         status = MQTTBadParameter;
     }

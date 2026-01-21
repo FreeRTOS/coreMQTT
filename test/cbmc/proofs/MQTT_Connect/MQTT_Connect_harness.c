@@ -60,6 +60,22 @@ static uint32_t ulGetTimeFunction( void )
     return systemTime;
 }
 
+uint8_t * serializeConnectFixedHeader( uint8_t * pIndex,
+                                       const MQTTConnectInfo_t * pConnectInfo,
+                                       const MQTTPublishInfo_t * pWillInfo,
+                                       size_t remainingLength )
+{
+    __CPROVER_assert( pIndex != NULL, "pIndex must not be NULL." );
+    __CPROVER_assert( pConnectInfo != NULL, "pConnectInfo must not be NULL." );
+
+    uint8_t value;
+
+    __CPROVER_assume( value >= 0 );
+    __CPROVER_assume( value < 15 );
+
+    return &pIndex[ value ];
+}
+
 MQTTStatus_t updateContextWithConnectProps( const MQTTPropBuilder_t * pPropBuilder,
                                             MQTTConnectionProperties_t * pConnectProperties )
 {
@@ -75,12 +91,10 @@ MQTTStatus_t MQTT_ValidateWillProperties( const MQTTPropBuilder_t * pPropertyBui
     return status;
 }
 
-MQTTStatus_t MQTT_DeserializeAck( const MQTTPacketInfo_t * pIncomingPacket,
-                                  uint16_t * pPacketId,
-                                  bool * pSessionPresent,
-                                  MQTTReasonCodeInfo_t * pReasonCode,
-                                  MQTTPropBuilder_t * propBuffer,
-                                  MQTTConnectionProperties_t * pConnectProperties )
+MQTTStatus_t MQTT_DeserializeConnAck( const MQTTPacketInfo_t * pIncomingPacket,
+                                      bool * pSessionPresent,
+                                      MQTTPropBuilder_t * pPropBuffer,
+                                      MQTTConnectionProperties_t * pConnectProperties )
 {
     MQTTStatus_t result;
 

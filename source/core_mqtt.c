@@ -653,7 +653,7 @@ static MQTTStatus_t handleSubUnsubAck( MQTTContext_t * pContext,
  * @param[in] packetId packet ID of original PUBLISH.
  * @param[in] publishState Current publish state in record.
  *
- * @return MQTTSuccess, MQTTBadParamater, MQTTBadResponse, MQTTIllegalState, MQTTSendFailed, MQTTStatusNotConnected, MQTTStatusDisconnectPending or MQTTNoMemory.
+ * @return MQTTSuccess, MQTTBadParameter, MQTTBadResponse, MQTTIllegalState, MQTTSendFailed, MQTTStatusNotConnected, MQTTStatusDisconnectPending or MQTTNoMemory.
  */
 static MQTTStatus_t sendPublishAcksWithoutProperty( MQTTContext_t * pContext,
                                                     uint16_t packetId,
@@ -2741,7 +2741,6 @@ static MQTTStatus_t sendSubscribeWithoutCopy( MQTTContext_t * pContext,
             ioVectorLength += vectorsAdded;
 
             /* Lastly, send the subscription options. */
-
             addSubscriptionOptions( pSubscriptionList[ subscriptionsSent ],
                                     subscriptionOptionsArray,
                                     currentOptionIndex );
@@ -3063,7 +3062,7 @@ static MQTTStatus_t sendConnectWithoutCopy( MQTTContext_t * pContext,
     MQTTStatus_t status = MQTTSuccess;
     TransportOutVector_t * iterator;
     size_t ioVectorLength = 0U;
-    size_t totalMessageLength = 0U;
+    uint32_t totalMessageLength = 0U;
     size_t connectPropLen = 0U;
     int32_t bytesSentOrError;
     uint8_t * pIndex;
@@ -3136,6 +3135,7 @@ static MQTTStatus_t sendConnectWithoutCopy( MQTTContext_t * pContext,
         /* coverity[misra_c_2012_rule_18_2_violation] */
         /* coverity[misra_c_2012_rule_10_8_violation] */
         iterator->iov_len = ( size_t ) ( pIndex - connectPacketHeader );
+
         totalMessageLength += iterator->iov_len;
         iterator++;
         ioVectorLength++;
@@ -3164,13 +3164,8 @@ static MQTTStatus_t sendConnectWithoutCopy( MQTTContext_t * pContext,
             totalMessageLength += iterator->iov_len;
             iterator++;
             ioVectorLength++;
-        }
 
-        /*
-         * Update the context with properties that will persist for the entire connection.
-         */
-        if( connectPropLen > 0U )
-        {
+            /* Update the context with properties that will persist for the entire connection. */
             status = updateContextWithConnectProps( pPropertyBuilder, &pContext->connectionProperties );
         }
 
@@ -4158,7 +4153,7 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
                            const MQTTPropBuilder_t * pPropertyBuilder,
                            const MQTTPropBuilder_t * pWillPropertyBuilder )
 {
-    size_t remainingLength = 0UL, packetSize = 0UL;
+    uint32_t remainingLength = 0UL, packetSize = 0UL;
     MQTTStatus_t status = MQTTSuccess;
     MQTTPacketInfo_t incomingPacket = { 0 };
     MQTTConnectionStatus_t connectStatus;

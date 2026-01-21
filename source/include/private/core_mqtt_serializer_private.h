@@ -297,6 +297,11 @@
 #define MQTT_REMAINING_LENGTH_INVALID    ( ( uint32_t ) 268435456U )
 
 /**
+ * @brief A value that represents maximum value of UTF-8 encoded string.
+ */
+#define MQTT_MAX_UTF8_STR_LENGTH         ( ( uint32_t ) 65535 )
+
+/**
  * @brief A value that represents the maximum value which can fit in a
  * variable byte integer.
  */
