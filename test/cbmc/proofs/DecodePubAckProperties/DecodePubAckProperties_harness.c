@@ -68,5 +68,5 @@ void harness()
 
     encodeVariableLength( &packetBytes[ MIN_REMAINING_LENGTH_FOR_ACK_WITHOUT_PROPS ], propertyLength );
 
-    __CPROVER_file_local_core_mqtt_serializer_c_decodeAckProperties( propBuffer, packetBytes, remainingLength );
+    __CPROVER_file_local_core_mqtt_serializer_c_decodePubAckProperties( propBuffer, packetBytes, remainingLength );
 }

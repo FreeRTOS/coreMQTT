@@ -40,7 +40,8 @@
  */
 #define MAX_LENGTH_OF_SINGLE_PROPERTY    ( 2 * MAX_UTF_8_STRING_LENGTH + 4 )
 
-static MQTTStatus_t updatePointer( uint32_t * pPropertyLength, uint8_t ** pIndex )
+static MQTTStatus_t updatePointer( uint32_t * pPropertyLength,
+                                   uint8_t ** pIndex )
 {
     MQTTStatus_t status = MQTTSuccess;
     uint32_t length = *pPropertyLength;
