@@ -5454,6 +5454,7 @@ MQTTStatus_t MQTT_DeserializeDisconnect( const MQTTPacketInfo_t * pPacket,
     {
         status = MQTTBadResponse;
     }
+
     /* Packet size should not be more than the max allowed by the client.
      * The length is calculated as: Remaining length +
      *       Bytes required to encode the remaining length +

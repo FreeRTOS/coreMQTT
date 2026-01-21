@@ -27,13 +27,14 @@ DEFINES +=
 INCLUDES +=
 
 # These functions have their memory saftey proven in other harnesses.
-REMOVE_FUNCTION_BODY += __CPROVER_file_local_core_mqtt_serializer_c_deserializeDisconnectProperties
+REMOVE_FUNCTION_BODY += __CPROVER_file_local_core_mqtt_serializer_c_validateIncomingDisconnectProperties
 
-UNWINDSET += __CPROVER_file_local_core_mqtt_serializer_c_decodeVariableLength.0:5
+UNWINDSET += decodeVariableLength.0:5
 
 PROOF_SOURCES += $(PROOFDIR)/$(HARNESS_FILE).c
 PROOF_SOURCES += $(SRCDIR)/test/cbmc/sources/mqtt_cbmc_state.c
 PROJECT_SOURCES += $(SRCDIR)/source/core_mqtt.c
 PROJECT_SOURCES += $(SRCDIR)/source/core_mqtt_serializer.c
+PROJECT_SOURCES += $(SRCDIR)/source/core_mqtt_serializer_private.c
 
 include ../Makefile.common
