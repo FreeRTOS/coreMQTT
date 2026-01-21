@@ -30,16 +30,16 @@
 #include "mqtt_cbmc_state.h"
 
 MQTTStatus_t __CPROVER_file_local_core_mqtt_serializer_c_deserializeConnackProperties( MQTTConnectionProperties_t * pConnackProperties,
-                                                                                       size_t length,
-                                                                                       uint8_t * pIndex,
-                                                                                       MQTTPropBuilder_t * propBuffer )
+                                                  uint32_t length,
+                                                  uint8_t * pIndex,
+                                                  MQTTPropBuilder_t * pPropBuffer )
 {
     MQTTStatus_t status;
 
     return status;
 }
 
-MQTTStatus_t __CPROVER_file_local_core_mqtt_serializer_c_deserializeSubackProperties( MQTTPropBuilder_t * propBuffer,
+MQTTStatus_t __CPROVER_file_local_core_mqtt_serializer_c_deserializeSubUnsubAckProperties( MQTTPropBuilder_t * propBuffer,
                                                                                       uint8_t * pIndex,
                                                                                       size_t * pSubackPropertyLength,
                                                                                       size_t remainingLength )
@@ -49,7 +49,7 @@ MQTTStatus_t __CPROVER_file_local_core_mqtt_serializer_c_deserializeSubackProper
     return status;
 }
 
-MQTTStatus_t __CPROVER_file_local_core_mqtt_serializer_c_decodeAckProperties( MQTTPropBuilder_t * propBuffer,
+MQTTStatus_t __CPROVER_file_local_core_mqtt_serializer_c_decodePubAckProperties( MQTTPropBuilder_t * propBuffer,
                                                                               uint8_t * pIndex,
                                                                               size_t remainingLength )
 {
@@ -72,7 +72,6 @@ void harness()
 
     /* These are allocated for coverage of a NULL input. */
     pPacketId = malloc( sizeof( uint16_t ) );
-    pSessionPresent = malloc( sizeof( bool ) );
     pReasonCode = malloc( sizeof( MQTTReasonCodeInfo_t ) );
 
     pPropertyBuilder = allocateMqttPropBuilder( NULL );
@@ -82,7 +81,6 @@ void harness()
 
     MQTT_DeserializeAck( pIncomingPacket,
                          pPacketId,
-                         pSessionPresent,
                          pReasonCode,
                          pPropertyBuilder,
                          pConnectProperties );

@@ -5450,7 +5450,10 @@ MQTTStatus_t MQTT_DeserializeDisconnect( const MQTTPacketInfo_t * pPacket,
     {
         status = MQTTBadParameter;
     }
-
+    else if( pPacket->remainingLength >= MQTT_REMAINING_LENGTH_INVALID )
+    {
+        status = MQTTBadResponse;
+    }
     /* Packet size should not be more than the max allowed by the client.
      * The length is calculated as: Remaining length +
      *       Bytes required to encode the remaining length +

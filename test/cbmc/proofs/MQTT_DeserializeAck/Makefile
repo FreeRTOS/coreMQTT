@@ -31,14 +31,15 @@ DEFINES += -DREMAINING_LENGTH_MAX=$(REMAINING_LENGTH_MAX)
 INCLUDES +=
 
 REMOVE_FUNCTION_BODY += __CPROVER_file_local_core_mqtt_serializer_c_deserializeConnackProperties
-REMOVE_FUNCTION_BODY += __CPROVER_file_local_core_mqtt_serializer_c_deserializeSubackProperties
-REMOVE_FUNCTION_BODY += __CPROVER_file_local_core_mqtt_serializer_c_decodeAckProperties
+REMOVE_FUNCTION_BODY += __CPROVER_file_local_core_mqtt_serializer_c_deserializeSubUnsubAckProperties
+REMOVE_FUNCTION_BODY += __CPROVER_file_local_core_mqtt_serializer_c_decodePubAckProperties
 
-UNWINDSET += __CPROVER_file_local_core_mqtt_serializer_c_decodeVariableLength.0:5
+UNWINDSET += decodeVariableLength.0:5
 UNWINDSET += __CPROVER_file_local_core_mqtt_serializer_c_readSubackStatus.0:$(REMAINING_LENGTH_MAX)
 
 PROOF_SOURCES += $(PROOFDIR)/$(HARNESS_FILE).c
 PROOF_SOURCES += $(SRCDIR)/test/cbmc/sources/mqtt_cbmc_state.c
 PROJECT_SOURCES += $(SRCDIR)/source/core_mqtt_serializer.c
+PROJECT_SOURCES += $(SRCDIR)/source/core_mqtt_serializer_private.c
 
 include ../Makefile.common
