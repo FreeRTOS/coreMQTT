@@ -33,6 +33,7 @@ void harness()
 {
     MQTTPropBuilder_t * propBuffer;
     uint16_t * serverKeepAlive;
+    uint32_t currentIndex;
 
     propBuffer = allocateMqttPropBuilder( NULL );
     __CPROVER_assume( isValidMqttPropBuilder( propBuffer ) );
@@ -46,5 +47,5 @@ void harness()
 
     serverKeepAlive = malloc( sizeof( uint16_t ) );
 
-    MQTTPropGet_ConnServerKeepAlive( propBuffer, serverKeepAlive );
+    MQTTPropGet_ServerKeepAlive( propBuffer, &currentIndex, serverKeepAlive );
 }
