@@ -65,6 +65,7 @@ PROOF_SOURCES += $(SRCDIR)/test/cbmc/stubs/get_time_stub.c
 PROOF_SOURCES += $(SRCDIR)/test/cbmc/stubs/event_callback_stub.c
 PROJECT_SOURCES += $(SRCDIR)/source/core_mqtt.c
 PROJECT_SOURCES += $(SRCDIR)/source/core_mqtt_serializer.c
+PROJECT_SOURCES += $(SRCDIR)/source/core_mqtt_serializer_private.c
 PROJECT_SOURCES += $(SRCDIR)/source/core_mqtt_state.c
 
 include ../Makefile.common
