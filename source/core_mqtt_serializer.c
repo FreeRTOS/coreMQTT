@@ -1894,6 +1894,20 @@ static MQTTStatus_t validateSubscriptionSerializeParams( const MQTTSubscribeInfo
                         ( unsigned long ) packetSize ) );
             status = MQTTNoMemory;
         }
+
+        if( status == MQTTSuccess )
+        {
+            for( size_t it = 0; it < subscriptionCount; it++ )
+            {
+                /* Check whether the topic filter and the topic filter length are non-zero. */
+                if( ( pSubscriptionList[ it ].pTopicFilter == NULL ) || ( pSubscriptionList[ it ].topicFilterLength == 0 ) )
+                {
+                    LogError( ( "Topic filter length must be non-zero and the topic filter must be non-NULL." ) );
+                    status = MQTTBadParameter;
+                    break;
+                }
+            }
+        }
     }
 
     return status;
