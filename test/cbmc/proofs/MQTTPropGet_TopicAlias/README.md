@@ -1,7 +1,7 @@
-MQTTPropGet_PubTopicAlias proof
+MQTTPropGet_TopicAlias proof
 ==============
 
-This directory contains a memory safety proof for MQTTPropGet_PubTopicAlias.
+This directory contains a memory safety proof for MQTTPropGet_TopicAlias.
 
 To run the proof.
 * Add cbmc, goto-cc, goto-instrument, goto-analyzer, and cbmc-viewer
