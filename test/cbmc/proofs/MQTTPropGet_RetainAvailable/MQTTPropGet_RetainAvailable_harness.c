@@ -33,6 +33,7 @@ void harness()
 {
     MQTTPropBuilder_t * propBuffer;
     uint8_t * retainAvailable;
+    uint32_t currentIndex;
 
     propBuffer = allocateMqttPropBuilder( NULL );
     __CPROVER_assume( isValidMqttPropBuilder( propBuffer ) );
@@ -46,5 +47,5 @@ void harness()
 
     retainAvailable = malloc( sizeof( uint8_t ) );
 
-    MQTTPropGet_ConnRetainAvailable( propBuffer, retainAvailable );
+    MQTTPropGet_RetainAvailable( propBuffer, &currentIndex, retainAvailable );
 }
