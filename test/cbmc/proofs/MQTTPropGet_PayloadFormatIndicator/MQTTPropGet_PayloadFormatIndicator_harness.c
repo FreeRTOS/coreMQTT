@@ -33,6 +33,7 @@ void harness()
 {
     MQTTPropBuilder_t * propBuffer;
     uint8_t * payloadFormat;
+    uint32_t currentIndex;
 
     propBuffer = allocateMqttPropBuilder( NULL );
     __CPROVER_assume( isValidMqttPropBuilder( propBuffer ) );
@@ -46,5 +47,5 @@ void harness()
 
     payloadFormat = malloc( sizeof( uint8_t ) );
 
-    MQTTPropGet_PubPayloadFormatIndicator( propBuffer, payloadFormat );
+    MQTTPropGet_PayloadFormatIndicator( propBuffer, &currentIndex, payloadFormat );
 }

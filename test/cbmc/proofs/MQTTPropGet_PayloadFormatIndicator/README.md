@@ -1,7 +1,7 @@
-MQTTPropGet_PubPayloadFormatIndicator proof
+MQTTPropGet_PayloadFormatIndicator proof
 ==============
 
-This directory contains a memory safety proof for MQTTPropGet_PubPayloadFormatIndicator.
+This directory contains a memory safety proof for MQTTPropGet_PayloadFormatIndicator.
 
 To run the proof.
 * Add cbmc, goto-cc, goto-instrument, goto-analyzer, and cbmc-viewer
