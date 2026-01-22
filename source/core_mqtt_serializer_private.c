@@ -398,18 +398,18 @@ MQTTStatus_t decodeVariableLength( const uint8_t * pBuffer,
 
 /*-----------------------------------------------------------*/
 
-uint8_t * encodeRemainingLength( uint8_t * pDestination,
-                                 size_t length )
+uint8_t * encodeVariableLength( uint8_t * pDestination,
+                                uint32_t length )
 {
     uint8_t lengthByte;
     uint8_t * pLengthEnd = NULL;
-    size_t remainingLength = length;
+    uint32_t remainingLength = length;
 
     assert( pDestination != NULL );
 
     pLengthEnd = pDestination;
 
-    /* This algorithm is copied from the MQTT v3.1.1 spec. */
+    /* This algorithm is copied from the MQTT 5.0 spec. */
     do
     {
         lengthByte = ( uint8_t ) ( remainingLength % 128U );
@@ -549,7 +549,7 @@ uint8_t * serializeSubscribeHeader( size_t remainingLength,
     pIterator++;
 
     /* Encode the "Remaining length" starting from the second byte. */
-    pIterator = encodeRemainingLength( pIterator, remainingLength );
+    pIterator = encodeVariableLength( pIterator, remainingLength );
 
     /* Place the packet identifier into the SUBSCRIBE packet. */
     pIterator[ 0 ] = UINT16_HIGH_BYTE( packetId );
@@ -573,7 +573,7 @@ uint8_t * serializeUnsubscribeHeader( size_t remainingLength,
     pIterator++;
 
     /* Encode the "Remaining length" starting from the second byte. */
-    pIterator = encodeRemainingLength( pIterator, remainingLength );
+    pIterator = encodeVariableLength( pIterator, remainingLength );
 
     /* Place the packet identifier into the SUBSCRIBE packet. */
     pIterator[ 0 ] = UINT16_HIGH_BYTE( packetId );

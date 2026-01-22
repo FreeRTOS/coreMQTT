@@ -2679,6 +2679,7 @@ static MQTTStatus_t sendSubscribeWithoutCopy( MQTTContext_t * pContext,
     pIterator = pIoVector;
 
     pIndex = serializeSubscribeHeader( remainingLength, pIndex, packetId );
+    assert( ( pIndex - subscribeHeader ) <= 7 );
 
     pIterator->iov_base = subscribeHeader;
     /* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-182 */
@@ -3647,8 +3648,13 @@ static MQTTStatus_t validateSharedSubscriptions( const MQTTContext_t * pContext,
     bool isSharedSub = ( topicFilterLength > 7U );
     const char * shareNameEnd;
     const char * shareNameStart;
+    size_t topicFilterMaxLen;
 
-    isSharedSub = ( isSharedSub ) && ( ( strncmp( pSubscriptionList[ iterator ].pTopicFilter, "$share/", 7U ) ) == 0 );
+    /* Need to check this only if the length is proper. */
+    if( pSubscriptionList[ iterator ].topicFilterLength > 7U )
+    {
+        isSharedSub = ( isSharedSub ) && ( ( strncmp( pSubscriptionList[ iterator ].pTopicFilter, "$share/", topicFilterMaxLen ) ) == 0 );
+    }
 
     if( isSharedSub )
     {
@@ -4341,7 +4347,8 @@ MQTTStatus_t MQTT_Subscribe( MQTTContext_t * pContext,
 
     if( ( status == MQTTSuccess ) && ( pPropertyBuilder != NULL ) && ( pPropertyBuilder->pBuffer != NULL ) )
     {
-        status = MQTT_ValidateSubscribeProperties( pContext->connectionProperties.isSubscriptionIdAvailable,
+        bool isSubscriptionIdAvailable = pContext->connectionProperties.isSubscriptionIdAvailable;
+        status = MQTT_ValidateSubscribeProperties( isSubscriptionIdAvailable,
                                                    pPropertyBuilder );
     }
 

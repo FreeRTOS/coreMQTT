@@ -729,19 +729,6 @@ typedef enum MQTTSubscriptionType
 } MQTTSubscriptionType_t;
 
 /**
- * @brief Encodes the remaining length of the packet using the variable length
- * encoding scheme provided in the MQTT 5.0 specification.
- *
- * @param[out] pDestination The destination buffer to store the encoded remaining
- * length.
- * @param[in] length The remaining length to encode.
- *
- * @return The location of the byte following the encoded value.
- */
-uint8_t * encodeVariableLength( uint8_t * pDestination,
-                                uint32_t length );
-
-/**
  * @brief Get the size and Remaining Length of an MQTT Version 5 CONNECT packet.
  *
  * This function must be called before #MQTT_SerializeConnect in order to get
@@ -2409,7 +2396,7 @@ MQTTStatus_t MQTTPropAdd_ReasonString( MQTTPropBuilder_t* pPropertyBuilder,
  * - #MQTTBadParameter if an invalid parameter is passed
  */
 /* @[declare_mqtt_validatesubscribeproperties] */
-MQTTStatus_t MQTT_ValidateSubscribeProperties(bool isSubscriptionIdAvailable, const MQTTPropBuilder_t* propBuilder);
+MQTTStatus_t MQTT_ValidateSubscribeProperties( bool isSubscriptionIdAvailable, const MQTTPropBuilder_t* propBuilder );
 /* @[declare_mqtt_validatesubscribeproperties] */
 
 /**
@@ -2448,7 +2435,7 @@ MQTTStatus_t MQTT_ValidateSubscribeProperties(bool isSubscriptionIdAvailable, co
  * @endcode
  */
 
-MQTTStatus_t updateContextWithConnectProps(const MQTTPropBuilder_t* pPropBuilder, MQTTConnectionProperties_t* pConnectProperties);
+MQTTStatus_t updateContextWithConnectProps( const MQTTPropBuilder_t* pPropBuilder, MQTTConnectionProperties_t* pConnectProperties );
 
 /**
  * @brief Get the property type at the current index in the property builder.

@@ -54,9 +54,10 @@ UNWINDSET += __CPROVER_file_local_core_mqtt_c_validateSubscribeUnsubscribeParams
 UNWINDSET += __CPROVER_file_local_core_mqtt_c_sendMessageVector.0:${SUBSCRIBE_PACKET_VECTORS}
 UNWINDSET += __CPROVER_file_local_core_mqtt_c_sendMessageVector.1:${SUBSCRIBE_PACKET_VECTORS}
 UNWINDSET += __CPROVER_file_local_core_mqtt_c_sendMessageVector.2:${SUBSCRIBE_PACKET_VECTORS}
-# The encodeRemainingLength loop is unwound 5 times because encodeRemainingLength()
+# The encodeVariableLength loop is unwound 5 times because encodeVariableLength()
 # divides a size_t variable by 128 until it reaches zero to stop the loop.
 # log128(SIZE_MAX) = 4.571...
+UNWINDSET += encodeVariableLength.0:5
 UNWINDSET += encodeVariableLength.0:5
 UNWINDSET += __CPROVER_file_local_core_mqtt_c_sendSubscribeWithoutCopy.0:$(MAX_NETWORK_SEND_TRIES)
 UNWINDSET += __CPROVER_file_local_core_mqtt_c_sendSubscribeWithoutCopy.1:$(MAX_NETWORK_SEND_TRIES)
@@ -69,6 +70,7 @@ PROOF_SOURCES += $(SRCDIR)/test/cbmc/stubs/event_callback_stub.c
 PROOF_SOURCES += $(SRCDIR)/test/cbmc/stubs/memchr.c
 PROJECT_SOURCES += $(SRCDIR)/source/core_mqtt.c
 PROJECT_SOURCES += $(SRCDIR)/source/core_mqtt_serializer.c
+PROJECT_SOURCES += $(SRCDIR)/source/core_mqtt_serializer_private.c
 PROJECT_SOURCES += $(SRCDIR)/source/core_mqtt_state.c
 
 include ../Makefile.common

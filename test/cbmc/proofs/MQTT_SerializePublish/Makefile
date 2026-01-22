@@ -29,7 +29,7 @@ DEFINES += -DMAX_TOPIC_NAME_FILTER_LENGTH=$(MAX_TOPIC_NAME_FILTER_LENGTH)
 INCLUDES +=
 
 REMOVE_FUNCTION_BODY +=
-# The encodeRemainingLength loop is unwound 5 times because encodeRemainingLength()
+# The encodeVariableLength loop is unwound 5 times because encodeVariableLength()
 # divides a size_t variable by 128 until it reaches zero to stop the loop.
 # log128(SIZE_MAX) = 4.571...
 UNWINDSET += encodeVariableLength.0:5

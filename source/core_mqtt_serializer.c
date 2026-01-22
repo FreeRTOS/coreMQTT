@@ -960,7 +960,7 @@ MQTTStatus_t MQTT_SerializePublishHeaderWithoutTopic( const MQTTPublishInfo_t * 
         pIndex++;
 
         /* The "Remaining length" is encoded from the second byte. */
-        pIndex = encodeRemainingLength( pIndex, remainingLength );
+        pIndex = encodeVariableLength( pIndex, remainingLength );
 
         /* The first byte of a UTF-8 string is the high byte of the string length. */
         *pIndex = UINT16_HIGH_BYTE( pPublishInfo->topicNameLength );
@@ -2835,39 +2835,6 @@ static MQTTStatus_t deserializePublishProperties( MQTTPublishInfo_t * pPublishIn
     }
 
     return status;
-}
-
-/*-----------------------------------------------------------*/
-
-uint8_t * encodeVariableLength( uint8_t * pDestination,
-                                uint32_t length )
-{
-    uint8_t lengthByte;
-    uint8_t * pLengthEnd = NULL;
-    uint32_t remainingLength = length;
-
-    assert( pDestination != NULL );
-
-    pLengthEnd = pDestination;
-
-    /* This algorithm is copied from the MQTT 5.0 spec. */
-    do
-    {
-        lengthByte = ( uint8_t ) ( remainingLength % 128U );
-        remainingLength = remainingLength / 128U;
-
-        /* Set the high bit of this byte, indicating that there's more data. */
-        if( remainingLength > 0U )
-        {
-            UINT8_SET_BIT( lengthByte, 7 );
-        }
-
-        /* Output a single encoded byte. */
-        *pLengthEnd = lengthByte;
-        pLengthEnd++;
-    } while( remainingLength > 0U );
-
-    return pLengthEnd;
 }
 
 /*-----------------------------------------------------------*/

@@ -395,6 +395,19 @@ MQTTStatus_t decodeUint8t( uint8_t * pProperty,
                            uint8_t ** pIndex );
 
 /**
+ * @brief Encodes the remaining length of the packet using the variable length
+ * encoding scheme provided in the MQTT 5.0 specification.
+ *
+ * @param[out] pDestination The destination buffer to store the encoded remaining
+ * length.
+ * @param[in] length The remaining length to encode.
+ *
+ * @return The location of the byte following the encoded value.
+ */
+uint8_t * encodeVariableLength( uint8_t * pDestination,
+                                uint32_t length );
+
+/**
  * @brief Validate the length and decode a utf 8 string.
  *
  * @param[out] pProperty To store the decoded string.
@@ -436,8 +449,8 @@ MQTTStatus_t decodeVariableLength( const uint8_t * pBuffer,
  *
  * @return The location of the byte following the encoded value.
  */
-uint8_t * encodeRemainingLength( uint8_t * pDestination,
-                                 size_t length );
+uint8_t * encodeVariableLength( uint8_t * pDestination,
+                                size_t length );
 
 /**
  * @brief Serialize the fixed size part of the ack packet header.

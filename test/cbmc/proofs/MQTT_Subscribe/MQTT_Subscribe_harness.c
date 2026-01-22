@@ -55,7 +55,7 @@ static uint32_t ulGetTimeFunction( void )
     return systemTime;
 }
 
-MQTTStatus_t MQTT_ValidateSubscribeProperties( uint8_t isSubscriptionIdAvailable,
+MQTTStatus_t MQTT_ValidateSubscribeProperties( bool isSubscriptionIdAvailable,
                                                const MQTTPropBuilder_t * propBuilder )
 {
     MQTTStatus_t status;

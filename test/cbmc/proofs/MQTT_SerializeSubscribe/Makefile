@@ -38,7 +38,7 @@ UNWINDSET += allocateMqttSubscriptionList.0:$(SUBSCRIPTION_COUNT_MAX)
 UNWINDSET += isValidMqttSubscriptionList.0:$(SUBSCRIPTION_COUNT_MAX)
 UNWINDSET += __CPROVER_file_local_core_mqtt_serializer_c_calculateSubscriptionPacketSize.0:$(SUBSCRIPTION_COUNT_MAX)
 UNWINDSET += MQTT_SerializeSubscribe.0:$(SUBSCRIPTION_COUNT_MAX)
-# The encodeRemainingLength loop is unwound 5 times because encodeRemainingLength()
+# The encodeVariableLength loop is unwound 5 times because encodeVariableLength()
 # divides a size_t variable by 128 until it reaches zero to stop the loop.
 # log128(SIZE_MAX) = 4.571...
 UNWINDSET += encodeVariableLength.0:5

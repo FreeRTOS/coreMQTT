@@ -51,7 +51,7 @@ UNWINDSET += __CPROVER_file_local_core_mqtt_serializer_c_calculateSubscriptionPa
 UNWINDSET += __CPROVER_file_local_core_mqtt_c_sendMessageVector.0:${UNSUBSCRIBE_PACKET_VECTORS}
 UNWINDSET += __CPROVER_file_local_core_mqtt_c_sendMessageVector.1:${UNSUBSCRIBE_PACKET_VECTORS}
 UNWINDSET += __CPROVER_file_local_core_mqtt_c_sendMessageVector.2:${UNSUBSCRIBE_PACKET_VECTORS}
-# The encodeRemainingLength loop is unwound 5 times because encodeRemainingLength()
+# The encodeVariableLength loop is unwound 5 times because encodeVariableLength()
 # divides a size_t variable by 128 until it reaches zero to stop the loop.
 # log128(SIZE_MAX) = 4.571...
 UNWINDSET += encodeVariableLength.0:5
