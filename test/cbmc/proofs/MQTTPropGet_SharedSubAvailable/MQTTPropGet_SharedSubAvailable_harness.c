@@ -33,6 +33,7 @@ void harness()
 {
     MQTTPropBuilder_t * propBuffer;
     uint8_t * isSharedSubAvailable;
+    uint32_t currentIndex;
 
     propBuffer = allocateMqttPropBuilder( NULL );
     __CPROVER_assume( isValidMqttPropBuilder( propBuffer ) );
@@ -46,5 +47,5 @@ void harness()
 
     isSharedSubAvailable = malloc( sizeof( uint8_t ) );
 
-    MQTTPropGet_ConnSharedSubAvailable( propBuffer, isSharedSubAvailable );
+    MQTTPropGet_SharedSubAvailable( propBuffer, &currentIndex, isSharedSubAvailable );
 }
