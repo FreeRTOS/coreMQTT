@@ -33,6 +33,7 @@ void harness()
 {
     MQTTPropBuilder_t * propBuffer;
     size_t * subscriptionId;
+    uint32_t currentIndex;
 
     propBuffer = allocateMqttPropBuilder( NULL );
     __CPROVER_assume( isValidMqttPropBuilder( propBuffer ) );
@@ -46,5 +47,5 @@ void harness()
 
     subscriptionId = malloc( sizeof( size_t ) );
 
-    MQTTPropGet_PubSubscriptionId( propBuffer, subscriptionId );
+    MQTTPropGet_SubscriptionId( propBuffer, &currentIndex, subscriptionId );
 }

@@ -1,7 +1,7 @@
-MQTTPropGet_PubSubscriptionId proof
+MQTTPropGet_SubscriptionId proof
 ==============
 
-This directory contains a memory safety proof for MQTTPropGet_PubSubscriptionId.
+This directory contains a memory safety proof for MQTTPropGet_SubscriptionId.
 
 To run the proof.
 * Add cbmc, goto-cc, goto-instrument, goto-analyzer, and cbmc-viewer
