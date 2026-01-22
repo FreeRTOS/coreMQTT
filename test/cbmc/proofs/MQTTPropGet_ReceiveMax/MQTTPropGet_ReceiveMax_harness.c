@@ -33,6 +33,7 @@ void harness()
 {
     MQTTPropBuilder_t * propBuffer;
     uint16_t * receiveMax;
+    uint32_t currentIndex;
 
     propBuffer = allocateMqttPropBuilder( NULL );
     __CPROVER_assume( isValidMqttPropBuilder( propBuffer ) );
@@ -46,5 +47,5 @@ void harness()
 
     receiveMax = malloc( sizeof( uint16_t ) );
 
-    MQTTPropGet_ConnReceiveMax( propBuffer, receiveMax );
+    MQTTPropGet_ReceiveMax( propBuffer, &currentIndex, receiveMax );
 }
