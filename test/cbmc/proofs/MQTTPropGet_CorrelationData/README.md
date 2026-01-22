@@ -1,7 +1,7 @@
-MQTTPropGet_PubCorrelationData proof
+MQTTPropGet_CorrelationData proof
 ==============
 
-This directory contains a memory safety proof for MQTTPropGet_PubCorrelationData.
+This directory contains a memory safety proof for MQTTPropGet_CorrelationData.
 
 To run the proof.
 * Add cbmc, goto-cc, goto-instrument, goto-analyzer, and cbmc-viewer
