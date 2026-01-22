@@ -33,6 +33,7 @@ void harness()
 {
     MQTTPropBuilder_t * propBuffer;
     uint16_t * topicAliasMax;
+    uint32_t currentIndex;
 
     propBuffer = allocateMqttPropBuilder( NULL );
     __CPROVER_assume( isValidMqttPropBuilder( propBuffer ) );
@@ -46,5 +47,5 @@ void harness()
 
     topicAliasMax = malloc( sizeof( uint16_t ) );
 
-    MQTTPropGet_ConnTopicAliasMax( propBuffer, topicAliasMax );
+    MQTTPropGet_TopicAliasMax( propBuffer, &currentIndex, topicAliasMax );
 }
