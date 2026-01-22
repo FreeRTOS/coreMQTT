@@ -1,7 +1,7 @@
-MQTTPropGet_PubMessageExpiryInterval proof
+MQTTPropGet_MessageExpiryInterval proof
 ==============
 
-This directory contains a memory safety proof for MQTTPropGet_PubMessageExpiryInterval.
+This directory contains a memory safety proof for MQTTPropGet_MessageExpiryInterval.
 
 To run the proof.
 * Add cbmc, goto-cc, goto-instrument, goto-analyzer, and cbmc-viewer

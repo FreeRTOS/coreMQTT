@@ -33,6 +33,7 @@ void harness()
 {
     MQTTPropBuilder_t * propBuffer;
     uint32_t * msgExpiryInterval;
+    uint32_t currentIndex;
 
     propBuffer = allocateMqttPropBuilder( NULL );
     __CPROVER_assume( isValidMqttPropBuilder( propBuffer ) );
@@ -46,5 +47,5 @@ void harness()
 
     msgExpiryInterval = malloc( sizeof( uint32_t ) );
 
-    MQTTPropGet_PubMessageExpiryInterval( propBuffer, msgExpiryInterval );
+    MQTTPropGet_MessageExpiryInterval( propBuffer, &currentIndex, msgExpiryInterval );
 }
