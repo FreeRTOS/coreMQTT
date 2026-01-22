@@ -33,6 +33,7 @@ void harness()
 {
     MQTTPropBuilder_t * propBuffer;
     uint32_t * maxPacketSize;
+    uint32_t currentIndex;
 
     propBuffer = allocateMqttPropBuilder( NULL );
     __CPROVER_assume( isValidMqttPropBuilder( propBuffer ) );
@@ -46,5 +47,5 @@ void harness()
 
     maxPacketSize = malloc( sizeof( uint32_t ) );
 
-    MQTTPropGet_ConnMaxPacketSize( propBuffer, maxPacketSize );
+    MQTTPropGet_MaxPacketSize( propBuffer, &currentIndex, maxPacketSize );
 }
