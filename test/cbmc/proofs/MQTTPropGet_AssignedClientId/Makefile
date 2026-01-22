@@ -20,8 +20,8 @@
 #
 
 HARNESS_ENTRY=harness
-HARNESS_FILE=MQTTPropGet_ConnClientId_harness
-PROOF_UID=MQTTPropGet_ConnClientId
+HARNESS_FILE=MQTTPropGet_AssignedClientId_harness
+PROOF_UID=MQTTPropGet_AssignedClientId
 
 DEFINES +=
 INCLUDES +=
@@ -33,5 +33,7 @@ UNWINDSET +=
 PROOF_SOURCES += $(PROOFDIR)/$(HARNESS_FILE).c
 PROOF_SOURCES += $(SRCDIR)/test/cbmc/sources/mqtt_cbmc_state.c
 PROJECT_SOURCES += $(SRCDIR)/source/core_mqtt_serializer.c
+PROJECT_SOURCES += $(SRCDIR)/source/core_mqtt_prop_deserializer.c
+PROJECT_SOURCES += $(SRCDIR)/source/core_mqtt_serializer_private.c
 
 include ../Makefile.common

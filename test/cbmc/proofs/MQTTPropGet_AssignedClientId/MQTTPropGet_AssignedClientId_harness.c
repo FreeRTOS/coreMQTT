@@ -34,6 +34,7 @@ void harness()
     MQTTPropBuilder_t * propBuffer;
     char ** pClientId;
     uint16_t * clientIdLength;
+    uint32_t currentIndex;
 
     propBuffer = allocateMqttPropBuilder( NULL );
     __CPROVER_assume( isValidMqttPropBuilder( propBuffer ) );
@@ -48,5 +49,5 @@ void harness()
     pClientId = malloc( sizeof( char * ) );
     clientIdLength = malloc( sizeof( uint16_t ) );
 
-    MQTTPropGet_ConnClientId( propBuffer, pClientId, clientIdLength );
+    MQTTPropGet_AssignedClientId( propBuffer, &currentIndex, pClientId, clientIdLength );
 }
