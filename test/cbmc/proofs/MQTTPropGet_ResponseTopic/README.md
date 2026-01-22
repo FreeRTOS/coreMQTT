@@ -1,7 +1,7 @@
-MQTTPropGet_PubResponseTopic proof
+MQTTPropGet_ResponseTopic proof
 ==============
 
-This directory contains a memory safety proof for MQTTPropGet_PubResponseTopic.
+This directory contains a memory safety proof for MQTTPropGet_ResponseTopic.
 
 To run the proof.
 * Add cbmc, goto-cc, goto-instrument, goto-analyzer, and cbmc-viewer
