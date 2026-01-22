@@ -33,6 +33,7 @@ void harness()
 {
     MQTTPropBuilder_t * propBuffer;
     uint8_t * isSubIdAvailable;
+    uint32_t currentIndex;
 
     propBuffer = allocateMqttPropBuilder( NULL );
     __CPROVER_assume( isValidMqttPropBuilder( propBuffer ) );
@@ -46,5 +47,5 @@ void harness()
 
     isSubIdAvailable = malloc( sizeof( uint8_t ) );
 
-    MQTTPropGet_ConnSubId( propBuffer, isSubIdAvailable );
+    MQTTPropGet_SubsIdAvailable( propBuffer, &currentIndex, isSubIdAvailable );
 }
