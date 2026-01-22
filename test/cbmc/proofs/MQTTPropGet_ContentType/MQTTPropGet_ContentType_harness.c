@@ -34,6 +34,7 @@ void harness()
     MQTTPropBuilder_t * propBuffer;
     char ** pContentType;
     uint16_t * contentTypeLength;
+    uint32_t currentIndex;
 
     propBuffer = allocateMqttPropBuilder( NULL );
     __CPROVER_assume( isValidMqttPropBuilder( propBuffer ) );
@@ -48,5 +49,5 @@ void harness()
     pContentType = malloc( sizeof( char * ) );
     contentTypeLength = malloc( sizeof( uint16_t ) );
 
-    MQTTPropGet_PubContentType( propBuffer, pContentType, contentTypeLength );
+    MQTTPropGet_ContentType( propBuffer, &currentIndex, pContentType, contentTypeLength );
 }
