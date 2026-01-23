@@ -69,7 +69,7 @@ UNWINDSET += __CPROVER_file_local_core_mqtt_serializer_c_processRemainingLength.
 # test/cbmc/include/core_mqtt_config.h.
 UNWINDSET += __CPROVER_file_local_core_mqtt_state_c_addRecord.0:$(MQTT_STATE_ARRAY_MAX_COUNT)
 UNWINDSET += __CPROVER_file_local_core_mqtt_state_c_findInRecord.0:$(MQTT_STATE_ARRAY_MAX_COUNT)
-UNWINDSET += __CPROVER_file_local_core_mqtt_c_receiveSingleIteration.0:1
+UNWINDSET += __CPROVER_file_local_core_mqtt_c_receiveSingleIteration.0:5
 
 PROOF_SOURCES += $(PROOFDIR)/$(HARNESS_FILE).c
 PROOF_SOURCES += $(SRCDIR)/test/cbmc/sources/mqtt_cbmc_state.c
