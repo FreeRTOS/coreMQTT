@@ -33,13 +33,25 @@
  */
 #define MAX_PROPERTY_LENGTH    ( 25U )
 
+uint8_t * encodeString( uint8_t * pDestination,
+                        const char * pSource,
+                        uint16_t sourceLength )
+{
+    size_t index;
+
+    __CPROVER_assert( pDestination != NULL, "Destination must not be NULL." );
+
+    /* We just return this as this reduces the time taken to run the proof. */
+    return &pDestination[ 2U ];
+}
+
 void harness()
 {
     MQTTConnectInfo_t * pConnectInfo;
     MQTTPublishInfo_t * pWillInfo;
-    size_t remainingLength;
+    uint32_t remainingLength;
     MQTTFixedBuffer_t * pFixedBuffer;
-    size_t packetSize;
+    uint32_t packetSize;
     MQTTStatus_t status = MQTTSuccess;
     MQTTPropBuilder_t * pConnectProperties;
     MQTTPropBuilder_t * pWillProperties;
