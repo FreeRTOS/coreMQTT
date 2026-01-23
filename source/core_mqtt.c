@@ -185,7 +185,7 @@ static size_t addEncodedStringToVector( uint8_t serializedLength[ CORE_MQTT_SERI
                                         const char * const string,
                                         uint16_t length,
                                         TransportOutVector_t * iterator,
-                                        size_t * updatedLength );
+                                        uint32_t * updatedLength );
 
 /**
  * @brief Send Subscribe without copying the users data into any buffer.
@@ -2396,7 +2396,10 @@ static MQTTStatus_t receiveSingleIteration( MQTTContext_t * pContext,
         }
 
         /* No data was received, check for keep alive timeout. */
-        if( ( status == MQTTSuccess ) && ( recvBytes == 0 ) )
+        if( ( ( status == MQTTSuccess ) ||
+              ( status == MQTTNoDataAvailable ) ||
+              ( status == MQTTNeedMoreBytes ) ) &&
+            ( recvBytes == 0 ) )
         {
             if( manageKeepAlive == true )
             {
@@ -2600,7 +2603,7 @@ static size_t addEncodedStringToVector( uint8_t serializedLength[ CORE_MQTT_SERI
                                         const char * const string,
                                         uint16_t length,
                                         TransportOutVector_t * iterator,
-                                        size_t * updatedLength )
+                                        uint32_t * updatedLength )
 {
     size_t packetLength = 0U;
     TransportOutVector_t * pLocalIterator = iterator;
@@ -2653,7 +2656,7 @@ static MQTTStatus_t sendSubscribeWithoutCopy( MQTTContext_t * pContext,
     TransportOutVector_t * pIterator;
     uint8_t serializedTopicFieldLength[ MQTT_SUB_UNSUB_MAX_VECTORS ][ CORE_MQTT_SERIALIZED_LENGTH_FIELD_BYTES ];
     uint8_t subscriptionOptionsArray[ MQTT_SUB_UNSUB_MAX_VECTORS / CORE_MQTT_SUBSCRIBE_PER_TOPIC_VECTOR_LENGTH ];
-    size_t totalPacketLength = 0U;
+    uint32_t totalPacketLength = 0U;
     size_t ioVectorLength = 0U;
     size_t subscriptionsSent = 0U;
     size_t vectorsAdded = 0U;
@@ -2794,7 +2797,7 @@ static MQTTStatus_t sendUnsubscribeWithoutCopy( MQTTContext_t * pContext,
     TransportOutVector_t pIoVector[ MQTT_SUB_UNSUB_MAX_VECTORS ];
     TransportOutVector_t * pIterator;
     uint8_t serializedTopicFieldLength[ MQTT_SUB_UNSUB_MAX_VECTORS ][ CORE_MQTT_SERIALIZED_LENGTH_FIELD_BYTES ];
-    size_t totalPacketLength = 0U;
+    uint32_t totalPacketLength = 0U;
     size_t ioVectorLength = 0U;
     size_t unsubscriptionsSent = 0U;
     size_t vectorsAdded = 0U;
@@ -3648,12 +3651,11 @@ static MQTTStatus_t validateSharedSubscriptions( const MQTTContext_t * pContext,
     bool isSharedSub = ( topicFilterLength > 7U );
     const char * shareNameEnd;
     const char * shareNameStart;
-    size_t topicFilterMaxLen;
 
     /* Need to check this only if the length is proper. */
     if( pSubscriptionList[ iterator ].topicFilterLength > 7U )
     {
-        isSharedSub = ( isSharedSub ) && ( ( strncmp( pSubscriptionList[ iterator ].pTopicFilter, "$share/", topicFilterMaxLen ) ) == 0 );
+        isSharedSub = ( isSharedSub ) && ( ( strncmp( pSubscriptionList[ iterator ].pTopicFilter, "$share/", 7U ) ) == 0 );
     }
 
     if( isSharedSub )

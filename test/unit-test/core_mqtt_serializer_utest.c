@@ -1177,9 +1177,8 @@ void test_MQTTV5_DeserializeConnackOnlyUserProperty( void )
 
 void test_MQTTV5_GetConnectPacketSize( void )
 {
-    size_t remainingLength = 0;
-    size_t packetSize = 0;
-
+    uint32_t remainingLength = 0;
+    uint32_t packetSize = 0;
 
     /* Call MQTT_GetConnectPacketSize() with various combinations of
      * incorrect paramters */
@@ -1289,10 +1288,10 @@ void test_MQTT_SerializeConnect( void )
 {
     MQTTConnectInfo_t connectInfo;
     MQTTPublishInfo_t willInfo = { 0 };
-    size_t remainingLength = 0;
+    uint32_t remainingLength = 0;
     uint8_t buffer[ 70 + 2 * BUFFER_PADDING_LENGTH ];
     size_t bufferSize = sizeof( buffer ) - 2 * BUFFER_PADDING_LENGTH;
-    size_t packetSize = bufferSize;
+    uint32_t packetSize = bufferSize;
     MQTTStatus_t status = MQTTSuccess;
     MQTTFixedBuffer_t fixedBuffer = { .pBuffer = &buffer[ BUFFER_PADDING_LENGTH ], .size = bufferSize };
 

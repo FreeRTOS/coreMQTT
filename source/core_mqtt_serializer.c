@@ -242,7 +242,7 @@ static void serializeConnectPacket( const MQTTConnectInfo_t * pConnectInfo,
                                     const MQTTPublishInfo_t * pWillInfo,
                                     const MQTTPropBuilder_t * pConnectProperties,
                                     const MQTTPropBuilder_t * pWillProperties,
-                                    size_t remainingLength,
+                                    uint32_t remainingLength,
                                     const MQTTFixedBuffer_t * pFixedBuffer );
 
 /**
@@ -1897,7 +1897,9 @@ static MQTTStatus_t validateSubscriptionSerializeParams( const MQTTSubscribeInfo
 
         if( status == MQTTSuccess )
         {
-            for( size_t it = 0; it < subscriptionCount; it++ )
+            size_t it;
+
+            for( it = 0; it < subscriptionCount; it++ )
             {
                 /* Check whether the topic filter and the topic filter length are non-zero. */
                 if( ( pSubscriptionList[ it ].pTopicFilter == NULL ) || ( pSubscriptionList[ it ].topicFilterLength == 0 ) )
@@ -2604,7 +2606,7 @@ static void serializeConnectPacket( const MQTTConnectInfo_t * pConnectInfo,
                                     const MQTTPublishInfo_t * pWillInfo,
                                     const MQTTPropBuilder_t * pConnectProperties,
                                     const MQTTPropBuilder_t * pWillProperties,
-                                    size_t remainingLength,
+                                    uint32_t remainingLength,
                                     const MQTTFixedBuffer_t * pFixedBuffer )
 {
     uint8_t * pIndex = NULL;
@@ -2966,16 +2968,16 @@ MQTTStatus_t MQTT_GetConnectPacketSize( const MQTTConnectInfo_t * pConnectInfo,
                                         const MQTTPublishInfo_t * pWillInfo,
                                         const MQTTPropBuilder_t * pConnectProperties,
                                         const MQTTPropBuilder_t * pWillProperties,
-                                        size_t * pRemainingLength,
-                                        size_t * pPacketSize )
+                                        uint32_t * pRemainingLength,
+                                        uint32_t * pPacketSize )
 {
     MQTTStatus_t status = MQTTSuccess;
-    size_t remainingLength;
+    uint32_t remainingLength;
     size_t propertyLength = 0U;
     size_t willPropertyLength = 0U;
 
     /* The CONNECT packet will always include a 10-byte variable header without connect properties. */
-    size_t connectPacketSize = MQTT_PACKET_CONNECT_HEADER_SIZE;
+    uint32_t connectPacketSize = MQTT_PACKET_CONNECT_HEADER_SIZE;
 
     /* Validate arguments. */
     if( ( pConnectInfo == NULL ) || ( pRemainingLength == NULL ) ||
@@ -2994,18 +2996,6 @@ MQTTStatus_t MQTT_GetConnectPacketSize( const MQTTConnectInfo_t * pConnectInfo,
         LogError( ( "Client ID length and value mismatch." ) );
         status = MQTTBadParameter;
     }
-    else if( ( pConnectInfo->clientIdentifierLength > UINT16_MAX ) ||
-             ( pConnectInfo->userNameLength > UINT16_MAX ) ||
-             ( pConnectInfo->passwordLength > UINT16_MAX ) )
-    {
-        LogError( ( "Client ID, userName and password length cannot be greater than %d. "
-                    "Client ID: %lu, User name len: %lu, Password len: %lu"
-                    UINT16_MAX,
-                    ( unsigned long ) pConnectInfo->clientIdentifierLength,
-                    ( unsigned long ) pConnectInfo->userNameLength,
-                    ( unsigned long ) pConnectInfo->passwordLength ) );
-        status = MQTTBadParameter;
-    }
     else if( ( pWillInfo != NULL ) && ( pWillInfo->payloadLength > ( size_t ) UINT16_MAX ) )
     {
         /* The MQTTPublishInfo_t is reused for the will message. The payload
@@ -3015,12 +3005,6 @@ MQTTStatus_t MQTT_GetConnectPacketSize( const MQTTConnectInfo_t * pConnectInfo,
                     "pWillInfo->payloadLength=%lu.",
                     UINT16_MAX,
                     ( unsigned long ) pWillInfo->payloadLength ) );
-        status = MQTTBadParameter;
-    }
-    else if( ( pWillInfo != NULL ) && ( pWillInfo->topicNameLength > ( size_t ) UINT16_MAX ) )
-    {
-        LogError( ( "The Will topic length must not exceed %d.",
-                    UINT16_MAX ) );
         status = MQTTBadParameter;
     }
     else
@@ -3261,11 +3245,11 @@ MQTTStatus_t MQTT_SerializeConnect( const MQTTConnectInfo_t * pConnectInfo,
                                     const MQTTPublishInfo_t * pWillInfo,
                                     const MQTTPropBuilder_t * pConnectProperties,
                                     const MQTTPropBuilder_t * pWillProperties,
-                                    size_t remainingLength,
+                                    uint32_t remainingLength,
                                     const MQTTFixedBuffer_t * pFixedBuffer )
 {
     MQTTStatus_t status = MQTTSuccess;
-    size_t connectPacketSize = 0;
+    uint32_t connectPacketSize = 0;
 
     /* Validate arguments. */
     if( ( pConnectInfo == NULL ) || ( pFixedBuffer == NULL ) )

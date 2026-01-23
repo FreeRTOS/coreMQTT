@@ -793,8 +793,8 @@ MQTTStatus_t MQTT_GetConnectPacketSize( const MQTTConnectInfo_t * pConnectInfo,
                                         const MQTTPublishInfo_t * pWillInfo,
                                         const MQTTPropBuilder_t * pConnectProperties,
                                         const MQTTPropBuilder_t * pWillProperties,
-                                        size_t * pRemainingLength,
-                                        size_t * pPacketSize );
+                                        uint32_t * pRemainingLength,
+                                        uint32_t * pPacketSize );
 /* @[declare_mqtt_getconnectpacketsize] */
 
 /**
@@ -864,7 +864,7 @@ MQTTStatus_t MQTT_SerializeConnect( const MQTTConnectInfo_t * pConnectInfo,
                                     const MQTTPublishInfo_t * pWillInfo,
                                     const MQTTPropBuilder_t * pConnectProperties,
                                     const MQTTPropBuilder_t * pWillProperties,
-                                    size_t remainingLength,
+                                    uint32_t remainingLength,
                                     const MQTTFixedBuffer_t * pFixedBuffer );
 /* @[declare_mqtt_serializeconnect] */
 

@@ -459,7 +459,7 @@ uint8_t * serializeAckFixed( uint8_t * pIndex,
 uint8_t * serializeConnectFixedHeader( uint8_t * pIndex,
                                        const MQTTConnectInfo_t * pConnectInfo,
                                        const MQTTPublishInfo_t * pWillInfo,
-                                       size_t remainingLength )
+                                       uint32_t remainingLength )
 {
     uint8_t * pIndexLocal = pIndex;
     uint8_t connectFlags = 0U;
