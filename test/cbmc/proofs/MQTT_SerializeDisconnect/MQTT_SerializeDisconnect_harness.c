@@ -33,7 +33,7 @@ void harness()
 {
     MQTTFixedBuffer_t * pFixedBuffer;
     MQTTPropBuilder_t * pDisconnectProperties;
-    MQTTSuccessFailReasonCode_t reasonCode;
+    MQTTSuccessFailReasonCode_t * reasonCode = NULL;
     MQTTStatus_t status;
     size_t remainingLength;
     size_t packetSize;
@@ -50,6 +50,11 @@ void harness()
 
     pFixedBuffer = allocateMqttFixedBuffer( NULL );
     __CPROVER_assume( isValidMqttFixedBuffer( pFixedBuffer ) );
+
+    if( nondet_bool() )
+    {
+        reasonCode = malloc( sizeof( MQTTSuccessFailReasonCode_t ) );
+    }
 
     status = MQTT_GetDisconnectPacketSize( pDisconnectProperties, &remainingLength, &packetSize, maxPacketSize, reasonCode );
 

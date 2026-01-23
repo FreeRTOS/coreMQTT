@@ -98,6 +98,11 @@ void harness()
     {
         /* For coverage, it is expected that a NULL pConnectInfo will reach this
          * function. */
-        MQTT_SerializeConnect( pConnectInfo, pWillInfo, pConnectProperties, pWillProperties, remainingLength, pFixedBuffer );
+        MQTT_SerializeConnect( pConnectInfo,
+                               pWillInfo,
+                               pConnectProperties,
+                               pWillProperties,
+                               remainingLength,
+                               pFixedBuffer );
     }
 }

@@ -152,9 +152,36 @@ MQTTConnectInfo_t * allocateMqttConnectInfo( MQTTConnectInfo_t * pConnectInfo )
 
     if( pConnectInfo != NULL )
     {
-        pConnectInfo->pClientIdentifier = malloc( pConnectInfo->clientIdentifierLength );
-        pConnectInfo->pUserName = malloc( pConnectInfo->userNameLength );
-        pConnectInfo->pPassword = malloc( pConnectInfo->passwordLength );
+        if( pConnectInfo->clientIdentifierLength != 0 )
+        {
+            pConnectInfo->pClientIdentifier = malloc( pConnectInfo->clientIdentifierLength );
+        }
+        else
+        {
+            /* 0 length malloc cannot be handled by the library properly. */
+
+            /* TODO: Fix this in the lib so that it branches on the length field instead
+             * of the string being NULL or non-NULL. */
+            pConnectInfo->pClientIdentifier = NULL;
+        }
+
+        if( pConnectInfo->userNameLength != 0 )
+        {
+            pConnectInfo->pUserName = malloc( pConnectInfo->userNameLength );
+        }
+        else
+        {
+            pConnectInfo->pUserName = NULL;
+        }
+
+        if( pConnectInfo->passwordLength != 0 )
+        {
+            pConnectInfo->pPassword = malloc( pConnectInfo->passwordLength );
+        }
+        else
+        {
+            pConnectInfo->pPassword = NULL;
+        }
     }
 
     return pConnectInfo;
