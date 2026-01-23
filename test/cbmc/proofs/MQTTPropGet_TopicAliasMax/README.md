@@ -1,7 +1,7 @@
-MQTTPropGet_ConnTopicAliasMax proof
+MQTTPropGet_TopicAliasMax proof
 ==============
 
-This directory contains a memory safety proof for MQTTPropGet_ConnTopicAliasMax.
+This directory contains a memory safety proof for MQTTPropGet_TopicAliasMax.
 
 To run the proof.
 * Add cbmc, goto-cc, goto-instrument, goto-analyzer, and cbmc-viewer

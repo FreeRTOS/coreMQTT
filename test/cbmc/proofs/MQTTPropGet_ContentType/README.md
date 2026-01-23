@@ -1,7 +1,7 @@
-MQTTPropGet_PubContentType proof
+MQTTPropGet_ContentType proof
 ==============
 
-This directory contains a memory safety proof for MQTTPropGet_PubContentType.
+This directory contains a memory safety proof for MQTTPropGet_ContentType.
 
 To run the proof.
 * Add cbmc, goto-cc, goto-instrument, goto-analyzer, and cbmc-viewer

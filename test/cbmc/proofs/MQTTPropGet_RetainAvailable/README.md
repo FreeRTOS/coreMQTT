@@ -1,7 +1,7 @@
-MQTTPropGet_ConnRetainAvailable proof
+MQTTPropGet_RetainAvailable proof
 ==============
 
-This directory contains a memory safety proof for MQTTPropGet_ConnRetainAvailable.
+This directory contains a memory safety proof for MQTTPropGet_RetainAvailable.
 
 To run the proof.
 * Add cbmc, goto-cc, goto-instrument, goto-analyzer, and cbmc-viewer

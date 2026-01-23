@@ -1,7 +1,7 @@
-MQTT_IncomingGetNextProp proof
+MQTT_GetNextPropertyType proof
 ==============
 
-This directory contains a memory safety proof for MQTT_IncomingGetNextProp.
+This directory contains a memory safety proof for MQTT_GetNextPropertyType.
 
 To run the proof.
 * Add cbmc, goto-cc, goto-instrument, goto-analyzer, and cbmc-viewer

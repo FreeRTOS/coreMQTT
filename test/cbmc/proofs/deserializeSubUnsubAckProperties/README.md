@@ -1,7 +1,7 @@
-DeserializeSubackProperties proof
+deserializeSubUnsubAckProperties proof
 ==============
 
-This directory contains a memory safety proof for DeserializeSubackProperties.
+This directory contains a memory safety proof for deserializeSubUnsubAckProperties.
 
 To run the proof.
 * Add cbmc, goto-cc, goto-instrument, goto-analyzer, and cbmc-viewer

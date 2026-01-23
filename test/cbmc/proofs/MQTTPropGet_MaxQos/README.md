@@ -1,7 +1,7 @@
-MQTTPropGet_ConnMaxQos proof
+MQTTPropGet_MaxQos proof
 ==============
 
-This directory contains a memory safety proof for MQTTPropGet_ConnMaxQos.
+This directory contains a memory safety proof for MQTTPropGet_MaxQos.
 
 To run the proof.
 * Add cbmc, goto-cc, goto-instrument, goto-analyzer, and cbmc-viewer

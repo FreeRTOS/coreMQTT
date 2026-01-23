@@ -1,7 +1,7 @@
-MQTTPropGet_ConnSubId proof
+MQTTPropGet_SubsIdAvailable proof
 ==============
 
-This directory contains a memory safety proof for MQTTPropGet_ConnSubId.
+This directory contains a memory safety proof for MQTTPropGet_SubsIdAvailable.
 
 To run the proof.
 * Add cbmc, goto-cc, goto-instrument, goto-analyzer, and cbmc-viewer

@@ -1,7 +1,7 @@
-MQTTPropGet_ConnResponseInfo proof
+MQTTPropGet_ResponseInfo proof
 ==============
 
-This directory contains a memory safety proof for MQTTPropGet_ConnResponseInfo.
+This directory contains a memory safety proof for MQTTPropGet_ResponseInfo.
 
 To run the proof.
 * Add cbmc, goto-cc, goto-instrument, goto-analyzer, and cbmc-viewer

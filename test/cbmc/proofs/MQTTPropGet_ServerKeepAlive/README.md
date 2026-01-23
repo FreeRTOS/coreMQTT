@@ -1,7 +1,7 @@
-MQTTPropGet_ConnServerKeepAlive proof
+MQTTPropGet_ServerKeepAlive proof
 ==============
 
-This directory contains a memory safety proof for MQTTPropGet_ConnServerKeepAlive.
+This directory contains a memory safety proof for MQTTPropGet_ServerKeepAlive.
 
 To run the proof.
 * Add cbmc, goto-cc, goto-instrument, goto-analyzer, and cbmc-viewer

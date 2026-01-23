@@ -1,7 +1,7 @@
-MQTTPropGet_ConnMaxPacketSize proof
+MQTTPropGet_MaxPacketSize proof
 ==============
 
-This directory contains a memory safety proof for MQTTPropGet_ConnMaxPacketSize.
+This directory contains a memory safety proof for MQTTPropGet_MaxPacketSize.
 
 To run the proof.
 * Add cbmc, goto-cc, goto-instrument, goto-analyzer, and cbmc-viewer

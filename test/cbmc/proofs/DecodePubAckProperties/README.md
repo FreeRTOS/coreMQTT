@@ -1,7 +1,7 @@
-DecodeAckProperties proof
+DecodePubAckProperties proof
 ==============
 
-This directory contains a memory safety proof for DecodeAckProperties.
+This directory contains a memory safety proof for DecodePubAckProperties.
 
 To run the proof.
 * Add cbmc, goto-cc, goto-instrument, goto-analyzer, and cbmc-viewer

@@ -1,7 +1,7 @@
-MQTTPropGet_ConnSharedSubAvailable proof
+MQTTPropGet_SharedSubAvailable proof
 ==============
 
-This directory contains a memory safety proof for MQTTPropGet_ConnSharedSubAvailable.
+This directory contains a memory safety proof for MQTTPropGet_SharedSubAvailable.
 
 To run the proof.
 * Add cbmc, goto-cc, goto-instrument, goto-analyzer, and cbmc-viewer

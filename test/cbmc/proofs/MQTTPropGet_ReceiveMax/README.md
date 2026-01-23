@@ -1,7 +1,7 @@
-MQTTPropGet_ConnReceiveMax proof
+MQTTPropGet_ReceiveMax proof
 ==============
 
-This directory contains a memory safety proof for MQTTPropGet_ConnReceiveMax.
+This directory contains a memory safety proof for MQTTPropGet_ReceiveMax.
 
 To run the proof.
 * Add cbmc, goto-cc, goto-instrument, goto-analyzer, and cbmc-viewer

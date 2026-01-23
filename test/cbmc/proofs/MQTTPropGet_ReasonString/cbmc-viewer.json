@@ -2,6 +2,6 @@
   [
 
   ],
-  "proof-name": "MQTT_Disconnect",
+  "proof-name": "MQTTPropGet_ReasonString",
   "proof-root": "test/cbmc/proofs"
 }

@@ -1,7 +1,7 @@
-MQTTPropGet_ConnAuthData proof
+MQTTPropGet_AuthData proof
 ==============
 
-This directory contains a memory safety proof for MQTTPropGet_ConnAuthData.
+This directory contains a memory safety proof for MQTTPropGet_AuthData.
 
 To run the proof.
 * Add cbmc, goto-cc, goto-instrument, goto-analyzer, and cbmc-viewer

@@ -2,6 +2,6 @@
   [
 
   ],
-  "proof-name": "decodePubAckProperties",
+  "proof-name": "DecodePubAckProperties",
   "proof-root": "test/cbmc"
 }

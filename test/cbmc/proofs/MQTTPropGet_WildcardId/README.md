@@ -1,7 +1,7 @@
-MQTTPropGet_ConnWildcard proof
+MQTTPropGet_WildcardId proof
 ==============
 
-This directory contains a memory safety proof for MQTTPropGet_ConnWildcard.
+This directory contains a memory safety proof for MQTTPropGet_WildcardId.
 
 To run the proof.
 * Add cbmc, goto-cc, goto-instrument, goto-analyzer, and cbmc-viewer
