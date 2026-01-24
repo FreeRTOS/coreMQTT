@@ -2458,6 +2458,70 @@ MQTTStatus_t MQTT_GetNextPropertyType( MQTTPropBuilder_t * mqttPropBuilder,
                                        uint8_t * property );
 
 /**
+ * @brief Skip the next property in the property builder without extracting its value.
+ *
+ * This function advances the current index past the property at the current position
+ * in the property buffer. It validates the property ID and ensures the property data
+ * is within bounds, but does not extract or return the property value. This is useful
+ * for iterating through properties when only specific properties need to be extracted.
+ *
+ * @param[in] pPropertyBuilder Pointer to the property builder containing the properties.
+ * @param[in,out] currentIndex Pointer to the current index in the property buffer.
+ *                             On success, updated to point to the next property.
+ *
+ * @return #MQTTSuccess if the property is successfully skipped;
+ *         #MQTTBadParameter if parameters are invalid, property ID is unknown, or
+ *         the property data extends beyond the buffer bounds;
+ *         #MQTTEndOfProperties if currentIndex is already at or past the end of properties.
+ *
+ * <b>Example</b>
+ * @code{c}
+ *
+ * // Variables used in this example.
+ * MQTTStatus_t status;
+ * MQTTPropBuilder_t propertyBuilder = { 0 };
+ * uint32_t currentIndex = 0;
+ * uint8_t propertyType;
+ *
+ * // Initialize property builder with received properties
+ * // (initialization details out of scope for this example)
+ * initializePropertyBuilder( &propertyBuilder );
+ *
+ * // Iterate through all properties
+ * while( currentIndex < propertyBuilder.currentIndex )
+ * {
+ *     // Get the property type at current position
+ *     status = MQTT_GetNextPropertyType( &propertyBuilder, &currentIndex, &propertyType );
+ *
+ *     if( status != MQTTSuccess )
+ *     {
+ *         break;
+ *     }
+ *
+ *     // Only extract user properties, skip all others
+ *     if( propertyType == MQTT_USER_PROPERTY_ID )
+ *     {
+ *         MQTTUserProperty_t userProp;
+ *         status = MQTTPropGet_UserProp( &propertyBuilder, &currentIndex, &userProp );
+ *         // Process user property...
+ *     }
+ *     else
+ *     {
+ *         // Skip this property
+ *         status = MQTT_SkipNextProperty( &propertyBuilder, &currentIndex );
+ *     }
+ *
+ *     if( status != MQTTSuccess )
+ *     {
+ *         break;
+ *     }
+ * }
+ * @endcode
+ */
+MQTTStatus_t MQTT_SkipNextProperty( MQTTPropBuilder_t * pPropertyBuilder,
+                                    uint32_t * currentIndex );
+
+/**
  * @brief Get User Property from property builder.
  *
  * @param[in] pPropertyBuilder Property builder to get property from.

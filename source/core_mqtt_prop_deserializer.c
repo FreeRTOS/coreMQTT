@@ -426,6 +426,118 @@ MQTTStatus_t MQTT_GetNextPropertyType( MQTTPropBuilder_t * pPropertyBuilder,
 
     return status;
 }
+
+/*-----------------------------------------------------------*/
+
+MQTTStatus_t MQTT_SkipNextProperty( MQTTPropBuilder_t * pPropertyBuilder,
+                                    uint32_t * currentIndex )
+{
+    MQTTStatus_t status = checkPropBuilderParams( pPropertyBuilder, currentIndex );
+    uint8_t property;
+    uint8_t * pLocalIndex;
+    uint32_t remainingPropLength;
+    bool tempBool = false;
+    uint32_t dummyUint32;
+    uint16_t dummyUint16;
+    uint8_t dummyUint8;
+    const char * dummyString;
+    uint16_t dummyStringLen;
+
+    if( status != MQTTSuccess )
+    {
+        /* Do nothing. checkPropBuilderParams will log the warning/error. */
+    }
+    else
+    {
+        property = pPropertyBuilder->pBuffer[ *currentIndex ];
+        pLocalIndex = &pPropertyBuilder->pBuffer[ *currentIndex ];
+        remainingPropLength = pPropertyBuilder->currentIndex - *currentIndex - 1U;
+
+        /* Skip the property ID byte */
+        pLocalIndex++;
+
+        switch( property )
+        {
+            /* Four-byte integer properties */
+            case MQTT_SESSION_EXPIRY_ID:
+            case MQTT_MAX_PACKET_SIZE_ID:
+            case MQTT_WILL_DELAY_ID:
+            case MQTT_MSG_EXPIRY_ID:
+                status = decodeUint32t( &dummyUint32, &remainingPropLength, &tempBool, &pLocalIndex );
+                break;
+
+            /* Two-byte integer properties */
+            case MQTT_RECEIVE_MAX_ID:
+            case MQTT_TOPIC_ALIAS_MAX_ID:
+            case MQTT_TOPIC_ALIAS_ID:
+            case MQTT_SERVER_KEEP_ALIVE_ID:
+                status = decodeUint16t( &dummyUint16, &remainingPropLength, &tempBool, &pLocalIndex );
+                break;
+
+            /* One-byte integer properties */
+            case MQTT_REQUEST_RESPONSE_ID:
+            case MQTT_REQUEST_PROBLEM_ID:
+            case MQTT_PAYLOAD_FORMAT_ID:
+            case MQTT_MAX_QOS_ID:
+            case MQTT_RETAIN_AVAILABLE_ID:
+            case MQTT_WILDCARD_ID:
+            case MQTT_SUB_AVAILABLE_ID:
+            case MQTT_SHARED_SUB_ID:
+                status = decodeUint8t( &dummyUint8, &remainingPropLength, &tempBool, &pLocalIndex );
+                break;
+
+            /* UTF-8 string properties */
+            case MQTT_AUTH_METHOD_ID:
+            case MQTT_CONTENT_TYPE_ID:
+            case MQTT_RESPONSE_TOPIC_ID:
+            case MQTT_ASSIGNED_CLIENT_ID:
+            case MQTT_REASON_STRING_ID:
+            case MQTT_RESPONSE_INFO_ID:
+            case MQTT_SERVER_REF_ID:
+            case MQTT_AUTH_DATA_ID:
+            case MQTT_CORRELATION_DATA_ID:
+                status = decodeUtf8( &dummyString, &dummyStringLen, &remainingPropLength, &tempBool, &pLocalIndex );
+                break;
+
+            /* User property (two UTF-8 strings: key and value) */
+            case MQTT_USER_PROPERTY_ID:
+                status = decodeUserProp( &dummyString, &dummyStringLen,
+                                         &dummyString, &dummyStringLen,
+                                         &remainingPropLength, &pLocalIndex );
+                break;
+
+            /* Variable byte integer property (subscription identifier) */
+            case MQTT_SUBSCRIPTION_ID_ID:
+               {
+                   uint32_t subscriptionId;
+                   size_t varIntSize;
+
+                   status = decodeVariableLength( pLocalIndex, remainingPropLength, &subscriptionId );
+
+                   if( status == MQTTSuccess )
+                   {
+                       varIntSize = variableLengthEncodedSize( subscriptionId );
+                       pLocalIndex = &pLocalIndex[ varIntSize ];
+                   }
+               }
+               break;
+
+            default:
+                LogError( ( "Unknown property ID: %d", property ) );
+                status = MQTTBadParameter;
+                break;
+        }
+
+        if( status == MQTTSuccess )
+        {
+            /* Update the current index to point past the skipped property */
+            *currentIndex = ( uint32_t ) ( pLocalIndex - pPropertyBuilder->pBuffer );
+        }
+    }
+
+    return status;
+}
+
 /*-----------------------------------------------------------*/
 
 MQTTStatus_t MQTTPropGet_UserProp( MQTTPropBuilder_t * pPropertyBuilder,

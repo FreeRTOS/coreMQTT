@@ -6432,3 +6432,1359 @@ void test_getAckPacketSize_AllPacketTypes( void )
 }
 
 /* ========================================================================== */
+
+/* ========================================================================== */
+/* MQTT_SkipNextProperty Tests */
+/* ========================================================================== */
+
+/* ========================================================================== */
+/* NULL Parameter Tests */
+/* ========================================================================== */
+
+/**
+ * @brief Test MQTT_SkipNextProperty with NULL pPropertyBuilder parameter.
+ */
+void test_MQTT_SkipNextProperty_NullPropertyBuilder( void )
+{
+    MQTTStatus_t status;
+    uint32_t currentIndex = 0;
+
+    status = MQTT_SkipNextProperty( NULL, &currentIndex );
+
+    TEST_ASSERT_EQUAL( MQTTBadParameter, status );
+}
+
+/**
+ * @brief Test MQTT_SkipNextProperty with NULL currentIndex parameter.
+ */
+void test_MQTT_SkipNextProperty_NullCurrentIndex( void )
+{
+    uint8_t testBuffer[ MQTT_TEST_BUFFER_LENGTH ];
+    MQTTPropBuilder_t propBuilder = { 0 };
+    MQTTStatus_t status;
+
+    propBuilder.pBuffer = testBuffer;
+    propBuilder.bufferLength = MQTT_TEST_BUFFER_LENGTH;
+
+    status = MQTT_SkipNextProperty( &propBuilder, NULL );
+
+    TEST_ASSERT_EQUAL( MQTTBadParameter, status );
+}
+
+/**
+ * @brief Test MQTT_SkipNextProperty with NULL pBuffer in property builder.
+ */
+void test_MQTT_SkipNextProperty_NullBuffer( void )
+{
+    MQTTPropBuilder_t propBuilder = { 0 };
+    MQTTStatus_t status;
+    uint32_t currentIndex = 0;
+
+    propBuilder.pBuffer = NULL;
+    propBuilder.bufferLength = MQTT_TEST_BUFFER_LENGTH;
+
+    status = MQTT_SkipNextProperty( &propBuilder, &currentIndex );
+
+    TEST_ASSERT_EQUAL( MQTTBadParameter, status );
+}
+
+/* ========================================================================== */
+/* Index Boundary Tests */
+/* ========================================================================== */
+
+/**
+ * @brief Test MQTT_SkipNextProperty with currentIndex at end of properties.
+ */
+void test_MQTT_SkipNextProperty_IndexAtEnd( void )
+{
+    uint8_t testBuffer[ MQTT_TEST_BUFFER_LENGTH ];
+    MQTTPropBuilder_t propBuilder = { 0 };
+    MQTTStatus_t status;
+    uint32_t currentIndex = 0;
+
+    propBuilder.pBuffer = testBuffer;
+    propBuilder.bufferLength = MQTT_TEST_BUFFER_LENGTH;
+    propBuilder.currentIndex = 0;
+
+    status = MQTT_SkipNextProperty( &propBuilder, &currentIndex );
+
+    TEST_ASSERT_EQUAL( MQTTEndOfProperties, status );
+}
+
+/**
+ * @brief Test MQTT_SkipNextProperty with currentIndex beyond end.
+ */
+void test_MQTT_SkipNextProperty_IndexBeyondEnd( void )
+{
+    uint8_t testBuffer[ MQTT_TEST_BUFFER_LENGTH ];
+    MQTTPropBuilder_t propBuilder = { 0 };
+    MQTTStatus_t status;
+    uint32_t currentIndex = 10;
+
+    propBuilder.pBuffer = testBuffer;
+    propBuilder.bufferLength = MQTT_TEST_BUFFER_LENGTH;
+    propBuilder.currentIndex = 5;
+
+    status = MQTT_SkipNextProperty( &propBuilder, &currentIndex );
+
+    TEST_ASSERT_EQUAL( MQTTEndOfProperties, status );
+}
+
+/* ========================================================================== */
+/* Unknown Property ID Tests */
+/* ========================================================================== */
+
+/**
+ * @brief Test MQTT_SkipNextProperty with unknown property ID.
+ */
+void test_MQTT_SkipNextProperty_UnknownPropertyId( void )
+{
+    uint8_t testBuffer[ MQTT_TEST_BUFFER_LENGTH ];
+    MQTTPropBuilder_t propBuilder = { 0 };
+    MQTTStatus_t status;
+    uint32_t currentIndex = 0;
+
+    propBuilder.pBuffer = testBuffer;
+    propBuilder.bufferLength = MQTT_TEST_BUFFER_LENGTH;
+
+    /* Set an invalid property ID */
+    testBuffer[ 0 ] = 0xFF;
+    propBuilder.currentIndex = 10;
+
+    status = MQTT_SkipNextProperty( &propBuilder, &currentIndex );
+
+    TEST_ASSERT_EQUAL( MQTTBadParameter, status );
+}
+
+/* ========================================================================== */
+/* Four-Byte Integer Property Tests */
+/* ========================================================================== */
+
+/**
+ * @brief Test skipping SESSION_EXPIRY property (4-byte integer).
+ */
+void test_MQTT_SkipNextProperty_SessionExpiry( void )
+{
+    uint8_t testBuffer[ MQTT_TEST_BUFFER_LENGTH ];
+    MQTTPropBuilder_t propBuilder = { 0 };
+    MQTTStatus_t status;
+    uint32_t currentIndex = 0;
+    uint8_t * pIndex = testBuffer;
+
+    propBuilder.pBuffer = testBuffer;
+    propBuilder.bufferLength = MQTT_TEST_BUFFER_LENGTH;
+
+    /* Encode SESSION_EXPIRY property */
+    *pIndex++ = MQTT_SESSION_EXPIRY_ID;
+    *pIndex++ = UINT32_BYTE3( MQTT_TEST_UINT32 );
+    *pIndex++ = UINT32_BYTE2( MQTT_TEST_UINT32 );
+    *pIndex++ = UINT32_BYTE1( MQTT_TEST_UINT32 );
+    *pIndex++ = UINT32_BYTE0( MQTT_TEST_UINT32 );
+
+    propBuilder.currentIndex = ( uint32_t ) ( pIndex - testBuffer );
+
+    status = MQTT_SkipNextProperty( &propBuilder, &currentIndex );
+
+    TEST_ASSERT_EQUAL( MQTTSuccess, status );
+    TEST_ASSERT_EQUAL( 5, currentIndex );
+}
+
+/**
+ * @brief Test skipping MAX_PACKET_SIZE property (4-byte integer).
+ */
+void test_MQTT_SkipNextProperty_MaxPacketSize( void )
+{
+    uint8_t testBuffer[ MQTT_TEST_BUFFER_LENGTH ];
+    MQTTPropBuilder_t propBuilder = { 0 };
+    MQTTStatus_t status;
+    uint32_t currentIndex = 0;
+    uint8_t * pIndex = testBuffer;
+
+    propBuilder.pBuffer = testBuffer;
+    propBuilder.bufferLength = MQTT_TEST_BUFFER_LENGTH;
+
+    *pIndex++ = MQTT_MAX_PACKET_SIZE_ID;
+    *pIndex++ = UINT32_BYTE3( MQTT_TEST_UINT32 );
+    *pIndex++ = UINT32_BYTE2( MQTT_TEST_UINT32 );
+    *pIndex++ = UINT32_BYTE1( MQTT_TEST_UINT32 );
+    *pIndex++ = UINT32_BYTE0( MQTT_TEST_UINT32 );
+
+    propBuilder.currentIndex = ( uint32_t ) ( pIndex - testBuffer );
+
+    status = MQTT_SkipNextProperty( &propBuilder, &currentIndex );
+
+    TEST_ASSERT_EQUAL( MQTTSuccess, status );
+    TEST_ASSERT_EQUAL( 5, currentIndex );
+}
+
+/**
+ * @brief Test skipping WILL_DELAY property (4-byte integer).
+ */
+void test_MQTT_SkipNextProperty_WillDelay( void )
+{
+    uint8_t testBuffer[ MQTT_TEST_BUFFER_LENGTH ];
+    MQTTPropBuilder_t propBuilder = { 0 };
+    MQTTStatus_t status;
+    uint32_t currentIndex = 0;
+    uint8_t * pIndex = testBuffer;
+
+    propBuilder.pBuffer = testBuffer;
+    propBuilder.bufferLength = MQTT_TEST_BUFFER_LENGTH;
+
+    *pIndex++ = MQTT_WILL_DELAY_ID;
+    *pIndex++ = UINT32_BYTE3( MQTT_TEST_UINT32 );
+    *pIndex++ = UINT32_BYTE2( MQTT_TEST_UINT32 );
+    *pIndex++ = UINT32_BYTE1( MQTT_TEST_UINT32 );
+    *pIndex++ = UINT32_BYTE0( MQTT_TEST_UINT32 );
+
+    propBuilder.currentIndex = ( uint32_t ) ( pIndex - testBuffer );
+
+    status = MQTT_SkipNextProperty( &propBuilder, &currentIndex );
+
+    TEST_ASSERT_EQUAL( MQTTSuccess, status );
+    TEST_ASSERT_EQUAL( 5, currentIndex );
+}
+
+/**
+ * @brief Test skipping MSG_EXPIRY property (4-byte integer).
+ */
+void test_MQTT_SkipNextProperty_MessageExpiry( void )
+{
+    uint8_t testBuffer[ MQTT_TEST_BUFFER_LENGTH ];
+    MQTTPropBuilder_t propBuilder = { 0 };
+    MQTTStatus_t status;
+    uint32_t currentIndex = 0;
+    uint8_t * pIndex = testBuffer;
+
+    propBuilder.pBuffer = testBuffer;
+    propBuilder.bufferLength = MQTT_TEST_BUFFER_LENGTH;
+
+    *pIndex++ = MQTT_MSG_EXPIRY_ID;
+    *pIndex++ = UINT32_BYTE3( MQTT_TEST_UINT32 );
+    *pIndex++ = UINT32_BYTE2( MQTT_TEST_UINT32 );
+    *pIndex++ = UINT32_BYTE1( MQTT_TEST_UINT32 );
+    *pIndex++ = UINT32_BYTE0( MQTT_TEST_UINT32 );
+
+    propBuilder.currentIndex = ( uint32_t ) ( pIndex - testBuffer );
+
+    status = MQTT_SkipNextProperty( &propBuilder, &currentIndex );
+
+    TEST_ASSERT_EQUAL( MQTTSuccess, status );
+    TEST_ASSERT_EQUAL( 5, currentIndex );
+}
+
+/**
+ * @brief Test skipping 4-byte integer property with insufficient buffer.
+ */
+void test_MQTT_SkipNextProperty_Uint32_InsufficientBuffer( void )
+{
+    uint8_t testBuffer[ MQTT_TEST_BUFFER_LENGTH ];
+    MQTTPropBuilder_t propBuilder = { 0 };
+    MQTTStatus_t status;
+    uint32_t currentIndex = 0;
+
+    propBuilder.pBuffer = testBuffer;
+    propBuilder.bufferLength = MQTT_TEST_BUFFER_LENGTH;
+
+    testBuffer[ 0 ] = MQTT_SESSION_EXPIRY_ID;
+    /* Only 3 bytes available instead of 4 */
+    propBuilder.currentIndex = 4;
+
+    status = MQTT_SkipNextProperty( &propBuilder, &currentIndex );
+
+    TEST_ASSERT_EQUAL( MQTTBadResponse, status );
+}
+
+/* ========================================================================== */
+/* Two-Byte Integer Property Tests */
+/* ========================================================================== */
+
+/**
+ * @brief Test skipping RECEIVE_MAX property (2-byte integer).
+ */
+void test_MQTT_SkipNextProperty_ReceiveMax( void )
+{
+    uint8_t testBuffer[ MQTT_TEST_BUFFER_LENGTH ];
+    MQTTPropBuilder_t propBuilder = { 0 };
+    MQTTStatus_t status;
+    uint32_t currentIndex = 0;
+    uint8_t * pIndex = testBuffer;
+
+    propBuilder.pBuffer = testBuffer;
+    propBuilder.bufferLength = MQTT_TEST_BUFFER_LENGTH;
+
+    *pIndex++ = MQTT_RECEIVE_MAX_ID;
+    *pIndex++ = UINT16_HIGH_BYTE( MQTT_TEST_UINT16 );
+    *pIndex++ = UINT16_LOW_BYTE( MQTT_TEST_UINT16 );
+
+    propBuilder.currentIndex = ( uint32_t ) ( pIndex - testBuffer );
+
+    status = MQTT_SkipNextProperty( &propBuilder, &currentIndex );
+
+    TEST_ASSERT_EQUAL( MQTTSuccess, status );
+    TEST_ASSERT_EQUAL( 3, currentIndex );
+}
+
+/**
+ * @brief Test skipping TOPIC_ALIAS_MAX property (2-byte integer).
+ */
+void test_MQTT_SkipNextProperty_TopicAliasMax( void )
+{
+    uint8_t testBuffer[ MQTT_TEST_BUFFER_LENGTH ];
+    MQTTPropBuilder_t propBuilder = { 0 };
+    MQTTStatus_t status;
+    uint32_t currentIndex = 0;
+    uint8_t * pIndex = testBuffer;
+
+    propBuilder.pBuffer = testBuffer;
+    propBuilder.bufferLength = MQTT_TEST_BUFFER_LENGTH;
+
+    *pIndex++ = MQTT_TOPIC_ALIAS_MAX_ID;
+    *pIndex++ = UINT16_HIGH_BYTE( MQTT_TEST_UINT16 );
+    *pIndex++ = UINT16_LOW_BYTE( MQTT_TEST_UINT16 );
+
+    propBuilder.currentIndex = ( uint32_t ) ( pIndex - testBuffer );
+
+    status = MQTT_SkipNextProperty( &propBuilder, &currentIndex );
+
+    TEST_ASSERT_EQUAL( MQTTSuccess, status );
+    TEST_ASSERT_EQUAL( 3, currentIndex );
+}
+
+/**
+ * @brief Test skipping TOPIC_ALIAS property (2-byte integer).
+ */
+void test_MQTT_SkipNextProperty_TopicAlias( void )
+{
+    uint8_t testBuffer[ MQTT_TEST_BUFFER_LENGTH ];
+    MQTTPropBuilder_t propBuilder = { 0 };
+    MQTTStatus_t status;
+    uint32_t currentIndex = 0;
+    uint8_t * pIndex = testBuffer;
+
+    propBuilder.pBuffer = testBuffer;
+    propBuilder.bufferLength = MQTT_TEST_BUFFER_LENGTH;
+
+    *pIndex++ = MQTT_TOPIC_ALIAS_ID;
+    *pIndex++ = UINT16_HIGH_BYTE( MQTT_TEST_UINT16 );
+    *pIndex++ = UINT16_LOW_BYTE( MQTT_TEST_UINT16 );
+
+    propBuilder.currentIndex = ( uint32_t ) ( pIndex - testBuffer );
+
+    status = MQTT_SkipNextProperty( &propBuilder, &currentIndex );
+
+    TEST_ASSERT_EQUAL( MQTTSuccess, status );
+    TEST_ASSERT_EQUAL( 3, currentIndex );
+}
+
+/**
+ * @brief Test skipping SERVER_KEEP_ALIVE property (2-byte integer).
+ */
+void test_MQTT_SkipNextProperty_ServerKeepAlive( void )
+{
+    uint8_t testBuffer[ MQTT_TEST_BUFFER_LENGTH ];
+    MQTTPropBuilder_t propBuilder = { 0 };
+    MQTTStatus_t status;
+    uint32_t currentIndex = 0;
+    uint8_t * pIndex = testBuffer;
+
+    propBuilder.pBuffer = testBuffer;
+    propBuilder.bufferLength = MQTT_TEST_BUFFER_LENGTH;
+
+    *pIndex++ = MQTT_SERVER_KEEP_ALIVE_ID;
+    *pIndex++ = UINT16_HIGH_BYTE( MQTT_TEST_UINT16 );
+    *pIndex++ = UINT16_LOW_BYTE( MQTT_TEST_UINT16 );
+
+    propBuilder.currentIndex = ( uint32_t ) ( pIndex - testBuffer );
+
+    status = MQTT_SkipNextProperty( &propBuilder, &currentIndex );
+
+    TEST_ASSERT_EQUAL( MQTTSuccess, status );
+    TEST_ASSERT_EQUAL( 3, currentIndex );
+}
+
+/**
+ * @brief Test skipping 2-byte integer property with insufficient buffer.
+ */
+void test_MQTT_SkipNextProperty_Uint16_InsufficientBuffer( void )
+{
+    uint8_t testBuffer[ MQTT_TEST_BUFFER_LENGTH ];
+    MQTTPropBuilder_t propBuilder = { 0 };
+    MQTTStatus_t status;
+    uint32_t currentIndex = 0;
+
+    propBuilder.pBuffer = testBuffer;
+    propBuilder.bufferLength = MQTT_TEST_BUFFER_LENGTH;
+
+    testBuffer[ 0 ] = MQTT_RECEIVE_MAX_ID;
+    /* Only 1 byte available instead of 2 */
+    propBuilder.currentIndex = 2;
+
+    status = MQTT_SkipNextProperty( &propBuilder, &currentIndex );
+
+    TEST_ASSERT_EQUAL( MQTTBadResponse, status );
+}
+
+/* ========================================================================== */
+/* One-Byte Integer Property Tests */
+/* ========================================================================== */
+
+/**
+ * @brief Test skipping REQUEST_RESPONSE property (1-byte integer).
+ */
+void test_MQTT_SkipNextProperty_RequestResponse( void )
+{
+    uint8_t testBuffer[ MQTT_TEST_BUFFER_LENGTH ];
+    MQTTPropBuilder_t propBuilder = { 0 };
+    MQTTStatus_t status;
+    uint32_t currentIndex = 0;
+    uint8_t * pIndex = testBuffer;
+
+    propBuilder.pBuffer = testBuffer;
+    propBuilder.bufferLength = MQTT_TEST_BUFFER_LENGTH;
+
+    *pIndex++ = MQTT_REQUEST_RESPONSE_ID;
+    *pIndex++ = MQTT_TEST_UINT8;
+
+    propBuilder.currentIndex = ( uint32_t ) ( pIndex - testBuffer );
+
+    status = MQTT_SkipNextProperty( &propBuilder, &currentIndex );
+
+    TEST_ASSERT_EQUAL( MQTTSuccess, status );
+    TEST_ASSERT_EQUAL( 2, currentIndex );
+}
+
+/**
+ * @brief Test skipping REQUEST_PROBLEM property (1-byte integer).
+ */
+void test_MQTT_SkipNextProperty_RequestProblem( void )
+{
+    uint8_t testBuffer[ MQTT_TEST_BUFFER_LENGTH ];
+    MQTTPropBuilder_t propBuilder = { 0 };
+    MQTTStatus_t status;
+    uint32_t currentIndex = 0;
+    uint8_t * pIndex = testBuffer;
+
+    propBuilder.pBuffer = testBuffer;
+    propBuilder.bufferLength = MQTT_TEST_BUFFER_LENGTH;
+
+    *pIndex++ = MQTT_REQUEST_PROBLEM_ID;
+    *pIndex++ = MQTT_TEST_UINT8;
+
+    propBuilder.currentIndex = ( uint32_t ) ( pIndex - testBuffer );
+
+    status = MQTT_SkipNextProperty( &propBuilder, &currentIndex );
+
+    TEST_ASSERT_EQUAL( MQTTSuccess, status );
+    TEST_ASSERT_EQUAL( 2, currentIndex );
+}
+
+/**
+ * @brief Test skipping PAYLOAD_FORMAT property (1-byte integer).
+ */
+void test_MQTT_SkipNextProperty_PayloadFormat( void )
+{
+    uint8_t testBuffer[ MQTT_TEST_BUFFER_LENGTH ];
+    MQTTPropBuilder_t propBuilder = { 0 };
+    MQTTStatus_t status;
+    uint32_t currentIndex = 0;
+    uint8_t * pIndex = testBuffer;
+
+    propBuilder.pBuffer = testBuffer;
+    propBuilder.bufferLength = MQTT_TEST_BUFFER_LENGTH;
+
+    *pIndex++ = MQTT_PAYLOAD_FORMAT_ID;
+    *pIndex++ = MQTT_TEST_UINT8;
+
+    propBuilder.currentIndex = ( uint32_t ) ( pIndex - testBuffer );
+
+    status = MQTT_SkipNextProperty( &propBuilder, &currentIndex );
+
+    TEST_ASSERT_EQUAL( MQTTSuccess, status );
+    TEST_ASSERT_EQUAL( 2, currentIndex );
+}
+
+/**
+ * @brief Test skipping MAX_QOS property (1-byte integer).
+ */
+void test_MQTT_SkipNextProperty_MaxQos( void )
+{
+    uint8_t testBuffer[ MQTT_TEST_BUFFER_LENGTH ];
+    MQTTPropBuilder_t propBuilder = { 0 };
+    MQTTStatus_t status;
+    uint32_t currentIndex = 0;
+    uint8_t * pIndex = testBuffer;
+
+    propBuilder.pBuffer = testBuffer;
+    propBuilder.bufferLength = MQTT_TEST_BUFFER_LENGTH;
+
+    *pIndex++ = MQTT_MAX_QOS_ID;
+    *pIndex++ = MQTT_TEST_UINT8;
+
+    propBuilder.currentIndex = ( uint32_t ) ( pIndex - testBuffer );
+
+    status = MQTT_SkipNextProperty( &propBuilder, &currentIndex );
+
+    TEST_ASSERT_EQUAL( MQTTSuccess, status );
+    TEST_ASSERT_EQUAL( 2, currentIndex );
+}
+
+/**
+ * @brief Test skipping RETAIN_AVAILABLE property (1-byte integer).
+ */
+void test_MQTT_SkipNextProperty_RetainAvailable( void )
+{
+    uint8_t testBuffer[ MQTT_TEST_BUFFER_LENGTH ];
+    MQTTPropBuilder_t propBuilder = { 0 };
+    MQTTStatus_t status;
+    uint32_t currentIndex = 0;
+    uint8_t * pIndex = testBuffer;
+
+    propBuilder.pBuffer = testBuffer;
+    propBuilder.bufferLength = MQTT_TEST_BUFFER_LENGTH;
+
+    *pIndex++ = MQTT_RETAIN_AVAILABLE_ID;
+    *pIndex++ = MQTT_TEST_UINT8;
+
+    propBuilder.currentIndex = ( uint32_t ) ( pIndex - testBuffer );
+
+    status = MQTT_SkipNextProperty( &propBuilder, &currentIndex );
+
+    TEST_ASSERT_EQUAL( MQTTSuccess, status );
+    TEST_ASSERT_EQUAL( 2, currentIndex );
+}
+
+/**
+ * @brief Test skipping WILDCARD property (1-byte integer).
+ */
+void test_MQTT_SkipNextProperty_Wildcard( void )
+{
+    uint8_t testBuffer[ MQTT_TEST_BUFFER_LENGTH ];
+    MQTTPropBuilder_t propBuilder = { 0 };
+    MQTTStatus_t status;
+    uint32_t currentIndex = 0;
+    uint8_t * pIndex = testBuffer;
+
+    propBuilder.pBuffer = testBuffer;
+    propBuilder.bufferLength = MQTT_TEST_BUFFER_LENGTH;
+
+    *pIndex++ = MQTT_WILDCARD_ID;
+    *pIndex++ = MQTT_TEST_UINT8;
+
+    propBuilder.currentIndex = ( uint32_t ) ( pIndex - testBuffer );
+
+    status = MQTT_SkipNextProperty( &propBuilder, &currentIndex );
+
+    TEST_ASSERT_EQUAL( MQTTSuccess, status );
+    TEST_ASSERT_EQUAL( 2, currentIndex );
+}
+
+/**
+ * @brief Test skipping SUB_AVAILABLE property (1-byte integer).
+ */
+void test_MQTT_SkipNextProperty_SubAvailable( void )
+{
+    uint8_t testBuffer[ MQTT_TEST_BUFFER_LENGTH ];
+    MQTTPropBuilder_t propBuilder = { 0 };
+    MQTTStatus_t status;
+    uint32_t currentIndex = 0;
+    uint8_t * pIndex = testBuffer;
+
+    propBuilder.pBuffer = testBuffer;
+    propBuilder.bufferLength = MQTT_TEST_BUFFER_LENGTH;
+
+    *pIndex++ = MQTT_SUB_AVAILABLE_ID;
+    *pIndex++ = MQTT_TEST_UINT8;
+
+    propBuilder.currentIndex = ( uint32_t ) ( pIndex - testBuffer );
+
+    status = MQTT_SkipNextProperty( &propBuilder, &currentIndex );
+
+    TEST_ASSERT_EQUAL( MQTTSuccess, status );
+    TEST_ASSERT_EQUAL( 2, currentIndex );
+}
+
+/**
+ * @brief Test skipping SHARED_SUB property (1-byte integer).
+ */
+void test_MQTT_SkipNextProperty_SharedSub( void )
+{
+    uint8_t testBuffer[ MQTT_TEST_BUFFER_LENGTH ];
+    MQTTPropBuilder_t propBuilder = { 0 };
+    MQTTStatus_t status;
+    uint32_t currentIndex = 0;
+    uint8_t * pIndex = testBuffer;
+
+    propBuilder.pBuffer = testBuffer;
+    propBuilder.bufferLength = MQTT_TEST_BUFFER_LENGTH;
+
+    *pIndex++ = MQTT_SHARED_SUB_ID;
+    *pIndex++ = MQTT_TEST_UINT8;
+
+    propBuilder.currentIndex = ( uint32_t ) ( pIndex - testBuffer );
+
+    status = MQTT_SkipNextProperty( &propBuilder, &currentIndex );
+
+    TEST_ASSERT_EQUAL( MQTTSuccess, status );
+    TEST_ASSERT_EQUAL( 2, currentIndex );
+}
+
+/**
+ * @brief Test skipping 1-byte integer property with insufficient buffer.
+ */
+void test_MQTT_SkipNextProperty_Uint8_InsufficientBuffer( void )
+{
+    uint8_t testBuffer[ MQTT_TEST_BUFFER_LENGTH ];
+    MQTTPropBuilder_t propBuilder = { 0 };
+    MQTTStatus_t status;
+    uint32_t currentIndex = 0;
+
+    propBuilder.pBuffer = testBuffer;
+    propBuilder.bufferLength = MQTT_TEST_BUFFER_LENGTH;
+
+    testBuffer[ 0 ] = MQTT_REQUEST_RESPONSE_ID;
+    /* No bytes available for the value */
+    propBuilder.currentIndex = 1;
+
+    status = MQTT_SkipNextProperty( &propBuilder, &currentIndex );
+
+    TEST_ASSERT_EQUAL( MQTTBadResponse, status );
+}
+
+/* ========================================================================== */
+/* UTF-8 String Property Tests */
+/* ========================================================================== */
+
+/**
+ * @brief Test skipping AUTH_METHOD property (UTF-8 string).
+ */
+void test_MQTT_SkipNextProperty_AuthMethod( void )
+{
+    uint8_t testBuffer[ MQTT_TEST_BUFFER_LENGTH ];
+    MQTTPropBuilder_t propBuilder = { 0 };
+    MQTTStatus_t status;
+    uint32_t currentIndex = 0;
+    uint8_t * pIndex = testBuffer;
+
+    propBuilder.pBuffer = testBuffer;
+    propBuilder.bufferLength = MQTT_TEST_BUFFER_LENGTH;
+
+    *pIndex++ = MQTT_AUTH_METHOD_ID;
+    pIndex += encodeStringUT( pIndex, MQTT_TEST_UTF8_STRING, MQTT_TEST_UTF8_STRING_LENGTH );
+
+    propBuilder.currentIndex = ( uint32_t ) ( pIndex - testBuffer );
+
+    status = MQTT_SkipNextProperty( &propBuilder, &currentIndex );
+
+    TEST_ASSERT_EQUAL( MQTTSuccess, status );
+    TEST_ASSERT_EQUAL( 1 + 2 + MQTT_TEST_UTF8_STRING_LENGTH, currentIndex );
+}
+
+/**
+ * @brief Test skipping CONTENT_TYPE property (UTF-8 string).
+ */
+void test_MQTT_SkipNextProperty_ContentType( void )
+{
+    uint8_t testBuffer[ MQTT_TEST_BUFFER_LENGTH ];
+    MQTTPropBuilder_t propBuilder = { 0 };
+    MQTTStatus_t status;
+    uint32_t currentIndex = 0;
+    uint8_t * pIndex = testBuffer;
+
+    propBuilder.pBuffer = testBuffer;
+    propBuilder.bufferLength = MQTT_TEST_BUFFER_LENGTH;
+
+    *pIndex++ = MQTT_CONTENT_TYPE_ID;
+    pIndex += encodeStringUT( pIndex, MQTT_TEST_UTF8_STRING, MQTT_TEST_UTF8_STRING_LENGTH );
+
+    propBuilder.currentIndex = ( uint32_t ) ( pIndex - testBuffer );
+
+    status = MQTT_SkipNextProperty( &propBuilder, &currentIndex );
+
+    TEST_ASSERT_EQUAL( MQTTSuccess, status );
+    TEST_ASSERT_EQUAL( 1 + 2 + MQTT_TEST_UTF8_STRING_LENGTH, currentIndex );
+}
+
+/**
+ * @brief Test skipping RESPONSE_TOPIC property (UTF-8 string).
+ */
+void test_MQTT_SkipNextProperty_ResponseTopic( void )
+{
+    uint8_t testBuffer[ MQTT_TEST_BUFFER_LENGTH ];
+    MQTTPropBuilder_t propBuilder = { 0 };
+    MQTTStatus_t status;
+    uint32_t currentIndex = 0;
+    uint8_t * pIndex = testBuffer;
+
+    propBuilder.pBuffer = testBuffer;
+    propBuilder.bufferLength = MQTT_TEST_BUFFER_LENGTH;
+
+    *pIndex++ = MQTT_RESPONSE_TOPIC_ID;
+    pIndex += encodeStringUT( pIndex, MQTT_TEST_UTF8_STRING, MQTT_TEST_UTF8_STRING_LENGTH );
+
+    propBuilder.currentIndex = ( uint32_t ) ( pIndex - testBuffer );
+
+    status = MQTT_SkipNextProperty( &propBuilder, &currentIndex );
+
+    TEST_ASSERT_EQUAL( MQTTSuccess, status );
+    TEST_ASSERT_EQUAL( 1 + 2 + MQTT_TEST_UTF8_STRING_LENGTH, currentIndex );
+}
+
+/**
+ * @brief Test skipping ASSIGNED_CLIENT_ID property (UTF-8 string).
+ */
+void test_MQTT_SkipNextProperty_AssignedClientId( void )
+{
+    uint8_t testBuffer[ MQTT_TEST_BUFFER_LENGTH ];
+    MQTTPropBuilder_t propBuilder = { 0 };
+    MQTTStatus_t status;
+    uint32_t currentIndex = 0;
+    uint8_t * pIndex = testBuffer;
+
+    propBuilder.pBuffer = testBuffer;
+    propBuilder.bufferLength = MQTT_TEST_BUFFER_LENGTH;
+
+    *pIndex++ = MQTT_ASSIGNED_CLIENT_ID;
+    pIndex += encodeStringUT( pIndex, MQTT_TEST_UTF8_STRING, MQTT_TEST_UTF8_STRING_LENGTH );
+
+    propBuilder.currentIndex = ( uint32_t ) ( pIndex - testBuffer );
+
+    status = MQTT_SkipNextProperty( &propBuilder, &currentIndex );
+
+    TEST_ASSERT_EQUAL( MQTTSuccess, status );
+    TEST_ASSERT_EQUAL( 1 + 2 + MQTT_TEST_UTF8_STRING_LENGTH, currentIndex );
+}
+
+/**
+ * @brief Test skipping REASON_STRING property (UTF-8 string).
+ */
+void test_MQTT_SkipNextProperty_ReasonString( void )
+{
+    uint8_t testBuffer[ MQTT_TEST_BUFFER_LENGTH ];
+    MQTTPropBuilder_t propBuilder = { 0 };
+    MQTTStatus_t status;
+    uint32_t currentIndex = 0;
+    uint8_t * pIndex = testBuffer;
+
+    propBuilder.pBuffer = testBuffer;
+    propBuilder.bufferLength = MQTT_TEST_BUFFER_LENGTH;
+
+    *pIndex++ = MQTT_REASON_STRING_ID;
+    pIndex += encodeStringUT( pIndex, MQTT_TEST_UTF8_STRING, MQTT_TEST_UTF8_STRING_LENGTH );
+
+    propBuilder.currentIndex = ( uint32_t ) ( pIndex - testBuffer );
+
+    status = MQTT_SkipNextProperty( &propBuilder, &currentIndex );
+
+    TEST_ASSERT_EQUAL( MQTTSuccess, status );
+    TEST_ASSERT_EQUAL( 1 + 2 + MQTT_TEST_UTF8_STRING_LENGTH, currentIndex );
+}
+
+/**
+ * @brief Test skipping RESPONSE_INFO property (UTF-8 string).
+ */
+void test_MQTT_SkipNextProperty_ResponseInfo( void )
+{
+    uint8_t testBuffer[ MQTT_TEST_BUFFER_LENGTH ];
+    MQTTPropBuilder_t propBuilder = { 0 };
+    MQTTStatus_t status;
+    uint32_t currentIndex = 0;
+    uint8_t * pIndex = testBuffer;
+
+    propBuilder.pBuffer = testBuffer;
+    propBuilder.bufferLength = MQTT_TEST_BUFFER_LENGTH;
+
+    *pIndex++ = MQTT_RESPONSE_INFO_ID;
+    pIndex += encodeStringUT( pIndex, MQTT_TEST_UTF8_STRING, MQTT_TEST_UTF8_STRING_LENGTH );
+
+    propBuilder.currentIndex = ( uint32_t ) ( pIndex - testBuffer );
+
+    status = MQTT_SkipNextProperty( &propBuilder, &currentIndex );
+
+    TEST_ASSERT_EQUAL( MQTTSuccess, status );
+    TEST_ASSERT_EQUAL( 1 + 2 + MQTT_TEST_UTF8_STRING_LENGTH, currentIndex );
+}
+
+/**
+ * @brief Test skipping SERVER_REF property (UTF-8 string).
+ */
+void test_MQTT_SkipNextProperty_ServerRef( void )
+{
+    uint8_t testBuffer[ MQTT_TEST_BUFFER_LENGTH ];
+    MQTTPropBuilder_t propBuilder = { 0 };
+    MQTTStatus_t status;
+    uint32_t currentIndex = 0;
+    uint8_t * pIndex = testBuffer;
+
+    propBuilder.pBuffer = testBuffer;
+    propBuilder.bufferLength = MQTT_TEST_BUFFER_LENGTH;
+
+    *pIndex++ = MQTT_SERVER_REF_ID;
+    pIndex += encodeStringUT( pIndex, MQTT_TEST_UTF8_STRING, MQTT_TEST_UTF8_STRING_LENGTH );
+
+    propBuilder.currentIndex = ( uint32_t ) ( pIndex - testBuffer );
+
+    status = MQTT_SkipNextProperty( &propBuilder, &currentIndex );
+
+    TEST_ASSERT_EQUAL( MQTTSuccess, status );
+    TEST_ASSERT_EQUAL( 1 + 2 + MQTT_TEST_UTF8_STRING_LENGTH, currentIndex );
+}
+
+/**
+ * @brief Test skipping AUTH_DATA property (UTF-8 string).
+ */
+void test_MQTT_SkipNextProperty_AuthData( void )
+{
+    uint8_t testBuffer[ MQTT_TEST_BUFFER_LENGTH ];
+    MQTTPropBuilder_t propBuilder = { 0 };
+    MQTTStatus_t status;
+    uint32_t currentIndex = 0;
+    uint8_t * pIndex = testBuffer;
+
+    propBuilder.pBuffer = testBuffer;
+    propBuilder.bufferLength = MQTT_TEST_BUFFER_LENGTH;
+
+    *pIndex++ = MQTT_AUTH_DATA_ID;
+    pIndex += encodeStringUT( pIndex, MQTT_TEST_UTF8_STRING, MQTT_TEST_UTF8_STRING_LENGTH );
+
+    propBuilder.currentIndex = ( uint32_t ) ( pIndex - testBuffer );
+
+    status = MQTT_SkipNextProperty( &propBuilder, &currentIndex );
+
+    TEST_ASSERT_EQUAL( MQTTSuccess, status );
+    TEST_ASSERT_EQUAL( 1 + 2 + MQTT_TEST_UTF8_STRING_LENGTH, currentIndex );
+}
+
+/**
+ * @brief Test skipping CORRELATION_DATA property (UTF-8 string).
+ */
+void test_MQTT_SkipNextProperty_CorrelationData( void )
+{
+    uint8_t testBuffer[ MQTT_TEST_BUFFER_LENGTH ];
+    MQTTPropBuilder_t propBuilder = { 0 };
+    MQTTStatus_t status;
+    uint32_t currentIndex = 0;
+    uint8_t * pIndex = testBuffer;
+
+    propBuilder.pBuffer = testBuffer;
+    propBuilder.bufferLength = MQTT_TEST_BUFFER_LENGTH;
+
+    *pIndex++ = MQTT_CORRELATION_DATA_ID;
+    pIndex += encodeStringUT( pIndex, MQTT_TEST_UTF8_STRING, MQTT_TEST_UTF8_STRING_LENGTH );
+
+    propBuilder.currentIndex = ( uint32_t ) ( pIndex - testBuffer );
+
+    status = MQTT_SkipNextProperty( &propBuilder, &currentIndex );
+
+    TEST_ASSERT_EQUAL( MQTTSuccess, status );
+    TEST_ASSERT_EQUAL( 1 + 2 + MQTT_TEST_UTF8_STRING_LENGTH, currentIndex );
+}
+
+/**
+ * @brief Test skipping UTF-8 string property with insufficient buffer for length.
+ */
+void test_MQTT_SkipNextProperty_Utf8_InsufficientBufferForLength( void )
+{
+    uint8_t testBuffer[ MQTT_TEST_BUFFER_LENGTH ];
+    MQTTPropBuilder_t propBuilder = { 0 };
+    MQTTStatus_t status;
+    uint32_t currentIndex = 0;
+
+    propBuilder.pBuffer = testBuffer;
+    propBuilder.bufferLength = MQTT_TEST_BUFFER_LENGTH;
+
+    testBuffer[ 0 ] = MQTT_AUTH_METHOD_ID;
+    /* Only 1 byte available for length (need 2) */
+    propBuilder.currentIndex = 2;
+
+    status = MQTT_SkipNextProperty( &propBuilder, &currentIndex );
+
+    TEST_ASSERT_EQUAL( MQTTBadResponse, status );
+}
+
+/**
+ * @brief Test skipping UTF-8 string property with insufficient buffer for data.
+ */
+void test_MQTT_SkipNextProperty_Utf8_InsufficientBufferForData( void )
+{
+    uint8_t testBuffer[ MQTT_TEST_BUFFER_LENGTH ];
+    MQTTPropBuilder_t propBuilder = { 0 };
+    MQTTStatus_t status;
+    uint32_t currentIndex = 0;
+    uint8_t * pIndex = testBuffer;
+
+    propBuilder.pBuffer = testBuffer;
+    propBuilder.bufferLength = MQTT_TEST_BUFFER_LENGTH;
+
+    *pIndex++ = MQTT_AUTH_METHOD_ID;
+    *pIndex++ = 0x00;
+    *pIndex++ = 0x10; /* Length = 16 */
+
+    /* Only 5 bytes available for data (need 16) */
+    propBuilder.currentIndex = 8;
+
+    status = MQTT_SkipNextProperty( &propBuilder, &currentIndex );
+
+    TEST_ASSERT_EQUAL( MQTTBadResponse, status );
+}
+
+/* ========================================================================== */
+/* User Property Tests */
+/* ========================================================================== */
+
+/**
+ * @brief Test skipping USER_PROPERTY (two UTF-8 strings).
+ */
+void test_MQTT_SkipNextProperty_UserProperty( void )
+{
+    uint8_t testBuffer[ MQTT_TEST_BUFFER_LENGTH ];
+    MQTTPropBuilder_t propBuilder = { 0 };
+    MQTTStatus_t status;
+    uint32_t currentIndex = 0;
+    uint8_t * pIndex = testBuffer;
+
+    propBuilder.pBuffer = testBuffer;
+    propBuilder.bufferLength = MQTT_TEST_BUFFER_LENGTH;
+
+    *pIndex++ = MQTT_USER_PROPERTY_ID;
+    pIndex += encodeStringUT( pIndex, MQTT_TEST_UTF8_STRING, MQTT_TEST_UTF8_STRING_LENGTH );
+    pIndex += encodeStringUT( pIndex, MQTT_TEST_UTF8_STRING, MQTT_TEST_UTF8_STRING_LENGTH );
+
+    propBuilder.currentIndex = ( uint32_t ) ( pIndex - testBuffer );
+
+    status = MQTT_SkipNextProperty( &propBuilder, &currentIndex );
+
+    TEST_ASSERT_EQUAL( MQTTSuccess, status );
+    TEST_ASSERT_EQUAL( 1 + 2 * ( 2 + MQTT_TEST_UTF8_STRING_LENGTH ), currentIndex );
+}
+
+/**
+ * @brief Test skipping USER_PROPERTY with insufficient buffer for key.
+ */
+void test_MQTT_SkipNextProperty_UserProperty_InsufficientBufferForKey( void )
+{
+    uint8_t testBuffer[ MQTT_TEST_BUFFER_LENGTH ];
+    MQTTPropBuilder_t propBuilder = { 0 };
+    MQTTStatus_t status;
+    uint32_t currentIndex = 0;
+
+    propBuilder.pBuffer = testBuffer;
+    propBuilder.bufferLength = MQTT_TEST_BUFFER_LENGTH;
+
+    testBuffer[ 0 ] = MQTT_USER_PROPERTY_ID;
+    testBuffer[ 1 ] = 0x00;
+    testBuffer[ 2 ] = 0x10; /* Key length = 16 */
+
+    /* Only 5 bytes available (need 16 for key + 2 for value length) */
+    propBuilder.currentIndex = 8;
+
+    status = MQTT_SkipNextProperty( &propBuilder, &currentIndex );
+
+    TEST_ASSERT_EQUAL( MQTTBadResponse, status );
+}
+
+/**
+ * @brief Test skipping USER_PROPERTY with insufficient buffer for value.
+ */
+void test_MQTT_SkipNextProperty_UserProperty_InsufficientBufferForValue( void )
+{
+    uint8_t testBuffer[ MQTT_TEST_BUFFER_LENGTH ];
+    MQTTPropBuilder_t propBuilder = { 0 };
+    MQTTStatus_t status;
+    uint32_t currentIndex = 0;
+    uint8_t * pIndex = testBuffer;
+
+    propBuilder.pBuffer = testBuffer;
+    propBuilder.bufferLength = MQTT_TEST_BUFFER_LENGTH;
+
+    *pIndex++ = MQTT_USER_PROPERTY_ID;
+    pIndex += encodeStringUT( pIndex, MQTT_TEST_UTF8_STRING, MQTT_TEST_UTF8_STRING_LENGTH );
+    *pIndex++ = 0x00;
+    *pIndex++ = 0x10; /* Value length = 16 */
+
+    /* Not enough bytes for value data */
+    propBuilder.currentIndex = ( uint32_t ) ( pIndex - testBuffer ) + 5;
+
+    status = MQTT_SkipNextProperty( &propBuilder, &currentIndex );
+
+    TEST_ASSERT_EQUAL( MQTTBadResponse, status );
+}
+
+/* ========================================================================== */
+/* Variable Byte Integer Property Tests */
+/* ========================================================================== */
+
+/**
+ * @brief Test skipping SUBSCRIPTION_ID property (variable byte integer, 1 byte).
+ */
+void test_MQTT_SkipNextProperty_SubscriptionId_OneByte( void )
+{
+    uint8_t testBuffer[ MQTT_TEST_BUFFER_LENGTH ];
+    MQTTPropBuilder_t propBuilder = { 0 };
+    MQTTStatus_t status;
+    uint32_t currentIndex = 0;
+    uint8_t * pIndex = testBuffer;
+
+    propBuilder.pBuffer = testBuffer;
+    propBuilder.bufferLength = MQTT_TEST_BUFFER_LENGTH;
+
+    *pIndex++ = MQTT_SUBSCRIPTION_ID_ID;
+    *pIndex++ = 0x7F; /* 127 - single byte encoding */
+
+    propBuilder.currentIndex = ( uint32_t ) ( pIndex - testBuffer );
+
+    status = MQTT_SkipNextProperty( &propBuilder, &currentIndex );
+
+    TEST_ASSERT_EQUAL( MQTTSuccess, status );
+    TEST_ASSERT_EQUAL( 2, currentIndex );
+}
+
+/**
+ * @brief Test skipping SUBSCRIPTION_ID property (variable byte integer, 2 bytes).
+ */
+void test_MQTT_SkipNextProperty_SubscriptionId_TwoBytes( void )
+{
+    uint8_t testBuffer[ MQTT_TEST_BUFFER_LENGTH ];
+    MQTTPropBuilder_t propBuilder = { 0 };
+    MQTTStatus_t status;
+    uint32_t currentIndex = 0;
+    uint8_t * pIndex = testBuffer;
+
+    propBuilder.pBuffer = testBuffer;
+    propBuilder.bufferLength = MQTT_TEST_BUFFER_LENGTH;
+
+    *pIndex++ = MQTT_SUBSCRIPTION_ID_ID;
+    *pIndex++ = 0x80; /* Continuation bit set */
+    *pIndex++ = 0x01; /* 128 - two byte encoding */
+
+    propBuilder.currentIndex = ( uint32_t ) ( pIndex - testBuffer );
+
+    status = MQTT_SkipNextProperty( &propBuilder, &currentIndex );
+
+    TEST_ASSERT_EQUAL( MQTTSuccess, status );
+    TEST_ASSERT_EQUAL( 3, currentIndex );
+}
+
+/**
+ * @brief Test skipping SUBSCRIPTION_ID property (variable byte integer, 4 bytes).
+ */
+void test_MQTT_SkipNextProperty_SubscriptionId_FourBytes( void )
+{
+    uint8_t testBuffer[ MQTT_TEST_BUFFER_LENGTH ];
+    MQTTPropBuilder_t propBuilder = { 0 };
+    MQTTStatus_t status;
+    uint32_t currentIndex = 0;
+    uint8_t * pIndex = testBuffer;
+
+    propBuilder.pBuffer = testBuffer;
+    propBuilder.bufferLength = MQTT_TEST_BUFFER_LENGTH;
+
+    *pIndex++ = MQTT_SUBSCRIPTION_ID_ID;
+    pIndex += encodeVariableLengthUT( pIndex, 268435455 ); /* Max value, 4 bytes */
+
+    propBuilder.currentIndex = ( uint32_t ) ( pIndex - testBuffer );
+
+    status = MQTT_SkipNextProperty( &propBuilder, &currentIndex );
+
+    TEST_ASSERT_EQUAL( MQTTSuccess, status );
+    TEST_ASSERT_EQUAL( 5, currentIndex );
+}
+
+/**
+ * @brief Test skipping SUBSCRIPTION_ID with insufficient buffer.
+ */
+void test_MQTT_SkipNextProperty_SubscriptionId_InsufficientBuffer( void )
+{
+    uint8_t testBuffer[ MQTT_TEST_BUFFER_LENGTH ];
+    MQTTPropBuilder_t propBuilder = { 0 };
+    MQTTStatus_t status;
+    uint32_t currentIndex = 0;
+
+    propBuilder.pBuffer = testBuffer;
+    propBuilder.bufferLength = MQTT_TEST_BUFFER_LENGTH;
+
+    testBuffer[ 0 ] = MQTT_SUBSCRIPTION_ID_ID;
+    testBuffer[ 1 ] = 0x80; /* Continuation bit set, but no next byte */
+
+    propBuilder.currentIndex = 2;
+
+    status = MQTT_SkipNextProperty( &propBuilder, &currentIndex );
+
+    TEST_ASSERT_EQUAL( MQTTBadResponse, status );
+}
+
+/**
+ * @brief Test skipping SUBSCRIPTION_ID with invalid encoding (5 bytes).
+ */
+void test_MQTT_SkipNextProperty_SubscriptionId_InvalidEncoding( void )
+{
+    uint8_t testBuffer[ MQTT_TEST_BUFFER_LENGTH ];
+    MQTTPropBuilder_t propBuilder = { 0 };
+    MQTTStatus_t status;
+    uint32_t currentIndex = 0;
+    uint8_t * pIndex = testBuffer;
+
+    propBuilder.pBuffer = testBuffer;
+    propBuilder.bufferLength = MQTT_TEST_BUFFER_LENGTH;
+
+    *pIndex++ = MQTT_SUBSCRIPTION_ID_ID;
+    *pIndex++ = 0xFF; /* All continuation bits set */
+    *pIndex++ = 0xFF;
+    *pIndex++ = 0xFF;
+    *pIndex++ = 0xFF;
+    *pIndex++ = 0x7F; /* 5 bytes - invalid */
+
+    propBuilder.currentIndex = ( uint32_t ) ( pIndex - testBuffer );
+
+    status = MQTT_SkipNextProperty( &propBuilder, &currentIndex );
+
+    TEST_ASSERT_EQUAL( MQTTBadResponse, status );
+}
+
+/* ========================================================================== */
+/* Multiple Properties Tests */
+/* ========================================================================== */
+
+/**
+ * @brief Test skipping multiple properties in sequence.
+ */
+void test_MQTT_SkipNextProperty_MultipleProperties( void )
+{
+    uint8_t testBuffer[ MQTT_TEST_BUFFER_LENGTH ];
+    MQTTPropBuilder_t propBuilder = { 0 };
+    MQTTStatus_t status;
+    uint32_t currentIndex = 0;
+    uint8_t * pIndex = testBuffer;
+
+    propBuilder.pBuffer = testBuffer;
+    propBuilder.bufferLength = MQTT_TEST_BUFFER_LENGTH;
+
+    /* Add SESSION_EXPIRY (4 bytes) */
+    *pIndex++ = MQTT_SESSION_EXPIRY_ID;
+    *pIndex++ = UINT32_BYTE3( MQTT_TEST_UINT32 );
+    *pIndex++ = UINT32_BYTE2( MQTT_TEST_UINT32 );
+    *pIndex++ = UINT32_BYTE1( MQTT_TEST_UINT32 );
+    *pIndex++ = UINT32_BYTE0( MQTT_TEST_UINT32 );
+
+    /* Add RECEIVE_MAX (2 bytes) */
+    *pIndex++ = MQTT_RECEIVE_MAX_ID;
+    *pIndex++ = UINT16_HIGH_BYTE( MQTT_TEST_UINT16 );
+    *pIndex++ = UINT16_LOW_BYTE( MQTT_TEST_UINT16 );
+
+    /* Add MAX_QOS (1 byte) */
+    *pIndex++ = MQTT_MAX_QOS_ID;
+    *pIndex++ = MQTT_TEST_UINT8;
+
+    propBuilder.currentIndex = ( uint32_t ) ( pIndex - testBuffer );
+
+    /* Skip first property */
+    status = MQTT_SkipNextProperty( &propBuilder, &currentIndex );
+    TEST_ASSERT_EQUAL( MQTTSuccess, status );
+    TEST_ASSERT_EQUAL( 5, currentIndex );
+
+    /* Skip second property */
+    status = MQTT_SkipNextProperty( &propBuilder, &currentIndex );
+    TEST_ASSERT_EQUAL( MQTTSuccess, status );
+    TEST_ASSERT_EQUAL( 8, currentIndex );
+
+    /* Skip third property */
+    status = MQTT_SkipNextProperty( &propBuilder, &currentIndex );
+    TEST_ASSERT_EQUAL( MQTTSuccess, status );
+    TEST_ASSERT_EQUAL( 10, currentIndex );
+
+    /* Try to skip beyond end */
+    status = MQTT_SkipNextProperty( &propBuilder, &currentIndex );
+    TEST_ASSERT_EQUAL( MQTTEndOfProperties, status );
+}
+
+/**
+ * @brief Test skipping property at exact buffer boundary.
+ */
+void test_MQTT_SkipNextProperty_AtBufferBoundary( void )
+{
+    uint8_t testBuffer[ MQTT_TEST_BUFFER_LENGTH ];
+    MQTTPropBuilder_t propBuilder = { 0 };
+    MQTTStatus_t status;
+    uint32_t currentIndex = 0;
+    uint8_t * pIndex = testBuffer;
+
+    propBuilder.pBuffer = testBuffer;
+    propBuilder.bufferLength = MQTT_TEST_BUFFER_LENGTH;
+
+    *pIndex++ = MQTT_MAX_QOS_ID;
+    *pIndex++ = MQTT_TEST_UINT8;
+
+    propBuilder.currentIndex = ( uint32_t ) ( pIndex - testBuffer );
+
+    status = MQTT_SkipNextProperty( &propBuilder, &currentIndex );
+
+    TEST_ASSERT_EQUAL( MQTTSuccess, status );
+    TEST_ASSERT_EQUAL( propBuilder.currentIndex, currentIndex );
+}
+
+/* ========================================================================== */
+/* Edge Case Tests */
+/* ========================================================================== */
+
+/**
+ * @brief Test skipping property with zero-length UTF-8 string.
+ */
+void test_MQTT_SkipNextProperty_ZeroLengthString( void )
+{
+    uint8_t testBuffer[ MQTT_TEST_BUFFER_LENGTH ];
+    MQTTPropBuilder_t propBuilder = { 0 };
+    MQTTStatus_t status;
+    uint32_t currentIndex = 0;
+    uint8_t * pIndex = testBuffer;
+
+    propBuilder.pBuffer = testBuffer;
+    propBuilder.bufferLength = MQTT_TEST_BUFFER_LENGTH;
+
+    *pIndex++ = MQTT_AUTH_METHOD_ID;
+    *pIndex++ = 0x00;
+    *pIndex++ = 0x00; /* Length = 0 */
+
+    propBuilder.currentIndex = ( uint32_t ) ( pIndex - testBuffer );
+
+    status = MQTT_SkipNextProperty( &propBuilder, &currentIndex );
+
+    TEST_ASSERT_EQUAL( MQTTSuccess, status );
+    TEST_ASSERT_EQUAL( 3, currentIndex );
+}
+
+/**
+ * @brief Test skipping USER_PROPERTY with zero-length key and value.
+ */
+void test_MQTT_SkipNextProperty_UserProperty_ZeroLength( void )
+{
+    uint8_t testBuffer[ MQTT_TEST_BUFFER_LENGTH ];
+    MQTTPropBuilder_t propBuilder = { 0 };
+    MQTTStatus_t status;
+    uint32_t currentIndex = 0;
+    uint8_t * pIndex = testBuffer;
+
+    propBuilder.pBuffer = testBuffer;
+    propBuilder.bufferLength = MQTT_TEST_BUFFER_LENGTH;
+
+    *pIndex++ = MQTT_USER_PROPERTY_ID;
+    *pIndex++ = 0x00;
+    *pIndex++ = 0x00; /* Key length = 0 */
+    *pIndex++ = 0x00;
+    *pIndex++ = 0x00; /* Value length = 0 */
+
+    propBuilder.currentIndex = ( uint32_t ) ( pIndex - testBuffer );
+
+    status = MQTT_SkipNextProperty( &propBuilder, &currentIndex );
+
+    TEST_ASSERT_EQUAL( MQTTSuccess, status );
+    TEST_ASSERT_EQUAL( 5, currentIndex );
+}
+
+/**
+ * @brief Test skipping SUBSCRIPTION_ID with value 0 (invalid but should skip).
+ */
+void test_MQTT_SkipNextProperty_SubscriptionId_Zero( void )
+{
+    uint8_t testBuffer[ MQTT_TEST_BUFFER_LENGTH ];
+    MQTTPropBuilder_t propBuilder = { 0 };
+    MQTTStatus_t status;
+    uint32_t currentIndex = 0;
+    uint8_t * pIndex = testBuffer;
+
+    propBuilder.pBuffer = testBuffer;
+    propBuilder.bufferLength = MQTT_TEST_BUFFER_LENGTH;
+
+    *pIndex++ = MQTT_SUBSCRIPTION_ID_ID;
+    *pIndex++ = 0x00; /* Value = 0 */
+
+    propBuilder.currentIndex = ( uint32_t ) ( pIndex - testBuffer );
+
+    status = MQTT_SkipNextProperty( &propBuilder, &currentIndex );
+
+    /* Should succeed in skipping even if value is semantically invalid */
+    TEST_ASSERT_EQUAL( MQTTSuccess, status );
+    TEST_ASSERT_EQUAL( 2, currentIndex );
+}
+
+/**
+ * @brief Test skipping property with maximum UTF-8 string length.
+ */
+void test_MQTT_SkipNextProperty_MaxUtf8Length( void )
+{
+    uint8_t testBuffer[ MQTT_TEST_BUFFER_LENGTH ];
+    MQTTPropBuilder_t propBuilder = { 0 };
+    MQTTStatus_t status;
+    uint32_t currentIndex = 0;
+    uint8_t * pIndex = testBuffer;
+
+    propBuilder.pBuffer = testBuffer;
+    propBuilder.bufferLength = MQTT_TEST_BUFFER_LENGTH;
+
+    *pIndex++ = MQTT_AUTH_METHOD_ID;
+    *pIndex++ = 0xFF;
+    *pIndex++ = 0xFF; /* Length = 65535 (max) */
+
+    /* Set buffer to accommodate this */
+    propBuilder.currentIndex = 3;
+    propBuilder.bufferLength = 3;
+
+    status = MQTT_SkipNextProperty( &propBuilder, &currentIndex );
+
+    /* Should fail due to insufficient buffer */
+    TEST_ASSERT_EQUAL( MQTTBadResponse, status );
+}
+
+/**
+ * @brief Test skipping all property types in one buffer.
+ */
+void test_MQTT_SkipNextProperty_AllPropertyTypes( void )
+{
+    uint8_t testBuffer[ MQTT_TEST_BUFFER_LENGTH ];
+    MQTTPropBuilder_t propBuilder = { 0 };
+    MQTTStatus_t status;
+    uint32_t currentIndex = 0;
+    uint8_t * pIndex = testBuffer;
+    uint32_t expectedIndex;
+
+    propBuilder.pBuffer = testBuffer;
+    propBuilder.bufferLength = MQTT_TEST_BUFFER_LENGTH;
+
+    /* Add one of each type */
+
+    /* 4-byte integer */
+    *pIndex++ = MQTT_SESSION_EXPIRY_ID;
+    *pIndex++ = UINT32_BYTE3( MQTT_TEST_UINT32 );
+    *pIndex++ = UINT32_BYTE2( MQTT_TEST_UINT32 );
+    *pIndex++ = UINT32_BYTE1( MQTT_TEST_UINT32 );
+    *pIndex++ = UINT32_BYTE0( MQTT_TEST_UINT32 );
+    expectedIndex = 5;
+
+    /* 2-byte integer */
+    *pIndex++ = MQTT_RECEIVE_MAX_ID;
+    *pIndex++ = UINT16_HIGH_BYTE( MQTT_TEST_UINT16 );
+    *pIndex++ = UINT16_LOW_BYTE( MQTT_TEST_UINT16 );
+
+    /* 1-byte integer */
+    *pIndex++ = MQTT_MAX_QOS_ID;
+    *pIndex++ = MQTT_TEST_UINT8;
+
+    /* UTF-8 string */
+    *pIndex++ = MQTT_AUTH_METHOD_ID;
+    pIndex += encodeStringUT( pIndex, MQTT_TEST_UTF8_STRING, MQTT_TEST_UTF8_STRING_LENGTH );
+
+    /* User property */
+    *pIndex++ = MQTT_USER_PROPERTY_ID;
+    pIndex += encodeStringUT( pIndex, MQTT_TEST_UTF8_STRING, MQTT_TEST_UTF8_STRING_LENGTH );
+    pIndex += encodeStringUT( pIndex, MQTT_TEST_UTF8_STRING, MQTT_TEST_UTF8_STRING_LENGTH );
+
+    /* Variable byte integer */
+    *pIndex++ = MQTT_SUBSCRIPTION_ID_ID;
+    *pIndex++ = 0x7F;
+
+    propBuilder.currentIndex = ( uint32_t ) ( pIndex - testBuffer );
+
+    /* Skip first property and verify */
+    status = MQTT_SkipNextProperty( &propBuilder, &currentIndex );
+    TEST_ASSERT_EQUAL( MQTTSuccess, status );
+    TEST_ASSERT_EQUAL( expectedIndex, currentIndex );
+}
