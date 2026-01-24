@@ -5410,18 +5410,22 @@ MQTTStatus_t MQTT_DeserializeDisconnect( const MQTTPacketInfo_t * pPacket,
     /* Validate the arguments. */
     if( ( pPacket == NULL ) || ( pPacket->pRemainingData == NULL ) )
     {
+        LogError( ( "pPacket and pPacket->pRemainingData must not be NULL." ) );
         status = MQTTBadParameter;
     }
     else if( pDisconnectInfo == NULL )
     {
+        LogError( ( "pDisconnectInfo must not be NULL." ) );
         status = MQTTBadParameter;
     }
     else if( maxPacketSize == 0U )
     {
+        LogError( ( "maxPacketSize must not be 0." ) );
         status = MQTTBadParameter;
     }
     else if( pPacket->remainingLength >= MQTT_REMAINING_LENGTH_INVALID )
     {
+        LogError( ( "pPacket->remainingLength must be less than 268435456." ) );
         status = MQTTBadResponse;
     }
 
