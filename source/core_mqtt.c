@@ -1808,7 +1808,6 @@ static MQTTStatus_t sendPublishAcksWithProperty( MQTTContext_t * pContext,
         if( ( pContext->ackPropsBuffer.pBuffer != NULL ) && ( ackPropertyLength != 0U ) )
         {
             /* Encode the property length. */
-            pIndex = propertyLength;
             pIndex = encodeVariableLength( propertyLength, ackPropertyLength );
             iterator->iov_base = propertyLength;
             /* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-182 */
@@ -2702,7 +2701,6 @@ static MQTTStatus_t sendSubscribeWithoutCopy( MQTTContext_t * pContext,
         subscribePropLen = pPropertyBuilder->currentIndex;
     }
 
-    pIndex = propertyLength;
     pIndex = encodeVariableLength( propertyLength, subscribePropLen );
     pIterator->iov_base = propertyLength;
     /* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-182 */
@@ -3193,7 +3191,6 @@ static MQTTStatus_t sendConnectWithoutCopy( MQTTContext_t * pContext,
                 willPropsLen = pWillPropertyBuilder->currentIndex;
             }
 
-            pIndex = willPropertyLength;
             pIndex = encodeVariableLength( willPropertyLength, willPropsLen );
             iterator->iov_base = willPropertyLength;
             /* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-182 */
@@ -4902,7 +4899,7 @@ MQTTStatus_t MQTT_MatchTopic( const char * pTopicName,
             topicFilterStartsWithWildcard = ( pTopicFilter[ 0 ] == '+' ) ||
                                             ( pTopicFilter[ 0 ] == '#' );
 
-            /* Note: According to the MQTT 3.1.1 specification, incoming PUBLISH topic names
+            /* Note: According to the MQTT 5.0 specification, incoming PUBLISH topic names
              * starting with "$" character cannot be matched against topic filter starting with
              * a wildcard, i.e. for example, "$SYS/sport" cannot be matched with "#" or
              * "+/sport" topic filters. */
