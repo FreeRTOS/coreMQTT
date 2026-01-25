@@ -40,11 +40,6 @@
 #include "core_mqtt_config_defaults.h"
 
 /**
- * @brief MQTT protocol version 3.1.1.
- */
-#define MQTT_VERSION_3_1_1                          ( ( uint8_t ) 4U )
-
-/**
  * @brief Size of the fixed and variable header of a CONNECT packet.
  */
 #define MQTT_PACKET_CONNECT_HEADER_SIZE             ( 10UL )
@@ -59,35 +54,7 @@
 #define MQTT_PUBLISH_FLAG_DUP                       ( 3 ) /**< @brief MQTT PUBLISH duplicate flag. */
 
 /**
- * @brief The size of MQTT DISCONNECT packets, per MQTT spec.
- */
-#define MQTT_DISCONNECT_PACKET_SIZE                 ( 2UL )
-
-/**
- * @brief A PINGREQ packet is always 2 bytes in size, defined by MQTT 3.1.1 spec.
- */
-#define MQTT_PACKET_PINGREQ_SIZE                    ( 2UL )
-
-/**
- * @brief The Remaining Length field of MQTT disconnect packets, per MQTT spec.
- */
-#define MQTT_DISCONNECT_REMAINING_LENGTH            ( ( uint8_t ) 0 )
-
-/*
- * Constants relating to CONNACK packets, defined by MQTT 3.1.1 spec.
- */
-#define MQTT_PACKET_CONNACK_REMAINING_LENGTH        ( ( uint8_t ) 2U )    /**< @brief A CONNACK packet always has a "Remaining length" of 2. */
-#define MQTT_PACKET_CONNACK_SESSION_PRESENT_MASK    ( ( uint8_t ) 0x01U ) /**< @brief The "Session Present" bit is always the lowest bit. */
-
-/*
- * UNSUBACK, PUBACK, PUBREC, PUBREL, and PUBCOMP always have a remaining length
- * of 2.
- */
-#define MQTT_PACKET_SIMPLE_ACK_REMAINING_LENGTH     ( ( uint8_t ) 2 ) /**< @brief PUBACK, PUBREC, PUBREl, PUBCOMP, UNSUBACK Remaining length. */
-#define MQTT_PACKET_PINGRESP_REMAINING_LENGTH       ( 0U )            /**< @brief A PINGRESP packet always has a "Remaining length" of 0. */
-
-/**
- * @brief Per the MQTT 3.1.1 spec, the largest "Remaining Length" of an MQTT
+ * @brief Per the MQTT spec, the largest "Remaining Length" of an MQTT
  * packet is this value, 256 MB.
  */
 #define MQTT_MAX_REMAINING_LENGTH                   ( 268435455UL )
@@ -99,13 +66,6 @@
  *    Maximum bytes used to encode the remaining length       4
  */
 #define MQTT_MAX_PACKET_SIZE                        ( MQTT_MAX_REMAINING_LENGTH + 5U )
-
-/**
- * @brief The minimum remaining length for a QoS 0 PUBLISH.
- *
- * Includes two bytes for topic name length and one byte for topic name.
- */
-#define MQTT_MIN_PUBLISH_REMAINING_LENGTH_QOS0      ( 3U )
 
 /**
  * @brief A PINGREQ packet is always 2 bytes in size, defined by MQTT 5.0 spec.
@@ -696,7 +656,7 @@ static size_t remainingLengthEncodedSize( size_t length )
     size_t encodedSize;
 
     /* Determine how many bytes are needed to encode length.
-     * The values below are taken from the MQTT 3.1.1 spec. */
+     * The values below are taken from the MQTT 5.0 spec. */
 
     /* 1 byte is needed to encode lengths between 0 and 127. */
     if( length < 128U )

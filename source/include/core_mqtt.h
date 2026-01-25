@@ -24,7 +24,7 @@
 
 /**
  * @file core_mqtt.h
- * @brief User-facing functions of the MQTT 3.1.1 library.
+ * @brief User-facing functions of the MQTT 5.0 library.
  */
 #ifndef CORE_MQTT_H
 #define CORE_MQTT_H
@@ -55,7 +55,7 @@
  * @ingroup mqtt_constants
  * @brief Invalid packet identifier.
  *
- * Zero is an invalid packet identifier as per MQTT v3.1.1 spec.
+ * Zero is an invalid packet identifier as per MQTT 5.0 spec.
  */
 #define MQTT_PACKET_ID_INVALID    ( ( uint16_t ) 0U )
 
@@ -1290,7 +1290,7 @@ MQTTStatus_t MQTT_ReceiveLoop( MQTTContext_t * pContext );
 /* @[declare_mqtt_receiveloop] */
 
 /**
- * @brief Get a packet ID that is valid according to the MQTT 3.1.1 spec.
+ * @brief Get a packet ID that is valid according to the MQTT 5.0 spec.
  *
  * @param[in] pContext Initialized MQTT context.
  *
@@ -1302,7 +1302,7 @@ uint16_t MQTT_GetPacketId( MQTTContext_t * pContext );
 
 /**
  * @brief A utility function that determines whether the passed topic filter and
- * topic name match according to the MQTT 3.1.1 protocol specification.
+ * topic name match according to the MQTT 5.0 protocol specification.
  *
  * @param[in] pTopicName The topic name to check.
  * @param[in] topicNameLength Length of the topic name.
@@ -1314,7 +1314,7 @@ uint16_t MQTT_GetPacketId( MQTTContext_t * pContext );
  * value is set to true; otherwise if there is no match then it is set to false.
  *
  * @note The API assumes that the passed topic name is valid to meet the
- * requirements of the MQTT 3.1.1 specification. Invalid topic names (for example,
+ * requirements of the MQTT 5.0 specification. Invalid topic names (for example,
  * containing wildcard characters) should not be passed to the function.
  * Also, the API checks validity of topic filter for wildcard characters ONLY if
  * the passed topic name and topic filter do not have an exact string match.
