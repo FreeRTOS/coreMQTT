@@ -35,12 +35,12 @@ MQTTStatus_t __CPROVER_file_local_core_mqtt_serializer_c_deserializePublishPrope
                                                                                        MQTTPropBuilder_t * propBuffer,
                                                                                        uint8_t * pIndex,
                                                                                        uint16_t topicAliasMax,
-                                                                                       size_t remainingLength )
+                                                                                       uint32_t remainingLength )
 {
     MQTTStatus_t status;
     size_t propertyLength = 0U;
     uint8_t * pLocalIndex = pIndex;
-    size_t remainingLengthForProperties;
+    uint32_t remainingLengthForProperties;
 
     remainingLengthForProperties = remainingLength;
     remainingLengthForProperties -= pPublishInfo->topicNameLength + sizeof( uint16_t );

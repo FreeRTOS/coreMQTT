@@ -51,7 +51,7 @@ void harness()
 {
     MQTTPropBuilder_t * propBuffer;
     uint8_t * packetBytes;
-    size_t remainingLength;
+    uint32_t remainingLength;
     size_t propertyLength;
 
     propBuffer = allocateMqttPropBuilder( NULL );

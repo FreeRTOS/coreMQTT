@@ -54,7 +54,7 @@ MQTTStatus_t MQTT_DeserializePublish( const MQTTPacketInfo_t * pIncomingPacket,
 
 MQTTStatus_t MQTT_SerializeDisconnect( const MQTTPropBuilder_t * pDisconnectProperties,
                                        MQTTSuccessFailReasonCode_t * pReasonCode,
-                                       size_t remainingLength,
+                                       uint32_t remainingLength,
                                        const MQTTFixedBuffer_t * pFixedBuffer )
 {
     MQTTStatus_t result;
@@ -73,8 +73,8 @@ MQTTStatus_t MQTT_DeserializeDisconnect( const MQTTPacketInfo_t * pPacket,
 }
 
 MQTTStatus_t MQTT_GetDisconnectPacketSize( const MQTTPropBuilder_t * pDisconnectProperties,
-                                           size_t * pRemainingLength,
-                                           size_t * pPacketSize,
+                                           uint32_t * pRemainingLength,
+                                           uint32_t * pPacketSize,
                                            uint32_t maxPacketSize,
                                            MQTTSuccessFailReasonCode_t * pReasonCode )
 {

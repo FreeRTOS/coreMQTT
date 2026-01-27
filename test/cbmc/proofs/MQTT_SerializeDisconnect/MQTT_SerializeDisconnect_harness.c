@@ -35,8 +35,8 @@ void harness()
     MQTTPropBuilder_t * pDisconnectProperties;
     MQTTSuccessFailReasonCode_t * reasonCode = NULL;
     MQTTStatus_t status;
-    size_t remainingLength;
-    size_t packetSize;
+    uint32_t remainingLength;
+    uint32_t packetSize;
     uint32_t maxPacketSize;
 
     pDisconnectProperties = allocateMqttPropBuilder( NULL );

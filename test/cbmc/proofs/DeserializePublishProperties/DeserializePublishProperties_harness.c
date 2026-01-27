@@ -54,12 +54,13 @@ void harness()
     size_t propertyLength;
     size_t maxPropertyLength;
     size_t minRemainingLength;
-    size_t remainingLength;
+    uint32_t remainingLength;
 
     pPublishInfo = allocateMqttPublishInfo( NULL );
     __CPROVER_assume( isValidMqttPublishInfo( pPublishInfo ) );
     __CPROVER_assume( pPublishInfo != NULL );
     __CPROVER_assume( pPublishInfo->topicNameLength != 0 );
+    __CPROVER_assume( pPublishInfo->topicNameLength <= UINT16_MAX );
 
     propBuffer = allocateMqttPropBuilder( NULL );
     __CPROVER_assume( isValidMqttPropBuilder( propBuffer ) );

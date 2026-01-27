@@ -33,8 +33,8 @@ void harness()
 {
     MQTTPublishInfo_t * pPublishInfo;
     uint16_t packetId;
-    size_t remainingLength;
-    size_t packetSize;
+    uint32_t remainingLength;
+    uint32_t packetSize;
     MQTTFixedBuffer_t * pFixedBuffer;
     size_t * pHeaderSize;
     MQTTPropBuilder_t * pPublishProperties;

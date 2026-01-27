@@ -34,7 +34,7 @@ void harness()
     MQTTPropBuilder_t * propBuffer;
     char ** pResponseInfo;
     uint16_t * responseInfoLength;
-    uint32_t currentIndex;
+    size_t currentIndex;
 
     propBuffer = allocateMqttPropBuilder( NULL );
     __CPROVER_assume( isValidMqttPropBuilder( propBuffer ) );
@@ -47,7 +47,7 @@ void harness()
     }
 
     pResponseInfo = malloc( sizeof( char * ) );
-    responseInfoLength = malloc( sizeof( uint16_t ) );
+    responseInfoLength = malloc( sizeof( size_t ) );
 
     MQTTPropGet_ResponseInfo( propBuffer, &currentIndex, pResponseInfo, responseInfoLength );
 }

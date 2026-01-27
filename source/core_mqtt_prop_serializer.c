@@ -684,11 +684,11 @@ MQTTStatus_t MQTTPropAdd_UserProp( MQTTPropBuilder_t * pPropertyBuilder,
     {
         LogError( ( "Arguments cannot be NULL: pUserProperties->userProperty->pKey=%p, "
                     "pUserProperties->userProperty->pValue=%p, "
-                    "Key Length = %u, Value Length = %u",
+                    "Key Length = %d, Value Length = %d",
                     ( void * ) userProperty->pKey,
                     ( void * ) userProperty->pValue,
-                    userProperty->keyLength,
-                    userProperty->valueLength ) );
+                    ( int ) userProperty->keyLength,
+                    ( int ) userProperty->valueLength ) );
         status = MQTTBadParameter;
     }
     else if( ( pOptionalMqttPacketType != NULL ) &&

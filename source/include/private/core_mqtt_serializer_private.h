@@ -308,6 +308,13 @@
 #define MAX_VARIABLE_LENGTH_INT_VALUE    ( ( uint32_t ) 268435455U )
 
 /**
+ * @brief A macro to check whether the size_t values will overflow when converted
+ * to uint16_t which is used to represent MQTT UTF8 strings.
+ */
+#define CHECK_SIZE_T_OVERFLOWS_16BIT( x ) \
+    ( ( sizeof( size_t ) <= sizeof( uint16_t ) ) ? false : ( x > UINT16_MAX ) )
+
+/**
  * @fn size_t variableLengthEncodedSize( uint32_t length );
  *
  * @brief Retrieve the size of the remaining length if it were to be encoded.
@@ -346,7 +353,7 @@ uint8_t * encodeString( uint8_t * pDestination,
 /** @endcond */
 
 /**
- * @fn MQTTStatus_t decodeUserProp( const char ** pPropertyKey, uint16_t * pPropertyKeyLen, const char ** pPropertyValue, uint16_t * pPropertyValueLen, uint32_t * pPropertyLength, uint8_t ** pIndex );
+ * @fn MQTTStatus_t decodeUserProp( const char ** pPropertyKey, size_t * pPropertyKeyLen, const char ** pPropertyValue, size_t * pPropertyValueLen, uint32_t * pPropertyLength, uint8_t ** pIndex );
  *
  * @brief Validate the length and decode a user property.
  *
@@ -365,9 +372,9 @@ uint8_t * encodeString( uint8_t * pDestination,
  * Doxygen should ignore this definition, this function is private.
  */
 MQTTStatus_t decodeUserProp( const char ** pPropertyKey,
-                             uint16_t * pPropertyKeyLen,
+                             size_t * pPropertyKeyLen,
                              const char ** pPropertyValue,
-                             uint16_t * pPropertyValueLen,
+                             size_t * pPropertyValueLen,
                              uint32_t * pPropertyLength,
                              uint8_t ** pIndex );
 /** @endcond */
@@ -463,7 +470,7 @@ uint8_t * encodeVariableLength( uint8_t * pDestination,
 /** @endcond */
 
 /**
- * @fn MQTTStatus_t decodeUtf8( const char ** pProperty, uint16_t * pLength, uint32_t * pPropertyLength, bool * pUsed, uint8_t ** pIndex );
+ * @fn MQTTStatus_t decodeUtf8( const char ** pProperty, size_t * pLength, uint32_t * pPropertyLength, bool * pUsed, uint8_t ** pIndex );
  *
  * @brief Validate the length and decode a utf 8 string.
  *
@@ -481,7 +488,7 @@ uint8_t * encodeVariableLength( uint8_t * pDestination,
  * Doxygen should ignore this definition, this function is private.
  */
 MQTTStatus_t decodeUtf8( const char ** pProperty,
-                         uint16_t * pLength,
+                         size_t * pLength,
                          uint32_t * pPropertyLength,
                          bool * pUsed,
                          uint8_t ** pIndex );
@@ -511,7 +518,7 @@ MQTTStatus_t decodeVariableLength( const uint8_t * pBuffer,
 /** @endcond */
 
 /**
- * @fn uint8_t * serializeAckFixed( uint8_t * pIndex, uint8_t packetType, uint16_t packetId, size_t remainingLength, MQTTSuccessFailReasonCode_t reasonCode );
+ * @fn uint8_t * serializeAckFixed( uint8_t * pIndex, uint8_t packetType, uint16_t packetId, uint32_t remainingLength, MQTTSuccessFailReasonCode_t reasonCode );
  *
  * @brief Serialize the fixed size part of the ack packet header.
  *
@@ -532,7 +539,7 @@ MQTTStatus_t decodeVariableLength( const uint8_t * pBuffer,
 uint8_t * serializeAckFixed( uint8_t * pIndex,
                              uint8_t packetType,
                              uint16_t packetId,
-                             size_t remainingLength,
+                             uint32_t remainingLength,
                              MQTTSuccessFailReasonCode_t reasonCode );
 /** @endcond */
 
@@ -559,7 +566,7 @@ MQTTStatus_t decodeSubackPropertyLength( const uint8_t * pIndex,
 /** @endcond */
 
 /**
- * @fn uint8_t * serializeDisconnectFixed( uint8_t * pIndex, MQTTSuccessFailReasonCode_t * pReasonCode, size_t remainingLength );
+ * @fn uint8_t * serializeDisconnectFixed( uint8_t * pIndex, MQTTSuccessFailReasonCode_t * pReasonCode, uint32_t remainingLength );
  *
  * @brief Serialize the fixed size part of the disconnect packet header.
  *
@@ -576,7 +583,7 @@ MQTTStatus_t decodeSubackPropertyLength( const uint8_t * pIndex,
  */
 uint8_t * serializeDisconnectFixed( uint8_t * pIndex,
                                     MQTTSuccessFailReasonCode_t * pReasonCode,
-                                    size_t remainingLength );
+                                    uint32_t remainingLength );
 /** @endcond */
 
 /**
@@ -604,7 +611,7 @@ uint8_t * serializeConnectFixedHeader( uint8_t * pIndex,
 /** @endcond */
 
 /**
- * @fn  uint8_t * serializeSubscribeHeader( size_t remainingLength, uint8_t * pIndex, uint16_t packetId );
+ * @fn  uint8_t * serializeSubscribeHeader( uint32_t remainingLength, uint8_t * pIndex, uint16_t packetId );
  * @brief Serialize the fixed part of the subscribe packet header.
  *
  * @param[in] remainingLength The remaining length of the packet to be
@@ -620,13 +627,13 @@ uint8_t * serializeConnectFixedHeader( uint8_t * pIndex,
  * @cond DOXYGEN_IGNORE
  * Doxygen should ignore this definition, this function is private.
  */
-uint8_t * serializeSubscribeHeader( size_t remainingLength,
+uint8_t * serializeSubscribeHeader( uint32_t remainingLength,
                                     uint8_t * pIndex,
                                     uint16_t packetId );
 /** @endcond */
 
 /**
- * @fn uint8_t * serializeUnsubscribeHeader( size_t remainingLength, uint8_t * pIndex, uint16_t packetId );
+ * @fn uint8_t * serializeUnsubscribeHeader( uint32_t remainingLength, uint8_t * pIndex, uint16_t packetId );
  * @brief Serialize the fixed part of the unsubscribe packet header.
  *
  * @param[in] remainingLength The remaining length of the packet to be
@@ -642,7 +649,7 @@ uint8_t * serializeSubscribeHeader( size_t remainingLength,
  * @cond DOXYGEN_IGNORE
  * Doxygen should ignore this definition, this function is private.
  */
-uint8_t * serializeUnsubscribeHeader( size_t remainingLength,
+uint8_t * serializeUnsubscribeHeader( uint32_t remainingLength,
                                       uint8_t * pIndex,
                                       uint16_t packetId );
 /** @endcond */

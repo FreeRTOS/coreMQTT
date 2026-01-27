@@ -32,7 +32,7 @@
 void harness()
 {
     MQTTPropBuilder_t * propBuffer;
-    uint32_t currentIndex;
+    size_t currentIndex;
     MQTTUserProperty_t pUserProperty;
 
     propBuffer = allocateMqttPropBuilder( NULL );
