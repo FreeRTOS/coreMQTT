@@ -331,7 +331,7 @@ static size_t encodeVariableLengthUT( uint8_t * pDestination,
 {
     uint8_t lengthByte;
     uint8_t * pLengthEnd = NULL;
-    size_t remainingLength = length;
+    uint32_t remainingLength = length;
 
     TEST_ASSERT_NOT_NULL( pDestination );
 
@@ -1455,8 +1455,8 @@ void test_MQTT_SerializeConnect( void )
 void test_RemaininglengthLimit( void )
 {
     /* Test will property length more than the max value allowed. */
-    size_t remainingLength = 0;
-    size_t packetSize = 0;
+    uint32_t remainingLength = 0;
+    uint32_t packetSize = 0;
     uint32_t maxPacketSize = 100;
     MQTTStatus_t status = MQTTSuccess;
 
@@ -1542,8 +1542,8 @@ void test_MQTTV5_ValidatePublishParams()
 
 void test_MQTTV5_GetPublishPacketSize()
 {
-    size_t remainingLength = 0U;
-    size_t packetSize = 0U;
+    uint32_t remainingLength = 0U;
+    uint32_t packetSize = 0U;
     uint32_t maxPacketSize = 0U;
 
     setupPublishInfo( &publishInfo );
@@ -1629,10 +1629,10 @@ void test_MQTTV5_GetPublishPacketSize()
 void test_MQTT_SerializePublish( void )
 {
     MQTTPublishInfo_t publishInfo;
-    size_t remainingLength = 98;
+    uint32_t remainingLength = 98;
     uint8_t buffer[ 200 + 2 * BUFFER_PADDING_LENGTH ];
     size_t bufferSize = sizeof( buffer ) - 2 * BUFFER_PADDING_LENGTH;
-    size_t packetSize = bufferSize;
+    uint32_t packetSize = bufferSize;
     MQTTStatus_t status = MQTTSuccess;
     MQTTFixedBuffer_t fixedBuffer = { .pBuffer = &buffer[ BUFFER_PADDING_LENGTH ], .size = bufferSize };
     uint8_t expectedPacket[ 200 ];
@@ -2066,8 +2066,8 @@ void test_MQTTV5_DeserializeAck_Pubrel()
 void test_MQTTV5_GetAckPacketSize()
 {
     MQTTStatus_t status;
-    size_t remainingLength;
-    size_t packetSize;
+    uint32_t remainingLength;
+    uint32_t packetSize;
     uint32_t maxPacketSize = 0U;
 
     /*Invalid parameters*/
@@ -2111,8 +2111,8 @@ void test_MQTTV5_GetAckPacketSize()
 
 void test_MQTTV5_GetDisconnectPacketSize()
 {
-    size_t remainingLength;
-    size_t packetSize;
+    uint32_t remainingLength;
+    uint32_t packetSize;
     uint32_t maxPacketSize = 0U;
     MQTTStatus_t status;
     MQTTSuccessFailReasonCode_t reasonCode;
@@ -2310,8 +2310,8 @@ void test_MQTTV5_GetSubscribePacketSize( void )
 {
     MQTTStatus_t status = MQTTSuccess;
     MQTTSubscribeInfo_t subscribeInfo;
-    size_t remainingLength = 0;
-    size_t packetSize = 0;
+    uint32_t remainingLength = 0;
+    uint32_t packetSize = 0;
 
     /** Verify Parameters */
 
@@ -2334,8 +2334,8 @@ void test_MQTTV5_GetSubscribePacketSize_HappyPath( void )
 {
     MQTTStatus_t status = MQTTSuccess;
     MQTTSubscribeInfo_t subscribeInfo;
-    size_t remainingLength = 0;
-    size_t packetSize = 0;
+    uint32_t remainingLength = 0;
+    uint32_t packetSize = 0;
 
     subscribeInfo.pTopicFilter = TEST_TOPIC_NAME;
     subscribeInfo.topicFilterLength = TEST_TOPIC_NAME_LENGTH;
@@ -2366,8 +2366,8 @@ void test_MQTTV5_GetSubscribePacketSize_MultipleSubscriptions( void )
 {
     MQTTStatus_t status = MQTTSuccess;
     MQTTSubscribeInfo_t subscribeInfo[ 2 ];
-    size_t remainingLength = 0;
-    size_t packetSize = 0;
+    uint32_t remainingLength = 0;
+    uint32_t packetSize = 0;
 
     subscribeInfo[ 0 ].pTopicFilter = TEST_TOPIC_NAME;
     subscribeInfo[ 0 ].topicFilterLength = TEST_TOPIC_NAME_LENGTH;
@@ -2390,8 +2390,8 @@ void test_MQTTV5_GetSubscribePacketSize_MultipleSubscriptions( void )
 void test_calculateSubscriptionPacketSizeV5( void )
 {
     size_t subscriptionCount = 1;
-    size_t remainingLength = 0;
-    size_t packetSize = 0;
+    uint32_t remainingLength = 0;
+    uint32_t packetSize = 0;
     MQTTStatus_t status = MQTTSuccess;
     MQTTSubscribeInfo_t fourThousandSubscriptions[ 4096 ] = { 0 };
     int i;
@@ -2421,10 +2421,10 @@ void test_MQTT_SerializeSubscribe( void )
 {
     MQTTSubscribeInfo_t subscriptionList;
     size_t subscriptionCount = 1;
-    size_t remainingLength = 0;
+    uint32_t remainingLength = 0;
     uint8_t buffer[ 25 + 2 * BUFFER_PADDING_LENGTH ];
     size_t bufferSize = sizeof( buffer ) - 2 * BUFFER_PADDING_LENGTH;
-    size_t packetSize = bufferSize;
+    uint32_t packetSize = bufferSize;
     MQTTStatus_t status = MQTTSuccess;
     MQTTFixedBuffer_t fixedBuffer = { .pBuffer = &buffer[ BUFFER_PADDING_LENGTH ], .size = bufferSize };
     uint8_t expectedPacket[ 100 ];
@@ -2638,10 +2638,10 @@ void test_MQTT_SerializeUnsubscribe( void )
 {
     MQTTSubscribeInfo_t subscriptionList;
     size_t subscriptionCount = 1;
-    size_t remainingLength = 0;
+    uint32_t remainingLength = 0;
     uint8_t buffer[ 33 + 2 * BUFFER_PADDING_LENGTH ];
     size_t bufferSize = sizeof( buffer ) - 2 * BUFFER_PADDING_LENGTH;
-    size_t packetSize = bufferSize;
+    uint32_t packetSize = bufferSize;
     MQTTStatus_t status = MQTTSuccess;
     MQTTFixedBuffer_t fixedBuffer = { .pBuffer = &buffer[ BUFFER_PADDING_LENGTH ], .size = bufferSize };
     uint8_t expectedPacket[ 100 ];
@@ -2878,8 +2878,8 @@ void test_MQTTV5_GetUnsubscribePacketSize( void )
 {
     MQTTStatus_t status = MQTTSuccess;
     MQTTSubscribeInfo_t subscribeInfo = { 0 };
-    size_t remainingLength = 0;
-    size_t packetSize = 0;
+    uint32_t remainingLength = 0;
+    uint32_t packetSize = 0;
 
     status = MQTT_GetUnsubscribePacketSize( NULL, 1, NULL, &remainingLength, &packetSize, MQTT_MAX_PACKET_SIZE );
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
@@ -3163,12 +3163,12 @@ void test_MQTT_SerializeDisconnect( void )
 {
     uint8_t buffer[ 25 + 2 * BUFFER_PADDING_LENGTH ];
     size_t bufferSize = sizeof( buffer ) - 2 * BUFFER_PADDING_LENGTH;
-    size_t packetSize = bufferSize;
+    uint32_t packetSize = bufferSize;
     MQTTFixedBuffer_t fixedBuffer = { .pBuffer = &buffer[ BUFFER_PADDING_LENGTH ], .size = bufferSize };
     uint8_t expectedPacket[ 10 ] = { 0 };
     uint8_t * pIterator = expectedPacket;
     MQTTStatus_t status = MQTTSuccess;
-    size_t remainingLength = 0;
+    uint32_t remainingLength = 0;
 
     /* Buffer size less than disconnect request fails. */
     fixedBuffer.size = 1;
@@ -3246,7 +3246,7 @@ void test_MQTT_SerializeDisconnect( void )
 void test_MQTT_GetPingreqPacketSize( void )
 {
     MQTTStatus_t status;
-    size_t packetSize;
+    uint32_t packetSize;
 
     /* Verify parameters. */
     status = MQTT_GetPingreqPacketSize( NULL );
@@ -3434,7 +3434,7 @@ void test_MQTT_GetIncomingPacketTypeAndLength1( void )
 void test_MQTT_SerializePublishHeaderWithoutTopic_BadInputs( void )
 {
     MQTTPublishInfo_t publishInfo = { 0 };
-    size_t remainingLength = 0;
+    uint32_t remainingLength = 0;
     uint8_t buffer[ 7 ];
     MQTTStatus_t status = MQTTSuccess;
     size_t headerSize = 0;
@@ -3470,7 +3470,7 @@ void test_MQTT_SerializePublishHeaderWithoutTopic_BadInputs( void )
 void test_MQTT_SerializePublishHeaderWithoutTopic_AllNULL( void )
 {
     MQTTPublishInfo_t publishInfo;
-    size_t remainingLength = 0;
+    uint32_t remainingLength = 0;
     uint8_t buffer[ 7 ];
     MQTTStatus_t status = MQTTSuccess;
     size_t headerSize = 0;
@@ -3522,7 +3522,7 @@ void test_MQTT_SerializePublishHeaderWithoutTopic_AllNULL( void )
 void test_MQTT_SerializePublishHeaderWithoutTopic_QoS1( void )
 {
     MQTTPublishInfo_t publishInfo;
-    size_t remainingLength = 0;
+    uint32_t remainingLength = 0;
     uint8_t buffer[ 7 ];
     MQTTStatus_t status = MQTTSuccess;
     size_t headerSize = 0;
@@ -3554,7 +3554,7 @@ void test_MQTT_SerializePublishHeaderWithoutTopic_QoS1( void )
 void test_MQTT_SerializePublishHeaderWithoutTopic_QoS2( void )
 {
     MQTTPublishInfo_t publishInfo;
-    size_t remainingLength = 0;
+    uint32_t remainingLength = 0;
     uint8_t buffer[ 7 ];
     MQTTStatus_t status = MQTTSuccess;
     size_t headerSize = 0;
@@ -3586,7 +3586,7 @@ void test_MQTT_SerializePublishHeaderWithoutTopic_QoS2( void )
 void test_MQTT_SerializePublishHeaderWithoutTopic_retain( void )
 {
     MQTTPublishInfo_t publishInfo;
-    size_t remainingLength = 0;
+    uint32_t remainingLength = 0;
     uint8_t buffer[ 7 ];
     MQTTStatus_t status = MQTTSuccess;
     size_t headerSize = 0;
@@ -3618,7 +3618,7 @@ void test_MQTT_SerializePublishHeaderWithoutTopic_retain( void )
 void test_MQTT_SerializePublishHeaderWithoutTopic_Duplicate( void )
 {
     MQTTPublishInfo_t publishInfo;
-    size_t remainingLength = 0;
+    uint32_t remainingLength = 0;
     uint8_t buffer[ 7 ];
     MQTTStatus_t status = MQTTSuccess;
     size_t headerSize = 0;
@@ -3650,7 +3650,7 @@ void test_MQTT_SerializePublishHeaderWithoutTopic_Duplicate( void )
 void test_MQTT_SerializePublishHeaderWithoutTopic_VariousFlagsSetTopicLength( void )
 {
     MQTTPublishInfo_t publishInfo;
-    size_t remainingLength = 0;
+    uint32_t remainingLength = 0;
     uint8_t buffer[ 7 ];
     MQTTStatus_t status = MQTTSuccess;
     size_t headerSize = 0;
@@ -3685,12 +3685,12 @@ void test_MQTT_SerializePublishHeaderWithoutTopic_VariousFlagsSetTopicLength( vo
 void test_MQTT_SerializePublishHeader( void )
 {
     MQTTPublishInfo_t publishInfo;
-    size_t remainingLength = 0;
+    uint32_t remainingLength = 0;
     uint8_t buffer[ 200 + 2 * BUFFER_PADDING_LENGTH ];
     uint8_t expectedPacket[ 200 ];
     uint8_t * pIterator;
     size_t bufferSize = sizeof( buffer ) - 2 * BUFFER_PADDING_LENGTH;
-    size_t packetSize = bufferSize;
+    uint32_t packetSize = bufferSize;
     MQTTStatus_t status = MQTTSuccess;
     MQTTFixedBuffer_t fixedBuffer = { .pBuffer = &buffer[ BUFFER_PADDING_LENGTH ], .size = bufferSize };
     size_t headerSize = 0;

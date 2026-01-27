@@ -1734,8 +1734,8 @@ static MQTTStatus_t sendPublishAcksWithProperty( MQTTContext_t * pContext,
      * Reason Code              + 1 = 8
      */
     uint8_t pubAckHeader[ 8U ];
-    size_t remainingLength = 0U;
-    size_t packetSize = 0U;
+    uint32_t remainingLength = 0U;
+    uint32_t packetSize = 0U;
 
     /* The maximum vectors required to encode and send a publish ack.
      * Ack Header           0 + 1 = 1
@@ -1846,7 +1846,7 @@ static MQTTStatus_t sendPublishAcksWithProperty( MQTTContext_t * pContext,
         if( bytesSentOrError != ( int32_t ) totalMessageLength )
         {
             LogError( ( "Failed to send ACK packet: PacketType=%02x, "
-                        "PacketSize=%lu.",
+                        "PacketSize=%" PRIu32,
                         ( unsigned int ) packetTypeByte,
                         packetSize ) );
             status = MQTTSendFailed;
@@ -4335,7 +4335,8 @@ MQTTStatus_t MQTT_Subscribe( MQTTContext_t * pContext,
                              const MQTTPropBuilder_t * pPropertyBuilder )
 {
     MQTTConnectionStatus_t connectStatus;
-    size_t remainingLength = 0UL, packetSize = 0UL;
+    uint32_t remainingLength = 0UL;
+    uint32_t packetSize = 0UL;
     MQTTStatus_t status = MQTTSuccess;
 
     status = validateSubscribeUnsubscribeParams( pContext,
@@ -4401,8 +4402,8 @@ MQTTStatus_t MQTT_Publish( MQTTContext_t * pContext,
                            const MQTTPropBuilder_t * pPropertyBuilder )
 {
     size_t headerSize = 0UL;
-    size_t remainingLength = 0UL;
-    size_t packetSize = 0UL;
+    uint32_t remainingLength = 0UL;
+    uint32_t packetSize = 0UL;
     MQTTPublishState_t publishStatus = MQTTStateNull;
     MQTTConnectionStatus_t connectStatus;
     uint16_t topicAlias = 0U;
@@ -4542,7 +4543,7 @@ MQTTStatus_t MQTT_Ping( MQTTContext_t * pContext )
 {
     int32_t sendResult = 0;
     MQTTStatus_t status = MQTTSuccess;
-    size_t packetSize = 0U;
+    uint32_t packetSize = 0U;
     /* MQTT ping packets are of fixed length. */
     uint8_t pingreqPacket[ 2U ];
     MQTTFixedBuffer_t localBuffer;
@@ -4634,7 +4635,8 @@ MQTTStatus_t MQTT_Unsubscribe( MQTTContext_t * pContext,
                                const MQTTPropBuilder_t * pPropertyBuilder )
 {
     MQTTConnectionStatus_t connectStatus;
-    size_t remainingLength = 0UL, packetSize = 0UL;
+    uint32_t remainingLength = 0UL;
+    uint32_t packetSize = 0UL;
     MQTTStatus_t status = MQTTSuccess;
 
     /* Validate arguments. */
@@ -4697,8 +4699,8 @@ MQTTStatus_t MQTT_Disconnect( MQTTContext_t * pContext,
                               const MQTTPropBuilder_t * pPropertyBuilder,
                               MQTTSuccessFailReasonCode_t * pReasonCode )
 {
-    size_t packetSize = 0U;
-    size_t remainingLength = 0U;
+    uint32_t packetSize = 0U;
+    uint32_t remainingLength = 0U;
     MQTTStatus_t status = MQTTSuccess;
     MQTTConnectionStatus_t connectStatus;
 

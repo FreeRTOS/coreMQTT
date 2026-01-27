@@ -202,10 +202,10 @@ typedef bool ( * MQTTStorePacketForRetransmit)( struct MQTTContext * pContext,
  * @return True if the retreive is successful else false.
  */
 /* @[define_mqtt_retransmitretrievepacket] */
-typedef bool ( * MQTTRetrievePacketForRetransmit)( struct MQTTContext * pContext,
-                                                   uint16_t packetId,
-                                                   uint8_t ** pSerializedMqttVec,
-                                                   size_t * pSerializedMqttVecLen );
+typedef bool ( * MQTTRetrievePacketForRetransmit )( struct MQTTContext * pContext,
+                                                    uint16_t packetId,
+                                                    uint8_t ** pSerializedMqttVec,
+                                                    size_t * pSerializedMqttVecLen );
 /* @[define_mqtt_retransmitretrievepacket] */
 
 /**

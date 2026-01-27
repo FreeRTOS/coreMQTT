@@ -428,7 +428,7 @@ typedef struct MQTTPublishInfo
      */
     size_t payloadLength;
 
-     /**
+    /**
      * @brief Length of the properties.
      */
     uint32_t propertyLength;
@@ -469,8 +469,8 @@ typedef struct MQTTPacketInfo
 typedef struct MQTTPropBuilder
 {
     uint8_t * pBuffer;           /**< @brief Pointer to the buffer for storing properties. */
-    uint32_t bufferLength;         /**< @brief Total length of the buffer available for properties. */
-    uint32_t currentIndex;       /**< @brief Current position in the buffer where next property will be written. */
+    size_t bufferLength;         /**< @brief Total length of the buffer available for properties. */
+    size_t currentIndex;       /**< @brief Current position in the buffer where next property will be written. */
     uint32_t fieldSet;           /**< @brief Bitfield tracking which properties have been added. */
 } MQTTPropBuilder_t;
 
@@ -938,8 +938,8 @@ MQTTStatus_t MQTT_SerializeConnect( const MQTTConnectInfo_t * pConnectInfo,
 MQTTStatus_t MQTT_GetSubscribePacketSize( const MQTTSubscribeInfo_t * pSubscriptionList,
                                           size_t subscriptionCount,
                                           const MQTTPropBuilder_t * pSubscribeProperties,
-                                          size_t * pRemainingLength,
-                                          size_t * pPacketSize,
+                                          uint32_t * pRemainingLength,
+                                          uint32_t * pPacketSize,
                                           uint32_t maxPacketSize );
 /* @[declare_mqtt_getsubscribepacketsize] */
 
@@ -1013,7 +1013,7 @@ MQTTStatus_t MQTT_SerializeSubscribe( const MQTTSubscribeInfo_t * pSubscriptionL
                                       size_t subscriptionCount,
                                       const MQTTPropBuilder_t * pSubscribeProperties,
                                       uint16_t packetId,
-                                      size_t remainingLength,
+                                      uint32_t remainingLength,
                                       const MQTTFixedBuffer_t * pFixedBuffer );
 /* @[declare_mqtt_serializesubscribe] */
 
@@ -1077,8 +1077,8 @@ MQTTStatus_t MQTT_SerializeSubscribe( const MQTTSubscribeInfo_t * pSubscriptionL
 MQTTStatus_t MQTT_GetUnsubscribePacketSize( const MQTTSubscribeInfo_t* pSubscriptionList,
                                             size_t subscriptionCount,
                                             const MQTTPropBuilder_t * pUnsubscribeProperties,
-                                            size_t* pRemainingLength,
-                                            size_t* pPacketSize,
+                                            uint32_t * pRemainingLength,
+                                            uint32_t * pPacketSize,
                                             uint32_t maxPacketSize);
 /* @[declare_mqtt_getunsubscribepacketsize] */
 
@@ -1161,7 +1161,7 @@ MQTTStatus_t MQTT_SerializeUnsubscribe( const MQTTSubscribeInfo_t * pSubscriptio
                                         size_t subscriptionCount,
                                         const MQTTPropBuilder_t * pUnsubscribeProperties,
                                         uint16_t packetId,
-                                        size_t remainingLength,
+                                        uint32_t remainingLength,
                                         const MQTTFixedBuffer_t * pFixedBuffer );
 /* @[declare_mqtt_serializeunsubscribe] */
 
@@ -1227,8 +1227,8 @@ MQTTStatus_t MQTT_SerializeUnsubscribe( const MQTTSubscribeInfo_t * pSubscriptio
 /* @[declare_mqtt_getpublishpacketsize] */
 MQTTStatus_t MQTT_GetPublishPacketSize( const MQTTPublishInfo_t * pPublishInfo,
                                         const MQTTPropBuilder_t * pPublishProperties,
-                                        size_t * pRemainingLength,
-                                        size_t * pPacketSize,
+                                        uint32_t * pRemainingLength,
+                                        uint32_t * pPacketSize,
                                         uint32_t maxPacketSize);
 /* @[declare_mqtt_getpublishpacketsize] */
 
@@ -1302,7 +1302,7 @@ MQTTStatus_t MQTT_GetPublishPacketSize( const MQTTPublishInfo_t * pPublishInfo,
 MQTTStatus_t MQTT_SerializePublish( const MQTTPublishInfo_t * pPublishInfo,
                                     const MQTTPropBuilder_t * pPublishProperties,
                                     uint16_t packetId,
-                                    size_t remainingLength,
+                                    uint32_t remainingLength,
                                     const MQTTFixedBuffer_t * pFixedBuffer );
 /* @[declare_mqtt_serializepublish] */
 
@@ -1321,7 +1321,7 @@ MQTTStatus_t MQTT_SerializePublish( const MQTTPublishInfo_t * pPublishInfo,
  */
 /* @[declare_mqtt_serializepublishheaderwithouttopic] */
 MQTTStatus_t MQTT_SerializePublishHeaderWithoutTopic( const MQTTPublishInfo_t * pPublishInfo,
-                                                      size_t remainingLength,
+                                                      uint32_t remainingLength,
                                                       uint8_t * pBuffer,
                                                       size_t * headerSize );
 /* @[declare_mqtt_serializepublishheaderwithouttopic] */
@@ -1407,7 +1407,7 @@ MQTTStatus_t MQTT_SerializePublishHeaderWithoutTopic( const MQTTPublishInfo_t * 
 MQTTStatus_t MQTT_SerializePublishHeader( const MQTTPublishInfo_t * pPublishInfo,
                                           const MQTTPropBuilder_t * pPublishProperties,
                                           uint16_t packetId,
-                                          size_t remainingLength,
+                                          uint32_t remainingLength,
                                           const MQTTFixedBuffer_t * pFixedBuffer,
                                           size_t * pHeaderSize );
 /* @[declare_mqtt_serializepublishheader] */
@@ -1505,8 +1505,8 @@ MQTTStatus_t MQTT_SerializeAck( const MQTTFixedBuffer_t * pFixedBuffer,
  */
 /* @[declare_mqtt_getdisconnectpacketsize] */
 MQTTStatus_t MQTT_GetDisconnectPacketSize( const MQTTPropBuilder_t * pDisconnectProperties,
-                                           size_t * pRemainingLength,
-                                           size_t * pPacketSize,
+                                           uint32_t * pRemainingLength,
+                                           uint32_t * pPacketSize,
                                            uint32_t maxPacketSize,
                                            MQTTSuccessFailReasonCode_t * pReasonCode );
 /* @[declare_mqtt_getdisconnectpacketsize] */
@@ -1566,7 +1566,7 @@ MQTTStatus_t MQTT_GetDisconnectPacketSize( const MQTTPropBuilder_t * pDisconnect
 /* @[declare_mqtt_serializedisconnect] */
 MQTTStatus_t MQTT_SerializeDisconnect( const MQTTPropBuilder_t * pDisconnectProperties,
                                        MQTTSuccessFailReasonCode_t * pReasonCode,
-                                       size_t remainingLength,
+                                       uint32_t remainingLength,
                                        const MQTTFixedBuffer_t * pFixedBuffer );
 /* @[declare_mqtt_serializedisconnect] */
 
@@ -1595,7 +1595,7 @@ MQTTStatus_t MQTT_SerializeDisconnect( const MQTTPropBuilder_t * pDisconnectProp
  * @endcode
  */
 /* @[declare_mqtt_getpingreqpacketsize] */
-MQTTStatus_t MQTT_GetPingreqPacketSize( size_t * pPacketSize );
+MQTTStatus_t MQTT_GetPingreqPacketSize( uint32_t * pPacketSize );
 /* @[declare_mqtt_getpingreqpacketsize] */
 
 /**
@@ -1708,7 +1708,7 @@ MQTTStatus_t MQTT_SerializePingreq( const MQTTFixedBuffer_t * pFixedBuffer );
  */
 /* @[declare_mqtt_deserializepublish] */
 MQTTStatus_t MQTT_DeserializePublish( const MQTTPacketInfo_t* pIncomingPacket,
-                                      uint16_t* pPacketId,
+                                      uint16_t * pPacketId,
                                       MQTTPublishInfo_t * pPublishInfo,
                                       MQTTPropBuilder_t * propBuffer,
                                       uint32_t maxPacketSize,
@@ -2015,8 +2015,8 @@ MQTTStatus_t MQTTPropAdd_SubscriptionId( MQTTPropBuilder_t* pPropertyBuilder,
  * - #MQTTNoMemory if the property builder has insufficient space
  */
 /* @[declare_mqttpropadd_userprop] */
-MQTTStatus_t MQTTPropAdd_UserProp( MQTTPropBuilder_t* pPropertyBuilder,
-                                   const MQTTUserProperty_t* userProperty,
+MQTTStatus_t MQTTPropAdd_UserProp( MQTTPropBuilder_t * pPropertyBuilder,
+                                   const MQTTUserProperty_t * userProperty,
                                    const uint8_t * pOptionalMqttPacketType );
 /* @[declare_mqttpropadd_userprop] */
 
@@ -2036,7 +2036,7 @@ MQTTStatus_t MQTTPropAdd_UserProp( MQTTPropBuilder_t* pPropertyBuilder,
  * - #MQTTNoMemory if the property builder has insufficient space
  */
 /* @[declare_mqttpropadd_sessionexpiry] */
-MQTTStatus_t MQTTPropAdd_SessionExpiry( MQTTPropBuilder_t* pPropertyBuilder,
+MQTTStatus_t MQTTPropAdd_SessionExpiry( MQTTPropBuilder_t * pPropertyBuilder,
                                         uint32_t sessionExpiry,
                                         const uint8_t * pOptionalMqttPacketType );
 /* @[declare_mqttpropadd_sessionexpiry] */
@@ -2170,8 +2170,8 @@ MQTTStatus_t MQTTPropAdd_RequestProbInfo( MQTTPropBuilder_t* pPropertyBuilder,
  * - #MQTTNoMemory if the property builder has insufficient space
  */
 /* @[declare_mqttpropadd_authmethod] */
-MQTTStatus_t MQTTPropAdd_AuthMethod( MQTTPropBuilder_t* pPropertyBuilder,
-                                     const char* authMethod,
+MQTTStatus_t MQTTPropAdd_AuthMethod( MQTTPropBuilder_t * pPropertyBuilder,
+                                     const char * authMethod,
                                      uint16_t authMethodLength,
                                      const uint8_t * pOptionalMqttPacketType );
 /* @[declare_mqttpropadd_authmethod] */
@@ -2194,8 +2194,8 @@ MQTTStatus_t MQTTPropAdd_AuthMethod( MQTTPropBuilder_t* pPropertyBuilder,
  * - #MQTTNoMemory if the property builder has insufficient space
  */
 /* @[declare_mqttpropadd_authdata] */
-MQTTStatus_t MQTTPropAdd_AuthData( MQTTPropBuilder_t* pPropertyBuilder,
-                                   const char* authData,
+MQTTStatus_t MQTTPropAdd_AuthData( MQTTPropBuilder_t * pPropertyBuilder,
+                                   const char * authData,
                                    uint16_t authDataLength,
                                    const uint8_t * pOptionalMqttPacketType );
 /* @[declare_mqttpropadd_authdata] */
@@ -2217,7 +2217,7 @@ MQTTStatus_t MQTTPropAdd_AuthData( MQTTPropBuilder_t* pPropertyBuilder,
  * - #MQTTNoMemory if the property builder has insufficient space
  */
 /* @[declare_mqttpropadd_payloadformat] */
-MQTTStatus_t MQTTPropAdd_PayloadFormat( MQTTPropBuilder_t* pPropertyBuilder,
+MQTTStatus_t MQTTPropAdd_PayloadFormat( MQTTPropBuilder_t * pPropertyBuilder,
                                         bool payloadFormat,
                                         const uint8_t * pOptionalMqttPacketType );
 /* @[declare_mqttpropadd_payloadformat] */
@@ -2239,7 +2239,7 @@ MQTTStatus_t MQTTPropAdd_PayloadFormat( MQTTPropBuilder_t* pPropertyBuilder,
  * - #MQTTNoMemory if the property builder has insufficient space
  */
 /* @[declare_mqttpropadd_messageexpiry] */
-MQTTStatus_t MQTTPropAdd_MessageExpiry( MQTTPropBuilder_t* pPropertyBuilder,
+MQTTStatus_t MQTTPropAdd_MessageExpiry( MQTTPropBuilder_t * pPropertyBuilder,
                                         uint32_t messageExpiry,
                                         const uint8_t * pOptionalMqttPacketType );
 /* @[declare_mqttpropadd_messageexpiry] */
@@ -2307,7 +2307,7 @@ MQTTStatus_t MQTTPropAdd_TopicAlias( MQTTPropBuilder_t* pPropertyBuilder,
  */
 /* @[declare_mqttpropadd_responsetopic] */
 MQTTStatus_t MQTTPropAdd_ResponseTopic( MQTTPropBuilder_t* pPropertyBuilder,
-                                        const char* responseTopic,
+                                        const char * responseTopic,
                                         uint16_t responseTopicLength,
                                         const uint8_t * pOptionalMqttPacketType);
 /* @[declare_mqttpropadd_responsetopic] */
@@ -2329,8 +2329,8 @@ MQTTStatus_t MQTTPropAdd_ResponseTopic( MQTTPropBuilder_t* pPropertyBuilder,
  * - #MQTTNoMemory if the property builder has insufficient space
  */
 /* @[declare_mqttpropadd_correlationdata] */
-MQTTStatus_t MQTTPropAdd_CorrelationData( MQTTPropBuilder_t* pPropertyBuilder,
-                                          const void* pCorrelationData,
+MQTTStatus_t MQTTPropAdd_CorrelationData( MQTTPropBuilder_t * pPropertyBuilder,
+                                          const void * pCorrelationData,
                                           uint16_t correlationLength,
                                           const uint8_t * pOptionalMqttPacketType );
 /* @[declare_mqttpropadd_correlationdata] */
@@ -2353,8 +2353,8 @@ MQTTStatus_t MQTTPropAdd_CorrelationData( MQTTPropBuilder_t* pPropertyBuilder,
  * - #MQTTNoMemory if the property builder has insufficient space
  */
 /* @[declare_mqttpropadd_contenttype] */
-MQTTStatus_t MQTTPropAdd_ContentType( MQTTPropBuilder_t* pPropertyBuilder,
-                                      const char* contentType,
+MQTTStatus_t MQTTPropAdd_ContentType( MQTTPropBuilder_t * pPropertyBuilder,
+                                      const char * contentType,
                                       uint16_t contentTypeLength,
                                       const uint8_t * pOptionalMqttPacketType );
 /* @[declare_mqttpropadd_contenttype] */
@@ -2377,8 +2377,8 @@ MQTTStatus_t MQTTPropAdd_ContentType( MQTTPropBuilder_t* pPropertyBuilder,
  * - #MQTTNoMemory if the property builder has insufficient space
  */
 /* @[declare_mqttpropadd_reasonstring] */
-MQTTStatus_t MQTTPropAdd_ReasonString( MQTTPropBuilder_t* pPropertyBuilder,
-                                       const char* pReasonString,
+MQTTStatus_t MQTTPropAdd_ReasonString( MQTTPropBuilder_t * pPropertyBuilder,
+                                       const char * pReasonString,
                                        uint16_t reasonStringLength,
                                        const uint8_t * pOptionalMqttPacketType );
 /* @[declare_mqttpropadd_reasonstring] */
@@ -2435,7 +2435,8 @@ MQTTStatus_t MQTT_ValidateSubscribeProperties( bool isSubscriptionIdAvailable, c
  * @endcode
  */
 
-MQTTStatus_t updateContextWithConnectProps( const MQTTPropBuilder_t* pPropBuilder, MQTTConnectionProperties_t* pConnectProperties );
+MQTTStatus_t updateContextWithConnectProps( const MQTTPropBuilder_t * pPropBuilder,
+                                            MQTTConnectionProperties_t * pConnectProperties );
 
 /**
  * @brief Get the property type at the current index in the property builder.
@@ -2943,7 +2944,9 @@ MQTTStatus_t MQTTPropGet_ContentType( MQTTPropBuilder_t * pPropertyBuilder,
  * - #MQTTBadResponse if an invalid packet is read
  */
 /* @[declare_mqtt_validatepublishproperties] */
-MQTTStatus_t MQTT_ValidatePublishProperties(uint16_t serverTopicAliasMax, const MQTTPropBuilder_t* propBuilder, uint16_t *topicAlias);
+MQTTStatus_t MQTT_ValidatePublishProperties( uint16_t serverTopicAliasMax,
+                                             const MQTTPropBuilder_t * propBuilder,
+                                             uint16_t * topicAlias);
 /* @[declare_mqtt_validatepublishproperties] */
 
 /**
@@ -2984,11 +2987,11 @@ MQTTStatus_t MQTT_ValidatePublishProperties(uint16_t serverTopicAliasMax, const 
  * @endcode
  */
 /* @[declare_mqtt_validatepublishparams] */
-MQTTStatus_t MQTT_ValidatePublishParams(const MQTTPublishInfo_t* pPublishInfo,
-                                        uint8_t retainAvailable,
-                                        uint8_t maxQos,
-                                        uint16_t topicAlias,
-                                        uint32_t maxPacketSize);
+MQTTStatus_t MQTT_ValidatePublishParams( const MQTTPublishInfo_t * pPublishInfo,
+                                         uint8_t retainAvailable,
+                                         uint8_t maxQos,
+                                         uint16_t topicAlias,
+                                         uint32_t maxPacketSize );
 /* @[declare_mqtt_validatepublishparams] */
 
 /**
@@ -3053,10 +3056,10 @@ MQTTStatus_t MQTT_ValidateUnsubscribeProperties( const MQTTPropBuilder_t * pProp
  * @endcode
  */
 /* @[declare_mqtt_getackpacketsize] */
-MQTTStatus_t MQTT_GetAckPacketSize(size_t* pRemainingLength,
-    size_t* pPacketSize,
-    uint32_t maxPacketSize,
-    size_t ackPropertyLength);
+MQTTStatus_t MQTT_GetAckPacketSize( uint32_t * pRemainingLength,
+                                    uint32_t * pPacketSize,
+                                    uint32_t maxPacketSize,
+                                    size_t ackPropertyLength );
 /* @[declare_mqtt_getackpacketsize] */
 
 /**
@@ -3072,7 +3075,8 @@ MQTTStatus_t MQTT_GetAckPacketSize(size_t* pRemainingLength,
  * - #MQTTSuccess , #MQTTBadParameter or #MQTTBadResponse.
  */
 /* @[declare_mqtt_validatedisconnectproperties] */
-MQTTStatus_t MQTT_ValidateDisconnectProperties( uint32_t connectSessionExpiry, const MQTTPropBuilder_t * pPropertyBuilder);
+MQTTStatus_t MQTT_ValidateDisconnectProperties( uint32_t connectSessionExpiry,
+                                                const MQTTPropBuilder_t * pPropertyBuilder );
 /* @[declare_mqtt_validatedisconnectproperties] */
 
 /**

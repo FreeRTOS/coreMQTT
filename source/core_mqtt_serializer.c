@@ -136,8 +136,8 @@ static void serializePublishCommon( const MQTTPublishInfo_t * pPublishInfo,
  * MQTT spec; MQTTSuccess otherwise.
  */
 static MQTTStatus_t calculatePublishPacketSize( const MQTTPublishInfo_t * pPublishInfo,
-                                                size_t * pRemainingLength,
-                                                size_t * pPacketSize,
+                                                uint32_t * pRemainingLength,
+                                                uint32_t * pPacketSize,
                                                 uint32_t maxPacketSize,
                                                 size_t publishPropertyLength );
 
@@ -162,8 +162,8 @@ static MQTTStatus_t calculatePublishPacketSize( const MQTTPublishInfo_t * pPubli
 
 static MQTTStatus_t calculateSubscriptionPacketSize( const MQTTSubscribeInfo_t * pSubscriptionList,
                                                      size_t subscriptionCount,
-                                                     size_t * pRemainingLength,
-                                                     size_t * pPacketSize,
+                                                     uint32_t * pRemainingLength,
+                                                     uint32_t * pPacketSize,
                                                      size_t subscribePropLen,
                                                      uint32_t maxPacketSize,
                                                      MQTTSubscriptionType_t subscriptionType );
@@ -689,14 +689,14 @@ static size_t remainingLengthEncodedSize( size_t length )
 /*-----------------------------------------------------------*/
 
 static MQTTStatus_t calculatePublishPacketSize( const MQTTPublishInfo_t * pPublishInfo,
-                                                size_t * pRemainingLength,
-                                                size_t * pPacketSize,
+                                                uint32_t * pRemainingLength,
+                                                uint32_t * pPacketSize,
                                                 uint32_t maxPacketSize,
                                                 size_t publishPropertyLength )
 {
     MQTTStatus_t status = MQTTSuccess;
-    size_t packetSize = 0, propertyAndPayloadLimit = 0;
-
+    uint32_t packetSize = 0;
+    uint32_t propertyAndPayloadLimit = 0;
 
     assert( pPublishInfo != NULL );
     assert( pRemainingLength != NULL );
@@ -848,7 +848,7 @@ static MQTTStatus_t deserializePubAcks( const MQTTPacketInfo_t * pAck,
 /*-----------------------------------------------------------*/
 
 MQTTStatus_t MQTT_SerializePublishHeaderWithoutTopic( const MQTTPublishInfo_t * pPublishInfo,
-                                                      size_t remainingLength,
+                                                      uint32_t remainingLength,
                                                       uint8_t * pBuffer,
                                                       size_t * headerSize )
 {
@@ -1583,8 +1583,8 @@ static MQTTStatus_t deserializeConnack( MQTTConnectionProperties_t * pConnackPro
 
 static MQTTStatus_t calculateSubscriptionPacketSize( const MQTTSubscribeInfo_t * pSubscriptionList,
                                                      size_t subscriptionCount,
-                                                     size_t * pRemainingLength,
-                                                     size_t * pPacketSize,
+                                                     uint32_t * pRemainingLength,
+                                                     uint32_t * pPacketSize,
                                                      size_t subscribePropLen,
                                                      uint32_t maxPacketSize,
                                                      MQTTSubscriptionType_t subscriptionType )
@@ -3266,8 +3266,8 @@ MQTTStatus_t MQTT_SerializeConnect( const MQTTConnectInfo_t * pConnectInfo,
 MQTTStatus_t MQTT_GetSubscribePacketSize( const MQTTSubscribeInfo_t * pSubscriptionList,
                                           size_t subscriptionCount,
                                           const MQTTPropBuilder_t * pSubscribeProperties,
-                                          size_t * pRemainingLength,
-                                          size_t * pPacketSize,
+                                          uint32_t * pRemainingLength,
+                                          uint32_t * pPacketSize,
                                           uint32_t maxPacketSize )
 {
     MQTTStatus_t status = MQTTSuccess;
@@ -3309,7 +3309,7 @@ MQTTStatus_t MQTT_SerializeSubscribe( const MQTTSubscribeInfo_t * pSubscriptionL
                                       size_t subscriptionCount,
                                       const MQTTPropBuilder_t * pSubscribeProperties,
                                       uint16_t packetId,
-                                      size_t remainingLength,
+                                      uint32_t remainingLength,
                                       const MQTTFixedBuffer_t * pFixedBuffer )
 {
     size_t i = 0;
@@ -3420,8 +3420,8 @@ MQTTStatus_t MQTT_SerializeSubscribe( const MQTTSubscribeInfo_t * pSubscriptionL
 MQTTStatus_t MQTT_GetUnsubscribePacketSize( const MQTTSubscribeInfo_t * pSubscriptionList,
                                             size_t subscriptionCount,
                                             const MQTTPropBuilder_t * pUnsubscribeProperties,
-                                            size_t * pRemainingLength,
-                                            size_t * pPacketSize,
+                                            uint32_t * pRemainingLength,
+                                            uint32_t * pPacketSize,
                                             uint32_t maxPacketSize )
 {
     MQTTStatus_t status = MQTTSuccess;
@@ -3516,7 +3516,7 @@ MQTTStatus_t MQTT_SerializeUnsubscribe( const MQTTSubscribeInfo_t * pSubscriptio
                                         size_t subscriptionCount,
                                         const MQTTPropBuilder_t * pUnsubscribeProperties,
                                         uint16_t packetId,
-                                        size_t remainingLength,
+                                        uint32_t remainingLength,
                                         const MQTTFixedBuffer_t * pFixedBuffer )
 {
     MQTTStatus_t status = MQTTSuccess;
@@ -3571,8 +3571,8 @@ MQTTStatus_t MQTT_SerializeUnsubscribe( const MQTTSubscribeInfo_t * pSubscriptio
 
 MQTTStatus_t MQTT_GetPublishPacketSize( const MQTTPublishInfo_t * pPublishInfo,
                                         const MQTTPropBuilder_t * pPublishProperties,
-                                        size_t * pRemainingLength,
-                                        size_t * pPacketSize,
+                                        uint32_t * pRemainingLength,
+                                        uint32_t * pPacketSize,
                                         uint32_t maxPacketSize )
 {
     MQTTStatus_t status = MQTTSuccess;
@@ -3606,7 +3606,7 @@ MQTTStatus_t MQTT_GetPublishPacketSize( const MQTTPublishInfo_t * pPublishInfo,
 MQTTStatus_t MQTT_SerializePublish( const MQTTPublishInfo_t * pPublishInfo,
                                     const MQTTPropBuilder_t * pPublishProperties,
                                     uint16_t packetId,
-                                    size_t remainingLength,
+                                    uint32_t remainingLength,
                                     const MQTTFixedBuffer_t * pFixedBuffer )
 {
     MQTTStatus_t status = MQTTSuccess;
@@ -3693,7 +3693,7 @@ MQTTStatus_t MQTT_SerializePublish( const MQTTPublishInfo_t * pPublishInfo,
 MQTTStatus_t MQTT_SerializePublishHeader( const MQTTPublishInfo_t * pPublishInfo,
                                           const MQTTPropBuilder_t * pPublishProperties,
                                           uint16_t packetId,
-                                          size_t remainingLength,
+                                          uint32_t remainingLength,
                                           const MQTTFixedBuffer_t * pFixedBuffer,
                                           size_t * pHeaderSize )
 {
@@ -3873,8 +3873,8 @@ MQTTStatus_t MQTT_SerializeAck( const MQTTFixedBuffer_t * pFixedBuffer,
 /*-----------------------------------------------------------*/
 
 MQTTStatus_t MQTT_GetDisconnectPacketSize( const MQTTPropBuilder_t * pDisconnectProperties,
-                                           size_t * pRemainingLength,
-                                           size_t * pPacketSize,
+                                           uint32_t * pRemainingLength,
+                                           uint32_t * pPacketSize,
                                            uint32_t maxPacketSize,
                                            MQTTSuccessFailReasonCode_t * pReasonCode )
 {
@@ -3970,7 +3970,7 @@ MQTTStatus_t MQTT_GetDisconnectPacketSize( const MQTTPropBuilder_t * pDisconnect
 
 MQTTStatus_t MQTT_SerializeDisconnect( const MQTTPropBuilder_t * pDisconnectProperties,
                                        MQTTSuccessFailReasonCode_t * pReasonCode,
-                                       size_t remainingLength,
+                                       uint32_t remainingLength,
                                        const MQTTFixedBuffer_t * pFixedBuffer )
 {
     MQTTStatus_t status = MQTTSuccess;
@@ -4040,7 +4040,7 @@ MQTTStatus_t MQTT_SerializeDisconnect( const MQTTPropBuilder_t * pDisconnectProp
 
 /*-----------------------------------------------------------*/
 
-MQTTStatus_t MQTT_GetPingreqPacketSize( size_t * pPacketSize )
+MQTTStatus_t MQTT_GetPingreqPacketSize( uint32_t * pPacketSize )
 {
     MQTTStatus_t status = MQTTSuccess;
 
@@ -5228,8 +5228,8 @@ MQTTStatus_t MQTT_ValidatePublishAckProperties( const MQTTPropBuilder_t * pPrope
 
 /*-----------------------------------------------------------*/
 
-MQTTStatus_t MQTT_GetAckPacketSize( size_t * pRemainingLength,
-                                    size_t * pPacketSize,
+MQTTStatus_t MQTT_GetAckPacketSize( uint32_t * pRemainingLength,
+                                    uint32_t * pPacketSize,
                                     uint32_t maxPacketSize,
                                     size_t ackPropertyLength )
 {

@@ -532,7 +532,7 @@ MQTTStatus_t decodeVariableLength( const uint8_t * pBuffer,
 uint8_t * serializeAckFixed( uint8_t * pIndex,
                              uint8_t packetType,
                              uint16_t packetId,
-                             size_t remainingLength,
+                             uint32_t remainingLength,
                              MQTTSuccessFailReasonCode_t reasonCode );
 /** @endcond */
 
@@ -576,7 +576,7 @@ MQTTStatus_t decodeSubackPropertyLength( const uint8_t * pIndex,
  */
 uint8_t * serializeDisconnectFixed( uint8_t * pIndex,
                                     MQTTSuccessFailReasonCode_t * pReasonCode,
-                                    size_t remainingLength );
+                                    uint32_t remainingLength );
 /** @endcond */
 
 /**
@@ -620,7 +620,7 @@ uint8_t * serializeConnectFixedHeader( uint8_t * pIndex,
  * @cond DOXYGEN_IGNORE
  * Doxygen should ignore this definition, this function is private.
  */
-uint8_t * serializeSubscribeHeader( size_t remainingLength,
+uint8_t * serializeSubscribeHeader( uint32_t remainingLength,
                                     uint8_t * pIndex,
                                     uint16_t packetId );
 /** @endcond */
@@ -642,7 +642,7 @@ uint8_t * serializeSubscribeHeader( size_t remainingLength,
  * @cond DOXYGEN_IGNORE
  * Doxygen should ignore this definition, this function is private.
  */
-uint8_t * serializeUnsubscribeHeader( size_t remainingLength,
+uint8_t * serializeUnsubscribeHeader( uint32_t remainingLength,
                                       uint8_t * pIndex,
                                       uint16_t packetId );
 /** @endcond */
