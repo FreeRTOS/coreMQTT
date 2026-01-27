@@ -34,7 +34,7 @@ void harness()
 {
     MQTTPropBuilder_t * propBuffer;
     uint8_t * propertyId;
-    uint32_t * currentIndex = malloc( sizeof( uint32_t ) );
+    size_t * currentIndex = malloc( sizeof( size_t ) );
 
     propBuffer = allocateMqttPropBuilder( NULL );
     __CPROVER_assume( isValidMqttPropBuilder( propBuffer ) );

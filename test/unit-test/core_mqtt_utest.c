@@ -601,7 +601,7 @@ static MQTTStatus_t MQTT_SerializeAck_SuccessAndSetDisconnPending( const MQTTFix
 static uint8_t * MQTTV5_SerializeAckFixed_cb( uint8_t * pIndex,
                                               uint8_t packetType,
                                               uint16_t packetId,
-                                              size_t remainingLength,
+                                              uint32_t remainingLength,
                                               MQTTSuccessFailReasonCode_t reasonCode,
                                               int numcallbacks )
 {
@@ -663,7 +663,7 @@ MQTTStatus_t MQTT_SerializeAck_StubSuccess( const MQTTFixedBuffer_t * pFixedBuff
 
 static uint8_t * MQTTV5_SerializeDisconnectFixed_cb( uint8_t * pIndex,
                                                      MQTTSuccessFailReasonCode_t * pReasonCode,
-                                                     size_t remainingLength,
+                                                     uint32_t remainingLength,
                                                      int numcallbacks )
 {
     ( void ) pIndex;
@@ -730,8 +730,8 @@ static int32_t transportWritevSuccess( NetworkContext_t * pNetworkContext,
 }
 
 static MQTTStatus_t MQTT_GetDisconnectPacketSize_ExpectReasonMalformed( const MQTTPropBuilder_t * pDisconnectProperties,
-                                                                        size_t * pRemainingLength,
-                                                                        size_t * pPacketSize,
+                                                                        uint32_t * pRemainingLength,
+                                                                        uint32_t * pPacketSize,
                                                                         uint32_t maxPacketSize,
                                                                         MQTTSuccessFailReasonCode_t * pReasonCode,
                                                                         int numcallbacks )
@@ -750,7 +750,7 @@ static MQTTStatus_t MQTT_GetDisconnectPacketSize_ExpectReasonMalformed( const MQ
 
 static uint8_t * serializeDisconnectFixed_cb_OneByte( uint8_t * pIndex,
                                                       MQTTSuccessFailReasonCode_t * pReasonCode,
-                                                      size_t remainingLength,
+                                                      uint32_t remainingLength,
                                                       int numcallbacks )
 {
     ( void ) pReasonCode;
@@ -1515,7 +1515,7 @@ static void expectProcessLoopCalls( MQTTContext_t * const pContext,
 {
     MQTTStatus_t mqttStatus = MQTTSuccess;
     MQTTPacketInfo_t incomingPacket = { 0 };
-    size_t pingreqSize = MQTT_PACKET_PINGREQ_SIZE;
+    uint32_t pingreqSize = MQTT_PACKET_PINGREQ_SIZE;
     bool expectMoreCalls = true;
     /* Copy values passed in the parameter struct. */
     MQTTStatus_t deserializeStatus = pExpectParams->deserializeStatus;
@@ -4689,7 +4689,7 @@ void test_MQTT_Disconnect_already_disconnected( void )
     MQTTStatus_t status;
     TransportInterface_t transport = { 0 };
     MQTTFixedBuffer_t networkBuffer = { 0 };
-    size_t disconnectSize = 2;
+    uint32_t disconnectSize = 2;
 
     setupTransportInterface( &transport );
     setupNetworkBuffer( &networkBuffer );
@@ -4782,7 +4782,7 @@ void test_MQTT_Disconnect2( void )
     NetworkContext_t networkContext = { 0 };
     TransportInterface_t transport = { 0 };
     MQTTFixedBuffer_t networkBuffer = { 0 };
-    size_t disconnectSize = 2;
+    uint32_t disconnectSize = 2;
 
     setupTransportInterface( &transport );
     setupNetworkBuffer( &networkBuffer );
@@ -4854,7 +4854,7 @@ void test_MQTT_Disconnect4( void )
     NetworkContext_t networkContext = { 0 };
     TransportInterface_t transport = { 0 };
     MQTTFixedBuffer_t networkBuffer = { 0 };
-    size_t disconnectSize = 2;
+    uint32_t disconnectSize = 2;
 
     /* Fill the buffer with garbage data. */
     memset( mqttBuffer, 0xAB, MQTT_TEST_BUFFER_LENGTH );
@@ -4908,7 +4908,7 @@ void test_MQTT_Disconnect4_status_disconnect_pending( void )
     NetworkContext_t networkContext = { 0 };
     TransportInterface_t transport = { 0 };
     MQTTFixedBuffer_t networkBuffer = { 0 };
-    size_t disconnectSize = 2;
+    uint32_t disconnectSize = 2;
 
     /* Fill the buffer with garbage data. */
     memset( mqttBuffer, 0xAB, MQTT_TEST_BUFFER_LENGTH );
@@ -5146,7 +5146,7 @@ void test_MQTT_ProcessLoop_HandleKeepAlive1( void )
     TransportInterface_t transport = { 0 };
     MQTTFixedBuffer_t networkBuffer = { 0 };
     MQTTStatus_t mqttStatus;
-    size_t pingreqSize = MQTT_PACKET_PINGREQ_SIZE;
+    uint32_t pingreqSize = MQTT_PACKET_PINGREQ_SIZE;
 
     setupTransportInterface( &transport );
     transport.recv = transportRecvNoData;
@@ -6538,7 +6538,7 @@ void test_MQTT_ProcessLoop_handleKeepAlive_Error_Paths3( void )
     context.waitingForPingResp = false;
     /* Set expected return values in the loop. */
     resetProcessLoopParams( &expectParams );
-    size_t packetSize = MQTT_PACKET_PINGREQ_SIZE;
+    uint32_t packetSize = MQTT_PACKET_PINGREQ_SIZE;
     MQTT_GetPingreqPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_GetPingreqPacketSize_ReturnThruPtr_pPacketSize( &packetSize );
     MQTT_SerializePingreq_ExpectAnyArgsAndReturn( MQTTSuccess );
@@ -6559,7 +6559,7 @@ void test_MQTT_ProcessLoop_handleKeepAlive_Error_Paths4( void )
     TransportInterface_t transport = { 0 };
     MQTTFixedBuffer_t networkBuffer = { 0 };
     ProcessLoopReturns_t expectParams = { 0 };
-    size_t packetSize = MQTT_PACKET_PINGREQ_SIZE;
+    uint32_t packetSize = MQTT_PACKET_PINGREQ_SIZE;
 
     setupTransportInterface( &transport );
     transport.recv = transportRecvNoData;
@@ -7668,7 +7668,7 @@ static void setupSubscriptionInfo( MQTTSubscribeInfo_t * pSubscribeInfo )
 }
 
 
-static uint8_t * MQTTV5_SerializeSubscribedHeader_cb( size_t remainingLength,
+static uint8_t * MQTTV5_SerializeSubscribedHeader_cb( uint32_t remainingLength,
                                                       uint8_t * pIndex,
                                                       uint16_t packetId,
                                                       int numcallbacks )
@@ -7681,7 +7681,7 @@ static uint8_t * MQTTV5_SerializeSubscribedHeader_cb( size_t remainingLength,
     return pIndex;
 }
 
-static uint8_t * MQTT_SerializeSubscribedHeader_cb2( size_t remainingLength,
+static uint8_t * MQTT_SerializeSubscribedHeader_cb2( uint32_t remainingLength,
                                                      uint8_t * pIndex,
                                                      uint16_t packetId,
                                                      int numcallbacks )
@@ -7696,7 +7696,7 @@ static uint8_t * MQTT_SerializeSubscribedHeader_cb2( size_t remainingLength,
     return pIndex + SubscribeHeaderLength;
 }
 
-static uint8_t * MQTT_SerializeUnsubscribedHeader_cb2( size_t remainingLength,
+static uint8_t * MQTT_SerializeUnsubscribedHeader_cb2( uint32_t remainingLength,
                                                        uint8_t * pIndex,
                                                        uint16_t packetId,
                                                        int numcallbacks )
@@ -7883,8 +7883,8 @@ void test_MQTTV5_Subscribe_happy_path( void )
     MQTTFixedBuffer_t networkBuffer = { 0 };
     MQTTSubscribeInfo_t subscribeInfo = { 0 };
 
-    size_t remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
-    size_t packetSize = MQTT_SAMPLE_REMAINING_LENGTH;
+    uint32_t remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
+    uint32_t packetSize = MQTT_SAMPLE_REMAINING_LENGTH;
     MQTTPubAckInfo_t incomingRecords = { 0 };
     MQTTPubAckInfo_t outgoingRecords = { 0 };
 
@@ -7953,8 +7953,8 @@ void test_MQTT_Subscribe_happy_path_not_connected( void )
     TransportInterface_t transport = { 0 };
     MQTTFixedBuffer_t networkBuffer = { 0 };
     MQTTSubscribeInfo_t subscribeInfo = { 0 };
-    size_t remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
-    size_t packetSize = MQTT_SAMPLE_REMAINING_LENGTH;
+    uint32_t remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
+    uint32_t packetSize = MQTT_SAMPLE_REMAINING_LENGTH;
     MQTTPubAckInfo_t incomingRecords = { 0 };
     MQTTPubAckInfo_t outgoingRecords = { 0 };
     uint8_t ackPropsBuf[ 500 ];
@@ -8004,8 +8004,8 @@ void test_MQTTV5_Subscribe_happy_path1( void )
     TransportInterface_t transport = { 0 };
     MQTTFixedBuffer_t networkBuffer = { 0 };
     MQTTSubscribeInfo_t subscribeInfo[ 2 ];
-    size_t remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
-    size_t packetSize = MQTT_SAMPLE_REMAINING_LENGTH;
+    uint32_t remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
+    uint32_t packetSize = MQTT_SAMPLE_REMAINING_LENGTH;
     MQTTPubAckInfo_t incomingRecords = { 0 };
     MQTTPubAckInfo_t outgoingRecords = { 0 };
 
@@ -8083,8 +8083,8 @@ void test_MQTTV5_Subscribe_happy_path2( void )
     TransportInterface_t transport = { 0 };
     MQTTFixedBuffer_t networkBuffer = { 0 };
     MQTTSubscribeInfo_t subscribeInfo = { 0 };
-    size_t remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
-    size_t packetSize = MQTT_SAMPLE_REMAINING_LENGTH;
+    uint32_t remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
+    uint32_t packetSize = MQTT_SAMPLE_REMAINING_LENGTH;
     MQTTPubAckInfo_t incomingRecords = { 0 };
     MQTTPubAckInfo_t outgoingRecords = { 0 };
     uint8_t ackPropsBuf[ 500 ];
@@ -8131,8 +8131,8 @@ void test_MQTT_Subscribe_MultipleSubscriptions( void )
     TransportInterface_t transport = { 0 };
     MQTTFixedBuffer_t networkBuffer = { 0 };
     MQTTSubscribeInfo_t subscribeInfo[ 5 ];
-    size_t remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
-    size_t packetSize = MQTT_SAMPLE_REMAINING_LENGTH;
+    uint32_t remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
+    uint32_t packetSize = MQTT_SAMPLE_REMAINING_LENGTH;
     MQTTPubAckInfo_t incomingRecords = { 0 };
     MQTTPubAckInfo_t outgoingRecords = { 0 };
 
@@ -8204,8 +8204,8 @@ void test_MQTTV5_Subscribe_happy_path3( void )
     TransportInterface_t transport = { 0 };
     MQTTFixedBuffer_t networkBuffer = { 0 };
     MQTTSubscribeInfo_t subscribeInfo = { 0 };
-    size_t remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
-    size_t packetSize = MQTT_SAMPLE_REMAINING_LENGTH;
+    uint32_t remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
+    uint32_t packetSize = MQTT_SAMPLE_REMAINING_LENGTH;
     MQTTPubAckInfo_t incomingRecords = { 0 };
     MQTTPubAckInfo_t outgoingRecords = { 0 };
 
@@ -8258,8 +8258,8 @@ void test_MQTT_Subscribe_error_paths1( void )
     TransportInterface_t transport = { 0 };
     MQTTFixedBuffer_t networkBuffer = { 0 };
     MQTTSubscribeInfo_t subscribeInfo = { 0 };
-    size_t remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
-    size_t packetSize = MQTT_SAMPLE_REMAINING_LENGTH;
+    uint32_t remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
+    uint32_t packetSize = MQTT_SAMPLE_REMAINING_LENGTH;
 
     /* Verify that an error is propagated when transport interface returns an error. */
     setupNetworkBuffer( &networkBuffer );
@@ -8298,8 +8298,8 @@ void test_MQTT_Unsubscribe_error_paths1( void )
     TransportInterface_t transport = { 0 };
     MQTTFixedBuffer_t networkBuffer = { 0 };
     MQTTSubscribeInfo_t subscribeInfo = { 0 };
-    size_t remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
-    size_t packetSize = MQTT_SAMPLE_REMAINING_LENGTH;
+    uint32_t remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
+    uint32_t packetSize = MQTT_SAMPLE_REMAINING_LENGTH;
 
     /* Verify that an error is propagated when transport interface returns an error. */
     setupNetworkBuffer( &networkBuffer );
@@ -8338,8 +8338,8 @@ void test_MQTT_Subscribe_error_paths_timerOverflowCheck( void )
     TransportInterface_t transport = { 0 };
     MQTTFixedBuffer_t networkBuffer = { 0 };
     MQTTSubscribeInfo_t subscribeInfo = { 0 };
-    size_t remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
-    size_t packetSize = MQTT_SAMPLE_REMAINING_LENGTH;
+    uint32_t remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
+    uint32_t packetSize = MQTT_SAMPLE_REMAINING_LENGTH;
 
     globalEntryTime = UINT32_MAX - 2U;
 
@@ -8385,8 +8385,8 @@ void test_MQTT_Subscribe_error_paths_timerOverflowCheck1( void )
     TransportInterface_t transport = { 0 };
     MQTTFixedBuffer_t networkBuffer = { 0 };
     MQTTSubscribeInfo_t subscribeInfo = { 0 };
-    size_t remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
-    size_t packetSize = MQTT_SAMPLE_REMAINING_LENGTH;
+    uint32_t remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
+    uint32_t packetSize = MQTT_SAMPLE_REMAINING_LENGTH;
 
     globalEntryTime = UINT32_MAX - MQTT_SEND_TIMEOUT_MS + 1;
 
@@ -8432,8 +8432,8 @@ void test_MQTT_Subscribe_error_paths2( void )
     TransportInterface_t transport = { 0 };
     MQTTFixedBuffer_t networkBuffer = { 0 };
     MQTTSubscribeInfo_t subscribeInfo = { 0 };
-    size_t remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
-    size_t packetSize = MQTT_SAMPLE_REMAINING_LENGTH;
+    uint32_t remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
+    uint32_t packetSize = MQTT_SAMPLE_REMAINING_LENGTH;
 
     /* Verify that an error is propagated when transport interface returns an error. */
     setupNetworkBuffer( &networkBuffer );
@@ -8472,8 +8472,8 @@ void test_MQTT_Subscribe_error_paths_with_transport_failure( void )
     TransportInterface_t transport = { 0 };
     MQTTFixedBuffer_t networkBuffer = { 0 };
     MQTTSubscribeInfo_t subscribeInfo = { 0 };
-    size_t remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
-    size_t packetSize = MQTT_SAMPLE_REMAINING_LENGTH;
+    uint32_t remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
+    uint32_t packetSize = MQTT_SAMPLE_REMAINING_LENGTH;
 
     /* Verify that an error is propagated when transport interface returns an error. */
     setupNetworkBuffer( &networkBuffer );
@@ -8509,8 +8509,8 @@ void test_MQTTV5_shared_subscriptions( void )
     MQTTSubscribeInfo_t subscribeInfo = { 0 };
     MQTTPubAckInfo_t incomingRecords = { 0 };
     MQTTPubAckInfo_t outgoingRecords = { 0 };
-    size_t remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
-    size_t packetSize = MQTT_SAMPLE_REMAINING_LENGTH;
+    uint32_t remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
+    uint32_t packetSize = MQTT_SAMPLE_REMAINING_LENGTH;
     uint8_t ackPropsBuf[ 500 ];
     size_t ackPropsBufLength = sizeof( ackPropsBuf );
 
@@ -8638,7 +8638,7 @@ void test_MQTT_Unsubscribe_invalid_params( void )
 }
 
 
-static uint8_t * MQTTV5_SerializeUnsubscribeHeader_cb( size_t remainingLength,
+static uint8_t * MQTTV5_SerializeUnsubscribeHeader_cb( uint32_t remainingLength,
                                                        uint8_t * pIndex,
                                                        uint16_t packetId,
                                                        int numcallbacks )
@@ -8662,8 +8662,8 @@ void test_MQTT_Unsubscribe_happy_path( void )
     TransportInterface_t transport = { 0 };
     MQTTFixedBuffer_t networkBuffer = { 0 };
     MQTTSubscribeInfo_t subscribeInfo = { 0 };
-    size_t remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
-    size_t packetSize = MQTT_SAMPLE_REMAINING_LENGTH;
+    uint32_t remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
+    uint32_t packetSize = MQTT_SAMPLE_REMAINING_LENGTH;
 
     setupTransportInterface( &transport );
     setupNetworkBuffer( &networkBuffer );
@@ -8723,8 +8723,8 @@ void test_MQTT_Unsubscribe_MultipleSubscriptions( void )
     TransportInterface_t transport = { 0 };
     MQTTFixedBuffer_t networkBuffer = { 0 };
     MQTTSubscribeInfo_t subscribeInfo[ 5 ];
-    size_t remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
-    size_t packetSize = MQTT_SAMPLE_REMAINING_LENGTH;
+    uint32_t remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
+    uint32_t packetSize = MQTT_SAMPLE_REMAINING_LENGTH;
     MQTTPubAckInfo_t incomingRecords = { 0 };
     MQTTPubAckInfo_t outgoingRecords = { 0 };
     uint8_t buf[ 100 ];
@@ -8785,8 +8785,8 @@ void test_MQTT_Unsubscribe_happy_path_withUP( void )
     TransportInterface_t transport = { 0 };
     MQTTFixedBuffer_t networkBuffer = { 0 };
     MQTTSubscribeInfo_t subscribeInfo = { 0 };
-    size_t remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
-    size_t packetSize = MQTT_SAMPLE_REMAINING_LENGTH;
+    uint32_t remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
+    uint32_t packetSize = MQTT_SAMPLE_REMAINING_LENGTH;
 
     setupTransportInterface( &transport );
     setupNetworkBuffer( &networkBuffer );
@@ -8816,8 +8816,8 @@ void test_MQTTV5_Unsubscribe_happy_path( void )
     MQTTFixedBuffer_t networkBuffer = { 0 };
     MQTTSubscribeInfo_t subscribeInfo = { 0 };
 
-    size_t remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
-    size_t packetSize = MQTT_SAMPLE_REMAINING_LENGTH;
+    uint32_t remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
+    uint32_t packetSize = MQTT_SAMPLE_REMAINING_LENGTH;
     MQTTPubAckInfo_t incomingRecords = { 0 };
     MQTTPubAckInfo_t outgoingRecords = { 0 };
 
@@ -8874,8 +8874,8 @@ void test_MQTT_Unsubscribe_not_connected( void )
     TransportInterface_t transport = { 0 };
     MQTTFixedBuffer_t networkBuffer = { 0 };
     MQTTSubscribeInfo_t subscribeInfo = { 0 };
-    size_t remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
-    size_t packetSize = MQTT_SAMPLE_REMAINING_LENGTH;
+    uint32_t remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
+    uint32_t packetSize = MQTT_SAMPLE_REMAINING_LENGTH;
 
     setupTransportInterface( &transport );
     setupNetworkBuffer( &networkBuffer );
@@ -8930,7 +8930,7 @@ void test_MQTT_Ping_happy_path( void )
     MQTTContext_t context = { 0 };
     TransportInterface_t transport = { 0 };
     MQTTFixedBuffer_t networkBuffer = { 0 };
-    size_t pingreqSize = MQTT_PACKET_PINGREQ_SIZE;
+    uint32_t pingreqSize = MQTT_PACKET_PINGREQ_SIZE;
 
     setupTransportInterface( &transport );
     setupNetworkBuffer( &networkBuffer );
@@ -8962,7 +8962,7 @@ void test_MQTT_Ping_not_connected( void )
     MQTTContext_t context = { 0 };
     TransportInterface_t transport = { 0 };
     MQTTFixedBuffer_t networkBuffer = { 0 };
-    size_t pingreqSize = MQTT_PACKET_PINGREQ_SIZE;
+    uint32_t pingreqSize = MQTT_PACKET_PINGREQ_SIZE;
 
     setupTransportInterface( &transport );
     setupNetworkBuffer( &networkBuffer );
@@ -9004,7 +9004,7 @@ void test_MQTT_Ping_error_path( void )
     MQTTContext_t context = { 0 };
     TransportInterface_t transport = { 0 };
     MQTTFixedBuffer_t networkBuffer = { 0 };
-    size_t pingreqSize = MQTT_PACKET_PINGREQ_SIZE;
+    uint32_t pingreqSize = MQTT_PACKET_PINGREQ_SIZE;
 
     setupTransportInterface( &transport );
     setupNetworkBuffer( &networkBuffer );

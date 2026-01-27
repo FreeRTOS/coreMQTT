@@ -33,7 +33,7 @@ void harness()
 {
     MQTTPropBuilder_t * propBuffer;
     uint32_t * sessionExpiry;
-    uint32_t currentIndex;
+    size_t currentIndex;
 
     propBuffer = allocateMqttPropBuilder( NULL );
     __CPROVER_assume( isValidMqttPropBuilder( propBuffer ) );

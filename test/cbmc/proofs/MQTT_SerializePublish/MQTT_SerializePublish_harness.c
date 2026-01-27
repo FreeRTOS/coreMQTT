@@ -33,8 +33,8 @@ void harness()
 {
     MQTTPublishInfo_t * pPublishInfo;
     uint16_t packetId;
-    size_t remainingLength;
-    size_t packetSize;
+    uint32_t remainingLength;
+    uint32_t packetSize;
     const MQTTFixedBuffer_t * pFixedBuffer;
     MQTTPropBuilder_t * pPublishProperties;
     MQTTStatus_t status = MQTTSuccess;

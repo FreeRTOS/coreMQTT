@@ -331,7 +331,7 @@ static size_t encodeVariableLengthUT( uint8_t * pDestination,
 {
     uint8_t lengthByte;
     uint8_t * pLengthEnd = NULL;
-    size_t remainingLength = length;
+    uint32_t remainingLength = length;
 
     TEST_ASSERT_NOT_NULL( pDestination );
 
@@ -1303,6 +1303,12 @@ void test_MQTT_SerializeConnect( void )
 
     memset( &connectInfo, 0x0, sizeof( connectInfo ) );
     status = MQTT_SerializeConnect( &connectInfo, NULL, NULL, NULL, 120, &fixedBuffer );
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+
+    memset( &connectInfo, 0x0, sizeof( connectInfo ) );
+    connectInfo.pClientIdentifier = "TEST";
+    connectInfo.clientIdentifierLength = 4;
+    status = MQTT_SerializeConnect( &connectInfo, NULL, NULL, NULL, 120, &fixedBuffer );
     TEST_ASSERT_EQUAL_INT( MQTTNoMemory, status );
 
     /* Create a good connection info. */
@@ -1455,8 +1461,8 @@ void test_MQTT_SerializeConnect( void )
 void test_RemaininglengthLimit( void )
 {
     /* Test will property length more than the max value allowed. */
-    size_t remainingLength = 0;
-    size_t packetSize = 0;
+    uint32_t remainingLength = 0;
+    uint32_t packetSize = 0;
     uint32_t maxPacketSize = 100;
     MQTTStatus_t status = MQTTSuccess;
 
@@ -1542,8 +1548,8 @@ void test_MQTTV5_ValidatePublishParams()
 
 void test_MQTTV5_GetPublishPacketSize()
 {
-    size_t remainingLength = 0U;
-    size_t packetSize = 0U;
+    uint32_t remainingLength = 0U;
+    uint32_t packetSize = 0U;
     uint32_t maxPacketSize = 0U;
 
     setupPublishInfo( &publishInfo );
@@ -1629,10 +1635,10 @@ void test_MQTTV5_GetPublishPacketSize()
 void test_MQTT_SerializePublish( void )
 {
     MQTTPublishInfo_t publishInfo;
-    size_t remainingLength = 98;
+    uint32_t remainingLength = 98;
     uint8_t buffer[ 200 + 2 * BUFFER_PADDING_LENGTH ];
     size_t bufferSize = sizeof( buffer ) - 2 * BUFFER_PADDING_LENGTH;
-    size_t packetSize = bufferSize;
+    uint32_t packetSize = bufferSize;
     MQTTStatus_t status = MQTTSuccess;
     MQTTFixedBuffer_t fixedBuffer = { .pBuffer = &buffer[ BUFFER_PADDING_LENGTH ], .size = bufferSize };
     uint8_t expectedPacket[ 200 ];
@@ -2066,8 +2072,8 @@ void test_MQTTV5_DeserializeAck_Pubrel()
 void test_MQTTV5_GetAckPacketSize()
 {
     MQTTStatus_t status;
-    size_t remainingLength;
-    size_t packetSize;
+    uint32_t remainingLength;
+    uint32_t packetSize;
     uint32_t maxPacketSize = 0U;
 
     /*Invalid parameters*/
@@ -2111,8 +2117,8 @@ void test_MQTTV5_GetAckPacketSize()
 
 void test_MQTTV5_GetDisconnectPacketSize()
 {
-    size_t remainingLength;
-    size_t packetSize;
+    uint32_t remainingLength;
+    uint32_t packetSize;
     uint32_t maxPacketSize = 0U;
     MQTTStatus_t status;
     MQTTSuccessFailReasonCode_t reasonCode;
@@ -2310,8 +2316,8 @@ void test_MQTTV5_GetSubscribePacketSize( void )
 {
     MQTTStatus_t status = MQTTSuccess;
     MQTTSubscribeInfo_t subscribeInfo;
-    size_t remainingLength = 0;
-    size_t packetSize = 0;
+    uint32_t remainingLength = 0;
+    uint32_t packetSize = 0;
 
     /** Verify Parameters */
 
@@ -2334,8 +2340,8 @@ void test_MQTTV5_GetSubscribePacketSize_HappyPath( void )
 {
     MQTTStatus_t status = MQTTSuccess;
     MQTTSubscribeInfo_t subscribeInfo;
-    size_t remainingLength = 0;
-    size_t packetSize = 0;
+    uint32_t remainingLength = 0;
+    uint32_t packetSize = 0;
 
     subscribeInfo.pTopicFilter = TEST_TOPIC_NAME;
     subscribeInfo.topicFilterLength = TEST_TOPIC_NAME_LENGTH;
@@ -2366,8 +2372,8 @@ void test_MQTTV5_GetSubscribePacketSize_MultipleSubscriptions( void )
 {
     MQTTStatus_t status = MQTTSuccess;
     MQTTSubscribeInfo_t subscribeInfo[ 2 ];
-    size_t remainingLength = 0;
-    size_t packetSize = 0;
+    uint32_t remainingLength = 0;
+    uint32_t packetSize = 0;
 
     subscribeInfo[ 0 ].pTopicFilter = TEST_TOPIC_NAME;
     subscribeInfo[ 0 ].topicFilterLength = TEST_TOPIC_NAME_LENGTH;
@@ -2390,8 +2396,8 @@ void test_MQTTV5_GetSubscribePacketSize_MultipleSubscriptions( void )
 void test_calculateSubscriptionPacketSizeV5( void )
 {
     size_t subscriptionCount = 1;
-    size_t remainingLength = 0;
-    size_t packetSize = 0;
+    uint32_t remainingLength = 0;
+    uint32_t packetSize = 0;
     MQTTStatus_t status = MQTTSuccess;
     MQTTSubscribeInfo_t fourThousandSubscriptions[ 4096 ] = { 0 };
     int i;
@@ -2421,10 +2427,10 @@ void test_MQTT_SerializeSubscribe( void )
 {
     MQTTSubscribeInfo_t subscriptionList;
     size_t subscriptionCount = 1;
-    size_t remainingLength = 0;
+    uint32_t remainingLength = 0;
     uint8_t buffer[ 25 + 2 * BUFFER_PADDING_LENGTH ];
     size_t bufferSize = sizeof( buffer ) - 2 * BUFFER_PADDING_LENGTH;
-    size_t packetSize = bufferSize;
+    uint32_t packetSize = bufferSize;
     MQTTStatus_t status = MQTTSuccess;
     MQTTFixedBuffer_t fixedBuffer = { .pBuffer = &buffer[ BUFFER_PADDING_LENGTH ], .size = bufferSize };
     uint8_t expectedPacket[ 100 ];
@@ -2638,10 +2644,10 @@ void test_MQTT_SerializeUnsubscribe( void )
 {
     MQTTSubscribeInfo_t subscriptionList;
     size_t subscriptionCount = 1;
-    size_t remainingLength = 0;
+    uint32_t remainingLength = 0;
     uint8_t buffer[ 33 + 2 * BUFFER_PADDING_LENGTH ];
     size_t bufferSize = sizeof( buffer ) - 2 * BUFFER_PADDING_LENGTH;
-    size_t packetSize = bufferSize;
+    uint32_t packetSize = bufferSize;
     MQTTStatus_t status = MQTTSuccess;
     MQTTFixedBuffer_t fixedBuffer = { .pBuffer = &buffer[ BUFFER_PADDING_LENGTH ], .size = bufferSize };
     uint8_t expectedPacket[ 100 ];
@@ -2878,8 +2884,8 @@ void test_MQTTV5_GetUnsubscribePacketSize( void )
 {
     MQTTStatus_t status = MQTTSuccess;
     MQTTSubscribeInfo_t subscribeInfo = { 0 };
-    size_t remainingLength = 0;
-    size_t packetSize = 0;
+    uint32_t remainingLength = 0;
+    uint32_t packetSize = 0;
 
     status = MQTT_GetUnsubscribePacketSize( NULL, 1, NULL, &remainingLength, &packetSize, MQTT_MAX_PACKET_SIZE );
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
@@ -3163,12 +3169,12 @@ void test_MQTT_SerializeDisconnect( void )
 {
     uint8_t buffer[ 25 + 2 * BUFFER_PADDING_LENGTH ];
     size_t bufferSize = sizeof( buffer ) - 2 * BUFFER_PADDING_LENGTH;
-    size_t packetSize = bufferSize;
+    uint32_t packetSize = bufferSize;
     MQTTFixedBuffer_t fixedBuffer = { .pBuffer = &buffer[ BUFFER_PADDING_LENGTH ], .size = bufferSize };
     uint8_t expectedPacket[ 10 ] = { 0 };
     uint8_t * pIterator = expectedPacket;
     MQTTStatus_t status = MQTTSuccess;
-    size_t remainingLength = 0;
+    uint32_t remainingLength = 0;
 
     /* Buffer size less than disconnect request fails. */
     fixedBuffer.size = 1;
@@ -3246,7 +3252,7 @@ void test_MQTT_SerializeDisconnect( void )
 void test_MQTT_GetPingreqPacketSize( void )
 {
     MQTTStatus_t status;
-    size_t packetSize;
+    uint32_t packetSize;
 
     /* Verify parameters. */
     status = MQTT_GetPingreqPacketSize( NULL );
@@ -3434,7 +3440,7 @@ void test_MQTT_GetIncomingPacketTypeAndLength1( void )
 void test_MQTT_SerializePublishHeaderWithoutTopic_BadInputs( void )
 {
     MQTTPublishInfo_t publishInfo = { 0 };
-    size_t remainingLength = 0;
+    uint32_t remainingLength = 0;
     uint8_t buffer[ 7 ];
     MQTTStatus_t status = MQTTSuccess;
     size_t headerSize = 0;
@@ -3470,7 +3476,7 @@ void test_MQTT_SerializePublishHeaderWithoutTopic_BadInputs( void )
 void test_MQTT_SerializePublishHeaderWithoutTopic_AllNULL( void )
 {
     MQTTPublishInfo_t publishInfo;
-    size_t remainingLength = 0;
+    uint32_t remainingLength = 0;
     uint8_t buffer[ 7 ];
     MQTTStatus_t status = MQTTSuccess;
     size_t headerSize = 0;
@@ -3522,7 +3528,7 @@ void test_MQTT_SerializePublishHeaderWithoutTopic_AllNULL( void )
 void test_MQTT_SerializePublishHeaderWithoutTopic_QoS1( void )
 {
     MQTTPublishInfo_t publishInfo;
-    size_t remainingLength = 0;
+    uint32_t remainingLength = 0;
     uint8_t buffer[ 7 ];
     MQTTStatus_t status = MQTTSuccess;
     size_t headerSize = 0;
@@ -3554,7 +3560,7 @@ void test_MQTT_SerializePublishHeaderWithoutTopic_QoS1( void )
 void test_MQTT_SerializePublishHeaderWithoutTopic_QoS2( void )
 {
     MQTTPublishInfo_t publishInfo;
-    size_t remainingLength = 0;
+    uint32_t remainingLength = 0;
     uint8_t buffer[ 7 ];
     MQTTStatus_t status = MQTTSuccess;
     size_t headerSize = 0;
@@ -3586,7 +3592,7 @@ void test_MQTT_SerializePublishHeaderWithoutTopic_QoS2( void )
 void test_MQTT_SerializePublishHeaderWithoutTopic_retain( void )
 {
     MQTTPublishInfo_t publishInfo;
-    size_t remainingLength = 0;
+    uint32_t remainingLength = 0;
     uint8_t buffer[ 7 ];
     MQTTStatus_t status = MQTTSuccess;
     size_t headerSize = 0;
@@ -3618,7 +3624,7 @@ void test_MQTT_SerializePublishHeaderWithoutTopic_retain( void )
 void test_MQTT_SerializePublishHeaderWithoutTopic_Duplicate( void )
 {
     MQTTPublishInfo_t publishInfo;
-    size_t remainingLength = 0;
+    uint32_t remainingLength = 0;
     uint8_t buffer[ 7 ];
     MQTTStatus_t status = MQTTSuccess;
     size_t headerSize = 0;
@@ -3650,7 +3656,7 @@ void test_MQTT_SerializePublishHeaderWithoutTopic_Duplicate( void )
 void test_MQTT_SerializePublishHeaderWithoutTopic_VariousFlagsSetTopicLength( void )
 {
     MQTTPublishInfo_t publishInfo;
-    size_t remainingLength = 0;
+    uint32_t remainingLength = 0;
     uint8_t buffer[ 7 ];
     MQTTStatus_t status = MQTTSuccess;
     size_t headerSize = 0;
@@ -3685,12 +3691,12 @@ void test_MQTT_SerializePublishHeaderWithoutTopic_VariousFlagsSetTopicLength( vo
 void test_MQTT_SerializePublishHeader( void )
 {
     MQTTPublishInfo_t publishInfo;
-    size_t remainingLength = 0;
+    uint32_t remainingLength = 0;
     uint8_t buffer[ 200 + 2 * BUFFER_PADDING_LENGTH ];
     uint8_t expectedPacket[ 200 ];
     uint8_t * pIterator;
     size_t bufferSize = sizeof( buffer ) - 2 * BUFFER_PADDING_LENGTH;
-    size_t packetSize = bufferSize;
+    uint32_t packetSize = bufferSize;
     MQTTStatus_t status = MQTTSuccess;
     MQTTFixedBuffer_t fixedBuffer = { .pBuffer = &buffer[ BUFFER_PADDING_LENGTH ], .size = bufferSize };
     size_t headerSize = 0;
@@ -4736,16 +4742,16 @@ void test_getProps( void )
     pIndex = serializeutf_8( pIndex, MQTT_AUTH_METHOD_ID );
     pIndex = serializeutf_8( pIndex, MQTT_AUTH_DATA_ID );
 
-    uint32_t propCurrentIndex = 0U;
+    size_t propCurrentIndex = 0U;
     uint16_t topicAlias;
     uint8_t payloadFormat;
     const char * pResponseTopic;
-    uint16_t responseTopicLength;
+    size_t responseTopicLength;
     const char * correlationData;
-    uint16_t correlationLength;
+    size_t correlationLength;
     uint32_t messageExpiry;
     const char * pContentType;
-    uint16_t contentTypeLength;
+    size_t contentTypeLength;
     uint32_t subscriptionId;
     uint32_t sessionExpiry;
     uint16_t aliasMax;
@@ -4754,20 +4760,20 @@ void test_getProps( void )
     uint8_t retainAvailable;
     uint32_t maxPacketSize;
     const char * pClientId;
-    uint16_t clientIdLength;
+    size_t clientIdLength;
     uint8_t wildcard;
     uint8_t subAvailable;
     uint8_t propertyId;
     const char * pReasonString;
-    uint16_t reasonStringLength;
+    size_t reasonStringLength;
     uint8_t sharedSubAvailable;
     uint16_t serverKeepAlive;
     const char * pResponseInfo;
-    uint16_t responseInfoLength;
+    size_t responseInfoLength;
     const char * pAuthMethod;
-    uint16_t authMethodLength;
+    size_t authMethodLength;
     const char * pAuthData;
-    uint16_t authDataLength;
+    size_t authDataLength;
     MQTTUserProperty_t userProp;
 
     size_t counter = 0U;
@@ -4996,9 +5002,9 @@ void test_getProps_decodeFailure( void )
     uint32_t sessionExpiry;
     uint32_t maxPacketSize;
     const char * string;
-    uint16_t stringLength;
+    size_t stringLength;
     MQTTUserProperty_t userProp;
-    uint32_t propCurrentIndex = 0U;
+    size_t propCurrentIndex = 0U;
 
     uint8_t buffer[ 500 ] = { 0 };
     size_t bufLength = 500;
@@ -6447,7 +6453,7 @@ void test_getAckPacketSize_AllPacketTypes( void )
 void test_MQTT_SkipNextProperty_NullPropertyBuilder( void )
 {
     MQTTStatus_t status;
-    uint32_t currentIndex = 0;
+    size_t currentIndex = 0;
 
     status = MQTT_SkipNextProperty( NULL, &currentIndex );
 
@@ -6478,7 +6484,7 @@ void test_MQTT_SkipNextProperty_NullBuffer( void )
 {
     MQTTPropBuilder_t propBuilder = { 0 };
     MQTTStatus_t status;
-    uint32_t currentIndex = 0;
+    size_t currentIndex = 0;
 
     propBuilder.pBuffer = NULL;
     propBuilder.bufferLength = MQTT_TEST_BUFFER_LENGTH;
@@ -6500,7 +6506,7 @@ void test_MQTT_SkipNextProperty_IndexAtEnd( void )
     uint8_t testBuffer[ MQTT_TEST_BUFFER_LENGTH ];
     MQTTPropBuilder_t propBuilder = { 0 };
     MQTTStatus_t status;
-    uint32_t currentIndex = 0;
+    size_t currentIndex = 0;
 
     propBuilder.pBuffer = testBuffer;
     propBuilder.bufferLength = MQTT_TEST_BUFFER_LENGTH;
@@ -6519,7 +6525,7 @@ void test_MQTT_SkipNextProperty_IndexBeyondEnd( void )
     uint8_t testBuffer[ MQTT_TEST_BUFFER_LENGTH ];
     MQTTPropBuilder_t propBuilder = { 0 };
     MQTTStatus_t status;
-    uint32_t currentIndex = 10;
+    size_t currentIndex = 10;
 
     propBuilder.pBuffer = testBuffer;
     propBuilder.bufferLength = MQTT_TEST_BUFFER_LENGTH;
@@ -6542,7 +6548,7 @@ void test_MQTT_SkipNextProperty_UnknownPropertyId( void )
     uint8_t testBuffer[ MQTT_TEST_BUFFER_LENGTH ];
     MQTTPropBuilder_t propBuilder = { 0 };
     MQTTStatus_t status;
-    uint32_t currentIndex = 0;
+    size_t currentIndex = 0;
 
     propBuilder.pBuffer = testBuffer;
     propBuilder.bufferLength = MQTT_TEST_BUFFER_LENGTH;
@@ -6568,7 +6574,7 @@ void test_MQTT_SkipNextProperty_SessionExpiry( void )
     uint8_t testBuffer[ MQTT_TEST_BUFFER_LENGTH ];
     MQTTPropBuilder_t propBuilder = { 0 };
     MQTTStatus_t status;
-    uint32_t currentIndex = 0;
+    size_t currentIndex = 0;
     uint8_t * pIndex = testBuffer;
 
     propBuilder.pBuffer = testBuffer;
@@ -6597,7 +6603,7 @@ void test_MQTT_SkipNextProperty_MaxPacketSize( void )
     uint8_t testBuffer[ MQTT_TEST_BUFFER_LENGTH ];
     MQTTPropBuilder_t propBuilder = { 0 };
     MQTTStatus_t status;
-    uint32_t currentIndex = 0;
+    size_t currentIndex = 0;
     uint8_t * pIndex = testBuffer;
 
     propBuilder.pBuffer = testBuffer;
@@ -6625,7 +6631,7 @@ void test_MQTT_SkipNextProperty_WillDelay( void )
     uint8_t testBuffer[ MQTT_TEST_BUFFER_LENGTH ];
     MQTTPropBuilder_t propBuilder = { 0 };
     MQTTStatus_t status;
-    uint32_t currentIndex = 0;
+    size_t currentIndex = 0;
     uint8_t * pIndex = testBuffer;
 
     propBuilder.pBuffer = testBuffer;
@@ -6653,7 +6659,7 @@ void test_MQTT_SkipNextProperty_MessageExpiry( void )
     uint8_t testBuffer[ MQTT_TEST_BUFFER_LENGTH ];
     MQTTPropBuilder_t propBuilder = { 0 };
     MQTTStatus_t status;
-    uint32_t currentIndex = 0;
+    size_t currentIndex = 0;
     uint8_t * pIndex = testBuffer;
 
     propBuilder.pBuffer = testBuffer;
@@ -6681,7 +6687,7 @@ void test_MQTT_SkipNextProperty_Uint32_InsufficientBuffer( void )
     uint8_t testBuffer[ MQTT_TEST_BUFFER_LENGTH ];
     MQTTPropBuilder_t propBuilder = { 0 };
     MQTTStatus_t status;
-    uint32_t currentIndex = 0;
+    size_t currentIndex = 0;
 
     propBuilder.pBuffer = testBuffer;
     propBuilder.bufferLength = MQTT_TEST_BUFFER_LENGTH;
@@ -6707,7 +6713,7 @@ void test_MQTT_SkipNextProperty_ReceiveMax( void )
     uint8_t testBuffer[ MQTT_TEST_BUFFER_LENGTH ];
     MQTTPropBuilder_t propBuilder = { 0 };
     MQTTStatus_t status;
-    uint32_t currentIndex = 0;
+    size_t currentIndex = 0;
     uint8_t * pIndex = testBuffer;
 
     propBuilder.pBuffer = testBuffer;
@@ -6733,7 +6739,7 @@ void test_MQTT_SkipNextProperty_TopicAliasMax( void )
     uint8_t testBuffer[ MQTT_TEST_BUFFER_LENGTH ];
     MQTTPropBuilder_t propBuilder = { 0 };
     MQTTStatus_t status;
-    uint32_t currentIndex = 0;
+    size_t currentIndex = 0;
     uint8_t * pIndex = testBuffer;
 
     propBuilder.pBuffer = testBuffer;
@@ -6759,7 +6765,7 @@ void test_MQTT_SkipNextProperty_TopicAlias( void )
     uint8_t testBuffer[ MQTT_TEST_BUFFER_LENGTH ];
     MQTTPropBuilder_t propBuilder = { 0 };
     MQTTStatus_t status;
-    uint32_t currentIndex = 0;
+    size_t currentIndex = 0;
     uint8_t * pIndex = testBuffer;
 
     propBuilder.pBuffer = testBuffer;
@@ -6785,7 +6791,7 @@ void test_MQTT_SkipNextProperty_ServerKeepAlive( void )
     uint8_t testBuffer[ MQTT_TEST_BUFFER_LENGTH ];
     MQTTPropBuilder_t propBuilder = { 0 };
     MQTTStatus_t status;
-    uint32_t currentIndex = 0;
+    size_t currentIndex = 0;
     uint8_t * pIndex = testBuffer;
 
     propBuilder.pBuffer = testBuffer;
@@ -6811,7 +6817,7 @@ void test_MQTT_SkipNextProperty_Uint16_InsufficientBuffer( void )
     uint8_t testBuffer[ MQTT_TEST_BUFFER_LENGTH ];
     MQTTPropBuilder_t propBuilder = { 0 };
     MQTTStatus_t status;
-    uint32_t currentIndex = 0;
+    size_t currentIndex = 0;
 
     propBuilder.pBuffer = testBuffer;
     propBuilder.bufferLength = MQTT_TEST_BUFFER_LENGTH;
@@ -6837,7 +6843,7 @@ void test_MQTT_SkipNextProperty_RequestResponse( void )
     uint8_t testBuffer[ MQTT_TEST_BUFFER_LENGTH ];
     MQTTPropBuilder_t propBuilder = { 0 };
     MQTTStatus_t status;
-    uint32_t currentIndex = 0;
+    size_t currentIndex = 0;
     uint8_t * pIndex = testBuffer;
 
     propBuilder.pBuffer = testBuffer;
@@ -6862,7 +6868,7 @@ void test_MQTT_SkipNextProperty_RequestProblem( void )
     uint8_t testBuffer[ MQTT_TEST_BUFFER_LENGTH ];
     MQTTPropBuilder_t propBuilder = { 0 };
     MQTTStatus_t status;
-    uint32_t currentIndex = 0;
+    size_t currentIndex = 0;
     uint8_t * pIndex = testBuffer;
 
     propBuilder.pBuffer = testBuffer;
@@ -6887,7 +6893,7 @@ void test_MQTT_SkipNextProperty_PayloadFormat( void )
     uint8_t testBuffer[ MQTT_TEST_BUFFER_LENGTH ];
     MQTTPropBuilder_t propBuilder = { 0 };
     MQTTStatus_t status;
-    uint32_t currentIndex = 0;
+    size_t currentIndex = 0;
     uint8_t * pIndex = testBuffer;
 
     propBuilder.pBuffer = testBuffer;
@@ -6912,7 +6918,7 @@ void test_MQTT_SkipNextProperty_MaxQos( void )
     uint8_t testBuffer[ MQTT_TEST_BUFFER_LENGTH ];
     MQTTPropBuilder_t propBuilder = { 0 };
     MQTTStatus_t status;
-    uint32_t currentIndex = 0;
+    size_t currentIndex = 0;
     uint8_t * pIndex = testBuffer;
 
     propBuilder.pBuffer = testBuffer;
@@ -6937,7 +6943,7 @@ void test_MQTT_SkipNextProperty_RetainAvailable( void )
     uint8_t testBuffer[ MQTT_TEST_BUFFER_LENGTH ];
     MQTTPropBuilder_t propBuilder = { 0 };
     MQTTStatus_t status;
-    uint32_t currentIndex = 0;
+    size_t currentIndex = 0;
     uint8_t * pIndex = testBuffer;
 
     propBuilder.pBuffer = testBuffer;
@@ -6962,7 +6968,7 @@ void test_MQTT_SkipNextProperty_Wildcard( void )
     uint8_t testBuffer[ MQTT_TEST_BUFFER_LENGTH ];
     MQTTPropBuilder_t propBuilder = { 0 };
     MQTTStatus_t status;
-    uint32_t currentIndex = 0;
+    size_t currentIndex = 0;
     uint8_t * pIndex = testBuffer;
 
     propBuilder.pBuffer = testBuffer;
@@ -6987,7 +6993,7 @@ void test_MQTT_SkipNextProperty_SubAvailable( void )
     uint8_t testBuffer[ MQTT_TEST_BUFFER_LENGTH ];
     MQTTPropBuilder_t propBuilder = { 0 };
     MQTTStatus_t status;
-    uint32_t currentIndex = 0;
+    size_t currentIndex = 0;
     uint8_t * pIndex = testBuffer;
 
     propBuilder.pBuffer = testBuffer;
@@ -7012,7 +7018,7 @@ void test_MQTT_SkipNextProperty_SharedSub( void )
     uint8_t testBuffer[ MQTT_TEST_BUFFER_LENGTH ];
     MQTTPropBuilder_t propBuilder = { 0 };
     MQTTStatus_t status;
-    uint32_t currentIndex = 0;
+    size_t currentIndex = 0;
     uint8_t * pIndex = testBuffer;
 
     propBuilder.pBuffer = testBuffer;
@@ -7037,7 +7043,7 @@ void test_MQTT_SkipNextProperty_Uint8_InsufficientBuffer( void )
     uint8_t testBuffer[ MQTT_TEST_BUFFER_LENGTH ];
     MQTTPropBuilder_t propBuilder = { 0 };
     MQTTStatus_t status;
-    uint32_t currentIndex = 0;
+    size_t currentIndex = 0;
 
     propBuilder.pBuffer = testBuffer;
     propBuilder.bufferLength = MQTT_TEST_BUFFER_LENGTH;
@@ -7063,7 +7069,7 @@ void test_MQTT_SkipNextProperty_AuthMethod( void )
     uint8_t testBuffer[ MQTT_TEST_BUFFER_LENGTH ];
     MQTTPropBuilder_t propBuilder = { 0 };
     MQTTStatus_t status;
-    uint32_t currentIndex = 0;
+    size_t currentIndex = 0;
     uint8_t * pIndex = testBuffer;
 
     propBuilder.pBuffer = testBuffer;
@@ -7088,7 +7094,7 @@ void test_MQTT_SkipNextProperty_ContentType( void )
     uint8_t testBuffer[ MQTT_TEST_BUFFER_LENGTH ];
     MQTTPropBuilder_t propBuilder = { 0 };
     MQTTStatus_t status;
-    uint32_t currentIndex = 0;
+    size_t currentIndex = 0;
     uint8_t * pIndex = testBuffer;
 
     propBuilder.pBuffer = testBuffer;
@@ -7113,7 +7119,7 @@ void test_MQTT_SkipNextProperty_ResponseTopic( void )
     uint8_t testBuffer[ MQTT_TEST_BUFFER_LENGTH ];
     MQTTPropBuilder_t propBuilder = { 0 };
     MQTTStatus_t status;
-    uint32_t currentIndex = 0;
+    size_t currentIndex = 0;
     uint8_t * pIndex = testBuffer;
 
     propBuilder.pBuffer = testBuffer;
@@ -7138,7 +7144,7 @@ void test_MQTT_SkipNextProperty_AssignedClientId( void )
     uint8_t testBuffer[ MQTT_TEST_BUFFER_LENGTH ];
     MQTTPropBuilder_t propBuilder = { 0 };
     MQTTStatus_t status;
-    uint32_t currentIndex = 0;
+    size_t currentIndex = 0;
     uint8_t * pIndex = testBuffer;
 
     propBuilder.pBuffer = testBuffer;
@@ -7163,7 +7169,7 @@ void test_MQTT_SkipNextProperty_ReasonString( void )
     uint8_t testBuffer[ MQTT_TEST_BUFFER_LENGTH ];
     MQTTPropBuilder_t propBuilder = { 0 };
     MQTTStatus_t status;
-    uint32_t currentIndex = 0;
+    size_t currentIndex = 0;
     uint8_t * pIndex = testBuffer;
 
     propBuilder.pBuffer = testBuffer;
@@ -7188,7 +7194,7 @@ void test_MQTT_SkipNextProperty_ResponseInfo( void )
     uint8_t testBuffer[ MQTT_TEST_BUFFER_LENGTH ];
     MQTTPropBuilder_t propBuilder = { 0 };
     MQTTStatus_t status;
-    uint32_t currentIndex = 0;
+    size_t currentIndex = 0;
     uint8_t * pIndex = testBuffer;
 
     propBuilder.pBuffer = testBuffer;
@@ -7213,7 +7219,7 @@ void test_MQTT_SkipNextProperty_ServerRef( void )
     uint8_t testBuffer[ MQTT_TEST_BUFFER_LENGTH ];
     MQTTPropBuilder_t propBuilder = { 0 };
     MQTTStatus_t status;
-    uint32_t currentIndex = 0;
+    size_t currentIndex = 0;
     uint8_t * pIndex = testBuffer;
 
     propBuilder.pBuffer = testBuffer;
@@ -7238,7 +7244,7 @@ void test_MQTT_SkipNextProperty_AuthData( void )
     uint8_t testBuffer[ MQTT_TEST_BUFFER_LENGTH ];
     MQTTPropBuilder_t propBuilder = { 0 };
     MQTTStatus_t status;
-    uint32_t currentIndex = 0;
+    size_t currentIndex = 0;
     uint8_t * pIndex = testBuffer;
 
     propBuilder.pBuffer = testBuffer;
@@ -7263,7 +7269,7 @@ void test_MQTT_SkipNextProperty_CorrelationData( void )
     uint8_t testBuffer[ MQTT_TEST_BUFFER_LENGTH ];
     MQTTPropBuilder_t propBuilder = { 0 };
     MQTTStatus_t status;
-    uint32_t currentIndex = 0;
+    size_t currentIndex = 0;
     uint8_t * pIndex = testBuffer;
 
     propBuilder.pBuffer = testBuffer;
@@ -7288,7 +7294,7 @@ void test_MQTT_SkipNextProperty_Utf8_InsufficientBufferForLength( void )
     uint8_t testBuffer[ MQTT_TEST_BUFFER_LENGTH ];
     MQTTPropBuilder_t propBuilder = { 0 };
     MQTTStatus_t status;
-    uint32_t currentIndex = 0;
+    size_t currentIndex = 0;
 
     propBuilder.pBuffer = testBuffer;
     propBuilder.bufferLength = MQTT_TEST_BUFFER_LENGTH;
@@ -7310,7 +7316,7 @@ void test_MQTT_SkipNextProperty_Utf8_InsufficientBufferForData( void )
     uint8_t testBuffer[ MQTT_TEST_BUFFER_LENGTH ];
     MQTTPropBuilder_t propBuilder = { 0 };
     MQTTStatus_t status;
-    uint32_t currentIndex = 0;
+    size_t currentIndex = 0;
     uint8_t * pIndex = testBuffer;
 
     propBuilder.pBuffer = testBuffer;
@@ -7340,7 +7346,7 @@ void test_MQTT_SkipNextProperty_UserProperty( void )
     uint8_t testBuffer[ MQTT_TEST_BUFFER_LENGTH ];
     MQTTPropBuilder_t propBuilder = { 0 };
     MQTTStatus_t status;
-    uint32_t currentIndex = 0;
+    size_t currentIndex = 0;
     uint8_t * pIndex = testBuffer;
 
     propBuilder.pBuffer = testBuffer;
@@ -7366,7 +7372,7 @@ void test_MQTT_SkipNextProperty_UserProperty_InsufficientBufferForKey( void )
     uint8_t testBuffer[ MQTT_TEST_BUFFER_LENGTH ];
     MQTTPropBuilder_t propBuilder = { 0 };
     MQTTStatus_t status;
-    uint32_t currentIndex = 0;
+    size_t currentIndex = 0;
 
     propBuilder.pBuffer = testBuffer;
     propBuilder.bufferLength = MQTT_TEST_BUFFER_LENGTH;
@@ -7391,7 +7397,7 @@ void test_MQTT_SkipNextProperty_UserProperty_InsufficientBufferForValue( void )
     uint8_t testBuffer[ MQTT_TEST_BUFFER_LENGTH ];
     MQTTPropBuilder_t propBuilder = { 0 };
     MQTTStatus_t status;
-    uint32_t currentIndex = 0;
+    size_t currentIndex = 0;
     uint8_t * pIndex = testBuffer;
 
     propBuilder.pBuffer = testBuffer;
@@ -7422,7 +7428,7 @@ void test_MQTT_SkipNextProperty_SubscriptionId_OneByte( void )
     uint8_t testBuffer[ MQTT_TEST_BUFFER_LENGTH ];
     MQTTPropBuilder_t propBuilder = { 0 };
     MQTTStatus_t status;
-    uint32_t currentIndex = 0;
+    size_t currentIndex = 0;
     uint8_t * pIndex = testBuffer;
 
     propBuilder.pBuffer = testBuffer;
@@ -7447,7 +7453,7 @@ void test_MQTT_SkipNextProperty_SubscriptionId_TwoBytes( void )
     uint8_t testBuffer[ MQTT_TEST_BUFFER_LENGTH ];
     MQTTPropBuilder_t propBuilder = { 0 };
     MQTTStatus_t status;
-    uint32_t currentIndex = 0;
+    size_t currentIndex = 0;
     uint8_t * pIndex = testBuffer;
 
     propBuilder.pBuffer = testBuffer;
@@ -7473,7 +7479,7 @@ void test_MQTT_SkipNextProperty_SubscriptionId_FourBytes( void )
     uint8_t testBuffer[ MQTT_TEST_BUFFER_LENGTH ];
     MQTTPropBuilder_t propBuilder = { 0 };
     MQTTStatus_t status;
-    uint32_t currentIndex = 0;
+    size_t currentIndex = 0;
     uint8_t * pIndex = testBuffer;
 
     propBuilder.pBuffer = testBuffer;
@@ -7498,7 +7504,7 @@ void test_MQTT_SkipNextProperty_SubscriptionId_InsufficientBuffer( void )
     uint8_t testBuffer[ MQTT_TEST_BUFFER_LENGTH ];
     MQTTPropBuilder_t propBuilder = { 0 };
     MQTTStatus_t status;
-    uint32_t currentIndex = 0;
+    size_t currentIndex = 0;
 
     propBuilder.pBuffer = testBuffer;
     propBuilder.bufferLength = MQTT_TEST_BUFFER_LENGTH;
@@ -7521,7 +7527,7 @@ void test_MQTT_SkipNextProperty_SubscriptionId_InvalidEncoding( void )
     uint8_t testBuffer[ MQTT_TEST_BUFFER_LENGTH ];
     MQTTPropBuilder_t propBuilder = { 0 };
     MQTTStatus_t status;
-    uint32_t currentIndex = 0;
+    size_t currentIndex = 0;
     uint8_t * pIndex = testBuffer;
 
     propBuilder.pBuffer = testBuffer;
@@ -7553,7 +7559,7 @@ void test_MQTT_SkipNextProperty_MultipleProperties( void )
     uint8_t testBuffer[ MQTT_TEST_BUFFER_LENGTH ];
     MQTTPropBuilder_t propBuilder = { 0 };
     MQTTStatus_t status;
-    uint32_t currentIndex = 0;
+    size_t currentIndex = 0;
     uint8_t * pIndex = testBuffer;
 
     propBuilder.pBuffer = testBuffer;
@@ -7605,7 +7611,7 @@ void test_MQTT_SkipNextProperty_AtBufferBoundary( void )
     uint8_t testBuffer[ MQTT_TEST_BUFFER_LENGTH ];
     MQTTPropBuilder_t propBuilder = { 0 };
     MQTTStatus_t status;
-    uint32_t currentIndex = 0;
+    size_t currentIndex = 0;
     uint8_t * pIndex = testBuffer;
 
     propBuilder.pBuffer = testBuffer;
@@ -7634,7 +7640,7 @@ void test_MQTT_SkipNextProperty_ZeroLengthString( void )
     uint8_t testBuffer[ MQTT_TEST_BUFFER_LENGTH ];
     MQTTPropBuilder_t propBuilder = { 0 };
     MQTTStatus_t status;
-    uint32_t currentIndex = 0;
+    size_t currentIndex = 0;
     uint8_t * pIndex = testBuffer;
 
     propBuilder.pBuffer = testBuffer;
@@ -7660,7 +7666,7 @@ void test_MQTT_SkipNextProperty_UserProperty_ZeroLength( void )
     uint8_t testBuffer[ MQTT_TEST_BUFFER_LENGTH ];
     MQTTPropBuilder_t propBuilder = { 0 };
     MQTTStatus_t status;
-    uint32_t currentIndex = 0;
+    size_t currentIndex = 0;
     uint8_t * pIndex = testBuffer;
 
     propBuilder.pBuffer = testBuffer;
@@ -7688,7 +7694,7 @@ void test_MQTT_SkipNextProperty_SubscriptionId_Zero( void )
     uint8_t testBuffer[ MQTT_TEST_BUFFER_LENGTH ];
     MQTTPropBuilder_t propBuilder = { 0 };
     MQTTStatus_t status;
-    uint32_t currentIndex = 0;
+    size_t currentIndex = 0;
     uint8_t * pIndex = testBuffer;
 
     propBuilder.pBuffer = testBuffer;
@@ -7714,7 +7720,7 @@ void test_MQTT_SkipNextProperty_MaxUtf8Length( void )
     uint8_t testBuffer[ MQTT_TEST_BUFFER_LENGTH ];
     MQTTPropBuilder_t propBuilder = { 0 };
     MQTTStatus_t status;
-    uint32_t currentIndex = 0;
+    size_t currentIndex = 0;
     uint8_t * pIndex = testBuffer;
 
     propBuilder.pBuffer = testBuffer;
@@ -7742,7 +7748,7 @@ void test_MQTT_SkipNextProperty_AllPropertyTypes( void )
     uint8_t testBuffer[ MQTT_TEST_BUFFER_LENGTH ];
     MQTTPropBuilder_t propBuilder = { 0 };
     MQTTStatus_t status;
-    uint32_t currentIndex = 0;
+    size_t currentIndex = 0;
     uint8_t * pIndex = testBuffer;
     uint32_t expectedIndex;
 

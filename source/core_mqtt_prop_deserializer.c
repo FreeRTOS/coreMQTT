@@ -47,7 +47,7 @@
  * @return MQTTSuccess if all the checks pass;
  */
 static inline MQTTStatus_t checkPropBuilderParams( MQTTPropBuilder_t * mqttPropBuilder,
-                                                   uint32_t * currentIndex );
+                                                   size_t * currentIndex );
 
 /**
  * @brief Get a uint8 property value from the property builder.
@@ -65,7 +65,7 @@ static inline MQTTStatus_t checkPropBuilderParams( MQTTPropBuilder_t * mqttPropB
  * #MQTTBadParameter if parameters are invalid or property ID doesn't match.
  */
 static MQTTStatus_t getPropUint8( MQTTPropBuilder_t * pPropertyBuilder,
-                                  uint32_t * currentIndex,
+                                  size_t * currentIndex,
                                   uint8_t propertyId,
                                   uint8_t * property );
 
@@ -85,7 +85,7 @@ static MQTTStatus_t getPropUint8( MQTTPropBuilder_t * pPropertyBuilder,
  * #MQTTBadParameter if parameters are invalid or property ID doesn't match.
  */
 static MQTTStatus_t getPropUint16( MQTTPropBuilder_t * pPropertyBuilder,
-                                   uint32_t * currentIndex,
+                                   size_t * currentIndex,
                                    uint8_t propertyId,
                                    uint16_t * property );
 
@@ -105,7 +105,7 @@ static MQTTStatus_t getPropUint16( MQTTPropBuilder_t * pPropertyBuilder,
  * #MQTTBadParameter if parameters are invalid or property ID doesn't match.
  */
 static MQTTStatus_t getPropUint32( MQTTPropBuilder_t * pPropertyBuilder,
-                                   uint32_t * currentIndex,
+                                   size_t * currentIndex,
                                    uint8_t propertyId,
                                    uint32_t * property );
 
@@ -126,15 +126,15 @@ static MQTTStatus_t getPropUint32( MQTTPropBuilder_t * pPropertyBuilder,
  * #MQTTBadParameter if parameters are invalid or property ID doesn't match.
  */
 static MQTTStatus_t getPropUtf8( MQTTPropBuilder_t * pPropertyBuilder,
-                                 uint32_t * currentIndex,
+                                 size_t * currentIndex,
                                  uint8_t propertyId,
                                  const char ** property,
-                                 uint16_t * propertyLength );
+                                 size_t * propertyLength );
 
 /*-----------------------------------------------------------*/
 
 static inline MQTTStatus_t checkPropBuilderParams( MQTTPropBuilder_t * mqttPropBuilder,
-                                                   uint32_t * currentIndex )
+                                                   size_t * currentIndex )
 {
     MQTTStatus_t status = MQTTSuccess;
 
@@ -160,7 +160,7 @@ static inline MQTTStatus_t checkPropBuilderParams( MQTTPropBuilder_t * mqttPropB
 /*-----------------------------------------------------------*/
 
 static MQTTStatus_t getPropUint8( MQTTPropBuilder_t * pPropertyBuilder,
-                                  uint32_t * currentIndex,
+                                  size_t * currentIndex,
                                   uint8_t propertyId,
                                   uint8_t * property )
 {
@@ -210,7 +210,7 @@ static MQTTStatus_t getPropUint8( MQTTPropBuilder_t * pPropertyBuilder,
 /*-----------------------------------------------------------*/
 
 static MQTTStatus_t getPropUint16( MQTTPropBuilder_t * pPropertyBuilder,
-                                   uint32_t * currentIndex,
+                                   size_t * currentIndex,
                                    uint8_t propertyId,
                                    uint16_t * property )
 {
@@ -263,7 +263,7 @@ static MQTTStatus_t getPropUint16( MQTTPropBuilder_t * pPropertyBuilder,
 /*-----------------------------------------------------------*/
 
 static MQTTStatus_t getPropUint32( MQTTPropBuilder_t * pPropertyBuilder,
-                                   uint32_t * currentIndex,
+                                   size_t * currentIndex,
                                    uint8_t propertyId,
                                    uint32_t * property )
 {
@@ -316,10 +316,10 @@ static MQTTStatus_t getPropUint32( MQTTPropBuilder_t * pPropertyBuilder,
 /*-----------------------------------------------------------*/
 
 static MQTTStatus_t getPropUtf8( MQTTPropBuilder_t * pPropertyBuilder,
-                                 uint32_t * currentIndex,
+                                 size_t * currentIndex,
                                  uint8_t propertyId,
                                  const char ** property,
-                                 uint16_t * propertyLength )
+                                 size_t * propertyLength )
 {
     MQTTStatus_t status = checkPropBuilderParams( pPropertyBuilder, currentIndex );
 
@@ -368,7 +368,7 @@ static MQTTStatus_t getPropUtf8( MQTTPropBuilder_t * pPropertyBuilder,
 /*-----------------------------------------------------------*/
 
 MQTTStatus_t MQTT_GetNextPropertyType( MQTTPropBuilder_t * pPropertyBuilder,
-                                       uint32_t * currentIndex,
+                                       size_t * currentIndex,
                                        uint8_t * property )
 {
     MQTTStatus_t status = checkPropBuilderParams( pPropertyBuilder, currentIndex );
@@ -430,7 +430,7 @@ MQTTStatus_t MQTT_GetNextPropertyType( MQTTPropBuilder_t * pPropertyBuilder,
 /*-----------------------------------------------------------*/
 
 MQTTStatus_t MQTT_SkipNextProperty( MQTTPropBuilder_t * pPropertyBuilder,
-                                    uint32_t * currentIndex )
+                                    size_t * currentIndex )
 {
     MQTTStatus_t status = checkPropBuilderParams( pPropertyBuilder, currentIndex );
     uint8_t property;
@@ -441,7 +441,7 @@ MQTTStatus_t MQTT_SkipNextProperty( MQTTPropBuilder_t * pPropertyBuilder,
     uint16_t dummyUint16;
     uint8_t dummyUint8;
     const char * dummyString;
-    uint16_t dummyStringLen;
+    size_t dummyStringLen;
 
     if( status != MQTTSuccess )
     {
@@ -541,7 +541,7 @@ MQTTStatus_t MQTT_SkipNextProperty( MQTTPropBuilder_t * pPropertyBuilder,
 /*-----------------------------------------------------------*/
 
 MQTTStatus_t MQTTPropGet_UserProp( MQTTPropBuilder_t * pPropertyBuilder,
-                                   uint32_t * currentIndex,
+                                   size_t * currentIndex,
                                    MQTTUserProperty_t * pUserProperty )
 {
     MQTTStatus_t status = checkPropBuilderParams( pPropertyBuilder, currentIndex );
@@ -594,7 +594,7 @@ MQTTStatus_t MQTTPropGet_UserProp( MQTTPropBuilder_t * pPropertyBuilder,
 /*-----------------------------------------------------------*/
 
 MQTTStatus_t MQTTPropGet_SessionExpiry( MQTTPropBuilder_t * pPropertyBuilder,
-                                        uint32_t * currentIndex,
+                                        size_t * currentIndex,
                                         uint32_t * pSessionExpiry )
 {
     return getPropUint32( pPropertyBuilder, currentIndex, MQTT_SESSION_EXPIRY_ID, pSessionExpiry );
@@ -603,7 +603,7 @@ MQTTStatus_t MQTTPropGet_SessionExpiry( MQTTPropBuilder_t * pPropertyBuilder,
 /*-----------------------------------------------------------*/
 
 MQTTStatus_t MQTTPropGet_ReceiveMax( MQTTPropBuilder_t * pPropertyBuilder,
-                                     uint32_t * currentIndex,
+                                     size_t * currentIndex,
                                      uint16_t * pReceiveMax )
 {
     return getPropUint16( pPropertyBuilder, currentIndex, MQTT_RECEIVE_MAX_ID, pReceiveMax );
@@ -612,7 +612,7 @@ MQTTStatus_t MQTTPropGet_ReceiveMax( MQTTPropBuilder_t * pPropertyBuilder,
 /*-----------------------------------------------------------*/
 
 MQTTStatus_t MQTTPropGet_MaxQos( MQTTPropBuilder_t * pPropertyBuilder,
-                                 uint32_t * currentIndex,
+                                 size_t * currentIndex,
                                  uint8_t * pMaxQos )
 {
     return getPropUint8( pPropertyBuilder, currentIndex, MQTT_MAX_QOS_ID, pMaxQos );
@@ -621,7 +621,7 @@ MQTTStatus_t MQTTPropGet_MaxQos( MQTTPropBuilder_t * pPropertyBuilder,
 /*-----------------------------------------------------------*/
 
 MQTTStatus_t MQTTPropGet_RetainAvailable( MQTTPropBuilder_t * pPropertyBuilder,
-                                          uint32_t * currentIndex,
+                                          size_t * currentIndex,
                                           uint8_t * pRetainAvailable )
 {
     return getPropUint8( pPropertyBuilder, currentIndex, MQTT_RETAIN_AVAILABLE_ID, pRetainAvailable );
@@ -630,7 +630,7 @@ MQTTStatus_t MQTTPropGet_RetainAvailable( MQTTPropBuilder_t * pPropertyBuilder,
 /*-----------------------------------------------------------*/
 
 MQTTStatus_t MQTTPropGet_MaxPacketSize( MQTTPropBuilder_t * pPropertyBuilder,
-                                        uint32_t * currentIndex,
+                                        size_t * currentIndex,
                                         uint32_t * pMaxPacketSize )
 {
     return getPropUint32( pPropertyBuilder, currentIndex, MQTT_MAX_PACKET_SIZE_ID, pMaxPacketSize );
@@ -639,9 +639,9 @@ MQTTStatus_t MQTTPropGet_MaxPacketSize( MQTTPropBuilder_t * pPropertyBuilder,
 /*-----------------------------------------------------------*/
 
 MQTTStatus_t MQTTPropGet_AssignedClientId( MQTTPropBuilder_t * pPropertyBuilder,
-                                           uint32_t * currentIndex,
+                                           size_t * currentIndex,
                                            const char ** pClientId,
-                                           uint16_t * pClientIdLength )
+                                           size_t * pClientIdLength )
 {
     return getPropUtf8( pPropertyBuilder, currentIndex, MQTT_ASSIGNED_CLIENT_ID, pClientId, pClientIdLength );
 }
@@ -649,7 +649,7 @@ MQTTStatus_t MQTTPropGet_AssignedClientId( MQTTPropBuilder_t * pPropertyBuilder,
 /*-----------------------------------------------------------*/
 
 MQTTStatus_t MQTTPropGet_TopicAliasMax( MQTTPropBuilder_t * pPropertyBuilder,
-                                        uint32_t * currentIndex,
+                                        size_t * currentIndex,
                                         uint16_t * pTopicAliasMax )
 {
     return getPropUint16( pPropertyBuilder, currentIndex, MQTT_TOPIC_ALIAS_MAX_ID, pTopicAliasMax );
@@ -658,9 +658,9 @@ MQTTStatus_t MQTTPropGet_TopicAliasMax( MQTTPropBuilder_t * pPropertyBuilder,
 /*-----------------------------------------------------------*/
 
 MQTTStatus_t MQTTPropGet_ReasonString( MQTTPropBuilder_t * pPropertyBuilder,
-                                       uint32_t * currentIndex,
+                                       size_t * currentIndex,
                                        const char ** pReasonString,
-                                       uint16_t * pReasonStringLength )
+                                       size_t * pReasonStringLength )
 {
     return getPropUtf8( pPropertyBuilder, currentIndex, MQTT_REASON_STRING_ID, pReasonString, pReasonStringLength );
 }
@@ -668,7 +668,7 @@ MQTTStatus_t MQTTPropGet_ReasonString( MQTTPropBuilder_t * pPropertyBuilder,
 /*-----------------------------------------------------------*/
 
 MQTTStatus_t MQTTPropGet_WildcardId( MQTTPropBuilder_t * pPropertyBuilder,
-                                     uint32_t * currentIndex,
+                                     size_t * currentIndex,
                                      uint8_t * pWildcardAvailable )
 {
     return getPropUint8( pPropertyBuilder, currentIndex, MQTT_WILDCARD_ID, pWildcardAvailable );
@@ -677,7 +677,7 @@ MQTTStatus_t MQTTPropGet_WildcardId( MQTTPropBuilder_t * pPropertyBuilder,
 /*-----------------------------------------------------------*/
 
 MQTTStatus_t MQTTPropGet_SubsIdAvailable( MQTTPropBuilder_t * pPropertyBuilder,
-                                          uint32_t * currentIndex,
+                                          size_t * currentIndex,
                                           uint8_t * pSubsIdAvailable )
 {
     return getPropUint8( pPropertyBuilder, currentIndex, MQTT_SUB_AVAILABLE_ID, pSubsIdAvailable );
@@ -686,7 +686,7 @@ MQTTStatus_t MQTTPropGet_SubsIdAvailable( MQTTPropBuilder_t * pPropertyBuilder,
 /*-----------------------------------------------------------*/
 
 MQTTStatus_t MQTTPropGet_SharedSubAvailable( MQTTPropBuilder_t * pPropertyBuilder,
-                                             uint32_t * currentIndex,
+                                             size_t * currentIndex,
                                              uint8_t * pSharedSubAvailable )
 {
     return getPropUint8( pPropertyBuilder, currentIndex, MQTT_SHARED_SUB_ID, pSharedSubAvailable );
@@ -695,7 +695,7 @@ MQTTStatus_t MQTTPropGet_SharedSubAvailable( MQTTPropBuilder_t * pPropertyBuilde
 /*-----------------------------------------------------------*/
 
 MQTTStatus_t MQTTPropGet_ServerKeepAlive( MQTTPropBuilder_t * pPropertyBuilder,
-                                          uint32_t * currentIndex,
+                                          size_t * currentIndex,
                                           uint16_t * pServerKeepAlive )
 {
     return getPropUint16( pPropertyBuilder, currentIndex, MQTT_SERVER_KEEP_ALIVE_ID, pServerKeepAlive );
@@ -704,9 +704,9 @@ MQTTStatus_t MQTTPropGet_ServerKeepAlive( MQTTPropBuilder_t * pPropertyBuilder,
 /*-----------------------------------------------------------*/
 
 MQTTStatus_t MQTTPropGet_ResponseInfo( MQTTPropBuilder_t * pPropertyBuilder,
-                                       uint32_t * currentIndex,
+                                       size_t * currentIndex,
                                        const char ** pResponseInfo,
-                                       uint16_t * pResponseInfoLength )
+                                       size_t * pResponseInfoLength )
 {
     return getPropUtf8( pPropertyBuilder, currentIndex, MQTT_RESPONSE_INFO_ID, pResponseInfo, pResponseInfoLength );
 }
@@ -714,9 +714,9 @@ MQTTStatus_t MQTTPropGet_ResponseInfo( MQTTPropBuilder_t * pPropertyBuilder,
 /*-----------------------------------------------------------*/
 
 MQTTStatus_t MQTTPropGet_ServerRef( MQTTPropBuilder_t * pPropertyBuilder,
-                                    uint32_t * currentIndex,
+                                    size_t * currentIndex,
                                     const char ** pServerRef,
-                                    uint16_t * pServerRefLength )
+                                    size_t * pServerRefLength )
 {
     return getPropUtf8( pPropertyBuilder, currentIndex, MQTT_SERVER_REF_ID, pServerRef, pServerRefLength );
 }
@@ -724,9 +724,9 @@ MQTTStatus_t MQTTPropGet_ServerRef( MQTTPropBuilder_t * pPropertyBuilder,
 /*-----------------------------------------------------------*/
 
 MQTTStatus_t MQTTPropGet_AuthMethod( MQTTPropBuilder_t * pPropertyBuilder,
-                                     uint32_t * currentIndex,
+                                     size_t * currentIndex,
                                      const char ** pAuthMethod,
-                                     uint16_t * pAuthMethodLen )
+                                     size_t * pAuthMethodLen )
 {
     return getPropUtf8( pPropertyBuilder, currentIndex, MQTT_AUTH_METHOD_ID, pAuthMethod, pAuthMethodLen );
 }
@@ -734,9 +734,9 @@ MQTTStatus_t MQTTPropGet_AuthMethod( MQTTPropBuilder_t * pPropertyBuilder,
 /*-----------------------------------------------------------*/
 
 MQTTStatus_t MQTTPropGet_AuthData( MQTTPropBuilder_t * pPropertyBuilder,
-                                   uint32_t * currentIndex,
+                                   size_t * currentIndex,
                                    const char ** pAuthData,
-                                   uint16_t * pAuthDataLen )
+                                   size_t * pAuthDataLen )
 {
     return getPropUtf8( pPropertyBuilder, currentIndex, MQTT_AUTH_DATA_ID, pAuthData, pAuthDataLen );
 }
@@ -744,7 +744,7 @@ MQTTStatus_t MQTTPropGet_AuthData( MQTTPropBuilder_t * pPropertyBuilder,
 /*-----------------------------------------------------------*/
 
 MQTTStatus_t MQTTPropGet_PayloadFormatIndicator( MQTTPropBuilder_t * pPropertyBuilder,
-                                                 uint32_t * currentIndex,
+                                                 size_t * currentIndex,
                                                  uint8_t * pPayloadFormat )
 {
     return getPropUint8( pPropertyBuilder, currentIndex, MQTT_PAYLOAD_FORMAT_ID, pPayloadFormat );
@@ -753,7 +753,7 @@ MQTTStatus_t MQTTPropGet_PayloadFormatIndicator( MQTTPropBuilder_t * pPropertyBu
 /*-----------------------------------------------------------*/
 
 MQTTStatus_t MQTTPropGet_MessageExpiryInterval( MQTTPropBuilder_t * pPropertyBuilder,
-                                                uint32_t * currentIndex,
+                                                size_t * currentIndex,
                                                 uint32_t * pMessageExpiry )
 {
     return getPropUint32( pPropertyBuilder, currentIndex, MQTT_MSG_EXPIRY_ID, pMessageExpiry );
@@ -762,7 +762,7 @@ MQTTStatus_t MQTTPropGet_MessageExpiryInterval( MQTTPropBuilder_t * pPropertyBui
 /*-----------------------------------------------------------*/
 
 MQTTStatus_t MQTTPropGet_TopicAlias( MQTTPropBuilder_t * pPropertyBuilder,
-                                     uint32_t * currentIndex,
+                                     size_t * currentIndex,
                                      uint16_t * pTopicAlias )
 {
     return getPropUint16( pPropertyBuilder, currentIndex, MQTT_TOPIC_ALIAS_ID, pTopicAlias );
@@ -771,9 +771,9 @@ MQTTStatus_t MQTTPropGet_TopicAlias( MQTTPropBuilder_t * pPropertyBuilder,
 /*-----------------------------------------------------------*/
 
 MQTTStatus_t MQTTPropGet_ResponseTopic( MQTTPropBuilder_t * pPropertyBuilder,
-                                        uint32_t * currentIndex,
+                                        size_t * currentIndex,
                                         const char ** pResponseTopic,
-                                        uint16_t * pResponseTopicLength )
+                                        size_t * pResponseTopicLength )
 {
     return getPropUtf8( pPropertyBuilder, currentIndex, MQTT_RESPONSE_TOPIC_ID, pResponseTopic, pResponseTopicLength );
 }
@@ -781,9 +781,9 @@ MQTTStatus_t MQTTPropGet_ResponseTopic( MQTTPropBuilder_t * pPropertyBuilder,
 /*-----------------------------------------------------------*/
 
 MQTTStatus_t MQTTPropGet_CorrelationData( MQTTPropBuilder_t * pPropertyBuilder,
-                                          uint32_t * currentIndex,
+                                          size_t * currentIndex,
                                           const char ** pCorrelationData,
-                                          uint16_t * pCorrelationDataLength )
+                                          size_t * pCorrelationDataLength )
 {
     return getPropUtf8( pPropertyBuilder, currentIndex, MQTT_CORRELATION_DATA_ID, pCorrelationData, pCorrelationDataLength );
 }
@@ -791,7 +791,7 @@ MQTTStatus_t MQTTPropGet_CorrelationData( MQTTPropBuilder_t * pPropertyBuilder,
 /*-----------------------------------------------------------*/
 
 MQTTStatus_t MQTTPropGet_SubscriptionId( MQTTPropBuilder_t * pPropertyBuilder,
-                                         uint32_t * currentIndex,
+                                         size_t * currentIndex,
                                          uint32_t * pSubscriptionId )
 {
     MQTTStatus_t status = checkPropBuilderParams( pPropertyBuilder, currentIndex );
@@ -838,9 +838,9 @@ MQTTStatus_t MQTTPropGet_SubscriptionId( MQTTPropBuilder_t * pPropertyBuilder,
 /*-----------------------------------------------------------*/
 
 MQTTStatus_t MQTTPropGet_ContentType( MQTTPropBuilder_t * pPropertyBuilder,
-                                      uint32_t * currentIndex,
+                                      size_t * currentIndex,
                                       const char ** pContentType,
-                                      uint16_t * pContentTypeLength )
+                                      size_t * pContentTypeLength )
 {
     return getPropUtf8( pPropertyBuilder, currentIndex, MQTT_CONTENT_TYPE_ID, pContentType, pContentTypeLength );
 }

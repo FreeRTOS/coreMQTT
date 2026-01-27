@@ -33,8 +33,8 @@ void harness()
 {
     MQTTPropBuilder_t * propBuffer;
     char ** correlationData;
-    uint16_t * correlationLength;
-    uint32_t currentIndex;
+    size_t * correlationLength;
+    size_t currentIndex;
 
     propBuffer = allocateMqttPropBuilder( NULL );
     __CPROVER_assume( isValidMqttPropBuilder( propBuffer ) );
@@ -47,7 +47,7 @@ void harness()
     }
 
     correlationData = malloc( sizeof( char * ) );
-    correlationLength = malloc( sizeof( uint16_t ) );
+    correlationLength = malloc( sizeof( size_t ) );
 
     MQTTPropGet_CorrelationData( propBuffer, &currentIndex, correlationData, correlationLength );
 }

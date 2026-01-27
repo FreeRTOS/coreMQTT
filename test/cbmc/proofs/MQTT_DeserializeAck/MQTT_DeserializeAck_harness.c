@@ -42,7 +42,7 @@ MQTTStatus_t __CPROVER_file_local_core_mqtt_serializer_c_deserializeConnackPrope
 MQTTStatus_t __CPROVER_file_local_core_mqtt_serializer_c_deserializeSubUnsubAckProperties( MQTTPropBuilder_t * propBuffer,
                                                                                            uint8_t * pIndex,
                                                                                            size_t * pSubackPropertyLength,
-                                                                                           size_t remainingLength )
+                                                                                           uint32_t remainingLength )
 {
     MQTTStatus_t status;
 
@@ -51,7 +51,7 @@ MQTTStatus_t __CPROVER_file_local_core_mqtt_serializer_c_deserializeSubUnsubAckP
 
 MQTTStatus_t __CPROVER_file_local_core_mqtt_serializer_c_decodePubAckProperties( MQTTPropBuilder_t * propBuffer,
                                                                                  uint8_t * pIndex,
-                                                                                 size_t remainingLength )
+                                                                                 uint32_t remainingLength )
 {
     MQTTStatus_t status;
 

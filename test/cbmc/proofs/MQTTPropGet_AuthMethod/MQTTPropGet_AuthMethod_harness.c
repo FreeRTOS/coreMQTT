@@ -33,8 +33,8 @@ void harness()
 {
     MQTTPropBuilder_t * propBuffer;
     char ** pAuthMethod;
-    uint16_t * authMethodLength;
-    uint32_t currentIndex;
+    size_t * authMethodLength;
+    size_t currentIndex;
 
     propBuffer = allocateMqttPropBuilder( NULL );
     __CPROVER_assume( isValidMqttPropBuilder( propBuffer ) );
@@ -47,7 +47,7 @@ void harness()
     }
 
     pAuthMethod = malloc( sizeof( char * ) );
-    authMethodLength = malloc( sizeof( uint16_t ) );
+    authMethodLength = malloc( sizeof( size_t ) );
 
     MQTTPropGet_AuthMethod( propBuffer, &currentIndex, pAuthMethod, authMethodLength );
 }

@@ -114,17 +114,17 @@ uint8_t * encodeString( uint8_t * pDestination,
 /*-----------------------------------------------------------*/
 
 MQTTStatus_t decodeUserProp( const char ** pPropertyKey,
-                             uint16_t * pPropertyKeyLen,
+                             size_t * pPropertyKeyLen,
                              const char ** pPropertyValue,
-                             uint16_t * pPropertyValueLen,
+                             size_t * pPropertyValueLen,
                              uint32_t * pPropertyLength,
                              uint8_t ** pIndex )
 {
     MQTTStatus_t status = MQTTSuccess;
     const char * pKey = NULL;
     const char * pValue = NULL;
-    uint16_t keyLength = 0U;
-    uint16_t valueLength = 0U;
+    size_t keyLength = 0U;
+    size_t valueLength = 0U;
     bool used = false;
 
     assert( pIndex != NULL );
@@ -275,7 +275,7 @@ MQTTStatus_t decodeUint8t( uint8_t * pProperty,
 /*-----------------------------------------------------------*/
 
 MQTTStatus_t decodeUtf8( const char ** pProperty,
-                         uint16_t * pLength,
+                         size_t * pLength,
                          uint32_t * pPropertyLength,
                          bool * pUsed,
                          uint8_t ** pIndex )
@@ -434,7 +434,7 @@ uint8_t * encodeVariableLength( uint8_t * pDestination,
 uint8_t * serializeAckFixed( uint8_t * pIndex,
                              uint8_t packetType,
                              uint16_t packetId,
-                             size_t remainingLength,
+                             uint32_t remainingLength,
                              MQTTSuccessFailReasonCode_t reasonCode )
 {
     uint8_t * pIndexLocal = pIndex;
@@ -538,7 +538,7 @@ uint8_t * serializeConnectFixedHeader( uint8_t * pIndex,
 
 /*-----------------------------------------------------------*/
 
-uint8_t * serializeSubscribeHeader( size_t remainingLength,
+uint8_t * serializeSubscribeHeader( uint32_t remainingLength,
                                     uint8_t * pIndex,
                                     uint16_t packetId )
 {
@@ -562,7 +562,7 @@ uint8_t * serializeSubscribeHeader( size_t remainingLength,
 
 /*-----------------------------------------------------------*/
 
-uint8_t * serializeUnsubscribeHeader( size_t remainingLength,
+uint8_t * serializeUnsubscribeHeader( uint32_t remainingLength,
                                       uint8_t * pIndex,
                                       uint16_t packetId )
 {
@@ -588,7 +588,7 @@ uint8_t * serializeUnsubscribeHeader( size_t remainingLength,
 
 uint8_t * serializeDisconnectFixed( uint8_t * pIndex,
                                     MQTTSuccessFailReasonCode_t * pReasonCode,
-                                    size_t remainingLength )
+                                    uint32_t remainingLength )
 {
     uint8_t * pIndexLocal = pIndex;
 

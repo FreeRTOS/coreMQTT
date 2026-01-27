@@ -64,7 +64,7 @@ void harness()
     __CPROVER_assume( *buffer != NULL );
 
     const char * pPropertyKey, * pPropertyValue;
-    uint16_t PropertyKeyLen, PropertyValueLen;
+    size_t PropertyKeyLen, PropertyValueLen;
 
     decodeUserProp( &pPropertyKey,
                     &PropertyKeyLen,
@@ -97,7 +97,7 @@ void harness()
     __CPROVER_assume( *buffer != NULL );
 
     const char * pProperty;
-    uint16_t PropertyLen;
+    size_t PropertyLen;
     decodeUtf8( &pProperty,
                 &PropertyLen,
                 length,

@@ -63,7 +63,7 @@ static uint32_t ulGetTimeFunction( void )
 uint8_t * serializeConnectFixedHeader( uint8_t * pIndex,
                                        const MQTTConnectInfo_t * pConnectInfo,
                                        const MQTTPublishInfo_t * pWillInfo,
-                                       size_t remainingLength )
+                                       uint32_t remainingLength )
 {
     __CPROVER_assert( pIndex != NULL, "pIndex must not be NULL." );
     __CPROVER_assert( pConnectInfo != NULL, "pConnectInfo must not be NULL." );

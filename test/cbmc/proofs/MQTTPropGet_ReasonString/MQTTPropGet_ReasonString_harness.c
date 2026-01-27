@@ -34,7 +34,7 @@ void harness()
     MQTTPropBuilder_t * propBuffer;
     char ** pReasonString;
     uint16_t * reasonStringLength;
-    uint32_t currentIndex;
+    size_t currentIndex;
 
     propBuffer = allocateMqttPropBuilder( NULL );
     __CPROVER_assume( isValidMqttPropBuilder( propBuffer ) );
