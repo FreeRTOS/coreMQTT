@@ -26,6 +26,11 @@
  * @file core_mqtt_serializer_private.h
  * @brief Declares the private functions/macros to be used with serialization and
  * deserialization by the core_mqtt library.
+ * DO NOT include this in your application.
+ *
+ * @note These functions should not be called by the application or relied upon
+ *       since their implementation can change. These are for internal use by the
+ *       library only.
  */
 #ifndef CORE_MQTT_SERIALIZER_PRIVATE_H
 #define CORE_MQTT_SERIALIZER_PRIVATE_H
@@ -310,9 +315,28 @@
 /**
  * @brief A macro to check whether the size_t values will overflow when converted
  * to uint16_t which is used to represent MQTT UTF8 strings.
+ *
+ * Evaluates to true when the value provided will overflow 16-bit variable. False otherwise.
  */
 #define CHECK_SIZE_T_OVERFLOWS_16BIT( x ) \
-    ( ( sizeof( size_t ) <= sizeof( uint16_t ) ) ? false : ( x > UINT16_MAX ) )
+    ( ( sizeof( size_t ) <= sizeof( uint16_t ) ) ? false : ( ( x ) > UINT16_MAX ) )
+
+/**
+ * @brief A macro to check whether the size_t values will overflow when converted
+ * to uint16_t which is used to represent MQTT UTF8 strings.
+ *
+ * Evaluates to true when the value provided will overflow 16-bit variable. False otherwise.
+ */
+#define CHECK_SIZE_T_OVERFLOWS_32BIT( x ) \
+    ( ( sizeof( size_t ) <= sizeof( uint32_t ) ) ? false : ( ( x ) > UINT32_MAX ) )
+
+/**
+ * @brief A macro to check whether the addition of two unsigned 32-bit numbers will overflow.
+ *
+ * Evaluates to true when the addition will overflow. False otherwise.
+ */
+#define ADDITION_WILL_OVERFLOW_U32( x, y ) \
+    ( ( x ) > ( UINT32_MAX - ( y ) ) )
 
 /**
  * @fn size_t variableLengthEncodedSize( uint32_t length );

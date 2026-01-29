@@ -703,7 +703,7 @@ typedef struct MQTTUserProperty
     /**
     * @brief key.
     */
-    const char* pKey;
+    const char * pKey;
     /**
     * @brief Length of the key.
     */
@@ -711,7 +711,7 @@ typedef struct MQTTUserProperty
     /**
     * @brief value.
     */
-    const char* pValue;
+    const char * pValue;
     /**
     * @brief Length of the value.
     */
@@ -1074,12 +1074,12 @@ MQTTStatus_t MQTT_SerializeSubscribe( const MQTTSubscribeInfo_t * pSubscriptionL
  * @endcode
  */
 /* @[declare_mqtt_getunsubscribepacketsize] */
-MQTTStatus_t MQTT_GetUnsubscribePacketSize( const MQTTSubscribeInfo_t* pSubscriptionList,
+MQTTStatus_t MQTT_GetUnsubscribePacketSize( const MQTTSubscribeInfo_t * pSubscriptionList,
                                             size_t subscriptionCount,
                                             const MQTTPropBuilder_t * pUnsubscribeProperties,
                                             uint32_t * pRemainingLength,
                                             uint32_t * pPacketSize,
-                                            uint32_t maxPacketSize);
+                                            uint32_t maxPacketSize );
 /* @[declare_mqtt_getunsubscribepacketsize] */
 
 /**
@@ -1229,7 +1229,7 @@ MQTTStatus_t MQTT_GetPublishPacketSize( const MQTTPublishInfo_t * pPublishInfo,
                                         const MQTTPropBuilder_t * pPublishProperties,
                                         uint32_t * pRemainingLength,
                                         uint32_t * pPacketSize,
-                                        uint32_t maxPacketSize);
+                                        uint32_t maxPacketSize );
 /* @[declare_mqtt_getpublishpacketsize] */
 
 /**
@@ -1748,11 +1748,11 @@ MQTTStatus_t MQTT_DeserializePublish( const MQTTPacketInfo_t * pIncomingPacket,
  * receiveIncomingPacket(&incomingPacket);
  *
  * // Deserialize ack information if the incoming packet is a publish ack.
- * status = MQTT_DeserializeAck(&incomingPacket,
- *                             &packetId,
- *                             &reasonCode,
- *                             &propBuffer,
- *                             &connectionProperties);
+ * status = MQTT_DeserializeAck( &incomingPacket,
+ *                               &packetId,
+ *                               &reasonCode,
+ *                               &propBuffer,
+ *                               &connectionProperties );
  * if(status == MQTTSuccess)
  * {
  *     // Ack information is now available.
@@ -1886,7 +1886,7 @@ MQTTStatus_t MQTT_ProcessIncomingPacketTypeAndLength( const uint8_t * pBuffer,
  * #MQTTBadParameter for invalid parameters
  */
  /* @[declare_mqtt_updateduplicatepublishflag] */
-MQTTStatus_t MQTT_UpdateDuplicatePublishFlag( uint8_t * pHeader , bool set );
+MQTTStatus_t MQTT_UpdateDuplicatePublishFlag( uint8_t * pHeader, bool set );
 /* @[declare_mqtt_updateduplicatepublishflag] */
 
 /**
@@ -1933,7 +1933,7 @@ MQTTStatus_t MQTTPropertyBuilder_Init( MQTTPropBuilder_t * pPropertyBuilder,
  * - #MQTTSuccess , #MQTTBadParameter or #MQTTBadResponse.
  */
 /* @[declare_mqtt_validatewillproperties] */
-MQTTStatus_t MQTT_ValidateWillProperties( const MQTTPropBuilder_t * pPropertyBuilder);
+MQTTStatus_t MQTT_ValidateWillProperties( const MQTTPropBuilder_t * pPropertyBuilder );
 /* @[declare_mqtt_validatewillproperties] */
 
 
@@ -1993,7 +1993,7 @@ MQTTStatus_t MQTT_ValidateConnectProperties( const MQTTPropBuilder_t * pProperty
  */
 
 /* @[declare_mqttpropadd_subscriptionid] */
-MQTTStatus_t MQTTPropAdd_SubscriptionId( MQTTPropBuilder_t* pPropertyBuilder,
+MQTTStatus_t MQTTPropAdd_SubscriptionId( MQTTPropBuilder_t * pPropertyBuilder,
                                          uint32_t subscriptionId,
                                          const uint8_t * pOptionalMqttPacketType );
 /* @[declare_mqttpropadd_subscriptionid] */
@@ -2015,8 +2015,8 @@ MQTTStatus_t MQTTPropAdd_SubscriptionId( MQTTPropBuilder_t* pPropertyBuilder,
  * - #MQTTNoMemory if the property builder has insufficient space
  */
 /* @[declare_mqttpropadd_userprop] */
-MQTTStatus_t MQTTPropAdd_UserProp( MQTTPropBuilder_t* pPropertyBuilder,
-                                   const MQTTUserProperty_t* userProperty,
+MQTTStatus_t MQTTPropAdd_UserProp( MQTTPropBuilder_t * pPropertyBuilder,
+                                   const MQTTUserProperty_t * userProperty,
                                    const uint8_t * pOptionalMqttPacketType );
 /* @[declare_mqttpropadd_userprop] */
 
@@ -2036,7 +2036,7 @@ MQTTStatus_t MQTTPropAdd_UserProp( MQTTPropBuilder_t* pPropertyBuilder,
  * - #MQTTNoMemory if the property builder has insufficient space
  */
 /* @[declare_mqttpropadd_sessionexpiry] */
-MQTTStatus_t MQTTPropAdd_SessionExpiry( MQTTPropBuilder_t* pPropertyBuilder,
+MQTTStatus_t MQTTPropAdd_SessionExpiry( MQTTPropBuilder_t * pPropertyBuilder,
                                         uint32_t sessionExpiry,
                                         const uint8_t * pOptionalMqttPacketType );
 /* @[declare_mqttpropadd_sessionexpiry] */
@@ -2059,7 +2059,7 @@ MQTTStatus_t MQTTPropAdd_SessionExpiry( MQTTPropBuilder_t* pPropertyBuilder,
  * - #MQTTNoMemory if the property builder has insufficient space
  */
 /* @[declare_mqttpropadd_receivemax] */
-MQTTStatus_t MQTTPropAdd_ReceiveMax( MQTTPropBuilder_t* pPropertyBuilder,
+MQTTStatus_t MQTTPropAdd_ReceiveMax( MQTTPropBuilder_t * pPropertyBuilder,
                                      uint16_t receiveMax,
                                      const uint8_t * pOptionalMqttPacketType );
 /* @[declare_mqttpropadd_receivemax] */
@@ -2081,7 +2081,7 @@ MQTTStatus_t MQTTPropAdd_ReceiveMax( MQTTPropBuilder_t* pPropertyBuilder,
  * - #MQTTNoMemory if the property builder has insufficient space
  */
 /* @[declare_mqttpropadd_maxpacketsize] */
-MQTTStatus_t MQTTPropAdd_MaxPacketSize( MQTTPropBuilder_t* pPropertyBuilder,
+MQTTStatus_t MQTTPropAdd_MaxPacketSize( MQTTPropBuilder_t * pPropertyBuilder,
                                         uint32_t maxPacketSize,
                                         const uint8_t * pOptionalMqttPacketType );
 /* @[declare_mqttpropadd_maxpacketsize] */
@@ -2103,7 +2103,7 @@ MQTTStatus_t MQTTPropAdd_MaxPacketSize( MQTTPropBuilder_t* pPropertyBuilder,
  * - #MQTTNoMemory if the property builder has insufficient space
  */
 /* @[declare_mqttpropadd_topicaliasmax] */
-MQTTStatus_t MQTTPropAdd_TopicAliasMax( MQTTPropBuilder_t* pPropertyBuilder,
+MQTTStatus_t MQTTPropAdd_TopicAliasMax( MQTTPropBuilder_t * pPropertyBuilder,
                                         uint16_t topicAliasMax,
                                         const uint8_t * pOptionalMqttPacketType );
 /* @[declare_mqttpropadd_topicaliasmax] */
@@ -2125,7 +2125,7 @@ MQTTStatus_t MQTTPropAdd_TopicAliasMax( MQTTPropBuilder_t* pPropertyBuilder,
  * - #MQTTNoMemory if the property builder has insufficient space
  */
 /* @[declare_mqttpropadd_requestrespinfo] */
-MQTTStatus_t MQTTPropAdd_RequestRespInfo( MQTTPropBuilder_t* pPropertyBuilder,
+MQTTStatus_t MQTTPropAdd_RequestRespInfo( MQTTPropBuilder_t * pPropertyBuilder,
                                           bool requestResponseInfo,
                                           const uint8_t * pOptionalMqttPacketType );
 /* @[declare_mqttpropadd_requestrespinfo] */
@@ -2147,7 +2147,7 @@ MQTTStatus_t MQTTPropAdd_RequestRespInfo( MQTTPropBuilder_t* pPropertyBuilder,
  * - #MQTTNoMemory if the property builder has insufficient space
  */
 /* @[declare_mqttpropadd_requestprobinfo] */
-MQTTStatus_t MQTTPropAdd_RequestProbInfo( MQTTPropBuilder_t* pPropertyBuilder,
+MQTTStatus_t MQTTPropAdd_RequestProbInfo( MQTTPropBuilder_t * pPropertyBuilder,
                                           bool requestProblemInfo,
                                           const uint8_t * pOptionalMqttPacketType );
 /* @[declare_mqttpropadd_requestprobinfo] */
@@ -2159,7 +2159,7 @@ MQTTStatus_t MQTTPropAdd_RequestProbInfo( MQTTPropBuilder_t* pPropertyBuilder,
  *
  * @param[out] pPropertyBuilder   Pointer to the property builder structure.
  * @param[in]  authMethod        Pointer to the authentication method string.
- * @param[in]  authMethodLength  Length of the authentication method string.
+ * @param[in]  authMethodLength  Length of the authentication method string (must be less than 65536).
  * @param[in]  pOptionalMqttPacketType Optional MQTT packet type for which the property
  *            is being added. The function will check whether the given property can be
  *            added to the packet type if it is provided.
@@ -2170,9 +2170,9 @@ MQTTStatus_t MQTTPropAdd_RequestProbInfo( MQTTPropBuilder_t* pPropertyBuilder,
  * - #MQTTNoMemory if the property builder has insufficient space
  */
 /* @[declare_mqttpropadd_authmethod] */
-MQTTStatus_t MQTTPropAdd_AuthMethod( MQTTPropBuilder_t* pPropertyBuilder,
-                                     const char* authMethod,
-                                     uint16_t authMethodLength,
+MQTTStatus_t MQTTPropAdd_AuthMethod( MQTTPropBuilder_t * pPropertyBuilder,
+                                     const char * authMethod,
+                                     size_t authMethodLength,
                                      const uint8_t * pOptionalMqttPacketType );
 /* @[declare_mqttpropadd_authmethod] */
 
@@ -2183,7 +2183,7 @@ MQTTStatus_t MQTTPropAdd_AuthMethod( MQTTPropBuilder_t* pPropertyBuilder,
  *
  * @param[out] pPropertyBuilder   Pointer to the property builder structure.
  * @param[in]  authData          Pointer to the authentication data.
- * @param[in]  authDataLength    Length of the authentication data.
+ * @param[in]  authDataLength    Length of the authentication data (must be less than 65536).
  * @param[in]  pOptionalMqttPacketType Optional MQTT packet type for which the property
  *            is being added. The function will check whether the given property can be
  *            added to the packet type if it is provided.
@@ -2194,9 +2194,9 @@ MQTTStatus_t MQTTPropAdd_AuthMethod( MQTTPropBuilder_t* pPropertyBuilder,
  * - #MQTTNoMemory if the property builder has insufficient space
  */
 /* @[declare_mqttpropadd_authdata] */
-MQTTStatus_t MQTTPropAdd_AuthData( MQTTPropBuilder_t* pPropertyBuilder,
-                                   const char* authData,
-                                   uint16_t authDataLength,
+MQTTStatus_t MQTTPropAdd_AuthData( MQTTPropBuilder_t * pPropertyBuilder,
+                                   const char * authData,
+                                   size_t authDataLength,
                                    const uint8_t * pOptionalMqttPacketType );
 /* @[declare_mqttpropadd_authdata] */
 
@@ -2217,7 +2217,7 @@ MQTTStatus_t MQTTPropAdd_AuthData( MQTTPropBuilder_t* pPropertyBuilder,
  * - #MQTTNoMemory if the property builder has insufficient space
  */
 /* @[declare_mqttpropadd_payloadformat] */
-MQTTStatus_t MQTTPropAdd_PayloadFormat( MQTTPropBuilder_t* pPropertyBuilder,
+MQTTStatus_t MQTTPropAdd_PayloadFormat( MQTTPropBuilder_t * pPropertyBuilder,
                                         bool payloadFormat,
                                         const uint8_t * pOptionalMqttPacketType );
 /* @[declare_mqttpropadd_payloadformat] */
@@ -2239,7 +2239,7 @@ MQTTStatus_t MQTTPropAdd_PayloadFormat( MQTTPropBuilder_t* pPropertyBuilder,
  * - #MQTTNoMemory if the property builder has insufficient space
  */
 /* @[declare_mqttpropadd_messageexpiry] */
-MQTTStatus_t MQTTPropAdd_MessageExpiry( MQTTPropBuilder_t* pPropertyBuilder,
+MQTTStatus_t MQTTPropAdd_MessageExpiry( MQTTPropBuilder_t * pPropertyBuilder,
                                         uint32_t messageExpiry,
                                         const uint8_t * pOptionalMqttPacketType );
 /* @[declare_mqttpropadd_messageexpiry] */
@@ -2283,7 +2283,7 @@ MQTTStatus_t MQTTPropAdd_WillDelayInterval( MQTTPropBuilder_t * pPropertyBuilder
  * - #MQTTNoMemory if the property builder has insufficient space
  */
 /* @[declare_mqttpropadd_topicalias] */
-MQTTStatus_t MQTTPropAdd_TopicAlias( MQTTPropBuilder_t* pPropertyBuilder,
+MQTTStatus_t MQTTPropAdd_TopicAlias( MQTTPropBuilder_t * pPropertyBuilder,
                                      uint16_t topicAlias,
                                      const uint8_t * pOptionalMqttPacketType );
 /* @[declare_mqttpropadd_topicalias] */
@@ -2295,7 +2295,7 @@ MQTTStatus_t MQTTPropAdd_TopicAlias( MQTTPropBuilder_t* pPropertyBuilder,
  *
  * @param[out] pPropertyBuilder      Pointer to the property builder structure.
  * @param[in]  responseTopic        Pointer to the response topic string.
- * @param[in]  responseTopicLength  Length of the response topic string.
+ * @param[in]  responseTopicLength  Length of the response topic string (must be less than 65536).
  * @param[in]  pOptionalMqttPacketType Optional MQTT packet type for which the property
  *            is being added. The function will check whether the given property can be
  *            added to the packet type if it is provided.
@@ -2306,10 +2306,10 @@ MQTTStatus_t MQTTPropAdd_TopicAlias( MQTTPropBuilder_t* pPropertyBuilder,
  * - #MQTTNoMemory if the property builder has insufficient space
  */
 /* @[declare_mqttpropadd_responsetopic] */
-MQTTStatus_t MQTTPropAdd_ResponseTopic( MQTTPropBuilder_t* pPropertyBuilder,
-                                        const char* responseTopic,
-                                        uint16_t responseTopicLength,
-                                        const uint8_t * pOptionalMqttPacketType);
+MQTTStatus_t MQTTPropAdd_ResponseTopic( MQTTPropBuilder_t * pPropertyBuilder,
+                                        const char * responseTopic,
+                                        size_t responseTopicLength,
+                                        const uint8_t * pOptionalMqttPacketType );
 /* @[declare_mqttpropadd_responsetopic] */
 /**
  * @brief Adds Correlation Data property to the MQTT property builder.
@@ -2318,7 +2318,7 @@ MQTTStatus_t MQTTPropAdd_ResponseTopic( MQTTPropBuilder_t* pPropertyBuilder,
  *
  * @param[out] pPropertyBuilder      Pointer to the property builder structure.
  * @param[in]  pCorrelationData     Pointer to the correlation data.
- * @param[in]  correlationLength    Length of the correlation data.
+ * @param[in]  correlationLength    Length of the correlation data (must be less than 65536).
  * @param[in]  pOptionalMqttPacketType Optional MQTT packet type for which the property
  *            is being added. The function will check whether the given property can be
  *            added to the packet type if it is provided.
@@ -2329,9 +2329,9 @@ MQTTStatus_t MQTTPropAdd_ResponseTopic( MQTTPropBuilder_t* pPropertyBuilder,
  * - #MQTTNoMemory if the property builder has insufficient space
  */
 /* @[declare_mqttpropadd_correlationdata] */
-MQTTStatus_t MQTTPropAdd_CorrelationData( MQTTPropBuilder_t* pPropertyBuilder,
-                                          const void* pCorrelationData,
-                                          uint16_t correlationLength,
+MQTTStatus_t MQTTPropAdd_CorrelationData( MQTTPropBuilder_t * pPropertyBuilder,
+                                          const void * pCorrelationData,
+                                          size_t correlationLength,
                                           const uint8_t * pOptionalMqttPacketType );
 /* @[declare_mqttpropadd_correlationdata] */
 
@@ -2342,7 +2342,7 @@ MQTTStatus_t MQTTPropAdd_CorrelationData( MQTTPropBuilder_t* pPropertyBuilder,
  *
  * @param[out] pPropertyBuilder     Pointer to the property builder structure.
  * @param[in]  contentType         Pointer to the content type string.
- * @param[in]  contentTypeLength   Length of the content type string.
+ * @param[in]  contentTypeLength   Length of the content type string (must be less than 65536).
  * @param[in]  pOptionalMqttPacketType Optional MQTT packet type for which the property
  *            is being added. The function will check whether the given property can be
  *            added to the packet type if it is provided.
@@ -2353,9 +2353,9 @@ MQTTStatus_t MQTTPropAdd_CorrelationData( MQTTPropBuilder_t* pPropertyBuilder,
  * - #MQTTNoMemory if the property builder has insufficient space
  */
 /* @[declare_mqttpropadd_contenttype] */
-MQTTStatus_t MQTTPropAdd_ContentType( MQTTPropBuilder_t* pPropertyBuilder,
-                                      const char* contentType,
-                                      uint16_t contentTypeLength,
+MQTTStatus_t MQTTPropAdd_ContentType( MQTTPropBuilder_t * pPropertyBuilder,
+                                      const char * contentType,
+                                      size_t contentTypeLength,
                                       const uint8_t * pOptionalMqttPacketType );
 /* @[declare_mqttpropadd_contenttype] */
 
@@ -2366,7 +2366,7 @@ MQTTStatus_t MQTTPropAdd_ContentType( MQTTPropBuilder_t* pPropertyBuilder,
  *
  * @param[out] pPropertyBuilder      Pointer to the property builder structure.
  * @param[in]  pReasonString        Pointer to the reason string.
- * @param[in]  reasonStringLength   Length of the reason string.
+ * @param[in]  reasonStringLength   Length of the reason string (must be less than 65536).
  * @param[in]  pOptionalMqttPacketType Optional MQTT packet type for which the property
  *            is being added. The function will check whether the given property can be
  *            added to the packet type if it is provided.
@@ -2377,9 +2377,9 @@ MQTTStatus_t MQTTPropAdd_ContentType( MQTTPropBuilder_t* pPropertyBuilder,
  * - #MQTTNoMemory if the property builder has insufficient space
  */
 /* @[declare_mqttpropadd_reasonstring] */
-MQTTStatus_t MQTTPropAdd_ReasonString( MQTTPropBuilder_t* pPropertyBuilder,
-                                       const char* pReasonString,
-                                       uint16_t reasonStringLength,
+MQTTStatus_t MQTTPropAdd_ReasonString( MQTTPropBuilder_t * pPropertyBuilder,
+                                       const char * pReasonString,
+                                       size_t reasonStringLength,
                                        const uint8_t * pOptionalMqttPacketType );
 /* @[declare_mqttpropadd_reasonstring] */
 
@@ -2396,7 +2396,8 @@ MQTTStatus_t MQTTPropAdd_ReasonString( MQTTPropBuilder_t* pPropertyBuilder,
  * - #MQTTBadParameter if an invalid parameter is passed
  */
 /* @[declare_mqtt_validatesubscribeproperties] */
-MQTTStatus_t MQTT_ValidateSubscribeProperties( bool isSubscriptionIdAvailable, const MQTTPropBuilder_t * propBuilder );
+MQTTStatus_t MQTT_ValidateSubscribeProperties( bool isSubscriptionIdAvailable,
+                                               const MQTTPropBuilder_t * propBuilder );
 /* @[declare_mqtt_validatesubscribeproperties] */
 
 /**
@@ -2426,7 +2427,7 @@ MQTTStatus_t MQTT_ValidateSubscribeProperties( bool isSubscriptionIdAvailable, c
  * // ...
  *
  * // Update connect properties
- * status = updateContextWithConnectProps(&propBuilder, &connectionProperties);
+ * status = updateContextWithConnectProps( &propBuilder, &connectionProperties );
  *
  * if(status == MQTTSuccess)
  * {
@@ -2435,7 +2436,8 @@ MQTTStatus_t MQTT_ValidateSubscribeProperties( bool isSubscriptionIdAvailable, c
  * @endcode
  */
 
-MQTTStatus_t updateContextWithConnectProps( const MQTTPropBuilder_t * pPropBuilder, MQTTConnectionProperties_t * pConnectProperties );
+MQTTStatus_t updateContextWithConnectProps( const MQTTPropBuilder_t * pPropBuilder,
+                                            MQTTConnectionProperties_t * pConnectProperties );
 
 /**
  * @brief Get the property type at the current index in the property builder.
@@ -2943,7 +2945,9 @@ MQTTStatus_t MQTTPropGet_ContentType( MQTTPropBuilder_t * pPropertyBuilder,
  * - #MQTTBadResponse if an invalid packet is read
  */
 /* @[declare_mqtt_validatepublishproperties] */
-MQTTStatus_t MQTT_ValidatePublishProperties(uint16_t serverTopicAliasMax, const MQTTPropBuilder_t* propBuilder, uint16_t *topicAlias);
+MQTTStatus_t MQTT_ValidatePublishProperties( uint16_t serverTopicAliasMax,
+                                             const MQTTPropBuilder_t * propBuilder,
+                                             uint16_t * topicAlias );
 /* @[declare_mqtt_validatepublishproperties] */
 
 /**
@@ -2984,11 +2988,11 @@ MQTTStatus_t MQTT_ValidatePublishProperties(uint16_t serverTopicAliasMax, const 
  * @endcode
  */
 /* @[declare_mqtt_validatepublishparams] */
-MQTTStatus_t MQTT_ValidatePublishParams(const MQTTPublishInfo_t* pPublishInfo,
-                                        uint8_t retainAvailable,
-                                        uint8_t maxQos,
-                                        uint16_t topicAlias,
-                                        uint32_t maxPacketSize);
+MQTTStatus_t MQTT_ValidatePublishParams( const MQTTPublishInfo_t * pPublishInfo,
+                                         uint8_t retainAvailable,
+                                         uint8_t maxQos,
+                                         uint16_t topicAlias,
+                                         uint32_t maxPacketSize );
 /* @[declare_mqtt_validatepublishparams] */
 
 /**
@@ -3012,7 +3016,7 @@ MQTTStatus_t MQTT_ValidatePublishAckProperties( const MQTTPropBuilder_t * pPrope
  * - #MQTTSuccess , #MQTTBadParameter or #MQTTBadResponse.
  */
 /* @[declare_mqtt_validateunsubscribeproperties] */
-MQTTStatus_t MQTT_ValidateUnsubscribeProperties( const MQTTPropBuilder_t * pPropertyBuilder);
+MQTTStatus_t MQTT_ValidateUnsubscribeProperties( const MQTTPropBuilder_t * pPropertyBuilder );
 /* @[declare_mqtt_validateunsubscribeproperties] */
 
 /**
@@ -3056,7 +3060,7 @@ MQTTStatus_t MQTT_ValidateUnsubscribeProperties( const MQTTPropBuilder_t * pProp
 MQTTStatus_t MQTT_GetAckPacketSize( uint32_t * pRemainingLength,
                                     uint32_t * pPacketSize,
                                     uint32_t maxPacketSize,
-                                    size_t ackPropertyLength);
+                                    size_t ackPropertyLength );
 /* @[declare_mqtt_getackpacketsize] */
 
 /**
@@ -3072,7 +3076,8 @@ MQTTStatus_t MQTT_GetAckPacketSize( uint32_t * pRemainingLength,
  * - #MQTTSuccess , #MQTTBadParameter or #MQTTBadResponse.
  */
 /* @[declare_mqtt_validatedisconnectproperties] */
-MQTTStatus_t MQTT_ValidateDisconnectProperties( uint32_t connectSessionExpiry, const MQTTPropBuilder_t * pPropertyBuilder );
+MQTTStatus_t MQTT_ValidateDisconnectProperties( uint32_t connectSessionExpiry,
+                                                const MQTTPropBuilder_t * pPropertyBuilder );
 /* @[declare_mqtt_validatedisconnectproperties] */
 
 /**
