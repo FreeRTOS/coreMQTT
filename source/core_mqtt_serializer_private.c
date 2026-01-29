@@ -25,6 +25,11 @@
 /**
  * @file core_mqtt_serializer_private.c
  * @brief Implements private functions used by serializer and deserializer.
+ *        DO NOT use these functions in your application.
+ *
+ * @note These functions should not be called by the application or relied upon
+ *       since their implementation can change. These are for internal use by the
+ *       library only.
  */
 #include <string.h>
 #include <assert.h>

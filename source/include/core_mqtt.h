@@ -88,7 +88,7 @@ typedef struct MQTTVec MQTTVec_t;
  *
  * @return The time elapsed in milliseconds.
  */
-typedef uint32_t (* MQTTGetCurrentTimeFunc_t )( void );
+typedef uint32_t ( * MQTTGetCurrentTimeFunc_t )( void );
 
 /**
  * @ingroup mqtt_callback_types
@@ -162,12 +162,12 @@ typedef uint32_t (* MQTTGetCurrentTimeFunc_t )( void );
  *          making sure that it would be able to process the
  *          received packet again.
  */
-typedef bool (* MQTTEventCallback_t )( struct MQTTContext * pContext,
-                                       struct MQTTPacketInfo * pPacketInfo,
-                                       struct MQTTDeserializedInfo * pDeserializedInfo,
-                                       enum MQTTSuccessFailReasonCode * pReasonCode,
-                                       struct MQTTPropBuilder * pSendPropsBuffer,
-                                       struct MQTTPropBuilder * pGetPropsBuffer );
+typedef bool ( * MQTTEventCallback_t )( struct MQTTContext * pContext,
+                                        struct MQTTPacketInfo * pPacketInfo,
+                                        struct MQTTDeserializedInfo * pDeserializedInfo,
+                                        enum MQTTSuccessFailReasonCode * pReasonCode,
+                                        struct MQTTPropBuilder * pSendPropsBuffer,
+                                        struct MQTTPropBuilder * pGetPropsBuffer );
 
 /**
  * @brief User defined callback used to store outgoing publishes. Used to track any publish
@@ -182,9 +182,9 @@ typedef bool (* MQTTEventCallback_t )( struct MQTTContext * pContext,
  * @return True if the copy is successful else false.
  */
 /* @[define_mqtt_retransmitstorepacket] */
-typedef bool ( * MQTTStorePacketForRetransmit)( struct MQTTContext * pContext,
-                                                uint16_t packetId,
-                                                MQTTVec_t * pMqttVec );
+typedef bool ( * MQTTStorePacketForRetransmit )( struct MQTTContext * pContext,
+                                                 uint16_t packetId,
+                                                 MQTTVec_t * pMqttVec );
 /* @[define_mqtt_retransmitstorepacket] */
 
 /**
@@ -202,10 +202,10 @@ typedef bool ( * MQTTStorePacketForRetransmit)( struct MQTTContext * pContext,
  * @return True if the retreive is successful else false.
  */
 /* @[define_mqtt_retransmitretrievepacket] */
-typedef bool ( * MQTTRetrievePacketForRetransmit)( struct MQTTContext * pContext,
-                                                   uint16_t packetId,
-                                                   uint8_t ** pSerializedMqttVec,
-                                                   size_t * pSerializedMqttVecLen );
+typedef bool ( * MQTTRetrievePacketForRetransmit )( struct MQTTContext * pContext,
+                                                    uint16_t packetId,
+                                                    uint8_t ** pSerializedMqttVec,
+                                                    size_t * pSerializedMqttVecLen );
 /* @[define_mqtt_retransmitretrievepacket] */
 
 /**
@@ -216,8 +216,8 @@ typedef bool ( * MQTTRetrievePacketForRetransmit)( struct MQTTContext * pContext
  * @param[in] packetId Copied publish packet identifier.
  */
 /* @[define_mqtt_retransmitclearpacket] */
-typedef void (* MQTTClearPacketForRetransmit)( struct MQTTContext * pContext,
-                                               uint16_t packetId );
+typedef void ( * MQTTClearPacketForRetransmit )( struct MQTTContext * pContext,
+                                                 uint16_t packetId );
 /* @[define_mqtt_retransmitclearpacket] */
 
 /**
@@ -1463,11 +1463,14 @@ const char * MQTT_Status_strerror( MQTTStatus_t status );
 /* @[declare_mqtt_status_strerror] */
 
 /**
- * @brief Get the bytes in a #MQTTVec pointer which can store the whole array as a an MQTT packet when calling MQTT_SerializeMQTTVec( void * pAllocatedMem, MQTTVec_t *pVec ) function.
+ * @brief Get the bytes in a #MQTTVec pointer which can store the whole array as a an
+ * MQTT packet when calling MQTT_SerializeMQTTVec( void * pAllocatedMem, MQTTVec_t *pVec ) function.
  *
- * @param[in] pVec The #MQTTVec pointer given as input to the user defined #MQTTStorePacketForRetransmit callback function. Must not be NULL.
+ * @param[in] pVec The #MQTTVec pointer given as input to the user defined
+ * #MQTTStorePacketForRetransmit callback function. Must not be NULL.
  *
- * @return The bytes in the provided #MQTTVec array which can then be used to set aside memory to be used with MQTT_SerializeMQTTVec( void * pAllocatedMem, MQTTVec_t *pVec ) function.
+ * @return The bytes in the provided #MQTTVec array which can then be used to
+ * set aside memory to be used with MQTT_SerializeMQTTVec( void * pAllocatedMem, MQTTVec_t *pVec ) function.
  */
 /* @[declare_mqtt_getbytesinmqttvec] */
 size_t MQTT_GetBytesInMQTTVec( const MQTTVec_t * pVec );
@@ -1476,8 +1479,11 @@ size_t MQTT_GetBytesInMQTTVec( const MQTTVec_t * pVec );
 /**
  * @brief Serialize the bytes in an array of #MQTTVec in the provided \p pAllocatedMem
  *
- * @param[in] pAllocatedMem Memory in which to serialize the data in the #MQTTVec array. It must be of size provided by MQTT_GetBytesInMQTTVec( MQTTVec_t *pVec ). Should not be NULL.
- * @param[in] pVec The #MQTTVec pointer given as input to the user defined #MQTTStorePacketForRetransmit callback function. Must not be NULL.
+ * @param[in] pAllocatedMem Memory in which to serialize the data in the #MQTTVec array.
+ *              It must be of size provided by MQTT_GetBytesInMQTTVec( MQTTVec_t *pVec ).
+ *              Should not be NULL.
+ * @param[in] pVec The #MQTTVec pointer given as input to the user defined
+ *              #MQTTStorePacketForRetransmit callback function. Must not be NULL.
  */
 /* @[declare_mqtt_serializemqttvec] */
 void MQTT_SerializeMQTTVec( uint8_t * pAllocatedMem,

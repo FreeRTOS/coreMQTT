@@ -2942,6 +2942,10 @@ static MQTTStatus_t sendPublishWithoutCopy( MQTTContext_t * pContext,
     uint8_t * pIndex;
     TransportOutVector_t * iterator;
 
+    assert( pContext != NULL );
+    assert( pPublishInfo != NULL );
+    assert( !CHECK_SIZE_T_OVERFLOWS_16BIT( pPublishInfo->topicNameLength ) );
+
     /* The header is sent first. */
     pIoVector[ 0U ].iov_base = pMqttHeader;
     pIoVector[ 0U ].iov_len = headerSize;
@@ -3065,7 +3069,7 @@ static MQTTStatus_t sendConnectWithoutCopy( MQTTContext_t * pContext,
     TransportOutVector_t * iterator;
     size_t ioVectorLength = 0U;
     uint32_t totalMessageLength = 0U;
-    size_t connectPropLen = 0U;
+    uint32_t connectPropLen = 0U;
     int32_t bytesSentOrError;
     uint8_t * pIndex;
     uint8_t serializedClientIDLength[ 2U ];
@@ -3108,6 +3112,11 @@ static MQTTStatus_t sendConnectWithoutCopy( MQTTContext_t * pContext,
      */
     TransportOutVector_t pIoVector[ 15U ];
 
+    if( pWillInfo != NULL )
+    {
+        assert( !CHECK_SIZE_T_OVERFLOWS_16BIT( pWillInfo->topicNameLength ) );
+    }
+
     iterator = pIoVector;
     pIndex = connectPacketHeader;
 
@@ -3144,6 +3153,9 @@ static MQTTStatus_t sendConnectWithoutCopy( MQTTContext_t * pContext,
 
         if( ( pPropertyBuilder != NULL ) && ( pPropertyBuilder->pBuffer != NULL ) )
         {
+            assert( !CHECK_SIZE_T_OVERFLOWS_32BIT( pPropertyBuilder->currentIndex ) );
+            assert( pPropertyBuilder->currentIndex < MQTT_REMAINING_LENGTH_INVALID );
+
             connectPropLen = pPropertyBuilder->currentIndex;
         }
 
@@ -3556,6 +3568,11 @@ static MQTTStatus_t validatePublishParams( const MQTTContext_t * pContext,
                     pPublishInfo->pPayload ) );
         status = MQTTBadParameter;
     }
+    else if( CHECK_SIZE_T_OVERFLOWS_16BIT( pPublishInfo->topicNameLength ) )
+    {
+        LogError( ( "Topic name length must be less than 65536." ) );
+        status = MQTTBadParameter;
+    }
     else if( ( pContext->outgoingPublishRecords == NULL ) && ( pPublishInfo->qos > MQTTQoS0 ) )
     {
         LogError( ( "Trying to publish a QoS > MQTTQoS0 packet when outgoing publishes "
@@ -3584,6 +3601,13 @@ static MQTTStatus_t validateTopicFilter( const MQTTContext_t * pContext,
         ( pSubscriptionList[ iterator ].topicFilterLength == 0U ) )
     {
         LogError( ( "Invalid subscription at index %lu: Topic filter is NULL or has zero length.", iterator ) );
+        status = MQTTBadParameter;
+    }
+
+    if( ( status == MQTTSuccess ) &&
+        CHECK_SIZE_T_OVERFLOWS_16BIT( pSubscriptionList[ iterator ].topicFilterLength ) )
+    {
+        LogError( ( "Topic filter length must be less than 65536 for topic number %" PRIu32, ( uint32_t ) iterator ) );
         status = MQTTBadParameter;
     }
 

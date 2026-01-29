@@ -138,7 +138,7 @@ static MQTTStatus_t addPropUint32( MQTTPropBuilder_t * pPropertyBuilder,
  */
 static MQTTStatus_t addPropUtf8( MQTTPropBuilder_t * pPropertyBuilder,
                                  const char * property,
-                                 uint16_t propertyLength,
+                                 size_t propertyLength,
                                  uint8_t propId,
                                  uint8_t fieldPosition,
                                  const uint8_t * pOptionalMqttPacketType );
@@ -526,13 +526,15 @@ static MQTTStatus_t addPropUint32( MQTTPropBuilder_t * pPropertyBuilder,
 
 static MQTTStatus_t addPropUtf8( MQTTPropBuilder_t * pPropertyBuilder,
                                  const char * property,
-                                 uint16_t propertyLength,
+                                 size_t propertyLength,
                                  uint8_t propId,
                                  uint8_t fieldPosition,
                                  const uint8_t * pOptionalMqttPacketType )
 {
     uint8_t * pIndex;
     MQTTStatus_t status = MQTTSuccess;
+
+    assert( !CHECK_SIZE_T_OVERFLOWS_16BIT( propertyLength ) );
 
     if( pPropertyBuilder == NULL )
     {
@@ -848,23 +850,35 @@ MQTTStatus_t MQTTPropAdd_RequestProbInfo( MQTTPropBuilder_t * pPropertyBuilder,
 
 MQTTStatus_t MQTTPropAdd_AuthMethod( MQTTPropBuilder_t * pPropertyBuilder,
                                      const char * authMethod,
-                                     uint16_t authMethodLength,
+                                     size_t authMethodLength,
                                      const uint8_t * pOptionalMqttPacketType )
 {
-    /* Auth method has no restrictions and hence no additional checks required. */
-    return addPropUtf8( pPropertyBuilder,
-                        authMethod,
-                        authMethodLength,
-                        MQTT_AUTH_METHOD_ID,
-                        MQTT_AUTHENTICATION_METHOD_POS,
-                        pOptionalMqttPacketType );
+    MQTTStatus_t status;
+
+    if( CHECK_SIZE_T_OVERFLOWS_16BIT( authMethodLength ) )
+    {
+        LogError( ( "Auth method length must be less than 65536 according to MQTT spec." ) );
+        status = MQTTBadParameter;
+    }
+    else
+    {
+        /* Auth method has no restrictions and hence no additional checks required. */
+        status = addPropUtf8( pPropertyBuilder,
+                              authMethod,
+                              authMethodLength,
+                              MQTT_AUTH_METHOD_ID,
+                              MQTT_AUTHENTICATION_METHOD_POS,
+                              pOptionalMqttPacketType );
+    }
+
+    return status;
 }
 
 /*-----------------------------------------------------------*/
 
 MQTTStatus_t MQTTPropAdd_AuthData( MQTTPropBuilder_t * pPropertyBuilder,
                                    const char * authData,
-                                   uint16_t authDataLength,
+                                   size_t authDataLength,
                                    const uint8_t * pOptionalMqttPacketType )
 {
     MQTTStatus_t status = MQTTSuccess;
@@ -888,6 +902,11 @@ MQTTStatus_t MQTTPropAdd_AuthData( MQTTPropBuilder_t * pPropertyBuilder,
     {
         LogError( ( "Auth method must be added before authentication data. "
                     "Not a protocol violation but a practice enforced by coreMQTT." ) );
+        status = MQTTBadParameter;
+    }
+    else if( CHECK_SIZE_T_OVERFLOWS_16BIT( authDataLength ) )
+    {
+        LogError( ( "Auth data length must be less than 65536 according to MQTT spec." ) );
         status = MQTTBadParameter;
     }
     else
@@ -971,7 +990,7 @@ MQTTStatus_t MQTTPropAdd_TopicAlias( MQTTPropBuilder_t * pPropertyBuilder,
 
 MQTTStatus_t MQTTPropAdd_ResponseTopic( MQTTPropBuilder_t * pPropertyBuilder,
                                         const char * responseTopic,
-                                        uint16_t responseTopicLength,
+                                        size_t responseTopicLength,
                                         const uint8_t * pOptionalMqttPacketType )
 {
     MQTTStatus_t status;
@@ -983,13 +1002,18 @@ MQTTStatus_t MQTTPropAdd_ResponseTopic( MQTTPropBuilder_t * pPropertyBuilder,
     }
     else if( responseTopicLength == 0U )
     {
-        LogError( ( "Response Topic Length cannot be 0" ) );
+        LogError( ( "Response Topic Length cannot be 0." ) );
         status = MQTTBadParameter;
     }
     else if( ( memchr( ( void * ) responseTopic, ( int ) '#', responseTopicLength ) != NULL ) ||
              ( memchr( ( void * ) responseTopic, ( int ) '+', responseTopicLength ) != NULL ) )
     {
         LogError( ( "Protocol Error : Response Topic contains wildcards (such as # or +)." ) );
+        status = MQTTBadParameter;
+    }
+    else if( CHECK_SIZE_T_OVERFLOWS_16BIT( responseTopicLength ) )
+    {
+        LogError( ( "Response topic length must be less than 65536 according to MQTT spec." ) );
         status = MQTTBadParameter;
     }
     else
@@ -1009,46 +1033,82 @@ MQTTStatus_t MQTTPropAdd_ResponseTopic( MQTTPropBuilder_t * pPropertyBuilder,
 
 MQTTStatus_t MQTTPropAdd_CorrelationData( MQTTPropBuilder_t * pPropertyBuilder,
                                           const void * pCorrelationData,
-                                          uint16_t correlationLength,
+                                          size_t correlationLength,
                                           const uint8_t * pOptionalMqttPacketType )
 {
-    /* Encoding binary and UTF-8 strings behaves in the same way. */
-    return addPropUtf8( pPropertyBuilder,
-                        ( const char * ) pCorrelationData,
-                        correlationLength,
-                        MQTT_CORRELATION_DATA_ID,
-                        MQTT_CORRELATION_DATA_POS,
-                        pOptionalMqttPacketType );
+    MQTTStatus_t status;
+
+    if( CHECK_SIZE_T_OVERFLOWS_16BIT( correlationLength ) )
+    {
+        LogError( ( "Correlation data length must be less than 65536 according to MQTT spec." ) );
+        status = MQTTBadParameter;
+    }
+    else
+    {
+        /* Encoding binary and UTF-8 strings behaves in the same way. */
+        status = addPropUtf8( pPropertyBuilder,
+                              ( const char * ) pCorrelationData,
+                              correlationLength,
+                              MQTT_CORRELATION_DATA_ID,
+                              MQTT_CORRELATION_DATA_POS,
+                              pOptionalMqttPacketType );
+    }
+
+    return status;
 }
 
 /*-----------------------------------------------------------*/
 
 MQTTStatus_t MQTTPropAdd_ContentType( MQTTPropBuilder_t * pPropertyBuilder,
                                       const char * contentType,
-                                      uint16_t contentTypeLength,
+                                      size_t contentTypeLength,
                                       const uint8_t * pOptionalMqttPacketType )
 {
-    /* No restriction and hence no additional checks on the content type. */
-    return addPropUtf8( pPropertyBuilder,
-                        contentType,
-                        contentTypeLength,
-                        MQTT_CONTENT_TYPE_ID,
-                        MQTT_CONTENT_TYPE_POS,
-                        pOptionalMqttPacketType );
+    MQTTStatus_t status;
+
+    if( CHECK_SIZE_T_OVERFLOWS_16BIT( contentTypeLength ) )
+    {
+        LogError( ( "Content type string length must be less than 65536 according to MQTT spec." ) );
+        status = MQTTBadParameter;
+    }
+    else
+    {
+        /* No restriction and hence no additional checks on the content type. */
+        status = addPropUtf8( pPropertyBuilder,
+                              contentType,
+                              contentTypeLength,
+                              MQTT_CONTENT_TYPE_ID,
+                              MQTT_CONTENT_TYPE_POS,
+                              pOptionalMqttPacketType );
+    }
+
+    return status;
 }
 
 /*-----------------------------------------------------------*/
 
 MQTTStatus_t MQTTPropAdd_ReasonString( MQTTPropBuilder_t * pPropertyBuilder,
                                        const char * pReasonString,
-                                       uint16_t reasonStringLength,
+                                       size_t reasonStringLength,
                                        const uint8_t * pOptionalMqttPacketType )
 {
-    /* No restriction and hence no additional checks on the reason string. */
-    return addPropUtf8( pPropertyBuilder,
-                        pReasonString,
-                        reasonStringLength,
-                        MQTT_REASON_STRING_ID,
-                        MQTT_REASON_STRING_POS,
-                        pOptionalMqttPacketType );
+    MQTTStatus_t status;
+
+    if( CHECK_SIZE_T_OVERFLOWS_16BIT( reasonStringLength ) )
+    {
+        LogError( ( "Reason string length must be less than 65536 according to MQTT spec." ) );
+        status = MQTTBadParameter;
+    }
+    else
+    {
+        /* No restriction and hence no additional checks on the reason string. */
+        status = addPropUtf8( pPropertyBuilder,
+                              pReasonString,
+                              reasonStringLength,
+                              MQTT_REASON_STRING_ID,
+                              MQTT_REASON_STRING_POS,
+                              pOptionalMqttPacketType );
+    }
+
+    return status;
 }

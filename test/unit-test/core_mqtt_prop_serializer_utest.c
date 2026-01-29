@@ -40,7 +40,7 @@
 
 void test_MQTTPropAdd_SubscriptionId_AllInputs( void )
 {
-    MQTTPropBuilder_t PropertyBuilder;
+    MQTTPropBuilder_t PropertyBuilder = { 0 };
     uint32_t subscriptionId;
     uint8_t OptionalMqttPacketType;
     MQTTStatus_t status;
@@ -151,7 +151,7 @@ void test_MQTTPropAdd_SubscriptionId_AllInputs( void )
 
 void test_MQTTPropAdd_UserProp_AllInputs( void )
 {
-    MQTTPropBuilder_t PropertyBuilder;
+    MQTTPropBuilder_t PropertyBuilder = { 0 };
     MQTTUserProperty_t userProperty = { 0 };
     uint8_t OptionalMqttPacketType = 0;
     MQTTStatus_t status;
@@ -246,7 +246,7 @@ void test_MQTTPropAdd_UserProp_AllInputs( void )
 
 void test_MQTTPropAdd_SessionExpiry_AllInputs( void )
 {
-    MQTTPropBuilder_t PropertyBuilder;
+    MQTTPropBuilder_t PropertyBuilder = { 0 };
     uint32_t sessionExpiry = 0;
     uint8_t OptionalMqttPacketType = 0;
     MQTTStatus_t status;
@@ -315,7 +315,7 @@ void test_MQTTPropAdd_SessionExpiry_AllInputs( void )
 
 void test_MQTTPropAdd_ReceiveMax_AllCases( void )
 {
-    MQTTPropBuilder_t PropertyBuilder;
+    MQTTPropBuilder_t PropertyBuilder = { 0 };
     uint16_t receiveMax = 10;
     uint8_t OptionalMqttPacketType = 0;
     MQTTStatus_t status;
@@ -388,7 +388,7 @@ void test_MQTTPropAdd_ReceiveMax_AllCases( void )
 
 void test_MQTTPropAdd_MaxPacketSize_AllInputs( void )
 {
-    MQTTPropBuilder_t PropertyBuilder;
+    MQTTPropBuilder_t PropertyBuilder = { 0 };
     uint32_t maxPacketSize = 10;
     uint8_t OptionalMqttPacketType = 0;
     MQTTStatus_t status;
@@ -460,7 +460,7 @@ void test_MQTTPropAdd_MaxPacketSize_AllInputs( void )
 
 void test_MQTTPropAdd_MessageExpiry_AllInputs( void )
 {
-    MQTTPropBuilder_t PropertyBuilder;
+    MQTTPropBuilder_t PropertyBuilder = { 0 };
     uint32_t messageExpiry = 10;
     uint8_t OptionalMqttPacketType = 0;
     MQTTStatus_t status;
@@ -537,7 +537,7 @@ void test_MQTTPropAdd_MessageExpiry_AllInputs( void )
 
 void test_MQTTPropAdd_WillDelayInterval_AllInputs( void )
 {
-    MQTTPropBuilder_t PropertyBuilder;
+    MQTTPropBuilder_t PropertyBuilder = { 0 };
     uint32_t willDelayInterVal = 10;
     uint8_t OptionalMqttPacketType = 0;
     MQTTStatus_t status;
@@ -615,7 +615,7 @@ void test_MQTTPropAdd_WillDelayInterval_AllInputs( void )
 
 void test_MQTTPropAdd_TopicAliasMax_AllCases( void )
 {
-    MQTTPropBuilder_t PropertyBuilder;
+    MQTTPropBuilder_t PropertyBuilder = { 0 };
     uint16_t topicAliasMax = 10;
     uint8_t OptionalMqttPacketType = 0;
     MQTTStatus_t status;
@@ -756,7 +756,7 @@ void test_MQTTPropAdd_TopicAliasMax_AllCases( void )
 
 void test_MQTTPropAdd_TopicAlias_AllCases( void )
 {
-    MQTTPropBuilder_t PropertyBuilder;
+    MQTTPropBuilder_t PropertyBuilder = { 0 };
     uint16_t topicAliasMax = 10;
     uint8_t OptionalMqttPacketType = MQTT_PACKET_TYPE_PUBLISH;
     MQTTStatus_t status;
@@ -866,7 +866,7 @@ void test_MQTTPropAdd_TopicAlias_AllCases( void )
 
 void test_MQTTPropAdd_RequestRespInfo_AllCases( void )
 {
-    MQTTPropBuilder_t PropertyBuilder;
+    MQTTPropBuilder_t PropertyBuilder = { 0 };
     bool requestRespInfo = false;
     uint8_t OptionalMqttPacketType = MQTT_PACKET_TYPE_CONNECT;
     MQTTStatus_t status;
@@ -964,7 +964,7 @@ void test_MQTTPropAdd_RequestRespInfo_AllCases( void )
 
 void test_MQTTPropAdd_RequestProbInfo_AllCases( void )
 {
-    MQTTPropBuilder_t PropertyBuilder;
+    MQTTPropBuilder_t PropertyBuilder = { 0 };
     bool requestRespInfo = false;
     uint8_t OptionalMqttPacketType = MQTT_PACKET_TYPE_CONNECT;
     MQTTStatus_t status;
@@ -1063,7 +1063,7 @@ void test_MQTTPropAdd_RequestProbInfo_AllCases( void )
 
 void test_MQTTPropAdd_PayloadFormat_AllCases( void )
 {
-    MQTTPropBuilder_t PropertyBuilder;
+    MQTTPropBuilder_t PropertyBuilder = { 0 };
     bool requestRespInfo = false;
     uint8_t OptionalMqttPacketType = MQTT_PACKET_TYPE_CONNECT;
     MQTTStatus_t status;
@@ -1162,7 +1162,7 @@ void test_MQTTPropAdd_PayloadFormat_AllCases( void )
 
 void test_MQTTPropAdd_AuthMethod_AllCases( void )
 {
-    MQTTPropBuilder_t PropertyBuilder;
+    MQTTPropBuilder_t PropertyBuilder = { 0 };
     uint8_t OptionalMqttPacketType = MQTT_PACKET_TYPE_CONNECT;
     uint8_t buffer[ 100 ];
     MQTTStatus_t status;
@@ -1247,7 +1247,7 @@ void test_MQTTPropAdd_AuthMethod_AllCases( void )
 
 void test_MQTTPropAdd_AuthData_AllCases( void )
 {
-    MQTTPropBuilder_t PropertyBuilder;
+    MQTTPropBuilder_t PropertyBuilder = { 0 };
     uint8_t OptionalMqttPacketType = MQTT_PACKET_TYPE_CONNECT;
     uint8_t buffer[ 100 ];
     MQTTStatus_t status;
@@ -1333,7 +1333,7 @@ void test_MQTTPropAdd_AuthData_AllCases( void )
 
 void test_MQTTPropAdd_ReasonString_AllCases( void )
 {
-    MQTTPropBuilder_t PropertyBuilder;
+    MQTTPropBuilder_t PropertyBuilder = { 0 };
     uint8_t OptionalMqttPacketType = MQTT_PACKET_TYPE_CONNECT;
     uint8_t buffer[ 100 ];
     MQTTStatus_t status;
@@ -1426,7 +1426,7 @@ void test_MQTTPropAdd_ReasonString_AllCases( void )
 
 void test_MQTTPropAdd_ContentType_AllCases( void )
 {
-    MQTTPropBuilder_t PropertyBuilder;
+    MQTTPropBuilder_t PropertyBuilder = { 0 };
     uint8_t OptionalMqttPacketType = MQTT_PACKET_TYPE_CONNECT;
     uint8_t buffer[ 100 ];
     MQTTStatus_t status;
@@ -1503,7 +1503,7 @@ void test_MQTTPropAdd_ContentType_AllCases( void )
 
 void test_MQTTPropAdd_CorrelationData_AllCases( void )
 {
-    MQTTPropBuilder_t PropertyBuilder;
+    MQTTPropBuilder_t PropertyBuilder = { 0 };
     uint8_t OptionalMqttPacketType = MQTT_PACKET_TYPE_CONNECT;
     uint8_t buffer[ 100 ];
     MQTTStatus_t status;
@@ -1580,7 +1580,7 @@ void test_MQTTPropAdd_CorrelationData_AllCases( void )
 
 void test_MQTTPropAdd_ResponseTopic_AllCases( void )
 {
-    MQTTPropBuilder_t PropertyBuilder;
+    MQTTPropBuilder_t PropertyBuilder = { 0 };
     uint8_t OptionalMqttPacketType = MQTT_PACKET_TYPE_CONNECT;
     uint8_t buffer[ 100 ] = { 0 };
     MQTTStatus_t status;
