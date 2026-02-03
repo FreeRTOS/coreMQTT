@@ -317,7 +317,7 @@ typedef struct MQTTContext
     TransportInterface_t transportInterface;
 
     /**
-     * @brief The buffer used in sending and receiving packets from the network.
+     * @brief The buffer used in receiving packets from the network.
      */
     MQTTFixedBuffer_t networkBuffer;
 
@@ -840,7 +840,7 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
                            const MQTTPublishInfo_t * pWillInfo,
                            uint32_t timeoutMs,
                            bool * pSessionPresent,
-                           const MQTTPropBuilder_t * pPropertyBuilder,
+                           MQTTPropBuilder_t * pPropertyBuilder,
                            const MQTTPropBuilder_t * pWillPropertyBuilder );
 /* @[declare_mqtt_connect] */
 
@@ -1468,20 +1468,24 @@ const char * MQTT_Status_strerror( MQTTStatus_t status );
  *
  * @param[in] pVec The #MQTTVec pointer given as input to the user defined
  * #MQTTStorePacketForRetransmit callback function. Must not be NULL.
+ * @param[out] pOutput The number of bytes in the vector. This value is invalid if the status is not
+ * #MQTTSuccess.
  *
- * @return The bytes in the provided #MQTTVec array which can then be used to
+ * @return #MQTTSuccess when the calculation is successful. The provided #MQTTVec array can then be used to
  * set aside memory to be used with MQTT_SerializeMQTTVec( void * pAllocatedMem, MQTTVec_t *pVec ) function.
+ * #MQTTBadParameter on failure.
  */
 /* @[declare_mqtt_getbytesinmqttvec] */
-size_t MQTT_GetBytesInMQTTVec( const MQTTVec_t * pVec );
+MQTTStatus_t MQTT_GetBytesInMQTTVec( const MQTTVec_t * pVec,
+                                     size_t * pOutput );
 /* @[declare_mqtt_getbytesinmqttvec] */
 
 /**
  * @brief Serialize the bytes in an array of #MQTTVec in the provided \p pAllocatedMem
  *
  * @param[in] pAllocatedMem Memory in which to serialize the data in the #MQTTVec array.
- *              It must be of size provided by MQTT_GetBytesInMQTTVec( MQTTVec_t *pVec ).
- *              Should not be NULL.
+ *              It must be of size provided by MQTT_GetBytesInMQTTVec( const MQTTVec_t * pVec, size_t * pOutput ).
+ *              Must not be NULL.
  * @param[in] pVec The #MQTTVec pointer given as input to the user defined
  *              #MQTTStorePacketForRetransmit callback function. Must not be NULL.
  */

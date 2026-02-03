@@ -35,6 +35,8 @@
 #ifndef CORE_MQTT_SERIALIZER_PRIVATE_H
 #define CORE_MQTT_SERIALIZER_PRIVATE_H
 
+#include <stdint.h>
+
 #include "core_mqtt_serializer.h"
 
 /**
@@ -211,13 +213,13 @@
 #define MQTT_USER_PROP_POS                          ( 28 )
 
 /* MQTT CONNECT flags. */
-#define MQTT_CONNECT_FLAG_CLEAN                     ( 1 ) /**< @brief Clean session. */
-#define MQTT_CONNECT_FLAG_WILL                      ( 2 ) /**< @brief Will present. */
-#define MQTT_CONNECT_FLAG_WILL_QOS1                 ( 3 ) /**< @brief Will QoS 1. */
-#define MQTT_CONNECT_FLAG_WILL_QOS2                 ( 4 ) /**< @brief Will QoS 2. */
-#define MQTT_CONNECT_FLAG_WILL_RETAIN               ( 5 ) /**< @brief Will retain. */
-#define MQTT_CONNECT_FLAG_PASSWORD                  ( 6 ) /**< @brief Password present. */
-#define MQTT_CONNECT_FLAG_USERNAME                  ( 7 ) /**< @brief User name present. */
+#define MQTT_CONNECT_FLAG_CLEAN                     ( 1 )     /**< @brief Clean session. */
+#define MQTT_CONNECT_FLAG_WILL                      ( 2 )     /**< @brief Will present. */
+#define MQTT_CONNECT_FLAG_WILL_QOS1                 ( 3 )     /**< @brief Will QoS 1. */
+#define MQTT_CONNECT_FLAG_WILL_QOS2                 ( 4 )     /**< @brief Will QoS 2. */
+#define MQTT_CONNECT_FLAG_WILL_RETAIN               ( 5 )     /**< @brief Will retain. */
+#define MQTT_CONNECT_FLAG_PASSWORD                  ( 6 )     /**< @brief Password present. */
+#define MQTT_CONNECT_FLAG_USERNAME                  ( 7 )     /**< @brief User name present. */
 
 /**
  * @brief Macro for decoding a 4-byte unsigned int from a sequence of bytes.
@@ -295,11 +297,25 @@
     ( ( ( uint32_t ) ( x ) & ( ( uint32_t ) 0x01U << ( position ) ) ) == ( ( uint32_t ) 0x01U << ( position ) ) )
 
 /**
+ * @brief Per the MQTT spec, the largest "Remaining Length" of an MQTT
+ * packet is this value, 256 MB.
+ */
+#define MQTT_MAX_REMAINING_LENGTH        ( 268435455UL )
+
+/**
  * @brief A value that represents an invalid remaining length.
  *
  * This value is greater than what is allowed by the MQTT specification.
  */
-#define MQTT_REMAINING_LENGTH_INVALID    ( ( uint32_t ) 268435456U )
+#define MQTT_REMAINING_LENGTH_INVALID    ( ( uint32_t ) MQTT_MAX_REMAINING_LENGTH + 1U )
+
+/**
+ * @brief Per the MQTT spec, the max packet size can be of max remaining length + 5 bytes.
+ * Fixed header
+ *    MQTT packet type nibble + MQTT flags nibble             1
+ *    Maximum bytes used to encode the remaining length       4
+ */
+#define MQTT_MAX_PACKET_SIZE             ( MQTT_MAX_REMAINING_LENGTH + 5U )
 
 /**
  * @brief A value that represents maximum value of UTF-8 encoded string.
@@ -313,13 +329,16 @@
 #define MAX_VARIABLE_LENGTH_INT_VALUE    ( ( uint32_t ) 268435455U )
 
 /**
- * @brief A macro to check whether the size_t values will overflow when converted
- * to uint16_t which is used to represent MQTT UTF8 strings.
+ * @brief A macro to check whether the uint32_t values will overflow when converted
+ * to size_t.
  *
- * Evaluates to true when the value provided will overflow 16-bit variable. False otherwise.
+ * Evaluates to true when the value provided will overflow size_t variable. False otherwise.
  */
-#define CHECK_SIZE_T_OVERFLOWS_16BIT( x ) \
-    ( ( sizeof( size_t ) <= sizeof( uint16_t ) ) ? false : ( ( x ) > UINT16_MAX ) )
+#if ( SIZE_MAX >= UINT32_MAX )
+    #define CHECK_U32T_OVERFLOWS_SIZE_T( x )    false
+#else
+    #define CHECK_U32T_OVERFLOWS_SIZE_T( x )    ( ( x ) > SIZE_MAX )
+#endif
 
 /**
  * @brief A macro to check whether the size_t values will overflow when converted
@@ -327,8 +346,23 @@
  *
  * Evaluates to true when the value provided will overflow 16-bit variable. False otherwise.
  */
-#define CHECK_SIZE_T_OVERFLOWS_32BIT( x ) \
-    ( ( sizeof( size_t ) <= sizeof( uint32_t ) ) ? false : ( ( x ) > UINT32_MAX ) )
+#if ( 65535U >= SIZE_MAX )
+    #define CHECK_SIZE_T_OVERFLOWS_16BIT( x )    false
+#else
+    #define CHECK_SIZE_T_OVERFLOWS_16BIT( x )    ( ( x ) > UINT16_MAX )
+#endif
+
+/**
+ * @brief A macro to check whether the size_t values will overflow when converted
+ * to uint32_t.
+ *
+ * Evaluates to true when the value provided will overflow 32-bit variable. False otherwise.
+ */
+#if ( UINT32_MAX >= SIZE_MAX )
+    #define CHECK_SIZE_T_OVERFLOWS_32BIT( x )    false
+#else
+    #define CHECK_SIZE_T_OVERFLOWS_32BIT( x )    ( ( x ) > UINT32_MAX )
+#endif
 
 /**
  * @brief A macro to check whether the addition of two unsigned 32-bit numbers will overflow.
@@ -337,6 +371,14 @@
  */
 #define ADDITION_WILL_OVERFLOW_U32( x, y ) \
     ( ( x ) > ( UINT32_MAX - ( y ) ) )
+
+/**
+ * @brief A macro to check whether the addition of two unsigned size_t numbers will overflow.
+ *
+ * Evaluates to true when the addition will overflow. False otherwise.
+ */
+#define ADDITION_WILL_OVERFLOW_SIZE_T( x, y ) \
+    ( ( x ) > ( SIZE_MAX - ( y ) ) )
 
 /**
  * @fn size_t variableLengthEncodedSize( uint32_t length );

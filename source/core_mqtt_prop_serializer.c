@@ -377,14 +377,14 @@ static MQTTStatus_t addPropUint8( MQTTPropBuilder_t * pPropertyBuilder,
         LogError( ( "%" PRIu8 " not allowed in %d packet type.", propId, *pOptionalMqttPacketType ) );
         status = MQTTBadParameter;
     }
-    else if( ( pPropertyBuilder->currentIndex + sizeof( uint8_t ) +
-               sizeof( uint8_t ) ) > pPropertyBuilder->bufferLength )
+    /* We need 1 byte to encode the property and 1 byte to encode the property ID. */
+    else if( ( pPropertyBuilder->bufferLength < 2U ) ||
+             ( pPropertyBuilder->currentIndex > ( pPropertyBuilder->bufferLength - 2U ) ) )
     {
         LogError( ( "Buffer too small to add property" ) );
         status = MQTTNoMemory;
     }
-    else if( ( pPropertyBuilder->currentIndex + sizeof( uint8_t ) +
-               sizeof( uint8_t ) ) > MQTT_REMAINING_LENGTH_INVALID )
+    else if( pPropertyBuilder->currentIndex > ( MQTT_REMAINING_LENGTH_INVALID - 2U ) )
     {
         LogError( ( "MQTT packets must be smaller than %" PRIu32 ".",
                     ( uint32_t ) MQTT_REMAINING_LENGTH_INVALID ) );
@@ -434,14 +434,16 @@ static MQTTStatus_t addPropUint16( MQTTPropBuilder_t * pPropertyBuilder,
         LogError( ( "Receive Maximum not allowed in %d packet type.", *pOptionalMqttPacketType ) );
         status = MQTTBadParameter;
     }
-    else if( ( pPropertyBuilder->currentIndex + sizeof( uint16_t ) +
-               sizeof( uint8_t ) ) > pPropertyBuilder->bufferLength )
+
+    /* We need 1 byte to encode property ID and 2 bytes to encode the property
+     * itself. */
+    else if( ( pPropertyBuilder->bufferLength < 3U ) ||
+             ( pPropertyBuilder->currentIndex > ( pPropertyBuilder->bufferLength - 3U ) ) )
     {
         LogError( ( "Buffer too small to add property." ) );
         status = MQTTNoMemory;
     }
-    else if( ( pPropertyBuilder->currentIndex + sizeof( uint16_t ) +
-               sizeof( uint8_t ) ) > MQTT_REMAINING_LENGTH_INVALID )
+    else if( pPropertyBuilder->currentIndex > ( MQTT_REMAINING_LENGTH_INVALID - 3U ) )
     {
         LogError( ( "MQTT packets must be smaller than %" PRIu32 ".",
                     ( uint32_t ) MQTT_REMAINING_LENGTH_INVALID ) );
@@ -494,14 +496,16 @@ static MQTTStatus_t addPropUint32( MQTTPropBuilder_t * pPropertyBuilder,
         LogError( ( "Subscription Id not allowed in %d packet type.", *pOptionalMqttPacketType ) );
         status = MQTTBadParameter;
     }
-    else if( ( pPropertyBuilder->currentIndex + sizeof( uint8_t ) +
-               sizeof( uint32_t ) ) > pPropertyBuilder->bufferLength )
+
+    /* We need 1 byte to encode property ID and 4 bytes to encode the property
+     * itself. */
+    else if( ( pPropertyBuilder->bufferLength < 5U ) ||
+             ( pPropertyBuilder->currentIndex > ( pPropertyBuilder->bufferLength - 5U ) ) )
     {
         LogError( ( "Buffer too small to add subscription id." ) );
         status = MQTTNoMemory;
     }
-    else if( ( pPropertyBuilder->currentIndex + sizeof( uint8_t ) +
-               sizeof( uint32_t ) ) > MQTT_REMAINING_LENGTH_INVALID )
+    else if( pPropertyBuilder->currentIndex > ( MQTT_REMAINING_LENGTH_INVALID - 5U ) )
     {
         LogError( ( "MQTT packets must be smaller than %" PRIu32 ".",
                     ( uint32_t ) MQTT_REMAINING_LENGTH_INVALID ) );
@@ -567,14 +571,19 @@ static MQTTStatus_t addPropUtf8( MQTTPropBuilder_t * pPropertyBuilder,
         LogError( ( "Reason String not allowed in %d packet type.", *pOptionalMqttPacketType ) );
         status = MQTTBadParameter;
     }
-    else if( ( pPropertyBuilder->currentIndex + sizeof( uint8_t ) + propertyLength +
-               sizeof( uint16_t ) ) > pPropertyBuilder->bufferLength )
+
+    /* We need to make sure that adding 2 to property length will not overflow. Then, we need to make
+     * sure that buffer is greater than the size needed to fit the property ( 2U + property length ).
+     * Then, we need to make sure that buffer is big enough to handle the existing data and this property. */
+    else if( ADDITION_WILL_OVERFLOW_SIZE_T( propertyLength, 2U ) ||
+             ( pPropertyBuilder->bufferLength < ( propertyLength + 2U ) ) ||
+             ( pPropertyBuilder->currentIndex > ( pPropertyBuilder->bufferLength - ( propertyLength + 2U ) ) ) )
     {
         LogError( ( "Buffer too small to add property." ) );
         status = MQTTNoMemory;
     }
-    else if( ( pPropertyBuilder->currentIndex + sizeof( uint8_t ) + propertyLength +
-               sizeof( uint16_t ) ) > MQTT_REMAINING_LENGTH_INVALID )
+    else if( ( MQTT_REMAINING_LENGTH_INVALID < ( propertyLength + 2U ) ) ||
+             ( pPropertyBuilder->currentIndex > ( MQTT_REMAINING_LENGTH_INVALID - ( propertyLength + 2U ) ) ) )
     {
         LogError( ( "MQTT packets must be smaller than %" PRIu32 ".",
                     ( uint32_t ) MQTT_REMAINING_LENGTH_INVALID ) );
@@ -635,11 +644,18 @@ MQTTStatus_t MQTTPropAdd_SubscriptionId( MQTTPropBuilder_t * pPropertyBuilder,
         LogError( ( "Subscription Id not allowed in %d packet type.", *pOptionalMqttPacketType ) );
         status = MQTTBadParameter;
     }
-    else if( ( pPropertyBuilder->currentIndex + sizeof( uint8_t ) +
-               variableLengthEncodedSize( subscriptionId ) ) > pPropertyBuilder->bufferLength )
+    /* variableLengthEncodedSize always returns a number in the range of [1,4]. The addition will not overflow. */
+    else if( ( pPropertyBuilder->bufferLength < ( variableLengthEncodedSize( subscriptionId ) + 1U ) ) ||
+             ( pPropertyBuilder->currentIndex > pPropertyBuilder->bufferLength - ( variableLengthEncodedSize( subscriptionId ) + 1U ) ) )
     {
         LogError( ( "Buffer too small to add subscription id." ) );
         status = MQTTNoMemory;
+    }
+    else if( pPropertyBuilder->currentIndex > ( MQTT_REMAINING_LENGTH_INVALID - ( variableLengthEncodedSize( subscriptionId ) + 1U ) ) )
+    {
+        LogError( ( "MQTT packets must be smaller than %" PRIu32 ".",
+                    ( uint32_t ) MQTT_REMAINING_LENGTH_INVALID ) );
+        status = MQTTBadParameter;
     }
     else
     {
@@ -697,6 +713,25 @@ MQTTStatus_t MQTTPropAdd_UserProp( MQTTPropBuilder_t * pPropertyBuilder,
              ( isValidPropertyInPacketType( pOptionalMqttPacketType, MQTT_USER_PROP_POS ) == false ) )
     {
         LogError( ( "User property not allowed in %d packet type.", *pOptionalMqttPacketType ) );
+        status = MQTTBadParameter;
+    }
+    /* 1 byte Property ID + 2 byte key length + 2 byte value length. */
+    else if( ADDITION_WILL_OVERFLOW_SIZE_T( pPropertyBuilder->currentIndex, 5U ) )
+    {
+        LogError( ( "Property builder buffer will overflow." ) );
+        status = MQTTBadParameter;
+    }
+    /* 1 byte Property ID + 2 byte key length + 2 byte value length + Actual key */
+    else if( ADDITION_WILL_OVERFLOW_SIZE_T( pPropertyBuilder->currentIndex + 5U, userProperty->keyLength ) )
+    {
+        LogError( ( "Property builder buffer will overflow." ) );
+        status = MQTTBadParameter;
+    }
+    /* 1 byte Property ID + 2 byte key length + 2 byte value length + Actual key + Actual value. */
+    else if( ADDITION_WILL_OVERFLOW_SIZE_T( pPropertyBuilder->currentIndex + 5U + userProperty->keyLength,
+                                            userProperty->valueLength ) )
+    {
+        LogError( ( "Property builder buffer will overflow." ) );
         status = MQTTBadParameter;
     }
 

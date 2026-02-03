@@ -179,8 +179,6 @@ struct NetworkContext
 
 #define UINT32_BYTE0( x )    ( ( uint8_t ) ( ( x ) & 0x000000FFU ) )
 
-#define MQTT_MAX_PACKET_SIZE    ( 268435460UL )
-
 /* Variables common to testcases */
 MQTTConnectionProperties_t properties;
 MQTTUserProperty_t userProperty;
@@ -1543,6 +1541,25 @@ void test_RemaininglengthLimit( void )
     TEST_ASSERT_EQUAL( MQTTBadParameter, status );
 
     status = MQTT_GetDisconnectPacketSize( &propBuffer, &remainingLength, &packetSize, maxPacketSize, 0x00 );
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+}
+
+void test_MQTT_GetDisconnectPacketSize_InvalidPropLen( void )
+{
+    /* Test will property length more than the max value allowed. */
+    uint32_t remainingLength = 0;
+    uint32_t packetSize = 0;
+    uint32_t maxPacketSize = 100;
+    MQTTStatus_t status = MQTTSuccess;
+    MQTTSuccessFailReasonCode_t ReasonCode = MQTT_REASON_DISCONNECT_DISCONNECT_WITH_WILL_MESSAGE;
+
+    publishInfo.topicNameLength = 0U;
+    MQTTPropBuilder_t propBuffer = { 0 };
+    uint8_t buf[ 10 ];
+    propBuffer.pBuffer = buf;
+    propBuffer.currentIndex = MQTT_MAX_REMAINING_LENGTH + 1; /* property length == max_remaining_length */
+
+    status = MQTT_GetDisconnectPacketSize( &propBuffer, &remainingLength, &packetSize, maxPacketSize, &ReasonCode );
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
 }
 
@@ -3209,6 +3226,29 @@ void test_incoming_publish2( void )
     TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
 }
 
+void test_incoming_publish_invalidRemainingLength( void )
+{
+    MQTTPacketInfo_t mqttPacketInfo;
+    uint16_t packetIdentifier = 1;
+    MQTTStatus_t status = MQTTSuccess;
+    MQTTPropBuilder_t propBuffer = { 0 };
+    uint8_t buffer[ 100 ] = { 0 };
+
+    buffer[ 0 ] = 0x00;
+    buffer[ 1 ] = 0x04;
+    buffer[ 2 ] = 't', buffer[ 3 ] = 'e', buffer[ 4 ] = 's', buffer[ 5 ] = 't';
+    mqttPacketInfo.type = MQTT_PACKET_TYPE_PUBLISH;
+    mqttPacketInfo.pRemainingData = buffer;
+
+    mqttPacketInfo.remainingLength = MQTT_REMAINING_LENGTH_INVALID;
+
+    MQTTPublishInfo_t publishIn;
+    ( void ) memset( &publishIn, 0x0, sizeof( publishIn ) );
+
+    status = MQTT_DeserializePublish( &mqttPacketInfo, &packetIdentifier, &publishIn, &propBuffer, 100, 100 );
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+}
+
 void test_incoming_publish_withPacketId( void )
 {
     MQTTPacketInfo_t mqttPacketInfo;
@@ -3280,11 +3320,15 @@ void test_MQTT_SerializeDisconnect( void )
     uint8_t * pIterator = expectedPacket;
     MQTTStatus_t status = MQTTSuccess;
     uint32_t remainingLength = 0;
+    MQTTPropBuilder_t propBuffer = { 0 };
 
     /* Buffer size less than disconnect request fails. */
     fixedBuffer.size = 1;
     status = MQTT_SerializeDisconnect( NULL, MQTT_REASON_DISCONNECT_NORMAL_DISCONNECTION, remainingLength, &fixedBuffer );
     TEST_ASSERT_EQUAL_INT( MQTTNoMemory, status );
+
+    status = MQTT_SerializeDisconnect( &propBuffer, NULL, remainingLength, &fixedBuffer );
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
 
     /* NULL buffer fails. */
     status = MQTT_SerializeDisconnect( NULL, MQTT_REASON_DISCONNECT_NORMAL_DISCONNECTION, remainingLength, NULL );
@@ -3309,7 +3353,6 @@ void test_MQTT_SerializeDisconnect( void )
     TEST_ASSERT_EQUAL_MEMORY( expectedPacket, &buffer[ BUFFER_PADDING_LENGTH ], packetSize );
 
     /* Test with properties. */
-    MQTTPropBuilder_t propBuffer = { 0 };
     uint8_t buf[ 10 ];
     propBuffer.pBuffer = buf;
     propBuffer.bufferLength = sizeof( buf );
@@ -5671,21 +5714,22 @@ void test_MQTT_ValidateConnectProperties( void )
     MQTTPropBuilder_t propBuilder;
     uint8_t buf[ 200 ];
     uint8_t * pIndex = NULL;
+    uint32_t receiveMaxPropValue = 0;
 
     /* Test 1: NULL pPropertyBuilder */
-    status = MQTT_ValidateConnectProperties( NULL, &isRequestProblemInfoSet );
+    status = MQTT_ValidateConnectProperties( NULL, &isRequestProblemInfoSet, NULL );
     TEST_ASSERT_EQUAL( MQTTBadParameter, status );
 
     /* Test 2: NULL pPropertyBuilder->pBuffer */
     propBuilder.pBuffer = NULL;
     propBuilder.bufferLength = 200;
     propBuilder.currentIndex = 0;
-    status = MQTT_ValidateConnectProperties( &propBuilder, &isRequestProblemInfoSet );
+    status = MQTT_ValidateConnectProperties( &propBuilder, &isRequestProblemInfoSet, NULL );
     TEST_ASSERT_EQUAL( MQTTBadParameter, status );
 
     /* Test 3: NULL isRequestProblemInfoSet */
     propBuilder.pBuffer = buf;
-    status = MQTT_ValidateConnectProperties( &propBuilder, NULL );
+    status = MQTT_ValidateConnectProperties( &propBuilder, NULL, NULL );
     TEST_ASSERT_EQUAL( MQTTBadParameter, status );
 
     /* Test 4: Empty properties (success case) */
@@ -5693,7 +5737,7 @@ void test_MQTT_ValidateConnectProperties( void )
     propBuilder.bufferLength = 200;
     propBuilder.currentIndex = 0;
     isRequestProblemInfoSet = true; /* Should be set to false */
-    status = MQTT_ValidateConnectProperties( &propBuilder, &isRequestProblemInfoSet );
+    status = MQTT_ValidateConnectProperties( &propBuilder, &isRequestProblemInfoSet, NULL );
     TEST_ASSERT_EQUAL( MQTTSuccess, status );
     TEST_ASSERT_EQUAL( false, isRequestProblemInfoSet );
 
@@ -5702,14 +5746,14 @@ void test_MQTT_ValidateConnectProperties( void )
     propBuilder.bufferLength = 200;
     propBuilder.currentIndex = MQTT_REMAINING_LENGTH_INVALID;
     isRequestProblemInfoSet = true; /* Should be set to false */
-    status = MQTT_ValidateConnectProperties( &propBuilder, &isRequestProblemInfoSet );
+    status = MQTT_ValidateConnectProperties( &propBuilder, &isRequestProblemInfoSet, NULL );
     TEST_ASSERT_EQUAL( MQTTBadParameter, status );
 
     /* Test 5: Valid MQTT_SESSION_EXPIRY_ID */
     pIndex = buf;
     pIndex = serializeuint_32( pIndex, MQTT_SESSION_EXPIRY_ID );
     propBuilder.currentIndex = 5;
-    status = MQTT_ValidateConnectProperties( &propBuilder, &isRequestProblemInfoSet );
+    status = MQTT_ValidateConnectProperties( &propBuilder, &isRequestProblemInfoSet, NULL );
     TEST_ASSERT_EQUAL( MQTTSuccess, status );
 
     /* Test 6: Duplicate MQTT_SESSION_EXPIRY_ID */
@@ -5717,14 +5761,14 @@ void test_MQTT_ValidateConnectProperties( void )
     pIndex = serializeuint_32( pIndex, MQTT_SESSION_EXPIRY_ID );
     pIndex = serializeuint_32( pIndex, MQTT_SESSION_EXPIRY_ID );
     propBuilder.currentIndex = 10;
-    status = MQTT_ValidateConnectProperties( &propBuilder, &isRequestProblemInfoSet );
+    status = MQTT_ValidateConnectProperties( &propBuilder, &isRequestProblemInfoSet, NULL );
     TEST_ASSERT_EQUAL( MQTTBadResponse, status );
 
     /* Test 7: Valid MQTT_RECEIVE_MAX_ID with non-zero value */
     pIndex = buf;
     pIndex = serializeuint_16( pIndex, MQTT_RECEIVE_MAX_ID );
     propBuilder.currentIndex = 3;
-    status = MQTT_ValidateConnectProperties( &propBuilder, &isRequestProblemInfoSet );
+    status = MQTT_ValidateConnectProperties( &propBuilder, &isRequestProblemInfoSet, NULL );
     TEST_ASSERT_EQUAL( MQTTSuccess, status );
 
     /* Test 8: MQTT_RECEIVE_MAX_ID with zero value (error) */
@@ -5733,7 +5777,7 @@ void test_MQTT_ValidateConnectProperties( void )
     buf[ 1 ] = 0x00;
     buf[ 2 ] = 0x00;
     propBuilder.currentIndex = 3;
-    status = MQTT_ValidateConnectProperties( &propBuilder, &isRequestProblemInfoSet );
+    status = MQTT_ValidateConnectProperties( &propBuilder, &isRequestProblemInfoSet, NULL );
     TEST_ASSERT_EQUAL( MQTTBadResponse, status );
 
     /* Test 9: Duplicate MQTT_RECEIVE_MAX_ID */
@@ -5741,14 +5785,14 @@ void test_MQTT_ValidateConnectProperties( void )
     pIndex = serializeuint_16( pIndex, MQTT_RECEIVE_MAX_ID );
     pIndex = serializeuint_16( pIndex, MQTT_RECEIVE_MAX_ID );
     propBuilder.currentIndex = 6;
-    status = MQTT_ValidateConnectProperties( &propBuilder, &isRequestProblemInfoSet );
+    status = MQTT_ValidateConnectProperties( &propBuilder, &isRequestProblemInfoSet, NULL );
     TEST_ASSERT_EQUAL( MQTTBadResponse, status );
 
     /* Test 10: Valid MQTT_MAX_PACKET_SIZE_ID with non-zero value */
     pIndex = buf;
     pIndex = serializeuint_32( pIndex, MQTT_MAX_PACKET_SIZE_ID );
     propBuilder.currentIndex = 5;
-    status = MQTT_ValidateConnectProperties( &propBuilder, &isRequestProblemInfoSet );
+    status = MQTT_ValidateConnectProperties( &propBuilder, &isRequestProblemInfoSet, NULL );
     TEST_ASSERT_EQUAL( MQTTSuccess, status );
 
     /* Test 11: MQTT_MAX_PACKET_SIZE_ID with zero value (error) */
@@ -5759,7 +5803,7 @@ void test_MQTT_ValidateConnectProperties( void )
     buf[ 3 ] = 0x00;
     buf[ 4 ] = 0x00;
     propBuilder.currentIndex = 5;
-    status = MQTT_ValidateConnectProperties( &propBuilder, &isRequestProblemInfoSet );
+    status = MQTT_ValidateConnectProperties( &propBuilder, &isRequestProblemInfoSet, NULL );
     TEST_ASSERT_EQUAL( MQTTBadResponse, status );
 
     /* Test 12: Duplicate MQTT_MAX_PACKET_SIZE_ID */
@@ -5767,14 +5811,14 @@ void test_MQTT_ValidateConnectProperties( void )
     pIndex = serializeuint_32( pIndex, MQTT_MAX_PACKET_SIZE_ID );
     pIndex = serializeuint_32( pIndex, MQTT_MAX_PACKET_SIZE_ID );
     propBuilder.currentIndex = 10;
-    status = MQTT_ValidateConnectProperties( &propBuilder, &isRequestProblemInfoSet );
+    status = MQTT_ValidateConnectProperties( &propBuilder, &isRequestProblemInfoSet, NULL );
     TEST_ASSERT_EQUAL( MQTTBadResponse, status );
 
     /* Test 13: Valid MQTT_TOPIC_ALIAS_MAX_ID */
     pIndex = buf;
     pIndex = serializeuint_16( pIndex, MQTT_TOPIC_ALIAS_MAX_ID );
     propBuilder.currentIndex = 3;
-    status = MQTT_ValidateConnectProperties( &propBuilder, &isRequestProblemInfoSet );
+    status = MQTT_ValidateConnectProperties( &propBuilder, &isRequestProblemInfoSet, NULL );
     TEST_ASSERT_EQUAL( MQTTSuccess, status );
 
     /* Test 14: Duplicate MQTT_TOPIC_ALIAS_MAX_ID */
@@ -5782,7 +5826,7 @@ void test_MQTT_ValidateConnectProperties( void )
     pIndex = serializeuint_16( pIndex, MQTT_TOPIC_ALIAS_MAX_ID );
     pIndex = serializeuint_16( pIndex, MQTT_TOPIC_ALIAS_MAX_ID );
     propBuilder.currentIndex = 6;
-    status = MQTT_ValidateConnectProperties( &propBuilder, &isRequestProblemInfoSet );
+    status = MQTT_ValidateConnectProperties( &propBuilder, &isRequestProblemInfoSet, NULL );
     TEST_ASSERT_EQUAL( MQTTBadResponse, status );
 
     /* Test 15: Valid MQTT_REQUEST_RESPONSE_ID with value 0 */
@@ -5790,7 +5834,7 @@ void test_MQTT_ValidateConnectProperties( void )
     buf[ 0 ] = MQTT_REQUEST_RESPONSE_ID;
     buf[ 1 ] = 0x00;
     propBuilder.currentIndex = 2;
-    status = MQTT_ValidateConnectProperties( &propBuilder, &isRequestProblemInfoSet );
+    status = MQTT_ValidateConnectProperties( &propBuilder, &isRequestProblemInfoSet, NULL );
     TEST_ASSERT_EQUAL( MQTTSuccess, status );
 
     /* Test 16: Valid MQTT_REQUEST_RESPONSE_ID with value 1 */
@@ -5798,7 +5842,7 @@ void test_MQTT_ValidateConnectProperties( void )
     buf[ 0 ] = MQTT_REQUEST_RESPONSE_ID;
     buf[ 1 ] = 0x01;
     propBuilder.currentIndex = 2;
-    status = MQTT_ValidateConnectProperties( &propBuilder, &isRequestProblemInfoSet );
+    status = MQTT_ValidateConnectProperties( &propBuilder, &isRequestProblemInfoSet, NULL );
     TEST_ASSERT_EQUAL( MQTTSuccess, status );
 
     /* Test 17: MQTT_REQUEST_RESPONSE_ID with invalid value (not 0 or 1) */
@@ -5806,7 +5850,7 @@ void test_MQTT_ValidateConnectProperties( void )
     buf[ 0 ] = MQTT_REQUEST_RESPONSE_ID;
     buf[ 1 ] = 0x02;
     propBuilder.currentIndex = 2;
-    status = MQTT_ValidateConnectProperties( &propBuilder, &isRequestProblemInfoSet );
+    status = MQTT_ValidateConnectProperties( &propBuilder, &isRequestProblemInfoSet, NULL );
     TEST_ASSERT_EQUAL( MQTTBadResponse, status );
 
     /* Test 18: Duplicate MQTT_REQUEST_RESPONSE_ID */
@@ -5816,7 +5860,7 @@ void test_MQTT_ValidateConnectProperties( void )
     buf[ 2 ] = MQTT_REQUEST_RESPONSE_ID;
     buf[ 3 ] = 0x00;
     propBuilder.currentIndex = 4;
-    status = MQTT_ValidateConnectProperties( &propBuilder, &isRequestProblemInfoSet );
+    status = MQTT_ValidateConnectProperties( &propBuilder, &isRequestProblemInfoSet, NULL );
     TEST_ASSERT_EQUAL( MQTTBadResponse, status );
 
     /* Test 19: Valid MQTT_REQUEST_PROBLEM_ID with value 0 */
@@ -5825,7 +5869,7 @@ void test_MQTT_ValidateConnectProperties( void )
     buf[ 1 ] = 0x00;
     propBuilder.currentIndex = 2;
     isRequestProblemInfoSet = true;
-    status = MQTT_ValidateConnectProperties( &propBuilder, &isRequestProblemInfoSet );
+    status = MQTT_ValidateConnectProperties( &propBuilder, &isRequestProblemInfoSet, NULL );
     TEST_ASSERT_EQUAL( MQTTSuccess, status );
     TEST_ASSERT_EQUAL( false, isRequestProblemInfoSet );
 
@@ -5835,7 +5879,7 @@ void test_MQTT_ValidateConnectProperties( void )
     buf[ 1 ] = 0x01;
     propBuilder.currentIndex = 2;
     isRequestProblemInfoSet = false;
-    status = MQTT_ValidateConnectProperties( &propBuilder, &isRequestProblemInfoSet );
+    status = MQTT_ValidateConnectProperties( &propBuilder, &isRequestProblemInfoSet, NULL );
     TEST_ASSERT_EQUAL( MQTTSuccess, status );
     TEST_ASSERT_EQUAL( true, isRequestProblemInfoSet );
 
@@ -5844,7 +5888,7 @@ void test_MQTT_ValidateConnectProperties( void )
     buf[ 0 ] = MQTT_REQUEST_PROBLEM_ID;
     buf[ 1 ] = 0x05;
     propBuilder.currentIndex = 2;
-    status = MQTT_ValidateConnectProperties( &propBuilder, &isRequestProblemInfoSet );
+    status = MQTT_ValidateConnectProperties( &propBuilder, &isRequestProblemInfoSet, NULL );
     TEST_ASSERT_EQUAL( MQTTBadResponse, status );
 
     /* Test 22: Duplicate MQTT_REQUEST_PROBLEM_ID */
@@ -5854,14 +5898,14 @@ void test_MQTT_ValidateConnectProperties( void )
     buf[ 2 ] = MQTT_REQUEST_PROBLEM_ID;
     buf[ 3 ] = 0x00;
     propBuilder.currentIndex = 4;
-    status = MQTT_ValidateConnectProperties( &propBuilder, &isRequestProblemInfoSet );
+    status = MQTT_ValidateConnectProperties( &propBuilder, &isRequestProblemInfoSet, NULL );
     TEST_ASSERT_EQUAL( MQTTBadResponse, status );
 
     /* Test 23: Valid MQTT_AUTH_METHOD_ID */
     pIndex = buf;
     pIndex = serializeutf_8( pIndex, MQTT_AUTH_METHOD_ID );
     propBuilder.currentIndex = pIndex - buf;
-    status = MQTT_ValidateConnectProperties( &propBuilder, &isRequestProblemInfoSet );
+    status = MQTT_ValidateConnectProperties( &propBuilder, &isRequestProblemInfoSet, NULL );
     TEST_ASSERT_EQUAL( MQTTSuccess, status );
 
     /* Test 24: Duplicate MQTT_AUTH_METHOD_ID */
@@ -5869,14 +5913,14 @@ void test_MQTT_ValidateConnectProperties( void )
     pIndex = serializeutf_8( pIndex, MQTT_AUTH_METHOD_ID );
     pIndex = serializeutf_8( pIndex, MQTT_AUTH_METHOD_ID );
     propBuilder.currentIndex = pIndex - buf;
-    status = MQTT_ValidateConnectProperties( &propBuilder, &isRequestProblemInfoSet );
+    status = MQTT_ValidateConnectProperties( &propBuilder, &isRequestProblemInfoSet, NULL );
     TEST_ASSERT_EQUAL( MQTTBadResponse, status );
 
     /* Test 25: Valid MQTT_AUTH_DATA_ID */
     pIndex = buf;
     pIndex = serializeutf_8( pIndex, MQTT_AUTH_DATA_ID );
     propBuilder.currentIndex = pIndex - buf;
-    status = MQTT_ValidateConnectProperties( &propBuilder, &isRequestProblemInfoSet );
+    status = MQTT_ValidateConnectProperties( &propBuilder, &isRequestProblemInfoSet, NULL );
     TEST_ASSERT_EQUAL( MQTTBadParameter, status ); /* Should fail - no auth method */
 
     /* Test 26: Duplicate MQTT_AUTH_DATA_ID */
@@ -5884,7 +5928,7 @@ void test_MQTT_ValidateConnectProperties( void )
     pIndex = serializeutf_8( pIndex, MQTT_AUTH_DATA_ID );
     pIndex = serializeutf_8( pIndex, MQTT_AUTH_DATA_ID );
     propBuilder.currentIndex = pIndex - buf;
-    status = MQTT_ValidateConnectProperties( &propBuilder, &isRequestProblemInfoSet );
+    status = MQTT_ValidateConnectProperties( &propBuilder, &isRequestProblemInfoSet, NULL );
     TEST_ASSERT_EQUAL( MQTTBadResponse, status );
 
     /* Test 27: Valid MQTT_AUTH_METHOD_ID and MQTT_AUTH_DATA_ID together */
@@ -5892,14 +5936,14 @@ void test_MQTT_ValidateConnectProperties( void )
     pIndex = serializeutf_8( pIndex, MQTT_AUTH_METHOD_ID );
     pIndex = serializeutf_8( pIndex, MQTT_AUTH_DATA_ID );
     propBuilder.currentIndex = pIndex - buf;
-    status = MQTT_ValidateConnectProperties( &propBuilder, &isRequestProblemInfoSet );
+    status = MQTT_ValidateConnectProperties( &propBuilder, &isRequestProblemInfoSet, NULL );
     TEST_ASSERT_EQUAL( MQTTSuccess, status );
 
     /* Test 28: Valid MQTT_USER_PROPERTY_ID (can appear multiple times) */
     pIndex = buf;
     pIndex = serializeutf_8pair( pIndex );
     propBuilder.currentIndex = pIndex - buf;
-    status = MQTT_ValidateConnectProperties( &propBuilder, &isRequestProblemInfoSet );
+    status = MQTT_ValidateConnectProperties( &propBuilder, &isRequestProblemInfoSet, NULL );
     TEST_ASSERT_EQUAL( MQTTSuccess, status );
 
     /* Test 29: Multiple MQTT_USER_PROPERTY_ID (should succeed) */
@@ -5908,7 +5952,7 @@ void test_MQTT_ValidateConnectProperties( void )
     pIndex = serializeutf_8pair( pIndex );
     pIndex = serializeutf_8pair( pIndex );
     propBuilder.currentIndex = pIndex - buf;
-    status = MQTT_ValidateConnectProperties( &propBuilder, &isRequestProblemInfoSet );
+    status = MQTT_ValidateConnectProperties( &propBuilder, &isRequestProblemInfoSet, NULL );
     TEST_ASSERT_EQUAL( MQTTSuccess, status );
 
     /* Test 30: Invalid property ID (default case) */
@@ -5916,7 +5960,7 @@ void test_MQTT_ValidateConnectProperties( void )
     buf[ 0 ] = 0xFF; /* Invalid property ID */
     buf[ 1 ] = 0x00;
     propBuilder.currentIndex = 2;
-    status = MQTT_ValidateConnectProperties( &propBuilder, &isRequestProblemInfoSet );
+    status = MQTT_ValidateConnectProperties( &propBuilder, &isRequestProblemInfoSet, NULL );
     TEST_ASSERT_EQUAL( MQTTBadResponse, status );
 
     /* Test 31: All valid CONNECT properties together */
@@ -5936,9 +5980,15 @@ void test_MQTT_ValidateConnectProperties( void )
     pIndex = serializeutf_8pair( pIndex );
     propBuilder.currentIndex = pIndex - buf;
     isRequestProblemInfoSet = false;
-    status = MQTT_ValidateConnectProperties( &propBuilder, &isRequestProblemInfoSet );
+    status = MQTT_ValidateConnectProperties( &propBuilder, &isRequestProblemInfoSet, NULL );
     TEST_ASSERT_EQUAL( MQTTSuccess, status );
     TEST_ASSERT_EQUAL( true, isRequestProblemInfoSet );
+
+
+    status = MQTT_ValidateConnectProperties( &propBuilder, &isRequestProblemInfoSet, &receiveMaxPropValue );
+    TEST_ASSERT_EQUAL( MQTTSuccess, status );
+    TEST_ASSERT_EQUAL( true, isRequestProblemInfoSet );
+    TEST_ASSERT_EQUAL( MQTT_TEST_UINT32, receiveMaxPropValue );
 }
 
 /* Additional tests for decode function error paths (insufficient property length) */
@@ -5959,7 +6009,7 @@ void test_MQTT_ValidateConnectProperties_DecodeErrors( void )
     buf[ 2 ] = 0x00;
     /* Missing 2 bytes for uint32 */
     propBuilder.currentIndex = 3;
-    status = MQTT_ValidateConnectProperties( &propBuilder, &isRequestProblemInfoSet );
+    status = MQTT_ValidateConnectProperties( &propBuilder, &isRequestProblemInfoSet, NULL );
     TEST_ASSERT_EQUAL( MQTTBadResponse, status );
 
     /* Test 33: MQTT_RECEIVE_MAX_ID with insufficient length (MQTTBadResponse) */
@@ -5967,7 +6017,7 @@ void test_MQTT_ValidateConnectProperties_DecodeErrors( void )
     buf[ 1 ] = 0x00;
     /* Missing 1 byte for uint16 */
     propBuilder.currentIndex = 2;
-    status = MQTT_ValidateConnectProperties( &propBuilder, &isRequestProblemInfoSet );
+    status = MQTT_ValidateConnectProperties( &propBuilder, &isRequestProblemInfoSet, NULL );
     TEST_ASSERT_EQUAL( MQTTBadResponse, status );
 
     /* Test 34: MQTT_MAX_PACKET_SIZE_ID with insufficient length (MQTTBadResponse) */
@@ -5975,28 +6025,28 @@ void test_MQTT_ValidateConnectProperties_DecodeErrors( void )
     buf[ 1 ] = 0x00;
     /* Missing 3 bytes for uint32 */
     propBuilder.currentIndex = 2;
-    status = MQTT_ValidateConnectProperties( &propBuilder, &isRequestProblemInfoSet );
+    status = MQTT_ValidateConnectProperties( &propBuilder, &isRequestProblemInfoSet, NULL );
     TEST_ASSERT_EQUAL( MQTTBadResponse, status );
 
     /* Test 35: MQTT_TOPIC_ALIAS_MAX_ID with insufficient length (MQTTBadResponse) */
     buf[ 0 ] = MQTT_TOPIC_ALIAS_MAX_ID;
     /* Missing 2 bytes for uint16 */
     propBuilder.currentIndex = 1;
-    status = MQTT_ValidateConnectProperties( &propBuilder, &isRequestProblemInfoSet );
+    status = MQTT_ValidateConnectProperties( &propBuilder, &isRequestProblemInfoSet, NULL );
     TEST_ASSERT_EQUAL( MQTTBadResponse, status );
 
     /* Test 36: MQTT_REQUEST_RESPONSE_ID with insufficient length (MQTTBadResponse) */
     buf[ 0 ] = MQTT_REQUEST_RESPONSE_ID;
     /* Missing 1 byte for uint8 */
     propBuilder.currentIndex = 1;
-    status = MQTT_ValidateConnectProperties( &propBuilder, &isRequestProblemInfoSet );
+    status = MQTT_ValidateConnectProperties( &propBuilder, &isRequestProblemInfoSet, NULL );
     TEST_ASSERT_EQUAL( MQTTBadResponse, status );
 
     /* Test 37: MQTT_REQUEST_PROBLEM_ID with insufficient length (MQTTBadResponse) */
     buf[ 0 ] = MQTT_REQUEST_PROBLEM_ID;
     /* Missing 1 byte for uint8 */
     propBuilder.currentIndex = 1;
-    status = MQTT_ValidateConnectProperties( &propBuilder, &isRequestProblemInfoSet );
+    status = MQTT_ValidateConnectProperties( &propBuilder, &isRequestProblemInfoSet, NULL );
     TEST_ASSERT_EQUAL( MQTTBadResponse, status );
 
     /* Test 38: MQTT_AUTH_METHOD_ID with insufficient length for string length field (MQTTBadResponse) */
@@ -6004,7 +6054,7 @@ void test_MQTT_ValidateConnectProperties_DecodeErrors( void )
     buf[ 1 ] = 0x00;
     /* Missing 1 byte for uint16 length field */
     propBuilder.currentIndex = 2;
-    status = MQTT_ValidateConnectProperties( &propBuilder, &isRequestProblemInfoSet );
+    status = MQTT_ValidateConnectProperties( &propBuilder, &isRequestProblemInfoSet, NULL );
     TEST_ASSERT_EQUAL( MQTTBadResponse, status );
 
     /* Test 39: MQTT_AUTH_METHOD_ID with insufficient length for string data (MQTTBadResponse) */
@@ -6015,14 +6065,14 @@ void test_MQTT_ValidateConnectProperties_DecodeErrors( void )
     buf[ 4 ] = 'b';
     /* Missing 3 bytes of string data */
     propBuilder.currentIndex = 5;
-    status = MQTT_ValidateConnectProperties( &propBuilder, &isRequestProblemInfoSet );
+    status = MQTT_ValidateConnectProperties( &propBuilder, &isRequestProblemInfoSet, NULL );
     TEST_ASSERT_EQUAL( MQTTBadResponse, status );
 
     /* Test 40: MQTT_AUTH_DATA_ID with insufficient length for string length field (MQTTBadResponse) */
     buf[ 0 ] = MQTT_AUTH_DATA_ID;
     /* Missing 2 bytes for uint16 length field */
     propBuilder.currentIndex = 1;
-    status = MQTT_ValidateConnectProperties( &propBuilder, &isRequestProblemInfoSet );
+    status = MQTT_ValidateConnectProperties( &propBuilder, &isRequestProblemInfoSet, NULL );
     TEST_ASSERT_EQUAL( MQTTBadResponse, status );
 
     /* Test 41: MQTT_AUTH_DATA_ID with insufficient length for string data (MQTTBadResponse) */
@@ -6032,7 +6082,7 @@ void test_MQTT_ValidateConnectProperties_DecodeErrors( void )
     buf[ 3 ] = 'a';
     /* Missing 15 bytes of string data */
     propBuilder.currentIndex = 4;
-    status = MQTT_ValidateConnectProperties( &propBuilder, &isRequestProblemInfoSet );
+    status = MQTT_ValidateConnectProperties( &propBuilder, &isRequestProblemInfoSet, NULL );
     TEST_ASSERT_EQUAL( MQTTBadResponse, status );
 
     /* Test 42: MQTT_USER_PROPERTY_ID with insufficient length for key length field (MQTTBadResponse) */
@@ -6040,7 +6090,7 @@ void test_MQTT_ValidateConnectProperties_DecodeErrors( void )
     buf[ 1 ] = 0x00;
     /* Missing 1 byte for key length field */
     propBuilder.currentIndex = 2;
-    status = MQTT_ValidateConnectProperties( &propBuilder, &isRequestProblemInfoSet );
+    status = MQTT_ValidateConnectProperties( &propBuilder, &isRequestProblemInfoSet, NULL );
     TEST_ASSERT_EQUAL( MQTTBadResponse, status );
 
     /* Test 43: MQTT_USER_PROPERTY_ID with insufficient length for key data (MQTTBadResponse) */
@@ -6051,7 +6101,7 @@ void test_MQTT_ValidateConnectProperties_DecodeErrors( void )
     buf[ 4 ] = 'e';
     /* Missing 3 bytes of key data */
     propBuilder.currentIndex = 5;
-    status = MQTT_ValidateConnectProperties( &propBuilder, &isRequestProblemInfoSet );
+    status = MQTT_ValidateConnectProperties( &propBuilder, &isRequestProblemInfoSet, NULL );
     TEST_ASSERT_EQUAL( MQTTBadResponse, status );
 
     /* Test 44: MQTT_USER_PROPERTY_ID with insufficient length for value length field (MQTTBadResponse) */
@@ -6064,7 +6114,7 @@ void test_MQTT_ValidateConnectProperties_DecodeErrors( void )
     buf[ 6 ] = 0x00;
     /* Missing 1 byte for value length field */
     propBuilder.currentIndex = 7;
-    status = MQTT_ValidateConnectProperties( &propBuilder, &isRequestProblemInfoSet );
+    status = MQTT_ValidateConnectProperties( &propBuilder, &isRequestProblemInfoSet, NULL );
     TEST_ASSERT_EQUAL( MQTTBadResponse, status );
 
     /* Test 45: MQTT_USER_PROPERTY_ID with insufficient length for value data (MQTTBadResponse) */
@@ -6080,7 +6130,7 @@ void test_MQTT_ValidateConnectProperties_DecodeErrors( void )
     buf[ 9 ] = 'a';
     /* Missing 3 bytes of value data */
     propBuilder.currentIndex = 10;
-    status = MQTT_ValidateConnectProperties( &propBuilder, &isRequestProblemInfoSet );
+    status = MQTT_ValidateConnectProperties( &propBuilder, &isRequestProblemInfoSet, NULL );
     TEST_ASSERT_EQUAL( MQTTBadResponse, status );
 }
 

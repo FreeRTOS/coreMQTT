@@ -149,6 +149,66 @@ void test_MQTTPropAdd_SubscriptionId_AllInputs( void )
     TEST_ASSERT_EQUAL( 2097152U, val );
 }
 
+void test_MQTTPropAdd_UserProp_AdditionOverflow1( void )
+{
+    MQTTPropBuilder_t PropertyBuilder = { 0 };
+    MQTTUserProperty_t userProperty = { 0 };
+    MQTTStatus_t status;
+    uint8_t buffer[ 100 ];
+
+    userProperty.pKey = "Key";
+    userProperty.pValue = "Value";
+    userProperty.keyLength = 3;
+    userProperty.valueLength = 5;
+
+    PropertyBuilder.pBuffer = buffer;
+    PropertyBuilder.bufferLength = 100;
+    PropertyBuilder.currentIndex = SIZE_MAX - 2;
+
+    status = MQTTPropAdd_UserProp( &PropertyBuilder, &userProperty, NULL );
+    TEST_ASSERT_EQUAL( MQTTBadParameter, status );
+}
+
+void test_MQTTPropAdd_UserProp_AdditionOverflow2( void )
+{
+    MQTTPropBuilder_t PropertyBuilder = { 0 };
+    MQTTUserProperty_t userProperty = { 0 };
+    MQTTStatus_t status;
+    uint8_t buffer[ 100 ];
+
+    userProperty.pKey = "Key";
+    userProperty.pValue = "Value";
+    userProperty.keyLength = 3;
+    userProperty.valueLength = 5;
+
+    PropertyBuilder.pBuffer = buffer;
+    PropertyBuilder.bufferLength = 100;
+    PropertyBuilder.currentIndex = SIZE_MAX - 6;
+
+    status = MQTTPropAdd_UserProp( &PropertyBuilder, &userProperty, NULL );
+    TEST_ASSERT_EQUAL( MQTTBadParameter, status );
+}
+
+void test_MQTTPropAdd_UserProp_AdditionOverflow3( void )
+{
+    MQTTPropBuilder_t PropertyBuilder = { 0 };
+    MQTTUserProperty_t userProperty = { 0 };
+    MQTTStatus_t status;
+    uint8_t buffer[ 100 ];
+
+    userProperty.pKey = "Key";
+    userProperty.pValue = "Value";
+    userProperty.keyLength = 3;
+    userProperty.valueLength = 5;
+
+    PropertyBuilder.pBuffer = buffer;
+    PropertyBuilder.bufferLength = 100;
+    PropertyBuilder.currentIndex = SIZE_MAX - 9;
+
+    status = MQTTPropAdd_UserProp( &PropertyBuilder, &userProperty, NULL );
+    TEST_ASSERT_EQUAL( MQTTBadParameter, status );
+}
+
 void test_MQTTPropAdd_UserProp_AllInputs( void )
 {
     MQTTPropBuilder_t PropertyBuilder = { 0 };
@@ -1300,6 +1360,13 @@ void test_MQTTPropAdd_AuthData_AllCases( void )
     PropertyBuilder.pBuffer = buffer;
     PropertyBuilder.currentIndex = 0;
     PropertyBuilder.bufferLength = 1;
+    PropertyBuilder.fieldSet = ( 1 << MQTT_AUTHENTICATION_METHOD_POS );
+    status = MQTTPropAdd_AuthData( &PropertyBuilder, "Hello", 100000, NULL );
+    TEST_ASSERT_EQUAL( MQTTBadParameter, status );
+
+    PropertyBuilder.pBuffer = buffer;
+    PropertyBuilder.currentIndex = 0;
+    PropertyBuilder.bufferLength = 1;
     PropertyBuilder.fieldSet = 0;
     PropertyBuilder.fieldSet |= ( 1 << MQTT_AUTHENTICATION_METHOD_POS );
     status = MQTTPropAdd_AuthData( &PropertyBuilder, "Hello", 5, NULL );
@@ -1339,6 +1406,9 @@ void test_MQTTPropAdd_ReasonString_AllCases( void )
     MQTTStatus_t status;
 
     status = MQTTPropAdd_ReasonString( NULL, "hello", 5, &OptionalMqttPacketType );
+    TEST_ASSERT_EQUAL( MQTTBadParameter, status );
+
+    status = MQTTPropAdd_ReasonString( &PropertyBuilder, "hello", 65537, &OptionalMqttPacketType );
     TEST_ASSERT_EQUAL( MQTTBadParameter, status );
 
     PropertyBuilder.pBuffer = NULL;
@@ -1434,6 +1504,9 @@ void test_MQTTPropAdd_ContentType_AllCases( void )
     status = MQTTPropAdd_ContentType( NULL, "hello", 5, &OptionalMqttPacketType );
     TEST_ASSERT_EQUAL( MQTTBadParameter, status );
 
+    status = MQTTPropAdd_ContentType( &PropertyBuilder, "hello", 65537, &OptionalMqttPacketType );
+    TEST_ASSERT_EQUAL( MQTTBadParameter, status );
+
     PropertyBuilder.pBuffer = NULL;
     status = MQTTPropAdd_ContentType( &PropertyBuilder, "hello", 5, &OptionalMqttPacketType );
     TEST_ASSERT_EQUAL( MQTTBadParameter, status );
@@ -1509,6 +1582,9 @@ void test_MQTTPropAdd_CorrelationData_AllCases( void )
     MQTTStatus_t status;
 
     status = MQTTPropAdd_CorrelationData( NULL, "hello", 5, &OptionalMqttPacketType );
+    TEST_ASSERT_EQUAL( MQTTBadParameter, status );
+
+    status = MQTTPropAdd_CorrelationData( NULL, "hello", 65537, &OptionalMqttPacketType );
     TEST_ASSERT_EQUAL( MQTTBadParameter, status );
 
     PropertyBuilder.pBuffer = NULL;
@@ -1645,6 +1721,15 @@ void test_MQTTPropAdd_ResponseTopic_AllCases( void )
     memset( buffer, 0, 100 );
     status = MQTTPropAdd_ResponseTopic( &PropertyBuilder, "Hello", 5, &OptionalMqttPacketType );
     TEST_ASSERT_EQUAL( MQTTNoMemory, status );
+
+    PropertyBuilder.pBuffer = buffer;
+    PropertyBuilder.currentIndex = 0;
+    PropertyBuilder.bufferLength = 1;
+    PropertyBuilder.fieldSet = 0;
+    memset( buffer, 0, 100 );
+    char array[ 65540 ] = { 'A' };
+    status = MQTTPropAdd_ResponseTopic( &PropertyBuilder, array, 65540, NULL );
+    TEST_ASSERT_EQUAL( MQTTBadParameter, status );
 
     PropertyBuilder.pBuffer = buffer;
     PropertyBuilder.currentIndex = 0;

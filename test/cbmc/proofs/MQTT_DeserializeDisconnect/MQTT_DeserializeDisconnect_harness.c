@@ -29,6 +29,7 @@
 
 #include "core_mqtt.h"
 #include "mqtt_cbmc_state.h"
+#include "private/core_mqtt_serializer_private.h"
 
 MQTTStatus_t __CPROVER_file_local_core_mqtt_serializer_c_validateIncomingDisconnectProperties( uint8_t * pIndex,
                                                                                                uint32_t propertyLength )
