@@ -930,20 +930,13 @@ static int32_t sendMessageVector( MQTTContext_t * pContext,
     /* Count the total number of bytes to be sent as outlined in the vector. */
     for( pIoVectIterator = pIoVec; pIoVectIterator <= &( pIoVec[ ioVecCount - 1U ] ); pIoVectIterator++ )
     {
-        /* We need to ensure that all the vectors when added together (and individually)
-         * are within the MQTT spec specified range. */
-        if( CHECK_SIZE_T_OVERFLOWS_32BIT( pIoVectIterator->iov_len ) ||
-            ADDITION_WILL_OVERFLOW_U32( bytesToSend, pIoVectIterator->iov_len ) ||
-            ( pIoVectIterator->iov_len > ( MQTT_MAX_PACKET_SIZE - bytesToSend ) ) )
-        {
-            LogError( ( "Adding all the iterator lengths will be greater than 268435460"
-                        " which is maximum MQTT packet size." ) );
-            bytesSentOrError = -1;
-        }
-        else
-        {
-            bytesToSend += pIoVectIterator->iov_len;
-        }
+        /* Before calling this function, the caller has checked that these below conditions
+         * are true. */
+        assert( !CHECK_SIZE_T_OVERFLOWS_32BIT( pIoVectIterator->iov_len ) );
+        assert( !ADDITION_WILL_OVERFLOW_U32( bytesToSend, pIoVectIterator->iov_len ) );
+        assert( pIoVectIterator->iov_len <= ( MQTT_MAX_PACKET_SIZE - bytesToSend ) );
+
+        bytesToSend += pIoVectIterator->iov_len;
     }
 
     /* Reset the iterator to point to the first entry in the array. */
@@ -1937,29 +1930,43 @@ static MQTTStatus_t handleIncomingPublish( MQTTContext_t * pContext,
 
         if( duplicatePublish == false )
         {
+            MQTTPropBuilder_t * pTempPropBuffer = NULL;
+
+            if( publishInfo.qos > MQTTQoS0 )
+            {
+                pTempPropBuffer = &pContext->ackPropsBuffer;
+            }
+
             if( pContext->appCallback( pContext, pIncomingPacket, &deserializedInfo,
-                                       &reasonCode, &pContext->ackPropsBuffer, &propBuffer ) == false )
+                                       &reasonCode, pTempPropBuffer, &propBuffer ) == false )
             {
                 /* TODO: Figure out whether this should block the library
                  * from processing any more packets. */
                 status = MQTTEventCallbackFailed;
             }
-            else if( ( pContext->ackPropsBuffer.pBuffer != NULL ) &&
-                     ( CHECK_SIZE_T_OVERFLOWS_32BIT( pContext->ackPropsBuffer.currentIndex ) ||
-                       ( pContext->ackPropsBuffer.currentIndex >= MQTT_REMAINING_LENGTH_INVALID ) ) )
+            else if( publishInfo.qos > MQTTQoS0 )
             {
-                status = MQTTSendFailed;
-                LogError( ( "Length of properties to be sent must be less than 268435456." ) );
+                if( ( pTempPropBuffer->pBuffer != NULL ) &&
+                    ( CHECK_SIZE_T_OVERFLOWS_32BIT( pTempPropBuffer->currentIndex ) ||
+                      ( pTempPropBuffer->currentIndex >= MQTT_REMAINING_LENGTH_INVALID ) ) )
+                {
+                    status = MQTTSendFailed;
+                    LogError( ( "Length of properties to be sent must be less than 268435456." ) );
+                }
+                else
+                {
+                    /* Send PUBREC or PUBCOMP if necessary. */
+                    ackPropsAdded = ( pContext->ackPropsBuffer.pBuffer != NULL ) &&
+                                    ( pContext->ackPropsBuffer.currentIndex > 0U );
+                }
             }
             else
             {
-                /* Send PUBREC or PUBCOMP if necessary. */
-                ackPropsAdded = ( pContext->ackPropsBuffer.pBuffer != NULL ) &&
-                                ( pContext->ackPropsBuffer.currentIndex > 0U );
+                /* Nothing to be done. QoS0 incoming publish handled successfully. */
             }
         }
 
-        if( status == MQTTSuccess )
+        if( ( status == MQTTSuccess ) && ( publishInfo.qos > MQTTQoS0 ) )
         {
             if( ( ackPropsAdded == false ) && ( reasonCode == MQTT_INVALID_REASON_CODE ) )
             {
@@ -2968,7 +2975,6 @@ static MQTTStatus_t sendPublishWithoutCopy( MQTTContext_t * pContext,
     ioVectorLength++;
 
     /* Serialize the publish properties, if provided. */
-
     if( publishPropLength > 0U )
     {
         iterator->iov_base = pPropertyBuilder->pBuffer;
@@ -2995,8 +3001,17 @@ static MQTTStatus_t sendPublishWithoutCopy( MQTTContext_t * pContext,
         pIoVector[ ioVectorLength ].iov_base = pPublishInfo->pPayload;
         pIoVector[ ioVectorLength ].iov_len = pPublishInfo->payloadLength;
 
-        ioVectorLength++;
-        totalMessageLength += pPublishInfo->payloadLength;
+        if( ADDITION_WILL_OVERFLOW_U32( totalMessageLength, pPublishInfo->payloadLength ) ||
+            ( ( totalMessageLength + pPublishInfo->payloadLength ) > MQTT_MAX_PACKET_SIZE ) )
+        {
+            LogError( ( "Total MQTT packet size must be less than 268435461." ) );
+            status = MQTTBadParameter;
+        }
+        else
+        {
+            ioVectorLength++;
+            totalMessageLength += pPublishInfo->payloadLength;
+        }
     }
 
     /* Store a copy of the publish for retransmission purposes. */

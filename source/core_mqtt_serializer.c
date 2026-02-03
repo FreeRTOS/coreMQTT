@@ -1401,10 +1401,13 @@ static void logConnackResponse( uint8_t responseCode )
             LogError( ( "Connection refused: Connection rate exceeded." ) );
             break;
 
+        /* This branch will never be reached as there the caller checks the value before-hand. */
         default:
+            /* LCOV_EXCL_START */
             LogError( ( "Invalid reason code received." ) );
             assert( false );
             break;
+            /* LCOV_EXCL_STOP */
     }
 }
 

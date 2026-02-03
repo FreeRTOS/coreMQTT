@@ -2464,6 +2464,10 @@ void test_MQTTV5_GetSubscribePacketSize( void )
     status = MQTT_GetSubscribePacketSize( NULL, 1, NULL, &remainingLength, &packetSize, MQTT_MAX_PACKET_SIZE );
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
 
+    /** NULL remaining length. */
+    status = MQTT_GetSubscribePacketSize( &subscribeInfo, 1, NULL, NULL, &packetSize, MQTT_MAX_PACKET_SIZE );
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+
     status = MQTT_GetSubscribePacketSize( &subscribeInfo, 0, NULL, &remainingLength, &packetSize, MQTT_MAX_PACKET_SIZE );
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
 
