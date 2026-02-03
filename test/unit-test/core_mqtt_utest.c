@@ -4735,7 +4735,8 @@ void test_MQTT_Disconnect_already_disconnected( void )
     /* Send failure with network error. */
     MQTT_GetDisconnectPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_GetDisconnectPacketSize_ReturnThruPtr_pPacketSize( &disconnectSize );
-    status = MQTT_Disconnect( &mqttContext, NULL, MQTT_REASON_DISCONNECT_NORMAL_DISCONNECTION );
+    MQTTSuccessFailReasonCode_t reasonCode = MQTT_REASON_DISCONNECT_NORMAL_DISCONNECTION;
+    status = MQTT_Disconnect( &mqttContext, NULL, &reasonCode );
     TEST_ASSERT_EQUAL( MQTTStatusNotConnected, status );
 }
 
