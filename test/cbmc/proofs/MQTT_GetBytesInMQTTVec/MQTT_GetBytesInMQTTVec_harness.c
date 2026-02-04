@@ -36,5 +36,5 @@ void harness()
 
     mqttVec = allocateMqttVec( NULL );
 
-    memoryRequired = MQTT_GetBytesInMQTTVec( mqttVec );
+    MQTTStatus_t status = MQTT_GetBytesInMQTTVec( mqttVec, &memoryRequired );
 }

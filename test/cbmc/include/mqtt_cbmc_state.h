@@ -35,8 +35,6 @@
 
 #define IMPLIES( a, b )    ( !( a ) || ( b ) )
 
-#define MQTT_MAX_PACKET_SIZE    ( 268435460U )
-
 /**
  * @brief Allocate a #MQTTPacketInfo_t object.
  *

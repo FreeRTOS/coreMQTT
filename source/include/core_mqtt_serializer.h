@@ -1943,13 +1943,16 @@ MQTTStatus_t MQTT_ValidateWillProperties( const MQTTPropBuilder_t * pPropertyBui
  * @param[in] pPropertyBuilder Pointer to the property builder structure containing connect packet
  * properties.
  * @param[out] isRequestProblemInfoSet Whether the request problem info field is set in the properties.
+ * @param[out] pPacketSizeMaxValue Optional pointer to get the Maximum Packet Size from the properties.
+ * If not required, NULL can be passed.
  *
  * @return Returns one of the following:
  * - #MQTTSuccess , #MQTTBadParameter or #MQTTBadResponse.
  */
 /* @[declare_mqtt_validateconnectproperties] */
 MQTTStatus_t MQTT_ValidateConnectProperties( const MQTTPropBuilder_t * pPropertyBuilder,
-                                             bool * isRequestProblemInfoSet );
+                                             bool * isRequestProblemInfoSet,
+                                             uint32_t * pPacketSizeMaxValue );
 /* @[declare_mqtt_validateconnectproperties] */
 
 /**

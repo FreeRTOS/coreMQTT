@@ -54,20 +54,6 @@
 #define MQTT_PUBLISH_FLAG_DUP                       ( 3 ) /**< @brief MQTT PUBLISH duplicate flag. */
 
 /**
- * @brief Per the MQTT spec, the largest "Remaining Length" of an MQTT
- * packet is this value, 256 MB.
- */
-#define MQTT_MAX_REMAINING_LENGTH                   ( 268435455UL )
-
-/**
- * @brief Per the MQTT spec, the max packet size can be of max remaining length + 5 bytes.
- * Fixed header
- *    MQTT packet type nibble + MQTT flags nibble             1
- *    Maximum bytes used to encode the remaining length       4
- */
-#define MQTT_MAX_PACKET_SIZE                        ( MQTT_MAX_REMAINING_LENGTH + 5U )
-
-/**
  * @brief A PINGREQ packet is always 2 bytes in size, defined by MQTT 5.0 spec.
  */
 #define MQTT_PACKET_PINGREQ_SIZE                    ( 2UL )
@@ -231,8 +217,8 @@ static size_t remainingLengthEncodedSize( uint32_t length );
  *
  * @return The Remaining Length of the incoming packet.
  */
-static size_t getRemainingLength( TransportRecv_t recvFunc,
-                                  NetworkContext_t * pNetworkContext );
+static uint32_t getRemainingLength( TransportRecv_t recvFunc,
+                                    NetworkContext_t * pNetworkContext );
 
 /**
  * @brief Retrieves, decodes and stores the Remaining Length from the network
@@ -555,6 +541,19 @@ static uint32_t getAckPacketSize( const MQTTPropBuilder_t * pAckProperties )
     uint32_t packetSize = 0;
 
     assert( pAckProperties != NULL );
+    assert( !CHECK_SIZE_T_OVERFLOWS_32BIT( pAckProperties->currentIndex ) );
+    assert( pAckProperties->currentIndex < MQTT_REMAINING_LENGTH_INVALID );
+
+    /* We do not need to check for overflow here as even if current index
+     * is close to or equal MQTT maximum remaining length, packetSize can
+     * accommodate it.
+     * Reason code                      1
+     * Max encoded size (props)       + 4
+     * Max encoded size (packet size) + 4
+     * Packet header                  + 1
+     * Packet ID                      + 2 = 12
+     */
+
 
     /* 1 byte for reason code. */
     packetSize += 1U;
@@ -1046,10 +1045,10 @@ static void serializePublishCommon( const MQTTPublishInfo_t * pPublishInfo,
     assert( ( ( size_t ) ( pIndex - pFixedBuffer->pBuffer ) ) <= pFixedBuffer->size );
 }
 
-static size_t getRemainingLength( TransportRecv_t recvFunc,
-                                  NetworkContext_t * pNetworkContext )
+static uint32_t getRemainingLength( TransportRecv_t recvFunc,
+                                    NetworkContext_t * pNetworkContext )
 {
-    size_t remainingLength = 0, multiplier = 1, bytesDecoded = 0, expectedSize = 0;
+    uint32_t remainingLength = 0, multiplier = 1, bytesDecoded = 0, expectedSize = 0;
     uint8_t encodedByte = 0;
     int32_t bytesReceived = 0;
 
@@ -1155,6 +1154,13 @@ static MQTTStatus_t processRemainingLength( const uint8_t * pBuffer,
         if( bytesDecoded != expectedSize )
         {
             LogError( ( "Expected and actual length of decoded bytes do not match.\n" ) );
+            status = MQTTBadResponse;
+        }
+        else if( CHECK_U32T_OVERFLOWS_SIZE_T( remainingLength ) )
+        {
+            LogError( ( "Remaining length %" PRIu32
+                        " will overflow when stored in pIncomingPacket->remainingLength "
+                        "(type: size_t).", remainingLength ) );
             status = MQTTBadResponse;
         }
         else
@@ -1395,10 +1401,13 @@ static void logConnackResponse( uint8_t responseCode )
             LogError( ( "Connection refused: Connection rate exceeded." ) );
             break;
 
+        /* This branch will never be reached as there the caller checks the value before-hand. */
         default:
+            /* LCOV_EXCL_START */
             LogError( ( "Invalid reason code received." ) );
             assert( false );
             break;
+            /* LCOV_EXCL_STOP */
     }
 }
 
@@ -1600,6 +1609,7 @@ static MQTTStatus_t calculateSubscriptionPacketSize( const MQTTSubscribeInfo_t *
     assert( pRemainingLength != NULL );
     assert( pPacketSize != NULL );
     assert( subscriptionCount != 0U );
+    assert( subscribePropLen < MQTT_REMAINING_LENGTH_INVALID );
 
     /* 2 byte packet id. */
     packetSize += sizeof( uint16_t );
@@ -1613,14 +1623,31 @@ static MQTTStatus_t calculateSubscriptionPacketSize( const MQTTSubscribeInfo_t *
         {
             LogError( ( "Topic filter length must be less than 65536. Length is %" PRIu32, ( uint32_t ) pSubscriptionList[ i ].topicFilterLength ) );
             status = MQTTBadParameter;
-            break;
+        }
+        else if( ADDITION_WILL_OVERFLOW_U32( packetSize, sizeof( uint16_t ) ) ||
+                 ADDITION_WILL_OVERFLOW_U32( packetSize + sizeof( uint16_t ), pSubscriptionList[ i ].topicFilterLength ) )
+        {
+            LogError( ( "packetSize will overflow if more subscriptions are added to it." ) );
+            status = MQTTBadParameter;
+        }
+        else
+        {
+            packetSize += pSubscriptionList[ i ].topicFilterLength + sizeof( uint16_t );
+
+            if( packetSize >= MQTT_REMAINING_LENGTH_INVALID )
+            {
+                LogError( ( "Packet size must be smaller than 268435456" ) );
+                status = MQTTBadParameter;
+            }
+            else if( subscriptionType == MQTT_TYPE_SUBSCRIBE )
+            {
+                packetSize += 1U;
+            }
         }
 
-        packetSize += pSubscriptionList[ i ].topicFilterLength + sizeof( uint16_t );
-
-        if( subscriptionType == MQTT_TYPE_SUBSCRIBE )
+        if( status != MQTTSuccess )
         {
-            packetSize += 1U;
+            break;
         }
     }
 
@@ -1629,11 +1656,8 @@ static MQTTStatus_t calculateSubscriptionPacketSize( const MQTTSubscribeInfo_t *
      * set the output parameter. */
     if( ( status == MQTTSuccess ) && ( packetSize > MQTT_MAX_REMAINING_LENGTH ) )
     {
-        LogError( ( "Subscribe packet size %lu exceeds %d. "
-                    "Packet size cannot be greater than %d.",
-                    ( unsigned long ) packetSize,
-                    UINT16_MAX,
-                    UINT16_MAX ) );
+        LogError( ( "Subscribe packet size %" PRIu32 " exceeds 268435456.",
+                    packetSize ) );
         status = MQTTBadParameter;
     }
 
@@ -2954,8 +2978,8 @@ MQTTStatus_t MQTT_GetConnectPacketSize( const MQTTConnectInfo_t * pConnectInfo,
 {
     MQTTStatus_t status = MQTTSuccess;
     uint32_t remainingLength;
-    size_t propertyLength = 0U;
-    size_t willPropertyLength = 0U;
+    uint32_t propertyLength = 0U;
+    uint32_t willPropertyLength = 0U;
 
     /* The CONNECT packet will always include a 10-byte variable header without connect properties. */
     uint32_t connectPacketSize = MQTT_PACKET_CONNECT_HEADER_SIZE;
@@ -2992,7 +3016,7 @@ MQTTStatus_t MQTT_GetConnectPacketSize( const MQTTConnectInfo_t * pConnectInfo,
         LogError( ( "Password length must be less than 65536 according to MQTT spec." ) );
         status = MQTTBadParameter;
     }
-    else if( ( pWillInfo != NULL ) && ( pWillInfo->payloadLength > ( size_t ) UINT16_MAX ) )
+    else if( ( pWillInfo != NULL ) && CHECK_SIZE_T_OVERFLOWS_16BIT( pWillInfo->payloadLength ) )
     {
         /* The MQTTPublishInfo_t is reused for the will message. The payload
          * length for any other message could be larger than 65,535, but
@@ -3049,6 +3073,19 @@ MQTTStatus_t MQTT_GetConnectPacketSize( const MQTTConnectInfo_t * pConnectInfo,
 
     if( status == MQTTSuccess )
     {
+        /* Since property length, client ID length, will property length, will topic name length
+         * and will payload length are ensured to be below their maximum value, connectPacketSize
+         * will not overflow.
+         * Max property length                     268435455
+         * Max encoded prop length               +         4
+         * Max client ID len (+2 byte len)       +     65535 + 2
+         * Max will property length              + 268435455
+         * Max will topic name len (+2 byte len) +     65535 + 2
+         * Max will payload len (+2 byte len)    +     65535 + 2
+         * Max username length (+2 byte len)     +     65535 + 2
+         * Max password length (+2 byte len)     +     65535 + 2
+         * Total                                 = 537198599 ( < UINT32_MAX ) */
+
         /* Add the length of the properties. */
         connectPacketSize += propertyLength;
         connectPacketSize += variableLengthEncodedSize( propertyLength );
@@ -3373,6 +3410,11 @@ MQTTStatus_t MQTT_GetSubscribePacketSize( const MQTTSubscribeInfo_t * pSubscript
         LogError( ( "Max Packet size cannot be 0" ) );
         status = MQTTBadParameter;
     }
+    else if( pRemainingLength == NULL )
+    {
+        LogError( ( "Pointer to remaining length cannot be NULL." ) );
+        status = MQTTBadParameter;
+    }
     else
     {
         if( ( pSubscribeProperties != NULL ) && ( pSubscribeProperties->pBuffer != NULL ) )
@@ -3536,6 +3578,11 @@ MQTTStatus_t MQTT_GetUnsubscribePacketSize( const MQTTSubscribeInfo_t * pSubscri
                     ( void * ) pSubscriptionList,
                     ( void * ) pRemainingLength,
                     ( void * ) pPacketSize ) );
+        status = MQTTBadParameter;
+    }
+    else if( maxPacketSize == 0U )
+    {
+        LogError( ( "Max Packet size cannot be 0" ) );
         status = MQTTBadParameter;
     }
     else if( subscriptionCount == 0U )
@@ -3961,6 +4008,13 @@ MQTTStatus_t MQTT_SerializeAck( const MQTTFixedBuffer_t * pFixedBuffer,
     else if( ( pReasonCode != NULL ) && ( validateReasonCodeForAck( packetType, *pReasonCode ) != MQTTSuccess ) )
     {
         LogError( ( "Invalid reason code for the ACK type." ) );
+        status = MQTTBadParameter;
+    }
+    else if( ( pAckProperties != NULL ) &&
+             ( CHECK_SIZE_T_OVERFLOWS_32BIT( pAckProperties->currentIndex ) ||
+               ( pAckProperties->currentIndex >= MQTT_REMAINING_LENGTH_INVALID ) ) )
+    {
+        LogError( ( "ACK properties must be smaller than 268435456." ) );
         status = MQTTBadParameter;
     }
     else
@@ -4511,13 +4565,25 @@ MQTTStatus_t MQTT_GetIncomingPacketTypeAndLength( TransportRecv_t readFunc,
         /* Check validity. */
         if( incomingPacketValid( pIncomingPacket->type ) == true )
         {
-            pIncomingPacket->remainingLength = getRemainingLength( readFunc,
-                                                                   pNetworkContext );
+            uint32_t remainingLengthU32;
 
-            if( pIncomingPacket->remainingLength == MQTT_REMAINING_LENGTH_INVALID )
+            remainingLengthU32 = getRemainingLength( readFunc,
+                                                     pNetworkContext );
+
+            if( CHECK_U32T_OVERFLOWS_SIZE_T( remainingLengthU32 ) )
             {
-                LogError( ( "Incoming packet remaining length invalid." ) );
+                LogError( ( "Incoming packet Remaining length will overflow the size_t variable." ) );
                 status = MQTTBadResponse;
+            }
+            else
+            {
+                pIncomingPacket->remainingLength = remainingLengthU32;
+
+                if( pIncomingPacket->remainingLength == MQTT_REMAINING_LENGTH_INVALID )
+                {
+                    LogError( ( "Incoming packet remaining length invalid." ) );
+                    status = MQTTBadResponse;
+                }
             }
         }
         else
@@ -4869,7 +4935,8 @@ MQTTStatus_t MQTT_ValidateWillProperties( const MQTTPropBuilder_t * pPropertyBui
 /*-----------------------------------------------------------*/
 
 MQTTStatus_t MQTT_ValidateConnectProperties( const MQTTPropBuilder_t * pPropertyBuilder,
-                                             bool * isRequestProblemInfoSet )
+                                             bool * isRequestProblemInfoSet,
+                                             uint32_t * pPacketMaxSizeValue )
 {
     MQTTStatus_t status = MQTTSuccess;
     uint32_t propertyLength = 0U;
@@ -4961,6 +5028,14 @@ MQTTStatus_t MQTT_ValidateConnectProperties( const MQTTPropBuilder_t * pProperty
                         {
                             LogError( ( "Maximum Packet Size cannot be 0 in CONNECT properties." ) );
                             status = MQTTBadResponse;
+                        }
+                        else if( pPacketMaxSizeValue != NULL )
+                        {
+                            *pPacketMaxSizeValue = maxPacketSize;
+                        }
+                        else
+                        {
+                            /* Nothing to do. */
                         }
                     }
                 }
@@ -5634,20 +5709,27 @@ MQTTStatus_t MQTT_DeserializeDisconnect( const MQTTPacketInfo_t * pPacket,
 
             if( status == MQTTSuccess )
             {
-                pIndex = &pIndex[ variableLengthEncodedSize( propertyLength ) ];
-
-                if( pPropBuffer != NULL )
-                {
-                    pPropBuffer->bufferLength = propertyLength;
-                    pPropBuffer->pBuffer = pIndex;
-                }
-
                 /* Validate the remaining length. It must only have the reason code
                  * and the properties and the bytes needed to encode the property length. */
                 if( pPacket->remainingLength != ( propertyLength + variableLengthEncodedSize( propertyLength ) + 1U ) )
                 {
                     LogError( ( "Remaining length doesn't match the expected size." ) );
                     status = MQTTBadResponse;
+                }
+                else if( CHECK_U32T_OVERFLOWS_SIZE_T( propertyLength ) )
+                {
+                    LogError( ( "Incoming property length will overflow the property buffer." ) );
+                    status = MQTTBadResponse;
+                }
+                else
+                {
+                    pIndex = &pIndex[ variableLengthEncodedSize( propertyLength ) ];
+
+                    if( pPropBuffer != NULL )
+                    {
+                        pPropBuffer->bufferLength = propertyLength;
+                        pPropBuffer->pBuffer = pIndex;
+                    }
                 }
             }
             else
