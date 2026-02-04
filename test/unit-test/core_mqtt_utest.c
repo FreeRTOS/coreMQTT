@@ -9640,7 +9640,7 @@ void test_MQTT_MatchTopic_topicNameLength_Overflow( void )
     size_t topicFilterlen = 14;
     bool matchResult = false;
 
-    /* NULL topic name. */
+    /* Topic name length more than maximum allowed length. */
     TEST_ASSERT_EQUAL( MQTTBadParameter, MQTT_MatchTopic( pTopicName,
                                                           topicNameLength,
                                                           pTopicFilter,
@@ -9656,7 +9656,7 @@ void test_MQTT_MatchTopic_topicFilterLength_Overflow( void )
     size_t topicFilterlen = 65536;
     bool matchResult = false;
 
-    /* NULL topic name. */
+    /* Topic filter length more than maximum allowed length. */
     TEST_ASSERT_EQUAL( MQTTBadParameter, MQTT_MatchTopic( pTopicName,
                                                           topicNameLength,
                                                           pTopicFilter,

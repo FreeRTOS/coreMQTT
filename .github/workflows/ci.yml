@@ -83,7 +83,7 @@ jobs:
         uses: FreeRTOS/CI-CD-Github-Actions/coverage-cop@main
         with:
           coverage-file: ./build/coverage.info
-          line-coverage-min: 94
+          branch-coverage-min: 94
 
   complexity:
     runs-on: ubuntu-latest

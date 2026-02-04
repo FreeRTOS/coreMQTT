@@ -731,6 +731,13 @@ MQTTStatus_t MQTT_CheckConnectStatus( const MQTTContext_t * pContext );
  * #MQTTEventCallbackFailed if the user defined callback fails.<br>
  * #MQTTSuccess otherwise.<br>
  *
+ * @note If no properties are provided (by setting @p pPropertyBuilder to NULL), coreMQTT
+ * will add a property to the connect packet to limit the maximum packet size that the
+ * broker can send to be equal to the application provided buffer to the #MQTT_Init API.
+ * This prevents the case when the packet is bigger than the buffer at which point,
+ * coreMQTT cannot handle the packet, neither can it drop it as MQTT protocol doesn't
+ * allow it.
+ *
  * @note This API may spend more time than provided in the timeoutMS parameters in
  * certain conditions as listed below:
  *

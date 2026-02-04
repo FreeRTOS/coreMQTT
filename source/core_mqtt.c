@@ -2359,10 +2359,8 @@ static MQTTStatus_t receiveSingleIteration( MQTTContext_t * pContext,
         /* If the MQTT Packet size is bigger than the buffer itself. */
         else if( totalMQTTPacketLength > pContext->networkBuffer.size )
         {
-            LogError( ( "Incoming packet size is bigger than MQTT buffer size. "
-                        "coreMQTT cannot handle such packets as 'dropping' packets is "
-                        "not allowed by the MQTT spec. Application MUST provide a bigger "
-                        "buffer to handle such packets." ) );
+            LogError( ( "Incoming packet size is bigger than MQTT buffer size. Total packet length %" PRIu32,
+                        totalMQTTPacketLength ) );
             status = MQTTRecvFailed;
         }
         /* If the total packet is of more length than the bytes we have available. */
@@ -4314,7 +4312,7 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
         if( pBackupPropBuilder != NULL )
         {
             bool isRequestProblemInfoSet;
-            uint32_t packetMaxSize;
+            uint32_t packetMaxSize = UINT32_MAX;
             status = MQTT_ValidateConnectProperties( pBackupPropBuilder,
                                                      &isRequestProblemInfoSet,
                                                      &packetMaxSize );
@@ -4343,11 +4341,9 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
 
             assert( !CHECK_SIZE_T_OVERFLOWS_32BIT( pContext->networkBuffer.size ) );
 
-            LogWarn( ( "Application has not set any properties. coreMQTT will add a property to "
-                       "set the maximum packet size received from the server. This prevents the case "
-                       "when the incoming packet is greater than the buffer size. In such case, the "
-                       "packet cannot be dropped by the library neither can it be processed. Setting "
-                       "the value of the property to: %" PRIu32, ( uint32_t ) pContext->networkBuffer.size ) );
+            LogInfo( ( "Application has not set any properties. Adding a property to set the maximum "
+                       "packet size received from the server for the client to be %" PRIu32 ".",
+                       ( uint32_t ) pContext->networkBuffer.size ) );
             status = MQTTPropAdd_MaxPacketSize( pBackupPropBuilder,
                                                 pContext->networkBuffer.size,
                                                 NULL );
