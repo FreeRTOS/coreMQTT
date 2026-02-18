@@ -300,7 +300,7 @@
  * @brief Per the MQTT spec, the largest "Remaining Length" of an MQTT
  * packet is this value, 256 MB.
  */
-#define MQTT_MAX_REMAINING_LENGTH        ( 268435455UL )
+#define MQTT_MAX_REMAINING_LENGTH        ( 268435455U )
 
 /**
  * @brief A value that represents an invalid remaining length.
@@ -349,7 +349,7 @@
 #if ( 65535U >= SIZE_MAX )
     #define CHECK_SIZE_T_OVERFLOWS_16BIT( x )    false
 #else
-    #define CHECK_SIZE_T_OVERFLOWS_16BIT( x )    ( ( x ) > UINT16_MAX )
+    #define CHECK_SIZE_T_OVERFLOWS_16BIT( x )    ( ( x ) > 65535U )
 #endif
 
 /**
@@ -358,10 +358,10 @@
  *
  * Evaluates to true when the value provided will overflow 32-bit variable. False otherwise.
  */
-#if ( UINT32_MAX >= SIZE_MAX )
+#if ( 0xFFFFFFFFU >= SIZE_MAX )
     #define CHECK_SIZE_T_OVERFLOWS_32BIT( x )    false
 #else
-    #define CHECK_SIZE_T_OVERFLOWS_32BIT( x )    ( ( x ) > UINT32_MAX )
+    #define CHECK_SIZE_T_OVERFLOWS_32BIT( x )    ( ( x ) > 0xFFFFFFFFU )
 #endif
 
 /**
@@ -381,11 +381,13 @@
     ( ( x ) > ( SIZE_MAX - ( y ) ) )
 
 /**
- * @fn size_t variableLengthEncodedSize( uint32_t length );
+ * @fn uint32_t variableLengthEncodedSize( uint32_t length );
  *
  * @brief Retrieve the size of the remaining length if it were to be encoded.
  *
  * @param[in] length The remaining length to be encoded.
+ *
+ * @note The length MUST be less than 268,435,455 as directed by the spec.
  *
  * @return The size of the remaining length if it were to be encoded.
  */
@@ -394,7 +396,7 @@
  * @cond DOXYGEN_IGNORE
  * Doxygen should ignore this definition, this function is private.
  */
-size_t variableLengthEncodedSize( uint32_t length );
+uint32_t variableLengthEncodedSize( uint32_t length );
 /** @endcond */
 
 /**
@@ -632,7 +634,7 @@ MQTTStatus_t decodeSubackPropertyLength( const uint8_t * pIndex,
 /** @endcond */
 
 /**
- * @fn uint8_t * serializeDisconnectFixed( uint8_t * pIndex, MQTTSuccessFailReasonCode_t * pReasonCode, uint32_t remainingLength );
+ * @fn uint8_t * serializeDisconnectFixed( uint8_t * pIndex, const MQTTSuccessFailReasonCode_t * pReasonCode, uint32_t remainingLength );
  *
  * @brief Serialize the fixed size part of the disconnect packet header.
  *
@@ -648,7 +650,7 @@ MQTTStatus_t decodeSubackPropertyLength( const uint8_t * pIndex,
  * Doxygen should ignore this definition, this function is private.
  */
 uint8_t * serializeDisconnectFixed( uint8_t * pIndex,
-                                    MQTTSuccessFailReasonCode_t * pReasonCode,
+                                    const MQTTSuccessFailReasonCode_t * pReasonCode,
                                     uint32_t remainingLength );
 /** @endcond */
 

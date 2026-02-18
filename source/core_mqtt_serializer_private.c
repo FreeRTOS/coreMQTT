@@ -49,9 +49,11 @@
 
 /*-----------------------------------------------------------*/
 
-size_t variableLengthEncodedSize( uint32_t length )
+uint32_t variableLengthEncodedSize( uint32_t length )
 {
-    size_t encodedSize;
+    uint32_t encodedSize;
+
+    assert( length <= MQTT_MAX_REMAINING_LENGTH );
 
     /* Determine how many bytes are needed to encode length.
      * The values below are taken from the MQTT 5.0 spec. */
@@ -77,9 +79,9 @@ size_t variableLengthEncodedSize( uint32_t length )
         encodedSize = 4U;
     }
 
-    LogDebug( ( "Encoded size for length %lu is %lu bytes.",
-                ( unsigned long ) length,
-                ( unsigned long ) encodedSize ) );
+    LogDebug( ( "Encoded size for length %" PRIu32 " is %" PRIu32 " bytes.",
+                length,
+                encodedSize ) );
 
     return encodedSize;
 }
@@ -190,7 +192,8 @@ MQTTStatus_t decodeUint32t( uint32_t * pProperty,
 
         pLocalIndex = &pLocalIndex[ sizeof( uint32_t ) ];
         *pUsed = true;
-        *pPropertyLength -= sizeof( uint32_t );
+        /* 4 byte property removed. */
+        *pPropertyLength -= 4U;
     }
 
     *pIndex = pLocalIndex;
@@ -230,7 +233,8 @@ MQTTStatus_t decodeUint16t( uint16_t * pProperty,
 
         pLocalIndex = &pLocalIndex[ sizeof( uint16_t ) ];
         *pUsed = true;
-        *pPropertyLength -= sizeof( uint16_t );
+        /* 2 byte property length. */
+        *pPropertyLength -= 2U;
     }
 
     *pIndex = pLocalIndex;
@@ -270,7 +274,8 @@ MQTTStatus_t decodeUint8t( uint8_t * pProperty,
 
         pLocalIndex = &pLocalIndex[ sizeof( uint8_t ) ];
         *pUsed = true;
-        *pPropertyLength -= sizeof( uint8_t );
+        /* One byte long property removed. */
+        *pPropertyLength -= 1U;
     }
 
     *pIndex = pLocalIndex;
@@ -299,15 +304,15 @@ MQTTStatus_t decodeUtf8( const char ** pProperty,
         status = MQTTBadResponse;
     }
     /* Validate the length and decode. */
-    else if( *pPropertyLength < sizeof( uint16_t ) )
+    else if( *pPropertyLength < 2U )
     {
         status = MQTTBadResponse;
     }
     else
     {
         length = UINT16_DECODE( pLocalIndex );
-        pLocalIndex = &pLocalIndex[ sizeof( uint16_t ) ];
-        *pPropertyLength -= sizeof( uint16_t );
+        pLocalIndex = &pLocalIndex[ 2U ];
+        *pPropertyLength -= 2U;
 
         if( *pPropertyLength < length )
         {
@@ -339,7 +344,7 @@ MQTTStatus_t decodeVariableLength( const uint8_t * pBuffer,
 {
     uint32_t remainingLength = 0;
     uint32_t multiplier = 1;
-    size_t bytesDecoded = 0;
+    uint32_t bytesDecoded = 0;
     uint8_t encodedByte = 0;
     size_t localBufferLength = bufferLength;
     MQTTStatus_t status = MQTTSuccess;
@@ -360,8 +365,12 @@ MQTTStatus_t decodeVariableLength( const uint8_t * pBuffer,
         {
             if( localBufferLength > 0U )
             {
-                encodedByte = pBuffer[ bytesDecoded ];
-                remainingLength += ( ( size_t ) encodedByte & 0x7FU ) * multiplier;
+                uint8_t tempResult;
+                encodedByte = pBuffer[ ( size_t ) bytesDecoded ];
+
+                /* Store the result before we multiply with the multiplier. */
+                tempResult = encodedByte & 0x7FU;
+                remainingLength += ( ( uint32_t ) tempResult ) * multiplier;
                 multiplier *= 128U;
                 bytesDecoded++;
                 localBufferLength--;
@@ -385,7 +394,7 @@ MQTTStatus_t decodeVariableLength( const uint8_t * pBuffer,
     if( status == MQTTSuccess )
     {
         /* Check that the decoded remaining length conforms to the MQTT specification. */
-        size_t expectedSize = variableLengthEncodedSize( remainingLength );
+        uint32_t expectedSize = variableLengthEncodedSize( remainingLength );
 
         if( bytesDecoded != expectedSize )
         {
@@ -411,6 +420,7 @@ uint8_t * encodeVariableLength( uint8_t * pDestination,
     uint32_t remainingLength = length;
 
     assert( pDestination != NULL );
+    assert( length < MQTT_REMAINING_LENGTH_INVALID );
 
     pLengthEnd = pDestination;
 
@@ -592,7 +602,7 @@ uint8_t * serializeUnsubscribeHeader( uint32_t remainingLength,
 /*-----------------------------------------------------------*/
 
 uint8_t * serializeDisconnectFixed( uint8_t * pIndex,
-                                    MQTTSuccessFailReasonCode_t * pReasonCode,
+                                    const MQTTSuccessFailReasonCode_t * pReasonCode,
                                     uint32_t remainingLength )
 {
     uint8_t * pIndexLocal = pIndex;

@@ -332,6 +332,7 @@ static bool isValidPropertyInPacketType( const uint8_t * mqttPacketType,
             UINT32_SET_BIT( allowedPropertiesMask, MQTT_AUTHENTICATION_DATA_POS );
             UINT32_SET_BIT( allowedPropertiesMask, MQTT_REASON_STRING_POS );
             UINT32_SET_BIT( allowedPropertiesMask, MQTT_USER_PROP_POS );
+            break;
 
         default:
             /* Unknown packet type - no properties allowed. */
@@ -355,6 +356,9 @@ static MQTTStatus_t addPropUint8( MQTTPropBuilder_t * pPropertyBuilder,
 {
     uint8_t * pIndex;
     MQTTStatus_t status = MQTTSuccess;
+
+    /* Property must be a boolean value. */
+    assert( ( property == 0 ) || ( property == 1 ) );
 
     if( pPropertyBuilder == NULL )
     {
@@ -395,7 +399,7 @@ static MQTTStatus_t addPropUint8( MQTTPropBuilder_t * pPropertyBuilder,
         pIndex = &pPropertyBuilder->pBuffer[ pPropertyBuilder->currentIndex ];
         *pIndex = propId;
         pIndex++;
-        *pIndex = ( property ? 1U : 0U );
+        *pIndex = ( ( property != 0U ) ? 1U : 0U );
         UINT32_SET_BIT( pPropertyBuilder->fieldSet, fieldPosition );
         pPropertyBuilder->currentIndex += 2U;
     }
@@ -594,7 +598,7 @@ static MQTTStatus_t addPropUtf8( MQTTPropBuilder_t * pPropertyBuilder,
         pIndex = &pPropertyBuilder->pBuffer[ pPropertyBuilder->currentIndex ];
         *pIndex = propId;
         pIndex++;
-        pIndex = encodeString( pIndex, property, propertyLength );
+        pIndex = encodeString( pIndex, property, ( uint16_t ) propertyLength );
         UINT32_SET_BIT( pPropertyBuilder->fieldSet, fieldPosition );
         /* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-108 */
         /* coverity[misra_c_2012_rule_10_8_violation] */
@@ -645,13 +649,24 @@ MQTTStatus_t MQTTPropAdd_SubscriptionId( MQTTPropBuilder_t * pPropertyBuilder,
         status = MQTTBadParameter;
     }
     /* variableLengthEncodedSize always returns a number in the range of [1,4]. The addition will not overflow. */
-    else if( ( pPropertyBuilder->bufferLength < ( variableLengthEncodedSize( subscriptionId ) + 1U ) ) ||
-             ( pPropertyBuilder->currentIndex > pPropertyBuilder->bufferLength - ( variableLengthEncodedSize( subscriptionId ) + 1U ) ) )
+    /* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-108 */
+    /* coverity[misra_c_2012_rule_10_8_violation] */
+    else if( ( pPropertyBuilder->bufferLength < ( ( size_t ) ( variableLengthEncodedSize( subscriptionId ) + 1U ) ) ) ||
+             /* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-108 */
+             /* coverity[misra_c_2012_rule_10_8_violation] */
+             ( pPropertyBuilder->currentIndex > ( pPropertyBuilder->bufferLength - ( ( size_t ) ( variableLengthEncodedSize( subscriptionId ) + 1U ) ) ) ) )
     {
         LogError( ( "Buffer too small to add subscription id." ) );
         status = MQTTNoMemory;
     }
-    else if( pPropertyBuilder->currentIndex > ( MQTT_REMAINING_LENGTH_INVALID - ( variableLengthEncodedSize( subscriptionId ) + 1U ) ) )
+    else if( CHECK_SIZE_T_OVERFLOWS_32BIT( pPropertyBuilder->currentIndex ) ||
+             ( pPropertyBuilder->currentIndex >= MQTT_REMAINING_LENGTH_INVALID ) )
+    {
+        LogError( ( "MQTT packets must be smaller than %" PRIu32 ".",
+                    ( uint32_t ) MQTT_REMAINING_LENGTH_INVALID ) );
+        status = MQTTBadParameter;
+    }
+    else if( ( ( uint32_t ) pPropertyBuilder->currentIndex ) > ( MQTT_REMAINING_LENGTH_INVALID - ( variableLengthEncodedSize( subscriptionId ) + 1U ) ) )
     {
         LogError( ( "MQTT packets must be smaller than %" PRIu32 ".",
                     ( uint32_t ) MQTT_REMAINING_LENGTH_INVALID ) );
@@ -734,6 +749,12 @@ MQTTStatus_t MQTTPropAdd_UserProp( MQTTPropBuilder_t * pPropertyBuilder,
         LogError( ( "Property builder buffer will overflow." ) );
         status = MQTTBadParameter;
     }
+    else if( CHECK_SIZE_T_OVERFLOWS_16BIT( userProperty->keyLength ) ||
+             CHECK_SIZE_T_OVERFLOWS_16BIT( userProperty->valueLength ) )
+    {
+        LogError( ( "Key and value lengths must be less than 65535." ) );
+        status = MQTTBadParameter;
+    }
 
     /*
      * User property is encoded as a key-value pair of UTF-8 strings.
@@ -767,8 +788,8 @@ MQTTStatus_t MQTTPropAdd_UserProp( MQTTPropBuilder_t * pPropertyBuilder,
         pIndex++;
 
         /* Encoding key. */
-        pIndex = encodeString( pIndex, userProperty->pKey, userProperty->keyLength );
-        pIndex = encodeString( pIndex, userProperty->pValue, userProperty->valueLength );
+        pIndex = encodeString( pIndex, userProperty->pKey, ( uint16_t ) userProperty->keyLength );
+        pIndex = encodeString( pIndex, userProperty->pValue, ( uint16_t ) userProperty->valueLength );
         /* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-108 */
         /* coverity[misra_c_2012_rule_10_8_violation] */
         pPropertyBuilder->currentIndex += ( size_t ) ( pIndex - start );
@@ -861,8 +882,10 @@ MQTTStatus_t MQTTPropAdd_RequestRespInfo( MQTTPropBuilder_t * pPropertyBuilder,
                                           bool requestResponseInfo,
                                           const uint8_t * pOptionalMqttPacketType )
 {
+    uint8_t requestResponseInfo_8bit = requestResponseInfo ? 1U : 0U;
+
     return addPropUint8( pPropertyBuilder,
-                         ( uint8_t ) requestResponseInfo,
+                         requestResponseInfo_8bit,
                          MQTT_REQUEST_RESPONSE_ID,
                          MQTT_REQUEST_RESPONSE_INFO_POS,
                          pOptionalMqttPacketType );
@@ -874,8 +897,10 @@ MQTTStatus_t MQTTPropAdd_RequestProbInfo( MQTTPropBuilder_t * pPropertyBuilder,
                                           bool requestProblemInfo,
                                           const uint8_t * pOptionalMqttPacketType )
 {
+    uint8_t requestProblemInfo_8bit = requestProblemInfo ? 1U : 0U;
+
     return addPropUint8( pPropertyBuilder,
-                         ( uint8_t ) requestProblemInfo,
+                         requestProblemInfo_8bit,
                          MQTT_REQUEST_PROBLEM_ID,
                          MQTT_REQUEST_PROBLEM_INFO_POS,
                          pOptionalMqttPacketType );
@@ -963,8 +988,10 @@ MQTTStatus_t MQTTPropAdd_PayloadFormat( MQTTPropBuilder_t * pPropertyBuilder,
                                         bool payloadFormat,
                                         const uint8_t * pOptionalMqttPacketType )
 {
+    uint8_t payloadFormat_8bit = payloadFormat ? 1U : 0U;
+
     return addPropUint8( pPropertyBuilder,
-                         ( uint8_t ) payloadFormat,
+                         payloadFormat_8bit,
                          MQTT_PAYLOAD_FORMAT_ID,
                          MQTT_PAYLOAD_FORMAT_INDICATOR_POS,
                          pOptionalMqttPacketType );
@@ -1040,8 +1067,8 @@ MQTTStatus_t MQTTPropAdd_ResponseTopic( MQTTPropBuilder_t * pPropertyBuilder,
         LogError( ( "Response Topic Length cannot be 0." ) );
         status = MQTTBadParameter;
     }
-    else if( ( memchr( ( void * ) responseTopic, ( int ) '#', responseTopicLength ) != NULL ) ||
-             ( memchr( ( void * ) responseTopic, ( int ) '+', responseTopicLength ) != NULL ) )
+    else if( ( memchr( ( const void * ) responseTopic, ( int32_t ) '#', responseTopicLength ) != NULL ) ||
+             ( memchr( ( const void * ) responseTopic, ( int32_t ) '+', responseTopicLength ) != NULL ) )
     {
         LogError( ( "Protocol Error : Response Topic contains wildcards (such as # or +)." ) );
         status = MQTTBadParameter;

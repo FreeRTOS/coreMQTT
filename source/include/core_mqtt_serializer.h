@@ -73,59 +73,59 @@
  */
 #define MQTT_PUBLISH_ACK_PACKET_SIZE    ( 4UL )
 
-#define MQTT_SUBSCRIBE_QOS1                    ( 0 ) /**< @brief MQTT SUBSCRIBE QoS1 flag. */
-#define MQTT_SUBSCRIBE_QOS2                    ( 1 ) /**< @brief MQTT SUBSCRIBE QoS2 flag. */
-#define MQTT_SUBSCRIBE_NO_LOCAL                ( 2 ) /**< @brief MQTT SUBSCRIBE no local flag. */
-#define MQTT_SUBSCRIBE_RETAIN_AS_PUBLISHED     ( 3 ) /**< @brief MQTT SUBSCRIBE retain as published flag. */
-#define MQTT_SUBSCRIBE_RETAIN_HANDLING1        ( 4 ) /**<@brief MQTT SUBSCRIBE Retain Handling Option 1 */
-#define MQTT_SUBSCRIBE_RETAIN_HANDLING2        ( 5 ) /**<@brief Retain Handling Option 2   -> in core_mqtt_serializer.c */
+#define MQTT_SUBSCRIBE_QOS1                    ( 0U ) /**< @brief MQTT SUBSCRIBE QoS1 flag. */
+#define MQTT_SUBSCRIBE_QOS2                    ( 1U ) /**< @brief MQTT SUBSCRIBE QoS2 flag. */
+#define MQTT_SUBSCRIBE_NO_LOCAL                ( 2U ) /**< @brief MQTT SUBSCRIBE no local flag. */
+#define MQTT_SUBSCRIBE_RETAIN_AS_PUBLISHED     ( 3U ) /**< @brief MQTT SUBSCRIBE retain as published flag. */
+#define MQTT_SUBSCRIBE_RETAIN_HANDLING1        ( 4U ) /**<@brief MQTT SUBSCRIBE Retain Handling Option 1 */
+#define MQTT_SUBSCRIBE_RETAIN_HANDLING2        ( 5U ) /**<@brief Retain Handling Option 2   -> in core_mqtt_serializer.c */
 
 /* CONNECT PROPERTIES. */
 
 /**
 * @brief Session expiry id.
 */
-#define MQTT_SESSION_EXPIRY_ID      ( 0x11 )
+#define MQTT_SESSION_EXPIRY_ID      ( 0x11U )
 
 /**
 * @brief Receive maximum id.
 */
-#define MQTT_RECEIVE_MAX_ID         ( 0x21 )
+#define MQTT_RECEIVE_MAX_ID         ( 0x21U )
 
 /**
 * @brief Maximum packet size  id.
 */
-#define MQTT_MAX_PACKET_SIZE_ID     ( 0x27 )
+#define MQTT_MAX_PACKET_SIZE_ID     ( 0x27U )
 
 /**
 * @brief Topic alias size id.
 */
-#define MQTT_TOPIC_ALIAS_MAX_ID     ( 0x22 )
+#define MQTT_TOPIC_ALIAS_MAX_ID     ( 0x22U )
 
 /**
 * @brief Request response id.
 */
-#define MQTT_REQUEST_RESPONSE_ID    ( 0x19 )
+#define MQTT_REQUEST_RESPONSE_ID    ( 0x19U )
 
 /**
 * @brief Request problem id.
 */
-#define MQTT_REQUEST_PROBLEM_ID     ( 0x17 )
+#define MQTT_REQUEST_PROBLEM_ID     ( 0x17U )
 
 /**
 * @brief User property id.
 */
-#define MQTT_USER_PROPERTY_ID       ( 0x26 )
+#define MQTT_USER_PROPERTY_ID       ( 0x26U )
 
 /**
 * @brief Authentication method id.
 */
-#define MQTT_AUTH_METHOD_ID         ( 0x15 )
+#define MQTT_AUTH_METHOD_ID         ( 0x15U )
 
 /**
 * @brief  Authentication data id.
 */
-#define MQTT_AUTH_DATA_ID           ( 0x16 )
+#define MQTT_AUTH_DATA_ID           ( 0x16U )
 
 
 /* Publish properties. */
@@ -133,37 +133,37 @@
 /**
 * @brief Will delay id.
 */
-#define MQTT_WILL_DELAY_ID          ( 0x18 )
+#define MQTT_WILL_DELAY_ID          ( 0x18U )
 
 /**
 * @brief Payload format id.
 */
-#define MQTT_PAYLOAD_FORMAT_ID      ( 0x01 )
+#define MQTT_PAYLOAD_FORMAT_ID      ( 0x01U )
 
 /**
 * @brief Message Expiry id.
 */
-#define MQTT_MSG_EXPIRY_ID          ( 0x02 )
+#define MQTT_MSG_EXPIRY_ID          ( 0x02U )
 
 /**
 * @brief Content type id.
 */
-#define MQTT_CONTENT_TYPE_ID        ( 0x03 )
+#define MQTT_CONTENT_TYPE_ID        ( 0x03U )
 
 /**
 * @brief Response topic id.
 */
-#define MQTT_RESPONSE_TOPIC_ID      ( 0x08 )
+#define MQTT_RESPONSE_TOPIC_ID      ( 0x08U )
 
 /**
 * @brief Correlation data id.
 */
-#define MQTT_CORRELATION_DATA_ID    ( 0x09 )
+#define MQTT_CORRELATION_DATA_ID    ( 0x09U )
 
 /**
 * @brief Topic alias id.
 */
-#define MQTT_TOPIC_ALIAS_ID         ( 0x23 )
+#define MQTT_TOPIC_ALIAS_ID         ( 0x23U )
 
 
 /* CONNACK PROPERTIES. */
@@ -171,58 +171,58 @@
 /**
 * @brief Max qos id.
 */
-#define MQTT_MAX_QOS_ID              ( 0x24 )
+#define MQTT_MAX_QOS_ID              ( 0x24U )
 
 /**
 * @brief Retain available id.
 */
-#define MQTT_RETAIN_AVAILABLE_ID     ( 0x25 )
+#define MQTT_RETAIN_AVAILABLE_ID     ( 0x25U )
 
 /**
 * @brief Assigned client identifier id.
 */
-#define MQTT_ASSIGNED_CLIENT_ID      ( 0x12 )
+#define MQTT_ASSIGNED_CLIENT_ID      ( 0x12U )
 
 /**
 * @brief Reason string id.
 */
-#define MQTT_REASON_STRING_ID        ( 0x1F )
+#define MQTT_REASON_STRING_ID        ( 0x1FU )
 
 /**
 * @brief Wildcard available id.
 */
-#define MQTT_WILDCARD_ID             ( 0x28 )
+#define MQTT_WILDCARD_ID             ( 0x28U )
 
 /**
 * @brief Subscription available id.
 */
-#define MQTT_SUB_AVAILABLE_ID        ( 0x29 )
+#define MQTT_SUB_AVAILABLE_ID        ( 0x29U )
 
 /**
 * @brief Shared subscription id.
 */
-#define MQTT_SHARED_SUB_ID           ( 0x2A )
+#define MQTT_SHARED_SUB_ID           ( 0x2AU )
 
 /**
 * @brief Server keep alive id.
 */
-#define MQTT_SERVER_KEEP_ALIVE_ID    ( 0x13 )
+#define MQTT_SERVER_KEEP_ALIVE_ID    ( 0x13U )
 
 /**
 * @brief Response information id.
 */
 
-#define MQTT_RESPONSE_INFO_ID    ( 0x1A )
+#define MQTT_RESPONSE_INFO_ID    ( 0x1AU )
 
 /**
 * @brief Server reference  id.
 */
-#define MQTT_SERVER_REF_ID       ( 0x1C )
+#define MQTT_SERVER_REF_ID       ( 0x1CU )
 
 /**
 * @brief Subscription ID id
 */
-#define MQTT_SUBSCRIPTION_ID_ID          ( 0x0B )
+#define MQTT_SUBSCRIPTION_ID_ID          ( 0x0BU )
 
 /* Structures defined in this file. */
 struct MQTTFixedBuffer;
@@ -454,7 +454,7 @@ typedef struct MQTTPacketInfo
     /**
      * @brief Length of remaining serialized data.
      */
-    size_t remainingLength;
+    uint32_t remainingLength;
 
     /**
      * @brief The length of the MQTT header including the type and length.
@@ -582,113 +582,113 @@ typedef struct MQTTConnectProperties
 typedef enum MQTTSuccessFailReasonCode
 {
     /* PUBACK reason codes */
-    MQTT_REASON_PUBACK_SUCCESS = 0x00,                    /**< Publish was successfully received and accepted. */
-    MQTT_REASON_PUBACK_NO_MATCHING_SUBSCRIBERS = 0x10,    /**< Publish was accepted but there are no subscribers. */
-    MQTT_REASON_PUBACK_UNSPECIFIED_ERROR = 0x80,         /**< Unspecified error occurred for the PUBACK. */
-    MQTT_REASON_PUBACK_IMPLEMENTATION_SPECIFIC_ERROR = 0x83, /**< Implementation specific error for the PUBACK. */
-    MQTT_REASON_PUBACK_NOT_AUTHORIZED = 0x87,            /**< Client is not authorized to publish. */
-    MQTT_REASON_PUBACK_TOPIC_NAME_INVALID = 0x90,        /**< Topic name is not valid. */
-    MQTT_REASON_PUBACK_PACKET_IDENTIFIER_IN_USE = 0x91,  /**< Packet identifier is already in use. */
-    MQTT_REASON_PUBACK_QUOTA_EXCEEDED = 0x97,            /**< Implementation or system quota exceeded. */
-    MQTT_REASON_PUBACK_PAYLOAD_FORMAT_INVALID = 0x99,    /**< Payload format is invalid. */
+    MQTT_REASON_PUBACK_SUCCESS = 0x00U,                    /**< Publish was successfully received and accepted. */
+    MQTT_REASON_PUBACK_NO_MATCHING_SUBSCRIBERS = 0x10U,    /**< Publish was accepted but there are no subscribers. */
+    MQTT_REASON_PUBACK_UNSPECIFIED_ERROR = 0x80U,         /**< Unspecified error occurred for the PUBACK. */
+    MQTT_REASON_PUBACK_IMPLEMENTATION_SPECIFIC_ERROR = 0x83U, /**< Implementation specific error for the PUBACK. */
+    MQTT_REASON_PUBACK_NOT_AUTHORIZED = 0x87U,            /**< Client is not authorized to publish. */
+    MQTT_REASON_PUBACK_TOPIC_NAME_INVALID = 0x90U,        /**< Topic name is not valid. */
+    MQTT_REASON_PUBACK_PACKET_IDENTIFIER_IN_USE = 0x91U,  /**< Packet identifier is already in use. */
+    MQTT_REASON_PUBACK_QUOTA_EXCEEDED = 0x97U,            /**< Implementation or system quota exceeded. */
+    MQTT_REASON_PUBACK_PAYLOAD_FORMAT_INVALID = 0x99U,    /**< Payload format is invalid. */
 
     /* PUBREC reason codes */
-    MQTT_REASON_PUBREC_SUCCESS = 0x00,                   /**< Publish was successfully received for QoS 2. */
-    MQTT_REASON_PUBREC_NO_MATCHING_SUBSCRIBERS = 0x10,   /**< Publish received but no matching subscribers. */
-    MQTT_REASON_PUBREC_UNSPECIFIED_ERROR = 0x80,        /**< Unspecified error occurred for the PUBREC. */
-    MQTT_REASON_PUBREC_IMPLEMENTATION_SPECIFIC_ERROR = 0x83, /**< Implementation specific error for the PUBREC. */
-    MQTT_REASON_PUBREC_NOT_AUTHORIZED = 0x87,           /**< Client is not authorized to publish. */
-    MQTT_REASON_PUBREC_TOPIC_NAME_INVALID = 0x90,       /**< Topic name is not valid. */
-    MQTT_REASON_PUBREC_PACKET_IDENTIFIER_IN_USE = 0x91, /**< Packet identifier is already in use. */
-    MQTT_REASON_PUBREC_QUOTA_EXCEEDED = 0x97,           /**< Implementation or system quota exceeded. */
-    MQTT_REASON_PUBREC_PAYLOAD_FORMAT_INVALID = 0x99,   /**< Payload format is invalid. */
+    MQTT_REASON_PUBREC_SUCCESS = 0x00U,                   /**< Publish was successfully received for QoS 2. */
+    MQTT_REASON_PUBREC_NO_MATCHING_SUBSCRIBERS = 0x10U,   /**< Publish received but no matching subscribers. */
+    MQTT_REASON_PUBREC_UNSPECIFIED_ERROR = 0x80U,        /**< Unspecified error occurred for the PUBREC. */
+    MQTT_REASON_PUBREC_IMPLEMENTATION_SPECIFIC_ERROR = 0x83U, /**< Implementation specific error for the PUBREC. */
+    MQTT_REASON_PUBREC_NOT_AUTHORIZED = 0x87U,           /**< Client is not authorized to publish. */
+    MQTT_REASON_PUBREC_TOPIC_NAME_INVALID = 0x90U,       /**< Topic name is not valid. */
+    MQTT_REASON_PUBREC_PACKET_IDENTIFIER_IN_USE = 0x91U, /**< Packet identifier is already in use. */
+    MQTT_REASON_PUBREC_QUOTA_EXCEEDED = 0x97U,           /**< Implementation or system quota exceeded. */
+    MQTT_REASON_PUBREC_PAYLOAD_FORMAT_INVALID = 0x99U,   /**< Payload format is invalid. */
 
     /* PUBREL reason codes */
-    MQTT_REASON_PUBREL_SUCCESS = 0x00,                  /**< Publish release was successful. */
-    MQTT_REASON_PUBREL_PACKET_IDENTIFIER_NOT_FOUND = 0x92, /**< Packet identifier was not found. */
+    MQTT_REASON_PUBREL_SUCCESS = 0x00U,                  /**< Publish release was successful. */
+    MQTT_REASON_PUBREL_PACKET_IDENTIFIER_NOT_FOUND = 0x92U, /**< Packet identifier was not found. */
 
     /* PUBCOMP reason codes */
-    MQTT_REASON_PUBCOMP_SUCCESS = 0x00,                 /**< Publish complete was successful. */
-    MQTT_REASON_PUBCOMP_PACKET_IDENTIFIER_NOT_FOUND = 0x92, /**< Packet identifier was not found. */
+    MQTT_REASON_PUBCOMP_SUCCESS = 0x00U,                 /**< Publish complete was successful. */
+    MQTT_REASON_PUBCOMP_PACKET_IDENTIFIER_NOT_FOUND = 0x92U, /**< Packet identifier was not found. */
 
     /* CONNACK reason codes */
-    MQTT_REASON_CONNACK_SUCCESS = 0x00,                 /**< Connection accepted. */
-    MQTT_REASON_CONNACK_UNSPECIFIED_ERROR = 0x80,       /**< Unspecified error occurred during connection. */
-    MQTT_REASON_CONNACK_MALFORMED_PACKET = 0x81,        /**< Received packet was malformed. */
-    MQTT_REASON_CONNACK_PROTOCOL_ERROR = 0x82,          /**< Protocol error occurred. */
-    MQTT_REASON_CONNACK_IMPLEMENTATION_SPECIFIC_ERROR = 0x83, /**< Implementation specific error. */
-    MQTT_REASON_CONNACK_UNSUPPORTED_PROTOCOL_VERSION = 0x84, /**< Protocol version not supported. */
-    MQTT_REASON_CONNACK_CLIENT_IDENTIFIER_NOT_VALID = 0x85, /**< Client identifier is not valid. */
-    MQTT_REASON_CONNACK_BAD_USER_NAME_OR_PASSWORD = 0x86, /**< Username or password is malformed. */
-    MQTT_REASON_CONNACK_NOT_AUTHORIZED = 0x87,          /**< Client is not authorized to connect. */
-    MQTT_REASON_CONNACK_SERVER_UNAVAILABLE = 0x88,      /**< Server is unavailable. */
-    MQTT_REASON_CONNACK_SERVER_BUSY = 0x89,             /**< Server is busy. */
-    MQTT_REASON_CONNACK_BANNED = 0x8A,                  /**< Client has been banned. */
-    MQTT_REASON_CONNACK_BAD_AUTHENTICATION_METHOD = 0x8C, /**< Authentication method is not supported. */
-    MQTT_REASON_CONNACK_TOPIC_NAME_INVALID = 0x90,      /**< Topic name is invalid. */
-    MQTT_REASON_CONNACK_PACKET_TOO_LARGE = 0x95,        /**< Packet size exceeds maximum allowed. */
-    MQTT_REASON_CONNACK_QUOTA_EXCEEDED = 0x97,          /**< Implementation or system quota exceeded. */
-    MQTT_REASON_CONNACK_PAYLOAD_FORMAT_INVALID = 0x99,  /**< Payload format is invalid. */
-    MQTT_REASON_CONNACK_RETAIN_NOT_SUPPORTED = 0x9A,    /**< Retain is not supported. */
-    MQTT_REASON_CONNACK_QOS_NOT_SUPPORTED = 0x9B,       /**< QoS level is not supported. */
-    MQTT_REASON_CONNACK_USE_ANOTHER_SERVER = 0x9C,      /**< Client should temporarily use another server. */
-    MQTT_REASON_CONNACK_SERVER_MOVED = 0x9D,            /**< Client should permanently use another server. */
-    MQTT_REASON_CONNACK_CONNECTION_RATE_EXCEEDED = 0x9F, /**< Connection rate limit exceeded. */
+    MQTT_REASON_CONNACK_SUCCESS = 0x00U,                 /**< Connection accepted. */
+    MQTT_REASON_CONNACK_UNSPECIFIED_ERROR = 0x80U,       /**< Unspecified error occurred during connection. */
+    MQTT_REASON_CONNACK_MALFORMED_PACKET = 0x81U,        /**< Received packet was malformed. */
+    MQTT_REASON_CONNACK_PROTOCOL_ERROR = 0x82U,          /**< Protocol error occurred. */
+    MQTT_REASON_CONNACK_IMPLEMENTATION_SPECIFIC_ERROR = 0x83U, /**< Implementation specific error. */
+    MQTT_REASON_CONNACK_UNSUPPORTED_PROTOCOL_VERSION = 0x84U, /**< Protocol version not supported. */
+    MQTT_REASON_CONNACK_CLIENT_IDENTIFIER_NOT_VALID = 0x85U, /**< Client identifier is not valid. */
+    MQTT_REASON_CONNACK_BAD_USER_NAME_OR_PASSWORD = 0x86U, /**< Username or password is malformed. */
+    MQTT_REASON_CONNACK_NOT_AUTHORIZED = 0x87U,          /**< Client is not authorized to connect. */
+    MQTT_REASON_CONNACK_SERVER_UNAVAILABLE = 0x88U,      /**< Server is unavailable. */
+    MQTT_REASON_CONNACK_SERVER_BUSY = 0x89U,             /**< Server is busy. */
+    MQTT_REASON_CONNACK_BANNED = 0x8AU,                  /**< Client has been banned. */
+    MQTT_REASON_CONNACK_BAD_AUTHENTICATION_METHOD = 0x8CU, /**< Authentication method is not supported. */
+    MQTT_REASON_CONNACK_TOPIC_NAME_INVALID = 0x90U,      /**< Topic name is invalid. */
+    MQTT_REASON_CONNACK_PACKET_TOO_LARGE = 0x95U,        /**< Packet size exceeds maximum allowed. */
+    MQTT_REASON_CONNACK_QUOTA_EXCEEDED = 0x97U,          /**< Implementation or system quota exceeded. */
+    MQTT_REASON_CONNACK_PAYLOAD_FORMAT_INVALID = 0x99U,  /**< Payload format is invalid. */
+    MQTT_REASON_CONNACK_RETAIN_NOT_SUPPORTED = 0x9AU,    /**< Retain is not supported. */
+    MQTT_REASON_CONNACK_QOS_NOT_SUPPORTED = 0x9BU,       /**< QoS level is not supported. */
+    MQTT_REASON_CONNACK_USE_ANOTHER_SERVER = 0x9CU,      /**< Client should temporarily use another server. */
+    MQTT_REASON_CONNACK_SERVER_MOVED = 0x9DU,            /**< Client should permanently use another server. */
+    MQTT_REASON_CONNACK_CONNECTION_RATE_EXCEEDED = 0x9FU, /**< Connection rate limit exceeded. */
 
     /* SUBACK reason codes */
-    MQTT_REASON_SUBACK_GRANTED_QOS0 = 0x00,             /**< Subscription accepted with maximum QoS 0. */
-    MQTT_REASON_SUBACK_GRANTED_QOS1 = 0x01,             /**< Subscription accepted with maximum QoS 1. */
-    MQTT_REASON_SUBACK_GRANTED_QOS2 = 0x02,             /**< Subscription accepted with maximum QoS 2. */
-    MQTT_REASON_SUBACK_UNSPECIFIED_ERROR = 0x80,        /**< Unspecified error occurred for the subscription. */
-    MQTT_REASON_SUBACK_IMPLEMENTATION_SPECIFIC_ERROR = 0x83, /**< Implementation specific error. */
-    MQTT_REASON_SUBACK_NOT_AUTHORIZED = 0x87,           /**< Client is not authorized to subscribe. */
-    MQTT_REASON_SUBACK_TOPIC_FILTER_INVALID = 0x8F,     /**< Topic filter is not valid. */
-    MQTT_REASON_SUBACK_PACKET_IDENTIFIER_IN_USE = 0x91, /**< Packet identifier is already in use. */
-    MQTT_REASON_SUBACK_QUOTA_EXCEEDED = 0x97,           /**< Implementation or system quota exceeded. */
-    MQTT_REASON_SUBACK_SHARED_SUBSCRIPTIONS_NOT_SUPPORTED = 0x9E, /**< Shared subscriptions are not supported. */
-    MQTT_REASON_SUBACK_SUBSCRIPTION_IDENTIFIERS_NOT_SUPPORTED = 0xA1, /**< Subscription identifiers are not supported. */
-    MQTT_REASON_SUBACK_WILDCARD_SUBSCRIPTIONS_NOT_SUPPORTED = 0xA2, /**< Wildcard subscriptions are not supported. */
+    MQTT_REASON_SUBACK_GRANTED_QOS0 = 0x00U,             /**< Subscription accepted with maximum QoS 0. */
+    MQTT_REASON_SUBACK_GRANTED_QOS1 = 0x01U,             /**< Subscription accepted with maximum QoS 1. */
+    MQTT_REASON_SUBACK_GRANTED_QOS2 = 0x02U,             /**< Subscription accepted with maximum QoS 2. */
+    MQTT_REASON_SUBACK_UNSPECIFIED_ERROR = 0x80U,        /**< Unspecified error occurred for the subscription. */
+    MQTT_REASON_SUBACK_IMPLEMENTATION_SPECIFIC_ERROR = 0x83U, /**< Implementation specific error. */
+    MQTT_REASON_SUBACK_NOT_AUTHORIZED = 0x87U,           /**< Client is not authorized to subscribe. */
+    MQTT_REASON_SUBACK_TOPIC_FILTER_INVALID = 0x8FU,     /**< Topic filter is not valid. */
+    MQTT_REASON_SUBACK_PACKET_IDENTIFIER_IN_USE = 0x91U, /**< Packet identifier is already in use. */
+    MQTT_REASON_SUBACK_QUOTA_EXCEEDED = 0x97U,           /**< Implementation or system quota exceeded. */
+    MQTT_REASON_SUBACK_SHARED_SUBSCRIPTIONS_NOT_SUPPORTED = 0x9EU, /**< Shared subscriptions are not supported. */
+    MQTT_REASON_SUBACK_SUBSCRIPTION_IDENTIFIERS_NOT_SUPPORTED = 0xA1U, /**< Subscription identifiers are not supported. */
+    MQTT_REASON_SUBACK_WILDCARD_SUBSCRIPTIONS_NOT_SUPPORTED = 0xA2U, /**< Wildcard subscriptions are not supported. */
 
     /* UNSUBACK reason codes */
-    MQTT_REASON_UNSUBACK_SUCCESS = 0x00,                /**< Unsubscribe was successful. */
-    MQTT_REASON_UNSUBACK_NO_SUBSCRIPTION_EXISTED = 0x11, /**< No matching subscription existed. */
-    MQTT_REASON_UNSUBACK_UNSPECIFIED_ERROR = 0x80,      /**< Unspecified error occurred for the unsubscribe. */
-    MQTT_REASON_UNSUBACK_IMPLEMENTATION_SPECIFIC_ERROR = 0x83, /**< Implementation specific error. */
-    MQTT_REASON_UNSUBACK_NOT_AUTHORIZED = 0x87,         /**< Client is not authorized to unsubscribe. */
-    MQTT_REASON_UNSUBACK_TOPIC_FILTER_INVALID = 0x8F,   /**< Topic filter is not valid. */
-    MQTT_REASON_UNSUBACK_PACKET_IDENTIFIER_IN_USE = 0x91, /**< Packet identifier is already in use. */
+    MQTT_REASON_UNSUBACK_SUCCESS = 0x00U,                /**< Unsubscribe was successful. */
+    MQTT_REASON_UNSUBACK_NO_SUBSCRIPTION_EXISTED = 0x11U, /**< No matching subscription existed. */
+    MQTT_REASON_UNSUBACK_UNSPECIFIED_ERROR = 0x80U,      /**< Unspecified error occurred for the unsubscribe. */
+    MQTT_REASON_UNSUBACK_IMPLEMENTATION_SPECIFIC_ERROR = 0x83U, /**< Implementation specific error. */
+    MQTT_REASON_UNSUBACK_NOT_AUTHORIZED = 0x87U,         /**< Client is not authorized to unsubscribe. */
+    MQTT_REASON_UNSUBACK_TOPIC_FILTER_INVALID = 0x8FU,   /**< Topic filter is not valid. */
+    MQTT_REASON_UNSUBACK_PACKET_IDENTIFIER_IN_USE = 0x91U, /**< Packet identifier is already in use. */
 
     /* DISCONNECT reason codes */
-    MQTT_REASON_DISCONNECT_NORMAL_DISCONNECTION = 0x00,  /**< Normal client-initiated disconnect. */
-    MQTT_REASON_DISCONNECT_DISCONNECT_WITH_WILL_MESSAGE = 0x04, /**< Client disconnecting with Will Message. */
-    MQTT_REASON_DISCONNECT_UNSPECIFIED_ERROR = 0x80,     /**< Unspecified error occurred. */
-    MQTT_REASON_DISCONNECT_MALFORMED_PACKET = 0x81,      /**< Received packet was malformed. */
-    MQTT_REASON_DISCONNECT_PROTOCOL_ERROR = 0x82,        /**< Protocol error occurred. */
-    MQTT_REASON_DISCONNECT_IMPLEMENTATION_SPECIFIC_ERROR = 0x83, /**< Implementation specific error. */
-    MQTT_REASON_DISCONNECT_NOT_AUTHORIZED = 0x87,        /**< Client is not authorized. */
-    MQTT_REASON_DISCONNECT_SERVER_BUSY = 0x89,           /**< Server is busy. */
-    MQTT_REASON_DISCONNECT_SERVER_SHUTTING_DOWN = 0x8B,  /**< Server is shutting down. */
-    MQTT_REASON_DISCONNECT_BAD_AUTHENTICATION_METHOD = 0x8C, /**< Authentication method is invalid. */
-    MQTT_REASON_DISCONNECT_KEEP_ALIVE_TIMEOUT = 0x8D,    /**< Keep alive timeout occurred. */
-    MQTT_REASON_DISCONNECT_SESSION_TAKEN_OVER = 0x8E,    /**< Another connection using same client ID. */
-    MQTT_REASON_DISCONNECT_TOPIC_FILTER_INVALID = 0x8F,  /**< Topic filter is not valid. */
-    MQTT_REASON_DISCONNECT_TOPIC_NAME_INVALID = 0x90,    /**< Topic name is not valid. */
-    MQTT_REASON_DISCONNECT_RECEIVE_MAXIMUM_EXCEEDED = 0x93, /**< Receive maximum value exceeded. */
-    MQTT_REASON_DISCONNECT_TOPIC_ALIAS_INVALID = 0x94,   /**< Topic alias is invalid. */
-    MQTT_REASON_DISCONNECT_PACKET_TOO_LARGE = 0x95,      /**< Packet size exceeds maximum allowed. */
-    MQTT_REASON_DISCONNECT_MESSAGE_RATE_TOO_HIGH = 0x96, /**< Message rate too high. */
-    MQTT_REASON_DISCONNECT_QUOTA_EXCEEDED = 0x97,        /**< Implementation or system quota exceeded. */
-    MQTT_REASON_DISCONNECT_ADMINISTRATIVE_ACTION = 0x98,  /**< Disconnected due to administrative action. */
-    MQTT_REASON_DISCONNECT_PAYLOAD_FORMAT_INVALID = 0x99, /**< Payload format is invalid. */
-    MQTT_REASON_DISCONNECT_RETAIN_NOT_SUPPORTED = 0x9A,   /**< Retain is not supported. */
-    MQTT_REASON_DISCONNECT_QOS_NOT_SUPPORTED = 0x9B,      /**< QoS level is not supported. */
-    MQTT_REASON_DISCONNECT_USE_ANOTHER_SERVER = 0x9C,     /**< Client should temporarily use another server. */
-    MQTT_REASON_DISCONNECT_SERVER_MOVED = 0x9D,           /**< Client should permanently use another server. */
-    MQTT_REASON_DISCONNECT_SHARED_SUBSCRIPTIONS_NOT_SUPPORTED = 0x9E, /**< Shared subscriptions are not supported. */
-    MQTT_REASON_DISCONNECT_CONNECTION_RATE_EXCEEDED = 0x9F, /**< Connection rate limit exceeded. */
-    MQTT_REASON_DISCONNECT_MAXIMUM_CONNECT_TIME = 0xA0,    /**< Maximum connection time authorized exceeded. */
-    MQTT_REASON_DISCONNECT_SUBSCRIPTION_IDENTIFIERS_NOT_SUPPORTED = 0xA1, /**< Subscription identifiers are not supported. */
-    MQTT_REASON_DISCONNECT_WILDCARD_SUBSCRIPTIONS_NOT_SUPPORTED = 0xA2,    /**< Wildcard subscriptions are not supported. */
+    MQTT_REASON_DISCONNECT_NORMAL_DISCONNECTION = 0x00U,  /**< Normal client-initiated disconnect. */
+    MQTT_REASON_DISCONNECT_DISCONNECT_WITH_WILL_MESSAGE = 0x04U, /**< Client disconnecting with Will Message. */
+    MQTT_REASON_DISCONNECT_UNSPECIFIED_ERROR = 0x80U,     /**< Unspecified error occurred. */
+    MQTT_REASON_DISCONNECT_MALFORMED_PACKET = 0x81U,      /**< Received packet was malformed. */
+    MQTT_REASON_DISCONNECT_PROTOCOL_ERROR = 0x82U,        /**< Protocol error occurred. */
+    MQTT_REASON_DISCONNECT_IMPLEMENTATION_SPECIFIC_ERROR = 0x83U, /**< Implementation specific error. */
+    MQTT_REASON_DISCONNECT_NOT_AUTHORIZED = 0x87U,        /**< Client is not authorized. */
+    MQTT_REASON_DISCONNECT_SERVER_BUSY = 0x89U,           /**< Server is busy. */
+    MQTT_REASON_DISCONNECT_SERVER_SHUTTING_DOWN = 0x8BU,  /**< Server is shutting down. */
+    MQTT_REASON_DISCONNECT_BAD_AUTHENTICATION_METHOD = 0x8CU, /**< Authentication method is invalid. */
+    MQTT_REASON_DISCONNECT_KEEP_ALIVE_TIMEOUT = 0x8DU,    /**< Keep alive timeout occurred. */
+    MQTT_REASON_DISCONNECT_SESSION_TAKEN_OVER = 0x8EU,    /**< Another connection using same client ID. */
+    MQTT_REASON_DISCONNECT_TOPIC_FILTER_INVALID = 0x8FU,  /**< Topic filter is not valid. */
+    MQTT_REASON_DISCONNECT_TOPIC_NAME_INVALID = 0x90U,    /**< Topic name is not valid. */
+    MQTT_REASON_DISCONNECT_RECEIVE_MAXIMUM_EXCEEDED = 0x93U, /**< Receive maximum value exceeded. */
+    MQTT_REASON_DISCONNECT_TOPIC_ALIAS_INVALID = 0x94U,   /**< Topic alias is invalid. */
+    MQTT_REASON_DISCONNECT_PACKET_TOO_LARGE = 0x95U,      /**< Packet size exceeds maximum allowed. */
+    MQTT_REASON_DISCONNECT_MESSAGE_RATE_TOO_HIGH = 0x96U, /**< Message rate too high. */
+    MQTT_REASON_DISCONNECT_QUOTA_EXCEEDED = 0x97U,        /**< Implementation or system quota exceeded. */
+    MQTT_REASON_DISCONNECT_ADMINISTRATIVE_ACTION = 0x98U,  /**< Disconnected due to administrative action. */
+    MQTT_REASON_DISCONNECT_PAYLOAD_FORMAT_INVALID = 0x99U, /**< Payload format is invalid. */
+    MQTT_REASON_DISCONNECT_RETAIN_NOT_SUPPORTED = 0x9AU,   /**< Retain is not supported. */
+    MQTT_REASON_DISCONNECT_QOS_NOT_SUPPORTED = 0x9BU,      /**< QoS level is not supported. */
+    MQTT_REASON_DISCONNECT_USE_ANOTHER_SERVER = 0x9CU,     /**< Client should temporarily use another server. */
+    MQTT_REASON_DISCONNECT_SERVER_MOVED = 0x9DU,           /**< Client should permanently use another server. */
+    MQTT_REASON_DISCONNECT_SHARED_SUBSCRIPTIONS_NOT_SUPPORTED = 0x9EU, /**< Shared subscriptions are not supported. */
+    MQTT_REASON_DISCONNECT_CONNECTION_RATE_EXCEEDED = 0x9FU, /**< Connection rate limit exceeded. */
+    MQTT_REASON_DISCONNECT_MAXIMUM_CONNECT_TIME = 0xA0U,    /**< Maximum connection time authorized exceeded. */
+    MQTT_REASON_DISCONNECT_SUBSCRIPTION_IDENTIFIERS_NOT_SUPPORTED = 0xA1U, /**< Subscription identifiers are not supported. */
+    MQTT_REASON_DISCONNECT_WILDCARD_SUBSCRIPTIONS_NOT_SUPPORTED = 0xA2U,    /**< Wildcard subscriptions are not supported. */
 
     MQTT_INVALID_REASON_CODE = 0xFF /**< @brief Invalid reason code. */
 
@@ -1463,7 +1463,7 @@ MQTTStatus_t MQTT_SerializeAck( const MQTTFixedBuffer_t * pFixedBuffer,
                                 uint8_t packetType,
                                 uint16_t packetId,
                                 const MQTTPropBuilder_t * pAckProperties,
-                                MQTTSuccessFailReasonCode_t * pReasonCode );
+                                const MQTTSuccessFailReasonCode_t * pReasonCode );
 /* @[declare_mqtt_serializeack] */
 
 /**
@@ -1508,7 +1508,7 @@ MQTTStatus_t MQTT_GetDisconnectPacketSize( const MQTTPropBuilder_t * pDisconnect
                                            uint32_t * pRemainingLength,
                                            uint32_t * pPacketSize,
                                            uint32_t maxPacketSize,
-                                           MQTTSuccessFailReasonCode_t * pReasonCode );
+                                           const MQTTSuccessFailReasonCode_t * pReasonCode );
 /* @[declare_mqtt_getdisconnectpacketsize] */
 
 /**
@@ -1565,7 +1565,7 @@ MQTTStatus_t MQTT_GetDisconnectPacketSize( const MQTTPropBuilder_t * pDisconnect
  */
 /* @[declare_mqtt_serializedisconnect] */
 MQTTStatus_t MQTT_SerializeDisconnect( const MQTTPropBuilder_t * pDisconnectProperties,
-                                       MQTTSuccessFailReasonCode_t * pReasonCode,
+                                       const MQTTSuccessFailReasonCode_t * pReasonCode,
                                        uint32_t remainingLength,
                                        const MQTTFixedBuffer_t * pFixedBuffer );
 /* @[declare_mqtt_serializedisconnect] */
@@ -1764,7 +1764,7 @@ MQTTStatus_t MQTT_DeserializeAck( const MQTTPacketInfo_t * pIncomingPacket,
                                   uint16_t * pPacketId,
                                   MQTTReasonCodeInfo_t * pReasonCode,
                                   MQTTPropBuilder_t * pPropBuffer,
-                                  MQTTConnectionProperties_t * pConnectProperties );
+                                  const MQTTConnectionProperties_t * pConnectProperties );
 /* @[declare_mqtt_deserializeack] */
 
 /**
@@ -1943,7 +1943,7 @@ MQTTStatus_t MQTT_ValidateWillProperties( const MQTTPropBuilder_t * pPropertyBui
  * @param[in] pPropertyBuilder Pointer to the property builder structure containing connect packet
  * properties.
  * @param[out] isRequestProblemInfoSet Whether the request problem info field is set in the properties.
- * @param[out] pPacketSizeMaxValue Optional pointer to get the Maximum Packet Size from the properties.
+ * @param[out] pPacketMaxSizeValue Optional pointer to get the Maximum Packet Size from the properties.
  * If not required, NULL can be passed.
  *
  * @return Returns one of the following:
@@ -1952,7 +1952,7 @@ MQTTStatus_t MQTT_ValidateWillProperties( const MQTTPropBuilder_t * pPropertyBui
 /* @[declare_mqtt_validateconnectproperties] */
 MQTTStatus_t MQTT_ValidateConnectProperties( const MQTTPropBuilder_t * pPropertyBuilder,
                                              bool * isRequestProblemInfoSet,
-                                             uint32_t * pPacketSizeMaxValue );
+                                             uint32_t * pPacketMaxSizeValue );
 /* @[declare_mqtt_validateconnectproperties] */
 
 /**
@@ -2450,16 +2450,16 @@ MQTTStatus_t updateContextWithConnectProps( const MQTTPropBuilder_t * pPropBuild
  * not advanced by this function - use the appropriate MQTTPropGet_* function
  * to retrieve the property value and advance the index.
  *
- * @param[in] mqttPropBuilder Property builder containing the properties.
- * @param[in] index Current index in the property builder buffer.
+ * @param[in] pPropertyBuilder Property builder containing the properties.
+ * @param[in] currentIndex Current index in the property builder buffer.
  * @param[out] property Pointer to store the property type identifier.
  *
  * @return #MQTTSuccess if property type is retrieved and valid;
  * #MQTTBadParameter if invalid parameters are passed, index is out of bounds,
  * or the property type is not recognized.
  */
-MQTTStatus_t MQTT_GetNextPropertyType( MQTTPropBuilder_t * mqttPropBuilder,
-                                       size_t * index,
+MQTTStatus_t MQTT_GetNextPropertyType( const MQTTPropBuilder_t * pPropertyBuilder,
+                                       const size_t * currentIndex,
                                        uint8_t * property );
 
 /**
@@ -2523,7 +2523,7 @@ MQTTStatus_t MQTT_GetNextPropertyType( MQTTPropBuilder_t * mqttPropBuilder,
  * }
  * @endcode
  */
-MQTTStatus_t MQTT_SkipNextProperty( MQTTPropBuilder_t * pPropertyBuilder,
+MQTTStatus_t MQTT_SkipNextProperty( const MQTTPropBuilder_t * pPropertyBuilder,
                                     size_t * currentIndex );
 
 /**
@@ -2537,7 +2537,7 @@ MQTTStatus_t MQTT_SkipNextProperty( MQTTPropBuilder_t * pPropertyBuilder,
  * #MQTTBadParameter if invalid parameters are passed.
  */
 /* @[declare_mqttpropget_userprop] */
-MQTTStatus_t MQTTPropGet_UserProp( MQTTPropBuilder_t * pPropertyBuilder,
+MQTTStatus_t MQTTPropGet_UserProp( const MQTTPropBuilder_t * pPropertyBuilder,
                                    size_t * currentIndex,
                                    MQTTUserProperty_t * pUserProperty );
 /* @[declare_mqttpropget_userprop] */
@@ -2553,7 +2553,7 @@ MQTTStatus_t MQTTPropGet_UserProp( MQTTPropBuilder_t * pPropertyBuilder,
  * #MQTTBadParameter if invalid parameters are passed.
  */
 /* @[declare_mqttpropget_sessionexpiry] */
-MQTTStatus_t MQTTPropGet_SessionExpiry( MQTTPropBuilder_t * pPropertyBuilder,
+MQTTStatus_t MQTTPropGet_SessionExpiry( const MQTTPropBuilder_t * pPropertyBuilder,
                                         size_t * currentIndex,
                                         uint32_t * pSessionExpiry );
 /* @[declare_mqttpropget_sessionexpiry] */
@@ -2569,7 +2569,7 @@ MQTTStatus_t MQTTPropGet_SessionExpiry( MQTTPropBuilder_t * pPropertyBuilder,
  * #MQTTBadParameter if invalid parameters are passed.
  */
 /* @[declare_mqttpropget_receivemax] */
-MQTTStatus_t MQTTPropGet_ReceiveMax( MQTTPropBuilder_t * pPropertyBuilder,
+MQTTStatus_t MQTTPropGet_ReceiveMax( const MQTTPropBuilder_t * pPropertyBuilder,
                                      size_t * currentIndex,
                                      uint16_t * pReceiveMax );
 /* @[declare_mqttpropget_receivemax] */
@@ -2585,7 +2585,7 @@ MQTTStatus_t MQTTPropGet_ReceiveMax( MQTTPropBuilder_t * pPropertyBuilder,
  * #MQTTBadParameter if invalid parameters are passed.
  */
 /* @[declare_mqttpropget_maxqos] */
-MQTTStatus_t MQTTPropGet_MaxQos( MQTTPropBuilder_t * pPropertyBuilder,
+MQTTStatus_t MQTTPropGet_MaxQos( const MQTTPropBuilder_t * pPropertyBuilder,
                                  size_t * currentIndex,
                                  uint8_t * pMaxQos );
 /* @[declare_mqttpropget_maxqos] */
@@ -2601,7 +2601,7 @@ MQTTStatus_t MQTTPropGet_MaxQos( MQTTPropBuilder_t * pPropertyBuilder,
  * #MQTTBadParameter if invalid parameters are passed.
  */
 /* @[declare_mqttpropget_retainavailable] */
-MQTTStatus_t MQTTPropGet_RetainAvailable( MQTTPropBuilder_t * pPropertyBuilder,
+MQTTStatus_t MQTTPropGet_RetainAvailable( const MQTTPropBuilder_t * pPropertyBuilder,
                                           size_t * currentIndex,
                                           uint8_t * pRetainAvailable );
 /* @[declare_mqttpropget_retainavailable] */
@@ -2617,7 +2617,7 @@ MQTTStatus_t MQTTPropGet_RetainAvailable( MQTTPropBuilder_t * pPropertyBuilder,
  * #MQTTBadParameter if invalid parameters are passed.
  */
 /* @[declare_mqttpropget_maxpacketsize] */
-MQTTStatus_t MQTTPropGet_MaxPacketSize( MQTTPropBuilder_t * pPropertyBuilder,
+MQTTStatus_t MQTTPropGet_MaxPacketSize( const MQTTPropBuilder_t * pPropertyBuilder,
                                         size_t * currentIndex,
                                         uint32_t * pMaxPacketSize );
 /* @[declare_mqttpropget_maxpacketsize] */
@@ -2634,7 +2634,7 @@ MQTTStatus_t MQTTPropGet_MaxPacketSize( MQTTPropBuilder_t * pPropertyBuilder,
  * #MQTTBadParameter if invalid parameters are passed.
  */
 /* @[declare_mqttpropget_assignedclientid] */
-MQTTStatus_t MQTTPropGet_AssignedClientId( MQTTPropBuilder_t * pPropertyBuilder,
+MQTTStatus_t MQTTPropGet_AssignedClientId( const MQTTPropBuilder_t * pPropertyBuilder,
                                            size_t * currentIndex,
                                            const char ** pClientId,
                                            size_t * pClientIdLength );
@@ -2651,7 +2651,7 @@ MQTTStatus_t MQTTPropGet_AssignedClientId( MQTTPropBuilder_t * pPropertyBuilder,
  * #MQTTBadParameter if invalid parameters are passed.
  */
 /* @[declare_mqttpropget_topicaliasmax] */
-MQTTStatus_t MQTTPropGet_TopicAliasMax( MQTTPropBuilder_t * pPropertyBuilder,
+MQTTStatus_t MQTTPropGet_TopicAliasMax( const MQTTPropBuilder_t * pPropertyBuilder,
                                         size_t * currentIndex,
                                         uint16_t * pTopicAliasMax );
 /* @[declare_mqttpropget_topicaliasmax] */
@@ -2668,7 +2668,7 @@ MQTTStatus_t MQTTPropGet_TopicAliasMax( MQTTPropBuilder_t * pPropertyBuilder,
  * #MQTTBadParameter if invalid parameters are passed.
  */
 /* @[declare_mqttpropget_reasonstring] */
-MQTTStatus_t MQTTPropGet_ReasonString( MQTTPropBuilder_t * pPropertyBuilder,
+MQTTStatus_t MQTTPropGet_ReasonString( const MQTTPropBuilder_t * pPropertyBuilder,
                                        size_t * currentIndex,
                                        const char ** pReasonString,
                                        size_t * pReasonStringLength );
@@ -2685,7 +2685,7 @@ MQTTStatus_t MQTTPropGet_ReasonString( MQTTPropBuilder_t * pPropertyBuilder,
  * #MQTTBadParameter if invalid parameters are passed.
  */
 /* @[declare_mqttpropget_wildcardid] */
-MQTTStatus_t MQTTPropGet_WildcardId( MQTTPropBuilder_t * pPropertyBuilder,
+MQTTStatus_t MQTTPropGet_WildcardId( const MQTTPropBuilder_t * pPropertyBuilder,
                                      size_t * currentIndex,
                                      uint8_t * pWildcardAvailable );
 /* @[declare_mqttpropget_wildcardid] */
@@ -2701,7 +2701,7 @@ MQTTStatus_t MQTTPropGet_WildcardId( MQTTPropBuilder_t * pPropertyBuilder,
  * #MQTTBadParameter if invalid parameters are passed.
  */
 /* @[declare_mqttpropget_subsidavailable] */
-MQTTStatus_t MQTTPropGet_SubsIdAvailable( MQTTPropBuilder_t * pPropertyBuilder,
+MQTTStatus_t MQTTPropGet_SubsIdAvailable( const MQTTPropBuilder_t * pPropertyBuilder,
                                           size_t * currentIndex,
                                           uint8_t * pSubsIdAvailable );
 /* @[declare_mqttpropget_subsidavailable] */
@@ -2717,7 +2717,7 @@ MQTTStatus_t MQTTPropGet_SubsIdAvailable( MQTTPropBuilder_t * pPropertyBuilder,
  * #MQTTBadParameter if invalid parameters are passed.
  */
 /* @[declare_mqttpropget_sharedsubavailable] */
-MQTTStatus_t MQTTPropGet_SharedSubAvailable( MQTTPropBuilder_t * pPropertyBuilder,
+MQTTStatus_t MQTTPropGet_SharedSubAvailable( const MQTTPropBuilder_t * pPropertyBuilder,
                                              size_t * currentIndex,
                                              uint8_t * pSharedSubAvailable );
 /* @[declare_mqttpropget_sharedsubavailable] */
@@ -2733,7 +2733,7 @@ MQTTStatus_t MQTTPropGet_SharedSubAvailable( MQTTPropBuilder_t * pPropertyBuilde
  * #MQTTBadParameter if invalid parameters are passed.
  */
 /* @[declare_mqttpropget_serverkeepalive] */
-MQTTStatus_t MQTTPropGet_ServerKeepAlive( MQTTPropBuilder_t * pPropertyBuilder,
+MQTTStatus_t MQTTPropGet_ServerKeepAlive( const MQTTPropBuilder_t * pPropertyBuilder,
                                           size_t * currentIndex,
                                           uint16_t * pServerKeepAlive );
 /* @[declare_mqttpropget_serverkeepalive] */
@@ -2750,7 +2750,7 @@ MQTTStatus_t MQTTPropGet_ServerKeepAlive( MQTTPropBuilder_t * pPropertyBuilder,
  * #MQTTBadParameter if invalid parameters are passed.
  */
 /* @[declare_mqttpropget_responseinfo] */
-MQTTStatus_t MQTTPropGet_ResponseInfo( MQTTPropBuilder_t * pPropertyBuilder,
+MQTTStatus_t MQTTPropGet_ResponseInfo( const MQTTPropBuilder_t * pPropertyBuilder,
                                        size_t * currentIndex,
                                        const char ** pResponseInfo,
                                        size_t * pResponseInfoLength );
@@ -2768,7 +2768,7 @@ MQTTStatus_t MQTTPropGet_ResponseInfo( MQTTPropBuilder_t * pPropertyBuilder,
  * #MQTTBadParameter if invalid parameters are passed.
  */
 /* @[declare_mqttpropget_serverref] */
-MQTTStatus_t MQTTPropGet_ServerRef( MQTTPropBuilder_t * pPropertyBuilder,
+MQTTStatus_t MQTTPropGet_ServerRef( const MQTTPropBuilder_t * pPropertyBuilder,
                                     size_t * currentIndex,
                                     const char ** pServerRef,
                                     size_t * pServerRefLength );
@@ -2786,7 +2786,7 @@ MQTTStatus_t MQTTPropGet_ServerRef( MQTTPropBuilder_t * pPropertyBuilder,
  * #MQTTBadParameter if invalid parameters are passed.
  */
 /* @[declare_mqttpropget_authmethod] */
-MQTTStatus_t MQTTPropGet_AuthMethod( MQTTPropBuilder_t * pPropertyBuilder,
+MQTTStatus_t MQTTPropGet_AuthMethod( const MQTTPropBuilder_t * pPropertyBuilder,
                                      size_t * currentIndex,
                                      const char ** pAuthMethod,
                                      size_t * pAuthMethodLen );
@@ -2804,7 +2804,7 @@ MQTTStatus_t MQTTPropGet_AuthMethod( MQTTPropBuilder_t * pPropertyBuilder,
  * #MQTTBadParameter if invalid parameters are passed.
  */
 /* @[declare_mqttpropget_authdata] */
-MQTTStatus_t MQTTPropGet_AuthData( MQTTPropBuilder_t * pPropertyBuilder,
+MQTTStatus_t MQTTPropGet_AuthData( const MQTTPropBuilder_t * pPropertyBuilder,
                                    size_t * currentIndex,
                                    const char ** pAuthData,
                                    size_t * pAuthDataLen );
@@ -2821,7 +2821,7 @@ MQTTStatus_t MQTTPropGet_AuthData( MQTTPropBuilder_t * pPropertyBuilder,
  * #MQTTBadParameter if invalid parameters are passed.
  */
 /* @[declare_mqttpropget_payloadformatindicator] */
-MQTTStatus_t MQTTPropGet_PayloadFormatIndicator( MQTTPropBuilder_t * pPropertyBuilder,
+MQTTStatus_t MQTTPropGet_PayloadFormatIndicator( const MQTTPropBuilder_t * pPropertyBuilder,
                                                  size_t * currentIndex,
                                                  uint8_t * pPayloadFormat );
 /* @[declare_mqttpropget_payloadformatindicator] */
@@ -2837,7 +2837,7 @@ MQTTStatus_t MQTTPropGet_PayloadFormatIndicator( MQTTPropBuilder_t * pPropertyBu
  * #MQTTBadParameter if invalid parameters are passed.
  */
 /* @[declare_mqttpropget_messageexpiryinterval] */
-MQTTStatus_t MQTTPropGet_MessageExpiryInterval( MQTTPropBuilder_t * pPropertyBuilder,
+MQTTStatus_t MQTTPropGet_MessageExpiryInterval( const MQTTPropBuilder_t * pPropertyBuilder,
                                                 size_t * currentIndex,
                                                 uint32_t * pMessageExpiry );
 /* @[declare_mqttpropget_messageexpiryinterval] */
@@ -2853,7 +2853,7 @@ MQTTStatus_t MQTTPropGet_MessageExpiryInterval( MQTTPropBuilder_t * pPropertyBui
  * #MQTTBadParameter if invalid parameters are passed.
  */
 /* @[declare_mqttpropget_topicalias] */
-MQTTStatus_t MQTTPropGet_TopicAlias( MQTTPropBuilder_t * pPropertyBuilder,
+MQTTStatus_t MQTTPropGet_TopicAlias( const MQTTPropBuilder_t * pPropertyBuilder,
                                      size_t * currentIndex,
                                      uint16_t * pTopicAlias );
 /* @[declare_mqttpropget_topicalias] */
@@ -2870,7 +2870,7 @@ MQTTStatus_t MQTTPropGet_TopicAlias( MQTTPropBuilder_t * pPropertyBuilder,
  * #MQTTBadParameter if invalid parameters are passed.
  */
 /* @[declare_mqttpropget_responsetopic] */
-MQTTStatus_t MQTTPropGet_ResponseTopic( MQTTPropBuilder_t * pPropertyBuilder,
+MQTTStatus_t MQTTPropGet_ResponseTopic( const MQTTPropBuilder_t * pPropertyBuilder,
                                         size_t * currentIndex,
                                         const char ** pResponseTopic,
                                         size_t * pResponseTopicLength );
@@ -2888,7 +2888,7 @@ MQTTStatus_t MQTTPropGet_ResponseTopic( MQTTPropBuilder_t * pPropertyBuilder,
  * #MQTTBadParameter if invalid parameters are passed.
  */
 /* @[declare_mqttpropget_correlationdata] */
-MQTTStatus_t MQTTPropGet_CorrelationData( MQTTPropBuilder_t * pPropertyBuilder,
+MQTTStatus_t MQTTPropGet_CorrelationData( const MQTTPropBuilder_t * pPropertyBuilder,
                                           size_t * currentIndex,
                                           const char ** pCorrelationData,
                                           size_t * pCorrelationDataLength );
@@ -2905,7 +2905,7 @@ MQTTStatus_t MQTTPropGet_CorrelationData( MQTTPropBuilder_t * pPropertyBuilder,
  * #MQTTBadParameter if invalid parameters are passed.
  */
 /* @[declare_mqttpropget_subscriptionid] */
-MQTTStatus_t MQTTPropGet_SubscriptionId( MQTTPropBuilder_t * pPropertyBuilder,
+MQTTStatus_t MQTTPropGet_SubscriptionId( const MQTTPropBuilder_t * pPropertyBuilder,
                                          size_t * currentIndex,
                                          uint32_t * pSubscriptionId );
 /* @[declare_mqttpropget_subscriptionid] */
@@ -2927,7 +2927,7 @@ MQTTStatus_t MQTTPropGet_SubscriptionId( MQTTPropBuilder_t * pPropertyBuilder,
  * #MQTTBadParameter if parameters are invalid or property is not Content Type.
  */
 /* @[declare_mqttpropget_contenttype] */
-MQTTStatus_t MQTTPropGet_ContentType( MQTTPropBuilder_t * pPropertyBuilder,
+MQTTStatus_t MQTTPropGet_ContentType( const MQTTPropBuilder_t * pPropertyBuilder,
                                       size_t * currentIndex,
                                       const char ** pContentType,
                                       size_t * pContentTypeLength );

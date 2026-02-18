@@ -14,6 +14,15 @@ with ( Assuming rule 18.2 violation; with justification in point 1 ):
 ```
 grep 'MISRA Ref 18.2.1' . -rI
 ```
+
+#### Rule 10.5
+
+_Ref 10.5.1_
+
+- MISRA C-2012 Rule 10.5 states that unsigned values should not be cast to enums. In
+  this case we are casting the uint8_t to MQTTSuccessFailReasonCode_t with a switch
+  case which protects against all uncovered enum cases.
+
 #### Rule 10.8
 
 _Ref 10.8.1_
@@ -37,3 +46,14 @@ _Ref 18.2.1_
   to be subtracted from the index. It is manually verified that the index will always be
   within bounds of the array. However, Coverity is flagging this as a deviation. Thus, we
   are suppressing it.
+
+#### Rule 14.3
+
+_Ref 14.3.1_
+
+- MISRA C-2012 Rule 14.3 prohibits use of invariants in conditional statements. Since
+  coreMQTT is designed to be compiled and executed on different machines with different
+  architectures, it is designed to protect against overflows when converting different
+  types to one another. In doing so, we have macros which check for such conditions on
+  different platforms. A side effect of this is that on some systems, those macros always
+  evaluate to false - that is intentional.
