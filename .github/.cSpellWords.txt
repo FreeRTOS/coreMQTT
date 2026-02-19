@@ -28,6 +28,7 @@ misra
 Misra
 MISRA
 MQTT
+mqtteventcallback
 mqttpropadd
 mqttpropertybuilder
 mqttpropget

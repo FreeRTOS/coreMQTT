@@ -42,7 +42,7 @@ If you want to migrate with minimal code changes and **not use v5.0 features**, 
 status = MQTT_Connect(&context, &connectInfo, &willInfo, timeoutMs, &sessionPresent);
 
 // coreMQTT v5.0.0 - Add two NULL parameters for properties
-status = MQTT_Connect(&context, &connectInfo, &willInfo, timeoutMs, &sessionPresent, 
+status = MQTT_Connect(&context, &connectInfo, &willInfo, timeoutMs, &sessionPresent,
                       NULL,  // Connect properties (optional)
                       NULL); // Will properties (optional)
 ```
@@ -120,7 +120,7 @@ The coreMQTT v5.0.0 version adds a buffer for ACK properties:
 
 ```c
 // coreMQTT v2.3.1 (MQTT v3.1.1)
-status = MQTT_InitStatefulQoS(&context, 
+status = MQTT_InitStatefulQoS(&context,
                               outgoingPublishRecords, outgoingPublishCount,
                               incomingPublishRecords, incomingPublishCount);
 
@@ -219,13 +219,13 @@ bool myEventCallback(MQTTContext_t *pContext,
 {
     // Your existing logic here
     // ...
-    
+
     // Return true to indicate successful processing
     return true;
 }
 
 // MQTT_Init call remains the same
-status = MQTT_Init(&context, &transport, getTimeFunction, 
+status = MQTT_Init(&context, &transport, getTimeFunction,
                    myEventCallback, &networkBuffer);
 ```
 
@@ -246,7 +246,7 @@ status = MQTT_InitStatefulQoS(&context,
 
 ```c
 // If not using properties, pass NULL
-status = MQTT_Connect(&context, &connectInfo, &willInfo, 
+status = MQTT_Connect(&context, &connectInfo, &willInfo,
                       timeoutMs, &sessionPresent,
                       NULL,  // No connect properties
                       NULL); // No will properties
@@ -261,7 +261,7 @@ for (int i = 0; i < NUM_SUBS; i++) {
     subscriptions[i].qos = MQTTQoS1;
     subscriptions[i].pTopicFilter = topics[i];
     subscriptions[i].topicFilterLength = strlen(topics[i]);
-    
+
     // Add MQTT v5.0 fields with default values
     subscriptions[i].noLocalOption = false;
     subscriptions[i].retainAsPublishedOption = false;
@@ -306,7 +306,7 @@ status = MQTTPropertyBuilder_Init(&propBuilder, propBuffer, sizeof(propBuffer));
 ```c
 // Add session expiry
 uint32_t sessionExpiry = 3600;  // 1 hour
-status = MQTTPropAdd_SessionExpiry(&propBuilder, sessionExpiry, 
+status = MQTTPropAdd_SessionExpiry(&propBuilder, sessionExpiry,
                                    &(uint8_t){MQTT_PACKET_TYPE_CONNECT});
 
 // Add user property
@@ -322,7 +322,7 @@ status = MQTTPropAdd_UserProp(&propBuilder, &userProp,
 
 3. **Pass the property builder to API functions:**
 ```c
-status = MQTT_Connect(&context, &connectInfo, &willInfo, timeoutMs, 
+status = MQTT_Connect(&context, &connectInfo, &willInfo, timeoutMs,
                       &sessionPresent, &propBuilder, NULL);
 ```
 
@@ -381,9 +381,9 @@ bool eventCallback(MQTTContext_t *pContext,
     if (pGetPropsBuffer != NULL && pGetPropsBuffer->bufferLength != 0) {
         size_t index = 0;
         uint8_t propertyType;
-        
+
         // Iterate through properties
-        while (MQTT_GetNextPropertyType(pGetPropsBuffer, &index, &propertyType) 
+        while (MQTT_GetNextPropertyType(pGetPropsBuffer, &index, &propertyType)
                == MQTTSuccess) {
             switch (propertyType) {
                 case MQTT_SESSION_EXPIRY_ID: {
@@ -402,7 +402,7 @@ bool eventCallback(MQTTContext_t *pContext,
             }
         }
     }
-    
+
     return true;
 }
 ```
@@ -457,7 +457,7 @@ if (pPacketInfo->type == MQTT_PACKET_TYPE_SUBACK) {
     if (pDeserializedInfo->pReasonCode != NULL) {
         for (size_t i = 0; i < pDeserializedInfo->pReasonCode->reasonCodeLength; i++) {
             uint8_t code = pDeserializedInfo->pReasonCode->reasonCode[i];
-            
+
             if (code == MQTT_REASON_SUBACK_GRANTED_QOS0 ||
                 code == MQTT_REASON_SUBACK_GRANTED_QOS1 ||
                 code == MQTT_REASON_SUBACK_GRANTED_QOS2) {
@@ -500,13 +500,13 @@ MQTTSubscribeInfo_t subscription = {
     .qos = MQTTQoS1,
     .pTopicFilter = "device/+/telemetry",
     .topicFilterLength = strlen("device/+/telemetry"),
-    
+
     // Don't receive messages published by this client
     .noLocalOption = true,
-    
+
     // Preserve the retain flag from original publish
     .retainAsPublishedOption = true,
-    
+
     // Only send retained messages if subscription doesn't exist
     .retainHandlingOption = retainSendOnSubIfNotPresent
 };
@@ -523,7 +523,7 @@ uint8_t pubPropsBuf[100];
 MQTTPropertyBuilder_Init(&pubProps, pubPropsBuf, sizeof(pubPropsBuf));
 
 uint16_t topicAlias = 1;
-MQTTPropAdd_TopicAlias(&pubProps, topicAlias, 
+MQTTPropAdd_TopicAlias(&pubProps, topicAlias,
                        &(uint8_t){MQTT_PACKET_TYPE_PUBLISH});
 
 MQTTPublishInfo_t publishInfo = {
@@ -550,7 +550,7 @@ MQTTPropBuilder_t pubProps;
 uint8_t pubPropsBuf[100];
 MQTTPropertyBuilder_Init(&pubProps, pubPropsBuf, sizeof(pubPropsBuf));
 
-MQTTPropAdd_ResponseTopic(&pubProps, "response/topic", 
+MQTTPropAdd_ResponseTopic(&pubProps, "response/topic",
                           strlen("response/topic"),
                           &(uint8_t){MQTT_PACKET_TYPE_PUBLISH});
 
@@ -651,7 +651,7 @@ MQTT_Publish(&context, &publishInfo, packetId, &pubProps);
 ```c
 MQTTPropBuilder_t disconnectProps;
 uint8_t disconnectPropsBuf[200];
-MQTTPropertyBuilder_Init(&disconnectProps, disconnectPropsBuf, 
+MQTTPropertyBuilder_Init(&disconnectProps, disconnectPropsBuf,
                          sizeof(disconnectPropsBuf));
 
 MQTTPropAdd_ReasonString(&disconnectProps, "Shutting down for maintenance",
