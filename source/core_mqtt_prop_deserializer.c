@@ -29,6 +29,7 @@
 #include <string.h>
 #include <inttypes.h>
 #include <stdbool.h>
+#include <assert.h>
 
 #include "core_mqtt_serializer.h"
 
@@ -46,8 +47,8 @@
  *
  * @return MQTTSuccess if all the checks pass;
  */
-static inline MQTTStatus_t checkPropBuilderParams( MQTTPropBuilder_t * mqttPropBuilder,
-                                                   size_t * currentIndex );
+static inline MQTTStatus_t checkPropBuilderParams( const MQTTPropBuilder_t * mqttPropBuilder,
+                                                   const size_t * currentIndex );
 
 /**
  * @brief Get a uint8 property value from the property builder.
@@ -64,7 +65,7 @@ static inline MQTTStatus_t checkPropBuilderParams( MQTTPropBuilder_t * mqttPropB
  * @return #MQTTSuccess if the property is successfully extracted;
  * #MQTTBadParameter if parameters are invalid or property ID doesn't match.
  */
-static MQTTStatus_t getPropUint8( MQTTPropBuilder_t * pPropertyBuilder,
+static MQTTStatus_t getPropUint8( const MQTTPropBuilder_t * pPropertyBuilder,
                                   size_t * currentIndex,
                                   uint8_t propertyId,
                                   uint8_t * property );
@@ -84,7 +85,7 @@ static MQTTStatus_t getPropUint8( MQTTPropBuilder_t * pPropertyBuilder,
  * @return #MQTTSuccess if the property is successfully extracted;
  * #MQTTBadParameter if parameters are invalid or property ID doesn't match.
  */
-static MQTTStatus_t getPropUint16( MQTTPropBuilder_t * pPropertyBuilder,
+static MQTTStatus_t getPropUint16( const MQTTPropBuilder_t * pPropertyBuilder,
                                    size_t * currentIndex,
                                    uint8_t propertyId,
                                    uint16_t * property );
@@ -104,7 +105,7 @@ static MQTTStatus_t getPropUint16( MQTTPropBuilder_t * pPropertyBuilder,
  * @return #MQTTSuccess if the property is successfully extracted;
  * #MQTTBadParameter if parameters are invalid or property ID doesn't match.
  */
-static MQTTStatus_t getPropUint32( MQTTPropBuilder_t * pPropertyBuilder,
+static MQTTStatus_t getPropUint32( const MQTTPropBuilder_t * pPropertyBuilder,
                                    size_t * currentIndex,
                                    uint8_t propertyId,
                                    uint32_t * property );
@@ -125,7 +126,7 @@ static MQTTStatus_t getPropUint32( MQTTPropBuilder_t * pPropertyBuilder,
  * @return #MQTTSuccess if the property is successfully extracted;
  * #MQTTBadParameter if parameters are invalid or property ID doesn't match.
  */
-static MQTTStatus_t getPropUtf8( MQTTPropBuilder_t * pPropertyBuilder,
+static MQTTStatus_t getPropUtf8( const MQTTPropBuilder_t * pPropertyBuilder,
                                  size_t * currentIndex,
                                  uint8_t propertyId,
                                  const char ** property,
@@ -133,8 +134,8 @@ static MQTTStatus_t getPropUtf8( MQTTPropBuilder_t * pPropertyBuilder,
 
 /*-----------------------------------------------------------*/
 
-static inline MQTTStatus_t checkPropBuilderParams( MQTTPropBuilder_t * mqttPropBuilder,
-                                                   size_t * currentIndex )
+static inline MQTTStatus_t checkPropBuilderParams( const MQTTPropBuilder_t * mqttPropBuilder,
+                                                   const size_t * currentIndex )
 {
     MQTTStatus_t status = MQTTSuccess;
 
@@ -159,7 +160,7 @@ static inline MQTTStatus_t checkPropBuilderParams( MQTTPropBuilder_t * mqttPropB
 
 /*-----------------------------------------------------------*/
 
-static MQTTStatus_t getPropUint8( MQTTPropBuilder_t * pPropertyBuilder,
+static MQTTStatus_t getPropUint8( const MQTTPropBuilder_t * pPropertyBuilder,
                                   size_t * currentIndex,
                                   uint8_t propertyId,
                                   uint8_t * property )
@@ -194,7 +195,11 @@ static MQTTStatus_t getPropUint8( MQTTPropBuilder_t * pPropertyBuilder,
 
             if( status == MQTTSuccess )
             {
-                *currentIndex = ( size_t ) ( pLocalIndex - pPropertyBuilder->pBuffer );
+                /* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-182 */
+                /* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-108 */
+                /* coverity[misra_c_2012_rule_18_2_violation] */
+                /* coverity[misra_c_2012_rule_10_8_violation] */
+                *currentIndex = ( size_t ) ( pLocalIndex - ( &( pPropertyBuilder->pBuffer[ 0 ] ) ) );
             }
         }
         else
@@ -209,7 +214,7 @@ static MQTTStatus_t getPropUint8( MQTTPropBuilder_t * pPropertyBuilder,
 
 /*-----------------------------------------------------------*/
 
-static MQTTStatus_t getPropUint16( MQTTPropBuilder_t * pPropertyBuilder,
+static MQTTStatus_t getPropUint16( const MQTTPropBuilder_t * pPropertyBuilder,
                                    size_t * currentIndex,
                                    uint8_t propertyId,
                                    uint16_t * property )
@@ -246,7 +251,10 @@ static MQTTStatus_t getPropUint16( MQTTPropBuilder_t * pPropertyBuilder,
 
             if( status == MQTTSuccess )
             {
-                /* Move the index to the end of the property. */
+                /* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-182 */
+                /* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-108 */
+                /* coverity[misra_c_2012_rule_18_2_violation] */
+                /* coverity[misra_c_2012_rule_10_8_violation] */
                 *currentIndex = ( size_t ) ( pLocalIndex - pPropertyBuilder->pBuffer );
             }
         }
@@ -262,7 +270,7 @@ static MQTTStatus_t getPropUint16( MQTTPropBuilder_t * pPropertyBuilder,
 
 /*-----------------------------------------------------------*/
 
-static MQTTStatus_t getPropUint32( MQTTPropBuilder_t * pPropertyBuilder,
+static MQTTStatus_t getPropUint32( const MQTTPropBuilder_t * pPropertyBuilder,
                                    size_t * currentIndex,
                                    uint8_t propertyId,
                                    uint32_t * property )
@@ -300,6 +308,10 @@ static MQTTStatus_t getPropUint32( MQTTPropBuilder_t * pPropertyBuilder,
             if( status == MQTTSuccess )
             {
                 /* Move the index to the end of the property. */
+                /* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-182 */
+                /* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-108 */
+                /* coverity[misra_c_2012_rule_18_2_violation] */
+                /* coverity[misra_c_2012_rule_10_8_violation] */
                 *currentIndex = ( size_t ) ( pLocalIndex - pPropertyBuilder->pBuffer );
             }
         }
@@ -315,7 +327,7 @@ static MQTTStatus_t getPropUint32( MQTTPropBuilder_t * pPropertyBuilder,
 
 /*-----------------------------------------------------------*/
 
-static MQTTStatus_t getPropUtf8( MQTTPropBuilder_t * pPropertyBuilder,
+static MQTTStatus_t getPropUtf8( const MQTTPropBuilder_t * pPropertyBuilder,
                                  size_t * currentIndex,
                                  uint8_t propertyId,
                                  const char ** property,
@@ -352,6 +364,10 @@ static MQTTStatus_t getPropUtf8( MQTTPropBuilder_t * pPropertyBuilder,
 
             if( status == MQTTSuccess )
             {
+                /* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-182 */
+                /* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-108 */
+                /* coverity[misra_c_2012_rule_18_2_violation] */
+                /* coverity[misra_c_2012_rule_10_8_violation] */
                 *currentIndex = ( size_t ) ( pLocalIndex - pPropertyBuilder->pBuffer );
             }
         }
@@ -367,8 +383,8 @@ static MQTTStatus_t getPropUtf8( MQTTPropBuilder_t * pPropertyBuilder,
 
 /*-----------------------------------------------------------*/
 
-MQTTStatus_t MQTT_GetNextPropertyType( MQTTPropBuilder_t * pPropertyBuilder,
-                                       size_t * currentIndex,
+MQTTStatus_t MQTT_GetNextPropertyType( const MQTTPropBuilder_t * pPropertyBuilder,
+                                       const size_t * currentIndex,
                                        uint8_t * property )
 {
     MQTTStatus_t status = checkPropBuilderParams( pPropertyBuilder, currentIndex );
@@ -429,7 +445,7 @@ MQTTStatus_t MQTT_GetNextPropertyType( MQTTPropBuilder_t * pPropertyBuilder,
 
 /*-----------------------------------------------------------*/
 
-MQTTStatus_t MQTT_SkipNextProperty( MQTTPropBuilder_t * pPropertyBuilder,
+MQTTStatus_t MQTT_SkipNextProperty( const MQTTPropBuilder_t * pPropertyBuilder,
                                     size_t * currentIndex )
 {
     MQTTStatus_t status = checkPropBuilderParams( pPropertyBuilder, currentIndex );
@@ -449,9 +465,12 @@ MQTTStatus_t MQTT_SkipNextProperty( MQTTPropBuilder_t * pPropertyBuilder,
     }
     else
     {
+        assert( !CHECK_SIZE_T_OVERFLOWS_32BIT( pPropertyBuilder->currentIndex ) );
+        assert( pPropertyBuilder->currentIndex < MQTT_REMAINING_LENGTH_INVALID );
+
         property = pPropertyBuilder->pBuffer[ *currentIndex ];
         pLocalIndex = &pPropertyBuilder->pBuffer[ *currentIndex ];
-        remainingPropLength = pPropertyBuilder->currentIndex - *currentIndex - 1U;
+        remainingPropLength = ( uint32_t ) ( pPropertyBuilder->currentIndex - *currentIndex - 1U );
 
         /* Skip the property ID byte */
         pLocalIndex++;
@@ -510,14 +529,14 @@ MQTTStatus_t MQTT_SkipNextProperty( MQTTPropBuilder_t * pPropertyBuilder,
             case MQTT_SUBSCRIPTION_ID_ID:
                {
                    uint32_t subscriptionId;
-                   size_t varIntSize;
+                   uint32_t varIntSize;
 
                    status = decodeVariableLength( pLocalIndex, remainingPropLength, &subscriptionId );
 
                    if( status == MQTTSuccess )
                    {
                        varIntSize = variableLengthEncodedSize( subscriptionId );
-                       pLocalIndex = &pLocalIndex[ varIntSize ];
+                       pLocalIndex = &pLocalIndex[ ( size_t ) varIntSize ];
                    }
                }
                break;
@@ -531,6 +550,10 @@ MQTTStatus_t MQTT_SkipNextProperty( MQTTPropBuilder_t * pPropertyBuilder,
         if( status == MQTTSuccess )
         {
             /* Update the current index to point past the skipped property */
+            /* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-182 */
+            /* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-108 */
+            /* coverity[misra_c_2012_rule_18_2_violation] */
+            /* coverity[misra_c_2012_rule_10_8_violation] */
             *currentIndex = ( uint32_t ) ( pLocalIndex - pPropertyBuilder->pBuffer );
         }
     }
@@ -540,7 +563,7 @@ MQTTStatus_t MQTT_SkipNextProperty( MQTTPropBuilder_t * pPropertyBuilder,
 
 /*-----------------------------------------------------------*/
 
-MQTTStatus_t MQTTPropGet_UserProp( MQTTPropBuilder_t * pPropertyBuilder,
+MQTTStatus_t MQTTPropGet_UserProp( const MQTTPropBuilder_t * pPropertyBuilder,
                                    size_t * currentIndex,
                                    MQTTUserProperty_t * pUserProperty )
 {
@@ -578,6 +601,10 @@ MQTTStatus_t MQTTPropGet_UserProp( MQTTPropBuilder_t * pPropertyBuilder,
             if( status == MQTTSuccess )
             {
                 /* Move the index to the end of the property. */
+                /* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-182 */
+                /* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-108 */
+                /* coverity[misra_c_2012_rule_18_2_violation] */
+                /* coverity[misra_c_2012_rule_10_8_violation] */
                 *currentIndex = ( size_t ) ( pLocalIndex - pPropertyBuilder->pBuffer );
             }
         }
@@ -593,7 +620,7 @@ MQTTStatus_t MQTTPropGet_UserProp( MQTTPropBuilder_t * pPropertyBuilder,
 
 /*-----------------------------------------------------------*/
 
-MQTTStatus_t MQTTPropGet_SessionExpiry( MQTTPropBuilder_t * pPropertyBuilder,
+MQTTStatus_t MQTTPropGet_SessionExpiry( const MQTTPropBuilder_t * pPropertyBuilder,
                                         size_t * currentIndex,
                                         uint32_t * pSessionExpiry )
 {
@@ -602,7 +629,7 @@ MQTTStatus_t MQTTPropGet_SessionExpiry( MQTTPropBuilder_t * pPropertyBuilder,
 
 /*-----------------------------------------------------------*/
 
-MQTTStatus_t MQTTPropGet_ReceiveMax( MQTTPropBuilder_t * pPropertyBuilder,
+MQTTStatus_t MQTTPropGet_ReceiveMax( const MQTTPropBuilder_t * pPropertyBuilder,
                                      size_t * currentIndex,
                                      uint16_t * pReceiveMax )
 {
@@ -611,7 +638,7 @@ MQTTStatus_t MQTTPropGet_ReceiveMax( MQTTPropBuilder_t * pPropertyBuilder,
 
 /*-----------------------------------------------------------*/
 
-MQTTStatus_t MQTTPropGet_MaxQos( MQTTPropBuilder_t * pPropertyBuilder,
+MQTTStatus_t MQTTPropGet_MaxQos( const MQTTPropBuilder_t * pPropertyBuilder,
                                  size_t * currentIndex,
                                  uint8_t * pMaxQos )
 {
@@ -620,7 +647,7 @@ MQTTStatus_t MQTTPropGet_MaxQos( MQTTPropBuilder_t * pPropertyBuilder,
 
 /*-----------------------------------------------------------*/
 
-MQTTStatus_t MQTTPropGet_RetainAvailable( MQTTPropBuilder_t * pPropertyBuilder,
+MQTTStatus_t MQTTPropGet_RetainAvailable( const MQTTPropBuilder_t * pPropertyBuilder,
                                           size_t * currentIndex,
                                           uint8_t * pRetainAvailable )
 {
@@ -629,7 +656,7 @@ MQTTStatus_t MQTTPropGet_RetainAvailable( MQTTPropBuilder_t * pPropertyBuilder,
 
 /*-----------------------------------------------------------*/
 
-MQTTStatus_t MQTTPropGet_MaxPacketSize( MQTTPropBuilder_t * pPropertyBuilder,
+MQTTStatus_t MQTTPropGet_MaxPacketSize( const MQTTPropBuilder_t * pPropertyBuilder,
                                         size_t * currentIndex,
                                         uint32_t * pMaxPacketSize )
 {
@@ -638,7 +665,7 @@ MQTTStatus_t MQTTPropGet_MaxPacketSize( MQTTPropBuilder_t * pPropertyBuilder,
 
 /*-----------------------------------------------------------*/
 
-MQTTStatus_t MQTTPropGet_AssignedClientId( MQTTPropBuilder_t * pPropertyBuilder,
+MQTTStatus_t MQTTPropGet_AssignedClientId( const MQTTPropBuilder_t * pPropertyBuilder,
                                            size_t * currentIndex,
                                            const char ** pClientId,
                                            size_t * pClientIdLength )
@@ -648,7 +675,7 @@ MQTTStatus_t MQTTPropGet_AssignedClientId( MQTTPropBuilder_t * pPropertyBuilder,
 
 /*-----------------------------------------------------------*/
 
-MQTTStatus_t MQTTPropGet_TopicAliasMax( MQTTPropBuilder_t * pPropertyBuilder,
+MQTTStatus_t MQTTPropGet_TopicAliasMax( const MQTTPropBuilder_t * pPropertyBuilder,
                                         size_t * currentIndex,
                                         uint16_t * pTopicAliasMax )
 {
@@ -657,7 +684,7 @@ MQTTStatus_t MQTTPropGet_TopicAliasMax( MQTTPropBuilder_t * pPropertyBuilder,
 
 /*-----------------------------------------------------------*/
 
-MQTTStatus_t MQTTPropGet_ReasonString( MQTTPropBuilder_t * pPropertyBuilder,
+MQTTStatus_t MQTTPropGet_ReasonString( const MQTTPropBuilder_t * pPropertyBuilder,
                                        size_t * currentIndex,
                                        const char ** pReasonString,
                                        size_t * pReasonStringLength )
@@ -667,7 +694,7 @@ MQTTStatus_t MQTTPropGet_ReasonString( MQTTPropBuilder_t * pPropertyBuilder,
 
 /*-----------------------------------------------------------*/
 
-MQTTStatus_t MQTTPropGet_WildcardId( MQTTPropBuilder_t * pPropertyBuilder,
+MQTTStatus_t MQTTPropGet_WildcardId( const MQTTPropBuilder_t * pPropertyBuilder,
                                      size_t * currentIndex,
                                      uint8_t * pWildcardAvailable )
 {
@@ -676,7 +703,7 @@ MQTTStatus_t MQTTPropGet_WildcardId( MQTTPropBuilder_t * pPropertyBuilder,
 
 /*-----------------------------------------------------------*/
 
-MQTTStatus_t MQTTPropGet_SubsIdAvailable( MQTTPropBuilder_t * pPropertyBuilder,
+MQTTStatus_t MQTTPropGet_SubsIdAvailable( const MQTTPropBuilder_t * pPropertyBuilder,
                                           size_t * currentIndex,
                                           uint8_t * pSubsIdAvailable )
 {
@@ -685,7 +712,7 @@ MQTTStatus_t MQTTPropGet_SubsIdAvailable( MQTTPropBuilder_t * pPropertyBuilder,
 
 /*-----------------------------------------------------------*/
 
-MQTTStatus_t MQTTPropGet_SharedSubAvailable( MQTTPropBuilder_t * pPropertyBuilder,
+MQTTStatus_t MQTTPropGet_SharedSubAvailable( const MQTTPropBuilder_t * pPropertyBuilder,
                                              size_t * currentIndex,
                                              uint8_t * pSharedSubAvailable )
 {
@@ -694,7 +721,7 @@ MQTTStatus_t MQTTPropGet_SharedSubAvailable( MQTTPropBuilder_t * pPropertyBuilde
 
 /*-----------------------------------------------------------*/
 
-MQTTStatus_t MQTTPropGet_ServerKeepAlive( MQTTPropBuilder_t * pPropertyBuilder,
+MQTTStatus_t MQTTPropGet_ServerKeepAlive( const MQTTPropBuilder_t * pPropertyBuilder,
                                           size_t * currentIndex,
                                           uint16_t * pServerKeepAlive )
 {
@@ -703,7 +730,7 @@ MQTTStatus_t MQTTPropGet_ServerKeepAlive( MQTTPropBuilder_t * pPropertyBuilder,
 
 /*-----------------------------------------------------------*/
 
-MQTTStatus_t MQTTPropGet_ResponseInfo( MQTTPropBuilder_t * pPropertyBuilder,
+MQTTStatus_t MQTTPropGet_ResponseInfo( const MQTTPropBuilder_t * pPropertyBuilder,
                                        size_t * currentIndex,
                                        const char ** pResponseInfo,
                                        size_t * pResponseInfoLength )
@@ -713,7 +740,7 @@ MQTTStatus_t MQTTPropGet_ResponseInfo( MQTTPropBuilder_t * pPropertyBuilder,
 
 /*-----------------------------------------------------------*/
 
-MQTTStatus_t MQTTPropGet_ServerRef( MQTTPropBuilder_t * pPropertyBuilder,
+MQTTStatus_t MQTTPropGet_ServerRef( const MQTTPropBuilder_t * pPropertyBuilder,
                                     size_t * currentIndex,
                                     const char ** pServerRef,
                                     size_t * pServerRefLength )
@@ -723,7 +750,7 @@ MQTTStatus_t MQTTPropGet_ServerRef( MQTTPropBuilder_t * pPropertyBuilder,
 
 /*-----------------------------------------------------------*/
 
-MQTTStatus_t MQTTPropGet_AuthMethod( MQTTPropBuilder_t * pPropertyBuilder,
+MQTTStatus_t MQTTPropGet_AuthMethod( const MQTTPropBuilder_t * pPropertyBuilder,
                                      size_t * currentIndex,
                                      const char ** pAuthMethod,
                                      size_t * pAuthMethodLen )
@@ -733,7 +760,7 @@ MQTTStatus_t MQTTPropGet_AuthMethod( MQTTPropBuilder_t * pPropertyBuilder,
 
 /*-----------------------------------------------------------*/
 
-MQTTStatus_t MQTTPropGet_AuthData( MQTTPropBuilder_t * pPropertyBuilder,
+MQTTStatus_t MQTTPropGet_AuthData( const MQTTPropBuilder_t * pPropertyBuilder,
                                    size_t * currentIndex,
                                    const char ** pAuthData,
                                    size_t * pAuthDataLen )
@@ -743,7 +770,7 @@ MQTTStatus_t MQTTPropGet_AuthData( MQTTPropBuilder_t * pPropertyBuilder,
 
 /*-----------------------------------------------------------*/
 
-MQTTStatus_t MQTTPropGet_PayloadFormatIndicator( MQTTPropBuilder_t * pPropertyBuilder,
+MQTTStatus_t MQTTPropGet_PayloadFormatIndicator( const MQTTPropBuilder_t * pPropertyBuilder,
                                                  size_t * currentIndex,
                                                  uint8_t * pPayloadFormat )
 {
@@ -752,7 +779,7 @@ MQTTStatus_t MQTTPropGet_PayloadFormatIndicator( MQTTPropBuilder_t * pPropertyBu
 
 /*-----------------------------------------------------------*/
 
-MQTTStatus_t MQTTPropGet_MessageExpiryInterval( MQTTPropBuilder_t * pPropertyBuilder,
+MQTTStatus_t MQTTPropGet_MessageExpiryInterval( const MQTTPropBuilder_t * pPropertyBuilder,
                                                 size_t * currentIndex,
                                                 uint32_t * pMessageExpiry )
 {
@@ -761,7 +788,7 @@ MQTTStatus_t MQTTPropGet_MessageExpiryInterval( MQTTPropBuilder_t * pPropertyBui
 
 /*-----------------------------------------------------------*/
 
-MQTTStatus_t MQTTPropGet_TopicAlias( MQTTPropBuilder_t * pPropertyBuilder,
+MQTTStatus_t MQTTPropGet_TopicAlias( const MQTTPropBuilder_t * pPropertyBuilder,
                                      size_t * currentIndex,
                                      uint16_t * pTopicAlias )
 {
@@ -770,7 +797,7 @@ MQTTStatus_t MQTTPropGet_TopicAlias( MQTTPropBuilder_t * pPropertyBuilder,
 
 /*-----------------------------------------------------------*/
 
-MQTTStatus_t MQTTPropGet_ResponseTopic( MQTTPropBuilder_t * pPropertyBuilder,
+MQTTStatus_t MQTTPropGet_ResponseTopic( const MQTTPropBuilder_t * pPropertyBuilder,
                                         size_t * currentIndex,
                                         const char ** pResponseTopic,
                                         size_t * pResponseTopicLength )
@@ -780,7 +807,7 @@ MQTTStatus_t MQTTPropGet_ResponseTopic( MQTTPropBuilder_t * pPropertyBuilder,
 
 /*-----------------------------------------------------------*/
 
-MQTTStatus_t MQTTPropGet_CorrelationData( MQTTPropBuilder_t * pPropertyBuilder,
+MQTTStatus_t MQTTPropGet_CorrelationData( const MQTTPropBuilder_t * pPropertyBuilder,
                                           size_t * currentIndex,
                                           const char ** pCorrelationData,
                                           size_t * pCorrelationDataLength )
@@ -790,7 +817,7 @@ MQTTStatus_t MQTTPropGet_CorrelationData( MQTTPropBuilder_t * pPropertyBuilder,
 
 /*-----------------------------------------------------------*/
 
-MQTTStatus_t MQTTPropGet_SubscriptionId( MQTTPropBuilder_t * pPropertyBuilder,
+MQTTStatus_t MQTTPropGet_SubscriptionId( const MQTTPropBuilder_t * pPropertyBuilder,
                                          size_t * currentIndex,
                                          uint32_t * pSubscriptionId )
 {
@@ -820,8 +847,13 @@ MQTTStatus_t MQTTPropGet_SubscriptionId( MQTTPropBuilder_t * pPropertyBuilder,
 
             if( status == MQTTSuccess )
             {
-                size_t encodedSize = variableLengthEncodedSize( *pSubscriptionId );
-                pLocalIndex = &pLocalIndex[ encodedSize ];
+                uint32_t encodedSize = variableLengthEncodedSize( *pSubscriptionId );
+                pLocalIndex = &pLocalIndex[ ( size_t ) encodedSize ];
+
+                /* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-182 */
+                /* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-108 */
+                /* coverity[misra_c_2012_rule_18_2_violation] */
+                /* coverity[misra_c_2012_rule_10_8_violation] */
                 *currentIndex = ( size_t ) ( pLocalIndex - pPropertyBuilder->pBuffer );
             }
         }
@@ -837,7 +869,7 @@ MQTTStatus_t MQTTPropGet_SubscriptionId( MQTTPropBuilder_t * pPropertyBuilder,
 
 /*-----------------------------------------------------------*/
 
-MQTTStatus_t MQTTPropGet_ContentType( MQTTPropBuilder_t * pPropertyBuilder,
+MQTTStatus_t MQTTPropGet_ContentType( const MQTTPropBuilder_t * pPropertyBuilder,
                                       size_t * currentIndex,
                                       const char ** pContentType,
                                       size_t * pContentTypeLength )

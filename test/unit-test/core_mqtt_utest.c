@@ -615,7 +615,7 @@ static MQTTStatus_t MQTT_SerializeAck_SuccessAndSetDisconnect( const MQTTFixedBu
                                                                uint8_t packetType,
                                                                uint16_t packetId,
                                                                const MQTTPropBuilder_t * pAckProperties,
-                                                               MQTTSuccessFailReasonCode_t * pReasonCode,
+                                                               const MQTTSuccessFailReasonCode_t * pReasonCode,
                                                                int numcallbacks )
 {
     ( void ) numcallbacks;
@@ -634,7 +634,7 @@ static MQTTStatus_t MQTT_SerializeAck_SuccessAndSetDisconnPending( const MQTTFix
                                                                    uint8_t packetType,
                                                                    uint16_t packetId,
                                                                    const MQTTPropBuilder_t * pAckProperties,
-                                                                   MQTTSuccessFailReasonCode_t * pReasonCode,
+                                                                   const MQTTSuccessFailReasonCode_t * pReasonCode,
                                                                    int numcallbacks )
 {
     ( void ) numcallbacks;
@@ -713,7 +713,7 @@ MQTTStatus_t MQTT_SerializeAck_StubSuccess( const MQTTFixedBuffer_t * pFixedBuff
 }
 
 static uint8_t * MQTTV5_SerializeDisconnectFixed_cb( uint8_t * pIndex,
-                                                     MQTTSuccessFailReasonCode_t * pReasonCode,
+                                                     const MQTTSuccessFailReasonCode_t * pReasonCode,
                                                      uint32_t remainingLength,
                                                      int numcallbacks )
 {
@@ -784,7 +784,7 @@ static MQTTStatus_t MQTT_GetDisconnectPacketSize_ExpectReasonMalformed( const MQ
                                                                         uint32_t * pRemainingLength,
                                                                         uint32_t * pPacketSize,
                                                                         uint32_t maxPacketSize,
-                                                                        MQTTSuccessFailReasonCode_t * pReasonCode,
+                                                                        const MQTTSuccessFailReasonCode_t * pReasonCode,
                                                                         int numcallbacks )
 {
     ( void ) pDisconnectProperties;
@@ -800,7 +800,7 @@ static MQTTStatus_t MQTT_GetDisconnectPacketSize_ExpectReasonMalformed( const MQ
 }
 
 static uint8_t * serializeDisconnectFixed_cb_OneByte( uint8_t * pIndex,
-                                                      MQTTSuccessFailReasonCode_t * pReasonCode,
+                                                      const MQTTSuccessFailReasonCode_t * pReasonCode,
                                                       uint32_t remainingLength,
                                                       int numcallbacks )
 {
@@ -2518,7 +2518,7 @@ void test_MQTT_Connect_error_path()
     MQTT_ValidateWillProperties_ExpectAnyArgsAndReturn( MQTTSuccess );
 
     MQTT_ValidateConnectProperties_ExpectAnyArgsAndReturn( MQTTSuccess );
-    MQTT_ValidateConnectProperties_ReturnThruPtr_pPacketSizeMaxValue( &receiveMax );
+    MQTT_ValidateConnectProperties_ReturnThruPtr_pPacketMaxSizeValue( &receiveMax );
     MQTTPropAdd_MaxPacketSize_IgnoreAndReturn( MQTTSuccess );
     MQTT_GetConnectPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
     serializeConnectFixedHeader_Stub( serializeConnectFixedHeader_cb );
@@ -3504,7 +3504,7 @@ void test_MQTT_Connect_happy_path1()
     willInfo.topicNameLength = 10;
     MQTT_ValidateWillProperties_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_ValidateConnectProperties_ExpectAnyArgsAndReturn( MQTTSuccess );
-    MQTT_ValidateConnectProperties_ReturnThruPtr_pPacketSizeMaxValue( &receiveMax );
+    MQTT_ValidateConnectProperties_ReturnThruPtr_pPacketMaxSizeValue( &receiveMax );
     MQTT_GetConnectPacketSize_IgnoreAndReturn( MQTTSuccess );
     serializeConnectFixedHeader_Stub( serializeConnectFixedHeader_cb );
     MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
@@ -6062,7 +6062,7 @@ void test_MQTT_ProcessLoop_handleIncomingAck_Error_Paths( void )
     expectProcessLoopCalls( &context, &expectParams );
 
     /* Verify that MQTTStatusNotConnected propagated when receiving a any ACK,
-     * here PUBREC but thr connection status is MQTTNotConnected. */
+     * here PUBREC but the connection status is MQTTNotConnected. */
     context.connectStatus = MQTTNotConnected;
     currentPacketType = MQTT_PACKET_TYPE_PUBREC;
     /* Set expected return values in the loop. */
@@ -6076,7 +6076,7 @@ void test_MQTT_ProcessLoop_handleIncomingAck_Error_Paths( void )
     context.connectStatus = MQTTConnected;
 
     /* Verify that MQTTStatusNotConnected propagated when receiving a any ACK,
-     * here PUBREC but thr connection status is MQTTNotConnected. */
+     * here PUBREC but the connection status is MQTTNotConnected. */
     currentPacketType = MQTT_PACKET_TYPE_PUBREC;
     /* Set expected return values in the loop. */
     resetProcessLoopParams( &expectParams );
@@ -6170,11 +6170,8 @@ void test_MQTT_ProcessLoop_handleIncomingAck_Error_PathsWithProperties( void )
     expectParams.processLoopStatus = MQTTBadResponse;
     expectProcessLoopCalls( &context, &expectParams );
 
-    /* Verify that MQTTStatusNotConnected propagated when receiving a any ACK,
-     * here PUBREC but thr connection status is MQTTNotConnected. */
-
-    /* Verify that MQTTStatusNotConnected propagated when receiving a any ACK,
-     * here PUBREC but thr connection status is MQTTNotConnected. */
+    /* Verify that MQTTStatusNotConnected propagated when receiving any ACK,
+     * here PUBREC but the connection status is MQTTNotConnected. */
     context.connectStatus = MQTTNotConnected;
     currentPacketType = MQTT_PACKET_TYPE_PUBREC;
     /* Set expected return values in the loop. */
@@ -6199,8 +6196,8 @@ void test_MQTT_ProcessLoop_handleIncomingAck_Error_PathsWithProperties( void )
     expectProcessLoopCalls( &context, &expectParams );
     context.connectStatus = MQTTConnected;
 
-    /* Verify that MQTTStatusNotConnected propagated when receiving a any ACK,
-     * here PUBREC but thr connection status is MQTTNotConnected. */
+    /* Verify that MQTTStatusNotConnected propagated when receiving any ACK,
+     * here PUBREC but the connection status is MQTTNotConnected. */
     currentPacketType = MQTT_PACKET_TYPE_PUBREC;
     /* Set expected return values in the loop. */
     resetProcessLoopParams( &expectParams );
@@ -10162,7 +10159,7 @@ void test_MQTT_Connect_MaxPacketSizeBiggerThanBuffer( void )
     uint32_t receiveMax = UINT32_MAX;
 
     MQTT_ValidateConnectProperties_ExpectAnyArgsAndReturn( MQTTSuccess );
-    MQTT_ValidateConnectProperties_ReturnThruPtr_pPacketSizeMaxValue( &receiveMax );
+    MQTT_ValidateConnectProperties_ReturnThruPtr_pPacketMaxSizeValue( &receiveMax );
 
     status = MQTT_Connect( &mqttContext, &connectInfo, NULL, timeout, &sessionPresentResult, &PropertyBuilder, NULL );
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );

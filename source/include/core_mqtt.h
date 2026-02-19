@@ -1167,7 +1167,7 @@ MQTTStatus_t MQTT_Unsubscribe( MQTTContext_t * pContext,
 /* @[declare_mqtt_disconnect] */
 MQTTStatus_t MQTT_Disconnect( MQTTContext_t * pContext,
                               const MQTTPropBuilder_t * pPropertyBuilder,
-                              MQTTSuccessFailReasonCode_t * pReasonCode );
+                              const MQTTSuccessFailReasonCode_t * pReasonCode );
 /* @[declare_mqtt_disconnect] */
 
 /**
