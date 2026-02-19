@@ -1,10 +1,14 @@
-# coreMQTT Migration Guide: MQTT v3.1.1 to MQTT v5.0
+# Moving to MQTT v5.0
 
 ## Overview
 
-This guide helps you migrate your existing coreMQTT v3.1.1 application to use the new coreMQTT v5.0 library. MQTT v5.0 introduces significant enhancements including properties, enhanced reason codes, bidirectional DISCONNECT packets, and improved error handling.
+This guide helps you migrate your existing coreMQTT v2.3.1 (MQTT v3.1.1) application to use the new coreMQTT v5.0.0 library. MQTT v5.0 introduces significant enhancements including properties, enhanced reason codes, bidirectional DISCONNECT packets, and improved error handling.
 
-**Key Philosophy**: The v5.0 library is designed to be backward compatible in usage patterns. If you don't want to use v5.0 features, you can pass `NULL` for property parameters and the library will work similarly to v3.1.1.
+**Key Philosophy**: The coreMQTT v5.0.0 library is designed to be backward compatible in usage patterns. If you don't want to use MQTT v5.0 features, you can pass `NULL` for property parameters and the library will work similarly to v3.1.1.
+
+> **See also:** For a complete list of every changed function signature
+> (including serialization APIs), see the
+> [coreMQTT Migration Guide](MigrationGuide.md).
 
 ---
 
@@ -34,10 +38,10 @@ If you want to migrate with minimal code changes and **not use v5.0 features**, 
 
 **MQTT_Connect:**
 ```c
-// v3.1.1
+// coreMQTT v2.3.1 (MQTT v3.1.1)
 status = MQTT_Connect(&context, &connectInfo, &willInfo, timeoutMs, &sessionPresent);
 
-// v5.0 - Add two NULL parameters for properties
+// coreMQTT v5.0.0 - Add two NULL parameters for properties
 status = MQTT_Connect(&context, &connectInfo, &willInfo, timeoutMs, &sessionPresent, 
                       NULL,  // Connect properties (optional)
                       NULL); // Will properties (optional)
@@ -45,40 +49,40 @@ status = MQTT_Connect(&context, &connectInfo, &willInfo, timeoutMs, &sessionPres
 
 **MQTT_Subscribe:**
 ```c
-// v3.1.1
+// coreMQTT v2.3.1 (MQTT v3.1.1)
 status = MQTT_Subscribe(&context, pSubscriptionList, subscriptionCount, packetId);
 
-// v5.0 - Add NULL parameter for properties
+// coreMQTT v5.0.0 - Add NULL parameter for properties
 status = MQTT_Subscribe(&context, pSubscriptionList, subscriptionCount, packetId,
                         NULL); // Subscribe properties (optional)
 ```
 
 **MQTT_Publish:**
 ```c
-// v3.1.1
+// coreMQTT v2.3.1 (MQTT v3.1.1)
 status = MQTT_Publish(&context, &publishInfo, packetId);
 
-// v5.0 - Add NULL parameter for properties
+// coreMQTT v5.0.0 - Add NULL parameter for properties
 status = MQTT_Publish(&context, &publishInfo, packetId,
                       NULL); // Publish properties (optional)
 ```
 
 **MQTT_Unsubscribe:**
 ```c
-// v3.1.1
+// coreMQTT v2.3.1 (MQTT v3.1.1)
 status = MQTT_Unsubscribe(&context, pSubscriptionList, subscriptionCount, packetId);
 
-// v5.0 - Add NULL parameter for properties
+// coreMQTT v5.0.0 - Add NULL parameter for properties
 status = MQTT_Unsubscribe(&context, pSubscriptionList, subscriptionCount, packetId,
                           NULL); // Unsubscribe properties (optional)
 ```
 
 **MQTT_Disconnect:**
 ```c
-// v3.1.1
+// coreMQTT v2.3.1 (MQTT v3.1.1)
 status = MQTT_Disconnect(&context);
 
-// v5.0 - Add parameters for properties and reason code
+// coreMQTT v5.0.0 - Add parameters for properties and reason code
 status = MQTT_Disconnect(&context,
                          NULL,  // Disconnect properties (optional)
                          NULL); // Reason code (optional)
@@ -89,7 +93,7 @@ status = MQTT_Disconnect(&context,
 The event callback signature has changed significantly:
 
 ```c
-// v3.1.1
+// coreMQTT v2.3.1 (MQTT v3.1.1)
 void eventCallback(MQTTContext_t *pContext,
                    MQTTPacketInfo_t *pPacketInfo,
                    MQTTDeserializedInfo_t *pDeserializedInfo)
@@ -97,7 +101,7 @@ void eventCallback(MQTTContext_t *pContext,
     // Handle events
 }
 
-// v5.0 - Returns bool and has additional parameters
+// coreMQTT v5.0.0 - Returns bool and has additional parameters
 bool eventCallback(MQTTContext_t *pContext,
                    MQTTPacketInfo_t *pPacketInfo,
                    MQTTDeserializedInfo_t *pDeserializedInfo,
@@ -112,15 +116,15 @@ bool eventCallback(MQTTContext_t *pContext,
 
 ### 4. Update MQTT_InitStatefulQoS
 
-The v5.0 version adds a buffer for ACK properties:
+The coreMQTT v5.0.0 version adds a buffer for ACK properties:
 
 ```c
-// v3.1.1
+// coreMQTT v2.3.1 (MQTT v3.1.1)
 status = MQTT_InitStatefulQoS(&context, 
                               outgoingPublishRecords, outgoingPublishCount,
                               incomingPublishRecords, incomingPublishCount);
 
-// v5.0 - Add buffer for ACK properties
+// coreMQTT v5.0.0 - Add buffer for ACK properties
 uint8_t ackPropsBuffer[500];
 status = MQTT_InitStatefulQoS(&context,
                               outgoingPublishRecords, outgoingPublishCount,
@@ -131,17 +135,17 @@ status = MQTT_InitStatefulQoS(&context,
 
 ### 5. Update MQTTSubscribeInfo Structure
 
-The v5.0 version adds subscription options:
+The coreMQTT v5.0.0 version adds subscription options:
 
 ```c
-// v3.1.1
+// coreMQTT v2.3.1 (MQTT v3.1.1)
 MQTTSubscribeInfo_t subscribeInfo = {
     .qos = MQTTQoS1,
     .pTopicFilter = "my/topic",
     .topicFilterLength = strlen("my/topic")
 };
 
-// v5.0 - Add subscription options (use defaults for v3.1.1 behavior)
+// coreMQTT v5.0.0 - Add subscription options (use defaults for v3.1.1 behavior)
 MQTTSubscribeInfo_t subscribeInfo = {
     .qos = MQTTQoS1,
     .pTopicFilter = "my/topic",
@@ -158,7 +162,7 @@ MQTTSubscribeInfo_t subscribeInfo = {
 
 ### Core API Functions
 
-| Function | v3.1.1 Parameters | v5.0 Additional Parameters |
+| Function | v2.3.1 Parameters | v5.0.0 Additional Parameters |
 |----------|-------------------|----------------------------|
 | `MQTT_Connect` | 5 params | +2: `pPropertyBuilder`, `pWillPropertyBuilder` |
 | `MQTT_Subscribe` | 4 params | +1: `pPropertyBuilder` |
@@ -171,7 +175,7 @@ MQTTSubscribeInfo_t subscribeInfo = {
 
 All serialization functions now accept property builders:
 
-| Function | v3.1.1 Parameters | v5.0 Additional Parameters |
+| Function | v2.3.1 Parameters | v5.0.0 Additional Parameters |
 |----------|-------------------|----------------------------|
 | `MQTT_GetConnectPacketSize` | 4 params | +2: `pConnectProperties`, `pWillProperties` |
 | `MQTT_SerializeConnect` | 4 params | +2: `pConnectProperties`, `pWillProperties` |
@@ -213,7 +217,7 @@ bool myEventCallback(MQTTContext_t *pContext,
                      MQTTPropBuilder_t *pSendPropsBuffer,
                      MQTTPropBuilder_t *pGetPropsBuffer)
 {
-    // Your existing v3.1.1 logic here
+    // Your existing logic here
     // ...
     
     // Return true to indicate successful processing
@@ -258,7 +262,7 @@ for (int i = 0; i < NUM_SUBS; i++) {
     subscriptions[i].pTopicFilter = topics[i];
     subscriptions[i].topicFilterLength = strlen(topics[i]);
     
-    // Add v5.0 fields with default values
+    // Add MQTT v5.0 fields with default values
     subscriptions[i].noLocalOption = false;
     subscriptions[i].retainAsPublishedOption = false;
     subscriptions[i].retainHandlingOption = retainSendOnSub;
@@ -375,7 +379,7 @@ bool eventCallback(MQTTContext_t *pContext,
                    MQTTPropBuilder_t *pGetPropsBuffer)
 {
     if (pGetPropsBuffer != NULL && pGetPropsBuffer->bufferLength != 0) {
-        uint32_t index = 0;
+        size_t index = 0;
         uint8_t propertyType;
         
         // Iterate through properties
@@ -566,7 +570,7 @@ MQTT_Publish(&context, &publishInfo, packetId, &pubProps);
 ### Pattern 1: Simple Migration (No v5.0 Features)
 
 ```c
-// Before (v3.1.1)
+// Before (coreMQTT v2.3.1)
 void eventCallback(MQTTContext_t *pContext,
                    MQTTPacketInfo_t *pPacketInfo,
                    MQTTDeserializedInfo_t *pDeserializedInfo) {
@@ -578,7 +582,7 @@ MQTT_Subscribe(&context, subscriptions, count, packetId);
 MQTT_Publish(&context, &publishInfo, packetId);
 MQTT_Disconnect(&context);
 
-// After (v5.0)
+// After (coreMQTT v5.0.0)
 bool eventCallback(MQTTContext_t *pContext,
                    MQTTPacketInfo_t *pPacketInfo,
                    MQTTDeserializedInfo_t *pDeserializedInfo,
@@ -664,7 +668,7 @@ MQTT_Disconnect(&context, &disconnectProps, &reason);
 
 ### Issue: Compilation Errors About Missing Parameters
 
-**Solution**: You're likely calling v5.0 APIs with v3.1.1 signatures. Add the additional parameters (use `NULL` if not using properties).
+**Solution**: You're likely calling v5.0.0 APIs with v2.3.1 signatures. Add the additional parameters (use `NULL` if not using properties).
 
 ### Issue: Event Callback Not Being Called
 
@@ -699,7 +703,7 @@ MQTT_Disconnect(&context, &disconnectProps, &reason);
 
 - **MQTT v5.0 Specification**: [OASIS MQTT Version 5.0](https://docs.oasis-open.org/mqtt/mqtt/v5.0/mqtt-v5.0.html)
 - **coreMQTT Documentation**: Check the `docs/` directory in the repository
-- **Example Code**: See `main.c` in the repository root for a complete v5.0 example
+- **Example Code**: See `main.c` in the repository root for a complete v5.0.0 example
 
 ---
 
@@ -716,4 +720,4 @@ MQTT_Disconnect(&context, &disconnectProps, &reason);
 
 ---
 
-**Note**: This migration guide assumes you're familiar with the v3.1.1 API. If you're new to coreMQTT, refer to the main documentation and examples in the repository.
+**Note**: This migration guide assumes you're familiar with the coreMQTT v2.3.1 API. If you're new to coreMQTT, refer to the main documentation and examples in the repository.

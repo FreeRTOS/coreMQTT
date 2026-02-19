@@ -1,5 +1,19 @@
 # coreMQTT Migration Guide
 
+This guide covers the API-level breaking changes between coreMQTT library
+versions. If you are upgrading from:
+
+- **coreMQTT v1.x → v2.x**: See the
+  [v2.x Migration Guide](#coremqtt-version-v2x-migration-guide) below.
+- **coreMQTT v2.x → v5.0.0** (adds MQTT v5.0 support): See the
+  [v5.0.0 Migration Guide](#coremqtt-version-v500-migration-guide) below.
+- **coreMQTT v1.x → v5.0.0**: Apply the v2.x changes first, then the v5.0.0
+  changes.
+
+For a conceptual guide on using MQTT v5.0 features (properties, topic aliases,
+enhanced subscriptions, reason codes), see
+[Moving to MQTT v5.0](MQTTv5Guide.md).
+
 ## Table of Contents
 * [coreMQTT version v2.x Migration Guide](#coremqtt-version-v2x-migration-guide)
     * [Breaking Changes](#breaking-changes)
@@ -10,7 +24,7 @@
         * [Replacing `MQTT_SEND_RETRY_TIMEOUT_MS`](#replacing-mqtt_send_retry_timeout_ms)
     * [Additional Changes](#additional-changes)
         * [New API `MQTT_CancelCallback`](#new-api-mqtt_cancelcallback)
-* [coreMQTT version >=v3.0.0 Migration Guide](#coremqtt-version-v300-migration-guide)
+* [coreMQTT version v5.0.0 Migration Guide](#coremqtt-version-v500-migration-guide)
     * [Breaking Changes](#breaking-changes-1)
         * [Updated `MQTTEventCallback_t` Callback Function](#updated-mqtteventcallback_t-callback-function)
         * [Updated `MQTT_InitStatefulQoS` API](#updated-mqtt_initstatefulqos-api)
@@ -301,15 +315,15 @@ For coreMQTT version >=v2.1.0, the `MQTT_SEND_RETRY_TIMEOUT_MS` macro configurat
 
 The `MQTT_CancelCallback` function has been added to allow a program to prevent the event callback from being called when receiving an ACK for a sent packet. For example, if a program sends a publish with packet ID 2 and QoS > 0 using `MQTT_Publish`, the program could then call `MQTT_CancelCallback` on packet ID 2 to prevent coreMQTT from calling the event callback when it receives the `PUBACK` for packet ID 2.
 
-## coreMQTT version >=v3.0.0 Migration Guide
+## coreMQTT version v5.0.0 Migration Guide
 
-With coreMQTT versions >=v3.0.0, there are some breaking changes that need to be addressed when upgrading.
+With coreMQTT version v5.0.0, there are some breaking changes that need to be addressed when upgrading.
 
 ### Breaking Changes
 
 #### Updated `MQTTEventCallback_t` Callback Function
 
-The `MQTTEventCallback_t` function signature used in `MQTT_Init` has changed to support MQTT v5 properties and reason codes. The signature changed
+The `MQTTEventCallback_t` function signature used in `MQTT_Init` has changed to support MQTT v5.0 properties and reason codes. The signature changed
 
 from
 
@@ -394,7 +408,7 @@ static void eventCallback(
         /* Add properties to outgoing ack packets if needed */
         if( pPacketInfo->type == MQTT_PACKET_TYPE_PUBACK )
         {
-            MQTTPropAdd_ReasonString( pSendPropsBuffer, "Success", 7 );
+            MQTTPropAdd_ReasonString( pSendPropsBuffer, "Success", 7, &(uint8_t){ MQTT_PACKET_TYPE_PUBACK } );
         }
     }
 }
@@ -409,7 +423,7 @@ status = MQTT_Init( &mqttContext,
 
 #### Updated `MQTT_InitStatefulQoS` API
 
-The `MQTT_InitStatefulQoS` function now includes support for MQTT v5 properties in outgoing publish acknowledgments with two additional parameters. Thus, the signature of `MQTT_InitStatefulQoS` changed
+The `MQTT_InitStatefulQoS` function now includes support for MQTT v5.0 properties in outgoing publish acknowledgments with two additional parameters. Thus, the signature of `MQTT_InitStatefulQoS` changed
 
 from
 
@@ -431,7 +445,7 @@ MQTTStatus_t MQTT_InitStatefulQoS( MQTTContext_t * pContext,
                                     uint8_t * pAckPropsBuf,
                                     size_t ackPropsBufLength )
 ```
-The new parameters can be set to NULL and 0 respectively if not using MQTT v5 properties in publish acknowledgments.
+The new parameters can be set to NULL and 0 respectively if not using MQTT v5.0 properties in publish acknowledgments.
 
 For example:
 
@@ -464,7 +478,7 @@ const size_t incomingPublishCount = 10;
 MQTTPubAckInfo_t pOutgoingPublishRecords[ outgoingPublishCount ];
 MQTTPubAckInfo_t pIncomingPublishRecords[ incomingPublishCount ];
 
-// Option 1: Without MQTT v5 properties in publish acknowledgments
+// Option 1: Without MQTT v5.0 properties in publish acknowledgments
 status = MQTT_InitStatefulQoS( &mqttContext,
                             pOutgoingPublishRecords,
                             outgoingPublishCount,
@@ -473,7 +487,7 @@ status = MQTT_InitStatefulQoS( &mqttContext,
                             NULL,  // No buffer for properties
                             0 );   // No buffer length
 
-// Option 2: With MQTT v5 properties in publish acknowledgments
+// Option 2: With MQTT v5.0 properties in publish acknowledgments
 uint8_t propertyBuffer[500];
 status = MQTT_InitStatefulQoS( &mqttContext,
                             pOutgoingPublishRecords,
@@ -491,7 +505,7 @@ if( status == MQTTSuccess )
 
 #### Updated `MQTT_Connect` API
 
-The `MQTT_Connect` function now includes MQTT v5 property support with two additional parameters. Thus, the signature of `MQTT_Connect` changed
+The `MQTT_Connect` function now includes MQTT v5.0 property support with two additional parameters. Thus, the signature of `MQTT_Connect` changed
 
 from
 
@@ -570,7 +584,7 @@ if( status == MQTTSuccess )
     // Connection successful
 }
 
-// To use MQTT v5 properties, initialize and use the property builders:
+// To use MQTT v5.0 properties, initialize and use the property builders:
 
 // Variables used in this example.
 MQTTStatus_t status;
@@ -593,7 +607,7 @@ size bufLength = sizeof(buf);
 MQTTPropertyBuilder_Init(&connectionProperties, buf, bufLength) ;
 
 uint32_t sessionExpiryInterval = 100 ; // 100ms
-MQTTPropAdd_SessionExpiry(&connectionProperties, sessionExpiryInterval );
+MQTTPropAdd_SessionExpiry(&connectionProperties, sessionExpiryInterval, &(uint8_t){ MQTT_PACKET_TYPE_CONNECT } );
 
 // Can also use the will properties in a similar way.
 
@@ -612,7 +626,7 @@ if( status == MQTTSuccess )
 
 #### Updated `MQTT_Subscribe` API
 
-The `MQTT_Subscribe` function now includes support for MQTT v5 properties with an additional parameter. Thus, the signature of `MQTT_Subscribe` changed
+The `MQTT_Subscribe` function now includes support for MQTT v5.0 properties with an additional parameter. Thus, the signature of `MQTT_Subscribe` changed
 
 from
 
@@ -632,7 +646,7 @@ MQTTStatus_t MQTT_Subscribe( MQTTContext_t * pContext,
                                 uint16_t packetId,
                                 const MQTTPropBuilder_t * pPropertyBuilder )
 ```
-The new parameter can be set to NULL if not using MQTT v5 properties.
+The new parameter can be set to NULL if not using MQTT v5.0 properties.
 
 For example:
 
@@ -676,14 +690,14 @@ subscriptionList[0].topicFilterLength = strlen("topic/example");
 // Get packet id
 packetId = MQTT_GetPacketId(&mqttContext);
 
-// Option 1: Without MQTT v5 properties
+// Option 1: Without MQTT v5.0 properties
 status = MQTT_Subscribe(&mqttContext,
                     subscriptionList,
                     1,
                     packetId,
                     NULL);  // No properties
 
-// Option 2: With MQTT v5 properties
+// Option 2: With MQTT v5.0 properties
 MQTTPropBuilder_t propertyBuilder = { 0 };
 uint8_t propertyBuffer[100];
 
@@ -693,7 +707,7 @@ MQTTPropertyBuilder_Init(&propertyBuilder,
                         sizeof(propertyBuffer));
 
 // Add subscription identifier property
-MQTTPropAdd_SubscribeId(&propertyBuilder, 1);
+MQTTPropAdd_SubscribeId(&propertyBuilder, 1, &(uint8_t){ MQTT_PACKET_TYPE_SUBSCRIBE } );
 
 status = MQTT_Subscribe(&mqttContext,
                     subscriptionList,
@@ -709,7 +723,7 @@ if(status == MQTTSuccess)
 
 #### Updated `MQTT_Publish` API
 
-The `MQTT_Publish` function now includes support for MQTT v5 properties with an additional parameter. Thus, the signature of `MQTT_Publish` changed
+The `MQTT_Publish` function now includes support for MQTT v5.0 properties with an additional parameter. Thus, the signature of `MQTT_Publish` changed
 
 from
 
@@ -727,7 +741,7 @@ MQTTStatus_t MQTT_Publish( MQTTContext_t * pContext,
                             uint16_t packetId,
                             const MQTTPropBuilder_t * pPropertyBuilder )
 ```
-The new parameter can be set to NULL if not using MQTT v5 properties.
+The new parameter can be set to NULL if not using MQTT v5.0 properties.
 
 For example:
 
@@ -774,13 +788,13 @@ publishInfo.payloadLength = strlen("Hello World!");
 // Get packet id for QoS > 0
 packetId = MQTT_GetPacketId(&mqttContext);
 
-// Option 1: Without MQTT v5 properties
+// Option 1: Without MQTT v5.0 properties
 status = MQTT_Publish(&mqttContext,
                     &publishInfo,
                     packetId,
                     NULL);  // No properties
 
-// Option 2: With MQTT v5 properties
+// Option 2: With MQTT v5.0 properties
 MQTTPropBuilder_t propertyBuilder = { 0 };
 uint8_t propertyBuffer[100];
 
@@ -790,8 +804,8 @@ MQTTPropertyBuilder_Init(&propertyBuilder,
                         sizeof(propertyBuffer));
 
 // Add publish properties
-MQTTPropAdd_PubPayloadFormat(&propertyBuilder, 1);
-MQTTPropAdd_PubTopicAlias(&propertyBuilder, 1);
+MQTTPropAdd_PubPayloadFormat(&propertyBuilder, 1, &(uint8_t){ MQTT_PACKET_TYPE_PUBLISH } );
+MQTTPropAdd_PubTopicAlias(&propertyBuilder, 1, &(uint8_t){ MQTT_PACKET_TYPE_PUBLISH } );
 
 status = MQTT_Publish(&mqttContext,
                     &publishInfo,
@@ -806,7 +820,7 @@ if(status == MQTTSuccess)
 
 #### Updated `MQTT_Unsubscribe` API
 
-The `MQTT_Unsubscribe` function now includes support for MQTT v5 properties with an additional parameter. Thus, the signature of `MQTT_Unsubscribe` changed
+The `MQTT_Unsubscribe` function now includes support for MQTT v5.0 properties with an additional parameter. Thus, the signature of `MQTT_Unsubscribe` changed
 
 from
 
@@ -826,7 +840,7 @@ MQTTStatus_t MQTT_Unsubscribe( MQTTContext_t * pContext,
                                 uint16_t packetId,
                                 const MQTTPropBuilder_t * pPropertyBuilder )
 ```
-The new parameter can be set to NULL if not using MQTT v5 properties.
+The new parameter can be set to NULL if not using MQTT v5.0 properties.
 
 For example:
 
@@ -870,14 +884,14 @@ unsubscribeList[0].topicFilterLength = strlen("topic/example");
 // Get packet id
 packetId = MQTT_GetPacketId(&mqttContext);
 
-// Option 1: Without MQTT v5 properties
+// Option 1: Without MQTT v5.0 properties
 status = MQTT_Unsubscribe(&mqttContext,
                         unsubscribeList,
                         1,
                         packetId,
                         NULL);  // No properties
 
-// Option 2: With MQTT v5 properties
+// Option 2: With MQTT v5.0 properties
 MQTTPropBuilder_t propertyBuilder = { 0 };
 uint8_t propertyBuffer[100];
 
@@ -893,7 +907,7 @@ MQTTUserProperty_t userProperty = {
     .pValue = "value",
     .valueLength = strlen("value")
 };
-MQTTPropAdd_UserProp(&propertyBuilder, &userProperty);
+MQTTPropAdd_UserProp(&propertyBuilder, &userProperty, &(uint8_t){ MQTT_PACKET_TYPE_UNSUBSCRIBE } );
 
 status = MQTT_Unsubscribe(&mqttContext,
                         unsubscribeList,
@@ -909,7 +923,7 @@ if(status == MQTTSuccess)
 
 #### Updated `MQTT_Disconnect` API
 
-The `MQTT_Disconnect` function now includes support for MQTT v5 properties and reason codes with two additional parameters. Thus, the signature of `MQTT_Disconnect` changed
+The `MQTT_Disconnect` function now includes support for MQTT v5.0 properties and reason codes with two additional parameters. Thus, the signature of `MQTT_Disconnect` changed
 
 from
 
@@ -922,9 +936,9 @@ to
 ```c
 MQTTStatus_t MQTT_Disconnect( MQTTContext_t * pContext,
                                 const MQTTPropBuilder_t * pPropertyBuilder,
-                                MQTTSuccessFailReasonCode_t reasonCode )
+                                const MQTTSuccessFailReasonCode_t * pReasonCode )
 ```
-The new parameters can be set to NULL and 0 respectively if not using MQTT v5 features.
+The new parameters can be set to NULL if not using MQTT v5.0 features.
 
 For example:
 
@@ -945,12 +959,12 @@ if(status == MQTTSuccess)
 // Variables used in this example.
 MQTTContext_t mqttContext;
 
-// Option 1: Without MQTT v5 properties and reason code
+// Option 1: Without MQTT v5.0 properties and reason code
 status = MQTT_Disconnect(&mqttContext,
                         NULL,  // No properties
-                        0);    // No reason code
+                        NULL); // No reason code
 
-// Option 2: With MQTT v5 properties and reason code
+// Option 2: With MQTT v5.0 properties and reason code
 MQTTPropBuilder_t propertyBuilder = { 0 };
 uint8_t propertyBuffer[100];
 
@@ -962,11 +976,13 @@ MQTTPropertyBuilder_Init(&propertyBuilder,
 // Add disconnect properties
 MQTTPropAdd_ReasonString(&propertyBuilder,
                         "Normal shutdown",
-                        strlen("Normal shutdown"));
+                        strlen("Normal shutdown"),
+                        &(uint8_t){ MQTT_PACKET_TYPE_DISCONNECT });
 
+MQTTSuccessFailReasonCode_t reason = MQTT_REASON_DISCONNECT_NORMAL_DISCONNECTION;
 status = MQTT_Disconnect(&mqttContext,
                         &propertyBuilder,
-                        MQTT_REASON_DISCONNECT_NORMAL_DISCONNECTION);
+                        &reason);
 
 if(status == MQTTSuccess)
 {
@@ -975,7 +991,7 @@ if(status == MQTTSuccess)
 ```
 #### Updated `MQTT_GetConnectPacketSize` API
 
-The `MQTT_GetConnectPacketSize` function now includes support for MQTT v5 properties with two additional parameters. Thus, the signature of `MQTT_GetConnectPacketSize` changed
+The `MQTT_GetConnectPacketSize` function now includes support for MQTT v5.0 properties with two additional parameters. Thus, the signature of `MQTT_GetConnectPacketSize` changed
 
 from
 
@@ -996,7 +1012,7 @@ MQTTStatus_t MQTT_GetConnectPacketSize( const MQTTConnectInfo_t * pConnectInfo,
                                         size_t * pRemainingLength,
                                         size_t * pPacketSize )
 ```
-The new parameters can be set to NULL if not using MQTT v5 properties.
+The new parameters can be set to NULL if not using MQTT v5.0 properties.
 
 For example:
 
@@ -1038,7 +1054,7 @@ connectInfo.cleanSession = true;
 connectInfo.pClientIdentifier = "clientId";
 connectInfo.clientIdentifierLength = strlen("clientId");
 
-// Option 1: Without MQTT v5 properties
+// Option 1: Without MQTT v5.0 properties
 status = MQTT_GetConnectPacketSize(&connectInfo,
                                 &willInfo,
                                 NULL,  // No connect properties
@@ -1046,7 +1062,7 @@ status = MQTT_GetConnectPacketSize(&connectInfo,
                                 &remainingLength,
                                 &packetSize);
 
-// Option 2: With MQTT v5 properties
+// Option 2: With MQTT v5.0 properties
 MQTTPropBuilder_t connectionProperties = { 0 };
 MQTTPropBuilder_t willProperties = { 0 };
 uint8_t connectPropBuffer[100];
@@ -1061,8 +1077,8 @@ MQTTPropertyBuilder_Init(&willProperties,
                         sizeof(willPropBuffer));
 
 // Add properties as needed
-MQTTPropAdd_SessionExpiry(&connectionProperties, 3600);
-MQTTPropAdd_WillDelayInterval(&willProperties, 60);
+MQTTPropAdd_SessionExpiry(&connectionProperties, 3600, &(uint8_t){ MQTT_PACKET_TYPE_CONNECT } );
+MQTTPropAdd_WillDelayInterval(&willProperties, 60, NULL );
 
 status = MQTT_GetConnectPacketSize(&connectInfo,
                                 &willInfo,
@@ -1079,7 +1095,7 @@ if(status == MQTTSuccess)
 
 #### Updated `MQTT_GetPublishPacketSize` API
 
-The `MQTT_GetPublishPacketSize` function now includes support for MQTT v5 properties and maximum packet size with two additional parameters. Thus, the signature of `MQTT_GetPublishPacketSize` changed
+The `MQTT_GetPublishPacketSize` function now includes support for MQTT v5.0 properties and maximum packet size with two additional parameters. Thus, the signature of `MQTT_GetPublishPacketSize` changed
 
 from
 
@@ -1098,7 +1114,7 @@ MQTTStatus_t MQTT_GetPublishPacketSize( const MQTTPublishInfo_t * pPublishInfo,
                                         size_t * pPacketSize,
                                         uint32_t maxPacketSize )
 ```
-The new parameters include support for MQTT v5 properties and server-imposed packet size limitations.
+The new parameters include support for MQTT v5.0 properties and server-imposed packet size limitations.
 
 For example:
 
@@ -1140,14 +1156,14 @@ publishInfo.topicNameLength = strlen("topic/example");
 publishInfo.pPayload = "Hello World!";
 publishInfo.payloadLength = strlen("Hello World!");
 
-// Option 1: Without MQTT v5 properties
+// Option 1: Without MQTT v5.0 properties
 status = MQTT_GetPublishPacketSize(&publishInfo,
                                 NULL,  // No publish properties
                                 &remainingLength,
                                 &packetSize,
                                 maxPacketSize);
 
-// Option 2: With MQTT v5 properties
+// Option 2: With MQTT v5.0 properties
 MQTTPropBuilder_t publishProperties = { 0 };
 uint8_t propBuffer[100];
 
@@ -1157,8 +1173,8 @@ MQTTPropertyBuilder_Init(&publishProperties,
                         sizeof(propBuffer));
 
 // Add publish properties
-MQTTPropAdd_PubTopicAlias(&publishProperties, 1);
-MQTTPropAdd_PubPayloadFormat(&publishProperties, 1);
+MQTTPropAdd_PubTopicAlias(&publishProperties, 1, &(uint8_t){ MQTT_PACKET_TYPE_PUBLISH } );
+MQTTPropAdd_PubPayloadFormat(&publishProperties, 1, &(uint8_t){ MQTT_PACKET_TYPE_PUBLISH } );
 
 // Get max packet size from CONNACK properties
 uint32_t serverMaxPacketSize = pContext->connectionProperties.serverMaxPacketSize; // Value from server
@@ -1177,7 +1193,7 @@ if(status == MQTTSuccess)
 
 #### Updated `MQTT_GetSubscribePacketSize` API
 
-The `MQTT_GetSubscribePacketSize` function now includes support for MQTT v5 properties and maximum packet size with two additional parameters. Thus, the signature of `MQTT_GetSubscribePacketSize` changed
+The `MQTT_GetSubscribePacketSize` function now includes support for MQTT v5.0 properties and maximum packet size with two additional parameters. Thus, the signature of `MQTT_GetSubscribePacketSize` changed
 
 from
 
@@ -1252,7 +1268,7 @@ MQTTPropertyBuilder_Init(&subscribeProperties,
                         sizeof(propBuffer));
 
 // Add subscription identifier
-MQTTPropAdd_SubscribeId(&subscribeProperties, 1);
+MQTTPropAdd_SubscribeId(&subscribeProperties, 1, &(uint8_t){ MQTT_PACKET_TYPE_SUBSCRIBE } );
 
 // Get max packet size from CONNACK properties
 uint32_t serverMaxPacketSize = pContext->connectionProperties.serverMaxPacketSize; // value from server
@@ -1273,7 +1289,7 @@ if(status == MQTTSuccess)
 
 #### Updated `MQTT_GetUnsubscribePacketSize` API
 
-The `MQTT_GetUnsubscribePacketSize` function now includes support for MQTT v5 properties with two additional parameters. Thus, the signature of `MQTT_GetUnsubscribePacketSize` changed
+The `MQTT_GetUnsubscribePacketSize` function now includes support for MQTT v5.0 properties with two additional parameters. Thus, the signature of `MQTT_GetUnsubscribePacketSize` changed
 
 from
 
@@ -1331,7 +1347,7 @@ uint32_t maxPacketSize = 268435455; // Default max packet size
 subscriptionList[0].pTopicFilter = "topic/1";
 subscriptionList[0].topicFilterLength = strlen("topic/1");
 
-// Option 1: Without MQTT v5 properties
+// Option 1: Without MQTT v5.0 properties
 status = MQTT_GetUnsubscribePacketSize(subscriptionList,
                                     1,
                                     NULL,  // No unsubscribe properties
@@ -1339,7 +1355,7 @@ status = MQTT_GetUnsubscribePacketSize(subscriptionList,
                                     &packetSize,
                                     maxPacketSize);
 
-// Option 2: With MQTT v5 properties
+// Option 2: With MQTT v5.0 properties
 MQTTPropBuilder_t unsubscribeProperties;
 uint8_t propBuffer[100];
 
@@ -1355,7 +1371,7 @@ MQTTUserProperty_t userProperty = {
     .pValue = "value",
     .valueLength = strlen("value")
 };
-MQTTPropAdd_UserProp(&unsubscribeProperties, &userProperty);
+MQTTPropAdd_UserProp(&unsubscribeProperties, &userProperty, &(uint8_t){ MQTT_PACKET_TYPE_UNSUBSCRIBE } );
 
 // Get max packet size from CONNACK properties
 uint32_t serverMaxPacketSize = pContext->connectionProperties.serverMaxPacketSize; // Value from server
@@ -1375,7 +1391,7 @@ if(status == MQTTSuccess)
 
 #### Updated `MQTT_GetDisconnectPacketSize` API
 
-The `MQTT_GetDisconnectPacketSize` function now includes support for MQTT v5 properties and reason code validation with four additional parameters. Thus, the signature of `MQTT_GetDisconnectPacketSize` changed
+The `MQTT_GetDisconnectPacketSize` function now includes support for MQTT v5.0 properties and reason code validation with four additional parameters. Thus, the signature of `MQTT_GetDisconnectPacketSize` changed
 
 from
 
@@ -1387,10 +1403,10 @@ to
 
 ```c
 MQTTStatus_t MQTT_GetDisconnectPacketSize( const MQTTPropBuilder_t * pDisconnectProperties,
-                                            size_t * pRemainingLength,
-                                            size_t * pPacketSize,
+                                            uint32_t * pRemainingLength,
+                                            uint32_t * pPacketSize,
                                             uint32_t maxPacketSize,
-                                            MQTTSuccessFailReasonCode_t reasonCode )
+                                            const MQTTSuccessFailReasonCode_t * pReasonCode )
 ```
 
 `pDisconnectProperties` can be set to NULL if no properties are sent in the DISCONNECT packet.
@@ -1412,18 +1428,18 @@ if(status == MQTTSuccess)
 **New Code Snippet**
 ```c
 // Variables used in this example.
-size_t remainingLength = 0;
-size_t packetSize = 0;
+uint32_t remainingLength = 0;
+uint32_t packetSize = 0;
 uint32_t serverMaxPacketSize = pContext->connectionProperties.serverMaxPacketSize ;
 
-// Option 1: Without MQTT v5 properties and default reason code
+// Option 1: Without MQTT v5.0 properties and default reason code
 status = MQTT_GetDisconnectPacketSize(NULL,  // No disconnect properties
                                     &remainingLength,
                                     &packetSize,
                                     serverMaxPacketSize,
-                                    0);  // Default reason code
+                                    NULL);  // No reason code
 
-// Option 2: With MQTT v5 properties and specific reason code
+// Option 2: With MQTT v5.0 properties and specific reason code
 MQTTPropBuilder_t disconnectProperties;
 uint8_t propBuffer[100];
 
@@ -1433,17 +1449,18 @@ MQTTPropertyBuilder_Init(&disconnectProperties,
                         sizeof(propBuffer));
 
 // Add disconnect properties
-MQTTPropAdd_SessionExpiry(&disconnectProperties, 0);
+MQTTPropAdd_SessionExpiry(&disconnectProperties, 0, &(uint8_t){ MQTT_PACKET_TYPE_DISCONNECT } );
 MQTTPropAdd_ReasonString(&disconnectProperties,
                         "Normal shutdown",
-                        strlen("Normal shutdown"));
+                        strlen("Normal shutdown"),
+                        &(uint8_t){ MQTT_PACKET_TYPE_DISCONNECT } );
 
-
+MQTTSuccessFailReasonCode_t reason = MQTT_REASON_DISCONNECT_NORMAL_DISCONNECTION;
 status = MQTT_GetDisconnectPacketSize(&disconnectProperties,
                                     &remainingLength,
                                     &packetSize,
                                     serverMaxPacketSize,
-                                    MQTT_REASON_DISCONNECT_NORMAL_DISCONNECTION);
+                                    &reason);
 
 if(status == MQTTSuccess)
 {
@@ -1453,7 +1470,7 @@ if(status == MQTTSuccess)
 
 #### Updated `MQTT_SerializeConnect` API
 
-The `MQTT_SerializeConnect` function now includes support for MQTT v5 properties with two additional parameters. Thus, the signature of `MQTT_SerializeConnect` changed
+The `MQTT_SerializeConnect` function now includes support for MQTT v5.0 properties with two additional parameters. Thus, the signature of `MQTT_SerializeConnect` changed
 
 from
 
@@ -1533,7 +1550,7 @@ connectInfo.clientIdentifierLength = strlen("clientId");
 fixedBuffer.pBuffer = buffer;
 fixedBuffer.size = BUFFER_SIZE;
 
-// Option 1: Without MQTT v5 properties
+// Option 1: Without MQTT v5.0 properties
 // Get remaining length first
 status = MQTT_GetConnectPacketSize(&connectInfo,
                                 &willInfo,
@@ -1549,7 +1566,7 @@ status = MQTT_SerializeConnect(&connectInfo,
                             NULL,  // No will properties
                             remainingLength,
                             &fixedBuffer);
-// Option 2: With MQTT v5 properties
+// Option 2: With MQTT v5.0 properties
 MQTTPropBuilder_t connectionProperties ;
 MQTTPropBuilder_t willProperties ;
 uint8_t connectPropBuffer[100];
@@ -1564,11 +1581,11 @@ MQTTPropertyBuilder_Init(&willProperties,
                         sizeof(willPropBuffer));
 
 // Add connect properties
-MQTTPropAdd_SessionExpiry(&connectionProperties, 3600);
-MQTTPropAdd_MaxPacketSize(&connectionProperties, 1024);
+MQTTPropAdd_SessionExpiry(&connectionProperties, 3600, &(uint8_t){ MQTT_PACKET_TYPE_CONNECT } );
+MQTTPropAdd_MaxPacketSize(&connectionProperties, 1024, &(uint8_t){ MQTT_PACKET_TYPE_CONNECT } );
 
 // Add will properties if using will message
-MQTTPropAdd_WillDelayInterval(&willProperties, 60);
+MQTTPropAdd_WillDelayInterval(&willProperties, 60, NULL );
 
 // Get remaining length first
 status = MQTT_GetConnectPacketSize(&connectInfo,
@@ -1594,7 +1611,7 @@ if(status == MQTTSuccess)
 
 #### Updated `MQTT_SerializePublish` API
 
-The `MQTT_SerializePublish` function now includes support for MQTT v5 properties with an additional parameter. Thus, the signature of `MQTT_SerializePublish` changed
+The `MQTT_SerializePublish` function now includes support for MQTT v5.0 properties with an additional parameter. Thus, the signature of `MQTT_SerializePublish` changed
 
 from
 
@@ -1675,7 +1692,7 @@ publishInfo.payloadLength = strlen("Hello World!");
 fixedBuffer.pBuffer = buffer;
 fixedBuffer.size = BUFFER_SIZE;
 
-// Option 1: Without MQTT v5 properties
+// Option 1: Without MQTT v5.0 properties
 // Get remaining length first
 status = MQTT_GetPublishPacketSize(&publishInfo,
                                 NULL,  // No publish properties
@@ -1690,7 +1707,7 @@ status = MQTT_SerializePublish(&publishInfo,
                             remainingLength,
                             &fixedBuffer);
 
-// Option 2: With MQTT v5 properties
+// Option 2: With MQTT v5.0 properties
 MQTTPropBuilder_t publishProperties = { 0 };
 uint8_t propBuffer[100];
 
@@ -1700,9 +1717,9 @@ MQTTPropertyBuilder_Init(&publishProperties,
                         sizeof(propBuffer));
 
 // Add publish properties
-MQTTPropAdd_PubPayloadFormat(&publishProperties, 1);
-MQTTPropAdd_PubTopicAlias(&publishProperties, 1);
-MQTTPropAdd_PubMessageExpiry(&publishProperties, 3600);
+MQTTPropAdd_PubPayloadFormat(&publishProperties, 1, &(uint8_t){ MQTT_PACKET_TYPE_PUBLISH } );
+MQTTPropAdd_PubTopicAlias(&publishProperties, 1, &(uint8_t){ MQTT_PACKET_TYPE_PUBLISH } );
+MQTTPropAdd_PubMessageExpiry(&publishProperties, 3600, &(uint8_t){ MQTT_PACKET_TYPE_PUBLISH } );
 
 // Get remaining length first
 status = MQTT_GetPublishPacketSize(&publishInfo,
@@ -1726,7 +1743,7 @@ if(status == MQTTSuccess)
 
 #### Updated `MQTT_SerializePublishHeader` API
 
-The `MQTT_SerializePublishHeader` function now includes support for MQTT v5 properties with an additional parameter. Thus, the signature of `MQTT_SerializePublishHeader` changed
+The `MQTT_SerializePublishHeader` function now includes support for MQTT v5.0 properties with an additional parameter. Thus, the signature of `MQTT_SerializePublishHeader` changed
 
 from
 
@@ -1814,7 +1831,7 @@ publishInfo.payloadLength = strlen("Hello World!");
 fixedBuffer.pBuffer = buffer;
 fixedBuffer.size = BUFFER_SIZE;
 
-// Option 1: Without MQTT v5 properties
+// Option 1: Without MQTT v5.0 properties
 // Get remaining length first
 status = MQTT_GetPublishPacketSize(&publishInfo,
                                 NULL,  // No publish properties
@@ -1830,7 +1847,7 @@ status = MQTT_SerializePublishHeader(&publishInfo,
                                 &fixedBuffer,
                                 &headerSize);
 
-// Option 2: With MQTT v5 properties
+// Option 2: With MQTT v5.0 properties
 MQTTPropBuilder_t publishProperties ;
 uint8_t propBuffer[100];
 
@@ -1840,9 +1857,9 @@ MQTTPropertyBuilder_Init(&publishProperties,
                         sizeof(propBuffer));
 
 // Add publish properties
-MQTTPropAdd_PubPayloadFormat(&publishProperties, 1);
-MQTTPropAdd_PubTopicAlias(&publishProperties, 1);
-MQTTPropAdd_PubMessageExpiry(&publishProperties, 3600);
+MQTTPropAdd_PubPayloadFormat(&publishProperties, 1, &(uint8_t){ MQTT_PACKET_TYPE_PUBLISH } );
+MQTTPropAdd_PubTopicAlias(&publishProperties, 1, &(uint8_t){ MQTT_PACKET_TYPE_PUBLISH } );
+MQTTPropAdd_PubMessageExpiry(&publishProperties, 3600, &(uint8_t){ MQTT_PACKET_TYPE_PUBLISH } );
 
 // Get remaining length first
 status = MQTT_GetPublishPacketSize(&publishInfo,
@@ -1869,7 +1886,7 @@ if(status == MQTTSuccess)
 
 #### Updated `MQTT_SerializeSubscribe` API
 
-The `MQTT_SerializeSubscribe` function now includes support for MQTT v5 properties with an additional parameter. Thus, the signature of `MQTT_SerializeSubscribe` changed
+The `MQTT_SerializeSubscribe` function now includes support for MQTT v5.0 properties with an additional parameter. Thus, the signature of `MQTT_SerializeSubscribe` changed
 
 from
 
@@ -1953,7 +1970,7 @@ subscriptionList[0].retainHandlingOption = retainSendOnSub;
 fixedBuffer.pBuffer = buffer;
 fixedBuffer.size = BUFFER_SIZE;
 
-// Option 1: Without MQTT v5 properties
+// Option 1: Without MQTT v5.0 properties
 // Get remaining length first
 status = MQTT_GetSubscribePacketSize(subscriptionList,
                                 1,
@@ -1970,7 +1987,7 @@ status = MQTT_SerializeSubscribe(subscriptionList,
                             remainingLength,
                             &fixedBuffer);
 
-// Option 2: With MQTT v5 properties
+// Option 2: With MQTT v5.0 properties
 MQTTPropBuilder_t subscribeProperties = { 0 };
 uint8_t propBuffer[100];
 
@@ -1980,7 +1997,7 @@ MQTTPropertyBuilder_Init(&subscribeProperties,
                         sizeof(propBuffer));
 
 // Add subscription identifier
-MQTTPropAdd_SubscribeId(&subscribeProperties, 1);
+MQTTPropAdd_SubscribeId(&subscribeProperties, 1, &(uint8_t){ MQTT_PACKET_TYPE_SUBSCRIBE } );
 
 // Get remaining length first
 status = MQTT_GetSubscribePacketSize(subscriptionList,
@@ -2006,7 +2023,7 @@ if(status == MQTTSuccess)
 
 #### Updated `MQTT_SerializeUnsubscribe` API
 
-The `MQTT_SerializeUnsubscribe` function now includes support for MQTT v5 properties with an additional parameter. Thus, the signature of `MQTT_SerializeUnsubscribe` changed
+The `MQTT_SerializeUnsubscribe` function now includes support for MQTT v5.0 properties with an additional parameter. Thus, the signature of `MQTT_SerializeUnsubscribe` changed
 
 from
 
@@ -2085,7 +2102,7 @@ subscriptionList[0].topicFilterLength = strlen("topic/1");
 fixedBuffer.pBuffer = buffer;
 fixedBuffer.size = BUFFER_SIZE;
 
-// Option 1: Without MQTT v5 properties
+// Option 1: Without MQTT v5.0 properties
 // Get remaining length first
 status = MQTT_GetUnsubscribePacketSize(subscriptionList,
                                     1,
@@ -2102,7 +2119,7 @@ status = MQTT_SerializeUnsubscribe(subscriptionList,
                                 remainingLength,
                                 &fixedBuffer);
 
-// Option 2: With MQTT v5 properties
+// Option 2: With MQTT v5.0 properties
 MQTTPropBuilder_t unsubscribeProperties ;
 uint8_t propBuffer[100];
 
@@ -2118,7 +2135,7 @@ MQTTUserProperty_t userProperty = {
 .pValue = "value",
 .valueLength = strlen("value")
 };
-MQTTPropAdd_UserProp(&unsubscribeProperties, &userProperty);
+MQTTPropAdd_UserProp(&unsubscribeProperties, &userProperty, &(uint8_t){ MQTT_PACKET_TYPE_UNSUBSCRIBE } );
 
 // Get remaining length first
 status = MQTT_GetUnsubscribePacketSize(subscriptionList,
@@ -2144,7 +2161,7 @@ if(status == MQTTSuccess)
 
 #### Updated `MQTT_SerializeDisconnect` API
 
-The `MQTT_SerializeDisconnect` function now includes support for MQTT v5 properties and reason codes with three additional parameters. Thus, the signature of `MQTT_SerializeDisconnect` changed
+The `MQTT_SerializeDisconnect` function now includes support for MQTT v5.0 properties and reason codes with three additional parameters. Thus, the signature of `MQTT_SerializeDisconnect` changed
 
 from
 
@@ -2156,8 +2173,8 @@ to
 
 ```c
 MQTTStatus_t MQTT_SerializeDisconnect( const MQTTPropBuilder_t *pDisconnectProperties,
-                                        MQTTSuccessFailReasonCode_t reasonCode,
-                                        size_t remainingLength,
+                                        const MQTTSuccessFailReasonCode_t * pReasonCode,
+                                        uint32_t remainingLength,
                                         const MQTTFixedBuffer_t * pFixedBuffer )
 ```
 `pDisconnectProperties` can be set to NULL if not used.
@@ -2187,28 +2204,29 @@ if(status == MQTTSuccess)
 // Variables used in this example.
 MQTTFixedBuffer_t fixedBuffer;
 uint8_t buffer[BUFFER_SIZE];
-size_t remainingLength = 0;
+uint32_t remainingLength = 0;
+uint32_t packetSize = 0;
 uint32_t maxPacketSize = pContext->connectionProperties.serverMaxPacketSize ;
 
 // Configure fixed buffer
 fixedBuffer.pBuffer = buffer;
 fixedBuffer.size = BUFFER_SIZE;
 
-// Option 1: Without MQTT v5 properties
+// Option 1: Without MQTT v5.0 properties
 // Get remaining length first
 status = MQTT_GetDisconnectPacketSize(NULL,  // No disconnect properties
                                     &remainingLength,
                                     &packetSize,
                                     maxPacketSize,
-                                    0);  // Default reason code
+                                    NULL);  // No reason code
 
 // Serialize disconnect packet
 status = MQTT_SerializeDisconnect(NULL,  // No disconnect properties
-                                0,      // Default reason code
+                                NULL,   // No reason code
                                 remainingLength,
                                 &fixedBuffer);
 
-// Option 2: With MQTT v5 properties
+// Option 2: With MQTT v5.0 properties
 MQTTPropBuilder_t disconnectProperties ;
 uint8_t propBuffer[100];
 
@@ -2218,21 +2236,23 @@ MQTTPropertyBuilder_Init(&disconnectProperties,
                         sizeof(propBuffer));
 
 // Add disconnect properties
-MQTTPropAdd_SessionExpiry(&disconnectProperties, 0);
+MQTTPropAdd_SessionExpiry(&disconnectProperties, 0, &(uint8_t){ MQTT_PACKET_TYPE_DISCONNECT } );
 MQTTPropAdd_ReasonString(&disconnectProperties,
                         "Normal shutdown",
-                        strlen("Normal shutdown"));
+                        strlen("Normal shutdown"),
+                        &(uint8_t){ MQTT_PACKET_TYPE_DISCONNECT } );
 
 // Get remaining length first
+MQTTSuccessFailReasonCode_t reason = MQTT_REASON_DISCONNECT_NORMAL_DISCONNECTION;
 status = MQTT_GetDisconnectPacketSize(&disconnectProperties,
                                     &remainingLength,
                                     &packetSize,
                                     maxPacketSize,
-                                    MQTT_REASON_DISCONNECT_NORMAL_DISCONNECTION);
+                                    &reason);
 
 // Serialize disconnect packet
 status = MQTT_SerializeDisconnect(&disconnectProperties,
-                                MQTT_REASON_DISCONNECT_NORMAL_DISCONNECTION,
+                                &reason,
                                 remainingLength,
                                 &fixedBuffer);
 
@@ -2244,7 +2264,7 @@ if(status == MQTTSuccess)
 
 #### Updated `MQTT_DeserializePublish` API
 
-The `MQTT_DeserializePublish` function now includes support for MQTT v5 properties with three additional parameters. Thus, the signature of `MQTT_DeserializePublish` changed
+The `MQTT_DeserializePublish` function now includes support for MQTT v5.0 properties with three additional parameters. Thus, the signature of `MQTT_DeserializePublish` changed
 
 from
 
@@ -2298,7 +2318,7 @@ uint16_t packetId;
 uint16_t topicAliasMax = pContext->connectionProperties.topicAliasMax ;
 uint32_t maxPacketSize = pContext->connectionProperties.maxPacketSize ;
 
-// Option 1: Without MQTT v5 properties
+// Option 1: Without MQTT v5.0 properties
 if((incomingPacket.type & 0xF0) == MQTT_PACKET_TYPE_PUBLISH)
 {
     status = MQTT_DeserializePublish(&incomingPacket,
@@ -2315,7 +2335,7 @@ if((incomingPacket.type & 0xF0) == MQTT_PACKET_TYPE_PUBLISH)
     }
 }
 
-// Option 2: With MQTT v5 properties
+// Option 2: With MQTT v5.0 properties
 MQTTPropBuilder_t propBuffer = { 0 };
 uint8_t buffer[100];
 
@@ -2356,7 +2376,7 @@ if((incomingPacket.type & 0xF0) == MQTT_PACKET_TYPE_PUBLISH)
 
 #### Updated `MQTT_DeserializeAck` API
 
-The `MQTT_DeserializeAck` function now includes support for MQTT v5 properties and reason codes with five additional parameters. Thus, the signature of `MQTT_DeserializeAck` changed
+The `MQTT_DeserializeAck` function now includes support for MQTT v5.0 properties and reason codes with five additional parameters. Thus, the signature of `MQTT_DeserializeAck` changed
 
 from
 
@@ -2422,3 +2442,9 @@ if(status == MQTTSuccess)
 
 }
 ```
+
+---
+
+> **Next step:** Once you have updated your API calls, see
+> [Moving to MQTT v5.0](MQTTv5Guide.md) to learn how to use MQTT v5.0
+> features such as properties, topic aliases, and enhanced subscriptions.
