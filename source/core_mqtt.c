@@ -2379,6 +2379,8 @@ static MQTTStatus_t receiveSingleIteration( MQTTContext_t * pContext,
         /* Handle received packet. If incomplete data was read then this will not execute. */
         if( status == MQTTSuccess )
         {
+            ( void ) memset( &pContext->ackPropsBuffer, 0, sizeof( struct MQTTPropBuilder ) );
+
             incomingPacket.pRemainingData = &pContext->networkBuffer.pBuffer[ incomingPacket.headerLength ];
 
             /* PUBLISH packets allow flags in the lower four bits. For other

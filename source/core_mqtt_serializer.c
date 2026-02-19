@@ -3081,9 +3081,6 @@ MQTTStatus_t MQTT_GetConnectPacketSize( const MQTTConnectInfo_t * pConnectInfo,
                     ( void * ) pPacketSize ) );
         status = MQTTBadParameter;
     }
-
-    /* '!=' serves as logical XOR here. It triggers the error condition when one condition
-     * is fulfilled and other is not. */
     else if( ( pConnectInfo->clientIdentifierLength == 0U ) !=
              ( ( pConnectInfo->pClientIdentifier == NULL ) || ( *( pConnectInfo->pClientIdentifier ) == '\0' ) ) )
     {
