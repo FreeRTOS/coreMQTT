@@ -990,13 +990,6 @@ static int32_t sendMessageVector( MQTTContext_t * pContext,
             /* MISRA Empty body */
         }
 
-        /* Check for timeout. */
-        if( calculateElapsedTime( pContext->getTime(), startTime ) > MQTT_SEND_TIMEOUT_MS )
-        {
-            LogError( ( "sendMessageVector: Unable to send packet: Timed out." ) );
-            break;
-        }
-
         /* Update the send pointer to the correct vector and offset. Here, it is fine
          * to cast iov_len (size_t) to int32_t since we have verified that, individually,
          * they all must be smaller than MQTT_MAX_PACKET_SIZE. */
@@ -1021,6 +1014,15 @@ static int32_t sendMessageVector( MQTTContext_t * pContext,
         {
             pIoVectIterator->iov_base = ( const void * ) &( ( ( const uint8_t * ) pIoVectIterator->iov_base )[ sendResult ] );
             pIoVectIterator->iov_len -= ( size_t ) sendResult;
+        }
+
+        /* Check for timeout. */
+        if( ( bytesSentOrError < ( int32_t ) bytesToSend ) &&
+            ( bytesSentOrError >= 0 ) &&
+            ( calculateElapsedTime( pContext->getTime(), startTime ) > MQTT_SEND_TIMEOUT_MS ) )
+        {
+            LogError( ( "sendMessageVector: Unable to send remaining packet: Timed out." ) );
+            break;
         }
     }
 
@@ -2379,8 +2381,6 @@ static MQTTStatus_t receiveSingleIteration( MQTTContext_t * pContext,
         /* Handle received packet. If incomplete data was read then this will not execute. */
         if( status == MQTTSuccess )
         {
-            ( void ) memset( &pContext->ackPropsBuffer, 0, sizeof( struct MQTTPropBuilder ) );
-
             incomingPacket.pRemainingData = &pContext->networkBuffer.pBuffer[ incomingPacket.headerLength ];
 
             /* PUBLISH packets allow flags in the lower four bits. For other

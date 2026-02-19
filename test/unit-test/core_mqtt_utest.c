@@ -6062,7 +6062,7 @@ void test_MQTT_ProcessLoop_handleIncomingAck_Error_Paths( void )
     expectProcessLoopCalls( &context, &expectParams );
 
     /* Verify that MQTTStatusNotConnected propagated when receiving a any ACK,
-     * here PUBREC but thr connection status is MQTTNotConnected. */
+     * here PUBREC but the connection status is MQTTNotConnected. */
     context.connectStatus = MQTTNotConnected;
     currentPacketType = MQTT_PACKET_TYPE_PUBREC;
     /* Set expected return values in the loop. */
@@ -6076,7 +6076,7 @@ void test_MQTT_ProcessLoop_handleIncomingAck_Error_Paths( void )
     context.connectStatus = MQTTConnected;
 
     /* Verify that MQTTStatusNotConnected propagated when receiving a any ACK,
-     * here PUBREC but thr connection status is MQTTNotConnected. */
+     * here PUBREC but the connection status is MQTTNotConnected. */
     currentPacketType = MQTT_PACKET_TYPE_PUBREC;
     /* Set expected return values in the loop. */
     resetProcessLoopParams( &expectParams );
@@ -6170,11 +6170,8 @@ void test_MQTT_ProcessLoop_handleIncomingAck_Error_PathsWithProperties( void )
     expectParams.processLoopStatus = MQTTBadResponse;
     expectProcessLoopCalls( &context, &expectParams );
 
-    /* Verify that MQTTStatusNotConnected propagated when receiving a any ACK,
-     * here PUBREC but thr connection status is MQTTNotConnected. */
-
-    /* Verify that MQTTStatusNotConnected propagated when receiving a any ACK,
-     * here PUBREC but thr connection status is MQTTNotConnected. */
+    /* Verify that MQTTStatusNotConnected propagated when receiving any ACK,
+     * here PUBREC but the connection status is MQTTNotConnected. */
     context.connectStatus = MQTTNotConnected;
     currentPacketType = MQTT_PACKET_TYPE_PUBREC;
     /* Set expected return values in the loop. */
@@ -6199,8 +6196,8 @@ void test_MQTT_ProcessLoop_handleIncomingAck_Error_PathsWithProperties( void )
     expectProcessLoopCalls( &context, &expectParams );
     context.connectStatus = MQTTConnected;
 
-    /* Verify that MQTTStatusNotConnected propagated when receiving a any ACK,
-     * here PUBREC but thr connection status is MQTTNotConnected. */
+    /* Verify that MQTTStatusNotConnected propagated when receiving any ACK,
+     * here PUBREC but the connection status is MQTTNotConnected. */
     currentPacketType = MQTT_PACKET_TYPE_PUBREC;
     /* Set expected return values in the loop. */
     resetProcessLoopParams( &expectParams );
