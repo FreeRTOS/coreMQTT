@@ -251,7 +251,7 @@ uint16_t MQTT_PubrelToResend( const MQTTContext_t * pMqttContext,
  * // Optional connect parameters are not relevant to this example.
  *
  * // Create an MQTT connection. Use 100 milliseconds as a timeout.
- * status = MQTT_Connect( pContext, &connectInfo, NULL, 100, &sessionPresent );
+ * status = MQTT_Connect( pContext, &connectInfo, NULL, 100, &sessionPresent, NULL, NULL );
  *
  * if( status == MQTTSuccess )
  * {
@@ -264,7 +264,7 @@ uint16_t MQTT_PubrelToResend( const MQTTContext_t * pMqttContext,
  *              pResendPublish = getPublish( packetID );
  *              // Set DUP flag.
  *              pResendPublish->dup = true;
- *              status = MQTT_Publish( pContext, pResendPublish, packetID );
+ *              status = MQTT_Publish( pContext, pResendPublish, packetID, NULL );
  *
  *              if( status != MQTTSuccess )
  *              {

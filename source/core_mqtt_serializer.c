@@ -1009,7 +1009,7 @@ static uint32_t getRemainingLength( TransportRecv_t recvFunc,
     uint8_t encodedByte = 0;
     int32_t bytesReceived = 0;
 
-    /* This algorithm is copied from the MQTT v3.1.1 spec. */
+    /* This algorithm is copied from the MQTT v5.0 spec (same as v3.1.1). */
     do
     {
         if( multiplier > 2097152U ) /* 128 ^ 3 */
