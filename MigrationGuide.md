@@ -379,11 +379,11 @@ status = MQTT_Init( &mqttContext,
 
 ```c
 // Callback function implementation
-static void eventCallback(
+static bool eventCallback(
     MQTTContext_t * pContext,
     MQTTPacketInfo_t * pPacketInfo,
     MQTTDeserializedInfo_t * pDeserializedInfo,
-    MQTTSuccessFailReasonCode * pReasonCode,
+    MQTTSuccessFailReasonCode_t * pReasonCode,
     MQTTPropBuilder_t * pSendPropsBuffer,
     MQTTPropBuilder_t * pGetPropsBuffer )
 {
@@ -395,22 +395,28 @@ static void eventCallback(
         /* Handle incoming publish. */
 
         /* Access publish properties if needed */
+        size_t index = 0;
         uint16_t topicAlias;
-        if( MQTTPropGet_PubTopicAlias( pGetPropsBuffer, &topicAlias ) == MQTTSuccess )
+        if( MQTTPropGet_TopicAlias( pGetPropsBuffer, &index, &topicAlias ) == MQTTSuccess )
         {
             /* Handle topic alias */
         }
     }
+    else if( pPacketInfo->type == MQTT_PACKET_TYPE_PUBREC )
+    {
+        /* PUBREC is not a terminating packet — the library will send PUBREL next.
+         * pReasonCode and pSendPropsBuffer are valid here. */
+        *pReasonCode = MQTT_REASON_PUBREL_SUCCESS;
+        MQTTPropAdd_ReasonString( pSendPropsBuffer, "Success", 7, &(uint8_t){ MQTT_PACKET_TYPE_PUBREL } );
+    }
     else
     {
-        /* Handle other packets. */
-
-        /* Add properties to outgoing ack packets if needed */
-        if( pPacketInfo->type == MQTT_PACKET_TYPE_PUBACK )
-        {
-            MQTTPropAdd_ReasonString( pSendPropsBuffer, "Success", 7, &(uint8_t){ MQTT_PACKET_TYPE_PUBACK } );
-        }
+        /* For terminating packets (PUBACK, PUBCOMP, SUBACK, UNSUBACK),
+         * pReasonCode and pSendPropsBuffer will be NULL since the library
+         * does not send a response for these. */
     }
+
+    return true;
 }
 
 // MQTT_Init call
@@ -707,7 +713,7 @@ MQTTPropertyBuilder_Init(&propertyBuilder,
                         sizeof(propertyBuffer));
 
 // Add subscription identifier property
-MQTTPropAdd_SubscribeId(&propertyBuilder, 1, &(uint8_t){ MQTT_PACKET_TYPE_SUBSCRIBE } );
+MQTTPropAdd_SubscriptionId(&propertyBuilder, 1, &(uint8_t){ MQTT_PACKET_TYPE_SUBSCRIBE } );
 
 status = MQTT_Subscribe(&mqttContext,
                     subscriptionList,
@@ -804,8 +810,8 @@ MQTTPropertyBuilder_Init(&propertyBuilder,
                         sizeof(propertyBuffer));
 
 // Add publish properties
-MQTTPropAdd_PubPayloadFormat(&propertyBuilder, 1, &(uint8_t){ MQTT_PACKET_TYPE_PUBLISH } );
-MQTTPropAdd_PubTopicAlias(&propertyBuilder, 1, &(uint8_t){ MQTT_PACKET_TYPE_PUBLISH } );
+MQTTPropAdd_PayloadFormat(&propertyBuilder, 1, &(uint8_t){ MQTT_PACKET_TYPE_PUBLISH } );
+MQTTPropAdd_TopicAlias(&propertyBuilder, 1, &(uint8_t){ MQTT_PACKET_TYPE_PUBLISH } );
 
 status = MQTT_Publish(&mqttContext,
                     &publishInfo,
@@ -1173,8 +1179,8 @@ MQTTPropertyBuilder_Init(&publishProperties,
                         sizeof(propBuffer));
 
 // Add publish properties
-MQTTPropAdd_PubTopicAlias(&publishProperties, 1, &(uint8_t){ MQTT_PACKET_TYPE_PUBLISH } );
-MQTTPropAdd_PubPayloadFormat(&publishProperties, 1, &(uint8_t){ MQTT_PACKET_TYPE_PUBLISH } );
+MQTTPropAdd_TopicAlias(&publishProperties, 1, &(uint8_t){ MQTT_PACKET_TYPE_PUBLISH } );
+MQTTPropAdd_PayloadFormat(&publishProperties, 1, &(uint8_t){ MQTT_PACKET_TYPE_PUBLISH } );
 
 // Get max packet size from CONNACK properties
 uint32_t serverMaxPacketSize = pContext->connectionProperties.serverMaxPacketSize; // Value from server
@@ -1268,7 +1274,7 @@ MQTTPropertyBuilder_Init(&subscribeProperties,
                         sizeof(propBuffer));
 
 // Add subscription identifier
-MQTTPropAdd_SubscribeId(&subscribeProperties, 1, &(uint8_t){ MQTT_PACKET_TYPE_SUBSCRIBE } );
+MQTTPropAdd_SubscriptionId(&subscribeProperties, 1, &(uint8_t){ MQTT_PACKET_TYPE_SUBSCRIBE } );
 
 // Get max packet size from CONNACK properties
 uint32_t serverMaxPacketSize = pContext->connectionProperties.serverMaxPacketSize; // value from server
@@ -1717,9 +1723,9 @@ MQTTPropertyBuilder_Init(&publishProperties,
                         sizeof(propBuffer));
 
 // Add publish properties
-MQTTPropAdd_PubPayloadFormat(&publishProperties, 1, &(uint8_t){ MQTT_PACKET_TYPE_PUBLISH } );
-MQTTPropAdd_PubTopicAlias(&publishProperties, 1, &(uint8_t){ MQTT_PACKET_TYPE_PUBLISH } );
-MQTTPropAdd_PubMessageExpiry(&publishProperties, 3600, &(uint8_t){ MQTT_PACKET_TYPE_PUBLISH } );
+MQTTPropAdd_PayloadFormat(&publishProperties, 1, &(uint8_t){ MQTT_PACKET_TYPE_PUBLISH } );
+MQTTPropAdd_TopicAlias(&publishProperties, 1, &(uint8_t){ MQTT_PACKET_TYPE_PUBLISH } );
+MQTTPropAdd_MessageExpiry(&publishProperties, 3600, &(uint8_t){ MQTT_PACKET_TYPE_PUBLISH } );
 
 // Get remaining length first
 status = MQTT_GetPublishPacketSize(&publishInfo,
@@ -1857,9 +1863,9 @@ MQTTPropertyBuilder_Init(&publishProperties,
                         sizeof(propBuffer));
 
 // Add publish properties
-MQTTPropAdd_PubPayloadFormat(&publishProperties, 1, &(uint8_t){ MQTT_PACKET_TYPE_PUBLISH } );
-MQTTPropAdd_PubTopicAlias(&publishProperties, 1, &(uint8_t){ MQTT_PACKET_TYPE_PUBLISH } );
-MQTTPropAdd_PubMessageExpiry(&publishProperties, 3600, &(uint8_t){ MQTT_PACKET_TYPE_PUBLISH } );
+MQTTPropAdd_PayloadFormat(&publishProperties, 1, &(uint8_t){ MQTT_PACKET_TYPE_PUBLISH } );
+MQTTPropAdd_TopicAlias(&publishProperties, 1, &(uint8_t){ MQTT_PACKET_TYPE_PUBLISH } );
+MQTTPropAdd_MessageExpiry(&publishProperties, 3600, &(uint8_t){ MQTT_PACKET_TYPE_PUBLISH } );
 
 // Get remaining length first
 status = MQTT_GetPublishPacketSize(&publishInfo,
@@ -1997,7 +2003,7 @@ MQTTPropertyBuilder_Init(&subscribeProperties,
                         sizeof(propBuffer));
 
 // Add subscription identifier
-MQTTPropAdd_SubscribeId(&subscribeProperties, 1, &(uint8_t){ MQTT_PACKET_TYPE_SUBSCRIBE } );
+MQTTPropAdd_SubscriptionId(&subscribeProperties, 1, &(uint8_t){ MQTT_PACKET_TYPE_SUBSCRIBE } );
 
 // Get remaining length first
 status = MQTT_GetSubscribePacketSize(subscriptionList,
@@ -2356,14 +2362,15 @@ if((incomingPacket.type & 0xF0) == MQTT_PACKET_TYPE_PUBLISH)
     if(status == MQTTSuccess)
     {
         // Access publish properties if needed
+        size_t propIndex = 0;
         uint8_t payloadFormat;
-        if(MQTTPropGet_PubPayloadFormat(&propBuffer, &payloadFormat) == MQTTSuccess)
+        if(MQTTPropGet_PayloadFormatIndicator(&propBuffer, &propIndex, &payloadFormat) == MQTTSuccess)
         {
             // Handle payload format
         }
 
         uint16_t topicAlias;
-        if(MQTTPropGet_PubTopicAlias(&propBuffer, &topicAlias) == MQTTSuccess)
+        if(MQTTPropGet_TopicAlias(&propBuffer, &propIndex, &topicAlias) == MQTTSuccess)
         {
             // Handle topic alias
         }

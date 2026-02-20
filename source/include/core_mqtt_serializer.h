@@ -2452,6 +2452,11 @@ MQTTStatus_t updateContextWithConnectProps( const MQTTPropBuilder_t * pPropBuild
  * not advanced by this function - use the appropriate MQTTPropGet_* function
  * to retrieve the property value and advance the index.
  *
+ * @warning When iterating through properties in a loop, every property returned
+ * by this function MUST be consumed by either calling the corresponding
+ * MQTTPropGet_* function or #MQTT_SkipNextProperty. Failing to do so will leave
+ * the index unchanged, causing an infinite loop.
+ *
  * @param[in] pPropertyBuilder Property builder containing the properties.
  * @param[in] currentIndex Current index in the property builder buffer.
  * @param[out] property Pointer to store the property type identifier.
@@ -2472,6 +2477,11 @@ MQTTStatus_t MQTT_GetNextPropertyType( const MQTTPropBuilder_t * pPropertyBuilde
  * is within bounds, but does not extract or return the property value. This is useful
  * for iterating through properties when only specific properties need to be extracted.
  *
+ * @warning When iterating through properties with #MQTT_GetNextPropertyType, you MUST
+ * call this function for any property you do not handle with a MQTTPropGet_* function.
+ * Without this, the index will not advance past the unhandled property, resulting in
+ * an infinite loop.
+ *
  * @param[in] pPropertyBuilder Pointer to the property builder containing the properties.
  * @param[in,out] currentIndex Pointer to the current index in the property buffer.
  *                             On success, updated to point to the next property.
@@ -2487,7 +2497,7 @@ MQTTStatus_t MQTT_GetNextPropertyType( const MQTTPropBuilder_t * pPropertyBuilde
  * // Variables used in this example.
  * MQTTStatus_t status;
  * MQTTPropBuilder_t propertyBuilder = { 0 };
- * uint32_t currentIndex = 0;
+ * size_t currentIndex = 0;
  * uint8_t propertyType;
  *
  * // Initialize property builder with received properties

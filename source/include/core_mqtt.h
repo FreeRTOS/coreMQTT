@@ -103,9 +103,13 @@ typedef uint32_t ( * MQTTGetCurrentTimeFunc_t )( void );
  * @param[in] pContext Initialized MQTT context.
  * @param[in] pPacketInfo Information on the type of incoming MQTT packet.
  * @param[in] pDeserializedInfo Deserialized information from incoming packet.
- * @param[out] pReasonCode Reason code for the incoming packet.
- * @param[out] pSendPropsBuffer Properties to be sent in the outgoing packet.
- * @param[in] pGetPropsBuffer Properties to be received in the incoming packet.
+ * @param[out] pReasonCode Reason code for the outgoing acknowledgment. Will be NULL
+ *             for terminating packets (PUBACK, PUBCOMP, SUBACK, UNSUBACK) where the
+ *             library does not send a response with a reason code.
+ * @param[out] pSendPropsBuffer Properties to be sent in the outgoing acknowledgment.
+ *             Will be NULL for terminating packets (PUBACK, PUBCOMP, SUBACK, UNSUBACK)
+ *             where the library does not send a response with properties.
+ * @param[in] pGetPropsBuffer Properties received in the incoming packet.
  *
  * @note Get optional properties of incoming packets by calling these functions:
  *
@@ -148,6 +152,11 @@ typedef uint32_t ( * MQTTGetCurrentTimeFunc_t )( void );
  *  - #MQTTPropGet_ReasonString
  *  - #MQTTPropGet_UserProp
  *  - #MQTTPropGet_ServerRef
+ *
+ * @warning When iterating through properties in pGetPropsBuffer using
+ * #MQTT_GetNextPropertyType, every property MUST be consumed by either calling
+ * the corresponding MQTTPropGet_* function or #MQTT_SkipNextProperty. Failing
+ * to advance the index past an unhandled property will cause an infinite loop.
  *
  * @note Add optional properties to outgoing publish ack packets by calling these functions:
  *
@@ -842,7 +851,7 @@ MQTTStatus_t MQTT_CheckConnectStatus( const MQTTContext_t * pContext );
  * status = MQTTPropertyBuilder_Init( &willPropsBuilder, willPropsBuffer, willPropsBufferLength );
  *
  * // Set a property in the willPropsBuilder
- * status = MQTTPropAdd_PubPayloadFormat( &willPropsBuilder, 1, NULL);
+ * status = MQTTPropAdd_PayloadFormat( &willPropsBuilder, 1, NULL);
  *
  * // Send the connect packet. Use 100 ms as the timeout to wait for the CONNACK packet.
  * status = MQTT_Connect( pContext, &connectInfo, &willInfo, 100, &sessionPresent, &connectPropsBuilder, &willPropsBuilder );
@@ -993,7 +1002,7 @@ MQTTStatus_t MQTT_Subscribe( MQTTContext_t * pContext,
  * status = MQTTPropertyBuilder_Init( &propertyBuilder, propertyBuffer, propertyBufferLength );
  *
  * // Set a property in the propertyBuilder
- * status = MQTTPropAdd_PubPayloadFormat( &propertyBuilder, 1, &(uint8_t){ MQTT_PACKET_TYPE_PUBLISH });
+ * status = MQTTPropAdd_PayloadFormat( &propertyBuilder, 1, &(uint8_t){ MQTT_PACKET_TYPE_PUBLISH });
  *
  * // Packet ID is needed for QoS > 0.
  * packetId = MQTT_GetPacketId( pContext );

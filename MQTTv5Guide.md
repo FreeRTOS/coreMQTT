@@ -110,6 +110,9 @@ bool eventCallback(MQTTContext_t *pContext,
                    MQTTPropBuilder_t *pGetPropsBuffer)            // NEW: Properties received
 {
     // Handle events
+    // NOTE: pReasonCode and pSendPropsBuffer will be NULL for terminating
+    // packets (PUBACK, PUBCOMP, SUBACK, UNSUBACK) since the library does
+    // not send a response for these. Always check before dereferencing.
     return true;  // Return true if processed successfully
 }
 ```
@@ -302,7 +305,7 @@ uint8_t propBuffer[500];
 status = MQTTPropertyBuilder_Init(&propBuilder, propBuffer, sizeof(propBuffer));
 ```
 
-2. **Add properties using MQTTPropAdd_* functions:**
+2. **Add properties using `MQTTPropAdd_*` functions:**
 ```c
 // Add session expiry
 uint32_t sessionExpiry = 3600;  // 1 hour
@@ -398,7 +401,12 @@ bool eventCallback(MQTTContext_t *pContext,
                     // Use userProp
                     break;
                 }
-                // Handle other properties...
+                default:
+                    // IMPORTANT: For any property you don't handle, you MUST call
+                    // MQTT_SkipNextProperty to advance the index past it. Without
+                    // this, the index will not move and the loop will never terminate.
+                    MQTT_SkipNextProperty(pGetPropsBuffer, &index);
+                    break;
             }
         }
     }

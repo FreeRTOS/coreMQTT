@@ -105,11 +105,6 @@ connectInfo.userNameLength = USERNAME_STRING_LENGTH;
 mqttStatus = MQTT_Connect( pMqttContext, &connectInfo, NULL, CONNACK_RECV_TIMEOUT_MS, pSessionPresent, NULL, NULL );
 ```
 
-## Upgrading to v2.x
-
-With coreMQTT versions v2.x, there are breaking changes. Please refer to the
-[coreMQTT version v2.x Migration Guide](MigrationGuide.md).
-
 ## Upgrading to v5.0.0
 
 coreMQTT v5.0.0 adds MQTT v5.0 protocol support with breaking API changes.
@@ -123,6 +118,11 @@ coreMQTT v5.0.0 adds MQTT v5.0 protocol support with breaking API changes.
 > **Note:** If you are upgrading from coreMQTT v1.x, apply the
 > [v2.x migration changes](MigrationGuide.md#coremqtt-version-v2x-migration-guide)
 > first, then the v5.0.0 changes.
+
+## Upgrading to v2.x
+
+With coreMQTT versions v2.x, there are breaking changes. Please refer to the
+[coreMQTT version v2.x Migration Guide](MigrationGuide.md).
 
 ## Building the Library
 
