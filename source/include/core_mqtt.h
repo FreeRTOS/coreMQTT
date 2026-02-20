@@ -48,7 +48,7 @@
  * If MQTT_LIBRARY_VERSION ends with + it represents the version in development
  * after the numbered release.
  */
-#define MQTT_LIBRARY_VERSION    "v2.3.1+"
+#define MQTT_LIBRARY_VERSION    "v5.0.0"
 /** @endcond */
 
 /**
@@ -103,9 +103,13 @@ typedef uint32_t ( * MQTTGetCurrentTimeFunc_t )( void );
  * @param[in] pContext Initialized MQTT context.
  * @param[in] pPacketInfo Information on the type of incoming MQTT packet.
  * @param[in] pDeserializedInfo Deserialized information from incoming packet.
- * @param[out] pReasonCode Reason code for the incoming packet.
- * @param[out] pSendPropsBuffer Properties to be sent in the outgoing packet.
- * @param[in] pGetPropsBuffer Properties to be received in the incoming packet.
+ * @param[out] pReasonCode Reason code for the outgoing acknowledgment. Will be NULL
+ *             for terminating packets (PUBACK, PUBCOMP, SUBACK, UNSUBACK) where the
+ *             library does not send a response with a reason code.
+ * @param[out] pSendPropsBuffer Properties to be sent in the outgoing acknowledgment.
+ *             Will be NULL for terminating packets (PUBACK, PUBCOMP, SUBACK, UNSUBACK)
+ *             where the library does not send a response with properties.
+ * @param[in] pGetPropsBuffer Properties received in the incoming packet.
  *
  * @note Get optional properties of incoming packets by calling these functions:
  *
@@ -148,6 +152,11 @@ typedef uint32_t ( * MQTTGetCurrentTimeFunc_t )( void );
  *  - #MQTTPropGet_ReasonString
  *  - #MQTTPropGet_UserProp
  *  - #MQTTPropGet_ServerRef
+ *
+ * @warning When iterating through properties in pGetPropsBuffer using
+ * #MQTT_GetNextPropertyType, every property MUST be consumed by either calling
+ * the corresponding MQTTPropGet_* function or #MQTT_SkipNextProperty. Failing
+ * to advance the index past an unhandled property will cause an infinite loop.
  *
  * @note Add optional properties to outgoing publish ack packets by calling these functions:
  *
@@ -440,10 +449,13 @@ typedef struct MQTTDeserializedInfo
  * // Function for obtaining a timestamp.
  * uint32_t getTimeStampMs();
  * // Callback function for receiving packets.
- * void eventCallback(
+ * bool eventCallback(
  *      MQTTContext_t * pContext,
  *      MQTTPacketInfo_t * pPacketInfo,
- *      MQTTDeserializedInfo_t * pDeserializedInfo
+ *      MQTTDeserializedInfo_t * pDeserializedInfo,
+ *      MQTTSuccessFailReasonCode_t * pReasonCode,
+ *      MQTTPropBuilder_t * pSendPropsBuffer,
+ *      MQTTPropBuilder_t * pGetPropsBuffer
  * );
  * // Network send.
  * int32_t networkSend( NetworkContext_t * pContext, const void * pBuffer, size_t bytes );
@@ -464,6 +476,7 @@ typedef struct MQTTDeserializedInfo
  * transport.pNetworkContext = &someTransportContext;
  * transport.send = networkSend;
  * transport.recv = networkRecv;
+ * transport.writev = NULL;
  *
  * // Set buffer members.
  * fixedBuffer.pBuffer = buffer;
@@ -512,10 +525,13 @@ MQTTStatus_t MQTT_Init( MQTTContext_t * pContext,
  * // Function for obtaining a timestamp.
  * uint32_t getTimeStampMs();
  * // Callback function for receiving packets.
- * void eventCallback(
+ * bool eventCallback(
  *      MQTTContext_t * pContext,
  *      MQTTPacketInfo_t * pPacketInfo,
- *      MQTTDeserializedInfo_t * pDeserializedInfo
+ *      MQTTDeserializedInfo_t * pDeserializedInfo,
+ *      MQTTSuccessFailReasonCode_t * pReasonCode,
+ *      MQTTPropBuilder_t * pSendPropsBuffer,
+ *      MQTTPropBuilder_t * pGetPropsBuffer
  * );
  * // Network send.
  * int32_t networkSend( NetworkContext_t * pContext, const void * pBuffer, size_t bytes );
@@ -536,6 +552,7 @@ MQTTStatus_t MQTT_Init( MQTTContext_t * pContext,
  * transport.pNetworkContext = &someTransportContext;
  * transport.send = networkSend;
  * transport.recv = networkRecv;
+ * transport.writev = NULL;
  *
  * // Set buffer members.
  * fixedBuffer.pBuffer = buffer;
@@ -591,10 +608,13 @@ MQTTStatus_t MQTT_InitStatefulQoS( MQTTContext_t * pContext,
  * // Function for obtaining a timestamp.
  * uint32_t getTimeStampMs();
  * // Callback function for receiving packets.
- * void eventCallback(
+ * bool eventCallback(
  *      MQTTContext_t * pContext,
  *      MQTTPacketInfo_t * pPacketInfo,
- *      MQTTDeserializedInfo_t * pDeserializedInfo
+ *      MQTTDeserializedInfo_t * pDeserializedInfo,
+ *      MQTTSuccessFailReasonCode_t * pReasonCode,
+ *      MQTTPropBuilder_t * pSendPropsBuffer,
+ *      MQTTPropBuilder_t * pGetPropsBuffer
  * );
  * // Network send.
  * int32_t networkSend( NetworkContext_t * pContext, const void * pBuffer, size_t bytes );
@@ -629,6 +649,7 @@ MQTTStatus_t MQTT_InitStatefulQoS( MQTTContext_t * pContext,
  * transport.pNetworkContext = &someTransportContext;
  * transport.send = networkSend;
  * transport.recv = networkRecv;
+ * transport.writev = NULL;
  *
  * // Set buffer members.
  * fixedBuffer.pBuffer = buffer;
@@ -640,7 +661,10 @@ MQTTStatus_t MQTT_InitStatefulQoS( MQTTContext_t * pContext,
  * {
  *      // We do not expect any incoming publishes in this example, therefore the incoming
  *      // publish pointer is NULL and the count is zero.
- *      status = MQTT_InitStatefulQoS( &mqttContext, outgoingPublishes, outgoingPublishCount, NULL, 0 );
+ *      uint8_t ackPropsBuf[ 500 ];
+ *      size_t ackPropsBufLength = sizeof( ackPropsBuf );
+ *      status = MQTT_InitStatefulQoS( &mqttContext, outgoingPublishes, outgoingPublishCount,
+ *                                     NULL, 0, ackPropsBuf, ackPropsBufLength );
  *
  *      // Now QoS1 and/or QoS2 publishes can be sent with this context.
  * }
@@ -811,7 +835,7 @@ MQTTStatus_t MQTT_CheckConnectStatus( const MQTTContext_t * pContext );
  *
  *   // Set a property in the connectPropsBuilder
  * uint32_t maxPacketSize = 100 ;
- * status = MQTTPropAdd_ConnMaxPacketSize(&connectPropsBuilder, maxPacketSize);
+ * status = MQTTPropAdd_MaxPacketSize(&connectPropsBuilder, maxPacketSize, &(uint8_t){ MQTT_PACKET_TYPE_CONNECT });
  *
  * // The last will and testament is optional, it will be published by the broker
  * // should this client disconnect without sending a DISCONNECT packet.
@@ -827,7 +851,7 @@ MQTTStatus_t MQTT_CheckConnectStatus( const MQTTContext_t * pContext );
  * status = MQTTPropertyBuilder_Init( &willPropsBuilder, willPropsBuffer, willPropsBufferLength );
  *
  * // Set a property in the willPropsBuilder
- * status = MQTTPropAdd_PubPayloadFormat( &willPropsBuilder, 1);
+ * status = MQTTPropAdd_PayloadFormat( &willPropsBuilder, 1, NULL);
  *
  * // Send the connect packet. Use 100 ms as the timeout to wait for the CONNACK packet.
  * status = MQTT_Connect( pContext, &connectInfo, &willInfo, 100, &sessionPresent, &connectPropsBuilder, &willPropsBuilder );
@@ -901,12 +925,12 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
  * size_t propertyBufferLength = sizeof( propertyBuffer );
  * status = MQTTPropertyBuilder_Init( &propertyBuilder, propertyBuffer, propertyBufferLength );
  *
- * status = MQTTPropAdd_SubscriptionId(&propertyBuilder, 1);
+ * status = MQTTPropAdd_SubscriptionId(&propertyBuilder, 1, &(uint8_t){ MQTT_PACKET_TYPE_SUBSCRIBE });
  *
  * // Obtain a new packet id for the subscription.
  * packetId = MQTT_GetPacketId( pContext );
  *
- * status = MQTT_Subscribe( pContext, &subscriptionList[ 0 ], NUMBER_OF_SUBSCRIPTIONS, packetId, propertyBuilder );
+ * status = MQTT_Subscribe( pContext, &subscriptionList[ 0 ], NUMBER_OF_SUBSCRIPTIONS, packetId, &propertyBuilder );
  *
  * if( status == MQTTSuccess )
  * {
@@ -978,7 +1002,7 @@ MQTTStatus_t MQTT_Subscribe( MQTTContext_t * pContext,
  * status = MQTTPropertyBuilder_Init( &propertyBuilder, propertyBuffer, propertyBufferLength );
  *
  * // Set a property in the propertyBuilder
- * status = MQTTPropAdd_PubPayloadFormat( &propertyBuilder, 1);
+ * status = MQTTPropAdd_PayloadFormat( &propertyBuilder, 1, &(uint8_t){ MQTT_PACKET_TYPE_PUBLISH });
  *
  * // Packet ID is needed for QoS > 0.
  * packetId = MQTT_GetPacketId( pContext );
@@ -1095,9 +1119,9 @@ MQTTStatus_t MQTT_Ping( MQTTContext_t * pContext );
  * userProperty.pKey = "key";
  * userProperty.keyLength = strlen( userProperty.pKey );
  * userProperty.pValue = "value";
- * *userProperty.valueLength = strlen( userProperty.pValue );
+ * userProperty.valueLength = strlen( userProperty.pValue );
  *
- * status = MQTTPropAdd_UserProp( &propertyBuilder,&userProperty);
+ * status = MQTTPropAdd_UserProp( &propertyBuilder, &userProperty, &(uint8_t){ MQTT_PACKET_TYPE_UNSUBSCRIBE });
  *
  * status = MQTT_Unsubscribe( pContext, &unsubscribeList[ 0 ], NUMBER_OF_SUBSCRIPTIONS, packetId, &propertyBuilder );
  *
@@ -1154,9 +1178,10 @@ MQTTStatus_t MQTT_Unsubscribe( MQTTContext_t * pContext,
  * status = MQTTPropertyBuilder_Init( &propertyBuilder, propertyBuffer, propertyBufferLength );
  *
  * // Set a property in the propertyBuilder
- * status = MQTTPropAdd_ReasonString( &propertyBuilder, "Disconnecting", 12);
+ * status = MQTTPropAdd_ReasonString( &propertyBuilder, "Disconnecting", 13, &(uint8_t){ MQTT_PACKET_TYPE_DISCONNECT });
  *
- * status = MQTT_Disconnect( pContext, &propertyBuilder, MQTT_REASON_DISCONNECT_NORMAL_DISCONNECTION );
+ * MQTTSuccessFailReasonCode_t reason = MQTT_REASON_DISCONNECT_NORMAL_DISCONNECTION;
+ * status = MQTT_Disconnect( pContext, &propertyBuilder, &reason );
  *
  * if( status == MQTTSuccess )
  * {

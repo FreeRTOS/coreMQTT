@@ -1484,18 +1484,18 @@ MQTTStatus_t MQTT_SerializeAck( const MQTTFixedBuffer_t * pFixedBuffer,
  *
  * // Variables used in this example.
  * MQTTStatus_t status;
- * size_t remainingLength = 0;
- * size_t packetSize = 0;
+ * uint32_t remainingLength = 0;
+ * uint32_t packetSize = 0;
  * uint32_t maxPacketSize;
  * MQTTPropBuilder_t disconnectProperties ;
- * MQTTSuccessFailReasonCode_t reasonCode;
+ * MQTTSuccessFailReasonCode_t reasonCode = MQTT_REASON_DISCONNECT_NORMAL_DISCONNECTION;
  *
  * //Set property builder. The details are out of scope for this example.
  * initializePropertyBuilder( &disconnectProperties );
  *
  * //Set the parameters.
  * // Get the size requirement for the disconnect packet.
- * status = MQTT_GetDisconnectPacketSize( &disconnectProperties, &remainingLength,&packetSize,maxPacketSize, reasonCode );
+ * status = MQTT_GetDisconnectPacketSize( &disconnectProperties, &remainingLength, &packetSize, maxPacketSize, &reasonCode );
  *
  * if( status == MQTTSuccess )
  * {
@@ -1538,22 +1538,24 @@ MQTTStatus_t MQTT_GetDisconnectPacketSize( const MQTTPropBuilder_t * pDisconnect
  * MQTTFixedBuffer_t fixedBuffer;
  * MQTTPropBuilder_t disconnectProperties = { 0 };
  * uint8_t buffer[ BUFFER_SIZE ];
- * size_t remainingLength = 0, packetSize = 0;
+ * uint32_t remainingLength = 0, packetSize = 0;
  *
  * fixedBuffer.pBuffer = buffer;
  * fixedBuffer.size = BUFFER_SIZE;
  *
+ * MQTTSuccessFailReasonCode_t reasonCode = MQTT_REASON_DISCONNECT_NORMAL_DISCONNECTION;
  * // Get the disconnect packet size.
  * status = MQTT_GetDisconnectPacketSize( &disconnectProperties,
- *                                        MQTT_REASON_DISCONNECT_NORMAL_DISCONNECTION,
  *                                        &remainingLength,
- *                                        &packetSize );
+ *                                        &packetSize,
+ *                                        MQTT_MAX_REMAINING_LENGTH,
+ *                                        &reasonCode );
  * assert( status == MQTTSuccess );
  * assert( packetSize <= BUFFER_SIZE );
  *
  * // Serialize the disconnect into the fixed buffer.
  * status = MQTT_SerializeDisconnect( &disconnectProperties,
- *                                   MQTT_REASON_DISCONNECT_NORMAL_DISCONNECTION,
+ *                                   &reasonCode,
  *                                   remainingLength,
  *                                   &fixedBuffer );
  *
@@ -1582,7 +1584,7 @@ MQTTStatus_t MQTT_SerializeDisconnect( const MQTTPropBuilder_t * pDisconnectProp
  *
  * // Variables used in this example.
  * MQTTStatus_t status;
- * size_t packetSize = 0;
+ * uint32_t packetSize = 0;
  *
  * // Get the size requirement for the ping request packet.
  * status = MQTT_GetPingreqPacketSize( &packetSize );
@@ -1979,10 +1981,10 @@ MQTTStatus_t MQTT_ValidateConnectProperties( const MQTTPropBuilder_t * pProperty
  * // Variables used in this example.
  * MQTTStatus_t status;
  * MQTTPropBuilder_t propertyBuilder ; // Assume this is initialized properly
- * size_t subscriptionId = 12345;
+ * uint32_t subscriptionId = 12345;
  *
  * // Add Subscription Identifier to property builder
- * status = MQTTPropAdd_SubscriptionId(&propertyBuilder, subscriptionId);
+ * status = MQTTPropAdd_SubscriptionId(&propertyBuilder, subscriptionId, &(uint8_t){ MQTT_PACKET_TYPE_SUBSCRIBE });
  *
  * if(status == MQTTSuccess)
  * {
@@ -2450,6 +2452,11 @@ MQTTStatus_t updateContextWithConnectProps( const MQTTPropBuilder_t * pPropBuild
  * not advanced by this function - use the appropriate MQTTPropGet_* function
  * to retrieve the property value and advance the index.
  *
+ * @warning When iterating through properties in a loop, every property returned
+ * by this function MUST be consumed by either calling the corresponding
+ * MQTTPropGet_* function or #MQTT_SkipNextProperty. Failing to do so will leave
+ * the index unchanged, causing an infinite loop.
+ *
  * @param[in] pPropertyBuilder Property builder containing the properties.
  * @param[in] currentIndex Current index in the property builder buffer.
  * @param[out] property Pointer to store the property type identifier.
@@ -2470,6 +2477,11 @@ MQTTStatus_t MQTT_GetNextPropertyType( const MQTTPropBuilder_t * pPropertyBuilde
  * is within bounds, but does not extract or return the property value. This is useful
  * for iterating through properties when only specific properties need to be extracted.
  *
+ * @warning When iterating through properties with #MQTT_GetNextPropertyType, you MUST
+ * call this function for any property you do not handle with a MQTTPropGet_* function.
+ * Without this, the index will not advance past the unhandled property, resulting in
+ * an infinite loop.
+ *
  * @param[in] pPropertyBuilder Pointer to the property builder containing the properties.
  * @param[in,out] currentIndex Pointer to the current index in the property buffer.
  *                             On success, updated to point to the next property.
@@ -2485,7 +2497,7 @@ MQTTStatus_t MQTT_GetNextPropertyType( const MQTTPropBuilder_t * pPropertyBuilde
  * // Variables used in this example.
  * MQTTStatus_t status;
  * MQTTPropBuilder_t propertyBuilder = { 0 };
- * uint32_t currentIndex = 0;
+ * size_t currentIndex = 0;
  * uint8_t propertyType;
  *
  * // Initialize property builder with received properties
