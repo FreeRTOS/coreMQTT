@@ -1623,7 +1623,10 @@ static MQTTStatus_t sendPublishAcksWithProperty( MQTTContext_t * pContext,
 
     if( packetTypeByte != 0U )
     {
-        status = MQTT_ValidatePublishAckProperties( &pContext->ackPropsBuffer );
+        if( pContext->ackPropsBuffer.currentIndex > 0U )
+        {
+            status = MQTT_ValidatePublishAckProperties( &pContext->ackPropsBuffer );
+        }
 
         if( status == MQTTSuccess )
         {
@@ -1823,7 +1826,7 @@ static MQTTStatus_t handleIncomingPublish( MQTTContext_t * pContext,
     MQTTDeserializedInfo_t deserializedInfo;
     bool duplicatePublish = false;
     MQTTPropBuilder_t propBuffer = { 0 };
-    MQTTSuccessFailReasonCode_t reasonCode;
+    MQTTSuccessFailReasonCode_t reasonCode = MQTT_INVALID_REASON_CODE;
     bool ackPropsAdded = false;
 
     assert( pContext != NULL );
@@ -1935,14 +1938,16 @@ static MQTTStatus_t handleIncomingPublish( MQTTContext_t * pContext,
         if( duplicatePublish == false )
         {
             MQTTPropBuilder_t * pTempPropBuffer = NULL;
+            MQTTSuccessFailReasonCode_t * pTempReasonCode = NULL;
 
             if( publishInfo.qos > MQTTQoS0 )
             {
-                pTempPropBuffer = &pContext->ackPropsBuffer;
+                pTempPropBuffer = &( pContext->ackPropsBuffer );
+                pTempReasonCode = &reasonCode;
             }
 
             if( pContext->appCallback( pContext, pIncomingPacket, &deserializedInfo,
-                                       &reasonCode, pTempPropBuffer, &propBuffer ) == false )
+                                       pTempReasonCode, pTempPropBuffer, &propBuffer ) == false )
             {
                 /* TODO: Figure out whether this should block the library
                  * from processing any more packets. */
@@ -1950,9 +1955,9 @@ static MQTTStatus_t handleIncomingPublish( MQTTContext_t * pContext,
             }
             else if( publishInfo.qos > MQTTQoS0 )
             {
-                if( ( pTempPropBuffer->pBuffer != NULL ) &&
-                    ( CHECK_SIZE_T_OVERFLOWS_32BIT( pTempPropBuffer->currentIndex ) ||
-                      ( pTempPropBuffer->currentIndex >= MQTT_REMAINING_LENGTH_INVALID ) ) )
+                if( ( pContext->ackPropsBuffer.pBuffer != NULL ) &&
+                    ( CHECK_SIZE_T_OVERFLOWS_32BIT( pContext->ackPropsBuffer.currentIndex ) ||
+                      ( pContext->ackPropsBuffer.currentIndex >= MQTT_REMAINING_LENGTH_INVALID ) ) )
                 {
                     status = MQTTSendFailed;
                     LogError( ( "Length of properties to be sent must be less than 268435456." ) );
@@ -2005,7 +2010,9 @@ static MQTTStatus_t handlePublishAcks( MQTTContext_t * pContext,
     MQTTEventCallback_t appCallback;
     MQTTDeserializedInfo_t deserializedInfo;
     MQTTPropBuilder_t propBuffer = { 0 };
-    MQTTSuccessFailReasonCode_t reasonCode;
+    MQTTPropBuilder_t * pSendProps;
+    MQTTSuccessFailReasonCode_t * pSendReasonCode;
+    MQTTSuccessFailReasonCode_t reasonCode = MQTT_INVALID_REASON_CODE;
     bool ackPropsAdded;
 
     MQTTReasonCodeInfo_t incomingReasonCode = { 0 };
@@ -2071,14 +2078,25 @@ static MQTTStatus_t handlePublishAcks( MQTTContext_t * pContext,
         deserializedInfo.pPublishInfo = NULL;
         deserializedInfo.pReasonCode = &incomingReasonCode;
 
+        if( ( ackType == MQTTPuback ) || ( ackType == MQTTPubcomp ) )
+        {
+            /* This is the last packet in PUB-ACK sequence - we will set these
+             * to NULL. */
+            pSendProps = NULL;
+            pSendReasonCode = NULL;
+        }
+        else
+        {
+            /* We need to send a response back to the server. Provide application with
+             * space to add data. */
+            pSendProps = &pContext->ackPropsBuffer;
+            pSendReasonCode = &reasonCode;
+        }
 
         /* Invoke application callback to hand the buffer over to application
          * before sending acks. */
-
-        reasonCode = MQTT_INVALID_REASON_CODE;
-
-        if( appCallback( pContext, pIncomingPacket, &deserializedInfo, &reasonCode,
-                         &pContext->ackPropsBuffer, &propBuffer ) == false )
+        if( appCallback( pContext, pIncomingPacket, &deserializedInfo, pSendReasonCode,
+                         pSendProps, &propBuffer ) == false )
         {
             /* TODO: verify whether this should block the recv thread? */
             status = MQTTEventCallbackFailed;
@@ -2130,13 +2148,7 @@ static MQTTStatus_t handleIncomingAck( MQTTContext_t * pContext,
     uint16_t packetIdentifier = MQTT_PACKET_ID_INVALID;
     MQTTDeserializedInfo_t deserializedInfo;
 
-    /* We should always invoke the app callback unless we receive a PINGRESP
-     * and are managing keep alive, or if we receive an unknown packet. We
-     * initialize this to false since the callback must be invoked before
-     * sending any PUBREL or PUBCOMP. However, for other cases, we invoke it
-     * at the end to reduce the complexity of this function. */
-    bool invokeAppCallback = false;
-    MQTTEventCallback_t appCallback = NULL;
+    MQTTEventCallback_t appCallback;
 
     assert( pContext != NULL );
     assert( pIncomingPacket != NULL );
@@ -2166,11 +2178,26 @@ static MQTTStatus_t handleIncomingAck( MQTTContext_t * pContext,
                                           NULL,
                                           NULL,
                                           &pContext->connectionProperties );
-            invokeAppCallback = ( status == MQTTSuccess ) && !manageKeepAlive;
 
-            if( ( status == MQTTSuccess ) && ( manageKeepAlive == true ) )
+            if( status == MQTTSuccess )
             {
-                pContext->waitingForPingResp = false;
+                if( manageKeepAlive == true )
+                {
+                    pContext->waitingForPingResp = false;
+                }
+                else
+                {
+                    /* Set fields of deserialized struct. */
+                    deserializedInfo.packetIdentifier = packetIdentifier;
+                    deserializedInfo.deserializationResult = status;
+                    deserializedInfo.pPublishInfo = NULL;
+
+                    if( appCallback( pContext, pIncomingPacket, &deserializedInfo, NULL,
+                                     NULL, NULL ) == false )
+                    {
+                        status = MQTTEventCallbackFailed;
+                    }
+                }
             }
 
             break;
@@ -2187,20 +2214,6 @@ static MQTTStatus_t handleIncomingAck( MQTTContext_t * pContext,
                         ( unsigned int ) pIncomingPacket->type ) );
             status = MQTTBadResponse;
             break;
-    }
-
-    if( invokeAppCallback == true )
-    {
-        /* Set fields of deserialized struct. */
-        deserializedInfo.packetIdentifier = packetIdentifier;
-        deserializedInfo.deserializationResult = status;
-        deserializedInfo.pPublishInfo = NULL;
-
-        if( appCallback( pContext, pIncomingPacket, &deserializedInfo, NULL,
-                         &pContext->ackPropsBuffer, NULL ) == false )
-        {
-            status = MQTTEventCallbackFailed;
-        }
     }
 
     return status;
@@ -2230,7 +2243,7 @@ static MQTTStatus_t handleIncomingDisconnect( MQTTContext_t * pContext,
         deserializedInfo.pReasonCode = &reasonCode;
 
         if( pContext->appCallback( pContext, pIncomingPacket, &deserializedInfo,
-                                   NULL, &pContext->ackPropsBuffer, &propBuffer ) == false )
+                                   NULL, NULL, &propBuffer ) == false )
         {
             status = MQTTEventCallbackFailed;
         }
@@ -3525,7 +3538,7 @@ static MQTTStatus_t receiveConnack( MQTTContext_t * pContext,
         deserializedInfo.deserializationResult = status;
 
         if( pContext->appCallback( pContext, pIncomingPacket, &deserializedInfo,
-                                   NULL, &pContext->ackPropsBuffer, &propBuffer ) == false )
+                                   NULL, NULL, &propBuffer ) == false )
         {
             status = MQTTEventCallbackFailed;
         }
@@ -3946,7 +3959,7 @@ static MQTTStatus_t handleSubUnsubAck( MQTTContext_t * pContext,
 
         /* Invoke application callback to hand the buffer over to application */
         if( appCallback( pContext, pIncomingPacket, &deserializedInfo, NULL,
-                         &pContext->ackPropsBuffer, &propBuffer ) == false )
+                         NULL, &propBuffer ) == false )
         {
             status = MQTTEventCallbackFailed;
         }
