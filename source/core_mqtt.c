@@ -1623,7 +1623,10 @@ static MQTTStatus_t sendPublishAcksWithProperty( MQTTContext_t * pContext,
 
     if( packetTypeByte != 0U )
     {
-        status = MQTT_ValidatePublishAckProperties( &pContext->ackPropsBuffer );
+        if( pContext->ackPropsBuffer.currentIndex > 0U )
+        {
+            status = MQTT_ValidatePublishAckProperties( &pContext->ackPropsBuffer );
+        }
 
         if( status == MQTTSuccess )
         {
@@ -1823,7 +1826,7 @@ static MQTTStatus_t handleIncomingPublish( MQTTContext_t * pContext,
     MQTTDeserializedInfo_t deserializedInfo;
     bool duplicatePublish = false;
     MQTTPropBuilder_t propBuffer = { 0 };
-    MQTTSuccessFailReasonCode_t reasonCode;
+    MQTTSuccessFailReasonCode_t reasonCode = MQTT_INVALID_REASON_CODE;
     bool ackPropsAdded = false;
 
     assert( pContext != NULL );
@@ -1935,14 +1938,16 @@ static MQTTStatus_t handleIncomingPublish( MQTTContext_t * pContext,
         if( duplicatePublish == false )
         {
             MQTTPropBuilder_t * pTempPropBuffer = NULL;
+            MQTTSuccessFailReasonCode_t * pTempReasonCode = NULL;
 
             if( publishInfo.qos > MQTTQoS0 )
             {
-                pTempPropBuffer = &pContext->ackPropsBuffer;
+                pTempPropBuffer = &( pContext->ackPropsBuffer );
+                pTempReasonCode = &reasonCode;
             }
 
             if( pContext->appCallback( pContext, pIncomingPacket, &deserializedInfo,
-                                       &reasonCode, pTempPropBuffer, &propBuffer ) == false )
+                                       pTempReasonCode, pTempPropBuffer, &propBuffer ) == false )
             {
                 /* TODO: Figure out whether this should block the library
                  * from processing any more packets. */
@@ -1950,9 +1955,9 @@ static MQTTStatus_t handleIncomingPublish( MQTTContext_t * pContext,
             }
             else if( publishInfo.qos > MQTTQoS0 )
             {
-                if( ( pTempPropBuffer->pBuffer != NULL ) &&
-                    ( CHECK_SIZE_T_OVERFLOWS_32BIT( pTempPropBuffer->currentIndex ) ||
-                      ( pTempPropBuffer->currentIndex >= MQTT_REMAINING_LENGTH_INVALID ) ) )
+                if( ( pContext->ackPropsBuffer.pBuffer != NULL ) &&
+                    ( CHECK_SIZE_T_OVERFLOWS_32BIT( pContext->ackPropsBuffer.currentIndex ) ||
+                      ( pContext->ackPropsBuffer.currentIndex >= MQTT_REMAINING_LENGTH_INVALID ) ) )
                 {
                     status = MQTTSendFailed;
                     LogError( ( "Length of properties to be sent must be less than 268435456." ) );
