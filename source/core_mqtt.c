@@ -2275,7 +2275,7 @@ static MQTTStatus_t receiveSingleIteration( MQTTContext_t * pContext,
                                                    &( pContext->networkBuffer.pBuffer[ pContext->index ] ),
                                                    pContext->networkBuffer.size - pContext->index );
 
-    LogDebug( ( "Received %ld bytes from network.",
+    LogTrace( ( "Received %ld bytes from network.",
                 ( long int ) recvBytes ) );
     LogTrace( ( "Index is at location: %ld",
                 ( long int ) pContext->index ) );
@@ -2302,7 +2302,7 @@ static MQTTStatus_t receiveSingleIteration( MQTTContext_t * pContext,
         }
         else if( ( recvBytes == 0 ) && ( pContext->index == 0U ) )
         {
-            LogDebug( ( "No data available from the network." ) );
+            LogTrace( ( "No data available from the network." ) );
 
             /* No more bytes available since the last read and neither is anything in
              * the buffer. */
