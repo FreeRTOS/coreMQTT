@@ -757,8 +757,7 @@ static MQTTStatus_t deserializePubAcks( const MQTTPacketInfo_t * pAck,
         LogError( ( "pReasonCode cannot be NULL." ) );
         status = MQTTBadParameter;
     }
-
-    if( pAck->remainingLength < 2U )
+    else if( pAck->remainingLength < 2U )
     {
         status = MQTTBadResponse;
     }
@@ -1765,11 +1764,16 @@ static MQTTStatus_t deserializeSubUnsubAck( const MQTTPacketInfo_t * incomingPac
     /* Validate input parameters using assert. */
     assert( incomingPacket != NULL );
     assert( pPacketId != NULL );
-    assert( pReasonCodes != NULL );
     assert( !CHECK_U32T_OVERFLOWS_SIZE_T( incomingPacket->remainingLength ) );
 
     pIndex = incomingPacket->pRemainingData;
     remainingLength = incomingPacket->remainingLength;
+
+    if( pReasonCodes == NULL )
+    {
+        LogError( ( "pReasonCodes cannot be NULL for SUB/UNSUB ack packets." ) );
+        status = MQTTBadParameter;
+    }
 
     if( incomingPacket->remainingLength < 4U )
     {

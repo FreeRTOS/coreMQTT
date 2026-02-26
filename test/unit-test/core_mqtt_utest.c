@@ -758,7 +758,7 @@ static uint8_t * MQTTV5_SerializeDisconnectFixed_cb( uint8_t * pIndex,
  * @return Returns true.
  */
 bool retrieveFunctionNotConnected( MQTTContext_t * pContext,
-                                   uint16_t packetId,
+                                   uint32_t packetId,
                                    uint8_t ** pSerializedMqttVec,
                                    size_t * pSerializedMqttVecLen )
 {
@@ -857,7 +857,7 @@ static uint8_t * encodeVariableLength_cb_1bytelength( uint8_t * pDestination,
  * @return true if store is successful else false
  */
 static bool publishStoreCallbackSuccess( struct MQTTContext * pContext,
-                                         uint16_t packetId,
+                                         uint32_t packetId,
                                          MQTTVec_t * pMqttVec )
 {
     ( void ) pContext;
@@ -878,7 +878,7 @@ static bool publishStoreCallbackSuccess( struct MQTTContext * pContext,
  * @return true if store is successful else false
  */
 static bool publishStoreCallbackFailed( struct MQTTContext * pContext,
-                                        uint16_t packetId,
+                                        uint32_t packetId,
                                         MQTTVec_t * pMqttVec )
 {
     ( void ) pContext;
@@ -899,7 +899,7 @@ static bool publishStoreCallbackFailed( struct MQTTContext * pContext,
  * @return true if retrieve is successful else false
  */
 static bool publishRetrieveCallbackSuccess( struct MQTTContext * pContext,
-                                            uint16_t packetId,
+                                            uint32_t packetId,
                                             uint8_t ** pPacket,
                                             size_t * pPacketSize )
 {
@@ -923,7 +923,7 @@ static bool publishRetrieveCallbackSuccess( struct MQTTContext * pContext,
  * @return true if retrieve is successful else false
  */
 static bool publishRetrieveCallbackSuccessThenFail( struct MQTTContext * pContext,
-                                                    uint16_t packetId,
+                                                    uint32_t packetId,
                                                     uint8_t ** pPacket,
                                                     size_t * pPacketSize )
 {
@@ -958,7 +958,7 @@ static bool publishRetrieveCallbackSuccessThenFail( struct MQTTContext * pContex
  * @return true if retrieve is successful else false
  */
 static bool publishRetrieveCallbackFailed( struct MQTTContext * pContext,
-                                           uint16_t packetId,
+                                           uint32_t packetId,
                                            uint8_t ** pPacket,
                                            size_t * pPacketSize )
 {
@@ -979,7 +979,7 @@ static bool publishRetrieveCallbackFailed( struct MQTTContext * pContext,
  * @return true if clear is successful else false
  */
 static void publishClearCallback( struct MQTTContext * pContext,
-                                  uint16_t packetId )
+                                  uint32_t packetId )
 {
     ( void ) pContext;
     ( void ) packetId;

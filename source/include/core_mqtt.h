@@ -179,11 +179,12 @@ typedef bool ( * MQTTEventCallback_t )( struct MQTTContext * pContext,
                                         struct MQTTPropBuilder * pGetPropsBuffer );
 
 /**
- * @brief User defined callback used to store outgoing publishes. Used to track any publish
+ * @brief User defined callback used to store packets for retransmits. Used to track any publish/PUBREC
  * retransmit on an unclean session connection.
  *
  * @param[in] pContext Initialised MQTT Context.
- * @param[in] packetId Outgoing publish packet identifier.
+ * @param[in] handle Unique 32-bit handle to distinguish the packets. Note that these values may or may not
+ *                be in order. The value is interpreted by the coreMQTT library and might change in pattern.
  * @param[in] pMqttVec Pointer to the opaque mqtt vector structure. Users should use MQTT_GetBytesInMQTTVec
  *                and MQTT_SerializeMQTTVec functions to get the memory required and to serialize the
  *                MQTTVec_t in the provided memory respectively.
@@ -192,16 +193,17 @@ typedef bool ( * MQTTEventCallback_t )( struct MQTTContext * pContext,
  */
 /* @[define_mqtt_retransmitstorepacket] */
 typedef bool ( * MQTTStorePacketForRetransmit )( struct MQTTContext * pContext,
-                                                 uint16_t packetId,
+                                                 uint32_t handle,
                                                  MQTTVec_t * pMqttVec );
 /* @[define_mqtt_retransmitstorepacket] */
 
 /**
- * @brief User defined callback used to retreive a copied publish for resend operation. Used to
- * track any publish retransmit on an unclean session connection.
+ * @brief User defined callback used to retreive a stored packet for resend operation. Used to
+ * track any publish/PUBREC retransmit on an unclean session connection.
  *
  * @param[in] pContext Initialised MQTT Context.
- * @param[in] packetId Copied publish packet identifier.
+ * @param[in] handle Unique 32-bit handle to distinguish the packets. Note that these values may or may not
+ *                be in order. The value is interpreted by the coreMQTT library and might change in pattern.
  * @param[out] pSerializedMqttVec Output parameter to store the pointer to the serialized MQTTVec_t
  *                  using MQTT_SerializeMQTTVec.
  * @param[out] pSerializedMqttVecLen Output parameter to return the number of bytes used to store the
@@ -212,21 +214,22 @@ typedef bool ( * MQTTStorePacketForRetransmit )( struct MQTTContext * pContext,
  */
 /* @[define_mqtt_retransmitretrievepacket] */
 typedef bool ( * MQTTRetrievePacketForRetransmit )( struct MQTTContext * pContext,
-                                                    uint16_t packetId,
+                                                    uint32_t handle,
                                                     uint8_t ** pSerializedMqttVec,
                                                     size_t * pSerializedMqttVecLen );
 /* @[define_mqtt_retransmitretrievepacket] */
 
 /**
- * @brief User defined callback used to clear a particular copied publish packet. Used to
- * track any publish retransmit on an unclean session connection.
+ * @brief User defined callback used to clear a particular stored packet. Used to track any packet
+ * retransmit on an unclean session connection.
  *
  * @param[in] pContext Initialised MQTT Context.
- * @param[in] packetId Copied publish packet identifier.
+ * @param[in] handle Unique 32-bit handle to distinguish the packets. Note that these values may or may not
+ *                be in order. The value is interpreted by the coreMQTT library and might change in pattern.
  */
 /* @[define_mqtt_retransmitclearpacket] */
 typedef void ( * MQTTClearPacketForRetransmit )( struct MQTTContext * pContext,
-                                                 uint16_t packetId );
+                                                 uint32_t handle );
 /* @[define_mqtt_retransmitclearpacket] */
 
 /**
