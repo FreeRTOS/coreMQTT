@@ -1601,46 +1601,116 @@ static MQTTStatus_t sendPublishAcksWithoutProperty( MQTTContext_t * pContext,
 
 /*-----------------------------------------------------------*/
 
+/**
+ * @brief Build the IO vector for a publish ACK with properties and send it.
+ * Returns MQTTSuccess, MQTTSendFailed, MQTTBadParameter, or MQTTPublishStoreFailed.
+ */
+static MQTTStatus_t buildAndSendAckWithProps( MQTTContext_t * pContext,
+                                              uint8_t packetTypeByte,
+                                              uint16_t packetId,
+                                              MQTTSuccessFailReasonCode_t reasonCode,
+                                              uint32_t remainingLength,
+                                              size_t ackPropertyLength )
+{
+    MQTTStatus_t status = MQTTSuccess;
+    int32_t bytesSentOrError;
+    size_t ioVectorLength = 0U;
+    uint32_t totalMessageLength = 0U;
+    uint8_t propertyLength[ 4U ];
+    uint8_t pubAckHeader[ 8U ];
+    TransportOutVector_t pIoVector[ 3U ];
+    uint8_t * pIndex = pubAckHeader;
+    TransportOutVector_t * iterator = pIoVector;
+
+    pIndex = serializeAckFixed( pIndex, packetTypeByte, packetId, remainingLength, reasonCode );
+    iterator->iov_base = pubAckHeader;
+    /* coverity[misra_c_2012_rule_18_2_violation] */
+    /* coverity[misra_c_2012_rule_10_8_violation] */
+    iterator->iov_len = ( size_t ) ( pIndex - pubAckHeader );
+    assert( iterator->iov_len < MQTT_MAX_PACKET_SIZE );
+    totalMessageLength += ( uint32_t ) iterator->iov_len;
+    iterator++;
+    ioVectorLength++;
+
+    /* Encode property length (0 if no properties). */
+    pIndex = encodeVariableLength( propertyLength, ( uint32_t ) ackPropertyLength );
+    iterator->iov_base = propertyLength;
+    /* coverity[misra_c_2012_rule_18_2_violation] */
+    /* coverity[misra_c_2012_rule_10_8_violation] */
+    iterator->iov_len = ( size_t ) ( pIndex - propertyLength );
+    assert( iterator->iov_len < MQTT_MAX_PACKET_SIZE );
+    assert( ADDITION_WILL_OVERFLOW_U32( totalMessageLength, iterator->iov_len ) == false );
+    totalMessageLength += ( uint32_t ) iterator->iov_len;
+    iterator++;
+    ioVectorLength++;
+
+    if( ( pContext->ackPropsBuffer.pBuffer != NULL ) && ( ackPropertyLength != 0U ) )
+    {
+        iterator->iov_base = pContext->ackPropsBuffer.pBuffer;
+        iterator->iov_len = pContext->ackPropsBuffer.currentIndex;
+        assert( iterator->iov_len < MQTT_MAX_PACKET_SIZE );
+        assert( ADDITION_WILL_OVERFLOW_U32( totalMessageLength, iterator->iov_len ) == false );
+        totalMessageLength += ( uint32_t ) iterator->iov_len;
+        iterator++;
+        ioVectorLength++;
+
+        pContext->ackPropsBuffer.currentIndex = 0;
+        pContext->ackPropsBuffer.fieldSet = 0;
+    }
+
+    if( totalMessageLength > MQTT_MAX_PACKET_SIZE )
+    {
+        LogError( ( "Total message length cannot be larger than 268435460." ) );
+        return MQTTBadParameter;
+    }
+
+    {
+        MQTTVec_t mqttVec;
+        mqttVec.pVector = pIoVector;
+        mqttVec.vectorLen = ioVectorLength;
+
+        if( ( pContext->storeFunction != NULL ) &&
+            ( packetTypeByte != MQTT_PACKET_TYPE_PUBACK ) &&
+            ( packetTypeByte != MQTT_PACKET_TYPE_PUBCOMP ) &&
+            ( pContext->storeFunction( pContext, SET_INCOMING_PUB_FLAG( packetId ), &mqttVec ) != true ) )
+        {
+            status = MQTTPublishStoreFailed;
+        }
+    }
+
+    if( status == MQTTSuccess )
+    {
+        MQTT_PRE_STATE_UPDATE_HOOK( pContext );
+        {
+            LogDebug( ( "Sending ACK packet: PacketType=%02x, PacketID=%hu.",
+                        ( unsigned int ) packetTypeByte, ( unsigned short ) packetId ) );
+            bytesSentOrError = sendMessageVector( pContext, pIoVector, ioVectorLength );
+        }
+        MQTT_POST_STATE_UPDATE_HOOK( pContext );
+
+        if( bytesSentOrError != ( int32_t ) totalMessageLength )
+        {
+            LogError( ( "Failed to send ACK packet: PacketType=%02x, PacketSize=%" PRIu32,
+                        ( unsigned int ) packetTypeByte, remainingLength ) );
+            status = MQTTSendFailed;
+        }
+    }
+
+    return status;
+}
+
 static MQTTStatus_t sendPublishAcksWithProperty( MQTTContext_t * pContext,
                                                  uint16_t packetId,
                                                  MQTTPublishState_t publishState,
                                                  MQTTSuccessFailReasonCode_t reasonCode )
 {
-    int32_t bytesSentOrError;
-    size_t ioVectorLength = 0U;
-    uint32_t totalMessageLength = 0U;
     MQTTStatus_t status = MQTTSuccess;
     MQTTPublishState_t newState = MQTTStateNull;
     uint8_t packetTypeByte = 0U;
     MQTTPubAckType_t packetType;
     size_t ackPropertyLength = 0U;
-
-    /**
-     * Maximum number of bytes to send the Property Length.
-     * Property Length  0 + 4 = 4
-     */
-    uint8_t propertyLength[ 4U ];
-
-    /* Maximum number of bytes required by the fixed size properties and header.
-     * MQTT Control Byte      0 + 1 = 1
-     * Remaining length (max)   + 4 = 5
-     * Packet Identifier        + 2 = 7
-     * Reason Code              + 1 = 8
-     */
-    uint8_t pubAckHeader[ 8U ];
     uint32_t remainingLength = 0U;
     uint32_t packetSize = 0U;
-
-    /* The maximum vectors required to encode and send a publish ack.
-     * Ack Header           0 + 1 = 1
-     * Property Length        + 1 = 2
-     * Properties             + 1 = 3
-     */
-
-    TransportOutVector_t pIoVector[ 3U ];
-
-    uint8_t * pIndex = pubAckHeader;
-    TransportOutVector_t * iterator = pIoVector;
 
     assert( pContext != NULL );
 
@@ -1654,9 +1724,7 @@ static MQTTStatus_t sendPublishAcksWithProperty( MQTTContext_t * pContext,
     packetTypeByte = getAckTypeToSend( publishState );
 
     LogDebug( ( "Got ACK packet type 0x%02x [pkt ID: %hu] for the publish state 0x%02x",
-                packetTypeByte,
-                packetId,
-                publishState ) );
+                packetTypeByte, packetId, publishState ) );
 
     if( packetTypeByte != 0U )
     {
@@ -1672,8 +1740,7 @@ static MQTTStatus_t sendPublishAcksWithProperty( MQTTContext_t * pContext,
 
         if( status == MQTTSuccess )
         {
-            status = MQTT_GetAckPacketSize( &remainingLength,
-                                            &packetSize,
+            status = MQTT_GetAckPacketSize( &remainingLength, &packetSize,
                                             pContext->connectionProperties.serverMaxPacketSize,
                                             ackPropertyLength );
         }
@@ -1688,118 +1755,8 @@ static MQTTStatus_t sendPublishAcksWithProperty( MQTTContext_t * pContext,
     {
         packetType = getAckFromPacketType( packetTypeByte );
 
-        /* Only for fixed size fields. */
-        pIndex = serializeAckFixed( pIndex,
-                                    packetTypeByte,
-                                    packetId,
-                                    remainingLength,
-                                    reasonCode );
-        iterator->iov_base = pubAckHeader;
-        /* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-182 */
-        /* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-108 */
-        /* coverity[misra_c_2012_rule_18_2_violation] */
-        /* coverity[misra_c_2012_rule_10_8_violation] */
-        iterator->iov_len = ( size_t ) ( pIndex - pubAckHeader );
-
-        /* We can get away with asserts as the internal function serializeAckFixed is
-         * only serializing the 'header' fields. */
-        assert( iterator->iov_len < MQTT_MAX_PACKET_SIZE );
-        totalMessageLength += ( uint32_t ) iterator->iov_len;
-        iterator++;
-        ioVectorLength++;
-
-        if( ( pContext->ackPropsBuffer.pBuffer != NULL ) && ( ackPropertyLength != 0U ) )
-        {
-            /* Encode the property length. */
-            pIndex = encodeVariableLength( propertyLength, ( uint32_t ) ackPropertyLength );
-            iterator->iov_base = propertyLength;
-            /* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-182 */
-            /* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-108 */
-            /* coverity[misra_c_2012_rule_18_2_violation] */
-            /* coverity[misra_c_2012_rule_10_8_violation] */
-            iterator->iov_len = ( size_t ) ( pIndex - propertyLength );
-
-            assert( iterator->iov_len < MQTT_MAX_PACKET_SIZE );
-            assert( ADDITION_WILL_OVERFLOW_U32( totalMessageLength, iterator->iov_len ) == false );
-            totalMessageLength += ( uint32_t ) iterator->iov_len;
-            iterator++;
-            ioVectorLength++;
-
-            /* Encode the properties. */
-            iterator->iov_base = pContext->ackPropsBuffer.pBuffer;
-            iterator->iov_len = pContext->ackPropsBuffer.currentIndex;
-
-            assert( iterator->iov_len < MQTT_MAX_PACKET_SIZE );
-            assert( ADDITION_WILL_OVERFLOW_U32( totalMessageLength, iterator->iov_len ) == false );
-            totalMessageLength += ( uint32_t ) iterator->iov_len;
-            iterator++;
-            ioVectorLength++;
-
-            /*
-             * Resetting buffer after sending the message.
-             */
-
-            pContext->ackPropsBuffer.currentIndex = 0;
-            pContext->ackPropsBuffer.fieldSet = 0;
-        }
-        else
-        {
-            /* Encode the property length. */
-            pIndex = encodeVariableLength( propertyLength, ( uint32_t ) 0U );
-            iterator->iov_base = propertyLength;
-            /* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-182 */
-            /* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-108 */
-            /* coverity[misra_c_2012_rule_18_2_violation] */
-            /* coverity[misra_c_2012_rule_10_8_violation] */
-            iterator->iov_len = ( size_t ) ( pIndex - propertyLength );
-
-            assert( iterator->iov_len < MQTT_MAX_PACKET_SIZE );
-            assert( ADDITION_WILL_OVERFLOW_U32( totalMessageLength, iterator->iov_len ) == false );
-            totalMessageLength += ( uint32_t ) iterator->iov_len;
-            iterator++;
-            ioVectorLength++;
-        }
-
-        if( totalMessageLength <= MQTT_MAX_PACKET_SIZE )
-        {
-            MQTTVec_t mqttVec;
-            mqttVec.pVector = pIoVector;
-            mqttVec.vectorLen = ioVectorLength;
-
-            if( ( pContext->storeFunction != NULL ) &&
-                ( packetTypeByte != MQTT_PACKET_TYPE_PUBACK ) &&
-                ( packetTypeByte != MQTT_PACKET_TYPE_PUBCOMP ) &&
-                ( pContext->storeFunction( pContext, SET_INCOMING_PUB_FLAG( packetId ), &mqttVec ) != true ) )
-            {
-                status = MQTTPublishStoreFailed;
-            }
-
-            if( status == MQTTSuccess )
-            {
-                MQTT_PRE_STATE_UPDATE_HOOK( pContext );
-                {
-                    LogDebug( ( "Sending ACK packet: PacketType=%02x, PacketID=%hu.",
-                                ( unsigned int ) packetTypeByte, ( unsigned short ) packetId ) );
-
-                    bytesSentOrError = sendMessageVector( pContext, pIoVector, ioVectorLength );
-                }
-                MQTT_POST_STATE_UPDATE_HOOK( pContext );
-
-                if( bytesSentOrError != ( int32_t ) totalMessageLength )
-                {
-                    LogError( ( "Failed to send ACK packet: PacketType=%02x, "
-                                "PacketSize=%" PRIu32,
-                                ( unsigned int ) packetTypeByte,
-                                packetSize ) );
-                    status = MQTTSendFailed;
-                }
-            }
-        }
-        else
-        {
-            LogError( ( "Total message length cannot be larger than 268435460." ) );
-            status = MQTTBadParameter;
-        }
+        status = buildAndSendAckWithProps( pContext, packetTypeByte, packetId,
+                                           reasonCode, remainingLength, ackPropertyLength );
 
         if( status == MQTTSuccess )
         {
@@ -1807,11 +1764,8 @@ static MQTTStatus_t sendPublishAcksWithProperty( MQTTContext_t * pContext,
 
             MQTT_PRE_STATE_UPDATE_HOOK( pContext );
             {
-                status = MQTT_UpdateStateAck( pContext,
-                                              packetId,
-                                              packetType,
-                                              MQTT_SEND,
-                                              &newState );
+                status = MQTT_UpdateStateAck( pContext, packetId, packetType,
+                                              MQTT_SEND, &newState );
             }
             MQTT_POST_STATE_UPDATE_HOOK( pContext );
 
