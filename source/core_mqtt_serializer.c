@@ -4066,6 +4066,101 @@ MQTTStatus_t MQTT_SerializePublishHeader( const MQTTPublishInfo_t * pPublishInfo
 
 /*-----------------------------------------------------------*/
 
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Serialize a publish ACK packet with properties into pFixedBuffer.
+ * Called only when pReasonCode != NULL and pAckProperties != NULL.
+ */
+static MQTTStatus_t serializeAckWithProperties( const MQTTFixedBuffer_t * pFixedBuffer,
+                                                uint8_t packetType,
+                                                uint16_t packetId,
+                                                const MQTTPropBuilder_t * pAckProperties,
+                                                const MQTTSuccessFailReasonCode_t * pReasonCode )
+{
+    MQTTStatus_t status = MQTTSuccess;
+    uint32_t ackPacketRemainingLength;
+    uint32_t ackPacketSize;
+    uint8_t * pIndex;
+
+    ackPacketRemainingLength = 3U +
+                               variableLengthEncodedSize( ( uint32_t ) pAckProperties->currentIndex ) +
+                               ( ( uint32_t ) pAckProperties->currentIndex );
+
+    if( ackPacketRemainingLength > MQTT_MAX_REMAINING_LENGTH )
+    {
+        LogError( ( "Packet remaining length must be smaller than 268435456." ) );
+        status = MQTTBadParameter;
+    }
+    else
+    {
+        ackPacketSize = 1U +
+                        variableLengthEncodedSize( ackPacketRemainingLength ) +
+                        ackPacketRemainingLength;
+
+        if( pFixedBuffer->size < ackPacketSize )
+        {
+            LogError( ( "Not enough space in the buffer to encode properties." ) );
+            status = MQTTBadParameter;
+        }
+        else
+        {
+            pFixedBuffer->pBuffer[ 0 ] = packetType;
+            pIndex = encodeVariableLength( &pFixedBuffer->pBuffer[ 1 ], ackPacketRemainingLength );
+            pIndex[ 0 ] = UINT16_HIGH_BYTE( packetId );
+            pIndex[ 1 ] = UINT16_LOW_BYTE( packetId );
+            pIndex[ 2 ] = ( uint8_t ) ( *pReasonCode );
+            pIndex = encodeVariableLength( &pIndex[ 3 ], ( uint32_t ) pAckProperties->currentIndex );
+            ( void ) memcpy( pIndex, pAckProperties->pBuffer, pAckProperties->currentIndex );
+        }
+    }
+
+    return status;
+}
+
+/**
+ * @brief Validate parameters and serialize a publish ACK packet body.
+ * Handles the three cases: no reason code, reason code only, reason code + properties.
+ */
+static MQTTStatus_t serializeAckBody( const MQTTFixedBuffer_t * pFixedBuffer,
+                                      uint8_t packetType,
+                                      uint16_t packetId,
+                                      const MQTTPropBuilder_t * pAckProperties,
+                                      const MQTTSuccessFailReasonCode_t * pReasonCode )
+{
+    MQTTStatus_t status = MQTTSuccess;
+
+    pFixedBuffer->pBuffer[ 0 ] = packetType;
+
+    if( pReasonCode == NULL )
+    {
+        /* Simple 4-byte ACK: type + remaining(2) + packetId(2). */
+        pFixedBuffer->pBuffer[ 1 ] = MQTT_PACKET_SIMPLE_ACK_REMAINING_LENGTH;
+        pFixedBuffer->pBuffer[ 2 ] = UINT16_HIGH_BYTE( packetId );
+        pFixedBuffer->pBuffer[ 3 ] = UINT16_LOW_BYTE( packetId );
+    }
+    else if( pFixedBuffer->size < ( MQTT_PUBLISH_ACK_PACKET_SIZE + 1U ) )
+    {
+        LogError( ( "Not enough space for reason code." ) );
+        status = MQTTBadParameter;
+    }
+    else if( ( pAckProperties == NULL ) || ( pAckProperties->pBuffer == NULL ) )
+    {
+        /* Reason code only, no properties. */
+        pFixedBuffer->pBuffer[ 1 ] = MQTT_PACKET_SIMPLE_ACK_REMAINING_LENGTH + 1U;
+        pFixedBuffer->pBuffer[ 2 ] = UINT16_HIGH_BYTE( packetId );
+        pFixedBuffer->pBuffer[ 3 ] = UINT16_LOW_BYTE( packetId );
+        pFixedBuffer->pBuffer[ 4 ] = ( uint8_t ) ( *pReasonCode );
+    }
+    else
+    {
+        status = serializeAckWithProperties( pFixedBuffer, packetType, packetId,
+                                             pAckProperties, pReasonCode );
+    }
+
+    return status;
+}
+
 MQTTStatus_t MQTT_SerializeAck( const MQTTFixedBuffer_t * pFixedBuffer,
                                 uint8_t packetType,
                                 uint16_t packetId,
@@ -4084,7 +4179,6 @@ MQTTStatus_t MQTT_SerializeAck( const MQTTFixedBuffer_t * pFixedBuffer,
         LogError( ( "pFixedBuffer->pBuffer cannot be NULL." ) );
         status = MQTTBadParameter;
     }
-    /* The buffer must be able to fit 4 bytes for the packet. */
     else if( pFixedBuffer->size < MQTT_PUBLISH_ACK_PACKET_SIZE )
     {
         LogError( ( "Insufficient memory for packet." ) );
@@ -4116,75 +4210,12 @@ MQTTStatus_t MQTT_SerializeAck( const MQTTFixedBuffer_t * pFixedBuffer,
     {
         switch( packetType )
         {
-            /* Only publish acks are serialized by the client. */
             case MQTT_PACKET_TYPE_PUBACK:
             case MQTT_PACKET_TYPE_PUBREC:
             case MQTT_PACKET_TYPE_PUBREL:
             case MQTT_PACKET_TYPE_PUBCOMP:
-                pFixedBuffer->pBuffer[ 0 ] = packetType;
-
-                if( pReasonCode != NULL )
-                {
-                    if( pFixedBuffer->size < ( MQTT_PUBLISH_ACK_PACKET_SIZE + 1U ) )
-                    {
-                        LogError( ( "Not enough space for reason code." ) );
-                        status = MQTTBadParameter;
-                    }
-                    else
-                    {
-                        if( ( pAckProperties == NULL ) || ( pAckProperties->pBuffer == NULL ) )
-                        {
-                            /* No properties to be added. But we are adding the reason code. */
-                            pFixedBuffer->pBuffer[ 1 ] = MQTT_PACKET_SIMPLE_ACK_REMAINING_LENGTH + 1U;
-                            pFixedBuffer->pBuffer[ 2 ] = UINT16_HIGH_BYTE( packetId );
-                            pFixedBuffer->pBuffer[ 3 ] = UINT16_LOW_BYTE( packetId );
-                            pFixedBuffer->pBuffer[ 4 ] = ( uint8_t ) ( *pReasonCode );
-                        }
-                        /* Size is calculated as PUBACK + 1 byte for reason code + properties. */
-                        else
-                        {
-                            uint32_t ackPacketRemainingLength = 3U +                                                                     /* The packet ID (2) + reason code (1). */
-                                                                variableLengthEncodedSize( ( uint32_t ) pAckProperties->currentIndex ) + /* Prop length. */
-                                                                ( ( uint32_t ) pAckProperties->currentIndex );                           /* Properties themselves. */
-
-                            if( ackPacketRemainingLength > MQTT_MAX_REMAINING_LENGTH )
-                            {
-                                LogError( ( "Packet remaining length must be smaller than 268435456." ) );
-                                status = MQTTBadParameter;
-                            }
-                            else
-                            {
-                                uint32_t ackPacketSize = 1U +                                                    /* Header. */
-                                                         variableLengthEncodedSize( ackPacketRemainingLength ) + /* Bytes to encode the remaining length. */
-                                                         ackPacketRemainingLength;                               /* Remaining length itself. */
-
-                                if( pFixedBuffer->size < ackPacketSize )
-                                {
-                                    LogError( ( "Not enough space in the buffer to encode properties." ) );
-                                    status = MQTTBadParameter;
-                                }
-                                else
-                                {
-                                    uint8_t * pIndex = &pFixedBuffer->pBuffer[ 1 ];
-
-                                    pIndex = encodeVariableLength( pIndex, ackPacketRemainingLength );
-                                    pIndex[ 0 ] = UINT16_HIGH_BYTE( packetId );
-                                    pIndex[ 1 ] = UINT16_LOW_BYTE( packetId );
-                                    pIndex[ 2 ] = ( uint8_t ) ( *pReasonCode );
-                                    pIndex = encodeVariableLength( pIndex, ( uint32_t ) pAckProperties->currentIndex );
-                                    ( void ) memcpy( pIndex, pAckProperties->pBuffer, pAckProperties->currentIndex );
-                                }
-                            }
-                        }
-                    }
-                }
-                else
-                {
-                    pFixedBuffer->pBuffer[ 1 ] = MQTT_PACKET_SIMPLE_ACK_REMAINING_LENGTH;
-                    pFixedBuffer->pBuffer[ 2 ] = UINT16_HIGH_BYTE( packetId );
-                    pFixedBuffer->pBuffer[ 3 ] = UINT16_LOW_BYTE( packetId );
-                }
-
+                status = serializeAckBody( pFixedBuffer, packetType, packetId,
+                                           pAckProperties, pReasonCode );
                 break;
 
             default:
