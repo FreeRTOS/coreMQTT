@@ -147,7 +147,7 @@ static inline MQTTStatus_t checkPropBuilderParams( const MQTTPropBuilder_t * mqt
     }
     else if( *currentIndex >= mqttPropBuilder->currentIndex )
     {
-        LogWarn( ( "Index out of bounds." ) );
+        LogDebug( ( "Index out of bounds." ) );
         status = MQTTEndOfProperties;
     }
     else

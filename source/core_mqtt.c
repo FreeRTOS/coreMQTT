@@ -82,6 +82,11 @@
  */
 #define CORE_MQTT_UNSUBSCRIBE_PER_TOPIC_VECTOR_LENGTH    ( 2U )
 
+/**
+ * @brief Set flag in the packet ID just beyond the actual packet ID.
+ */
+#define SET_INCOMING_PUB_FLAG( packetID )    ( ( uint32_t ) ( ( ( uint32_t ) packetID ) | ( ( ( uint32_t ) 1U ) << 16U ) ) )
+
 struct MQTTVec
 {
     TransportOutVector_t * pVector; /**< Pointer to transport vector. USER SHOULD NOT ACCESS THIS DIRECTLY - IT IS AN INTERNAL DETAIL AND CAN CHANGE. */
@@ -1503,11 +1508,27 @@ static MQTTStatus_t sendPublishAcksWithoutProperty( MQTTContext_t * pContext,
         {
             MQTT_PRE_STATE_UPDATE_HOOK( pContext );
             {
+                TransportOutVector_t vector;
+                MQTTVec_t mqttVec;
+                vector.iov_base = localBuffer.pBuffer;
+                vector.iov_len = MQTT_PUBLISH_ACK_PACKET_SIZE;
+                mqttVec.pVector = &vector;
+                mqttVec.vectorLen = 1U;
+
                 connectStatus = pContext->connectStatus;
 
                 if( connectStatus != MQTTConnected )
                 {
                     status = ( connectStatus == MQTTNotConnected ) ? MQTTStatusNotConnected : MQTTStatusDisconnectPending;
+                }
+
+                if( ( status == MQTTSuccess ) &&
+                    ( packetTypeByte != MQTT_PACKET_TYPE_PUBACK ) &&
+                    ( packetTypeByte != MQTT_PACKET_TYPE_PUBCOMP ) &&
+                    ( pContext->storeFunction != NULL ) &&
+                    ( pContext->storeFunction( pContext, SET_INCOMING_PUB_FLAG( packetId ), &mqttVec ) != true ) )
+                {
+                    status = MQTTPublishStoreFailed;
                 }
 
                 if( status == MQTTSuccess )
@@ -1642,7 +1663,7 @@ static MQTTStatus_t sendPublishAcksWithProperty( MQTTContext_t * pContext,
         }
     }
 
-    if( pContext->connectStatus != MQTTConnected )
+    if( ( status == MQTTSuccess ) && ( pContext->connectStatus != MQTTConnected ) )
     {
         status = ( pContext->connectStatus == MQTTNotConnected ) ? MQTTStatusNotConnected : MQTTStatusDisconnectPending;
     }
@@ -1705,25 +1726,57 @@ static MQTTStatus_t sendPublishAcksWithProperty( MQTTContext_t * pContext,
             pContext->ackPropsBuffer.currentIndex = 0;
             pContext->ackPropsBuffer.fieldSet = 0;
         }
+        else
+        {
+            /* Encode the property length. */
+            pIndex = encodeVariableLength( propertyLength, ( uint32_t ) 0U );
+            iterator->iov_base = propertyLength;
+            /* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-182 */
+            /* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-108 */
+            /* coverity[misra_c_2012_rule_18_2_violation] */
+            /* coverity[misra_c_2012_rule_10_8_violation] */
+            iterator->iov_len = ( size_t ) ( pIndex - propertyLength );
+
+            assert( iterator->iov_len < MQTT_MAX_PACKET_SIZE );
+            assert( ADDITION_WILL_OVERFLOW_U32( totalMessageLength, iterator->iov_len ) == false );
+            totalMessageLength += ( uint32_t ) iterator->iov_len;
+            iterator++;
+            ioVectorLength++;
+        }
 
         if( totalMessageLength <= MQTT_MAX_PACKET_SIZE )
         {
-            MQTT_PRE_STATE_UPDATE_HOOK( pContext );
-            {
-                LogDebug( ( "Sending ACK packet: PacketType=%02x, PacketID=%hu.",
-                            ( unsigned int ) packetTypeByte, ( unsigned short ) packetId ) );
+            MQTTVec_t mqttVec;
+            mqttVec.pVector = pIoVector;
+            mqttVec.vectorLen = ioVectorLength;
 
-                bytesSentOrError = sendMessageVector( pContext, pIoVector, ioVectorLength );
+            if( ( pContext->storeFunction != NULL ) &&
+                ( packetTypeByte != MQTT_PACKET_TYPE_PUBACK ) &&
+                ( packetTypeByte != MQTT_PACKET_TYPE_PUBCOMP ) &&
+                ( pContext->storeFunction( pContext, SET_INCOMING_PUB_FLAG( packetId ), &mqttVec ) != true ) )
+            {
+                status = MQTTPublishStoreFailed;
             }
-            MQTT_POST_STATE_UPDATE_HOOK( pContext );
 
-            if( bytesSentOrError != ( int32_t ) totalMessageLength )
+            if( status == MQTTSuccess )
             {
-                LogError( ( "Failed to send ACK packet: PacketType=%02x, "
-                            "PacketSize=%" PRIu32,
-                            ( unsigned int ) packetTypeByte,
-                            packetSize ) );
-                status = MQTTSendFailed;
+                MQTT_PRE_STATE_UPDATE_HOOK( pContext );
+                {
+                    LogDebug( ( "Sending ACK packet: PacketType=%02x, PacketID=%hu.",
+                                ( unsigned int ) packetTypeByte, ( unsigned short ) packetId ) );
+
+                    bytesSentOrError = sendMessageVector( pContext, pIoVector, ioVectorLength );
+                }
+                MQTT_POST_STATE_UPDATE_HOOK( pContext );
+
+                if( bytesSentOrError != ( int32_t ) totalMessageLength )
+                {
+                    LogError( ( "Failed to send ACK packet: PacketType=%02x, "
+                                "PacketSize=%" PRIu32,
+                                ( unsigned int ) packetTypeByte,
+                                packetSize ) );
+                    status = MQTTSendFailed;
+                }
             }
         }
         else
@@ -1935,7 +1988,8 @@ static MQTTStatus_t handleIncomingPublish( MQTTContext_t * pContext,
          * before sending acks. */
         reasonCode = MQTT_INVALID_REASON_CODE;
 
-        if( duplicatePublish == false )
+        if( ( duplicatePublish == false ) ||
+            ( publishInfo.qos == MQTTQoS1 ) ) /* Even a duplicate QoS1 packet must be forwarded to the application [MQTT-4.3.2-5]. */
         {
             MQTTPropBuilder_t * pTempPropBuffer = NULL;
             MQTTSuccessFailReasonCode_t * pTempReasonCode = NULL;
@@ -2062,12 +2116,44 @@ static MQTTStatus_t handlePublishAcks( MQTTContext_t * pContext,
         }
     }
 
-    if( ( ackType == MQTTPuback ) || ( ackType == MQTTPubrec ) )
+    if( ( status == MQTTSuccess ) &&
+        ( pContext->clearFunction != NULL ) )
     {
-        if( ( status == MQTTSuccess ) &&
-            ( pContext->clearFunction != NULL ) )
+        /* Outgoing publish QoS1: (Tx) PUBLISH -> (Rx) PUBACK. On receiving PubAck, the packet is acked and can be cleared. */
+        if( ackType == MQTTPuback )
         {
-            pContext->clearFunction( pContext, packetIdentifier );
+            /* Clear the stored publish. */
+            pContext->clearFunction( pContext, ( uint32_t ) packetIdentifier );
+        }
+
+        /* Outgoing publish QoS2: (Tx) PUBLISH -> (Rx) PUBREC -> (Tx) PUBREL -> (Rx) PUBCOMP. Sender MUST treat the PUBLISH
+         * packet as “unacknowledged” until it has received the corresponding PUBREC packet from the receiver [MQTT-4.3.3-3] */
+        else if( ackType == MQTTPubrec )
+        {
+            /* Clear the stored publish. */
+            pContext->clearFunction( pContext, ( uint32_t ) packetIdentifier );
+        }
+
+        /* Outgoing publish QoS2: Sender MUST treat the PUBREL packet as “unacknowledged” until it has received the corresponding
+         * PUBCOMP packet from the receiver [MQTT-4.3.3-5]. */
+        else if( ackType == MQTTPubcomp )
+        {
+            /* Clear the stored PUBREL. */
+            pContext->clearFunction( pContext, SET_INCOMING_PUB_FLAG( packetIdentifier ) );
+        }
+
+        /* Incoming Publish QoS2: (Rx) PUBLISH -> (Tx) PUBREC -> (Rx) PUBREL -> (Tx) PUBCOMP. Once we receive PUBREL, it means that
+         * the broker received and processed the PUBREC packet [MQTT-4.3.3-10]. */
+        else if( ackType == MQTTPubrel )
+        {
+            /* Clear the stored PUBREC. */
+            pContext->clearFunction( pContext, SET_INCOMING_PUB_FLAG( packetIdentifier ) );
+        }
+        /* The following should never happen. The ACK type must be one of the above. */
+        else
+        {
+            assert( false );
+            status = MQTTBadResponse;
         }
     }
 
@@ -2115,7 +2201,8 @@ static MQTTStatus_t handlePublishAcks( MQTTContext_t * pContext,
                             ( pContext->ackPropsBuffer.currentIndex > 0U );
         }
 
-        if( status == MQTTSuccess )
+        /* No need to call the following functions if the packet that was received was PUBACK or PUBCOMP. */
+        if( ( status == MQTTSuccess ) && ( ackType != MQTTPuback ) && ( ackType != MQTTPubcomp ) )
         {
             if( ( ackPropsAdded == false ) && ( reasonCode == MQTT_INVALID_REASON_CODE ) )
             {
@@ -2275,7 +2362,7 @@ static MQTTStatus_t receiveSingleIteration( MQTTContext_t * pContext,
                                                    &( pContext->networkBuffer.pBuffer[ pContext->index ] ),
                                                    pContext->networkBuffer.size - pContext->index );
 
-    LogDebug( ( "Received %ld bytes from network.",
+    LogTrace( ( "Received %ld bytes from network.",
                 ( long int ) recvBytes ) );
     LogTrace( ( "Index is at location: %ld",
                 ( long int ) pContext->index ) );
@@ -2302,7 +2389,7 @@ static MQTTStatus_t receiveSingleIteration( MQTTContext_t * pContext,
         }
         else if( ( recvBytes == 0 ) && ( pContext->index == 0U ) )
         {
-            LogDebug( ( "No data available from the network." ) );
+            LogTrace( ( "No data available from the network." ) );
 
             /* No more bytes available since the last read and neither is anything in
              * the buffer. */
@@ -3073,7 +3160,7 @@ static MQTTStatus_t sendPublishWithoutCopy( MQTTContext_t * pContext,
             mqttVec.pVector = pIoVector;
             mqttVec.vectorLen = ioVectorLength;
 
-            if( pContext->storeFunction( pContext, packetId, &mqttVec ) != true )
+            if( pContext->storeFunction( pContext, ( uint32_t ) packetId, &mqttVec ) != true )
             {
                 status = MQTTPublishStoreFailed;
             }
@@ -3560,17 +3647,50 @@ static MQTTStatus_t handleUncleanSessionResumption( MQTTContext_t * pContext )
 
     assert( pContext != NULL );
 
-    /* Get the next packet ID for which a PUBREL need to be resent. */
-    packetId = MQTT_PubrelToResend( pContext, &cursor, &state );
-
-    /* Resend all the PUBREL acks after session is reestablished. */
-    while( ( packetId != MQTT_PACKET_ID_INVALID ) &&
-           ( status == MQTTSuccess ) )
+    do
     {
-        status = sendPublishAcks( pContext, packetId, state );
-
+        /* Get the next packet ID for which a PUBREL need to be resent. */
         packetId = MQTT_PubrelToResend( pContext, &cursor, &state );
+
+        /* Resend all the PUBREL acks after session is reestablished. */
+        if( packetId != MQTT_PACKET_ID_INVALID )
+        {
+            /* If we have the stored data, then we just need to send it. */
+            if( pContext->retrieveFunction != NULL )
+            {
+                if( pContext->retrieveFunction( pContext, SET_INCOMING_PUB_FLAG( packetId ), &pMqttPacket, &totalMessageLength ) != true )
+                {
+                    LogError( ( "Failed to retrieve PUBREL with packet ID %u", packetId ) );
+                    status = MQTTPublishRetrieveFailed;
+                }
+                else if( CHECK_SIZE_T_OVERFLOWS_32BIT( totalMessageLength ) ||
+                         ( totalMessageLength > MQTT_MAX_PACKET_SIZE ) )
+                {
+                    LogError( ( "Total packet size returned by the retrieve function exceeds the MQTT Max packet size." ) );
+                    status = MQTTBadParameter;
+                }
+                else
+                {
+                    MQTT_PRE_STATE_UPDATE_HOOK( pContext );
+
+                    if( sendBuffer( pContext, pMqttPacket, totalMessageLength ) != ( int32_t ) totalMessageLength )
+                    {
+                        status = MQTTSendFailed;
+                    }
+
+                    MQTT_POST_STATE_UPDATE_HOOK( pContext );
+                }
+            }
+            /* Otherwise, send default ACKs. */
+            else
+            {
+                LogWarn( ( "No Application provided retransmission storage callbacks, sending 'default' PUBRECs." ) );
+                status = sendPublishAcks( pContext, packetId, state );
+            }
+        }
     }
+    while( ( packetId != MQTT_PACKET_ID_INVALID ) &&
+           ( status == MQTTSuccess ) );
 
     if( ( status == MQTTSuccess ) &&
         ( pContext->retrieveFunction != NULL ) )
@@ -3585,7 +3705,7 @@ static MQTTStatus_t handleUncleanSessionResumption( MQTTContext_t * pContext )
 
             if( packetId != MQTT_PACKET_ID_INVALID )
             {
-                if( pContext->retrieveFunction( pContext, packetId, &pMqttPacket, &totalMessageLength ) != true )
+                if( pContext->retrieveFunction( pContext, ( uint32_t ) packetId, &pMqttPacket, &totalMessageLength ) != true )
                 {
                     LogError( ( "Failed to retrieve publish with packet ID %u", packetId ) );
                     status = MQTTPublishRetrieveFailed;
@@ -3629,25 +3749,24 @@ static MQTTStatus_t handleCleanSession( MQTTContext_t * pContext )
     pContext->index = 0;
     ( void ) memset( pContext->networkBuffer.pBuffer, 0, pContext->networkBuffer.size );
 
-    if( pContext->clearFunction != NULL )
-    {
-        cursor = MQTT_STATE_CURSOR_INITIALIZER;
-
-        /* Resend all the PUBLISH for which PUBACK/PUBREC is not received
-         * after session is reestablished. */
-        do
-        {
-            packetId = MQTT_PublishToResend( pContext, &cursor );
-
-            if( packetId != MQTT_PACKET_ID_INVALID )
-            {
-                pContext->clearFunction( pContext, packetId );
-            }
-        } while( packetId != MQTT_PACKET_ID_INVALID );
-    }
-
     if( pContext->outgoingPublishRecordMaxCount > 0U )
     {
+        if( pContext->clearFunction != NULL )
+        {
+            cursor = MQTT_STATE_CURSOR_INITIALIZER;
+
+            /* Clear the stored packets on clean session. */
+            do
+            {
+                packetId = MQTT_PublishToResend( pContext, &cursor );
+
+                if( packetId != MQTT_PACKET_ID_INVALID )
+                {
+                    pContext->clearFunction( pContext, ( uint32_t ) packetId );
+                }
+            } while( packetId != MQTT_PACKET_ID_INVALID );
+        }
+
         /* Clear any existing records if a new session is established. */
         ( void ) memset( pContext->outgoingPublishRecords,
                          0x00,
@@ -3656,6 +3775,24 @@ static MQTTStatus_t handleCleanSession( MQTTContext_t * pContext )
 
     if( pContext->incomingPublishRecordMaxCount > 0U )
     {
+        if( pContext->clearFunction != NULL )
+        {
+            MQTTPublishState_t state;
+            cursor = MQTT_STATE_CURSOR_INITIALIZER;
+
+            /* Clear the stored PUBRELs on clean session. */
+            do
+            {
+                state = MQTTStateNull;
+                packetId = MQTT_PubrelToResend( pContext, &cursor, &state );
+
+                if( packetId != MQTT_PACKET_ID_INVALID )
+                {
+                    pContext->clearFunction( pContext, SET_INCOMING_PUB_FLAG( packetId ) );
+                }
+            } while( packetId != MQTT_PACKET_ID_INVALID );
+        }
+
         ( void ) memset( pContext->incomingPublishRecords,
                          0x00,
                          pContext->incomingPublishRecordMaxCount * sizeof( *pContext->incomingPublishRecords ) );
