@@ -819,7 +819,7 @@ static bool matchWildcards( const char * pTopicName,
              * reached past the end of the topic name, and thus, we decrement the
              * index to the last character in the topic name. */
             /* coverity[integer_overflow] */
-            nameIndex -= 1U;
+            nameIndex -= ( uint16_t ) 1U;
         }
     }
 
@@ -1063,9 +1063,25 @@ static int32_t sendBuffer( MQTTContext_t * pContext,
 
     while( ( bytesSentOrError < localCopyBytesToSend ) && ( bytesSentOrError >= 0 ) )
     {
-        sendResult = pContext->transportInterface.send( pContext->transportInterface.pNetworkContext,
-                                                        pIndex,
-                                                        localCopyBytesToSend - bytesSentOrError );
+        /* Safe to cast as the value will always be positive and will fit in an int32_t and hence
+         * in uint32_t. */
+        int32_t i32RemainingBytes = localCopyBytesToSend - bytesSentOrError;
+        uint32_t remainingBytesToSend = ( uint32_t ) i32RemainingBytes;
+
+        if( CHECK_U32T_OVERFLOWS_SIZE_T( remainingBytesToSend ) )
+        {
+            LogError( ( "Remaining bytes (%" PRIu32 ") will overflow size_t variable.", remainingBytesToSend ) );
+            /* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-143 */
+            /* coverity[misra_c_2012_rule_14_3_violation] */
+            sendResult = -1;
+        }
+        else
+        {
+            size_t safeRemainingBytesToSend = ( size_t ) remainingBytesToSend;
+            sendResult = pContext->transportInterface.send( pContext->transportInterface.pNetworkContext,
+                                                            pIndex,
+                                                            safeRemainingBytesToSend );
+        }
 
         if( sendResult > 0 )
         {
@@ -2572,8 +2588,8 @@ static MQTTStatus_t validateSubscribeUnsubscribeParams( const MQTTContext_t * pC
     {
         LogError( ( "Argument cannot be NULL: pContext=%p, "
                     "pSubscriptionList=%p.",
-                    ( void * ) pContext,
-                    ( void * ) pSubscriptionList ) );
+                    ( const void * ) pContext,
+                    ( const void * ) pSubscriptionList ) );
         status = MQTTBadParameter;
     }
     else if( subscriptionCount == 0UL )
@@ -3814,8 +3830,8 @@ static MQTTStatus_t validatePublishParams( const MQTTContext_t * pContext,
     {
         LogError( ( "Argument cannot be NULL: pContext=%p, "
                     "pPublishInfo=%p.",
-                    ( void * ) pContext,
-                    ( void * ) pPublishInfo ) );
+                    ( const void * ) pContext,
+                    ( const void * ) pPublishInfo ) );
         status = MQTTBadParameter;
     }
     else if( ( pPublishInfo->qos != MQTTQoS0 ) && ( packetId == 0U ) )
@@ -4235,8 +4251,8 @@ MQTTStatus_t MQTT_Init( MQTTContext_t * pContext,
                     "pTransportInterface=%p, "
                     "pNetworkBuffer=%p",
                     ( void * ) pContext,
-                    ( void * ) pTransportInterface,
-                    ( void * ) pNetworkBuffer ) );
+                    ( const void * ) pTransportInterface,
+                    ( const void * ) pNetworkBuffer ) );
         status = MQTTBadParameter;
     }
     else if( getTimeFunction == NULL )
@@ -4431,7 +4447,7 @@ MQTTStatus_t MQTT_CheckConnectStatus( const MQTTContext_t * pContext )
     if( pContext == NULL )
     {
         LogError( ( "Argument cannot be NULL: pContext=%p",
-                    ( void * ) pContext ) );
+                    ( const void * ) pContext ) );
         status = MQTTBadParameter;
     }
 
@@ -4486,7 +4502,7 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
         LogError( ( "Argument cannot be NULL: pContext=%p, "
                     "pConnectInfo=%p, pSessionPresent=%p.",
                     ( void * ) pContext,
-                    ( void * ) pConnectInfo,
+                    ( const void * ) pConnectInfo,
                     ( void * ) pSessionPresent ) );
         status = MQTTBadParameter;
     }
@@ -5241,7 +5257,7 @@ MQTTStatus_t MQTT_MatchTopic( const char * pTopicName,
     {
         LogError( ( "Invalid paramater: Topic name should be non-NULL and its "
                     "length should be > 0: TopicName=%p, TopicNameLength=%hu",
-                    ( void * ) pTopicName,
+                    ( const void * ) pTopicName,
                     ( unsigned short ) topicNameLength ) );
 
         status = MQTTBadParameter;
@@ -5250,7 +5266,7 @@ MQTTStatus_t MQTT_MatchTopic( const char * pTopicName,
     {
         LogError( ( "Invalid paramater: Topic filter should be non-NULL and "
                     "its length should be > 0: TopicName=%p, TopicFilterLength=%hu",
-                    ( void * ) pTopicFilter,
+                    ( const void * ) pTopicFilter,
                     ( unsigned short ) topicFilterLength ) );
         status = MQTTBadParameter;
     }

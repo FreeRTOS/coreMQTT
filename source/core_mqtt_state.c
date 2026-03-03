@@ -889,7 +889,7 @@ MQTTStatus_t MQTT_UpdateStatePublish( const MQTTContext_t * pMqttContext,
     if( ( pMqttContext == NULL ) || ( pNewState == NULL ) )
     {
         LogError( ( "Argument cannot be NULL: pMqttContext=%p, pNewState=%p",
-                    ( void * ) pMqttContext,
+                    ( const void * ) pMqttContext,
                     ( void * ) pNewState ) );
 
         mqttStatus = MQTTBadParameter;
@@ -1015,7 +1015,7 @@ MQTTStatus_t MQTT_UpdateStateAck( const MQTTContext_t * pMqttContext,
     if( ( pMqttContext == NULL ) || ( pNewState == NULL ) )
     {
         LogError( ( "Argument cannot be NULL: pMqttContext=%p, pNewState=%p.",
-                    ( void * ) pMqttContext,
+                    ( const void * ) pMqttContext,
                     ( void * ) pNewState ) );
         status = MQTTBadParameter;
     }
@@ -1090,7 +1090,7 @@ uint16_t MQTT_PubrelToResend( const MQTTContext_t * pMqttContext,
     {
         LogError( ( "Arguments cannot be NULL pMqttContext=%p, pCursor=%p"
                     " pState=%p.",
-                    ( void * ) pMqttContext,
+                    ( const void * ) pMqttContext,
                     ( void * ) pCursor,
                     ( void * ) pState ) );
     }
@@ -1124,7 +1124,7 @@ uint16_t MQTT_PublishToResend( const MQTTContext_t * pMqttContext,
     if( ( pMqttContext == NULL ) || ( pCursor == NULL ) )
     {
         LogError( ( "Arguments cannot be NULL pMqttContext=%p, pCursor=%p",
-                    ( void * ) pMqttContext,
+                    ( const void * ) pMqttContext,
                     ( void * ) pCursor ) );
     }
     else
