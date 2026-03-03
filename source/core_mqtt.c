@@ -3200,6 +3200,117 @@ static MQTTStatus_t sendPublishWithoutCopy( MQTTContext_t * pContext,
 
 /*-----------------------------------------------------------*/
 
+/**
+ * @brief Add an encoded string to the IO vector if it fits within maxPacketSize.
+ * Returns MQTTBadParameter if the addition would overflow.
+ */
+static MQTTStatus_t addStringToVectorChecked( uint8_t * pLenBuf,
+                                              const char * pStr,
+                                              uint16_t strLen,
+                                              TransportOutVector_t ** ppIterator,
+                                              size_t * pIoVectorLength,
+                                              uint32_t * pTotalMessageLength )
+{
+    MQTTStatus_t status = MQTTSuccess;
+
+    if( ADDITION_WILL_OVERFLOW_U32( *pTotalMessageLength, 2U ) ||
+        ADDITION_WILL_OVERFLOW_U32( *pTotalMessageLength + 2U, ( uint32_t ) strLen ) ||
+        ( ( *pTotalMessageLength + 2U + ( uint32_t ) strLen ) > MQTT_MAX_PACKET_SIZE ) )
+    {
+        LogError( ( "Total MQTT packet size must be less than 268435461" ) );
+        status = MQTTBadParameter;
+    }
+    else
+    {
+        size_t vectorsAdded = addEncodedStringToVector( pLenBuf, pStr, strLen,
+                                                        *ppIterator, pTotalMessageLength );
+        *ppIterator = &( ( *ppIterator )[ vectorsAdded ] );
+        *pIoVectorLength += vectorsAdded;
+    }
+
+    return status;
+}
+
+/**
+ * @brief Append will properties, topic, and payload vectors to the IO vector.
+ */
+static MQTTStatus_t appendWillVectors( const MQTTPublishInfo_t * pWillInfo,
+                                       const MQTTPropBuilder_t * pWillPropertyBuilder,
+                                       TransportOutVector_t ** ppIterator,
+                                       size_t * pIoVectorLength,
+                                       uint32_t * pTotalMessageLength,
+                                       uint8_t * pWillPropertyLength )
+{
+    MQTTStatus_t status = MQTTSuccess;
+    uint32_t willPropsLen = 0U;
+    uint8_t * pIndex;
+
+    if( ( pWillPropertyBuilder != NULL ) && ( pWillPropertyBuilder->pBuffer != NULL ) )
+    {
+        willPropsLen = ( uint32_t ) pWillPropertyBuilder->currentIndex;
+    }
+
+    pIndex = encodeVariableLength( pWillPropertyLength, willPropsLen );
+    ( *ppIterator )->iov_base = pWillPropertyLength;
+    /* coverity[misra_c_2012_rule_18_2_violation] */
+    /* coverity[misra_c_2012_rule_10_8_violation] */
+    ( *ppIterator )->iov_len = ( size_t ) ( pIndex - pWillPropertyLength );
+
+    if( ADDITION_WILL_OVERFLOW_U32( *pTotalMessageLength, ( *ppIterator )->iov_len ) ||
+        ( ( *pTotalMessageLength + ( *ppIterator )->iov_len ) > MQTT_MAX_PACKET_SIZE ) )
+    {
+        LogError( ( "Total MQTT packet size must be less than 268435461" ) );
+        status = MQTTBadParameter;
+    }
+    else
+    {
+        *pTotalMessageLength += ( uint32_t ) ( *ppIterator )->iov_len;
+        ( *ppIterator )++;
+        ( *pIoVectorLength )++;
+    }
+
+    if( ( status == MQTTSuccess ) && ( willPropsLen > 0U ) )
+    {
+        assert( !CHECK_SIZE_T_OVERFLOWS_32BIT( pWillPropertyBuilder->currentIndex ) );
+        ( *ppIterator )->iov_base = pWillPropertyBuilder->pBuffer;
+        ( *ppIterator )->iov_len = pWillPropertyBuilder->currentIndex;
+
+        if( ADDITION_WILL_OVERFLOW_U32( *pTotalMessageLength, ( *ppIterator )->iov_len ) ||
+            ( ( *pTotalMessageLength + ( *ppIterator )->iov_len ) > MQTT_MAX_PACKET_SIZE ) )
+        {
+            LogError( ( "Total MQTT packet size must be less than 268435461" ) );
+            status = MQTTBadParameter;
+        }
+        else
+        {
+            *pTotalMessageLength += ( uint32_t ) ( *ppIterator )->iov_len;
+            ( *ppIterator )++;
+            ( *pIoVectorLength )++;
+        }
+    }
+
+    if( status == MQTTSuccess )
+    {
+        uint8_t serializedTopicLength[ 2U ];
+        uint8_t serializedPayloadLength[ 2U ];
+
+        status = addStringToVectorChecked( serializedTopicLength,
+                                           pWillInfo->pTopicName,
+                                           ( uint16_t ) pWillInfo->topicNameLength,
+                                           ppIterator, pIoVectorLength, pTotalMessageLength );
+
+        if( status == MQTTSuccess )
+        {
+            status = addStringToVectorChecked( serializedPayloadLength,
+                                               pWillInfo->pPayload,
+                                               ( uint16_t ) pWillInfo->payloadLength,
+                                               ppIterator, pIoVectorLength, pTotalMessageLength );
+        }
+    }
+
+    return status;
+}
+
 static MQTTStatus_t sendConnectWithoutCopy( MQTTContext_t * pContext,
                                             const MQTTConnectInfo_t * pConnectInfo,
                                             const MQTTPublishInfo_t * pWillInfo,
@@ -3215,8 +3326,6 @@ static MQTTStatus_t sendConnectWithoutCopy( MQTTContext_t * pContext,
     int32_t bytesSentOrError;
     uint8_t * pIndex;
     uint8_t serializedClientIDLength[ 2U ];
-    uint8_t serializedTopicLength[ 2U ];
-    uint8_t serializedPayloadLength[ 2U ];
     uint8_t serializedUsernameLength[ 2U ];
     uint8_t serializedPasswordLength[ 2U ];
 
@@ -3272,25 +3381,15 @@ static MQTTStatus_t sendConnectWithoutCopy( MQTTContext_t * pContext,
     }
     else
     {
-        pIndex = serializeConnectFixedHeader( pIndex,
-                                              pConnectInfo,
-                                              pWillInfo,
-                                              remainingLength );
+        pIndex = serializeConnectFixedHeader( pIndex, pConnectInfo, pWillInfo, remainingLength );
 
-        /**
-         * Set value of serverKeepAlive to keepAlive value sent in the CONNECT packet.
-         * This value shall be overwritten if the broker also sends a Keep Alive Interval
-         * in the CONNACK.
-         */
+        /* Set serverKeepAlive; may be overwritten by CONNACK. */
         pContext->connectionProperties.serverKeepAlive = pConnectInfo->keepAliveSeconds;
 
         iterator->iov_base = connectPacketHeader;
-        /* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-182 */
-        /* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-108 */
         /* coverity[misra_c_2012_rule_18_2_violation] */
         /* coverity[misra_c_2012_rule_10_8_violation] */
         iterator->iov_len = ( size_t ) ( pIndex - connectPacketHeader );
-
         totalMessageLength += ( uint32_t ) iterator->iov_len;
         iterator++;
         ioVectorLength++;
@@ -3299,14 +3398,11 @@ static MQTTStatus_t sendConnectWithoutCopy( MQTTContext_t * pContext,
         {
             assert( !CHECK_SIZE_T_OVERFLOWS_32BIT( pPropertyBuilder->currentIndex ) );
             assert( pPropertyBuilder->currentIndex < MQTT_REMAINING_LENGTH_INVALID );
-
             connectPropLen = ( uint32_t ) pPropertyBuilder->currentIndex;
         }
 
         pIndex = encodeVariableLength( propertyLength, connectPropLen );
         iterator->iov_base = propertyLength;
-        /* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-182 */
-        /* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-108 */
         /* coverity[misra_c_2012_rule_18_2_violation] */
         /* coverity[misra_c_2012_rule_10_8_violation] */
         iterator->iov_len = ( size_t ) ( pIndex - propertyLength );
@@ -3331,164 +3427,41 @@ static MQTTStatus_t sendConnectWithoutCopy( MQTTContext_t * pContext,
                 totalMessageLength += ( uint32_t ) iterator->iov_len;
                 iterator++;
                 ioVectorLength++;
-
-                /* Update the context with properties that will persist for the entire connection. */
                 status = updateContextWithConnectProps( pPropertyBuilder, &pContext->connectionProperties );
             }
         }
 
+        /* Serialize client ID. */
         if( status == MQTTSuccess )
         {
-            if( ADDITION_WILL_OVERFLOW_U32( totalMessageLength, 2U ) ||
-                ADDITION_WILL_OVERFLOW_U32( totalMessageLength + 2U, ( uint32_t ) pConnectInfo->clientIdentifierLength ) ||
-                ( ( totalMessageLength + 2U + ( uint32_t ) pConnectInfo->clientIdentifierLength ) > MQTT_MAX_PACKET_SIZE ) )
-            {
-                LogError( ( "Total MQTT packet size must be less than 268435461" ) );
-                status = MQTTBadParameter;
-            }
-            else
-            {
-                /* Serialize the client ID. */
-                vectorsAdded = addEncodedStringToVector( serializedClientIDLength,
-                                                         pConnectInfo->pClientIdentifier,
-                                                         ( uint16_t ) pConnectInfo->clientIdentifierLength,
-                                                         iterator,
-                                                         &totalMessageLength );
-
-                /* Update the iterator to point to the next empty slot. */
-                iterator = &iterator[ vectorsAdded ];
-                ioVectorLength += vectorsAdded;
-            }
+            status = addStringToVectorChecked( serializedClientIDLength,
+                                               pConnectInfo->pClientIdentifier,
+                                               ( uint16_t ) pConnectInfo->clientIdentifierLength,
+                                               &iterator, &ioVectorLength, &totalMessageLength );
         }
 
+        /* Serialize will properties, topic, and payload. */
         if( ( status == MQTTSuccess ) && ( pWillInfo != NULL ) )
         {
-            uint32_t willPropsLen = 0U;
-
-            if( ( pWillPropertyBuilder != NULL ) && ( pWillPropertyBuilder->pBuffer != NULL ) )
-            {
-                willPropsLen = ( uint32_t ) pWillPropertyBuilder->currentIndex;
-            }
-
-            pIndex = encodeVariableLength( willPropertyLength, willPropsLen );
-            iterator->iov_base = willPropertyLength;
-            /* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-182 */
-            /* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-108 */
-            /* coverity[misra_c_2012_rule_18_2_violation] */
-            /* coverity[misra_c_2012_rule_10_8_violation] */
-            iterator->iov_len = ( size_t ) ( pIndex - willPropertyLength );
-
-            if( ADDITION_WILL_OVERFLOW_U32( totalMessageLength, iterator->iov_len ) ||
-                ( ( totalMessageLength + iterator->iov_len ) > MQTT_MAX_PACKET_SIZE ) )
-            {
-                LogError( ( "Total MQTT packet size must be less than 268435461" ) );
-                status = MQTTBadParameter;
-            }
-            else
-            {
-                totalMessageLength += ( uint32_t ) iterator->iov_len;
-                iterator++;
-                ioVectorLength++;
-            }
-
-            if( ( status == MQTTSuccess ) && ( willPropsLen > 0U ) )
-            {
-                /* Serialize the will properties, if present. */
-
-                iterator->iov_base = pWillPropertyBuilder->pBuffer;
-                iterator->iov_len = pWillPropertyBuilder->currentIndex;
-
-                assert( !CHECK_SIZE_T_OVERFLOWS_32BIT( pWillPropertyBuilder->currentIndex ) );
-
-                if( ADDITION_WILL_OVERFLOW_U32( totalMessageLength, iterator->iov_len ) ||
-                    ( ( totalMessageLength + iterator->iov_len ) > MQTT_MAX_PACKET_SIZE ) )
-                {
-                    LogError( ( "Total MQTT packet size must be less than 268435461" ) );
-                    status = MQTTBadParameter;
-                }
-                else
-                {
-                    totalMessageLength += ( uint32_t ) iterator->iov_len;
-                    iterator++;
-                    ioVectorLength++;
-                }
-            }
-
-            if( status == MQTTSuccess )
-            {
-                if( ADDITION_WILL_OVERFLOW_U32( totalMessageLength, 2U ) ||
-                    ADDITION_WILL_OVERFLOW_U32( totalMessageLength + 2U, ( uint32_t ) pWillInfo->topicNameLength ) ||
-                    ( ( totalMessageLength + 2U + ( uint32_t ) pWillInfo->topicNameLength ) > MQTT_MAX_PACKET_SIZE ) )
-                {
-                    LogError( ( "Total MQTT packet size must be less than 268435461" ) );
-                    status = MQTTBadParameter;
-                }
-                else
-                {
-                    /* Serialize the topic. */
-                    vectorsAdded = addEncodedStringToVector( serializedTopicLength,
-                                                             pWillInfo->pTopicName,
-                                                             ( uint16_t ) pWillInfo->topicNameLength,
-                                                             iterator,
-                                                             &totalMessageLength );
-
-                    /* Update the iterator to point to the next empty slot. */
-                    iterator = &iterator[ vectorsAdded ];
-                    ioVectorLength += vectorsAdded;
-                }
-
-                if( ( status == MQTTSuccess ) &&
-                    ( ADDITION_WILL_OVERFLOW_U32( totalMessageLength, 2U ) ||
-                      ADDITION_WILL_OVERFLOW_U32( totalMessageLength + 2U, ( uint32_t ) pWillInfo->payloadLength ) ||
-                      ( ( totalMessageLength + 2U + ( uint32_t ) pWillInfo->payloadLength ) > MQTT_MAX_PACKET_SIZE ) ) )
-                {
-                    LogError( ( "Total MQTT packet size must be less than 268435461" ) );
-                    status = MQTTBadParameter;
-                }
-                else
-                {
-                    /* Serialize the payload. Payload of last will and testament can be NULL. */
-                    vectorsAdded = addEncodedStringToVector( serializedPayloadLength,
-                                                             pWillInfo->pPayload,
-                                                             ( uint16_t ) pWillInfo->payloadLength,
-                                                             iterator,
-                                                             &totalMessageLength );
-
-                    /* Update the iterator to point to the next empty slot. */
-                    iterator = &iterator[ vectorsAdded ];
-                    ioVectorLength += vectorsAdded;
-                }
-            }
+            status = appendWillVectors( pWillInfo, pWillPropertyBuilder,
+                                        &iterator, &ioVectorLength, &totalMessageLength,
+                                        willPropertyLength );
         }
 
-        /* Encode the user name if provided. */
+        /* Serialize username. */
         if( ( status == MQTTSuccess ) && ( pConnectInfo->pUserName != NULL ) )
         {
-            if( ADDITION_WILL_OVERFLOW_U32( totalMessageLength, 2U ) ||
-                ADDITION_WILL_OVERFLOW_U32( totalMessageLength + 2U, ( uint32_t ) pConnectInfo->userNameLength ) ||
-                ( ( totalMessageLength + 2U + ( uint32_t ) pConnectInfo->userNameLength ) > MQTT_MAX_PACKET_SIZE ) )
-            {
-                LogError( ( "Total MQTT packet size must be less than 268435461" ) );
-                status = MQTTBadParameter;
-            }
-            else
-            {
-                /* Serialize the user name string. */
-                vectorsAdded = addEncodedStringToVector( serializedUsernameLength,
-                                                         pConnectInfo->pUserName,
-                                                         ( uint16_t ) pConnectInfo->userNameLength,
-                                                         iterator,
-                                                         &totalMessageLength );
-
-                /* Update the iterator to point to the next empty slot. */
-                iterator = &iterator[ vectorsAdded ];
-                ioVectorLength += vectorsAdded;
-            }
+            status = addStringToVectorChecked( serializedUsernameLength,
+                                               pConnectInfo->pUserName,
+                                               ( uint16_t ) pConnectInfo->userNameLength,
+                                               &iterator, &ioVectorLength, &totalMessageLength );
         }
 
-        /* Encode the password if provided. */
+        /* Serialize password. */
         if( ( status == MQTTSuccess ) && ( pConnectInfo->pPassword != NULL ) )
         {
+            vectorsAdded = 0U;
+
             if( ADDITION_WILL_OVERFLOW_U32( totalMessageLength, 2U ) ||
                 ADDITION_WILL_OVERFLOW_U32( totalMessageLength + 2U, ( uint32_t ) pConnectInfo->passwordLength ) ||
                 ( ( totalMessageLength + 2U + ( uint32_t ) pConnectInfo->passwordLength ) > MQTT_MAX_PACKET_SIZE ) )
@@ -3498,13 +3471,11 @@ static MQTTStatus_t sendConnectWithoutCopy( MQTTContext_t * pContext,
             }
             else
             {
-                /* Serialize the user name string. */
                 vectorsAdded = addEncodedStringToVector( serializedPasswordLength,
                                                          pConnectInfo->pPassword,
                                                          ( uint16_t ) pConnectInfo->passwordLength,
                                                          iterator,
                                                          &totalMessageLength );
-                /* Update the iterator to point to the next empty slot. */
                 ioVectorLength += vectorsAdded;
             }
         }
