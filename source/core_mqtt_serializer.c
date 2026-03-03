@@ -2080,6 +2080,312 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp )
 
 /*-----------------------------------------------------------*/
 
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Set a bit in pPropBuffer->fieldSet if pPropBuffer is not NULL.
+ */
+static void setConnackPropBit( MQTTPropBuilder_t * pPropBuffer,
+                               uint8_t bitPos )
+{
+    if( pPropBuffer != NULL )
+    {
+        UINT32_SET_BIT( pPropBuffer->fieldSet, bitPos );
+    }
+}
+
+/**
+ * @brief Validate that a uint8 property is 0 or 1 (boolean).
+ */
+static MQTTStatus_t validateBoolProp( uint8_t value,
+                                      const char * pPropName )
+{
+    MQTTStatus_t status = MQTTSuccess;
+
+    if( value > 1U )
+    {
+        LogError( ( "Server set %s to %u (not 0 or 1). Invalid response.", pPropName, value ) );
+        status = MQTTBadResponse;
+    }
+
+    return status;
+}
+
+/**
+ * @brief Decode a uint8 boolean property, validate it, and set the fieldSet bit.
+ */
+static MQTTStatus_t decodeConnackBoolProp( uint8_t * pDest,
+                                           uint32_t * pPropertyLength,
+                                           bool * pSeen,
+                                           uint8_t ** ppIndex,
+                                           const char * pPropName,
+                                           MQTTPropBuilder_t * pPropBuffer,
+                                           uint8_t bitPos )
+{
+    MQTTStatus_t status = decodeUint8t( pDest, pPropertyLength, pSeen, ppIndex );
+
+    if( status == MQTTSuccess )
+    {
+        status = validateBoolProp( *pDest, pPropName );
+    }
+
+    if( status == MQTTSuccess )
+    {
+        setConnackPropBit( pPropBuffer, bitPos );
+    }
+
+    return status;
+}
+
+static MQTTStatus_t deserializeConnackProperty( uint8_t propertyId,
+                                                MQTTConnectionProperties_t * pConnackProperties,
+                                                uint32_t * pPropertyLength,
+                                                uint8_t ** ppVariableHeader,
+                                                MQTTPropBuilder_t * pPropBuffer,
+                                                bool * pSeenFlags )
+{
+    MQTTStatus_t status = MQTTSuccess;
+    const char * data;
+    size_t dataLength;
+
+    /* pSeenFlags layout: [0]=sessionExpiry [1]=receiveMax [2]=maxQos [3]=retain
+     * [4]=maxPacket [5]=clientId [6]=topicAlias [7]=wildcard [8]=subId
+     * [9]=sharedsub [10]=keepAlive [11]=responseInfo [12]=serverRef
+     * [13]=authMethod [14]=authData [15]=reasonString */
+
+    switch( propertyId )
+    {
+        case MQTT_SESSION_EXPIRY_ID:
+            status = decodeUint32t( &pConnackProperties->sessionExpiry, pPropertyLength,
+                                    &pSeenFlags[ 0 ], ppVariableHeader );
+
+            if( status == MQTTSuccess )
+            {
+                LogDebug( ( "Session expiry from server: %" PRIu32, pConnackProperties->sessionExpiry ) );
+                setConnackPropBit( pPropBuffer, MQTT_SESSION_EXPIRY_INTERVAL_POS );
+            }
+
+            break;
+
+        case MQTT_RECEIVE_MAX_ID:
+            status = decodeUint16t( &pConnackProperties->serverReceiveMax, pPropertyLength,
+                                    &pSeenFlags[ 1 ], ppVariableHeader );
+
+            if( ( status == MQTTSuccess ) && ( pConnackProperties->serverReceiveMax == 0U ) )
+            {
+                LogError( ( "Receive Maximum value set to 0 by the server." ) );
+                status = MQTTBadResponse;
+            }
+
+            if( status == MQTTSuccess )
+            {
+                LogDebug( ( "Server receive maximum: %" PRIu16, pConnackProperties->serverReceiveMax ) );
+                setConnackPropBit( pPropBuffer, MQTT_RECEIVE_MAXIMUM_POS );
+            }
+
+            break;
+
+        case MQTT_MAX_QOS_ID:
+            status = decodeConnackBoolProp( &pConnackProperties->serverMaxQos, pPropertyLength,
+                                            &pSeenFlags[ 2 ], ppVariableHeader, "maximum QoS",
+                                            pPropBuffer, MQTT_MAX_QOS_POS );
+
+            if( status == MQTTSuccess )
+            {
+                LogDebug( ( "Server maximum QoS: %" PRIu8, pConnackProperties->serverMaxQos ) );
+            }
+
+            break;
+
+        case MQTT_RETAIN_AVAILABLE_ID:
+            status = decodeConnackBoolProp( &pConnackProperties->retainAvailable, pPropertyLength,
+                                            &pSeenFlags[ 3 ], ppVariableHeader, "retain available",
+                                            pPropBuffer, MQTT_RETAIN_AVAILABLE_POS );
+
+            if( status == MQTTSuccess )
+            {
+                LogDebug( ( "Retain available: %" PRIu8, pConnackProperties->retainAvailable ) );
+            }
+
+            break;
+
+        case MQTT_MAX_PACKET_SIZE_ID:
+            status = decodeUint32t( &pConnackProperties->serverMaxPacketSize, pPropertyLength,
+                                    &pSeenFlags[ 4 ], ppVariableHeader );
+
+            if( ( status == MQTTSuccess ) && ( pConnackProperties->serverMaxPacketSize == 0U ) )
+            {
+                LogError( ( "Server set maximum packet size to 0. Invalid response." ) );
+                status = MQTTBadResponse;
+            }
+
+            if( status == MQTTSuccess )
+            {
+                LogDebug( ( "Server maximum packet size: %" PRIu32, pConnackProperties->serverMaxPacketSize ) );
+                setConnackPropBit( pPropBuffer, MQTT_MAX_PACKET_SIZE_POS );
+            }
+
+            break;
+
+        case MQTT_ASSIGNED_CLIENT_ID:
+            status = decodeUtf8( &data, &dataLength, pPropertyLength, &pSeenFlags[ 5 ], ppVariableHeader );
+
+            if( status == MQTTSuccess )
+            {
+                LogDebug( ( "Assigned client ID: %.*s", ( int ) dataLength, data ) );
+                setConnackPropBit( pPropBuffer, MQTT_ASSIGNED_CLIENT_ID_POS );
+            }
+
+            break;
+
+        case MQTT_TOPIC_ALIAS_MAX_ID:
+            status = decodeUint16t( &pConnackProperties->serverTopicAliasMax, pPropertyLength,
+                                    &pSeenFlags[ 6 ], ppVariableHeader );
+
+            if( status == MQTTSuccess )
+            {
+                LogDebug( ( "Topic alias max ID: %" PRIu16, pConnackProperties->serverTopicAliasMax ) );
+                setConnackPropBit( pPropBuffer, MQTT_TOPIC_ALIAS_MAX_POS );
+            }
+
+            break;
+
+        case MQTT_REASON_STRING_ID:
+            status = decodeUtf8( &data, &dataLength, pPropertyLength, &pSeenFlags[ 15 ], ppVariableHeader );
+
+            if( status == MQTTSuccess )
+            {
+                LogInfo( ( "Reason string from server: %.*s", ( int ) dataLength, data ) );
+                setConnackPropBit( pPropBuffer, MQTT_REASON_STRING_POS );
+            }
+
+            break;
+
+        case MQTT_USER_PROPERTY_ID:
+           {
+               const char * key;
+               const char * value;
+               size_t keyLength;
+               size_t valueLength;
+               status = decodeUserProp( &key, &keyLength, &value, &valueLength, pPropertyLength, ppVariableHeader );
+
+               if( status == MQTTSuccess )
+               {
+                   LogDebug( ( "User property: %.*s : %.*s", ( int ) keyLength, key, ( int ) valueLength, value ) );
+                   setConnackPropBit( pPropBuffer, MQTT_USER_PROP_POS );
+               }
+           }
+           break;
+
+        case MQTT_WILDCARD_ID:
+            status = decodeConnackBoolProp( &pConnackProperties->isWildcardAvailable, pPropertyLength,
+                                            &pSeenFlags[ 7 ], ppVariableHeader, "wildcard",
+                                            pPropBuffer, MQTT_WILDCARD_SUBSCRIPTION_AVAILABLE_POS );
+
+            if( status == MQTTSuccess )
+            {
+                LogDebug( ( "Wildcard subscription available: %s",
+                            pConnackProperties->isWildcardAvailable ? "Yes" : "No" ) );
+            }
+
+            break;
+
+        case MQTT_SUB_AVAILABLE_ID:
+            status = decodeConnackBoolProp( &pConnackProperties->isSubscriptionIdAvailable, pPropertyLength,
+                                            &pSeenFlags[ 8 ], ppVariableHeader, "subscription ID availability",
+                                            pPropBuffer, MQTT_SUBSCRIPTION_ID_AVAILABLE_POS );
+
+            if( status == MQTTSuccess )
+            {
+                LogDebug( ( "Subscription ID available: %s",
+                            pConnackProperties->isSubscriptionIdAvailable ? "Yes" : "No" ) );
+            }
+
+            break;
+
+        case MQTT_SHARED_SUB_ID:
+            status = decodeConnackBoolProp( &pConnackProperties->isSharedAvailable, pPropertyLength,
+                                            &pSeenFlags[ 9 ], ppVariableHeader, "shared sub availability",
+                                            pPropBuffer, MQTT_SHARED_SUBSCRIPTION_AVAILABLE_POS );
+
+            if( status == MQTTSuccess )
+            {
+                LogDebug( ( "Shared subscription available: %s",
+                            pConnackProperties->isSharedAvailable ? "Yes" : "No" ) );
+            }
+
+            break;
+
+        case MQTT_SERVER_KEEP_ALIVE_ID:
+            status = decodeUint16t( &pConnackProperties->serverKeepAlive, pPropertyLength,
+                                    &pSeenFlags[ 10 ], ppVariableHeader );
+
+            if( status == MQTTSuccess )
+            {
+                LogDebug( ( "Server keep alive: %d", ( int ) pConnackProperties->serverKeepAlive ) );
+                setConnackPropBit( pPropBuffer, MQTT_SERVER_KEEP_ALIVE_POS );
+            }
+
+            break;
+
+        case MQTT_RESPONSE_INFO_ID:
+            status = decodeUtf8( &data, &dataLength, pPropertyLength, &pSeenFlags[ 11 ], ppVariableHeader );
+
+            if( ( status == MQTTSuccess ) && ( pConnackProperties->requestResponseInfo == false ) )
+            {
+                LogError( ( "Client did not request information still server sent it. Protocol error." ) );
+                status = MQTTBadResponse;
+            }
+
+            if( status == MQTTSuccess )
+            {
+                LogDebug( ( "Response information: %.*s", ( int ) dataLength, data ) );
+                setConnackPropBit( pPropBuffer, MQTT_RESPONSE_INFORMATION_POS );
+            }
+
+            break;
+
+        case MQTT_SERVER_REF_ID:
+            status = decodeUtf8( &data, &dataLength, pPropertyLength, &pSeenFlags[ 12 ], ppVariableHeader );
+
+            if( status == MQTTSuccess )
+            {
+                LogDebug( ( "Server reference: %.*s", ( int ) dataLength, data ) );
+                setConnackPropBit( pPropBuffer, MQTT_SERVER_REFERENCE_POS );
+            }
+
+            break;
+
+        case MQTT_AUTH_METHOD_ID:
+            status = decodeUtf8( &data, &dataLength, pPropertyLength, &pSeenFlags[ 13 ], ppVariableHeader );
+
+            if( status == MQTTSuccess )
+            {
+                LogDebug( ( "Authentication method received: %.*s", ( int ) dataLength, data ) );
+                setConnackPropBit( pPropBuffer, MQTT_AUTHENTICATION_METHOD_POS );
+            }
+
+            break;
+
+        case MQTT_AUTH_DATA_ID:
+            status = decodeUtf8( &data, &dataLength, pPropertyLength, &pSeenFlags[ 14 ], ppVariableHeader );
+
+            if( status == MQTTSuccess )
+            {
+                LogDebug( ( "Auth data received: %.*s", ( int ) dataLength, data ) );
+                setConnackPropBit( pPropBuffer, MQTT_AUTHENTICATION_DATA_POS );
+            }
+
+            break;
+
+        default:
+            status = MQTTBadResponse;
+            break;
+    }
+
+    return status;
+}
+
 static MQTTStatus_t deserializeConnackProperties( MQTTConnectionProperties_t * pConnackProperties,
                                                   uint32_t length,
                                                   uint8_t * pIndex,
@@ -2088,22 +2394,7 @@ static MQTTStatus_t deserializeConnackProperties( MQTTConnectionProperties_t * p
     MQTTStatus_t status = MQTTSuccess;
     uint8_t * pVariableHeader = pIndex;
     uint32_t propertyLength = length;
-    bool sessionExpiry = false;
-    bool serverReceiveMax = false;
-    bool maxQos = false;
-    bool retain = false;
-    bool maxPacket = false;
-    bool clientId = false;
-    bool topicAlias = false;
-    bool wildcard = false;
-    bool subId = false;
-    bool sharedsub = false;
-    bool keepAlive = false;
-    bool responseInfo = false;
-    bool serverReference = false;
-    bool authMethod = false;
-    bool authData = false;
-    bool reasonString = false;
+    bool seenFlags[ 16 ] = { false };
 
     pVariableHeader = &pVariableHeader[ variableLengthEncodedSize( propertyLength ) ];
 
@@ -2115,375 +2406,16 @@ static MQTTStatus_t deserializeConnackProperties( MQTTConnectionProperties_t * p
         pPropBuffer->fieldSet = 0U;
     }
 
-    /* Decode all the properties received, validate and store them in pConnackProperties. */
     while( ( propertyLength > 0U ) && ( status == MQTTSuccess ) )
     {
         uint8_t propertyId = *pVariableHeader;
-        const char * data;
-        size_t dataLength;
 
         pVariableHeader = &pVariableHeader[ 1 ];
         propertyLength -= 1U;
 
-        switch( propertyId )
-        {
-            /* In absence of this property, the value in the connect packet is used. */
-            case MQTT_SESSION_EXPIRY_ID:
-                status = decodeUint32t( &pConnackProperties->sessionExpiry, &propertyLength,
-                                        &sessionExpiry, &pVariableHeader );
-
-                if( status == MQTTSuccess )
-                {
-                    LogDebug( ( "Session expiry from server: %" PRIu32, pConnackProperties->sessionExpiry ) );
-
-                    if( pPropBuffer != NULL )
-                    {
-                        UINT32_SET_BIT( pPropBuffer->fieldSet, MQTT_SESSION_EXPIRY_INTERVAL_POS );
-                    }
-                }
-
-                break;
-
-            case MQTT_RECEIVE_MAX_ID:
-                status = decodeUint16t( &pConnackProperties->serverReceiveMax, &propertyLength,
-                                        &serverReceiveMax, &pVariableHeader );
-
-                if( status == MQTTSuccess )
-                {
-                    /* Receive max cannot be 0. */
-                    if( pConnackProperties->serverReceiveMax == 0U )
-                    {
-                        LogError( ( "Receive Maximum value set to 0 by the server." ) );
-                        status = MQTTBadResponse;
-                    }
-                    else
-                    {
-                        LogDebug( ( "Server receive maximum: %" PRIu16, pConnackProperties->serverReceiveMax ) );
-
-                        if( pPropBuffer != NULL )
-                        {
-                            UINT32_SET_BIT( pPropBuffer->fieldSet, MQTT_RECEIVE_MAXIMUM_POS );
-                        }
-                    }
-                }
-
-                break;
-
-            case MQTT_MAX_QOS_ID:
-                status = decodeUint8t( &pConnackProperties->serverMaxQos, &propertyLength,
-                                       &maxQos, &pVariableHeader );
-
-                if( status == MQTTSuccess )
-                {
-                    /* Protocol error for this value to be anything else except 0 or 1. */
-                    if( pConnackProperties->serverMaxQos > 1U )
-                    {
-                        LogError( ( "Invalid maximum QoS value set to %" PRIu8 " (not 0 or 1) by the server.",
-                                    pConnackProperties->serverMaxQos ) );
-                        status = MQTTBadResponse;
-                    }
-                    else
-                    {
-                        LogDebug( ( "Server maximum QoS: %" PRIu8, pConnackProperties->serverMaxQos ) );
-
-                        if( pPropBuffer != NULL )
-                        {
-                            UINT32_SET_BIT( pPropBuffer->fieldSet, MQTT_MAX_QOS_POS );
-                        }
-                    }
-                }
-
-                break;
-
-            case MQTT_RETAIN_AVAILABLE_ID:
-                status = decodeUint8t( &pConnackProperties->retainAvailable, &propertyLength,
-                                       &retain, &pVariableHeader );
-
-                if( status == MQTTSuccess )
-                {
-                    /* Protocol error for this value to be anything else except 0 or 1. */
-                    if( pConnackProperties->retainAvailable > 1U )
-                    {
-                        LogError( ( "Invalid retain available value set by the server %" PRIu8 " (not 0 or 1)",
-                                    pConnackProperties->retainAvailable ) );
-                        status = MQTTBadResponse;
-                    }
-                    else
-                    {
-                        LogDebug( ( "Retain available: %" PRIu8, pConnackProperties->retainAvailable ) );
-
-                        if( pPropBuffer != NULL )
-                        {
-                            UINT32_SET_BIT( pPropBuffer->fieldSet, MQTT_RETAIN_AVAILABLE_POS );
-                        }
-                    }
-                }
-
-                break;
-
-            case MQTT_MAX_PACKET_SIZE_ID:
-                status = decodeUint32t( &pConnackProperties->serverMaxPacketSize, &propertyLength,
-                                        &maxPacket, &pVariableHeader );
-
-                if( status == MQTTSuccess )
-                {
-                    /* Protocol error for this value to be 0. */
-                    if( pConnackProperties->serverMaxPacketSize == 0U )
-                    {
-                        LogError( ( "Server set maximum packet size to 0. Invalid response." ) );
-                        status = MQTTBadResponse;
-                    }
-                    else
-                    {
-                        LogDebug( ( "Server maximum packet size: %" PRIu32, pConnackProperties->serverMaxPacketSize ) );
-
-                        if( pPropBuffer != NULL )
-                        {
-                            UINT32_SET_BIT( pPropBuffer->fieldSet, MQTT_MAX_PACKET_SIZE_POS );
-                        }
-                    }
-                }
-
-                break;
-
-            case MQTT_ASSIGNED_CLIENT_ID:
-                status = decodeUtf8( &data, &dataLength, &propertyLength, &clientId, &pVariableHeader );
-
-                if( status == MQTTSuccess )
-                {
-                    LogDebug( ( "Assigned client ID: %.*s", ( int ) dataLength, data ) );
-
-                    if( pPropBuffer != NULL )
-                    {
-                        UINT32_SET_BIT( pPropBuffer->fieldSet, MQTT_ASSIGNED_CLIENT_ID_POS );
-                    }
-                }
-
-                break;
-
-            case MQTT_TOPIC_ALIAS_MAX_ID:
-                status = decodeUint16t( &pConnackProperties->serverTopicAliasMax, &propertyLength,
-                                        &topicAlias, &pVariableHeader );
-
-                if( status == MQTTSuccess )
-                {
-                    LogDebug( ( "Topic alias max ID: %" PRIu16, pConnackProperties->serverTopicAliasMax ) );
-
-                    if( pPropBuffer != NULL )
-                    {
-                        UINT32_SET_BIT( pPropBuffer->fieldSet, MQTT_TOPIC_ALIAS_MAX_POS );
-                    }
-                }
-
-                break;
-
-            case MQTT_REASON_STRING_ID:
-                status = decodeUtf8( &data, &dataLength, &propertyLength, &reasonString, &pVariableHeader );
-
-                if( status == MQTTSuccess )
-                {
-                    /* Proper uses for the reason string in the Client would include using this information
-                     * in an exception thrown by the Client code, or writing this string to a log. */
-                    LogInfo( ( "Reason string from server: %.*s", ( int ) dataLength, data ) );
-
-                    if( pPropBuffer != NULL )
-                    {
-                        UINT32_SET_BIT( pPropBuffer->fieldSet, MQTT_REASON_STRING_POS );
-                    }
-                }
-
-                break;
-
-            case MQTT_USER_PROPERTY_ID:
-               {
-                   const char * key, * value;
-                   size_t keyLength, valueLength;
-                   status = decodeUserProp( &key, &keyLength, &value, &valueLength, &propertyLength, &pVariableHeader );
-
-                   if( status == MQTTSuccess )
-                   {
-                       LogDebug( ( "User property: %.*s : %.*s", ( int ) keyLength, key, ( int ) valueLength, value ) );
-
-                       if( pPropBuffer != NULL )
-                       {
-                           UINT32_SET_BIT( pPropBuffer->fieldSet, MQTT_USER_PROP_POS );
-                       }
-                   }
-               }
-               break;
-
-            case MQTT_WILDCARD_ID:
-                status = decodeUint8t( &pConnackProperties->isWildcardAvailable, &propertyLength,
-                                       &wildcard, &pVariableHeader );
-
-                if( status == MQTTSuccess )
-                {
-                    /* Protocol error for this value to be anything except 0 or 1. */
-                    if( pConnackProperties->isWildcardAvailable > 1U )
-                    {
-                        LogError( ( "Server set wildcard value to %u (not 0 or 1). Invalid response.",
-                                    pConnackProperties->isWildcardAvailable ) );
-                        status = MQTTBadResponse;
-                    }
-                    else
-                    {
-                        LogDebug( ( "Wildcard subscription available: %s", pConnackProperties->isWildcardAvailable ? "Yes" : "No" ) );
-
-                        if( pPropBuffer != NULL )
-                        {
-                            UINT32_SET_BIT( pPropBuffer->fieldSet, MQTT_WILDCARD_SUBSCRIPTION_AVAILABLE_POS );
-                        }
-                    }
-                }
-
-                break;
-
-            case MQTT_SUB_AVAILABLE_ID:
-                status = decodeUint8t( &pConnackProperties->isSubscriptionIdAvailable, &propertyLength,
-                                       &subId, &pVariableHeader );
-
-                if( status == MQTTSuccess )
-                {
-                    /* Protocol error for this value to be anything except 0 or 1. */
-                    if( pConnackProperties->isSubscriptionIdAvailable > 1U )
-                    {
-                        LogError( ( "Server set subscription ID availability to %u (not 0 or 1). Invalid response.",
-                                    pConnackProperties->isSubscriptionIdAvailable ) );
-                        status = MQTTBadResponse;
-                    }
-                    else
-                    {
-                        LogDebug( ( "Subscription ID available: %s", pConnackProperties->isSubscriptionIdAvailable ? "Yes" : "No" ) );
-
-                        if( pPropBuffer != NULL )
-                        {
-                            UINT32_SET_BIT( pPropBuffer->fieldSet, MQTT_SUBSCRIPTION_ID_AVAILABLE_POS );
-                        }
-                    }
-                }
-
-                break;
-
-            case MQTT_SHARED_SUB_ID:
-                status = decodeUint8t( &pConnackProperties->isSharedAvailable, &propertyLength,
-                                       &sharedsub, &pVariableHeader );
-
-                if( status == MQTTSuccess )
-                {
-                    /* Protocol error for this value to be anything except 0 or 1. */
-                    if( pConnackProperties->isSharedAvailable > 1U )
-                    {
-                        LogError( ( "Server set shared sub availability to %u (not 0 or 1). Invalid response.",
-                                    pConnackProperties->isSharedAvailable ) );
-                        status = MQTTBadResponse;
-                    }
-                    else
-                    {
-                        LogDebug( ( "Shared subscription available: %s", pConnackProperties->isSharedAvailable ? "Yes" : "No" ) );
-
-                        if( pPropBuffer != NULL )
-                        {
-                            UINT32_SET_BIT( pPropBuffer->fieldSet, MQTT_SHARED_SUBSCRIPTION_AVAILABLE_POS );
-                        }
-                    }
-                }
-
-                break;
-
-            case MQTT_SERVER_KEEP_ALIVE_ID:
-                status = decodeUint16t( &pConnackProperties->serverKeepAlive, &propertyLength,
-                                        &keepAlive, &pVariableHeader );
-
-                if( status == MQTTSuccess )
-                {
-                    LogDebug( ( "Server keep alive: %d", ( int ) pConnackProperties->serverKeepAlive ) );
-
-                    if( pPropBuffer != NULL )
-                    {
-                        UINT32_SET_BIT( pPropBuffer->fieldSet, MQTT_SERVER_KEEP_ALIVE_POS );
-                    }
-                }
-
-                break;
-
-            case MQTT_RESPONSE_INFO_ID:
-                status = decodeUtf8( &data, &dataLength, &propertyLength, &responseInfo, &pVariableHeader );
-
-                if( status == MQTTSuccess )
-                {
-                    /* Protocol error to send response information if the client has not requested it. */
-                    if( pConnackProperties->requestResponseInfo == false )
-                    {
-                        LogError( ( "Client did not request information still server sent it. Protocol error." ) );
-                        status = MQTTBadResponse;
-                    }
-                    else
-                    {
-                        LogDebug( ( "Response information: %.*s", ( int ) dataLength, data ) );
-
-                        if( pPropBuffer != NULL )
-                        {
-                            UINT32_SET_BIT( pPropBuffer->fieldSet, MQTT_RESPONSE_INFORMATION_POS );
-                        }
-                    }
-                }
-
-                break;
-
-            case MQTT_SERVER_REF_ID:
-                status = decodeUtf8( &data, &dataLength, &propertyLength, &serverReference, &pVariableHeader );
-
-                if( status == MQTTSuccess )
-                {
-                    LogDebug( ( "Server reference: %.*s", ( int ) dataLength, data ) );
-
-                    if( pPropBuffer != NULL )
-                    {
-                        UINT32_SET_BIT( pPropBuffer->fieldSet, MQTT_SERVER_REFERENCE_POS );
-                    }
-                }
-
-                break;
-
-            case MQTT_AUTH_METHOD_ID:
-                status = decodeUtf8( &data, &dataLength, &propertyLength, &authMethod, &pVariableHeader );
-
-                if( status == MQTTSuccess )
-                {
-                    LogDebug( ( "Authentication method received: %.*s", ( int ) dataLength, data ) );
-
-                    if( pPropBuffer != NULL )
-                    {
-                        UINT32_SET_BIT( pPropBuffer->fieldSet, MQTT_AUTHENTICATION_METHOD_POS );
-                    }
-                }
-
-                /* TODO: AUTH method should be returned to the application to allow the
-                 * authentication to complete. */
-                break;
-
-            case MQTT_AUTH_DATA_ID:
-                status = decodeUtf8( &data, &dataLength, &propertyLength, &authData, &pVariableHeader );
-
-                if( status == MQTTSuccess )
-                {
-                    LogDebug( ( "Auth data received: %.*s", ( int ) dataLength, data ) );
-
-                    if( pPropBuffer != NULL )
-                    {
-                        UINT32_SET_BIT( pPropBuffer->fieldSet, MQTT_AUTHENTICATION_DATA_POS );
-                    }
-                }
-
-                /* TODO: AUTH Data should be returned to the application to allow the
-                 * authentication to complete. */
-                break;
-
-            /* Protocol error to include any other property id. */
-            default:
-                status = MQTTBadResponse;
-                break;
-        }
+        status = deserializeConnackProperty( propertyId, pConnackProperties,
+                                             &propertyLength, &pVariableHeader,
+                                             pPropBuffer, seenFlags );
     }
 
     return status;
