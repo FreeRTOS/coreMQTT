@@ -2107,6 +2107,10 @@ static MQTTStatus_t validateBoolProp( uint8_t value,
         LogError( ( "Server set %s to %u (not 0 or 1). Invalid response.", pPropName, value ) );
         status = MQTTBadResponse;
     }
+    else
+    {
+        ( void ) pPropName;
+    }
 
     return status;
 }
@@ -5112,8 +5116,8 @@ MQTTStatus_t MQTT_ValidateWillProperties( const MQTTPropBuilder_t * pPropertyBui
  * Returns MQTTBadResponse if the property appears more than once.
  */
 static MQTTStatus_t checkOnce( uint32_t * pBitMask,
-                                uint8_t bitPos,
-                                const char * pPropName )
+                               uint8_t bitPos,
+                               const char * pPropName )
 {
     MQTTStatus_t status = MQTTSuccess;
 
@@ -5124,6 +5128,7 @@ static MQTTStatus_t checkOnce( uint32_t * pBitMask,
     }
     else
     {
+        ( void ) pPropName;
         UINT32_SET_BIT( *pBitMask, bitPos );
     }
 
@@ -5158,50 +5163,50 @@ static MQTTStatus_t validateConnectProperty( uint8_t propertyId,
             break;
 
         case MQTT_RECEIVE_MAX_ID:
-        {
-            uint16_t receiveMax = 0U;
-            status = checkOnce( pBitMask, MQTT_RECEIVE_MAXIMUM_POS, "Receive Maximum" );
+           {
+               uint16_t receiveMax = 0U;
+               status = checkOnce( pBitMask, MQTT_RECEIVE_MAXIMUM_POS, "Receive Maximum" );
 
-            if( status == MQTTSuccess )
-            {
-                status = decodeUint16t( &receiveMax, pPropertyLength, &used, ppIndex );
-            }
+               if( status == MQTTSuccess )
+               {
+                   status = decodeUint16t( &receiveMax, pPropertyLength, &used, ppIndex );
+               }
 
-            if( ( status == MQTTSuccess ) && ( receiveMax == 0U ) )
-            {
-                LogError( ( "Receive Maximum cannot be 0 in CONNECT properties." ) );
-                status = MQTTBadResponse;
-            }
+               if( ( status == MQTTSuccess ) && ( receiveMax == 0U ) )
+               {
+                   LogError( ( "Receive Maximum cannot be 0 in CONNECT properties." ) );
+                   status = MQTTBadResponse;
+               }
 
-            break;
-        }
+               break;
+           }
 
         case MQTT_MAX_PACKET_SIZE_ID:
-        {
-            uint32_t maxPacketSize = 0U;
-            status = checkOnce( pBitMask, MQTT_MAX_PACKET_SIZE_POS, "Maximum Packet Size" );
+           {
+               uint32_t maxPacketSize = 0U;
+               status = checkOnce( pBitMask, MQTT_MAX_PACKET_SIZE_POS, "Maximum Packet Size" );
 
-            if( status == MQTTSuccess )
-            {
-                status = decodeUint32t( &maxPacketSize, pPropertyLength, &used, ppIndex );
-            }
+               if( status == MQTTSuccess )
+               {
+                   status = decodeUint32t( &maxPacketSize, pPropertyLength, &used, ppIndex );
+               }
 
-            if( ( status == MQTTSuccess ) && ( maxPacketSize == 0U ) )
-            {
-                LogError( ( "Maximum Packet Size cannot be 0 in CONNECT properties." ) );
-                status = MQTTBadResponse;
-            }
-            else if( ( status == MQTTSuccess ) && ( pPacketMaxSizeValue != NULL ) )
-            {
-                *pPacketMaxSizeValue = maxPacketSize;
-            }
-            else
-            {
-                /* Nothing to do. */
-            }
+               if( ( status == MQTTSuccess ) && ( maxPacketSize == 0U ) )
+               {
+                   LogError( ( "Maximum Packet Size cannot be 0 in CONNECT properties." ) );
+                   status = MQTTBadResponse;
+               }
+               else if( ( status == MQTTSuccess ) && ( pPacketMaxSizeValue != NULL ) )
+               {
+                   *pPacketMaxSizeValue = maxPacketSize;
+               }
+               else
+               {
+                   /* Nothing to do. */
+               }
 
-            break;
-        }
+               break;
+           }
 
         case MQTT_TOPIC_ALIAS_MAX_ID:
             status = checkOnce( pBitMask, MQTT_TOPIC_ALIAS_MAX_POS, "Topic Alias Maximum" );
@@ -5214,50 +5219,50 @@ static MQTTStatus_t validateConnectProperty( uint8_t propertyId,
             break;
 
         case MQTT_REQUEST_RESPONSE_ID:
-        {
-            uint8_t requestResponseInfo = 0U;
-            status = checkOnce( pBitMask, MQTT_REQUEST_RESPONSE_INFO_POS, "Request Response Information" );
+           {
+               uint8_t requestResponseInfo = 0U;
+               status = checkOnce( pBitMask, MQTT_REQUEST_RESPONSE_INFO_POS, "Request Response Information" );
 
-            if( status == MQTTSuccess )
-            {
-                status = decodeUint8t( &requestResponseInfo, pPropertyLength, &used, ppIndex );
-            }
+               if( status == MQTTSuccess )
+               {
+                   status = decodeUint8t( &requestResponseInfo, pPropertyLength, &used, ppIndex );
+               }
 
-            if( ( status == MQTTSuccess ) && ( requestResponseInfo != 0U ) && ( requestResponseInfo != 1U ) )
-            {
-                LogError( ( "Request Response Information can only be 0 or 1 in CONNECT properties." ) );
-                status = MQTTBadResponse;
-            }
+               if( ( status == MQTTSuccess ) && ( requestResponseInfo != 0U ) && ( requestResponseInfo != 1U ) )
+               {
+                   LogError( ( "Request Response Information can only be 0 or 1 in CONNECT properties." ) );
+                   status = MQTTBadResponse;
+               }
 
-            break;
-        }
+               break;
+           }
 
         case MQTT_REQUEST_PROBLEM_ID:
-        {
-            uint8_t requestProblemInfo = 0U;
-            status = checkOnce( pBitMask, MQTT_REQUEST_PROBLEM_INFO_POS, "Request Problem Information" );
+           {
+               uint8_t requestProblemInfo = 0U;
+               status = checkOnce( pBitMask, MQTT_REQUEST_PROBLEM_INFO_POS, "Request Problem Information" );
 
-            if( status == MQTTSuccess )
-            {
-                status = decodeUint8t( &requestProblemInfo, pPropertyLength, &used, ppIndex );
-            }
+               if( status == MQTTSuccess )
+               {
+                   status = decodeUint8t( &requestProblemInfo, pPropertyLength, &used, ppIndex );
+               }
 
-            if( ( status == MQTTSuccess ) && ( requestProblemInfo != 0U ) && ( requestProblemInfo != 1U ) )
-            {
-                LogError( ( "Request Problem Information can only be 0 or 1 in CONNECT properties." ) );
-                status = MQTTBadResponse;
-            }
-            else if( status == MQTTSuccess )
-            {
-                *pIsRequestProblemInfoSet = ( requestProblemInfo == 1U );
-            }
-            else
-            {
-                /* Nothing to do. */
-            }
+               if( ( status == MQTTSuccess ) && ( requestProblemInfo != 0U ) && ( requestProblemInfo != 1U ) )
+               {
+                   LogError( ( "Request Problem Information can only be 0 or 1 in CONNECT properties." ) );
+                   status = MQTTBadResponse;
+               }
+               else if( status == MQTTSuccess )
+               {
+                   *pIsRequestProblemInfoSet = ( requestProblemInfo == 1U );
+               }
+               else
+               {
+                   /* Nothing to do. */
+               }
 
-            break;
-        }
+               break;
+           }
 
         case MQTT_AUTH_METHOD_ID:
             status = checkOnce( pBitMask, MQTT_AUTHENTICATION_METHOD_POS, "Authentication Method" );

@@ -1661,9 +1661,9 @@ static MQTTStatus_t buildAndSendAckWithProps( MQTTContext_t * pContext,
     if( totalMessageLength > MQTT_MAX_PACKET_SIZE )
     {
         LogError( ( "Total message length cannot be larger than 268435460." ) );
-        return MQTTBadParameter;
+        status = MQTTBadParameter;
     }
-
+    else
     {
         MQTTVec_t mqttVec;
         mqttVec.pVector = pIoVector;
@@ -3197,18 +3197,16 @@ static MQTTStatus_t appendWillVectors( const MQTTPublishInfo_t * pWillInfo,
 {
     MQTTStatus_t status = MQTTSuccess;
     uint32_t willPropsLen = 0U;
-    uint8_t * pIndex;
 
     if( ( pWillPropertyBuilder != NULL ) && ( pWillPropertyBuilder->pBuffer != NULL ) )
     {
         willPropsLen = ( uint32_t ) pWillPropertyBuilder->currentIndex;
     }
 
-    pIndex = encodeVariableLength( pWillPropertyLength, willPropsLen );
     ( *ppIterator )->iov_base = pWillPropertyLength;
     /* coverity[misra_c_2012_rule_18_2_violation] */
     /* coverity[misra_c_2012_rule_10_8_violation] */
-    ( *ppIterator )->iov_len = ( size_t ) ( pIndex - pWillPropertyLength );
+    ( *ppIterator )->iov_len = ( size_t ) ( encodeVariableLength( pWillPropertyLength, willPropsLen ) - pWillPropertyLength );
 
     if( ADDITION_WILL_OVERFLOW_U32( *pTotalMessageLength, ( *ppIterator )->iov_len ) ||
         ( ( *pTotalMessageLength + ( *ppIterator )->iov_len ) > MQTT_MAX_PACKET_SIZE ) )
@@ -3289,7 +3287,6 @@ static MQTTStatus_t sendConnectWithoutCopy( MQTTContext_t * pContext,
      */
     uint8_t propertyLength[ 4U ];
     uint8_t willPropertyLength[ 4U ];
-    size_t vectorsAdded;
 
     /* Maximum number of bytes required by the fixed part of the CONNECT
      * packet header according to the MQTT specification.
@@ -3414,24 +3411,10 @@ static MQTTStatus_t sendConnectWithoutCopy( MQTTContext_t * pContext,
         /* Serialize password. */
         if( ( status == MQTTSuccess ) && ( pConnectInfo->pPassword != NULL ) )
         {
-            vectorsAdded = 0U;
-
-            if( ADDITION_WILL_OVERFLOW_U32( totalMessageLength, 2U ) ||
-                ADDITION_WILL_OVERFLOW_U32( totalMessageLength + 2U, ( uint32_t ) pConnectInfo->passwordLength ) ||
-                ( ( totalMessageLength + 2U + ( uint32_t ) pConnectInfo->passwordLength ) > MQTT_MAX_PACKET_SIZE ) )
-            {
-                LogError( ( "Total MQTT packet size must be less than 268435461" ) );
-                status = MQTTBadParameter;
-            }
-            else
-            {
-                vectorsAdded = addEncodedStringToVector( serializedPasswordLength,
-                                                         pConnectInfo->pPassword,
-                                                         ( uint16_t ) pConnectInfo->passwordLength,
-                                                         iterator,
-                                                         &totalMessageLength );
-                ioVectorLength += vectorsAdded;
-            }
+            status = addStringToVectorChecked( serializedPasswordLength,
+                                               pConnectInfo->pPassword,
+                                               ( uint16_t ) pConnectInfo->passwordLength,
+                                               &iterator, &ioVectorLength, &totalMessageLength );
         }
 
         if( status == MQTTSuccess )
