@@ -157,13 +157,27 @@ function(create_real_library target
             ${real_include_list}
         )
     set_target_properties(${target} PROPERTIES
-            COMPILE_FLAGS "-Wall -Werror -Wunused-macros -Wextra -Wpedantic \
-                    -fprofile-arcs -ftest-coverage -fprofile-generate \
-                    -Wno-unused-but-set-variable"
-            LINK_FLAGS "-fprofile-arcs -ftest-coverage \
-                    -fprofile-generate "
-            ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/lib
-        )
+        COMPILE_FLAGS "-Wall -Werror -Wunused-macros -Wextra -Wpedantic \
+                -fprofile-arcs -ftest-coverage -fprofile-generate \
+                -Wno-unused-but-set-variable -Wconversion \
+                -Wshadow \
+                -Wdouble-promotion \
+                -Wformat=2 \
+                -Wundef \
+                -Wnull-dereference \
+                -Wcast-qual \
+                -Wstrict-prototypes \
+                -Wmissing-prototypes \
+                -Wsign-conversion \
+                -Wsign-compare \
+                -Wfloat-conversion \
+                -fno-inline \
+                -fno-optimize-sibling-calls \
+                -O0"
+        LINK_FLAGS "-fprofile-arcs -ftest-coverage \
+                -fprofile-generate"
+        ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/lib
+    )
     if(NOT(mock_name STREQUAL ""))
         add_dependencies(${target} ${mock_name})
     endif()

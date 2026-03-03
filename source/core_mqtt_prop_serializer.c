@@ -718,8 +718,8 @@ MQTTStatus_t MQTTPropAdd_UserProp( MQTTPropBuilder_t * pPropertyBuilder,
         LogError( ( "Arguments cannot be NULL: pUserProperties->userProperty->pKey=%p, "
                     "pUserProperties->userProperty->pValue=%p, "
                     "Key Length = %d, Value Length = %d",
-                    ( void * ) userProperty->pKey,
-                    ( void * ) userProperty->pValue,
+                    ( const void * ) userProperty->pKey,
+                    ( const void * ) userProperty->pValue,
                     ( int ) userProperty->keyLength,
                     ( int ) userProperty->valueLength ) );
         status = MQTTBadParameter;
@@ -1059,7 +1059,7 @@ MQTTStatus_t MQTTPropAdd_ResponseTopic( MQTTPropBuilder_t * pPropertyBuilder,
 
     if( responseTopic == NULL )
     {
-        LogError( ( "Arguments cannot be NULL : responseTopic=%p.", ( void * ) responseTopic ) );
+        LogError( ( "Arguments cannot be NULL : responseTopic=%p.", ( const void * ) responseTopic ) );
         status = MQTTBadParameter;
     }
     else if( responseTopicLength == 0U )

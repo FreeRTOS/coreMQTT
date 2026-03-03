@@ -1837,8 +1837,8 @@ static MQTTStatus_t validateSubscriptionSerializeParams( const MQTTSubscribeInfo
     {
         LogError( ( "Argument cannot be NULL: pFixedBuffer=%p, "
                     "pSubscriptionList=%p.",
-                    ( void * ) pFixedBuffer,
-                    ( void * ) pSubscriptionList ) );
+                    ( const void * ) pFixedBuffer,
+                    ( const void * ) pSubscriptionList ) );
         status = MQTTBadParameter;
     }
     /* A buffer must be configured for serialization. */
@@ -3085,7 +3085,7 @@ MQTTStatus_t MQTT_GetConnectPacketSize( const MQTTConnectInfo_t * pConnectInfo,
     {
         LogError( ( "Argument cannot be NULL: pConnectInfo=%p, "
                     "pRemainingLength=%p, pPacketSize=%p.",
-                    ( void * ) pConnectInfo,
+                    ( const void * ) pConnectInfo,
                     ( void * ) pRemainingLength,
                     ( void * ) pPacketSize ) );
         status = MQTTBadParameter;
@@ -3410,8 +3410,8 @@ MQTTStatus_t MQTT_SerializeConnect( const MQTTConnectInfo_t * pConnectInfo,
     {
         LogError( ( "Argument cannot be NULL: pConnectInfo=%p, "
                     "pFixedBuffer=%p.",
-                    ( void * ) pConnectInfo,
-                    ( void * ) pFixedBuffer ) );
+                    ( const void * ) pConnectInfo,
+                    ( const void * ) pFixedBuffer ) );
         status = MQTTBadParameter;
     }
     /* A buffer must be configured for serialization. */
@@ -3679,7 +3679,7 @@ MQTTStatus_t MQTT_GetUnsubscribePacketSize( const MQTTSubscribeInfo_t * pSubscri
     {
         LogError( ( "Argument cannot be NULL: pSubscriptionList=%p, "
                     "pRemainingLength=%p, pPacketSize=%p.",
-                    ( void * ) pSubscriptionList,
+                    ( const void * ) pSubscriptionList,
                     ( void * ) pRemainingLength,
                     ( void * ) pPacketSize ) );
         status = MQTTBadParameter;
@@ -3886,7 +3886,7 @@ MQTTStatus_t MQTT_GetPublishPacketSize( const MQTTPublishInfo_t * pPublishInfo,
     {
         LogError( ( "Argument cannot be NULL: pPublishInfo=%p, "
                     "pRemainingLength=%p, pPacketSize=%p.",
-                    ( void * ) pPublishInfo,
+                    ( const void * ) pPublishInfo,
                     ( void * ) pRemainingLength,
                     ( void * ) pPacketSize ) );
         status = MQTTBadParameter;
@@ -3929,8 +3929,8 @@ MQTTStatus_t MQTT_SerializePublish( const MQTTPublishInfo_t * pPublishInfo,
     {
         LogError( ( "Argument cannot be NULL: pFixedBuffer=%p, "
                     "pPublishInfo=%p.",
-                    ( void * ) pFixedBuffer,
-                    ( void * ) pPublishInfo ) );
+                    ( const void * ) pFixedBuffer,
+                    ( const void * ) pPublishInfo ) );
         status = MQTTBadParameter;
     }
     /* A buffer must be configured for serialization. */
@@ -3954,7 +3954,7 @@ MQTTStatus_t MQTT_SerializePublish( const MQTTPublishInfo_t * pPublishInfo,
     {
         LogError( ( "Invalid topic name for PUBLISH: pTopicName=%p, "
                     "topicNameLength=%hu.",
-                    ( void * ) pPublishInfo->pTopicName,
+                    ( const void * ) pPublishInfo->pTopicName,
                     ( unsigned short ) pPublishInfo->topicNameLength ) );
         status = MQTTBadParameter;
     }
@@ -4036,8 +4036,8 @@ MQTTStatus_t MQTT_SerializePublishHeader( const MQTTPublishInfo_t * pPublishInfo
     {
         LogError( ( "Argument cannot be NULL: pFixedBuffer=%p, "
                     "pPublishInfo=%p, pHeaderSize=%p.",
-                    ( void * ) pFixedBuffer,
-                    ( void * ) pPublishInfo,
+                    ( const void * ) pFixedBuffer,
+                    ( const void * ) pPublishInfo,
                     ( void * ) pHeaderSize ) );
         status = MQTTBadParameter;
     }
@@ -4051,7 +4051,7 @@ MQTTStatus_t MQTT_SerializePublishHeader( const MQTTPublishInfo_t * pPublishInfo
     {
         LogError( ( "Invalid topic name for publish: pTopicName=%p, "
                     "topicNameLength=%hu.",
-                    ( void * ) pPublishInfo->pTopicName,
+                    ( const void * ) pPublishInfo->pTopicName,
                     ( unsigned short ) pPublishInfo->topicNameLength ) );
         status = MQTTBadParameter;
     }
@@ -4541,7 +4541,7 @@ MQTTStatus_t MQTT_DeserializePublish( const MQTTPacketInfo_t * pIncomingPacket,
     {
         LogError( ( "Argument cannot be NULL: pIncomingPacket=%p, "
                     "pPacketId=%p, pPublishInfo=%p",
-                    ( void * ) pIncomingPacket,
+                    ( const void * ) pIncomingPacket,
                     ( void * ) pPacketId,
                     ( void * ) pPublishInfo ) );
         status = MQTTBadParameter;
@@ -5599,8 +5599,7 @@ MQTTStatus_t MQTT_ValidatePublishParams( const MQTTPublishInfo_t * pPublishInfo,
     if( pPublishInfo == NULL )
     {
         LogError( ( "Argument cannot be NULL: pPublishInfo=%p ",
-                    ( void * ) pPublishInfo
-                    ) );
+                    ( const void * ) pPublishInfo ) );
         status = MQTTBadParameter;
     }
     else if( ( pPublishInfo->retain == true ) && ( retainAvailable == 0U ) )
@@ -5618,7 +5617,7 @@ MQTTStatus_t MQTT_ValidatePublishParams( const MQTTPublishInfo_t * pPublishInfo,
     {
         LogError( ( "Invalid topic name for PUBLISH: pTopicName=%p, "
                     "topicNameLength=%hu.",
-                    ( void * ) pPublishInfo->pTopicName,
+                    ( const void * ) pPublishInfo->pTopicName,
                     ( unsigned short ) pPublishInfo->topicNameLength ) );
         status = MQTTBadParameter;
     }
@@ -5626,7 +5625,7 @@ MQTTStatus_t MQTT_ValidatePublishParams( const MQTTPublishInfo_t * pPublishInfo,
     {
         LogError( ( "Invalid topic name for PUBLISH: pTopicName=%p, "
                     "topicNameLength=%hu.",
-                    ( void * ) pPublishInfo->pTopicName,
+                    ( const void * ) pPublishInfo->pTopicName,
                     ( unsigned short ) pPublishInfo->topicNameLength ) );
         status = MQTTBadParameter;
     }
@@ -5789,7 +5788,7 @@ MQTTStatus_t MQTT_ValidateDisconnectProperties( uint32_t connectSessionExpiry,
 
     if( ( pPropertyBuilder == NULL ) || ( pPropertyBuilder->pBuffer == NULL ) )
     {
-        LogError( ( "Arguments cannot be NULL : pPropertyBuilder=%p.", ( void * ) pPropertyBuilder ) );
+        LogError( ( "Arguments cannot be NULL : pPropertyBuilder=%p.", ( const void * ) pPropertyBuilder ) );
         status = MQTTBadParameter;
     }
     else if( ( CHECK_SIZE_T_OVERFLOWS_32BIT( pPropertyBuilder->currentIndex ) ) ||
