@@ -1,5 +1,20 @@
 # Changelog for coreMQTT Client Library
 
+## v5.0.0 (February 2026)
+
+### Changes
+
+- Added MQTT v5.0 protocol support including properties, enhanced reason codes, bidirectional DISCONNECT, and subscription options.
+- New property builder API (`MQTTPropBuilder_t`) with `MQTTPropAdd_*` and `MQTTPropGet_*` functions.
+- Updated `MQTT_Connect`, `MQTT_Subscribe`, `MQTT_Publish`, `MQTT_Unsubscribe`, and `MQTT_Disconnect` APIs with optional property parameters.
+- Updated `MQTTEventCallback_t` signature to return `bool` and include reason code and property parameters.
+- Updated `MQTT_InitStatefulQoS` with ACK properties buffer support.
+- Added `MQTTConnectionProperties_t` for server-negotiated connection properties.
+- Added `MQTTSubscribeInfo_t` subscription options: `noLocalOption`, `retainAsPublishedOption`, `retainHandlingOption`.
+- Added `MQTTSuccessFailReasonCode_t` enum for all MQTT v5.0 reason codes.
+- Added `maxPacketSize` enforcement in packet size calculation APIs.
+- All new parameters are optional (pass `NULL`/`0`) for backward-compatible usage.
+
 ## v2.3.1 (July 2024)
 
 ### Changes

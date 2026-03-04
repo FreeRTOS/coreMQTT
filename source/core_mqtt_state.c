@@ -1,5 +1,5 @@
 /*
- * coreMQTT <DEVELOPMENT BRANCH>
+ * coreMQTT
  * Copyright (C) 2022 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * SPDX-License-Identifier: MIT
@@ -535,7 +535,7 @@ static MQTTStatus_t addRecord( MQTTPubAckInfo_t * records,
     /* Start from end so first available index will be populated.
      * Available index is always found after the last element in the records.
      * This is to make sure the relative order of the records in order to meet
-     * the message ordering requirement of MQTT spec 3.1.1. */
+     * the message ordering requirement of MQTT spec 5.0. */
     for( index = ( ( int32_t ) recordCount - 1 ); index >= 0; index-- )
     {
         /* Available index is only found after packet at the highest index. */
@@ -889,7 +889,7 @@ MQTTStatus_t MQTT_UpdateStatePublish( const MQTTContext_t * pMqttContext,
     if( ( pMqttContext == NULL ) || ( pNewState == NULL ) )
     {
         LogError( ( "Argument cannot be NULL: pMqttContext=%p, pNewState=%p",
-                    ( void * ) pMqttContext,
+                    ( const void * ) pMqttContext,
                     ( void * ) pNewState ) );
 
         mqttStatus = MQTTBadParameter;
@@ -1015,7 +1015,7 @@ MQTTStatus_t MQTT_UpdateStateAck( const MQTTContext_t * pMqttContext,
     if( ( pMqttContext == NULL ) || ( pNewState == NULL ) )
     {
         LogError( ( "Argument cannot be NULL: pMqttContext=%p, pNewState=%p.",
-                    ( void * ) pMqttContext,
+                    ( const void * ) pMqttContext,
                     ( void * ) pNewState ) );
         status = MQTTBadParameter;
     }
@@ -1090,14 +1090,14 @@ uint16_t MQTT_PubrelToResend( const MQTTContext_t * pMqttContext,
     {
         LogError( ( "Arguments cannot be NULL pMqttContext=%p, pCursor=%p"
                     " pState=%p.",
-                    ( void * ) pMqttContext,
+                    ( const void * ) pMqttContext,
                     ( void * ) pCursor,
                     ( void * ) pState ) );
     }
     else
     {
         /* PUBREL for packets in state #MQTTPubCompPending and #MQTTPubRelSend
-         * would need to be resent when a session is reestablished.*/
+         * would need to be resent when a session is reestablished. */
         UINT16_SET_BIT( searchStates, MQTTPubCompPending );
         UINT16_SET_BIT( searchStates, MQTTPubRelSend );
         packetId = stateSelect( pMqttContext, searchStates, pCursor );
@@ -1124,7 +1124,7 @@ uint16_t MQTT_PublishToResend( const MQTTContext_t * pMqttContext,
     if( ( pMqttContext == NULL ) || ( pCursor == NULL ) )
     {
         LogError( ( "Arguments cannot be NULL pMqttContext=%p, pCursor=%p",
-                    ( void * ) pMqttContext,
+                    ( const void * ) pMqttContext,
                     ( void * ) pCursor ) );
     }
     else

@@ -1,0 +1,7 @@
+{ "expected-missing-functions":
+  [
+
+  ],
+  "proof-name": "validateIncomingDisconnectProperties",
+  "proof-root": "test/cbmc"
+}

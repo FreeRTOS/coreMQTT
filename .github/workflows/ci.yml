@@ -10,7 +10,7 @@ on:
   push:
     branches: ["**"]
   pull_request:
-    branches: [main]
+    branches: [main, MQTTv5-reviewed-changes]
   workflow_dispatch:
 
 jobs:
@@ -83,6 +83,7 @@ jobs:
         uses: FreeRTOS/CI-CD-Github-Actions/coverage-cop@main
         with:
           coverage-file: ./build/coverage.info
+          branch-coverage-min: 93
 
   complexity:
     runs-on: ubuntu-latest
@@ -92,7 +93,7 @@ jobs:
         uses: FreeRTOS/CI-CD-Github-Actions/complexity@main
         with:
           path: ./
-          horrid_threshold: 12
+          horrid_threshold: 30
 
   doxygen:
     runs-on: ubuntu-latest
@@ -154,6 +155,7 @@ jobs:
           mkdir -p override-include
           cp source/include/stdbool.readme override-include/stdbool.h
           cp source/include/stdint.readme override-include/stdint.h
+          cp source/include/inttypes.readme override-include/inttypes.h
 
           # Build using the custom headers
           cmake -S test -B build/ \

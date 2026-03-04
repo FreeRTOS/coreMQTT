@@ -1,5 +1,5 @@
 /*
- * coreMQTT <DEVELOPMENT BRANCH>
+ * coreMQTT
  * Copyright (C) 2020 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * SPDX-License-Identifier: MIT
@@ -37,7 +37,7 @@ void harness()
 
     mqttVec = allocateMqttVec( NULL );
 
-    memoryRequired = MQTT_GetBytesInMQTTVec( mqttVec );
+    MQTT_GetBytesInMQTTVec( mqttVec, &memoryRequired );
 
     /* It is a part of the API contract that #MQTT_SerializeMQTTVec will be called with
      * a memory buffer of size output by #MQTT_GetBytesInMQTTVec function and the

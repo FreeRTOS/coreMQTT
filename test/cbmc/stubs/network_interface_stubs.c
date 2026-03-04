@@ -1,5 +1,5 @@
 /*
- * coreMQTT <DEVELOPMENT BRANCH>
+ * coreMQTT
  * Copyright (C) 2020 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * SPDX-License-Identifier: MIT
@@ -63,7 +63,7 @@ int32_t NetworkInterfaceReceiveStub( NetworkContext_t * pNetworkContext,
      * more than bytesToRecv. */
     __CPROVER_assume( bytesOrError <= ( int32_t ) bytesToRecv );
 
-    if( tries < ( MAX_NETWORK_RECV_TRIES - 1 ) )
+    if( tries < ( MAX_NETWORK_RECV_TRIES - 1U ) )
     {
         tries++;
     }

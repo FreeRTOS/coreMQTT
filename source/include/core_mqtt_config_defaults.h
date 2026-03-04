@@ -1,5 +1,5 @@
 /*
- * coreMQTT <DEVELOPMENT BRANCH>
+ * coreMQTT
  * Copyright (C) 2022 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * SPDX-License-Identifier: MIT
@@ -273,6 +273,26 @@
  */
 #ifndef LogDebug
     #define LogDebug( message )
+#endif
+
+/**
+ * @brief Macro that is called in the MQTT library for logging "Trace" level
+ * messages.
+ *
+ * To enable trace level logging from MQTT library, this macro should be mapped to the
+ * application-specific logging implementation that supports trace logging.
+ *
+ * @note This logging macro is called in the MQTT library with parameters wrapped in
+ * double parentheses to be ISO C89/C90 standard compliant. For a reference
+ * POSIX implementation of the logging macros, refer to core_mqtt_config.h files, and the
+ * logging-stack in demos folder of the
+ * [AWS IoT Embedded C SDK repository](https://github.com/aws/aws-iot-device-sdk-embedded-C/).
+ *
+ * <b>Default value</b>: Trace logging is turned off, and no code is generated for calls
+ * to the macro in the MQTT library on compilation.
+ */
+#ifndef LogTrace
+    #define LogTrace( message )
 #endif
 
 /* *INDENT-OFF* */

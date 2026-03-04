@@ -1,0 +1,7 @@
+{ "expected-missing-functions":
+  [
+
+  ],
+  "proof-name": "DeserializeConnackProperties",
+  "proof-root": "test/cbmc"
+}
