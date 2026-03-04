@@ -526,6 +526,30 @@ static MQTTStatus_t validateIncomingDisconnectProperties( uint8_t * pIndex,
                                                           uint32_t disconnectPropertyLength );
 
 /**
+ * @brief Tracks which CONNACK properties have been seen during deserialization,
+ *        used to detect duplicates.
+ */
+typedef struct ConnackSeenFlags
+{
+    bool sessionExpiry; /**< @brief Session Expiry Interval property seen. */
+    bool receiveMax;    /**< @brief Receive Maximum property seen. */
+    bool maxQos;        /**< @brief Maximum QoS property seen. */
+    bool retain;        /**< @brief Retain Available property seen. */
+    bool maxPacket;     /**< @brief Maximum Packet Size property seen. */
+    bool clientId;      /**< @brief Assigned Client Identifier property seen. */
+    bool topicAlias;    /**< @brief Topic Alias Maximum property seen. */
+    bool wildcard;      /**< @brief Wildcard Subscription Available property seen. */
+    bool subId;         /**< @brief Subscription Identifier Available property seen. */
+    bool sharedSub;     /**< @brief Shared Subscription Available property seen. */
+    bool keepAlive;     /**< @brief Server Keep Alive property seen. */
+    bool responseInfo;  /**< @brief Response Information property seen. */
+    bool serverRef;     /**< @brief Server Reference property seen. */
+    bool authMethod;    /**< @brief Authentication Method property seen. */
+    bool authData;      /**< @brief Authentication Data property seen. */
+    bool reasonString;  /**< @brief Reason String property seen. */
+} ConnackSeenFlags_t;
+
+/**
  * @brief Decode and validate a single CONNACK property from the incoming packet.
  *
  * Reads one property from the variable header, validates its value, stores it
@@ -540,9 +564,7 @@ static MQTTStatus_t validateIncomingDisconnectProperties( uint8_t * pIndex,
  *                                 buffer; advanced past the consumed property value.
  * @param[in,out] pPropBuffer Optional property builder to record which properties were
  *                            received. May be NULL.
- * @param[in,out] pSeenFlags Array of 16 bool flags (indexed by property slot) used to
- *                           detect duplicate properties. Each flag is set to true when
- *                           its corresponding property is first decoded.
+ * @param[in,out] pSeen Duplicate-detection flags for each CONNACK property.
  *
  * @return #MQTTSuccess if the property was decoded and validated successfully.
  * @return #MQTTBadResponse if the property value is invalid (e.g., boolean out of range,
@@ -554,7 +576,7 @@ static MQTTStatus_t deserializeConnackProperty( uint8_t propertyId,
                                                 uint32_t * pPropertyLength,
                                                 uint8_t ** ppVariableHeader,
                                                 MQTTPropBuilder_t * pPropBuffer,
-                                                bool * pSeenFlags );
+                                                ConnackSeenFlags_t * pSeen );
 
 /**
  * @brief Set a bit in pPropBuffer->fieldSet if pPropBuffer is not NULL.
@@ -2222,22 +2244,17 @@ static MQTTStatus_t deserializeConnackProperty( uint8_t propertyId,
                                                 uint32_t * pPropertyLength,
                                                 uint8_t ** ppVariableHeader,
                                                 MQTTPropBuilder_t * pPropBuffer,
-                                                bool * pSeenFlags )
+                                                ConnackSeenFlags_t * pSeen )
 {
     MQTTStatus_t status = MQTTSuccess;
     const char * data;
     size_t dataLength;
 
-    /* pSeenFlags layout: [0]=sessionExpiry [1]=receiveMax [2]=maxQos [3]=retain
-     * [4]=maxPacket [5]=clientId [6]=topicAlias [7]=wildcard [8]=subId
-     * [9]=sharedsub [10]=keepAlive [11]=responseInfo [12]=serverRef
-     * [13]=authMethod [14]=authData [15]=reasonString */
-
     switch( propertyId )
     {
         case MQTT_SESSION_EXPIRY_ID:
             status = decodeUint32t( &pConnackProperties->sessionExpiry, pPropertyLength,
-                                    &pSeenFlags[ 0 ], ppVariableHeader );
+                                    &pSeen->sessionExpiry, ppVariableHeader );
 
             if( status == MQTTSuccess )
             {
@@ -2249,7 +2266,7 @@ static MQTTStatus_t deserializeConnackProperty( uint8_t propertyId,
 
         case MQTT_RECEIVE_MAX_ID:
             status = decodeUint16t( &pConnackProperties->serverReceiveMax, pPropertyLength,
-                                    &pSeenFlags[ 1 ], ppVariableHeader );
+                                    &pSeen->receiveMax, ppVariableHeader );
 
             if( ( status == MQTTSuccess ) && ( pConnackProperties->serverReceiveMax == 0U ) )
             {
@@ -2267,7 +2284,7 @@ static MQTTStatus_t deserializeConnackProperty( uint8_t propertyId,
 
         case MQTT_MAX_QOS_ID:
             status = decodeConnackBoolProp( &pConnackProperties->serverMaxQos, pPropertyLength,
-                                            &pSeenFlags[ 2 ], ppVariableHeader, "maximum QoS",
+                                            &pSeen->maxQos, ppVariableHeader, "maximum QoS",
                                             pPropBuffer, MQTT_MAX_QOS_POS );
 
             if( status == MQTTSuccess )
@@ -2279,7 +2296,7 @@ static MQTTStatus_t deserializeConnackProperty( uint8_t propertyId,
 
         case MQTT_RETAIN_AVAILABLE_ID:
             status = decodeConnackBoolProp( &pConnackProperties->retainAvailable, pPropertyLength,
-                                            &pSeenFlags[ 3 ], ppVariableHeader, "retain available",
+                                            &pSeen->retain, ppVariableHeader, "retain available",
                                             pPropBuffer, MQTT_RETAIN_AVAILABLE_POS );
 
             if( status == MQTTSuccess )
@@ -2291,7 +2308,7 @@ static MQTTStatus_t deserializeConnackProperty( uint8_t propertyId,
 
         case MQTT_MAX_PACKET_SIZE_ID:
             status = decodeUint32t( &pConnackProperties->serverMaxPacketSize, pPropertyLength,
-                                    &pSeenFlags[ 4 ], ppVariableHeader );
+                                    &pSeen->maxPacket, ppVariableHeader );
 
             if( ( status == MQTTSuccess ) && ( pConnackProperties->serverMaxPacketSize == 0U ) )
             {
@@ -2308,7 +2325,7 @@ static MQTTStatus_t deserializeConnackProperty( uint8_t propertyId,
             break;
 
         case MQTT_ASSIGNED_CLIENT_ID:
-            status = decodeUtf8( &data, &dataLength, pPropertyLength, &pSeenFlags[ 5 ], ppVariableHeader );
+            status = decodeUtf8( &data, &dataLength, pPropertyLength, &pSeen->clientId, ppVariableHeader );
 
             if( status == MQTTSuccess )
             {
@@ -2320,7 +2337,7 @@ static MQTTStatus_t deserializeConnackProperty( uint8_t propertyId,
 
         case MQTT_TOPIC_ALIAS_MAX_ID:
             status = decodeUint16t( &pConnackProperties->serverTopicAliasMax, pPropertyLength,
-                                    &pSeenFlags[ 6 ], ppVariableHeader );
+                                    &pSeen->topicAlias, ppVariableHeader );
 
             if( status == MQTTSuccess )
             {
@@ -2331,7 +2348,7 @@ static MQTTStatus_t deserializeConnackProperty( uint8_t propertyId,
             break;
 
         case MQTT_REASON_STRING_ID:
-            status = decodeUtf8( &data, &dataLength, pPropertyLength, &pSeenFlags[ 15 ], ppVariableHeader );
+            status = decodeUtf8( &data, &dataLength, pPropertyLength, &pSeen->reasonString, ppVariableHeader );
 
             if( status == MQTTSuccess )
             {
@@ -2359,7 +2376,7 @@ static MQTTStatus_t deserializeConnackProperty( uint8_t propertyId,
 
         case MQTT_WILDCARD_ID:
             status = decodeConnackBoolProp( &pConnackProperties->isWildcardAvailable, pPropertyLength,
-                                            &pSeenFlags[ 7 ], ppVariableHeader, "wildcard",
+                                            &pSeen->wildcard, ppVariableHeader, "wildcard",
                                             pPropBuffer, MQTT_WILDCARD_SUBSCRIPTION_AVAILABLE_POS );
 
             if( status == MQTTSuccess )
@@ -2372,7 +2389,7 @@ static MQTTStatus_t deserializeConnackProperty( uint8_t propertyId,
 
         case MQTT_SUB_AVAILABLE_ID:
             status = decodeConnackBoolProp( &pConnackProperties->isSubscriptionIdAvailable, pPropertyLength,
-                                            &pSeenFlags[ 8 ], ppVariableHeader, "subscription ID availability",
+                                            &pSeen->subId, ppVariableHeader, "subscription ID availability",
                                             pPropBuffer, MQTT_SUBSCRIPTION_ID_AVAILABLE_POS );
 
             if( status == MQTTSuccess )
@@ -2385,7 +2402,7 @@ static MQTTStatus_t deserializeConnackProperty( uint8_t propertyId,
 
         case MQTT_SHARED_SUB_ID:
             status = decodeConnackBoolProp( &pConnackProperties->isSharedAvailable, pPropertyLength,
-                                            &pSeenFlags[ 9 ], ppVariableHeader, "shared sub availability",
+                                            &pSeen->sharedSub, ppVariableHeader, "shared sub availability",
                                             pPropBuffer, MQTT_SHARED_SUBSCRIPTION_AVAILABLE_POS );
 
             if( status == MQTTSuccess )
@@ -2398,7 +2415,7 @@ static MQTTStatus_t deserializeConnackProperty( uint8_t propertyId,
 
         case MQTT_SERVER_KEEP_ALIVE_ID:
             status = decodeUint16t( &pConnackProperties->serverKeepAlive, pPropertyLength,
-                                    &pSeenFlags[ 10 ], ppVariableHeader );
+                                    &pSeen->keepAlive, ppVariableHeader );
 
             if( status == MQTTSuccess )
             {
@@ -2409,7 +2426,7 @@ static MQTTStatus_t deserializeConnackProperty( uint8_t propertyId,
             break;
 
         case MQTT_RESPONSE_INFO_ID:
-            status = decodeUtf8( &data, &dataLength, pPropertyLength, &pSeenFlags[ 11 ], ppVariableHeader );
+            status = decodeUtf8( &data, &dataLength, pPropertyLength, &pSeen->responseInfo, ppVariableHeader );
 
             if( ( status == MQTTSuccess ) && ( pConnackProperties->requestResponseInfo == false ) )
             {
@@ -2426,7 +2443,7 @@ static MQTTStatus_t deserializeConnackProperty( uint8_t propertyId,
             break;
 
         case MQTT_SERVER_REF_ID:
-            status = decodeUtf8( &data, &dataLength, pPropertyLength, &pSeenFlags[ 12 ], ppVariableHeader );
+            status = decodeUtf8( &data, &dataLength, pPropertyLength, &pSeen->serverRef, ppVariableHeader );
 
             if( status == MQTTSuccess )
             {
@@ -2437,7 +2454,7 @@ static MQTTStatus_t deserializeConnackProperty( uint8_t propertyId,
             break;
 
         case MQTT_AUTH_METHOD_ID:
-            status = decodeUtf8( &data, &dataLength, pPropertyLength, &pSeenFlags[ 13 ], ppVariableHeader );
+            status = decodeUtf8( &data, &dataLength, pPropertyLength, &pSeen->authMethod, ppVariableHeader );
 
             if( status == MQTTSuccess )
             {
@@ -2448,7 +2465,7 @@ static MQTTStatus_t deserializeConnackProperty( uint8_t propertyId,
             break;
 
         case MQTT_AUTH_DATA_ID:
-            status = decodeUtf8( &data, &dataLength, pPropertyLength, &pSeenFlags[ 14 ], ppVariableHeader );
+            status = decodeUtf8( &data, &dataLength, pPropertyLength, &pSeen->authData, ppVariableHeader );
 
             if( status == MQTTSuccess )
             {
@@ -2474,7 +2491,8 @@ static MQTTStatus_t deserializeConnackProperties( MQTTConnectionProperties_t * p
     MQTTStatus_t status = MQTTSuccess;
     uint8_t * pVariableHeader = pIndex;
     uint32_t propertyLength = length;
-    bool seenFlags[ 16 ] = { false };
+
+    ConnackSeenFlags_t seen = { false };
 
     pVariableHeader = &pVariableHeader[ variableLengthEncodedSize( propertyLength ) ];
 
@@ -2495,7 +2513,7 @@ static MQTTStatus_t deserializeConnackProperties( MQTTConnectionProperties_t * p
 
         status = deserializeConnackProperty( propertyId, pConnackProperties,
                                              &propertyLength, &pVariableHeader,
-                                             pPropBuffer, seenFlags );
+                                             pPropBuffer, &seen );
     }
 
     return status;
