@@ -525,6 +525,87 @@ static inline MQTTStatus_t isValidConnackReasonCode( uint8_t reasonCode );
 static MQTTStatus_t validateIncomingDisconnectProperties( uint8_t * pIndex,
                                                           uint32_t disconnectPropertyLength );
 
+/**
+ * @brief Decode and validate a single CONNACK property from the incoming packet.
+ *
+ * Reads one property from the variable header, validates its value, stores it
+ * in the appropriate field of @p pConnackProperties, and sets the corresponding
+ * bit in the property buffer's fieldSet if @p pPropBuffer is not NULL.
+ *
+ * @param[in] propertyId The MQTT property identifier byte.
+ * @param[in,out] pConnackProperties Connection properties structure to populate.
+ * @param[in,out] pPropertyLength Remaining bytes in the property section; decremented
+ *                                as each property value is consumed.
+ * @param[in,out] ppVariableHeader Pointer to the current read position in the packet
+ *                                 buffer; advanced past the consumed property value.
+ * @param[in,out] pPropBuffer Optional property builder to record which properties were
+ *                            received. May be NULL.
+ * @param[in,out] pSeenFlags Array of 16 bool flags (indexed by property slot) used to
+ *                           detect duplicate properties. Each flag is set to true when
+ *                           its corresponding property is first decoded.
+ *
+ * @return #MQTTSuccess if the property was decoded and validated successfully.
+ * @return #MQTTBadResponse if the property value is invalid (e.g., boolean out of range,
+ *         zero where prohibited, response info sent without being requested) or if an
+ *         unknown property ID is encountered.
+ */
+static MQTTStatus_t deserializeConnackProperty( uint8_t propertyId,
+                                                MQTTConnectionProperties_t * pConnackProperties,
+                                                uint32_t * pPropertyLength,
+                                                uint8_t ** ppVariableHeader,
+                                                MQTTPropBuilder_t * pPropBuffer,
+                                                bool * pSeenFlags );
+
+/**
+ * @brief Set a bit in pPropBuffer->fieldSet if pPropBuffer is not NULL.
+ *
+ * @param[in,out] pPropBuffer Property builder whose fieldSet will be updated.
+ *                            If NULL, this function does nothing.
+ * @param[in] bitPos Bit position to set in fieldSet.
+ */
+static void setConnackPropBit( MQTTPropBuilder_t * pPropBuffer,
+                               uint8_t bitPos );
+
+/**
+ * @brief Validate that a uint8 property value is 0 or 1 (boolean).
+ *
+ * @param[in] value The decoded uint8 property value to validate.
+ * @param[in] pPropName Human-readable property name used in the error log message.
+ *
+ * @return #MQTTSuccess if value is 0 or 1.
+ * @return #MQTTBadResponse if value is greater than 1.
+ */
+static MQTTStatus_t validateBoolProp( uint8_t value,
+                                      const char * pPropName );
+
+/**
+ * @brief Decode a uint8 boolean CONNACK property, validate it, and record it.
+ *
+ * Calls decodeUint8t to read the value, validateBoolProp to check it is 0 or 1,
+ * and setConnackPropBit to mark the property as received in the property buffer.
+ *
+ * @param[out] pDest Destination to store the decoded uint8 value.
+ * @param[in,out] pPropertyLength Remaining bytes in the property section; decremented
+ *                                by the size of the decoded value.
+ * @param[in,out] pSeen Duplicate-detection flag; set to true after first decode.
+ * @param[in,out] ppIndex Current read position in the packet buffer; advanced past
+ *                        the decoded value.
+ * @param[in] pPropName Human-readable property name used in error log messages.
+ * @param[in,out] pPropBuffer Optional property builder to record the property bit.
+ *                            May be NULL.
+ * @param[in] bitPos Bit position to set in pPropBuffer->fieldSet on success.
+ *
+ * @return #MQTTSuccess if the property was decoded and validated successfully.
+ * @return #MQTTBadResponse if the value is not 0 or 1, or if decoding fails.
+ */
+static MQTTStatus_t decodeConnackBoolProp( uint8_t * pDest,
+                                           uint32_t * pPropertyLength,
+                                           bool * pSeen,
+                                           uint8_t ** ppIndex,
+                                           const char * pPropName,
+                                           MQTTPropBuilder_t * pPropBuffer,
+                                           uint8_t bitPos );
+
 /*-----------------------------------------------------------*/
 
 static MQTTStatus_t validateReasonCodeForAck( uint8_t ackPacketType,
@@ -2080,11 +2161,6 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp )
 
 /*-----------------------------------------------------------*/
 
-/*-----------------------------------------------------------*/
-
-/**
- * @brief Set a bit in pPropBuffer->fieldSet if pPropBuffer is not NULL.
- */
 static void setConnackPropBit( MQTTPropBuilder_t * pPropBuffer,
                                uint8_t bitPos )
 {
@@ -2094,9 +2170,8 @@ static void setConnackPropBit( MQTTPropBuilder_t * pPropBuffer,
     }
 }
 
-/**
- * @brief Validate that a uint8 property is 0 or 1 (boolean).
- */
+/*-----------------------------------------------------------*/
+
 static MQTTStatus_t validateBoolProp( uint8_t value,
                                       const char * pPropName )
 {
@@ -2115,9 +2190,8 @@ static MQTTStatus_t validateBoolProp( uint8_t value,
     return status;
 }
 
-/**
- * @brief Decode a uint8 boolean property, validate it, and set the fieldSet bit.
- */
+/*-----------------------------------------------------------*/
+
 static MQTTStatus_t decodeConnackBoolProp( uint8_t * pDest,
                                            uint32_t * pPropertyLength,
                                            bool * pSeen,
@@ -2140,6 +2214,8 @@ static MQTTStatus_t decodeConnackBoolProp( uint8_t * pDest,
 
     return status;
 }
+
+/*-----------------------------------------------------------*/
 
 static MQTTStatus_t deserializeConnackProperty( uint8_t propertyId,
                                                 MQTTConnectionProperties_t * pConnackProperties,
