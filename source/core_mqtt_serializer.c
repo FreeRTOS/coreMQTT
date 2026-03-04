@@ -4219,18 +4219,19 @@ static MQTTStatus_t serializeAckBody( const MQTTFixedBuffer_t * pFixedBuffer,
         pFixedBuffer->pBuffer[ 2 ] = UINT16_HIGH_BYTE( packetId );
         pFixedBuffer->pBuffer[ 3 ] = UINT16_LOW_BYTE( packetId );
     }
-    else if( pFixedBuffer->size < ( MQTT_PUBLISH_ACK_PACKET_SIZE + 1U ) )
+    else if( pFixedBuffer->size < ( MQTT_PUBLISH_ACK_PACKET_SIZE + 2U ) )
     {
         LogError( ( "Not enough space for reason code." ) );
         status = MQTTBadParameter;
     }
     else if( ( pAckProperties == NULL ) || ( pAckProperties->pBuffer == NULL ) )
     {
-        /* Reason code only, no properties. */
-        pFixedBuffer->pBuffer[ 1 ] = MQTT_PACKET_SIMPLE_ACK_REMAINING_LENGTH + 1U;
+        /* Reason code present, no properties — must still encode property length 0x00. */
+        pFixedBuffer->pBuffer[ 1 ] = MQTT_PACKET_SIMPLE_ACK_REMAINING_LENGTH + 2U;
         pFixedBuffer->pBuffer[ 2 ] = UINT16_HIGH_BYTE( packetId );
         pFixedBuffer->pBuffer[ 3 ] = UINT16_LOW_BYTE( packetId );
         pFixedBuffer->pBuffer[ 4 ] = ( uint8_t ) ( *pReasonCode );
+        pFixedBuffer->pBuffer[ 5 ] = 0x00; /* property length = 0 */
     }
     else
     {
