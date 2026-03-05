@@ -24,6 +24,7 @@ jobs:
         uses: FreeRTOS/CI-CD-Github-Actions/release@main
         with:
           version_number: ${{ github.event.inputs.version_number }}
+          remove_tests: false
           branch: ${{ github.event.inputs.branch }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
           repo_build_command: rm -rf ../build && cmake -S. -B ../build -DSTANDALONE_TEST_BUILD_UNIX=1 && make -C ../build all
