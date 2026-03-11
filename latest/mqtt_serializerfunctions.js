@@ -1,0 +1,26 @@
+var mqtt_serializerfunctions =
+[
+    [ "MQTTPropertyBuilder_Init", "mqttpropertybuilder_init_function.html", null ],
+    [ "MQTT_GetConnectPacketSize", "mqtt_getconnectpacketsize_function.html", null ],
+    [ "MQTT_SerializeConnect", "mqtt_serializeconnect_function.html", null ],
+    [ "MQTT_GetSubscribePacketSize", "mqtt_getsubscribepacketsize_function.html", null ],
+    [ "MQTT_SerializeSubscribe", "mqtt_serializesubscribe_function.html", null ],
+    [ "MQTT_ValidateSubscribeProperties", "mqtt_validatesubscribeproperties_function.html", null ],
+    [ "MQTT_GetUnsubscribePacketSize", "mqtt_getunsubscribepacketsize_function.html", null ],
+    [ "MQTT_SerializeUnsubscribe", "mqtt_serializeunsubscribe_function.html", null ],
+    [ "MQTT_GetPublishPacketSize", "mqtt_getpublishpacketsize_function.html", null ],
+    [ "MQTT_SerializePublish", "mqtt_serializepublish_function.html", null ],
+    [ "MQTT_SerializePublishHeader", "mqtt_serializepublishheader_function.html", null ],
+    [ "MQTT_SerializePublishHeaderWithoutTopic", "mqtt_serializepublishheaderwithouttopic_function.html", null ],
+    [ "MQTT_ValidatePublishParams", "mqtt_validatepublishparams_function.html", null ],
+    [ "MQTT_ValidatePublishProperties", "mqtt_validatepublishproperties_function.html", null ],
+    [ "MQTT_SerializeAck", "mqtt_serializeack_function.html", null ],
+    [ "MQTT_GetAckPacketSize", "mqtt_getackpacketsize_function.html", null ],
+    [ "MQTT_GetDisconnectPacketSize", "mqtt_getdisconnectpacketsize_function.html", null ],
+    [ "MQTT_GetPingreqPacketSize", "mqtt_getpingreqpacketsize_function.html", null ],
+    [ "MQTT_SerializePingreq", "mqtt_serializepingreq_function.html", null ],
+    [ "MQTT_DeserializePublish", "mqtt_deserializepublish_function.html", null ],
+    [ "MQTT_DeserializeAck", "mqtt_deserializeack_function.html", null ],
+    [ "MQTT_GetIncomingPacketTypeAndLength", "mqtt_getincomingpackettypeandlength_function.html", null ],
+    [ "MQTT_InitConnect", "mqtt_initconnect_function.html", null ]
+];
