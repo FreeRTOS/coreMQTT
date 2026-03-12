@@ -3806,7 +3806,8 @@ static MQTTStatus_t validateTopicFilter( const MQTTContext_t * pContext,
     if( ( pSubscriptionList[ iterator ].pTopicFilter == NULL ) ||
         ( pSubscriptionList[ iterator ].topicFilterLength == 0U ) )
     {
-        LogError( ( "Invalid subscription at index %lu: Topic filter is NULL or has zero length.", iterator ) );
+        LogError( ( "Invalid subscription at index %lu: Topic filter is NULL or has zero length.",
+                    ( unsigned long ) iterator ) );
         status = MQTTBadParameter;
     }
 
