@@ -133,3 +133,19 @@ create_test(${utest_name}
             "${utest_dep_list}"
             "${test_include_directories}"
         )
+
+# mqtt_prop_oob_utest
+set(utest_name "${project_name}_oob_utest")
+set(utest_source "${project_name}_oob_utest.c")
+
+set(utest_link_list "")
+list(APPEND utest_link_list
+            lib${real_name}.a
+        )
+
+create_test(${utest_name}
+            ${utest_source}
+            "${utest_link_list}"
+            "${utest_dep_list}"
+            "${test_include_directories}"
+        )
