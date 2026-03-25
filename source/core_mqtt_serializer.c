@@ -1897,7 +1897,7 @@ static MQTTStatus_t deserializeSubUnsubAck( const MQTTPacketInfo_t * incomingPac
         }
     }
 
-    if( ( status == MQTTSuccess ) && ( incomingPacket->remainingLength > 4U ) )
+    if( ( status == MQTTSuccess ) && ( incomingPacket->remainingLength >= 4U ) )
     {
         status = deserializeSubUnsubAckProperties( pPropBuffer,
                                                    pIndex,
