@@ -2600,6 +2600,7 @@ static MQTTStatus_t deserializeSubUnsubAckProperties( MQTTPropBuilder_t * pPropB
     bool reasonString = false;
 
     assert( !CHECK_U32T_OVERFLOWS_SIZE_T( remainingLength ) );
+    assert( remainingLength >= 2U );
 
     /* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-108 */
     /* coverity[misra_c_2012_rule_10_8_violation] */
@@ -2623,13 +2624,26 @@ static MQTTStatus_t deserializeSubUnsubAckProperties( MQTTPropBuilder_t * pPropB
 
     if( status == MQTTSuccess )
     {
-        pLocalIndex = &pLocalIndex[ variableLengthEncodedSize( propertyLength ) ];
-    }
+        uint32_t bytesForPropLen = variableLengthEncodedSize( propertyLength );
+        
+        pLocalIndex = &pLocalIndex[ ( size_t ) bytesForPropLen ];
 
-    if( pPropBuffer != NULL )
-    {
-        pPropBuffer->bufferLength = propertyLength;
-        pPropBuffer->pBuffer = pLocalIndex;
+        /* Remaining length should be at least big enough to hold the packet ID, the properties
+         * and the encoded property length. */
+        if( ( propertyLength + bytesForPropLen + 2U ) > remainingLength )
+        {
+            LogError( ( "Invalid property length. Goes beyond the packet bounds." ) );
+            status = MQTTBadResponse;
+        }
+        else if( pPropBuffer != NULL )
+        {
+            pPropBuffer->bufferLength = propertyLength;
+            pPropBuffer->pBuffer = pLocalIndex;
+        }
+        else
+        {
+            /* Nothing to do. No property buffer provided and no error. */
+        }
     }
 
     while( ( propertyLength > 0U ) && ( status == MQTTSuccess ) )

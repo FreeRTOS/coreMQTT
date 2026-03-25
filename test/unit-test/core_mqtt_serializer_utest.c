@@ -28,6 +28,7 @@
  */
 #include <string.h>
 #include <stdint.h>
+#include <stdlib.h>
 #include <assert.h>
 #include "unity.h"
 
@@ -2997,6 +2998,7 @@ void test_MQTT_SerializeUnsubscribe( void )
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
     checkBufferOverflow( buffer, sizeof( buffer ) );
 }
+
 /* ========================================================================== */
 
 void test_MQTTV5_suback( void )
@@ -3080,6 +3082,50 @@ void test_MQTTV5_suback( void )
     packetBufferNoProperties[ 5 ] = 0x00; /* Set reason code to 0x00 (Success) */
     status = MQTT_DeserializeAck( &subackPacket, &packetIdentifier, &subackReasonCodes, NULL, &properties );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
+}
+
+void test_MQTTV5_suback_outOfBoundAccess( void )
+{
+    MQTTStatus_t status;
+    MQTTPacketInfo_t subackPacket = { 0 };
+
+    memset( &properties, 0x00, sizeof( properties ) );
+    properties.maxPacketSize = MQTT_MAX_PACKET_SIZE;
+    uint8_t packetBuffer[ 33 ] =
+    {
+        0x90,             /* Fixed header: SUBACK type (0x90) */
+        0x15,             /* Remaining Length = 21 bytes */
+        0x00, 0x01,       /* Packet Identifier = 1 */
+        0x1C,             /* Property Length = 28 bytes -> INVALID - properties can only be 19 (21 - 2) bytes long at max. */
+        0x1F,             /* Property ID = 0x1F (Reason String) */
+        0x00, 0x03,       /* UTF-8 string length = 3 */
+        0x61, 0x62, 0x63, /* The string "abc" */
+        0x26,             /* Property ID = 0x26 (User Property) */
+        0x00, 0x03,       /* UTF-8 string length = 3 */
+        0x61, 0x62, 0x63, /* The string "abc" */
+        0x00, 0x03,       /* UTF-8 string length = 3 */
+        0x61, 0x62, 0x63, /* The string "abc" */
+        /* FOLLOWING is the payload - masquerading as a property. */
+        0x26,             /* Property ID = 0x26 (User Property) */
+
+        /* ======= Packet end all the following bytes will be out of bound reads ===== */
+        0x00, 0x03,       /* UTF-8 string length = 3 */
+        0x61, 0x62, 0x63, /* The string "abc" */
+        0x00, 0x03,       /* UTF-8 string length = 3 */
+        0x61, 0x62, 0x63, /* The string "abc" */
+    };
+
+    subackPacket.type = MQTT_PACKET_TYPE_SUBACK; /* Should be defined as 0x90 */
+    subackPacket.remainingLength = 21;           /* From the fixed header (0x0A) */
+    subackPacket.headerLength = 2;               /* Fixed header size in this example */
+    subackPacket.pRemainingData = &packetBuffer[ 2 ];
+    uint16_t packetIdentifier = 0;
+    MQTTReasonCodeInfo_t subackReasonCodes;
+    MQTTPropBuilder_t propBuffer = { 0 };
+
+    status = MQTT_DeserializeAck( &subackPacket, &packetIdentifier, &subackReasonCodes, &propBuffer, &properties );
+    /* Must fail. */
+    TEST_ASSERT_NOT_EQUAL( MQTTSuccess, status );
 }
 
 void test_MQTTV5_GetUnsubscribePacketSize( void )
