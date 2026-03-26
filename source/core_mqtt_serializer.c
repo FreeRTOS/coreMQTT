@@ -2625,7 +2625,7 @@ static MQTTStatus_t deserializeSubUnsubAckProperties( MQTTPropBuilder_t * pPropB
     if( status == MQTTSuccess )
     {
         uint32_t bytesForPropLen = variableLengthEncodedSize( propertyLength );
-        
+
         pLocalIndex = &pLocalIndex[ ( size_t ) bytesForPropLen ];
 
         /* Remaining length should be at least big enough to hold the packet ID, the properties
