@@ -36,6 +36,7 @@ REMOVE_FUNCTION_BODY += decodeUint8t
 REMOVE_FUNCTION_BODY += decodeUint32t
 
 UNWINDSET += encodeVariableLength.0:5
+UNWINDSET += decodeVariableLength.0:5
 UNWINDSET += __CPROVER_file_local_core_mqtt_serializer_c_deserializeSubUnsubAckProperties.0:$(MQTT_INCOMING_PUBLISH_MAX_PROPERTIES)
 
 PROOF_SOURCES += $(PROOFDIR)/$(HARNESS_FILE).c
