@@ -1,5 +1,12 @@
 # Changelog for coreMQTT Client Library
 
+## v5.0.1 (March 2026)
+
+### Changes
+
+- Added a check to verify properties in incoming SUBACK/UNSUBACK packets do not overflow the bounds of the packet itself.
+- Minor fixes in logging formatting to allow builds without warnings on a 32-bit system.
+
 ## v5.0.0 (February 2026)
 
 ### Changes
