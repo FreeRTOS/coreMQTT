@@ -970,6 +970,10 @@ MQTTStatus_t MQTT_Subscribe( MQTTContext_t * pContext,
  * #MQTTStatusNotConnected if the connection is not established yet<br>
  * #MQTTStatusDisconnectPending if the user is expected to call MQTT_Disconnect
  * before calling any other API<br>
+ * #MQTTNoMemory if the outgoing publish record array is full<br>
+ * #MQTTStateCollision if a QoS > 0 publish with the same packet ID already
+ * exists in the state records and the duplicate flag is not set<br>
+ * #MQTTIllegalState if the state machine update after sending fails<br>
  * #MQTTPublishStoreFailed if the user provided callback to copy and store the
  * outgoing publish packet fails<br>
  * #MQTTSuccess otherwise.<br>
@@ -1157,10 +1161,7 @@ MQTTStatus_t MQTT_Unsubscribe( MQTTContext_t * pContext,
  * #MQTTBadParameter if invalid parameters are passed;<br>
  * #MQTTBadResponse if invalid properties are parsed;<br>
  * #MQTTSendFailed if transport send failed;<br>
- * #MQTTStatusNotConnected if the connection is not established yet and a PING
- * or an ACK is being sent.<br>
- * #MQTTStatusDisconnectPending if the user is expected to call MQTT_Disconnect
- * before calling any other API<br>
+ * #MQTTStatusNotConnected if the connection is not established yet.<br>
  * #MQTTSuccess otherwise.<br>
  *
  * Functions to add optional properties to the DISCONNECT packet are:
@@ -1218,7 +1219,12 @@ MQTTStatus_t MQTT_Disconnect( MQTTContext_t * pContext,
  * #MQTTEventCallback_t callback does not contain blocking operations to prevent potential
  * non-deterministic blocking period of the #MQTT_ProcessLoop API call.
  *
- * @return #MQTTBadParameter if context is NULL;
+ * @return #MQTTSuccess on success;
+ * #MQTTNeedMoreBytes if an incomplete packet has been received. The caller
+ * should call this function again (probably after a delay) to receive the
+ * remaining data. Both #MQTTSuccess and #MQTTNeedMoreBytes indicate normal
+ * operation — all other return values indicate an error.<br>
+ * #MQTTBadParameter if context is NULL;
  * #MQTTRecvFailed if a network error occurs during reception;
  * #MQTTSendFailed if a network error occurs while sending an ACK or PINGREQ;
  * #MQTTBadResponse if an invalid packet is received;
@@ -1226,13 +1232,15 @@ MQTTStatus_t MQTT_Disconnect( MQTTContext_t * pContext,
  * #MQTT_PINGRESP_TIMEOUT_MS milliseconds;
  * #MQTTIllegalState if an incoming QoS 1/2 publish or ack causes an
  * invalid transition for the internal state machine;
- * #MQTTNeedMoreBytes if MQTT_ProcessLoop has received
- * incomplete data; it should be called again (probably after a delay);
+ * #MQTTNoMemory if the incoming publish record array is full when
+ * receiving a QoS 1/2 publish;
  * #MQTTStatusNotConnected if the connection is not established yet and a PING
- * or an ACK is being sent.
+ * or an ACK is being sent;
  * #MQTTStatusDisconnectPending if the user is expected to call MQTT_Disconnect
- * before calling any other API
- * #MQTTSuccess on success.
+ * before calling any other API;
+ * #MQTTPublishStoreFailed if the user provided store function for
+ * retransmission failed while storing an outgoing acknowledgment;
+ * #MQTTEventCallbackFailed if the application callback returns false.
  *
  * <b>Example</b>
  * @code{c}
@@ -1280,15 +1288,26 @@ MQTTStatus_t MQTT_ProcessLoop( MQTTContext_t * pContext );
  * #MQTTEventCallback_t callback does not contain blocking operations to prevent potential
  * non-deterministic blocking period of the #MQTT_ReceiveLoop API call.
  *
- * @return #MQTTBadParameter if context is NULL;
+ * @return #MQTTSuccess on success;
+ * #MQTTNeedMoreBytes if an incomplete packet has been received. The caller
+ * should call this function again (probably after a delay) to receive the
+ * remaining data. Both #MQTTSuccess and #MQTTNeedMoreBytes indicate normal
+ * operation — all other return values indicate an error.<br>
+ * #MQTTBadParameter if context is NULL;
  * #MQTTRecvFailed if a network error occurs during reception;
  * #MQTTSendFailed if a network error occurs while sending an ACK or PINGREQ;
  * #MQTTBadResponse if an invalid packet is received;
  * #MQTTIllegalState if an incoming QoS 1/2 publish or ack causes an
  * invalid transition for the internal state machine;
- * #MQTTNeedMoreBytes if MQTT_ReceiveLoop has received
- * incomplete data; it should be called again (probably after a delay);
- * #MQTTSuccess on success.
+ * #MQTTNoMemory if the incoming publish record array is full when
+ * receiving a QoS 1/2 publish;
+ * #MQTTStatusNotConnected if the connection is not established yet and an
+ * ACK is being sent;
+ * #MQTTStatusDisconnectPending if the user is expected to call MQTT_Disconnect
+ * before calling any other API;
+ * #MQTTPublishStoreFailed if the user provided store function for
+ * retransmission failed while storing an outgoing acknowledgment;
+ * #MQTTEventCallbackFailed if the application callback returns false.
  *
  * <b>Example</b>
  * @code{c}
@@ -1331,7 +1350,7 @@ MQTTStatus_t MQTT_ReceiveLoop( MQTTContext_t * pContext );
  *
  * @param[in] pContext Initialized MQTT context.
  *
- * @return A non-zero number.
+ * @return A non-zero packet ID, or zero if @p pContext is NULL.
  */
 /* @[declare_mqtt_getpacketid] */
 uint16_t MQTT_GetPacketId( MQTTContext_t * pContext );
@@ -1420,6 +1439,7 @@ MQTTStatus_t MQTT_MatchTopic( const char * pTopicName,
  *
  * @return Returns one of the following:
  * - #MQTTBadParameter if the input SUBACK packet is invalid.<br>
+ * - #MQTTBadResponse if the SUBACK property length is malformed.<br>
  * - #MQTTSuccess if parsing the payload was successful.<br>
  *
  * <b>Example</b>
