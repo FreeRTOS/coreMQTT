@@ -97,8 +97,10 @@ typedef uint32_t ( * MQTTGetCurrentTimeFunc_t )( void );
  *
  * @note This callback will be called only if packets are deserialized with a
  * result of #MQTTSuccess or #MQTTServerRefused. The latter can be obtained
- * when deserializing a SUBACK indicating a broker's rejection of a subscribe,
- * or a CONNACK indicating a broker's rejection of a connection.
+ * when deserializing a CONNACK indicating a broker's rejection of a connection.
+ * For SUBACK and UNSUBACK, the deserialization result will be #MQTTSuccess even
+ * when individual topic filters are rejected; the application should inspect
+ * per-topic reason codes via #MQTTDeserializedInfo_t.pReasonCode.
  *
  * @param[in] pContext Initialized MQTT context.
  * @param[in] pPacketInfo Information on the type of incoming MQTT packet.

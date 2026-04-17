@@ -615,12 +615,20 @@ static void addSubscriptionOptions( const MQTTSubscribeInfo_t subscriptionInfo,
                                     size_t currentOptionIndex );
 
 /**
- * @brief Handle Incoming Subscribe ACK
+ * @brief Handle incoming SUBACK or UNSUBACK packet.
+ *
+ * Deserializes the packet and invokes the application callback. Server
+ * rejection of individual topic filters (reason codes >= 0x80) is not
+ * treated as a library-level error; the application can inspect per-topic
+ * reason codes via #MQTTDeserializedInfo_t.pReasonCode in the callback.
  *
  * @param[in] pContext MQTT Connection context.
- * @param[in] pIncomingPacket Information of incoming packet
+ * @param[in] pIncomingPacket Information of incoming packet.
  *
- * @return #MQTTSuccess, #MQTTServerRefused, #MQTTBadResponse, #MQTTBadParameter, #MQTTEventCallbackFailed.
+ * @return #MQTTSuccess on successful deserialization (including server refusal);
+ * #MQTTBadResponse if the packet is malformed;
+ * #MQTTBadParameter if parameters are invalid;
+ * #MQTTEventCallbackFailed if the application callback returns false.
  */
 static MQTTStatus_t handleSubUnsubAck( MQTTContext_t * pContext,
                                        MQTTPacketInfo_t * pIncomingPacket );
@@ -4024,7 +4032,7 @@ static MQTTStatus_t handleSubUnsubAck( MQTTContext_t * pContext,
     LogInfo( ( "Ack packet deserialized with result: %s.",
                MQTT_Status_strerror( status ) ) );
 
-    if( ( status == MQTTSuccess ) || ( status == MQTTServerRefused ) )
+    if( status == MQTTSuccess )
     {
         deserializedInfo.packetIdentifier = packetIdentifier;
         deserializedInfo.deserializationResult = status;

@@ -243,7 +243,7 @@ typedef enum MQTTStatus
     MQTTSendFailed,                 /**< The transport send function failed. */
     MQTTRecvFailed,                 /**< The transport receive function failed. */
     MQTTBadResponse,                /**< An invalid packet was received from the server. It is recommended that application closes the connection.  */
-    MQTTServerRefused,              /**< The server refused a CONNECT or SUBSCRIBE. */
+    MQTTServerRefused,              /**< The server refused a CONNECT. */
     MQTTNoDataAvailable,            /**< No data available from the transport interface. */
     MQTTIllegalState,               /**< An illegal state in the state record. */
     MQTTStateCollision,             /**< A collision with an existing state record entry. */
@@ -1731,7 +1731,6 @@ MQTTStatus_t MQTT_DeserializePublish( const MQTTPacketInfo_t * pIncomingPacket,
  * @return Returns one of the following:
  * - #MQTTSuccess if the packet was successfully deserialized
  * - #MQTTBadParameter if invalid parameters are passed
- * - #MQTTServerRefused if the server explicitly rejected the request, either in the CONNACK or a SUBACK.
  * - #MQTTBadResponse if the packet type is invalid or packet parsing fails
  *
  * <b>Example</b>
