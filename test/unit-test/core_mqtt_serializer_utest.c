@@ -3066,9 +3066,13 @@ void test_MQTTV5_suback( void )
     status = MQTT_DeserializeAck( &subackPacket, &packetIdentifier, &subackReasonCodes, &propBuffer, &properties );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
 
-    packetBufferNoProperties[ 5 ] = 0x80; /* Change reason code to 0x01 (Unspecified error) */
+    packetBufferNoProperties[ 5 ] = 0x80; /* Change reason code to 0x80 (Unspecified error). */
     status = MQTT_DeserializeAck( &subackPacket, &packetIdentifier, &subackReasonCodes, &propBuffer, &properties );
-    TEST_ASSERT_EQUAL_INT( MQTTServerRefused, status );
+
+    /* Server rejection is no longer treated as a library-level error for
+     * SUBACK/UNSUBACK; the application inspects per-topic reason codes in the
+     * callback. */
+    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
 
     /* Invalid Property Length. */
     subackPacket.remainingLength = 20;
