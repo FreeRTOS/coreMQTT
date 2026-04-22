@@ -284,7 +284,7 @@ static MQTTStatus_t processPublishFlags( uint8_t publishFlags,
  * @param[out]  pSessionPresent Whether a previous session was present.
  * @param[out]  pPropBuffer MQTTPropBuilder_t to store the deserialized properties.
  *
- * @return #MQTTBadParameter, #MQTTBadResponse, #MQTTSuccess, #MQTTServerRefused
+ * @return #MQTTBadParameter, #MQTTBadResponse, or #MQTTSuccess.
  */
 static MQTTStatus_t deserializeConnack( MQTTConnectionProperties_t * pConnackProperties,
                                         const MQTTPacketInfo_t * pIncomingPacket,
@@ -294,10 +294,14 @@ static MQTTStatus_t deserializeConnack( MQTTConnectionProperties_t * pConnackPro
 /**
  * @brief Decode the status bytes of a SUBACK packet to a #MQTTStatus_t.
  *
+ * All known reason codes (including server rejections >= 0x80) are treated
+ * as successful deserialization. The application can inspect individual
+ * reason codes via #MQTTReasonCodeInfo_t in the event callback.
+ *
  * @param[in] statusCount Number of status bytes in the SUBACK.
  * @param[in] pStatusStart The first status byte in the SUBACK.
  * @param[out] pReasonCodes The #MQTTReasonCodeInfo_t to store reason codes for each topic filter.
- * @return #MQTTSuccess, #MQTTServerRefused, or #MQTTBadResponse.
+ * @return #MQTTSuccess or #MQTTBadResponse.
  */
 static MQTTStatus_t readSubackStatus( size_t statusCount,
                                       const uint8_t * pStatusStart,
@@ -312,7 +316,7 @@ static MQTTStatus_t readSubackStatus( size_t statusCount,
  *                           Contains the success/failure status of the corresponding request.
  * @param[out]  pPropBuffer MQTTPropBuilder_t to store the deserialized properties.
  *
- * @return #MQTTBadParameter, #MQTTBadResponse, #MQTTSuccess, #MQTTServerRefused
+ * @return #MQTTBadParameter, #MQTTBadResponse, or #MQTTSuccess.
  */
 static MQTTStatus_t deserializeSubUnsubAck( const MQTTPacketInfo_t * incomingPacket,
                                             uint16_t * pPacketId,
@@ -1771,7 +1775,7 @@ static MQTTStatus_t readSubackStatus( size_t statusCount,
                                       const uint8_t * pStatusStart,
                                       MQTTReasonCodeInfo_t * pReasonCodes )
 {
-    MQTTStatus_t status = MQTTServerRefused;
+    MQTTStatus_t status = MQTTSuccess;
     uint8_t subscriptionStatus = 0;
     size_t i = 0;
 
@@ -1789,7 +1793,6 @@ static MQTTStatus_t readSubackStatus( size_t statusCount,
                 LogDebug( ( "Topic Filter %lu accepted, max QoS %u.",
                             ( unsigned long ) i,
                             ( unsigned int ) subscriptionStatus ) );
-                status = MQTTSuccess;
                 break;
 
             case 0x80:
@@ -1841,7 +1844,7 @@ static MQTTStatus_t readSubackStatus( size_t statusCount,
         }
     }
 
-    if( ( status == MQTTSuccess ) || ( status == MQTTServerRefused ) )
+    if( status == MQTTSuccess )
     {
         pReasonCodes->reasonCode = pStatusStart;
         pReasonCodes->reasonCodeLength = statusCount;

@@ -6359,14 +6359,14 @@ void test_MQTT_ProcessLoop_handleIncomingAck_Happy_Paths5( void )
     resetProcessLoopParams( &expectParams );
     expectProcessLoopCalls( &context, &expectParams );
 
-    /* Verify that process loop is still successful when SUBACK indicates a
-     * server refusal. */
+    /* Verify that process loop is successful and the callback is invoked when
+     * SUBACK indicates server refusal of one or more topic filters. The
+     * deserializer now treats rejections as successful deserialization; the
+     * application inspects per-topic reason codes in the callback. */
     currentPacketType = MQTT_PACKET_TYPE_SUBACK;
     isEventCallbackInvoked = false;
     /* Set expected return values in the loop. */
     resetProcessLoopParams( &expectParams );
-    expectParams.deserializeStatus = MQTTServerRefused;
-    expectParams.processLoopStatus = MQTTServerRefused;
     expectProcessLoopCalls( &context, &expectParams );
     TEST_ASSERT_TRUE( isEventCallbackInvoked );
 

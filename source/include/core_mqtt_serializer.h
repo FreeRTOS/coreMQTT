@@ -68,6 +68,40 @@
 /** @} */
 
 /**
+ * @addtogroup mqtt_constants
+ * @{
+ */
+
+/**
+ * @brief Convenience pointers for the @c pOptionalMqttPacketType parameter
+ * of the @c MQTTPropAdd_* functions.
+ *
+ * Pass one of these to enable runtime validation that a property is allowed
+ * in the intended packet type. Pass @ref MQTT_PROP_NO_VALIDATE (NULL) to
+ * skip validation.
+ *
+ * @code{c}
+ * MQTTPropAdd_SessionExpiry( &props, 3600, MQTT_PROP_VALIDATE_CONNECT );
+ * MQTTPropAdd_PayloadFormat( &props, 1,    MQTT_PROP_VALIDATE_PUBLISH );
+ * MQTTPropAdd_UserProp( &props, &up,       MQTT_PROP_NO_VALIDATE );
+ * @endcode
+ */
+static const uint8_t MQTT_PACKET_TYPE_CONNECT_VAL     = ( uint8_t ) 0x10U;  /**< @brief CONNECT value for property validation. */
+static const uint8_t MQTT_PACKET_TYPE_PUBLISH_VAL     = ( uint8_t ) 0x30U;  /**< @brief PUBLISH value for property validation. */
+static const uint8_t MQTT_PACKET_TYPE_SUBSCRIBE_VAL   = ( uint8_t ) 0x82U;  /**< @brief SUBSCRIBE value for property validation. */
+static const uint8_t MQTT_PACKET_TYPE_UNSUBSCRIBE_VAL = ( uint8_t ) 0xA2U;  /**< @brief UNSUBSCRIBE value for property validation. */
+static const uint8_t MQTT_PACKET_TYPE_DISCONNECT_VAL  = ( uint8_t ) 0xE0U;  /**< @brief DISCONNECT value for property validation. */
+
+#define MQTT_PROP_VALIDATE_CONNECT      ( &MQTT_PACKET_TYPE_CONNECT_VAL )      /**< @brief Validate property for CONNECT. */
+#define MQTT_PROP_VALIDATE_PUBLISH      ( &MQTT_PACKET_TYPE_PUBLISH_VAL )      /**< @brief Validate property for PUBLISH. */
+#define MQTT_PROP_VALIDATE_SUBSCRIBE    ( &MQTT_PACKET_TYPE_SUBSCRIBE_VAL )    /**< @brief Validate property for SUBSCRIBE. */
+#define MQTT_PROP_VALIDATE_UNSUBSCRIBE  ( &MQTT_PACKET_TYPE_UNSUBSCRIBE_VAL )  /**< @brief Validate property for UNSUBSCRIBE. */
+#define MQTT_PROP_VALIDATE_DISCONNECT   ( &MQTT_PACKET_TYPE_DISCONNECT_VAL )   /**< @brief Validate property for DISCONNECT. */
+#define MQTT_PROP_NO_VALIDATE           ( NULL )                               /**< @brief Skip packet type validation. */
+
+/** @} */
+
+/**
  * @ingroup mqtt_constants
  * @brief The size of MQTT PUBACK, PUBREC, PUBREL, and PUBCOMP packets, per MQTT spec.
  */
@@ -243,7 +277,7 @@ typedef enum MQTTStatus
     MQTTSendFailed,                 /**< The transport send function failed. */
     MQTTRecvFailed,                 /**< The transport receive function failed. */
     MQTTBadResponse,                /**< An invalid packet was received from the server. It is recommended that application closes the connection.  */
-    MQTTServerRefused,              /**< The server refused a CONNECT or SUBSCRIBE. */
+    MQTTServerRefused,              /**< The server refused a CONNECT. */
     MQTTNoDataAvailable,            /**< No data available from the transport interface. */
     MQTTIllegalState,               /**< An illegal state in the state record. */
     MQTTStateCollision,             /**< A collision with an existing state record entry. */
@@ -1731,7 +1765,6 @@ MQTTStatus_t MQTT_DeserializePublish( const MQTTPacketInfo_t * pIncomingPacket,
  * @return Returns one of the following:
  * - #MQTTSuccess if the packet was successfully deserialized
  * - #MQTTBadParameter if invalid parameters are passed
- * - #MQTTServerRefused if the server explicitly rejected the request, either in the CONNACK or a SUBACK.
  * - #MQTTBadResponse if the packet type is invalid or packet parsing fails
  *
  * <b>Example</b>
