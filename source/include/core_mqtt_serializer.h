@@ -86,10 +86,30 @@
  * MQTTPropAdd_UserProp( &props, &up,       MQTT_PROP_NO_VALIDATE );
  * @endcode
  */
+/* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-22 */
+/* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-28 */
+/* coverity[misra_c_2012_rule_2_2_violation] */
+/* coverity[misra_c_2012_rule_2_8_violation] */
 static const uint8_t MQTT_PACKET_TYPE_CONNECT_VAL     = ( uint8_t ) 0x10U;  /**< @brief CONNECT value for property validation. */
+/* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-22 */
+/* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-28 */
+/* coverity[misra_c_2012_rule_2_2_violation] */
+/* coverity[misra_c_2012_rule_2_8_violation] */
 static const uint8_t MQTT_PACKET_TYPE_PUBLISH_VAL     = ( uint8_t ) 0x30U;  /**< @brief PUBLISH value for property validation. */
+/* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-22 */
+/* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-28 */
+/* coverity[misra_c_2012_rule_2_2_violation] */
+/* coverity[misra_c_2012_rule_2_8_violation] */
 static const uint8_t MQTT_PACKET_TYPE_SUBSCRIBE_VAL   = ( uint8_t ) 0x82U;  /**< @brief SUBSCRIBE value for property validation. */
+/* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-22 */
+/* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-28 */
+/* coverity[misra_c_2012_rule_2_2_violation] */
+/* coverity[misra_c_2012_rule_2_8_violation] */
 static const uint8_t MQTT_PACKET_TYPE_UNSUBSCRIBE_VAL = ( uint8_t ) 0xA2U;  /**< @brief UNSUBSCRIBE value for property validation. */
+/* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-22 */
+/* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-28 */
+/* coverity[misra_c_2012_rule_2_2_violation] */
+/* coverity[misra_c_2012_rule_2_8_violation] */
 static const uint8_t MQTT_PACKET_TYPE_DISCONNECT_VAL  = ( uint8_t ) 0xE0U;  /**< @brief DISCONNECT value for property validation. */
 
 #define MQTT_PROP_VALIDATE_CONNECT      ( &MQTT_PACKET_TYPE_CONNECT_VAL )      /**< @brief Validate property for CONNECT. */
