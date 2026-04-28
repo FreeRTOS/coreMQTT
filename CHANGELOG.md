@@ -1,5 +1,12 @@
 # Changelog for coreMQTT Client Library
 
+## v5.0.2 (April 2026)
+
+### Changes
+
+- Modified `SUBACK`/`UNSUBACK` handling to only return `MQTTServerRefused` for malformed packets through `MQTT_ProcessLoop`/`MQTT_ReceiveLoop`.
+- Added `MQTT_GetUnsubAckStatusCodes` API.
+
 ## v5.0.1 (March 2026)
 
 ### Changes
