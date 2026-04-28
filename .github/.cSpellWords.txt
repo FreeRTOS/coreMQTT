@@ -22,6 +22,7 @@ DUNITTEST
 DUNITY
 getbytesinmqttvec
 getpacketid
+getunsubackstatuscodes
 isystem
 lcov
 misra

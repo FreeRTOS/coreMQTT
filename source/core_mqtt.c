@@ -5332,6 +5332,71 @@ MQTTStatus_t MQTT_GetSubAckStatusCodes( const MQTTPacketInfo_t * pSubackPacket,
 
 /*-----------------------------------------------------------*/
 
+MQTTStatus_t MQTT_GetUnsubAckStatusCodes( const MQTTPacketInfo_t * pUnsubackPacket,
+                                          uint8_t ** pPayloadStart,
+                                          size_t * pPayloadSize )
+{
+    MQTTStatus_t status = MQTTSuccess;
+    uint32_t propertyLength = 0;
+
+    if( pUnsubackPacket == NULL )
+    {
+        LogError( ( "Invalid parameter: pUnsubackPacket is NULL." ) );
+        status = MQTTBadParameter;
+    }
+    else if( pPayloadStart == NULL )
+    {
+        LogError( ( "Invalid parameter: pPayloadStart is NULL." ) );
+        status = MQTTBadParameter;
+    }
+    else if( pPayloadSize == NULL )
+    {
+        LogError( ( "Invalid parameter: pPayloadSize is NULL." ) );
+        status = MQTTBadParameter;
+    }
+    else if( pUnsubackPacket->type != MQTT_PACKET_TYPE_UNSUBACK )
+    {
+        LogError( ( "Invalid parameter: Input packet is not an UNSUBACK packet: "
+                    "ExpectedType=%02x, InputType=%02x",
+                    ( int ) MQTT_PACKET_TYPE_UNSUBACK,
+                    ( int ) pUnsubackPacket->type ) );
+        status = MQTTBadParameter;
+    }
+    else if( pUnsubackPacket->pRemainingData == NULL )
+    {
+        LogError( ( "Invalid parameter: pUnsubackPacket->pRemainingData is NULL" ) );
+        status = MQTTBadParameter;
+    }
+    else if( pUnsubackPacket->remainingLength < 4U )
+    {
+        LogError( ( "Invalid parameter: Packet remaining length is invalid: "
+                    "Should be greater than or equal to 4 for UNSUBACK packet: InputRemainingLength=%lu",
+                    ( unsigned long ) pUnsubackPacket->remainingLength ) );
+        status = MQTTBadParameter;
+    }
+    else if( pUnsubackPacket->remainingLength >= MQTT_REMAINING_LENGTH_INVALID )
+    {
+        LogError( ( "Remaining length cannot be larger than MQTT maximum (268435456)." ) );
+        status = MQTTBadParameter;
+    }
+    else
+    {
+        status = decodeSubackPropertyLength( &pUnsubackPacket->pRemainingData[ sizeof( uint16_t ) ],
+                                             pUnsubackPacket->remainingLength,
+                                             &propertyLength );
+
+        if( status == MQTTSuccess )
+        {
+            *pPayloadStart = &pUnsubackPacket->pRemainingData[ sizeof( uint16_t ) + propertyLength ];
+            *pPayloadSize = pUnsubackPacket->remainingLength - sizeof( uint16_t ) - propertyLength;
+        }
+    }
+
+    return status;
+}
+
+/*-----------------------------------------------------------*/
+
 const char * MQTT_Status_strerror( MQTTStatus_t status )
 {
     const char * str = NULL;

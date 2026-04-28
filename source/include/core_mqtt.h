@@ -1509,6 +1509,66 @@ MQTTStatus_t MQTT_GetSubAckStatusCodes( const MQTTPacketInfo_t * pSubackPacket,
 /* @[declare_mqtt_getsubackstatuscodes] */
 
 /**
+ * @brief Parses the payload of an MQTT UNSUBACK packet that contains status codes
+ * corresponding to topic filter unsubscribe requests from the original
+ * unsubscribe packet.
+ *
+ * Each return code in the UNSUBACK packet corresponds to a topic filter in the
+ * UNSUBSCRIBE Packet being acknowledged.
+ * The status codes can be one of the following:
+ *  - 0x00 - Success
+ *  - 0x11 - No subscription existed
+ *  These are the reason codes when the server refuses the request:
+ *  - 0x80 - Unspecified error
+ *  - 0x83 - Implementation specific error
+ *  - 0x87 - Not authorized
+ *  - 0x8F - Topic Filter invalid
+ *  - 0x91 - Packet Identifier in use
+ *
+ * @param[in] pUnsubackPacket The UNSUBACK packet whose payload is to be parsed.
+ * @param[out] pPayloadStart This is populated with the starting address
+ * of the payload (reason codes for topic filters) in the UNSUBACK packet.
+ * @param[out] pPayloadSize This is populated with the size of the payload
+ * in the UNSUBACK packet. It represents the number of topic filters whose
+ * UNSUBACK status is present in the packet.
+ *
+ * @return Returns one of the following:
+ * - #MQTTBadParameter if the input UNSUBACK packet is invalid.<br>
+ * - #MQTTBadResponse if the UNSUBACK property length is malformed.<br>
+ * - #MQTTSuccess if parsing the payload was successful.<br>
+ *
+ * <b>Example</b>
+ * @code{c}
+ *
+ * // MQTT_GetUnsubAckStatusCodes is intended to be used from the application
+ * // callback that is called by the library in MQTT_ProcessLoop or MQTT_ReceiveLoop.
+ * if( pPacketInfo->type == MQTT_PACKET_TYPE_UNSUBACK )
+ * {
+ *      uint8_t * pCodes;
+ *      size_t numCodes;
+ *
+ *      status = MQTT_GetUnsubAckStatusCodes( pPacketInfo, &pCodes, &numCodes );
+ *
+ *      if( status == MQTTSuccess )
+ *      {
+ *          for( int i = 0; i < numCodes; i++ )
+ *          {
+ *              if( pCodes[ i ] != 0x00 )
+ *              {
+ *                  // Unsubscribe for topic filter i was not successful.
+ *              }
+ *          }
+ *      }
+ * }
+ * @endcode
+ */
+/* @[declare_mqtt_getunsubackstatuscodes] */
+MQTTStatus_t MQTT_GetUnsubAckStatusCodes( const MQTTPacketInfo_t * pUnsubackPacket,
+                                          uint8_t ** pPayloadStart,
+                                          size_t * pPayloadSize );
+/* @[declare_mqtt_getunsubackstatuscodes] */
+
+/**
  * @brief Error code to string conversion for MQTT statuses.
  *
  * @param[in] status The status to convert to a string.
