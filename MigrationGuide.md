@@ -407,7 +407,7 @@ static bool eventCallback(
         /* PUBREC is not a terminating packet — the library will send PUBREL next.
          * pReasonCode and pSendPropsBuffer are valid here. */
         *pReasonCode = MQTT_REASON_PUBREL_SUCCESS;
-        MQTTPropAdd_ReasonString( pSendPropsBuffer, "Success", 7, &(uint8_t){ MQTT_PACKET_TYPE_PUBREL } );
+        MQTTPropAdd_ReasonString( pSendPropsBuffer, "Success", 7, MQTT_PROP_NO_VALIDATE );
     }
     else
     {
@@ -613,7 +613,7 @@ size bufLength = sizeof(buf);
 MQTTPropertyBuilder_Init(&connectionProperties, buf, bufLength) ;
 
 uint32_t sessionExpiryInterval = 100 ; // 100ms
-MQTTPropAdd_SessionExpiry(&connectionProperties, sessionExpiryInterval, &(uint8_t){ MQTT_PACKET_TYPE_CONNECT } );
+MQTTPropAdd_SessionExpiry(&connectionProperties, sessionExpiryInterval, MQTT_PROP_VALIDATE_CONNECT );
 
 // Can also use the will properties in a similar way.
 
@@ -713,7 +713,7 @@ MQTTPropertyBuilder_Init(&propertyBuilder,
                         sizeof(propertyBuffer));
 
 // Add subscription identifier property
-MQTTPropAdd_SubscriptionId(&propertyBuilder, 1, &(uint8_t){ MQTT_PACKET_TYPE_SUBSCRIBE } );
+MQTTPropAdd_SubscriptionId(&propertyBuilder, 1, MQTT_PROP_VALIDATE_SUBSCRIBE );
 
 status = MQTT_Subscribe(&mqttContext,
                     subscriptionList,
@@ -810,8 +810,8 @@ MQTTPropertyBuilder_Init(&propertyBuilder,
                         sizeof(propertyBuffer));
 
 // Add publish properties
-MQTTPropAdd_PayloadFormat(&propertyBuilder, 1, &(uint8_t){ MQTT_PACKET_TYPE_PUBLISH } );
-MQTTPropAdd_TopicAlias(&propertyBuilder, 1, &(uint8_t){ MQTT_PACKET_TYPE_PUBLISH } );
+MQTTPropAdd_PayloadFormat(&propertyBuilder, 1, MQTT_PROP_VALIDATE_PUBLISH );
+MQTTPropAdd_TopicAlias(&propertyBuilder, 1, MQTT_PROP_VALIDATE_PUBLISH );
 
 status = MQTT_Publish(&mqttContext,
                     &publishInfo,
@@ -913,7 +913,7 @@ MQTTUserProperty_t userProperty = {
     .pValue = "value",
     .valueLength = strlen("value")
 };
-MQTTPropAdd_UserProp(&propertyBuilder, &userProperty, &(uint8_t){ MQTT_PACKET_TYPE_UNSUBSCRIBE } );
+MQTTPropAdd_UserProp(&propertyBuilder, &userProperty, MQTT_PROP_VALIDATE_UNSUBSCRIBE );
 
 status = MQTT_Unsubscribe(&mqttContext,
                         unsubscribeList,
@@ -983,7 +983,7 @@ MQTTPropertyBuilder_Init(&propertyBuilder,
 MQTTPropAdd_ReasonString(&propertyBuilder,
                         "Normal shutdown",
                         strlen("Normal shutdown"),
-                        &(uint8_t){ MQTT_PACKET_TYPE_DISCONNECT });
+                        MQTT_PROP_VALIDATE_DISCONNECT);
 
 MQTTSuccessFailReasonCode_t reason = MQTT_REASON_DISCONNECT_NORMAL_DISCONNECTION;
 status = MQTT_Disconnect(&mqttContext,
@@ -1083,7 +1083,7 @@ MQTTPropertyBuilder_Init(&willProperties,
                         sizeof(willPropBuffer));
 
 // Add properties as needed
-MQTTPropAdd_SessionExpiry(&connectionProperties, 3600, &(uint8_t){ MQTT_PACKET_TYPE_CONNECT } );
+MQTTPropAdd_SessionExpiry(&connectionProperties, 3600, MQTT_PROP_VALIDATE_CONNECT );
 MQTTPropAdd_WillDelayInterval(&willProperties, 60, NULL );
 
 status = MQTT_GetConnectPacketSize(&connectInfo,
@@ -1179,8 +1179,8 @@ MQTTPropertyBuilder_Init(&publishProperties,
                         sizeof(propBuffer));
 
 // Add publish properties
-MQTTPropAdd_TopicAlias(&publishProperties, 1, &(uint8_t){ MQTT_PACKET_TYPE_PUBLISH } );
-MQTTPropAdd_PayloadFormat(&publishProperties, 1, &(uint8_t){ MQTT_PACKET_TYPE_PUBLISH } );
+MQTTPropAdd_TopicAlias(&publishProperties, 1, MQTT_PROP_VALIDATE_PUBLISH );
+MQTTPropAdd_PayloadFormat(&publishProperties, 1, MQTT_PROP_VALIDATE_PUBLISH );
 
 // Get max packet size from CONNACK properties
 uint32_t serverMaxPacketSize = pContext->connectionProperties.serverMaxPacketSize; // Value from server
@@ -1274,7 +1274,7 @@ MQTTPropertyBuilder_Init(&subscribeProperties,
                         sizeof(propBuffer));
 
 // Add subscription identifier
-MQTTPropAdd_SubscriptionId(&subscribeProperties, 1, &(uint8_t){ MQTT_PACKET_TYPE_SUBSCRIBE } );
+MQTTPropAdd_SubscriptionId(&subscribeProperties, 1, MQTT_PROP_VALIDATE_SUBSCRIBE );
 
 // Get max packet size from CONNACK properties
 uint32_t serverMaxPacketSize = pContext->connectionProperties.serverMaxPacketSize; // value from server
@@ -1377,7 +1377,7 @@ MQTTUserProperty_t userProperty = {
     .pValue = "value",
     .valueLength = strlen("value")
 };
-MQTTPropAdd_UserProp(&unsubscribeProperties, &userProperty, &(uint8_t){ MQTT_PACKET_TYPE_UNSUBSCRIBE } );
+MQTTPropAdd_UserProp(&unsubscribeProperties, &userProperty, MQTT_PROP_VALIDATE_UNSUBSCRIBE );
 
 // Get max packet size from CONNACK properties
 uint32_t serverMaxPacketSize = pContext->connectionProperties.serverMaxPacketSize; // Value from server
@@ -1455,11 +1455,11 @@ MQTTPropertyBuilder_Init(&disconnectProperties,
                         sizeof(propBuffer));
 
 // Add disconnect properties
-MQTTPropAdd_SessionExpiry(&disconnectProperties, 0, &(uint8_t){ MQTT_PACKET_TYPE_DISCONNECT } );
+MQTTPropAdd_SessionExpiry(&disconnectProperties, 0, MQTT_PROP_VALIDATE_DISCONNECT );
 MQTTPropAdd_ReasonString(&disconnectProperties,
                         "Normal shutdown",
                         strlen("Normal shutdown"),
-                        &(uint8_t){ MQTT_PACKET_TYPE_DISCONNECT } );
+                        MQTT_PROP_VALIDATE_DISCONNECT );
 
 MQTTSuccessFailReasonCode_t reason = MQTT_REASON_DISCONNECT_NORMAL_DISCONNECTION;
 status = MQTT_GetDisconnectPacketSize(&disconnectProperties,
@@ -1587,8 +1587,8 @@ MQTTPropertyBuilder_Init(&willProperties,
                         sizeof(willPropBuffer));
 
 // Add connect properties
-MQTTPropAdd_SessionExpiry(&connectionProperties, 3600, &(uint8_t){ MQTT_PACKET_TYPE_CONNECT } );
-MQTTPropAdd_MaxPacketSize(&connectionProperties, 1024, &(uint8_t){ MQTT_PACKET_TYPE_CONNECT } );
+MQTTPropAdd_SessionExpiry(&connectionProperties, 3600, MQTT_PROP_VALIDATE_CONNECT );
+MQTTPropAdd_MaxPacketSize(&connectionProperties, 1024, MQTT_PROP_VALIDATE_CONNECT );
 
 // Add will properties if using will message
 MQTTPropAdd_WillDelayInterval(&willProperties, 60, NULL );
@@ -1723,9 +1723,9 @@ MQTTPropertyBuilder_Init(&publishProperties,
                         sizeof(propBuffer));
 
 // Add publish properties
-MQTTPropAdd_PayloadFormat(&publishProperties, 1, &(uint8_t){ MQTT_PACKET_TYPE_PUBLISH } );
-MQTTPropAdd_TopicAlias(&publishProperties, 1, &(uint8_t){ MQTT_PACKET_TYPE_PUBLISH } );
-MQTTPropAdd_MessageExpiry(&publishProperties, 3600, &(uint8_t){ MQTT_PACKET_TYPE_PUBLISH } );
+MQTTPropAdd_PayloadFormat(&publishProperties, 1, MQTT_PROP_VALIDATE_PUBLISH );
+MQTTPropAdd_TopicAlias(&publishProperties, 1, MQTT_PROP_VALIDATE_PUBLISH );
+MQTTPropAdd_MessageExpiry(&publishProperties, 3600, MQTT_PROP_VALIDATE_PUBLISH );
 
 // Get remaining length first
 status = MQTT_GetPublishPacketSize(&publishInfo,
@@ -1863,9 +1863,9 @@ MQTTPropertyBuilder_Init(&publishProperties,
                         sizeof(propBuffer));
 
 // Add publish properties
-MQTTPropAdd_PayloadFormat(&publishProperties, 1, &(uint8_t){ MQTT_PACKET_TYPE_PUBLISH } );
-MQTTPropAdd_TopicAlias(&publishProperties, 1, &(uint8_t){ MQTT_PACKET_TYPE_PUBLISH } );
-MQTTPropAdd_MessageExpiry(&publishProperties, 3600, &(uint8_t){ MQTT_PACKET_TYPE_PUBLISH } );
+MQTTPropAdd_PayloadFormat(&publishProperties, 1, MQTT_PROP_VALIDATE_PUBLISH );
+MQTTPropAdd_TopicAlias(&publishProperties, 1, MQTT_PROP_VALIDATE_PUBLISH );
+MQTTPropAdd_MessageExpiry(&publishProperties, 3600, MQTT_PROP_VALIDATE_PUBLISH );
 
 // Get remaining length first
 status = MQTT_GetPublishPacketSize(&publishInfo,
@@ -2003,7 +2003,7 @@ MQTTPropertyBuilder_Init(&subscribeProperties,
                         sizeof(propBuffer));
 
 // Add subscription identifier
-MQTTPropAdd_SubscriptionId(&subscribeProperties, 1, &(uint8_t){ MQTT_PACKET_TYPE_SUBSCRIBE } );
+MQTTPropAdd_SubscriptionId(&subscribeProperties, 1, MQTT_PROP_VALIDATE_SUBSCRIBE );
 
 // Get remaining length first
 status = MQTT_GetSubscribePacketSize(subscriptionList,
@@ -2141,7 +2141,7 @@ MQTTUserProperty_t userProperty = {
 .pValue = "value",
 .valueLength = strlen("value")
 };
-MQTTPropAdd_UserProp(&unsubscribeProperties, &userProperty, &(uint8_t){ MQTT_PACKET_TYPE_UNSUBSCRIBE } );
+MQTTPropAdd_UserProp(&unsubscribeProperties, &userProperty, MQTT_PROP_VALIDATE_UNSUBSCRIBE );
 
 // Get remaining length first
 status = MQTT_GetUnsubscribePacketSize(subscriptionList,
@@ -2242,11 +2242,11 @@ MQTTPropertyBuilder_Init(&disconnectProperties,
                         sizeof(propBuffer));
 
 // Add disconnect properties
-MQTTPropAdd_SessionExpiry(&disconnectProperties, 0, &(uint8_t){ MQTT_PACKET_TYPE_DISCONNECT } );
+MQTTPropAdd_SessionExpiry(&disconnectProperties, 0, MQTT_PROP_VALIDATE_DISCONNECT );
 MQTTPropAdd_ReasonString(&disconnectProperties,
                         "Normal shutdown",
                         strlen("Normal shutdown"),
-                        &(uint8_t){ MQTT_PACKET_TYPE_DISCONNECT } );
+                        MQTT_PROP_VALIDATE_DISCONNECT );
 
 // Get remaining length first
 MQTTSuccessFailReasonCode_t reason = MQTT_REASON_DISCONNECT_NORMAL_DISCONNECTION;

@@ -105,6 +105,61 @@ connectInfo.userNameLength = USERNAME_STRING_LENGTH;
 mqttStatus = MQTT_Connect( pMqttContext, &connectInfo, NULL, CONNACK_RECV_TIMEOUT_MS, pSessionPresent, NULL, NULL );
 ```
 
+## Thread Safety
+
+coreMQTT is a single-threaded protocol engine: a given `MQTTContext_t` is
+**not** safe to use concurrently from multiple threads. The `MQTT_ProcessLoop`,
+`MQTT_ReceiveLoop`, and publish/subscribe APIs all read and mutate fields in
+the context (timestamps, state records, in-flight packet IDs, etc.) without
+internal locking.
+
+If your application calls coreMQTT APIs from more than one thread — for
+example, an MQTT receive loop in one task and application-originated
+`MQTT_Publish` calls from another — you must serialize access to the context
+yourself. The library provides two extension points for that purpose:
+
+- `MQTT_PRE_STATE_UPDATE_HOOK( pContext )` — invoked immediately before the
+  library reads or writes shared context state.
+- `MQTT_POST_STATE_UPDATE_HOOK( pContext )` — invoked immediately after the
+  corresponding read or write completes.
+
+Both macros expand to nothing by default. Define them in your
+`core_mqtt_config.h` (or via the compiler command line) to acquire and release
+a mutex that protects the context. Sketch for FreeRTOS:
+
+```c
+/* In core_mqtt_config.h */
+#include "FreeRTOS.h"
+#include "semphr.h"
+
+/* Application provides one mutex per MQTT context and stores a pointer to it
+ * reachable from the context — for example, inside the NetworkContext or a
+ * parallel lookup table keyed by pContext. */
+extern SemaphoreHandle_t getMutexForContext( const MQTTContext_t * pContext );
+
+#define MQTT_PRE_STATE_UPDATE_HOOK( pContext ) \
+    ( void ) xSemaphoreTake( getMutexForContext( pContext ), portMAX_DELAY )
+
+#define MQTT_POST_STATE_UPDATE_HOOK( pContext ) \
+    ( void ) xSemaphoreGive( getMutexForContext( pContext ) )
+```
+
+Notes:
+
+- The library calls the hooks in matched pre/post pairs around individual
+  state accesses; it does not re-enter a hook-protected region from inside
+  another one, so a non-recursive mutex is sufficient. A recursive mutex
+  also works if you prefer one for defense in depth.
+- The hooks surround individual state accesses, not whole API calls. If you
+  also need atomicity across a full `MQTT_Publish` invocation from the
+  application's point of view, take a second application-level lock around
+  the API call.
+- On a single-threaded system (for example, cooperative scheduling with one
+  task owning the MQTT stack), leave the hooks undefined.
+- The transport `send` / `recv` callbacks are not called from inside the
+  hooks, so your transport implementation does not need to be reentrant with
+  respect to the mutex.
+
 ## Upgrading to v5.0.0
 
 coreMQTT v5.0.0 adds MQTT v5.0 protocol support with breaking API changes.

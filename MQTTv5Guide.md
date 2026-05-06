@@ -310,7 +310,7 @@ status = MQTTPropertyBuilder_Init(&propBuilder, propBuffer, sizeof(propBuffer));
 // Add session expiry
 uint32_t sessionExpiry = 3600;  // 1 hour
 status = MQTTPropAdd_SessionExpiry(&propBuilder, sessionExpiry,
-                                   &(uint8_t){MQTT_PACKET_TYPE_CONNECT});
+                                   MQTT_PROP_VALIDATE_CONNECT);
 
 // Add user property
 MQTTUserProperty_t userProp = {
@@ -320,7 +320,7 @@ MQTTUserProperty_t userProp = {
     .valueLength = strlen("sensor-001")
 };
 status = MQTTPropAdd_UserProp(&propBuilder, &userProp,
-                              &(uint8_t){MQTT_PACKET_TYPE_CONNECT});
+                              MQTT_PROP_VALIDATE_CONNECT);
 ```
 
 3. **Pass the property builder to API functions:**
@@ -532,7 +532,7 @@ MQTTPropertyBuilder_Init(&pubProps, pubPropsBuf, sizeof(pubPropsBuf));
 
 uint16_t topicAlias = 1;
 MQTTPropAdd_TopicAlias(&pubProps, topicAlias,
-                       &(uint8_t){MQTT_PACKET_TYPE_PUBLISH});
+                       MQTT_PROP_VALIDATE_PUBLISH);
 
 MQTTPublishInfo_t publishInfo = {
     .qos = MQTTQoS1,
@@ -560,10 +560,10 @@ MQTTPropertyBuilder_Init(&pubProps, pubPropsBuf, sizeof(pubPropsBuf));
 
 MQTTPropAdd_ResponseTopic(&pubProps, "response/topic",
                           strlen("response/topic"),
-                          &(uint8_t){MQTT_PACKET_TYPE_PUBLISH});
+                          MQTT_PROP_VALIDATE_PUBLISH);
 
 MQTTPropAdd_CorrelationData(&pubProps, "req-123", strlen("req-123"),
-                            &(uint8_t){MQTT_PACKET_TYPE_PUBLISH});
+                            MQTT_PROP_VALIDATE_PUBLISH);
 
 MQTT_Publish(&context, &publishInfo, packetId, &pubProps);
 
@@ -618,7 +618,7 @@ MQTTPropertyBuilder_Init(&connectProps, connectPropsBuf, sizeof(connectPropsBuf)
 // Set session expiry to 1 hour
 uint32_t sessionExpiry = 3600;
 MQTTPropAdd_SessionExpiry(&connectProps, sessionExpiry,
-                          &(uint8_t){MQTT_PACKET_TYPE_CONNECT});
+                          MQTT_PROP_VALIDATE_CONNECT);
 
 // Connect with session expiry
 MQTT_Connect(&context, &connectInfo, NULL, 1000, &sessionPresent,
@@ -640,7 +640,7 @@ MQTTUserProperty_t deviceId = {
     .valueLength = strlen("sensor-001")
 };
 MQTTPropAdd_UserProp(&pubProps, &deviceId,
-                     &(uint8_t){MQTT_PACKET_TYPE_PUBLISH});
+                     MQTT_PROP_VALIDATE_PUBLISH);
 
 MQTTUserProperty_t timestamp = {
     .pKey = "timestamp",
@@ -649,7 +649,7 @@ MQTTUserProperty_t timestamp = {
     .valueLength = strlen("2024-01-23T10:30:00Z")
 };
 MQTTPropAdd_UserProp(&pubProps, &timestamp,
-                     &(uint8_t){MQTT_PACKET_TYPE_PUBLISH});
+                     MQTT_PROP_VALIDATE_PUBLISH);
 
 MQTT_Publish(&context, &publishInfo, packetId, &pubProps);
 ```
@@ -664,7 +664,7 @@ MQTTPropertyBuilder_Init(&disconnectProps, disconnectPropsBuf,
 
 MQTTPropAdd_ReasonString(&disconnectProps, "Shutting down for maintenance",
                          strlen("Shutting down for maintenance"),
-                         &(uint8_t){MQTT_PACKET_TYPE_DISCONNECT});
+                         MQTT_PROP_VALIDATE_DISCONNECT);
 
 MQTTSuccessFailReasonCode_t reason = MQTT_REASON_DISCONNECT_NORMAL_DISCONNECTION;
 MQTT_Disconnect(&context, &disconnectProps, &reason);

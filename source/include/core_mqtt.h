@@ -520,7 +520,7 @@ MQTTStatus_t MQTT_Init( MQTTContext_t * pContext,
  * @param[in] incomingPublishCount Maximum number of records which can be kept in the memory
  * pointed to by @p pIncomingPublishRecords.
  * @param[in] pAckPropsBuf Pointer to memory which will be used to store properties of outgoing publish-ACKS.
- * @param[in] ackPropsBufLength Length of the buffer pointed to by @p pBuffer.
+ * @param[in] ackPropsBufLength Length of the buffer pointed to by @p pAckPropsBuf.
  * @return #MQTTBadParameter if invalid parameters are passed;<br>
  * #MQTTSuccess otherwise.<br>
  *
@@ -637,8 +637,6 @@ MQTTStatus_t MQTT_InitStatefulQoS( MQTTContext_t * pContext,
  * // User defined callback used to clear a particular copied publish packet
  * bool publishClearCallback(struct MQTTContext* pContext,
  *                           uint16_t packetId);
- * // User defined callback used to clear all copied publish packets
- * bool publishClearAllCallback(struct MQTTContext* pContext);
  *
  * MQTTContext_t mqttContext;
  * TransportInterface_t transport;
@@ -678,8 +676,7 @@ MQTTStatus_t MQTT_InitStatefulQoS( MQTTContext_t * pContext,
  * {
  *      status = MQTT_InitRetransmits( &mqttContext, publishStoreCallback,
  *                                                   publishRetrieveCallback,
- *                                                   publishClearCallback,
- *                                                   publishClearAllCallback );
+ *                                                   publishClearCallback );
  *
  *      // Now unacked Publishes can be resent on an unclean session resumption.
  * }
@@ -700,7 +697,7 @@ MQTTStatus_t MQTT_InitRetransmits( MQTTContext_t * pContext,
  *
  * @return #MQTTBadParameter if invalid parameters are passed;
  * #MQTTStatusConnected if the MQTT connection is established with the broker.
- * #MQTTStatusNotConnected if the MQTT connection is broker.
+ * #MQTTStatusNotConnected if the MQTT connection is not established with the broker.
  * #MQTTStatusDisconnectPending if Transport Interface has failed and MQTT connection needs to be closed.
  *
  * <b>Example</b>
@@ -840,7 +837,7 @@ MQTTStatus_t MQTT_CheckConnectStatus( const MQTTContext_t * pContext );
  *
  *   // Set a property in the connectPropsBuilder
  * uint32_t maxPacketSize = 100 ;
- * status = MQTTPropAdd_MaxPacketSize(&connectPropsBuilder, maxPacketSize, &(uint8_t){ MQTT_PACKET_TYPE_CONNECT });
+ * status = MQTTPropAdd_MaxPacketSize(&connectPropsBuilder, maxPacketSize, MQTT_PROP_VALIDATE_CONNECT);
  *
  * // The last will and testament is optional, it will be published by the broker
  * // should this client disconnect without sending a DISCONNECT packet.
@@ -930,7 +927,7 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
  * size_t propertyBufferLength = sizeof( propertyBuffer );
  * status = MQTTPropertyBuilder_Init( &propertyBuilder, propertyBuffer, propertyBufferLength );
  *
- * status = MQTTPropAdd_SubscriptionId(&propertyBuilder, 1, &(uint8_t){ MQTT_PACKET_TYPE_SUBSCRIBE });
+ * status = MQTTPropAdd_SubscriptionId(&propertyBuilder, 1, MQTT_PROP_VALIDATE_SUBSCRIBE);
  *
  * // Obtain a new packet id for the subscription.
  * packetId = MQTT_GetPacketId( pContext );
@@ -1011,7 +1008,7 @@ MQTTStatus_t MQTT_Subscribe( MQTTContext_t * pContext,
  * status = MQTTPropertyBuilder_Init( &propertyBuilder, propertyBuffer, propertyBufferLength );
  *
  * // Set a property in the propertyBuilder
- * status = MQTTPropAdd_PayloadFormat( &propertyBuilder, 1, &(uint8_t){ MQTT_PACKET_TYPE_PUBLISH });
+ * status = MQTTPropAdd_PayloadFormat( &propertyBuilder, 1, MQTT_PROP_VALIDATE_PUBLISH);
  *
  * // Packet ID is needed for QoS > 0.
  * packetId = MQTT_GetPacketId( pContext );
@@ -1130,7 +1127,7 @@ MQTTStatus_t MQTT_Ping( MQTTContext_t * pContext );
  * userProperty.pValue = "value";
  * userProperty.valueLength = strlen( userProperty.pValue );
  *
- * status = MQTTPropAdd_UserProp( &propertyBuilder, &userProperty, &(uint8_t){ MQTT_PACKET_TYPE_UNSUBSCRIBE });
+ * status = MQTTPropAdd_UserProp( &propertyBuilder, &userProperty, MQTT_PROP_VALIDATE_UNSUBSCRIBE);
  *
  * status = MQTT_Unsubscribe( pContext, &unsubscribeList[ 0 ], NUMBER_OF_SUBSCRIPTIONS, packetId, &propertyBuilder );
  *
@@ -1184,7 +1181,7 @@ MQTTStatus_t MQTT_Unsubscribe( MQTTContext_t * pContext,
  * status = MQTTPropertyBuilder_Init( &propertyBuilder, propertyBuffer, propertyBufferLength );
  *
  * // Set a property in the propertyBuilder
- * status = MQTTPropAdd_ReasonString( &propertyBuilder, "Disconnecting", 13, &(uint8_t){ MQTT_PACKET_TYPE_DISCONNECT });
+ * status = MQTTPropAdd_ReasonString( &propertyBuilder, "Disconnecting", 13, MQTT_PROP_VALIDATE_DISCONNECT);
  *
  * MQTTSuccessFailReasonCode_t reason = MQTT_REASON_DISCONNECT_NORMAL_DISCONNECTION;
  * status = MQTT_Disconnect( pContext, &propertyBuilder, &reason );

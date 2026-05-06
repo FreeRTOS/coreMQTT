@@ -86,6 +86,21 @@
  * MQTTPropAdd_UserProp( &props, &up,       MQTT_PROP_NO_VALIDATE );
  * @endcode
  */
+/*
+ * The five file-scope constants below are intentionally named in the same
+ * MQTT_PACKET_TYPE_* family as the existing MQTT_PACKET_TYPE_* macros a few
+ * lines above, and their values match those macros. Coverity flags this as
+ * MISRA C:2012 Rule 2.2 (unused redundant expression — the name reuse looks
+ * redundant to the analyser) and Rule 2.8 (unused objects at file scope).
+ * Both deviations are accepted because these constants have to be addressable
+ * storage — the MQTT_PROP_VALIDATE_* macros below take their addresses so
+ * that callers can pass a typed `const uint8_t *` argument to the
+ * MQTTPropAdd_* APIs without resorting to C99 compound literals. Macros
+ * cannot be addressed, which is why we cannot reuse the existing
+ * MQTT_PACKET_TYPE_* macros directly here.
+ *
+ * See MISRA.md in the repository root for the project-wide deviation record.
+ */
 /* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-22 */
 /* More details at: https://github.com/FreeRTOS/coreMQTT/blob/main/MISRA.md#rule-28 */
 /* coverity[misra_c_2012_rule_2_2_violation] */
@@ -2037,7 +2052,7 @@ MQTTStatus_t MQTT_ValidateConnectProperties( const MQTTPropBuilder_t * pProperty
  * uint32_t subscriptionId = 12345;
  *
  * // Add Subscription Identifier to property builder
- * status = MQTTPropAdd_SubscriptionId(&propertyBuilder, subscriptionId, &(uint8_t){ MQTT_PACKET_TYPE_SUBSCRIBE });
+ * status = MQTTPropAdd_SubscriptionId(&propertyBuilder, subscriptionId, MQTT_PROP_VALIDATE_SUBSCRIBE);
  *
  * if(status == MQTTSuccess)
  * {
