@@ -3554,6 +3554,11 @@ MQTTStatus_t MQTT_GetSubscribePacketSize( const MQTTSubscribeInfo_t * pSubscript
         LogError( ( "Pointer to remaining length cannot be NULL." ) );
         status = MQTTBadParameter;
     }
+    else if( pPacketSize == NULL )
+    {
+        LogError( ( "Pointer to packet size cannot be NULL." ) );
+        status = MQTTBadParameter;
+    }
     else
     {
         if( ( pSubscribeProperties != NULL ) && ( pSubscribeProperties->pBuffer != NULL ) )
