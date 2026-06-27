@@ -1854,7 +1854,7 @@ static MQTTStatus_t handleIncomingPublish( MQTTContext_t * pContext,
     MQTTPublishState_t publishRecordState = MQTTStateNull;
     uint16_t packetIdentifier = 0U;
     MQTTPublishInfo_t publishInfo = { 0 };
-    MQTTDeserializedInfo_t deserializedInfo;
+    MQTTDeserializedInfo_t deserializedInfo = { 0 };
     bool duplicatePublish = false;
     MQTTPropBuilder_t propBuffer = { 0 };
     MQTTSuccessFailReasonCode_t reasonCode = MQTT_INVALID_REASON_CODE;
@@ -2040,7 +2040,7 @@ static MQTTStatus_t handlePublishAcks( MQTTContext_t * pContext,
     uint16_t packetIdentifier;
     MQTTPubAckType_t ackType;
     MQTTEventCallback_t appCallback;
-    MQTTDeserializedInfo_t deserializedInfo;
+    MQTTDeserializedInfo_t deserializedInfo = { 0 };
     MQTTPropBuilder_t propBuffer = { 0 };
     MQTTPropBuilder_t * pSendProps;
     MQTTSuccessFailReasonCode_t * pSendReasonCode;
@@ -2211,7 +2211,7 @@ static MQTTStatus_t handleIncomingAck( MQTTContext_t * pContext,
 {
     MQTTStatus_t status = MQTTBadResponse;
     uint16_t packetIdentifier = MQTT_PACKET_ID_INVALID;
-    MQTTDeserializedInfo_t deserializedInfo;
+    MQTTDeserializedInfo_t deserializedInfo = { 0 };
 
     MQTTEventCallback_t appCallback;
 
@@ -4012,7 +4012,7 @@ static MQTTStatus_t handleSubUnsubAck( MQTTContext_t * pContext,
     MQTTStatus_t status = MQTTSuccess;
     uint16_t packetIdentifier;
     MQTTEventCallback_t appCallback;
-    MQTTDeserializedInfo_t deserializedInfo;
+    MQTTDeserializedInfo_t deserializedInfo = { 0 };
     MQTTPropBuilder_t propBuffer = { 0 };
 
     MQTTReasonCodeInfo_t ackInfo = { 0 };
