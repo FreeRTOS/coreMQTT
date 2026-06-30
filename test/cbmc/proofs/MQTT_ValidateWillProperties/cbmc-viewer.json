@@ -1,0 +1,7 @@
+{ "expected-missing-functions":
+  [
+
+  ],
+  "proof-name": "MQTT_ValidateWillProperties",
+  "proof-root": "test/cbmc/proofs"
+}

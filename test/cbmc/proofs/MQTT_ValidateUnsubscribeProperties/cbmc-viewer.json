@@ -1,0 +1,7 @@
+{ "expected-missing-functions":
+  [
+
+  ],
+  "proof-name": "MQTT_ValidateUnsubscribeProperties",
+  "proof-root": "test/cbmc/proofs"
+}
