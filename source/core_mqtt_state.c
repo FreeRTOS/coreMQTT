@@ -526,8 +526,11 @@ static MQTTStatus_t addRecord( MQTTPubAckInfo_t * records,
     assert( qos != MQTTQoS0 );
 
     /* Check if we have to compact the records. This is known by checking if
-     * the last spot in the array is filled. */
-    if( records[ recordCount - 1U ].packetId != MQTT_PACKET_ID_INVALID )
+     * the last spot in the array is filled. The recordCount > 0U check guards
+     * against a size_t underflow of ( recordCount - 1U ) when no record storage
+     * is configured (records == NULL, recordCount == 0); in that case the loop
+     * below does not execute and the function returns MQTTNoMemory. */
+    if( ( recordCount > 0U ) && ( records[ recordCount - 1U ].packetId != MQTT_PACKET_ID_INVALID ) )
     {
         compactRecords( records, recordCount );
     }
