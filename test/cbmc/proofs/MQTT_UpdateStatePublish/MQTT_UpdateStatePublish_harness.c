@@ -58,8 +58,8 @@ void harness()
     __CPROVER_assume( pContext != NULL );
 
     /* Wire up initialized record arrays. The send path searches the outgoing
-     * records (findInRecord) and updates them; the receive path adds to the
-     * incoming records (addRecord). Record contents are non-deterministic. */
+    * records (findInRecord) and updates them; the receive path adds to the
+    * incoming records (addRecord). Record contents are non-deterministic. */
     pContext->outgoingPublishRecords = malloc( RECORD_COUNT * sizeof( MQTTPubAckInfo_t ) );
     __CPROVER_assume( pContext->outgoingPublishRecords != NULL );
     pContext->outgoingPublishRecordMaxCount = RECORD_COUNT;

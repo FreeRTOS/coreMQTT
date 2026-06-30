@@ -51,7 +51,7 @@ void harness()
     __CPROVER_assume( isValidMqttPropBuilder( pWillProperties ) );
 
     /* The output parameters are plain pointers. They are allocated with malloc
-     * so that they may also be NULL, which covers the NULL-parameter checks. */
+    * so that they may also be NULL, which covers the NULL-parameter checks. */
     pRemainingLength = malloc( sizeof( uint32_t ) );
     pPacketSize = malloc( sizeof( uint32_t ) );
 

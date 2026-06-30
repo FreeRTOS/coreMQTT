@@ -36,7 +36,7 @@ void harness()
     MQTTQoS_t qos;
 
     /* MQTT_CalculateStateAck is a pure function operating only on its scalar
-     * arguments. It performs no pointer dereferences and contains no loops, so
-     * the arguments are left fully non-deterministic to cover every input. */
+    * arguments. It performs no pointer dereferences and contains no loops, so
+    * the arguments are left fully non-deterministic to cover every input. */
     ( void ) MQTT_CalculateStateAck( packetType, opType, qos );
 }

@@ -46,6 +46,6 @@ void harness()
     pOptionalMqttPacketType = malloc( sizeof( uint8_t ) );
 
     MQTTPropAdd_RequestRespInfo( pPropertyBuilder,
-                          requestResponseInfo,
-                               pOptionalMqttPacketType );
+                                 requestResponseInfo,
+                                 pOptionalMqttPacketType );
 }
