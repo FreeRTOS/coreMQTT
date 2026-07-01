@@ -4528,6 +4528,10 @@ void test_MQTT_Publish_Storing_Publish_Failed( void )
 
     MQTT_UpdateDuplicatePublishFlag_ExpectAnyArgsAndReturn( MQTTSuccess );
 
+    /* The publish send fails after a fresh state reservation, so the reserved
+    * record must be rolled back to avoid leaking the outgoing record slot. */
+    MQTT_RemoveStateRecord_ExpectAndReturn( &mqttContext, 1, MQTTSuccess );
+
     mqttContext.transportInterface.send = transportSendSuccess;
     status = MQTT_Publish( &mqttContext, &publishInfo, 1, NULL );
     TEST_ASSERT_EQUAL_INT( MQTTPublishStoreFailed, status );
@@ -4580,9 +4584,67 @@ void test_MQTT_Publish_Storing_Publish_Failed_Due_To_Dup_Flag_Not_Set( void )
 
     MQTT_UpdateDuplicatePublishFlag_ExpectAnyArgsAndReturn( MQTTBadParameter );
 
+    /* The publish send fails after a fresh state reservation, so the reserved
+    * record must be rolled back to avoid leaking the outgoing record slot. */
+    MQTT_RemoveStateRecord_ExpectAndReturn( &mqttContext, 1, MQTTSuccess );
+
     mqttContext.transportInterface.send = transportSendSuccess;
     status = MQTT_Publish( &mqttContext, &publishInfo, 1, NULL );
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+}
+
+
+/**
+ * @brief Test that MQTT_Publish rolls back a newly reserved outgoing publish
+ * record when the PUBLISH send itself fails, so the record slot is not leaked.
+ */
+void test_MQTT_Publish_SendFailed_RollsBackReservedState( void )
+{
+    MQTTContext_t mqttContext = { 0 };
+    MQTTPublishInfo_t publishInfo = { 0 };
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
+    MQTTStatus_t status;
+    MQTTPubAckInfo_t outgoingPublishRecord[ 10 ];
+    uint16_t packetId = 10;
+
+    setupTransportInterface( &transport );
+    setupNetworkBuffer( &networkBuffer );
+    /* Force the PUBLISH onto the byte-send path and make that send fail. */
+    transport.writev = NULL;
+    transport.send = transportSendFailure;
+
+    memset( &mqttContext, 0x0, sizeof( mqttContext ) );
+    memset( &publishInfo, 0x0, sizeof( publishInfo ) );
+    MQTT_InitConnect_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_Init( &mqttContext, &transport, getTime, eventCallback, &networkBuffer );
+
+    MQTT_ValidatePublishParams_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_GetPublishPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_SerializePublishHeaderWithoutTopic_ExpectAnyArgsAndReturn( MQTTSuccess );
+    encodeVariableLength_Stub( encodeVariableLength_cb_1bytelength );
+
+    /* A new (non-duplicate) QoS1 publish reserves a fresh outgoing record. */
+    MQTT_ReserveState_ExpectAnyArgsAndReturn( MQTTSuccess );
+    /* Because the send fails, that record must be released (not leaked). */
+    MQTT_RemoveStateRecord_ExpectAndReturn( &mqttContext, packetId, MQTTSuccess );
+
+    mqttContext.outgoingPublishRecordMaxCount = 10;
+    mqttContext.outgoingPublishRecords = outgoingPublishRecord;
+    mqttContext.connectStatus = MQTTConnected;
+
+    publishInfo.qos = MQTTQoS1;
+    publishInfo.dup = false;
+    publishInfo.pPayload = "TestPublish";
+    publishInfo.payloadLength = strlen( publishInfo.pPayload );
+    publishInfo.pTopicName = "TestTopic";
+    publishInfo.topicNameLength = strlen( publishInfo.pTopicName );
+
+    status = MQTT_Publish( &mqttContext, &publishInfo, packetId, NULL );
+
+    /* Send failure is reported to the caller; MQTT_UpdateStatePublish is not
+     * called (gated on success) and the reserved record was rolled back. */
+    TEST_ASSERT_EQUAL_INT( MQTTSendFailed, status );
 }
 
 

@@ -4727,6 +4727,7 @@ MQTTStatus_t MQTT_Publish( MQTTContext_t * pContext,
     MQTTPublishState_t publishStatus = MQTTStateNull;
     MQTTConnectionStatus_t connectStatus;
     uint16_t topicAlias = 0U;
+    bool stateReserved = false;
 
     /* Maximum number of bytes required by the 'fixed' part of the PUBLISH
      * packet header according to the MQTT specifications.
@@ -4803,6 +4804,12 @@ MQTTStatus_t MQTT_Publish( MQTTContext_t * pContext,
                                         packetId,
                                         pPublishInfo->qos );
 
+            if( status == MQTTSuccess )
+            {
+                /* A new outgoing publish record was reserved by this call. */
+                stateReserved = true;
+            }
+
             /* State already exists for a duplicate packet.
              * If a state doesn't exist, it will be handled as a new publish in
              * state engine. */
@@ -4820,6 +4827,26 @@ MQTTStatus_t MQTT_Publish( MQTTContext_t * pContext,
                                              headerSize,
                                              packetId,
                                              pPropertyBuilder );
+
+            if( ( status != MQTTSuccess ) && ( stateReserved == true ) )
+            {
+                MQTTStatus_t removeStatus;
+
+                /* The record was newly reserved for this publish, but the
+                 * packet was not sent. Remove it so the outgoing publish record
+                 * slot is not leaked over repeated send failures. The original
+                 * send-failure status is preserved for the caller. Records that
+                 * already existed (duplicate retransmits) are left intact. */
+                removeStatus = MQTT_RemoveStateRecord( pContext, packetId );
+
+                /* The record was just reserved by this call for a QoS1/QoS2
+                 * publish, so it is guaranteed to be present and removable. A
+                 * failure here can only mean the state records were corrupted. */
+                assert( removeStatus == MQTTSuccess );
+
+                /* Avoid an unused-variable warning when asserts are disabled. */
+                ( void ) removeStatus;
+            }
         }
 
         if( ( status == MQTTSuccess ) &&
