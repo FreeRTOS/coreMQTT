@@ -435,7 +435,7 @@ static MQTTStatus_t addPropUint16( MQTTPropBuilder_t * pPropertyBuilder,
     else if( ( pOptionalMqttPacketType != NULL ) &&
              ( isValidPropertyInPacketType( pOptionalMqttPacketType, fieldPosition ) == false ) )
     {
-        LogError( ( "Receive Maximum not allowed in %d packet type.", *pOptionalMqttPacketType ) );
+        LogError( ( "Property %u not allowed in %d packet type.", ( unsigned int ) propId, *pOptionalMqttPacketType ) );
         status = MQTTBadParameter;
     }
 
@@ -491,13 +491,13 @@ static MQTTStatus_t addPropUint32( MQTTPropBuilder_t * pPropertyBuilder,
     }
     else if( UINT32_CHECK_BIT( pPropertyBuilder->fieldSet, fieldPosition ) )
     {
-        LogError( ( "Subscription Id already set." ) );
+        LogError( ( "Property %u already set.", ( unsigned int ) propId ) );
         status = MQTTBadParameter;
     }
     else if( ( pOptionalMqttPacketType != NULL ) &&
              ( isValidPropertyInPacketType( pOptionalMqttPacketType, fieldPosition ) == false ) )
     {
-        LogError( ( "Subscription Id not allowed in %d packet type.", *pOptionalMqttPacketType ) );
+        LogError( ( "Property %u not allowed in %d packet type.", ( unsigned int ) propId, *pOptionalMqttPacketType ) );
         status = MQTTBadParameter;
     }
 

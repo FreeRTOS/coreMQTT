@@ -2907,7 +2907,7 @@ static MQTTStatus_t sendUnsubscribeWithoutCopy( MQTTContext_t * pContext,
 
         if( CHECK_SIZE_T_OVERFLOWS_32BIT( pIterator->iov_len ) ||
             ADDITION_WILL_OVERFLOW_U32( totalPacketLength, ( uint32_t ) pIterator->iov_len ) ||
-            ( ( totalPacketLength + pIterator->iov_len ) > MQTT_MAX_REMAINING_LENGTH ) )
+            ( ( totalPacketLength + pIterator->iov_len ) > MQTT_MAX_PACKET_SIZE ) )
         {
             LogError( ( "Total packet length must less than 268435461." ) );
             status = MQTTBadParameter;

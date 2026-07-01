@@ -4163,7 +4163,7 @@ MQTTStatus_t MQTT_SerializePublishHeader( const MQTTPublishInfo_t * pPublishInfo
         LogError( ( "Buffer size of %lu is not sufficient to hold "
                     "serialized PUBLISH header packet of size of %lu.",
                     ( unsigned long ) pFixedBuffer->size,
-                    ( unsigned long ) ( packetSize - pPublishInfo->payloadLength ) ) );
+                    ( unsigned long ) packetSize ) );
         status = MQTTNoMemory;
     }
 
@@ -4423,9 +4423,9 @@ MQTTStatus_t MQTT_GetDisconnectPacketSize( const MQTTPropBuilder_t * pDisconnect
              * Actual properties +
              * Optional reason code (which is depicted by length)
              *
-             * Must be less than the maximum allowed remaining length.
+             * Must not exceed the maximum allowed remaining length.
              */
-            if( ( propertyLength + variableLengthEncodedSize( propertyLength ) + length ) < MQTT_MAX_REMAINING_LENGTH )
+            if( ( propertyLength + variableLengthEncodedSize( propertyLength ) + length ) <= MQTT_MAX_REMAINING_LENGTH )
             {
                 length += variableLengthEncodedSize( propertyLength ) + propertyLength;
                 *pRemainingLength = length;
@@ -5524,6 +5524,7 @@ MQTTStatus_t MQTT_ValidateSubscribeProperties( bool isSubscriptionIdAvailable,
 
                 if( status == MQTTSuccess )
                 {
+                    pLocalIndex = &pLocalIndex[ variableLengthEncodedSize( subscriptionId ) ];
                     propertyLength -= variableLengthEncodedSize( subscriptionId );
 
                     if( isSubscriptionIdAvailable == false )
