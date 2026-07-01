@@ -3383,6 +3383,8 @@ void test_MQTT_Connect_resendPendingAcks8( void )
     mqttContext.connectStatus = MQTTNotConnected;
     mqttContext.outgoingPublishRecordMaxCount = 1;
     mqttContext.incomingPublishRecordMaxCount = 1;
+    mqttContext.outgoingPublishRecordMaxCountConfigured = 1;
+    mqttContext.incomingPublishRecordMaxCountConfigured = 1;
     mqttContext.outgoingPublishRecords = &outgoingRecords;
     mqttContext.incomingPublishRecords = &incomingRecords;
     mqttContext.connectionProperties.receiveMax = 1;

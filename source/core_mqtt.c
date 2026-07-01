@@ -4276,8 +4276,10 @@ MQTTStatus_t MQTT_InitStatefulQoS( MQTTContext_t * pContext,
     else
     {
         pContext->incomingPublishRecordMaxCount = incomingPublishCount;
+        pContext->incomingPublishRecordMaxCountConfigured = incomingPublishCount;
         pContext->incomingPublishRecords = pIncomingPublishRecords;
         pContext->outgoingPublishRecordMaxCount = outgoingPublishCount;
+        pContext->outgoingPublishRecordMaxCountConfigured = outgoingPublishCount;
         pContext->outgoingPublishRecords = pOutgoingPublishRecords;
 
         if( ( pAckPropsBuf != NULL ) && ( ackPropsBufLength != 0U ) )
@@ -4556,6 +4558,12 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
          **/
         if( status == MQTTSuccess )
         {
+            /* Start from the application-configured limits so the effective
+             * limits are recomputed fresh on every connect, rather than being
+             * monotonically shrunk across reconnects. */
+            pContext->incomingPublishRecordMaxCount = pContext->incomingPublishRecordMaxCountConfigured;
+            pContext->outgoingPublishRecordMaxCount = pContext->outgoingPublishRecordMaxCountConfigured;
+
             if( pContext->connectionProperties.receiveMax < pContext->incomingPublishRecordMaxCount )
             {
                 pContext->incomingPublishRecordMaxCount = pContext->connectionProperties.receiveMax;

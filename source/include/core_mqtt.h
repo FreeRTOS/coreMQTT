@@ -326,6 +326,28 @@ typedef struct MQTTContext
     size_t incomingPublishRecordMaxCount;
 
     /**
+     * @brief The application-configured maximum number of outgoing publish
+     * records, as passed to #MQTT_InitStatefulQoS.
+     *
+     * @note #outgoingPublishRecordMaxCount is the effective limit actually used
+     * by the state engine; it is recomputed as the minimum of this configured
+     * value and the server's Receive Maximum on every successful #MQTT_Connect.
+     * This configured value is preserved so the effective limit can be restored
+     * (not just monotonically shrunk) across reconnects.
+     */
+    size_t outgoingPublishRecordMaxCountConfigured;
+
+    /**
+     * @brief The application-configured maximum number of incoming publish
+     * records, as passed to #MQTT_InitStatefulQoS.
+     *
+     * @note #incomingPublishRecordMaxCount is the effective limit actually used
+     * by the state engine; it is recomputed as the minimum of this configured
+     * value and the client's Receive Maximum on every successful #MQTT_Connect.
+     */
+    size_t incomingPublishRecordMaxCountConfigured;
+
+    /**
      * @brief The transport interface used by the MQTT connection.
      */
     TransportInterface_t transportInterface;
