@@ -548,7 +548,7 @@ MQTTStatus_t MQTT_Init( MQTTContext_t * pContext,
  * MQTTFixedBuffer_t fixedBuffer;
  * uint8_t buffer[ 1024 ];
  * const size_t outgoingPublishCount = 30;
- * MQTTPubAckInfo_t outgoingPublishes[ outgoingPublishCount ];
+ * MQTTPubAckInfo_t outgoingPublishes[ 30 ];
  *
  * // Clear context.
  * memset( ( void * ) &mqttContext, 0x00, sizeof( MQTTContext_t ) );
@@ -626,24 +626,24 @@ MQTTStatus_t MQTT_InitStatefulQoS( MQTTContext_t * pContext,
  * // Network receive.
  * int32_t networkRecv( NetworkContext_t * pContext, void * pBuffer, size_t bytes );
  * // User defined callback used to store outgoing publishes
- * bool publishStoreCallback(struct MQTTContext* pContext,
- *                           uint16_t packetId,
- *                           MQTTVec_t* pIoVec);
+ * bool publishStoreCallback(struct MQTTContext * pContext,
+ *                           uint32_t handle,
+ *                           MQTTVec_t * pMqttVec);
  * // User defined callback used to retreive a copied publish for resend operation
- * bool publishRetrieveCallback(struct MQTTContext* pContext,
- *                              uint16_t packetId,
- *                              TransportOutVector_t** pIoVec,
- *                              size_t* ioVecCount);
+ * bool publishRetrieveCallback(struct MQTTContext * pContext,
+ *                              uint32_t handle,
+ *                              uint8_t ** pSerializedMqttVec,
+ *                              size_t * pSerializedMqttVecLen);
  * // User defined callback used to clear a particular copied publish packet
- * bool publishClearCallback(struct MQTTContext* pContext,
- *                           uint16_t packetId);
+ * bool publishClearCallback(struct MQTTContext * pContext,
+ *                           uint32_t handle);
  *
  * MQTTContext_t mqttContext;
  * TransportInterface_t transport;
  * MQTTFixedBuffer_t fixedBuffer;
  * uint8_t buffer[ 1024 ];
  * const size_t outgoingPublishCount = 30;
- * MQTTPubAckInfo_t outgoingPublishes[ outgoingPublishCount ];
+ * MQTTPubAckInfo_t outgoingPublishes[ 30 ];
  *
  * // Clear context.
  * memset( ( void * ) &mqttContext, 0x00, sizeof( MQTTContext_t ) );
@@ -699,11 +699,6 @@ MQTTStatus_t MQTT_InitRetransmits( MQTTContext_t * pContext,
  * #MQTTStatusConnected if the MQTT connection is established with the broker.
  * #MQTTStatusNotConnected if the MQTT connection is not established with the broker.
  * #MQTTStatusDisconnectPending if Transport Interface has failed and MQTT connection needs to be closed.
- *
- * <b>Example</b>
- * @code{c}
- *
- * @endcode
  */
 /* @[declare_mqtt_checkconnectstatus] */
 MQTTStatus_t MQTT_CheckConnectStatus( const MQTTContext_t * pContext );
@@ -1425,7 +1420,10 @@ MQTTStatus_t MQTT_MatchTopic( const char * pTopicName,
  *  - 0xA1 - Subscription identifiers not supported.
  *  - 0xA2 - Wildcard subscriptions not supported.
  *
- * Refer to #MQTTSubAckStatus_t for the status codes.
+ * The payload is an array of raw reason-code bytes, one per topic filter.
+ * Symbolic names for all of the codes listed above are provided by the
+ * @c MQTT_REASON_SUBACK_* members of #MQTTSuccessFailReasonCode_t, which can be
+ * used to interpret each byte (see the example below).
  *
  * @param[in] pSubackPacket The SUBACK packet whose payload is to be parsed.
  * @param[out] pPayloadStart This is populated with the starting address
@@ -1451,7 +1449,7 @@ MQTTStatus_t MQTT_MatchTopic( const char * pTopicName,
  * bool eventCallback(
  *      MQTTContext_t * pContext,
  *      MQTTPacketInfo_t * pPacketInfo,
- *      MQTTDeserializedInfo_t * pDeserializedInfo
+ *      MQTTDeserializedInfo_t * pDeserializedInfo,
  *      MQTTSuccessFailReasonCode_t * pReasonCode,
  *      MQTTPropBuilder_t * pSendPropsBuffer,
  *      MQTTPropBuilder_t * pGetPropsBuffer
@@ -1473,25 +1471,33 @@ MQTTStatus_t MQTT_MatchTopic( const char * pTopicName,
  *          // original SUBSCRIBE packet.
  *          assert( numCodes == NUMBER_OF_SUBSCRIPTIONS );
  *
- *          for( int i = 0; i < numCodes; i++ )
+ *          for( size_t i = 0; i < numCodes; i++ )
  *          {
- *              // The only failure code is 0x80 = MQTTSubAckFailure.
- *              if( pCodes[ i ] == MQTTSubAckFailure )
+ *              switch( pCodes[ i ] )
  *              {
- *                  // The subscription failed, we may want to retry the
- *                  // subscription in pSubscribes[ i ] outside of this callback.
- *              }
- *              else
- *              {
- *                  // The subscription was granted, but the maximum QoS may be
- *                  // lower than what was requested. We can verify the granted QoS.
- *                  if( pSubscribes[ i ].qos != pCodes[ i ] )
- *                  {
- *                      LogWarn( (
- *                          "Requested QoS %u, but granted QoS %u for %s",
- *                          pSubscribes[ i ].qos, pCodes[ i ], pSubscribes[ i ].pTopicFilter
- *                      ) );
- *                  }
+ *                  case MQTT_REASON_SUBACK_GRANTED_QOS0:
+ *                  case MQTT_REASON_SUBACK_GRANTED_QOS1:
+ *                  case MQTT_REASON_SUBACK_GRANTED_QOS2:
+ *                      // The subscription was granted, but the maximum QoS may be
+ *                      // lower than what was requested. The reason code is the
+ *                      // granted maximum QoS.
+ *                      if( pSubscribes[ i ].qos != pCodes[ i ] )
+ *                      {
+ *                          LogWarn( (
+ *                              "Requested QoS %u, but granted QoS %u for %s",
+ *                              pSubscribes[ i ].qos, pCodes[ i ], pSubscribes[ i ].pTopicFilter
+ *                          ) );
+ *                      }
+ *                      break;
+ *
+ *                  case MQTT_REASON_SUBACK_NOT_AUTHORIZED:
+ *                  case MQTT_REASON_SUBACK_TOPIC_FILTER_INVALID:
+ *                  case MQTT_REASON_SUBACK_QUOTA_EXCEEDED:
+ *                  default:
+ *                      // The subscription for pSubscribes[ i ] was refused. The
+ *                      // specific MQTT_REASON_SUBACK_* code indicates why; the
+ *                      // subscription may be retried outside of this callback.
+ *                      break;
  *              }
  *          }
  *      }
@@ -1522,6 +1528,11 @@ MQTTStatus_t MQTT_GetSubAckStatusCodes( const MQTTPacketInfo_t * pSubackPacket,
  *  - 0x8F - Topic Filter invalid
  *  - 0x91 - Packet Identifier in use
  *
+ * The payload is an array of raw reason-code bytes, one per topic filter.
+ * Symbolic names for all of the codes listed above are provided by the
+ * @c MQTT_REASON_UNSUBACK_* members of #MQTTSuccessFailReasonCode_t, which can be
+ * used to interpret each byte (see the example below).
+ *
  * @param[in] pUnsubackPacket The UNSUBACK packet whose payload is to be parsed.
  * @param[out] pPayloadStart This is populated with the starting address
  * of the payload (reason codes for topic filters) in the UNSUBACK packet.
@@ -1548,11 +1559,22 @@ MQTTStatus_t MQTT_GetSubAckStatusCodes( const MQTTPacketInfo_t * pSubackPacket,
  *
  *      if( status == MQTTSuccess )
  *      {
- *          for( int i = 0; i < numCodes; i++ )
+ *          for( size_t i = 0; i < numCodes; i++ )
  *          {
- *              if( pCodes[ i ] != 0x00 )
+ *              switch( pCodes[ i ] )
  *              {
- *                  // Unsubscribe for topic filter i was not successful.
+ *                  case MQTT_REASON_UNSUBACK_SUCCESS:
+ *                  case MQTT_REASON_UNSUBACK_NO_SUBSCRIPTION_EXISTED:
+ *                      // Unsubscribe for topic filter i succeeded (a missing
+ *                      // matching subscription is also treated as success).
+ *                      break;
+ *
+ *                  case MQTT_REASON_UNSUBACK_NOT_AUTHORIZED:
+ *                  case MQTT_REASON_UNSUBACK_TOPIC_FILTER_INVALID:
+ *                  default:
+ *                      // Unsubscribe for topic filter i was refused. The specific
+ *                      // MQTT_REASON_UNSUBACK_* code indicates why.
+ *                      break;
  *              }
  *          }
  *      }

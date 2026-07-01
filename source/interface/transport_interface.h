@@ -277,8 +277,8 @@ typedef struct TransportOutVector
  * interfaces must be defined for the application to work properly.
  *
  * @param[in] pNetworkContext Implementation-defined network context.
- * @param[in] pIoVec An array of TransportIoVector_t structs.
- * @param[in] ioVecCount Number of TransportIoVector_t in pIoVec.
+ * @param[in] pIoVec An array of TransportOutVector_t structs.
+ * @param[in] ioVecCount Number of TransportOutVector_t in pIoVec.
  *
  * @return The number of bytes written or a negative value to indicate error.
  *

@@ -828,7 +828,7 @@ typedef enum MQTTSubscriptionType
  * MQTTPublishInfo_t willInfo = { 0 };
  * MQTTPropBuilder_t connectionProperties = { 0 };
  * MQTTPropBuilder_t willProperties = { 0 };
- * size_t remainingLength = 0, packetSize = 0;
+ * uint32_t remainingLength = 0, packetSize = 0;
  *
  * // Initialize the connection info, the details are out of scope for this example.
  * initializeConnectInfo( &connectInfo );
@@ -898,7 +898,7 @@ MQTTStatus_t MQTT_GetConnectPacketSize( const MQTTConnectInfo_t * pConnectInfo,
  * MQTTPropBuilder_t willProperties = { 0 };
  * MQTTFixedBuffer_t fixedBuffer;
  * uint8_t buffer[ BUFFER_SIZE ];
- * size_t remainingLength = 0, packetSize = 0;
+ * uint32_t remainingLength = 0, packetSize = 0;
  *
  * fixedBuffer.pBuffer = buffer;
  * fixedBuffer.size = BUFFER_SIZE;
@@ -967,7 +967,7 @@ MQTTStatus_t MQTT_SerializeConnect( const MQTTConnectInfo_t * pConnectInfo,
  * MQTTStatus_t status;
  * MQTTSubscribeInfo_t subscriptionList[ NUMBER_OF_SUBSCRIPTIONS ] = { 0 };
  * MQTTPropBuilder_t subscribeProperties = { 0 };
- * size_t remainingLength = 0, packetSize = 0;
+ * uint32_t remainingLength = 0, packetSize = 0;
  * // This is assumed to be a list of filters we want to subscribe to.
  * const char * filters[ NUMBER_OF_SUBSCRIPTIONS ];
  *
@@ -1042,7 +1042,7 @@ MQTTStatus_t MQTT_GetSubscribePacketSize( const MQTTSubscribeInfo_t * pSubscript
  * MQTTPropBuilder_t subscribeProperties = { 0 };
  * MQTTFixedBuffer_t fixedBuffer;
  * uint8_t buffer[ BUFFER_SIZE ];
- * size_t remainingLength = 0, packetSize = 0;
+ * uint32_t remainingLength = 0, packetSize = 0;
  * uint16_t packetId;
  *
  * fixedBuffer.pBuffer = buffer;
@@ -1054,9 +1054,10 @@ MQTTStatus_t MQTT_GetSubscribePacketSize( const MQTTSubscribeInfo_t * pSubscript
  *
  * // Assume subscriptionList and subscribeProperties have been initialized.
  * Get the subscribe packet size.
+ * uint32_t maxPacketSize = 1024;
  * status = MQTT_GetSubscribePacketSize(
  *      &subscriptionList[ 0 ], NUMBER_OF_SUBSCRIPTIONS, &subscribeProperties,
- *      &remainingLength, &packetSize
+ *      &remainingLength, &packetSize, maxPacketSize
  * );
  * assert( status == MQTTSuccess );
  * assert( packetSize <= BUFFER_SIZE );
@@ -1114,7 +1115,7 @@ MQTTStatus_t MQTT_SerializeSubscribe( const MQTTSubscribeInfo_t * pSubscriptionL
  * // Variables used in this example.
  * MQTTStatus_t status;
  * MQTTSubscribeInfo_t subscriptionList[ NUMBER_OF_SUBSCRIPTIONS ] = { 0 };
- * size_t remainingLength = 0, packetSize = 0;
+ * uint32_t remainingLength = 0, packetSize = 0;
  * MQTTPropBuilder_t unsubscribeProperties = { 0 };
  * size_t maxPacketSize = 0;
  *
@@ -1180,7 +1181,7 @@ MQTTStatus_t MQTT_GetUnsubscribePacketSize( const MQTTSubscribeInfo_t * pSubscri
  * MQTTPropBuilder_t unsubscribeProperties;
  * MQTTFixedBuffer_t fixedBuffer;
  * uint8_t buffer[100];
- * size_t remainingLength = 0, packetSize = 0;
+ * uint32_t remainingLength = 0, packetSize = 0;
  * uint16_t packetId = 1;
  *
  * // Initialize the fixed buffer.
@@ -1196,12 +1197,14 @@ MQTTStatus_t MQTT_GetUnsubscribePacketSize( const MQTTSubscribeInfo_t * pSubscri
  * // Initialize properties (optional)
  *
  * // Get size requirement for the unsubscribe packet.
+ * uint32_t maxPacketSize = 1024;
  * status = MQTT_GetUnsubscribePacketSize(
  *      subscriptionList,
  *      2,
  *      &unsubscribeProperties,
  *      &remainingLength,
- *      &packetSize
+ *      &packetSize,
+ *      maxPacketSize
  * );
  *
  * if( status == MQTTSuccess )
@@ -1263,7 +1266,7 @@ MQTTStatus_t MQTT_SerializeUnsubscribe( const MQTTSubscribeInfo_t * pSubscriptio
  * uint16_t topicAliasMax;
  * uint8_t retainAvailable;
  * uint8_t maxQos;
- * size_t remainingLength = 0, packetSize = 0;
+ * uint32_t remainingLength = 0, packetSize = 0;
  *
  * // Initialize the publish info.
  * publishInfo.qos = MQTTQoS0;
@@ -1276,7 +1279,7 @@ MQTTStatus_t MQTT_SerializeUnsubscribe( const MQTTSubscribeInfo_t * pSubscriptio
  * initializePublishProperties( &publishProperties );
  *
  * // Validate publish parameters
- * status = MQTT_ValidatePublishParams(&publishInfo, topicAliasMax, retainAvailable, maxQos);
+ * status = MQTT_ValidatePublishParams( &publishInfo, retainAvailable, maxQos, topicAliasMax, maxPacketSize );
  *
  * // Get the size requirement for the publish packet.
  * status = MQTT_GetPublishPacketSize(
@@ -1335,7 +1338,7 @@ MQTTStatus_t MQTT_GetPublishPacketSize( const MQTTPublishInfo_t * pPublishInfo,
  * MQTTPropBuilder_t publishProperties = { 0 };
  * MQTTFixedBuffer_t fixedBuffer;
  * uint8_t buffer[ BUFFER_SIZE ];
- * size_t remainingLength = 0, packetSize = 0;
+ * uint32_t remainingLength = 0, packetSize = 0;
  * uint16_t packetId;
  *
  * fixedBuffer.pBuffer = buffer;
@@ -1346,8 +1349,9 @@ MQTTStatus_t MQTT_GetPublishPacketSize( const MQTTPublishInfo_t * pPublishInfo,
  * packetId = 0;
  *
  * // Assume publishInfo and publishProperties have been initialized. Get publish packet size.
+ * uint32_t maxPacketSize = 1024;
  * status = MQTT_GetPublishPacketSize(
- *      &publishInfo, &publishProperties, &remainingLength, &packetSize
+ *      &publishInfo, &publishProperties, &remainingLength, &packetSize, maxPacketSize
  * );
  * assert( status == MQTTSuccess );
  * assert( packetSize <= BUFFER_SIZE );
@@ -1693,6 +1697,7 @@ MQTTStatus_t MQTT_GetPingreqPacketSize( uint32_t * pPacketSize );
  * fixedBuffer.size = BUFFER_SIZE;
  *
  * // Get the ping request packet size.
+ * uint32_t packetSize = 0;
  * status = MQTT_GetPingreqPacketSize( &packetSize );
  * assert( status == MQTTSuccess );
  * assert( packetSize <= BUFFER_SIZE );
@@ -1795,7 +1800,7 @@ MQTTStatus_t MQTT_DeserializePublish( const MQTTPacketInfo_t * pIncomingPacket,
  *                        Contains the success/failure status of the corresponding request.
  * @param[out] pPropBuffer Struct to store the deserialized acknowledgment properties.
  *                       Will contain any MQTT v5.0 properties included in the ack packet.
- * @param[in,out] pConnectProperties Struct to store the deserialized connect/connack properties.
+ * @param[in] pConnectProperties Struct to store the deserialized connect/connack properties.
  *
  * @return Returns one of the following:
  * - #MQTTSuccess if the packet was successfully deserialized
@@ -1809,7 +1814,7 @@ MQTTStatus_t MQTT_DeserializePublish( const MQTTPacketInfo_t * pIncomingPacket,
  * MQTTStatus_t status;
  * MQTTPacketInfo_t incomingPacket;
  * uint16_t packetId;
- * MQTTReasonCodeInfo_t reasonCode ; // Can be set to NULL if the incoming packet is CONNACK or PINGRESP
+ * MQTTReasonCodeInfo_t reasonCode ; // Can be set to NULL if the incoming packet is PINGRESP
  * MQTTPropBuilder_t propBuffer; // Can be set to NULL if the user does not want any incoming properties.
  * MQTTConnectionProperties_t connectionProperties = pContext->connectionProperties;  // Cannot be set to NULL.
  *
@@ -3129,10 +3134,10 @@ MQTTStatus_t MQTT_ValidateUnsubscribeProperties( const MQTTPropBuilder_t * pProp
  * fixedBuffer.size = BUFFER_SIZE;
  * // Variables used in this example.
  * MQTTStatus_t status;
- * size_t remainingLength =0;
- * size_t packetSize = 0;
+ * uint32_t remainingLength = 0;
+ * uint32_t packetSize = 0;
  * size_t ackPropertyLength = 0;
- * uint32_t maxPacketSize;
+ * uint32_t maxPacketSize = 1024;
  * //set the parameters.
  * // Get the size requirement for the ack packet.
  * status = MQTT_GetAckPacketSize(&remainingLength,&packetSize,maxPacketSize, ackPropertyLength);
