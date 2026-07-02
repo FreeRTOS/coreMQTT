@@ -5357,8 +5357,18 @@ MQTTStatus_t MQTT_GetSubAckStatusCodes( const MQTTPacketInfo_t * pSubackPacket,
 
         if( status == MQTTSuccess )
         {
-            *pPayloadStart = &pSubackPacket->pRemainingData[ sizeof( uint16_t ) + propertyLength ];
-            *pPayloadSize = pSubackPacket->remainingLength - sizeof( uint16_t ) - propertyLength;
+            size_t payloadSize = ( pSubackPacket->remainingLength - sizeof( uint16_t ) ) - propertyLength;
+
+            if( payloadSize == 0U )
+            {
+                LogError( ( "SUBACK must contain at least one reason code." ) );
+                status = MQTTBadResponse;
+            }
+            else
+            {
+                *pPayloadStart = &pSubackPacket->pRemainingData[ sizeof( uint16_t ) + propertyLength ];
+                *pPayloadSize = payloadSize;
+            }
         }
     }
 
@@ -5422,8 +5432,18 @@ MQTTStatus_t MQTT_GetUnsubAckStatusCodes( const MQTTPacketInfo_t * pUnsubackPack
 
         if( status == MQTTSuccess )
         {
-            *pPayloadStart = &pUnsubackPacket->pRemainingData[ sizeof( uint16_t ) + propertyLength ];
-            *pPayloadSize = pUnsubackPacket->remainingLength - sizeof( uint16_t ) - propertyLength;
+            size_t payloadSize = ( pUnsubackPacket->remainingLength - sizeof( uint16_t ) ) - propertyLength;
+
+            if( payloadSize == 0U )
+            {
+                LogError( ( "UNSUBACK must contain at least one reason code." ) );
+                status = MQTTBadResponse;
+            }
+            else
+            {
+                *pPayloadStart = &pUnsubackPacket->pRemainingData[ sizeof( uint16_t ) + propertyLength ];
+                *pPayloadSize = payloadSize;
+            }
         }
     }
 

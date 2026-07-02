@@ -1781,6 +1781,15 @@ static MQTTStatus_t readSubackStatus( size_t statusCount,
 
     assert( pStatusStart != NULL );
 
+    /* A SUBACK/UNSUBACK must carry at least one reason code (one per topic
+     * filter). A packet whose remaining length is consumed entirely by the
+     * packet identifier and properties, leaving no reason codes, is malformed. */
+    if( statusCount == 0U )
+    {
+        LogError( ( "SUBACK/UNSUBACK must contain at least one reason code." ) );
+        status = MQTTBadResponse;
+    }
+
     for( i = 0; i < statusCount; i++ )
     {
         subscriptionStatus = pStatusStart[ i ];

@@ -10284,6 +10284,55 @@ static void setupUnsubAckPacket( MQTTPacketInfo_t * pPacketInfo,
 }
 
 /**
+ * @brief MQTT_GetSubAckStatusCodes rejects a SUBACK whose remaining length is
+ * consumed entirely by the packet id and properties, leaving zero reason codes
+ * (a malformed SUBACK per MQTT 5).
+ */
+void test_MQTT_GetSubAckStatusCodes_ZeroReasonCodes( void )
+{
+    MQTTPacketInfo_t mqttPacketInfo = { 0 };
+    uint8_t buffer[ 10 ] = { 0 }; /* Contents are irrelevant; decodeSubackPropertyLength is mocked. */
+    size_t payloadSize = 99;
+    uint8_t * pPayloadStart = NULL;
+    MQTTStatus_t status;
+    uint32_t propertyLength = 2U; /* properties consume all bytes after the packet id */
+
+    mqttPacketInfo.type = MQTT_PACKET_TYPE_SUBACK;
+    mqttPacketInfo.pRemainingData = buffer;
+    mqttPacketInfo.remainingLength = 4U; /* packet id (2) + properties (2), no reason codes */
+
+    decodeSubackPropertyLength_ExpectAnyArgsAndReturn( MQTTSuccess );
+    decodeSubackPropertyLength_ReturnThruPtr_subackPropertyLength( &propertyLength );
+
+    status = MQTT_GetSubAckStatusCodes( &mqttPacketInfo, &pPayloadStart, &payloadSize );
+    TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
+}
+
+/**
+ * @brief MQTT_GetUnsubAckStatusCodes rejects an UNSUBACK whose remaining length
+ * is consumed entirely by the packet id and properties, leaving zero reason
+ * codes (a malformed UNSUBACK per MQTT 5).
+ */
+void test_MQTT_GetUnsubAckStatusCodes_ZeroReasonCodes( void )
+{
+    MQTTPacketInfo_t mqttPacketInfo;
+    uint8_t buffer[ 10 ]; /* Contents are irrelevant; decodeSubackPropertyLength is mocked. */
+    size_t payloadSize = 99;
+    uint8_t * pPayloadStart = NULL;
+    MQTTStatus_t status;
+    uint32_t propertyLength = 2U;
+
+    setupUnsubAckPacket( &mqttPacketInfo, buffer, sizeof( buffer ) );
+    mqttPacketInfo.remainingLength = 4U; /* packet id (2) + properties (2), no reason codes */
+
+    decodeSubackPropertyLength_ExpectAnyArgsAndReturn( MQTTSuccess );
+    decodeSubackPropertyLength_ReturnThruPtr_subackPropertyLength( &propertyLength );
+
+    status = MQTT_GetUnsubAckStatusCodes( &mqttPacketInfo, &pPayloadStart, &payloadSize );
+    TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
+}
+
+/**
  * @brief Tests that MQTT_GetUnsubAckStatusCodes succeeds for a valid UNSUBACK
  * packet and correctly populates the payload pointer and size.
  */

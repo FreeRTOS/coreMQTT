@@ -3140,6 +3140,41 @@ void test_MQTTV5_suback_properties_readable( void )
 
 /* ========================================================================== */
 
+/**
+ * @brief Regression test: a SUBACK/UNSUBACK must carry at least one reason code.
+ * A packet whose remaining length is consumed by the packet id and properties,
+ * leaving no reason codes, must be rejected as malformed (MQTT 5 §3.9/§3.11).
+ */
+void test_MQTTV5_suback_zero_reason_codes( void )
+{
+    MQTTStatus_t status;
+    MQTTPacketInfo_t subackPacket = { 0 };
+    uint16_t packetIdentifier = 0;
+    MQTTReasonCodeInfo_t subackReasonCodes;
+    MQTTPropBuilder_t propBuffer = { 0 };
+
+    /* SUBACK: packet id + zero-length property section, and NO reason code. */
+    uint8_t packetBuffer[ 5 ] =
+    {
+        0x90,       /* [Unused, mirrors real packet] Fixed header: SUBACK type */
+        0x03,       /* [Unused, mirrors real packet] Remaining Length = 3 */
+        0x00, 0x01, /* Packet Identifier = 1 */
+        0x00        /* Property Length = 0 (no reason codes follow) */
+    };
+
+    memset( &properties, 0x00, sizeof( properties ) );
+    properties.maxPacketSize = MQTT_MAX_PACKET_SIZE;
+
+    subackPacket.type = MQTT_PACKET_TYPE_SUBACK;
+    subackPacket.remainingLength = 3;
+    subackPacket.pRemainingData = &packetBuffer[ 2 ];
+
+    status = MQTT_DeserializeAck( &subackPacket, &packetIdentifier, &subackReasonCodes, &propBuffer, &properties );
+    TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
+}
+
+/* ========================================================================== */
+
 void test_MQTTV5_suback_outOfBoundAccess( void )
 {
     MQTTStatus_t status;
