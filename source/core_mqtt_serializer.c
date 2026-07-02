@@ -2640,8 +2640,9 @@ static MQTTStatus_t deserializeSubUnsubAckProperties( MQTTPropBuilder_t * pPropB
         }
         else if( pPropBuffer != NULL )
         {
-            pPropBuffer->bufferLength = propertyLength;
             pPropBuffer->pBuffer = pLocalIndex;
+            pPropBuffer->bufferLength = propertyLength;
+            pPropBuffer->currentIndex = propertyLength;
         }
         else
         {

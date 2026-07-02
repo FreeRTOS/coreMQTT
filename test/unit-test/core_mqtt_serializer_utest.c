@@ -3088,6 +3088,58 @@ void test_MQTTV5_suback( void )
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
 }
 
+/**
+ * @brief Regression test: MQTTv5 properties carried in a SUBACK/UNSUBACK must be
+ * readable through the property-get API. deserializeSubUnsubAckProperties
+ * previously left MQTTPropBuilder_t.currentIndex unset, so MQTT_GetNextPropertyType
+ * immediately reported end-of-properties and the properties were inaccessible.
+ */
+void test_MQTTV5_suback_properties_readable( void )
+{
+    MQTTStatus_t status;
+    MQTTPacketInfo_t subackPacket = { 0 };
+    uint16_t packetIdentifier = 0;
+    MQTTReasonCodeInfo_t subackReasonCodes;
+    MQTTPropBuilder_t propBuffer = { 0 };
+    size_t propIndex = 0;
+    uint8_t propertyId = 0;
+
+    /* SUBACK carrying one property (Reason String "abc") and one reason code. */
+    uint8_t packetBuffer[ 12 ] =
+    {
+        0x90,             /* [Unused, mirrors real packet] Fixed header: SUBACK type */
+        0x0A,             /* [Unused, mirrors real packet] Remaining Length = 10 */
+        0x00, 0x01,       /* Packet Identifier = 1 */
+        0x06,             /* Property Length = 6 */
+        0x1F,             /* Property ID = Reason String (0x1F) */
+        0x00, 0x03,       /* UTF-8 string length = 3 */
+        0x61, 0x62, 0x63, /* "abc" */
+        0x00              /* Payload: Reason code = Success */
+    };
+
+    memset( &properties, 0x00, sizeof( properties ) );
+    properties.maxPacketSize = MQTT_MAX_PACKET_SIZE;
+
+    subackPacket.type = MQTT_PACKET_TYPE_SUBACK;
+    subackPacket.remainingLength = 10;
+    subackPacket.pRemainingData = &packetBuffer[ 2 ];
+
+    status = MQTT_DeserializeAck( &subackPacket, &packetIdentifier, &subackReasonCodes, &propBuffer, &properties );
+    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
+
+    /* The property-section length (6) must be recorded so the getters know how
+     * many bytes are valid. */
+    TEST_ASSERT_EQUAL( 6, propBuffer.currentIndex );
+
+    /* The Reason String property must be reachable, not immediately reported as
+     * end-of-properties. */
+    status = MQTT_GetNextPropertyType( &propBuffer, &propIndex, &propertyId );
+    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
+    TEST_ASSERT_EQUAL_UINT8( MQTT_REASON_STRING_ID, propertyId );
+}
+
+/* ========================================================================== */
+
 void test_MQTTV5_suback_outOfBoundAccess( void )
 {
     MQTTStatus_t status;
