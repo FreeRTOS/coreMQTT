@@ -383,6 +383,16 @@ typedef struct MQTTContext
     MQTTEventCallback_t appCallback;
 
     /**
+     * @brief Application-defined data pointer.
+     *
+     * The library never reads or modifies this field; it allows the
+     * application to access its own state from an #MQTTEventCallback_t
+     * callback through the pContext parameter. As #MQTT_Init clears the
+     * entire context, set this field only after calling #MQTT_Init.
+     */
+    void * pUserData;
+
+    /**
      * @brief Timestamp of the last packet sent by the library.
      */
     uint32_t lastPacketTxTime;

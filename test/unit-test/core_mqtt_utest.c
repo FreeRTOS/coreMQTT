@@ -434,6 +434,29 @@ static bool eventCallback2( MQTTContext_t * pContext,
     return true;
 }
 
+/**
+ * @brief Value of pContext->pUserData recorded by eventCallbackUserData.
+ */
+static void * pUserDataSeenInCallback = NULL;
+
+/**
+ * @brief Mocked MQTT event callback that records the application-defined
+ * pUserData pointer from the context, and otherwise behaves exactly like
+ * eventCallback2.
+ */
+static bool eventCallbackUserData( MQTTContext_t * pContext,
+                                   MQTTPacketInfo_t * pPacketInfo,
+                                   MQTTDeserializedInfo_t * pDeserializedInfo,
+                                   MQTTSuccessFailReasonCode_t * pReasonCode,
+                                   MQTTPropBuilder_t * pSendPropsBuffer,
+                                   MQTTPropBuilder_t * pGetPropsBuffer )
+{
+    pUserDataSeenInCallback = pContext->pUserData;
+
+    return eventCallback2( pContext, pPacketInfo, pDeserializedInfo,
+                           pReasonCode, pSendPropsBuffer, pGetPropsBuffer );
+}
+
 static bool eventCallback3( MQTTContext_t * pContext,
                             MQTTPacketInfo_t * pPacketInfo,
                             MQTTDeserializedInfo_t * pDeserializedInfo,
@@ -1809,6 +1832,65 @@ void test_MQTT_Init_Happy_Path( void )
     /* These Unity assertions take pointers and compare their contents. */
     TEST_ASSERT_EQUAL_MEMORY( &transport, &context.transportInterface, sizeof( transport ) );
     TEST_ASSERT_EQUAL_MEMORY( &networkBuffer, &context.networkBuffer, sizeof( networkBuffer ) );
+}
+
+/**
+ * @brief Test that MQTT_Init clears pUserData and that the application can
+ * read it back from the event callback through the context pointer.
+ */
+void test_MQTT_Init_UserData_AccessibleInEventCallback( void )
+{
+    MQTTStatus_t mqttStatus;
+    MQTTContext_t context = { 0 };
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
+    ProcessLoopReturns_t expectParams = { 0 };
+    MQTTPubAckInfo_t pIncomingCallback[ 10 ];
+    uint8_t ackPropsBuf[ 500 ];
+    size_t ackPropsBufLength = sizeof( ackPropsBuf );
+    MQTTPublishInfo_t publishInfo = { 0 };
+    int userData = 0;
+
+    setupTransportInterface( &transport );
+    setupNetworkBuffer( &networkBuffer );
+
+    /* Set pUserData before MQTT_Init to verify that MQTT_Init clears it. */
+    context.pUserData = &userData;
+
+    MQTT_InitConnect_ExpectAnyArgsAndReturn( MQTTSuccess );
+    mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallbackUserData, &networkBuffer );
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+    TEST_ASSERT_NULL( context.pUserData );
+
+    /* The application sets its data pointer after MQTT_Init. */
+    context.pUserData = &userData;
+
+    MQTTPropertyBuilder_Init_ExpectAnyArgsAndReturn( MQTTSuccess );
+    mqttStatus = MQTT_InitStatefulQoS( &context, NULL, 0, pIncomingCallback, 10, ackPropsBuf, ackPropsBufLength );
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+
+    MQTTPropBuilder_t ackPropsBuffer;
+    setupackPropsBuilder( &ackPropsBuffer );
+    context.ackPropsBuffer = ackPropsBuffer;
+
+    context.connectStatus = MQTTConnected;
+
+    modifyIncomingPacketStatus = MQTTSuccess;
+
+    /* Receive a QoS 1 PUBLISH so that the event callback is invoked. */
+    currentPacketType = MQTT_PACKET_TYPE_PUBLISH;
+    resetProcessLoopParams( &expectParams );
+    expectParams.stateAfterDeserialize = MQTTPubAckSend;
+    expectParams.stateAfterSerialize = MQTTPublishDone;
+    expectParams.incomingPublish = true;
+    publishInfo.qos = MQTTQoS1;
+    expectParams.pPubInfo = &publishInfo;
+    expectParams.willReasonCodeBeSet = true;
+    expectParams.willSendPropsBeSet = true;
+    pUserDataSeenInCallback = NULL;
+    expectProcessLoopCalls( &context, &expectParams );
+
+    TEST_ASSERT_EQUAL_PTR( &userData, pUserDataSeenInCallback );
 }
 
 /**
