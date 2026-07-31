@@ -149,6 +149,46 @@ void test_MQTTPropAdd_SubscriptionId_AllInputs( void )
     TEST_ASSERT_EQUAL( 2097152U, val );
 }
 
+void test_MQTTPropAdd_SubscriptionId_BufferFullAtCurrentIndex( void )
+{
+    MQTTPropBuilder_t PropertyBuilder = { 0 };
+    MQTTStatus_t status;
+    uint8_t buffer[ 100 ];
+
+    /* Buffer is large enough overall, but currentIndex leaves fewer than the
+     * 2 bytes needed to encode the property ID and a 1 byte subscription id. */
+    PropertyBuilder.pBuffer = buffer;
+    PropertyBuilder.bufferLength = 100;
+    PropertyBuilder.currentIndex = 99;
+    status = MQTTPropAdd_SubscriptionId( &PropertyBuilder, 1, NULL );
+    TEST_ASSERT_EQUAL( MQTTNoMemory, status );
+}
+
+void test_MQTTPropAdd_SubscriptionId_PacketSizeLimit( void )
+{
+    MQTTPropBuilder_t PropertyBuilder = { 0 };
+    MQTTStatus_t status;
+    uint8_t buffer[ 100 ];
+
+    /* currentIndex does not fit in 32 bits. */
+    PropertyBuilder.pBuffer = buffer;
+    PropertyBuilder.bufferLength = SIZE_MAX;
+    PropertyBuilder.currentIndex = ( ( size_t ) UINT32_MAX ) + 1U;
+    status = MQTTPropAdd_SubscriptionId( &PropertyBuilder, 1, NULL );
+    TEST_ASSERT_EQUAL( MQTTBadParameter, status );
+
+    /* currentIndex is already at the maximum MQTT remaining length. */
+    PropertyBuilder.currentIndex = MQTT_REMAINING_LENGTH_INVALID;
+    status = MQTTPropAdd_SubscriptionId( &PropertyBuilder, 1, NULL );
+    TEST_ASSERT_EQUAL( MQTTBadParameter, status );
+
+    /* currentIndex is below the maximum MQTT remaining length, but the
+     * encoded property would not fit below it. */
+    PropertyBuilder.currentIndex = MQTT_REMAINING_LENGTH_INVALID - 1U;
+    status = MQTTPropAdd_SubscriptionId( &PropertyBuilder, 1, NULL );
+    TEST_ASSERT_EQUAL( MQTTBadParameter, status );
+}
+
 void test_MQTTPropAdd_UserProp_AdditionOverflow1( void )
 {
     MQTTPropBuilder_t PropertyBuilder = { 0 };
@@ -304,6 +344,31 @@ void test_MQTTPropAdd_UserProp_AllInputs( void )
     TEST_ASSERT_EQUAL( 0, memcmp( &PropertyBuilder.pBuffer[ 8 ], "Value", 5 ) );
 }
 
+void test_MQTTPropAdd_UserProp_KeyValueLengthTooLarge( void )
+{
+    MQTTPropBuilder_t PropertyBuilder = { 0 };
+    MQTTUserProperty_t userProperty = { 0 };
+    MQTTStatus_t status;
+    uint8_t buffer[ 100 ];
+
+    PropertyBuilder.pBuffer = buffer;
+    PropertyBuilder.bufferLength = 100;
+
+    /* Key length does not fit in 16 bits. */
+    userProperty.pKey = "Key";
+    userProperty.pValue = "Value";
+    userProperty.keyLength = ( size_t ) UINT16_MAX + 1U;
+    userProperty.valueLength = 5;
+    status = MQTTPropAdd_UserProp( &PropertyBuilder, &userProperty, NULL );
+    TEST_ASSERT_EQUAL( MQTTBadParameter, status );
+
+    /* Value length does not fit in 16 bits. */
+    userProperty.keyLength = 3;
+    userProperty.valueLength = ( size_t ) UINT16_MAX + 1U;
+    status = MQTTPropAdd_UserProp( &PropertyBuilder, &userProperty, NULL );
+    TEST_ASSERT_EQUAL( MQTTBadParameter, status );
+}
+
 void test_MQTTPropAdd_SessionExpiry_AllInputs( void )
 {
     MQTTPropBuilder_t PropertyBuilder = { 0 };
@@ -371,6 +436,21 @@ void test_MQTTPropAdd_SessionExpiry_AllInputs( void )
     TEST_ASSERT_EQUAL_UINT8( 0, PropertyBuilder.pBuffer[ 2 ] );
     TEST_ASSERT_EQUAL_UINT8( 3, PropertyBuilder.pBuffer[ 3 ] );
     TEST_ASSERT_EQUAL_UINT8( 232, PropertyBuilder.pBuffer[ 4 ] );
+}
+
+void test_MQTTPropAdd_SessionExpiry_BufferFullAtCurrentIndex( void )
+{
+    MQTTPropBuilder_t PropertyBuilder = { 0 };
+    MQTTStatus_t status;
+    uint8_t buffer[ 100 ];
+
+    /* Buffer is large enough overall, but currentIndex leaves fewer than the
+     * 5 bytes needed to encode the property ID and a uint32 property. */
+    PropertyBuilder.pBuffer = buffer;
+    PropertyBuilder.bufferLength = 100;
+    PropertyBuilder.currentIndex = 96;
+    status = MQTTPropAdd_SessionExpiry( &PropertyBuilder, 30, NULL );
+    TEST_ASSERT_EQUAL( MQTTNoMemory, status );
 }
 
 void test_MQTTPropAdd_ReceiveMax_AllCases( void )
@@ -814,6 +894,21 @@ void test_MQTTPropAdd_TopicAliasMax_AllCases( void )
     TEST_ASSERT_EQUAL_UINT8( 0xAA, PropertyBuilder.pBuffer[ 4 ] );
 }
 
+void test_MQTTPropAdd_TopicAliasMax_BufferFullAtCurrentIndex( void )
+{
+    MQTTPropBuilder_t PropertyBuilder = { 0 };
+    MQTTStatus_t status;
+    uint8_t buffer[ 100 ];
+
+    /* Buffer is large enough overall, but currentIndex leaves fewer than the
+     * 3 bytes needed to encode the property ID and a uint16 property. */
+    PropertyBuilder.pBuffer = buffer;
+    PropertyBuilder.bufferLength = 100;
+    PropertyBuilder.currentIndex = 98;
+    status = MQTTPropAdd_TopicAliasMax( &PropertyBuilder, 10, NULL );
+    TEST_ASSERT_EQUAL( MQTTNoMemory, status );
+}
+
 void test_MQTTPropAdd_TopicAlias_AllCases( void )
 {
     MQTTPropBuilder_t PropertyBuilder = { 0 };
@@ -1218,6 +1313,21 @@ void test_MQTTPropAdd_PayloadFormat_AllCases( void )
     TEST_ASSERT_EQUAL_UINT8( 0xAA, PropertyBuilder.pBuffer[ 2 ] );
     TEST_ASSERT_EQUAL_UINT8( 0xAA, PropertyBuilder.pBuffer[ 3 ] );
     TEST_ASSERT_EQUAL_UINT8( 0xAA, PropertyBuilder.pBuffer[ 4 ] );
+}
+
+void test_MQTTPropAdd_PayloadFormat_BufferFullAtCurrentIndex( void )
+{
+    MQTTPropBuilder_t PropertyBuilder = { 0 };
+    MQTTStatus_t status;
+    uint8_t buffer[ 100 ];
+
+    /* Buffer is large enough overall, but currentIndex leaves fewer than the
+     * 2 bytes needed to encode the property ID and a uint8 property. */
+    PropertyBuilder.pBuffer = buffer;
+    PropertyBuilder.bufferLength = 100;
+    PropertyBuilder.currentIndex = 99;
+    status = MQTTPropAdd_PayloadFormat( &PropertyBuilder, true, NULL );
+    TEST_ASSERT_EQUAL( MQTTNoMemory, status );
 }
 
 void test_MQTTPropAdd_AuthMethod_AllCases( void )
