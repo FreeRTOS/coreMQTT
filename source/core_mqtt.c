@@ -2588,6 +2588,7 @@ static MQTTStatus_t validateSubscribeUnsubscribeParams( const MQTTContext_t * pC
             {
                 break;
             }
+
             status = validateTopicFilter( pContext, pSubscriptionList, iterator, subscriptionType );
         }
     }
