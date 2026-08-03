@@ -2582,12 +2582,14 @@ static MQTTStatus_t validateSubscribeUnsubscribeParams( const MQTTContext_t * pC
             }
         }
 
-        if( status == MQTTSuccess )
+        for( iterator = 0U; iterator < subscriptionCount; iterator++ )
         {
-            for( iterator = 0U; iterator < subscriptionCount; iterator++ )
+            if( status != MQTTSuccess )
             {
-                status = validateTopicFilter( pContext, pSubscriptionList, iterator, subscriptionType );
+                break;
             }
+
+            status = validateTopicFilter( pContext, pSubscriptionList, iterator, subscriptionType );
         }
     }
 
