@@ -8490,6 +8490,54 @@ void test_MQTTV5_Subscribe_invalid_params( void )
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, mqttStatus );
 }
 
+/**
+ * @brief Test that the wildcard check is bounded by topicFilterLength.
+ *
+ * A topic filter is a pointer paired with a separate topicFilterLength and is
+ * not required to be NUL-terminated, so a '#' or '+' byte sitting past
+ * topicFilterLength inside a larger caller-owned buffer must not affect the
+ * result. Two buffers identical within topicFilterLength and differing only at
+ * the byte just past it must therefore produce the same status.
+ */
+void test_MQTTV5_Subscribe_WildcardCheck_HonorsTopicFilterLength( void )
+{
+    MQTTStatus_t cleanStatus;
+    MQTTStatus_t trappedStatus;
+    MQTTContext_t context = { 0 };
+    MQTTSubscribeInfo_t subscribeInfo = { 0 };
+    char cleanBuffer[ 16 ];
+    char trappedBuffer[ 16 ];
+
+    memset( cleanBuffer, 'X', sizeof( cleanBuffer ) );
+    cleanBuffer[ sizeof( cleanBuffer ) - 1U ] = '\0';
+    memcpy( cleanBuffer, "alarm", 5U );
+
+    memcpy( trappedBuffer, cleanBuffer, sizeof( cleanBuffer ) );
+    trappedBuffer[ 5 ] = '#';
+
+    /* Broker reported that wildcards are unavailable, which selects the
+     * wildcard-check branch. */
+    context.connectionProperties.isWildcardAvailable = 0U;
+    subscribeInfo.qos = MQTTQoS0;
+    subscribeInfo.topicFilterLength = 5U;
+
+    /* Reaching the packet-size step returns a sentinel status, distinguishing
+     * it from the MQTTBadParameter the wildcard check would return. Both
+     * buffers are expected to reach this step. */
+    MQTT_GetSubscribePacketSize_ExpectAnyArgsAndReturn( MQTTNoMemory );
+    MQTT_GetSubscribePacketSize_ExpectAnyArgsAndReturn( MQTTNoMemory );
+
+    subscribeInfo.pTopicFilter = cleanBuffer;
+    cleanStatus = MQTT_Subscribe( &context, &subscribeInfo, 1,
+                                  MQTT_FIRST_VALID_PACKET_ID, NULL );
+
+    subscribeInfo.pTopicFilter = trappedBuffer;
+    trappedStatus = MQTT_Subscribe( &context, &subscribeInfo, 1,
+                                    MQTT_FIRST_VALID_PACKET_ID, NULL );
+
+    TEST_ASSERT_EQUAL_INT( cleanStatus, trappedStatus );
+}
+
 void test_MQTTV5_Subscribe_ValidateFailure( void )
 {
     MQTTStatus_t mqttStatus;

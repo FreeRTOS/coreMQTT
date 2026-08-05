@@ -3868,8 +3868,15 @@ static bool checkWildcardSubscriptions( uint8_t isWildcardAvailable,
 
     if( isWildcardAvailable == 0U )
     {
-        if( ( ( strchr( pSubscriptionList[ iterator ].pTopicFilter, ( int32_t ) '#' ) != NULL ) ||
-              ( strchr( pSubscriptionList[ iterator ].pTopicFilter, ( int32_t ) '+' ) != NULL ) ) )
+        const char * pTopicFilter = pSubscriptionList[ iterator ].pTopicFilter;
+        size_t topicFilterLength = pSubscriptionList[ iterator ].topicFilterLength;
+
+        /* Topic filters are length-prefixed (MQTT 5.0 section 1.5.4) and are not
+         * required to be NUL-terminated. Use memchr() bounded by
+         * topicFilterLength rather than strchr() so that the scan stops at the
+         * end of the caller-supplied buffer. */
+        if( ( memchr( pTopicFilter, ( int32_t ) '#', topicFilterLength ) != NULL ) ||
+            ( memchr( pTopicFilter, ( int32_t ) '+', topicFilterLength ) != NULL ) )
         {
             ret = true;
         }
