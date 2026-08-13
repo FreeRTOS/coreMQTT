@@ -1875,3 +1875,35 @@ void test_MQTTPropAdd_ResponseTopic_AllCases( void )
     TEST_ASSERT_EQUAL_UINT8( 5, PropertyBuilder.pBuffer[ 2 ] );
     TEST_ASSERT_EQUAL( 0, memcmp( &PropertyBuilder.pBuffer[ 3 ], "Hello", 5 ) );
 }
+
+/**
+ * @brief Test that a property is rejected when the buffer cannot hold the
+ * property ID byte in addition to the length prefix and the string.
+ *
+ * A UTF-8 property occupies 1 (property ID) + 2 (length prefix) +
+ * propertyLength bytes. A buffer of only propertyLength + 2 bytes is one byte
+ * short and must be rejected.
+ */
+void test_MQTTPropAdd_ReasonString_BufferTooSmall( void )
+{
+    MQTTPropBuilder_t PropertyBuilder = { 0 };
+    MQTTStatus_t status;
+    const char reasonString[] = "Hello";
+    const size_t reasonStringLength = 5U;
+
+    /* Allocate more than is advertised so the byte just past the advertised
+     * length is real, observable memory. */
+    uint8_t buffer[ 16 ];
+
+    memset( buffer, 0xA5, sizeof( buffer ) );
+
+    PropertyBuilder.pBuffer = buffer;
+    PropertyBuilder.currentIndex = 0;
+    PropertyBuilder.bufferLength = reasonStringLength + 2U;
+    PropertyBuilder.fieldSet = 0;
+
+    status = MQTTPropAdd_ReasonString( &PropertyBuilder, reasonString, reasonStringLength, NULL );
+
+    TEST_ASSERT_EQUAL( MQTTNoMemory, status );
+    TEST_ASSERT_EQUAL_UINT8( 0xA5, buffer[ reasonStringLength + 2U ] );
+}

@@ -576,18 +576,20 @@ static MQTTStatus_t addPropUtf8( MQTTPropBuilder_t * pPropertyBuilder,
         status = MQTTBadParameter;
     }
 
-    /* We need to make sure that adding 2 to property length will not overflow. Then, we need to make
-     * sure that buffer is greater than the size needed to fit the property ( 2U + property length ).
-     * Then, we need to make sure that buffer is big enough to handle the existing data and this property. */
-    else if( ADDITION_WILL_OVERFLOW_SIZE_T( propertyLength, 2U ) ||
-             ( pPropertyBuilder->bufferLength < ( propertyLength + 2U ) ) ||
-             ( pPropertyBuilder->currentIndex > ( pPropertyBuilder->bufferLength - ( propertyLength + 2U ) ) ) )
+    /* The encoded property occupies 3U + propertyLength bytes: 1 byte for the
+     * property ID, 2 bytes for the UTF-8 length prefix, and propertyLength bytes
+     * for the string itself. We first make sure that adding 3 to property length
+     * will not overflow, then that the buffer is large enough to fit the property,
+     * and finally that it can hold the existing data plus this property. */
+    else if( ADDITION_WILL_OVERFLOW_SIZE_T( propertyLength, 3U ) ||
+             ( pPropertyBuilder->bufferLength < ( propertyLength + 3U ) ) ||
+             ( pPropertyBuilder->currentIndex > ( pPropertyBuilder->bufferLength - ( propertyLength + 3U ) ) ) )
     {
         LogError( ( "Buffer too small to add property." ) );
         status = MQTTNoMemory;
     }
-    else if( ( MQTT_REMAINING_LENGTH_INVALID < ( propertyLength + 2U ) ) ||
-             ( pPropertyBuilder->currentIndex > ( MQTT_REMAINING_LENGTH_INVALID - ( propertyLength + 2U ) ) ) )
+    else if( ( MQTT_REMAINING_LENGTH_INVALID < ( propertyLength + 3U ) ) ||
+             ( pPropertyBuilder->currentIndex > ( MQTT_REMAINING_LENGTH_INVALID - ( propertyLength + 3U ) ) ) )
     {
         LogError( ( "MQTT packets must be smaller than %" PRIu32 ".",
                     ( uint32_t ) MQTT_REMAINING_LENGTH_INVALID ) );
