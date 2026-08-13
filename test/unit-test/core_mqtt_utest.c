@@ -838,10 +838,14 @@ static uint8_t * encodeVariableLength_cb_1bytelength( uint8_t * pDestination,
                                                       uint32_t length,
                                                       int callCount )
 {
-    ( void ) length;
     ( void ) callCount;
 
     TEST_ASSERT_NOT_NULL( pDestination );
+
+    /* This stub models the single-byte encoding of the real
+     * encodeVariableLength. It must write the encoded byte, otherwise callers
+     * read uninitialized memory. */
+    pDestination[ 0 ] = ( uint8_t ) length;
 
     return &pDestination[ 1 ];
 }
@@ -3327,6 +3331,9 @@ void test_MQTT_Connect_resendPendingAcks7( void )
     /* Test 8: One publish found in ack pending state with valid packet ID but invalid state. */
     mqttContext.connectStatus = MQTTNotConnected;
     pubRelState = MQTTStateNull;
+
+    /* A session must be present for the pending-ack resend path to run. */
+    sessionPresent = true;
     serializeConnectFixedHeader_Stub( serializeConnectFixedHeader_cb );
     encodeVariableLength_Stub( encodeVariableLength_cb_1bytelength );
 

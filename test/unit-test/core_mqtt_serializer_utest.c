@@ -2454,7 +2454,7 @@ void test_MQTT_GetIncomingPacketTypeAndLength( void )
 void test_MQTTV5_GetSubscribePacketSize( void )
 {
     MQTTStatus_t status = MQTTSuccess;
-    MQTTSubscribeInfo_t subscribeInfo;
+    MQTTSubscribeInfo_t subscribeInfo = { 0 };
     uint32_t remainingLength = 0;
     uint32_t packetSize = 0;
 
@@ -2590,7 +2590,7 @@ void test_calculateSubscriptionPacketSizeV5( void )
  */
 void test_MQTT_SerializeSubscribe( void )
 {
-    MQTTSubscribeInfo_t subscriptionList;
+    MQTTSubscribeInfo_t subscriptionList = { 0 };
     size_t subscriptionCount = 1;
     uint32_t remainingLength = 0;
     uint8_t buffer[ 25 + 2 * BUFFER_PADDING_LENGTH ];
@@ -2845,7 +2845,7 @@ void test_MQTT_SerializeUnsubscribe_NullTopicFilter( void )
  */
 void test_MQTT_SerializeUnsubscribe( void )
 {
-    MQTTSubscribeInfo_t subscriptionList;
+    MQTTSubscribeInfo_t subscriptionList = { 0 };
     size_t subscriptionCount = 1;
     uint32_t remainingLength = 0;
     uint8_t buffer[ 33 + 2 * BUFFER_PADDING_LENGTH ];
