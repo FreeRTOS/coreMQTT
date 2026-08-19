@@ -316,6 +316,26 @@ static MQTTStatus_t receiveConnackPacket( MQTTContext_t * pContext,
 static uint8_t getAckTypeToSend( MQTTPublishState_t state );
 
 /**
+ * @brief Respond to a PUBREL for which no publish record exists with a
+ * PUBCOMP carrying reason code 0x92 (Packet Identifier not found).
+ *
+ * A client that has lost its session state, for example because the device
+ * rebooted, may receive a PUBREL for an incoming QoS 2 publish it no longer
+ * knows about. MQTT v5 requires a PUBCOMP response to every PUBREL
+ * [MQTT-4.3.3-11]; reason code 0x92 informs the broker that the packet
+ * identifier was not found, which the specification notes is not an error
+ * during recovery.
+ *
+ * @param[in] pContext MQTT Connection context.
+ * @param[in] packetId Packet identifier of the received PUBREL.
+ *
+ * @return #MQTTSuccess if the PUBCOMP is sent; otherwise the error from
+ * sending it.
+ */
+static MQTTStatus_t respondToUnknownPubrel( MQTTContext_t * pContext,
+                                            uint16_t packetId );
+
+/**
  * @brief Send acks for received QoS 1/2 publishes.
  *
  * @param[in] pContext MQTT Connection context.
@@ -2032,6 +2052,46 @@ static MQTTStatus_t handleIncomingPublish( MQTTContext_t * pContext,
 
 /*-----------------------------------------------------------*/
 
+static MQTTStatus_t respondToUnknownPubrel( MQTTContext_t * pContext,
+                                            uint16_t packetId )
+{
+    MQTTStatus_t status;
+    uint32_t remainingLength = 0U;
+    uint32_t packetSize = 0U;
+
+    assert( pContext != NULL );
+
+    /* PUBCOMP with a reason code and zero-length properties. */
+    status = MQTT_GetAckPacketSize( &remainingLength,
+                                    &packetSize,
+                                    pContext->connectionProperties.serverMaxPacketSize,
+                                    0U );
+
+    if( ( status == MQTTSuccess ) && ( pContext->connectStatus != MQTTConnected ) )
+    {
+        status = ( pContext->connectStatus == MQTTNotConnected ) ? MQTTStatusNotConnected : MQTTStatusDisconnectPending;
+    }
+
+    if( status == MQTTSuccess )
+    {
+        status = buildAndSendAckWithProps( pContext,
+                                           MQTT_PACKET_TYPE_PUBCOMP,
+                                           packetId,
+                                           MQTT_REASON_PUBCOMP_PACKET_IDENTIFIER_NOT_FOUND,
+                                           remainingLength,
+                                           0U );
+    }
+
+    if( status == MQTTSuccess )
+    {
+        pContext->controlPacketSent = true;
+    }
+
+    return status;
+}
+
+/*-----------------------------------------------------------*/
+
 static MQTTStatus_t handlePublishAcks( MQTTContext_t * pContext,
                                        MQTTPacketInfo_t * pIncomingPacket )
 {
@@ -2046,6 +2106,7 @@ static MQTTStatus_t handlePublishAcks( MQTTContext_t * pContext,
     MQTTSuccessFailReasonCode_t * pSendReasonCode;
     MQTTSuccessFailReasonCode_t reasonCode = MQTT_INVALID_REASON_CODE;
     bool ackPropsAdded;
+    bool recoveredUnknownPubrel = false;
 
     MQTTReasonCodeInfo_t incomingReasonCode = { 0 };
 
@@ -2085,6 +2146,22 @@ static MQTTStatus_t handlePublishAcks( MQTTContext_t * pContext,
             LogInfo( ( "State record updated. New state=%s.",
                        MQTT_State_strerror( publishRecordState ) ) );
         }
+        else if( ( status == MQTTBadResponse ) && ( ackType == MQTTPubrel ) )
+        {
+            /* MQTT_UpdateStateAck returns MQTTBadResponse for a received
+             * PUBREL only when no publish record exists for the packet
+             * identifier. This happens when the session state was lost, for
+             * example because the device rebooted after sending the PUBREC.
+             * Respond with PUBCOMP and reason code 0x92 (Packet Identifier
+             * not found) so that both sides can discard the packet and the
+             * connection stays usable. */
+            LogWarn( ( "No matching record found for incoming PUBREL with packet"
+                       " id %hu. Responding with PUBCOMP with reason code 0x92.",
+                       ( unsigned short ) packetIdentifier ) );
+
+            recoveredUnknownPubrel = true;
+            status = respondToUnknownPubrel( pContext, packetIdentifier );
+        }
         else
         {
             LogError( ( "Updating the state engine for packet id %hu"
@@ -2094,7 +2171,7 @@ static MQTTStatus_t handlePublishAcks( MQTTContext_t * pContext,
         }
     }
 
-    if( ( status == MQTTSuccess ) &&
+    if( ( status == MQTTSuccess ) && ( recoveredUnknownPubrel == false ) &&
         ( pContext->clearFunction != NULL ) )
     {
         /* Outgoing publish QoS1: (Tx) PUBLISH -> (Rx) PUBACK. On receiving PubAck, the packet is acked and can be cleared. */
@@ -2135,7 +2212,7 @@ static MQTTStatus_t handlePublishAcks( MQTTContext_t * pContext,
         }
     }
 
-    if( status == MQTTSuccess )
+    if( ( status == MQTTSuccess ) && ( recoveredUnknownPubrel == false ) )
     {
         deserializedInfo.packetIdentifier = packetIdentifier;
         deserializedInfo.deserializationResult = status;
