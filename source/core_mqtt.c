@@ -851,13 +851,6 @@ static int32_t sendMessageVector( MQTTContext_t * pContext,
             /* MISRA Empty body */
         }
 
-        /* Check for timeout. */
-        if( calculateElapsedTime( pContext->getTime(), startTime ) > MQTT_SEND_TIMEOUT_MS )
-        {
-            LogError( ( "sendMessageVector: Unable to send packet: Timed out." ) );
-            break;
-        }
-
         /* Update the send pointer to the correct vector and offset. */
         while( ( pIoVectIterator <= &( pIoVec[ ioVecCount - 1U ] ) ) &&
                ( sendResult >= ( int32_t ) pIoVectIterator->iov_len ) )
@@ -880,6 +873,15 @@ static int32_t sendMessageVector( MQTTContext_t * pContext,
         {
             pIoVectIterator->iov_base = ( const void * ) &( ( ( const uint8_t * ) pIoVectIterator->iov_base )[ sendResult ] );
             pIoVectIterator->iov_len -= ( size_t ) sendResult;
+        }
+
+        /* Check for timeout. */
+        if( ( bytesSentOrError < ( int32_t ) bytesToSend ) &&
+            ( bytesSentOrError >= 0 ) &&
+            ( calculateElapsedTime( pContext->getTime(), startTime ) > MQTT_SEND_TIMEOUT_MS ) )
+        {
+            LogError( ( "sendMessageVector: Unable to send packet: Timed out." ) );
+            break;
         }
     }
 
