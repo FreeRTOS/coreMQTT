@@ -2,13 +2,11 @@
 
 **[API Documentation Pages for current and previous releases of this library can be found here](https://freertos.github.io/coreMQTT/)**
 
-This repository contains the coreMQTT library that has been optimized for a low
-memory footprint. The coreMQTT library is compliant with the
-[MQTT 3.1.1](https://docs.oasis-open.org/mqtt/mqtt/v3.1.1/mqtt-v3.1.1.html)
-standard. It has no dependencies on any additional libraries other than the
-standard C library, a customer-implemented network transport interface, and
-_optionally_ a user-implemented platform time function. This library is
-distributed under the [MIT Open Source License](LICENSE).
+This repository contains the coreMQTT library, an MQTT v5.0 client optimized
+for a low memory footprint. It has no dependencies on any additional libraries
+other than the standard C library, a customer-implemented network transport
+interface, and _optionally_ a user-implemented platform time function. This
+library is distributed under the [MIT Open Source License](LICENSE).
 
 This library has gone through code quality checks including verification that no
 function has a
@@ -21,14 +19,12 @@ library has also undergone both static code analysis from
 safety through the
 [CBMC automated reasoning tool](https://www.cprover.org/cbmc/).
 
+-For MQTT v3.1.1 [(MQTTv3 Specification)](https://docs.oasis-open.org/mqtt/mqtt/v3.1.1/mqtt-v3.1.1.html), use code from tag : [coreMQTT v2.3.1](https://github.com/FreeRTOS/coreMQTT/tree/v2.3.1)
+
+-For MQTT v5.0 [(MQTTv5 Specification)](https://docs.oasis-open.org/mqtt/mqtt/v5.0/mqtt-v5.0.html), use code from tag : [coreMQTT v5.0.2](https://github.com/FreeRTOS/coreMQTT/tree/v5.0.2)
+
 See memory requirements for this library
 [here](./docs/doxygen/include/size_table.md).
-
-**coreMQTT v2.3.1
-[source code](https://github.com/FreeRTOS/coreMQTT/tree/v2.3.1/source) is part
-of the
-[FreeRTOS 202406.01 LTS](https://github.com/FreeRTOS/FreeRTOS-LTS/tree/202406.01-LTS)
-release.**
 
 ## MQTT Config File
 
@@ -87,18 +83,18 @@ Example
 
 - Actual_Username = “iotuser”, OS_Name = FreeRTOS, OS_Version = V10.4.3,
   Hardware_Platform_Name = WinSim, MQTT_Library_Name = coremqtt,
-  MQTT_Library_version = 2.3.0. If username is not used, then “iotuser” can be
+  MQTT_Library_version = 5.0.0. If username is not used, then “iotuser” can be
   removed.
 
 ```
 /* Username string:
- * iotuser?SDK=FreeRTOS&Version=v10.4.3&Platform=WinSim&MQTTLib=coremqtt@2.3.0
+ * iotuser?SDK=FreeRTOS&Version=v10.4.3&Platform=WinSim&MQTTLib=coremqtt@5.0.0
  */
 
 #define OS_NAME                   "FreeRTOS"
 #define OS_VERSION                "V10.4.3"
 #define HARDWARE_PLATFORM_NAME    "WinSim"
-#define MQTT_LIB                  "coremqtt@2.3.0"
+#define MQTT_LIB                  "coremqtt@5.0.0"
 
 #define USERNAME_STRING           "iotuser?SDK=" OS_NAME "&Version=" OS_VERSION "&Platform=" HARDWARE_PLATFORM_NAME "&MQTTLib=" MQTT_LIB
 #define USERNAME_STRING_LENGTH    ( ( uint16_t ) ( sizeof( USERNAME_STRING ) - 1 ) )
@@ -106,13 +102,82 @@ Example
 MQTTConnectInfo_t connectInfo;
 connectInfo.pUserName = USERNAME_STRING;
 connectInfo.userNameLength = USERNAME_STRING_LENGTH;
-mqttStatus = MQTT_Connect( pMqttContext, &connectInfo, NULL, CONNACK_RECV_TIMEOUT_MS, pSessionPresent );
+mqttStatus = MQTT_Connect( pMqttContext, &connectInfo, NULL, CONNACK_RECV_TIMEOUT_MS, pSessionPresent, NULL, NULL );
 ```
 
-## Upgrading to v2.0.0 and above
+## Thread Safety
 
-With coreMQTT versions >=v2.0.0, there are breaking changes. Please refer to the
-[coreMQTT version >=v2.0.0 Migration Guide](MigrationGuide.md).
+coreMQTT is a single-threaded protocol engine: a given `MQTTContext_t` is
+**not** safe to use concurrently from multiple threads. The `MQTT_ProcessLoop`,
+`MQTT_ReceiveLoop`, and publish/subscribe APIs all read and mutate fields in
+the context (timestamps, state records, in-flight packet IDs, etc.) without
+internal locking.
+
+If your application calls coreMQTT APIs from more than one thread — for
+example, an MQTT receive loop in one task and application-originated
+`MQTT_Publish` calls from another — you must serialize access to the context
+yourself. The library provides two extension points for that purpose:
+
+- `MQTT_PRE_STATE_UPDATE_HOOK( pContext )` — invoked immediately before the
+  library reads or writes shared context state.
+- `MQTT_POST_STATE_UPDATE_HOOK( pContext )` — invoked immediately after the
+  corresponding read or write completes.
+
+Both macros expand to nothing by default. Define them in your
+`core_mqtt_config.h` (or via the compiler command line) to acquire and release
+a mutex that protects the context. Sketch for FreeRTOS:
+
+```c
+/* In core_mqtt_config.h */
+#include "FreeRTOS.h"
+#include "semphr.h"
+
+/* Application provides one mutex per MQTT context and stores a pointer to it
+ * reachable from the context — for example, inside the NetworkContext or a
+ * parallel lookup table keyed by pContext. */
+extern SemaphoreHandle_t getMutexForContext( const MQTTContext_t * pContext );
+
+#define MQTT_PRE_STATE_UPDATE_HOOK( pContext ) \
+    ( void ) xSemaphoreTake( getMutexForContext( pContext ), portMAX_DELAY )
+
+#define MQTT_POST_STATE_UPDATE_HOOK( pContext ) \
+    ( void ) xSemaphoreGive( getMutexForContext( pContext ) )
+```
+
+Notes:
+
+- The library calls the hooks in matched pre/post pairs around individual
+  state accesses; it does not re-enter a hook-protected region from inside
+  another one, so a non-recursive mutex is sufficient. A recursive mutex
+  also works if you prefer one for defense in depth.
+- The hooks surround individual state accesses, not whole API calls. If you
+  also need atomicity across a full `MQTT_Publish` invocation from the
+  application's point of view, take a second application-level lock around
+  the API call.
+- On a single-threaded system (for example, cooperative scheduling with one
+  task owning the MQTT stack), leave the hooks undefined.
+- The transport `send` / `recv` callbacks are not called from inside the
+  hooks, so your transport implementation does not need to be reentrant with
+  respect to the mutex.
+
+## Upgrading to v5.0.0
+
+coreMQTT v5.0.0 adds MQTT v5.0 protocol support with breaking API changes.
+
+- **For API-level changes** (updated function signatures, new parameters):
+  see the [coreMQTT v5.0.0 Migration Guide](MigrationGuide.md).
+- **For a conceptual guide** on using MQTT v5.0 features (properties, topic
+  aliases, enhanced subscriptions, reason codes):
+  see [Moving to MQTT v5.0](MQTTv5Guide.md).
+
+> **Note:** If you are upgrading from coreMQTT v1.x, apply the
+> [v2.x migration changes](MigrationGuide.md#coremqtt-version-v2x-migration-guide)
+> first, then the v5.0.0 changes.
+
+## Upgrading to v2.x
+
+With coreMQTT versions v2.x, there are breaking changes. Please refer to the
+[coreMQTT version v2.x Migration Guide](MigrationGuide.md).
 
 ## Building the Library
 

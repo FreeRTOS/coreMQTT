@@ -12,7 +12,10 @@ set( MQTT_SOURCES
 
 # MQTT Serializer library source files.
 set( MQTT_SERIALIZER_SOURCES
-     "${CMAKE_CURRENT_LIST_DIR}/source/core_mqtt_serializer.c" )
+     "${CMAKE_CURRENT_LIST_DIR}/source/core_mqtt_serializer.c"
+     "${CMAKE_CURRENT_LIST_DIR}/source/core_mqtt_prop_serializer.c"
+     "${CMAKE_CURRENT_LIST_DIR}/source/core_mqtt_prop_deserializer.c"
+     "${CMAKE_CURRENT_LIST_DIR}/source/core_mqtt_serializer_private.c" )
 
 # MQTT library Public Include directories.
 set( MQTT_INCLUDE_PUBLIC_DIRS

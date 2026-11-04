@@ -14,6 +14,42 @@ with ( Assuming rule 18.2 violation; with justification in point 1 ):
 ```
 grep 'MISRA Ref 18.2.1' . -rI
 ```
+
+#### Rule 2.2
+
+_Ref 2.2.1_
+
+- MISRA C-2012 Rule 2.2 states that there shall be no dead code. In
+  `core_mqtt_serializer.h`, the `MQTT_PACKET_TYPE_*_VAL` static const variables
+  back the `MQTT_PROP_VALIDATE_*` convenience macros. Each translation unit
+  that includes the header gets its own copy of these variables, and a TU that
+  does not use a particular `MQTT_PROP_VALIDATE_*` macro will leave the
+  corresponding variable unreferenced — Coverity flags this as dead code.
+  This is expected: the variables exist so that the address-of operator in the
+  macros yields a valid `const uint8_t *`, and the alternative (compound
+  literals) is not portable to C90. The cost is at most one byte of read-only
+  data per unused variable per TU, which is negligible.
+
+#### Rule 2.8
+
+_Ref 2.8.1_
+
+- MISRA C-2012 Rule 2.8 (Advisory) states that a project should not contain
+  unused object definitions. The `MQTT_PACKET_TYPE_*_VAL` static const
+  variables in `core_mqtt_serializer.h` are object definitions that may be
+  unused in any given translation unit that does not reference the
+  corresponding `MQTT_PROP_VALIDATE_*` macro. The deviation has the same
+  rationale as Rule 2.2 above: the variables must exist at file scope so the
+  macros can take their address, and the alternative is not portable to C90.
+
+#### Rule 10.5
+
+_Ref 10.5.1_
+
+- MISRA C-2012 Rule 10.5 states that unsigned values should not be cast to enums. In
+  this case we are casting the uint8_t to MQTTSuccessFailReasonCode_t with a switch
+  case which protects against all uncovered enum cases.
+
 #### Rule 10.8
 
 _Ref 10.8.1_
@@ -37,3 +73,14 @@ _Ref 18.2.1_
   to be subtracted from the index. It is manually verified that the index will always be
   within bounds of the array. However, Coverity is flagging this as a deviation. Thus, we
   are suppressing it.
+
+#### Rule 14.3
+
+_Ref 14.3.1_
+
+- MISRA C-2012 Rule 14.3 prohibits use of invariants in conditional statements. Since
+  coreMQTT is designed to be compiled and executed on different machines with different
+  architectures, it is designed to protect against overflows when converting different
+  types to one another. In doing so, we have macros which check for such conditions on
+  different platforms. A side effect of this is that on some systems, those macros always
+  evaluate to false - that is intentional.

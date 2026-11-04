@@ -1,5 +1,5 @@
 /*
- * coreMQTT <DEVELOPMENT BRANCH>
+ * coreMQTT
  * Copyright (C) 2020 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * SPDX-License-Identifier: MIT
@@ -34,9 +34,18 @@ void harness()
     MQTTFixedBuffer_t * pFixedBuffer;
     uint8_t packetType;
     uint16_t packetId;
+    MQTTSuccessFailReasonCode_t ReasonCode;
+    MQTTPropBuilder_t * pAckProperties;
 
     pFixedBuffer = allocateMqttFixedBuffer( NULL );
     __CPROVER_assume( isValidMqttFixedBuffer( pFixedBuffer ) );
 
-    MQTT_SerializeAck( pFixedBuffer, packetType, packetId );
+    pAckProperties = allocateMqttPropBuilder( NULL );
+    __CPROVER_assume( isValidMqttPropBuilder( pAckProperties ) );
+
+    MQTT_SerializeAck( pFixedBuffer,
+                       packetType,
+                       packetId,
+                       pAckProperties,
+                       &ReasonCode );
 }

@@ -1,5 +1,5 @@
 /*
- * coreMQTT <DEVELOPMENT BRANCH>
+ * coreMQTT
  * Copyright (C) 2020 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * SPDX-License-Identifier: MIT
@@ -36,5 +36,5 @@ void harness()
 
     mqttVec = allocateMqttVec( NULL );
 
-    memoryRequired = MQTT_GetBytesInMQTTVec( mqttVec );
+    MQTTStatus_t status = MQTT_GetBytesInMQTTVec( mqttVec, &memoryRequired );
 }

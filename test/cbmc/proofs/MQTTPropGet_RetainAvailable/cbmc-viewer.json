@@ -1,0 +1,7 @@
+{ "expected-missing-functions":
+  [
+
+  ],
+  "proof-name": "MQTTPropGet_RetainAvailable",
+  "proof-root": "test/cbmc/proofs"
+}

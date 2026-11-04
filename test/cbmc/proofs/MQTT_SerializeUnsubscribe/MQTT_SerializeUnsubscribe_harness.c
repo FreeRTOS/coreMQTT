@@ -1,5 +1,5 @@
 /*
- * coreMQTT <DEVELOPMENT BRANCH>
+ * coreMQTT
  * Copyright (C) 2020 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * SPDX-License-Identifier: MIT
@@ -33,12 +33,14 @@ void harness()
 {
     MQTTSubscribeInfo_t * pSubscriptionList;
     size_t subscriptionCount;
-    size_t remainingLength;
+    uint32_t remainingLength;
     uint16_t packetId;
+    MQTTPropBuilder_t * pUnsubscribeProperties;
+    uint32_t maxPacketSize;
 
     /* This variable is not used but is needed for MQTT_GetUnsubscribePacketSize()
      * to verify the pSubscriptionList. */
-    size_t packetSize;
+    uint32_t packetSize;
     MQTTFixedBuffer_t * pFixedBuffer;
     MQTTStatus_t status = MQTTSuccess;
 
@@ -51,6 +53,15 @@ void harness()
 
     pFixedBuffer = allocateMqttFixedBuffer( NULL );
     __CPROVER_assume( isValidMqttFixedBuffer( pFixedBuffer ) );
+
+    pUnsubscribeProperties = allocateMqttPropBuilder( NULL );
+
+    if( pUnsubscribeProperties != NULL )
+    {
+        __CPROVER_assume( pUnsubscribeProperties->currentIndex >= 0 );
+        __CPROVER_assume( pUnsubscribeProperties->currentIndex < pUnsubscribeProperties->bufferLength );
+        __CPROVER_assume( pUnsubscribeProperties->fieldSet >= 0 );
+    }
 
     /* Before calling MQTT_SerializeUnsubscribe() it is up to the application to
      * make sure that the information in the list of MQTTSubscribeInfo_t can fit
@@ -65,8 +76,10 @@ void harness()
          * to recalculate the packetSize. */
         status = MQTT_GetUnsubscribePacketSize( pSubscriptionList,
                                                 subscriptionCount,
+                                                pUnsubscribeProperties,
                                                 &remainingLength,
-                                                &packetSize );
+                                                &packetSize,
+                                                maxPacketSize );
     }
 
     if( status == MQTTSuccess )
@@ -75,6 +88,7 @@ void harness()
          * reach this function. */
         MQTT_SerializeUnsubscribe( pSubscriptionList,
                                    subscriptionCount,
+                                   pUnsubscribeProperties,
                                    packetId,
                                    remainingLength,
                                    pFixedBuffer );

@@ -1,5 +1,5 @@
 /*
- * coreMQTT <DEVELOPMENT BRANCH>
+ * coreMQTT
  * Copyright (C) 2020 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * SPDX-License-Identifier: MIT
@@ -32,9 +32,34 @@
 void harness()
 {
     MQTTFixedBuffer_t * pFixedBuffer;
+    MQTTPropBuilder_t * pDisconnectProperties;
+    MQTTSuccessFailReasonCode_t * reasonCode = NULL;
+    MQTTStatus_t status;
+    uint32_t remainingLength;
+    uint32_t packetSize;
+    uint32_t maxPacketSize;
+
+    pDisconnectProperties = allocateMqttPropBuilder( NULL );
+
+    if( pDisconnectProperties != NULL )
+    {
+        __CPROVER_assume( pDisconnectProperties->currentIndex >= 0 );
+        __CPROVER_assume( pDisconnectProperties->currentIndex < pDisconnectProperties->bufferLength );
+        __CPROVER_assume( pDisconnectProperties->fieldSet >= 0 );
+    }
 
     pFixedBuffer = allocateMqttFixedBuffer( NULL );
     __CPROVER_assume( isValidMqttFixedBuffer( pFixedBuffer ) );
 
-    MQTT_SerializeDisconnect( pFixedBuffer );
+    if( nondet_bool() )
+    {
+        reasonCode = malloc( sizeof( MQTTSuccessFailReasonCode_t ) );
+    }
+
+    status = MQTT_GetDisconnectPacketSize( pDisconnectProperties, &remainingLength, &packetSize, maxPacketSize, reasonCode );
+
+    if( status == MQTTSuccess )
+    {
+        MQTT_SerializeDisconnect( pDisconnectProperties, reasonCode, remainingLength, pFixedBuffer );
+    }
 }

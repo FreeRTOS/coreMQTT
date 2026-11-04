@@ -1,5 +1,5 @@
 /*
- * coreMQTT <DEVELOPMENT BRANCH>
+ * coreMQTT
  * Copyright (C) 2020 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * SPDX-License-Identifier: MIT
@@ -118,6 +118,10 @@ MQTTFixedBuffer_t * allocateMqttFixedBuffer( MQTTFixedBuffer_t * pFixedBuffer );
  * parameter checks in the function under proof.
  */
 bool isValidMqttFixedBuffer( const MQTTFixedBuffer_t * pFixedBuffer );
+
+MQTTPropBuilder_t * allocateMqttPropBuilder( MQTTPropBuilder_t * pPropBuilder );
+
+bool isValidMqttPropBuilder( const MQTTPropBuilder_t * pPropBuilder );
 
 /**
  * @brief Allocate an array of #MQTTSubscribeInfo_t objects.

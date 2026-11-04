@@ -22,12 +22,18 @@ DUNITTEST
 DUNITY
 getbytesinmqttvec
 getpacketid
+getunsubackstatuscodes
 isystem
 lcov
 misra
 Misra
 MISRA
 MQTT
+mqtteventcallback
+mqttpropadd
+mqttpropertybuilder
+mqttpropget
+MQTTV
 mypy
 nondet
 Nondet
@@ -37,6 +43,7 @@ pytest
 pyyaml
 serializemqttvec
 sinclude
+subscriptionid
 UNACKED
 unpadded
 Unpadded

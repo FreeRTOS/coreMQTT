@@ -1,0 +1,7 @@
+{ "expected-missing-functions":
+  [
+
+  ],
+  "proof-name": "MQTT_GetNextPropertyType",
+  "proof-root": "test/cbmc/proofs"
+}

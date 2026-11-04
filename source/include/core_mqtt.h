@@ -1,5 +1,5 @@
 /*
- * coreMQTT <DEVELOPMENT BRANCH>
+ * coreMQTT
  * Copyright (C) 2022 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * SPDX-License-Identifier: MIT
@@ -24,7 +24,7 @@
 
 /**
  * @file core_mqtt.h
- * @brief User-facing functions of the MQTT 3.1.1 library.
+ * @brief User-facing functions of the MQTT 5.0 library.
  */
 #ifndef CORE_MQTT_H
 #define CORE_MQTT_H
@@ -48,14 +48,14 @@
  * If MQTT_LIBRARY_VERSION ends with + it represents the version in development
  * after the numbered release.
  */
-#define MQTT_LIBRARY_VERSION    "v2.3.1+"
+#define MQTT_LIBRARY_VERSION    "v5.0.2"
 /** @endcond */
 
 /**
  * @ingroup mqtt_constants
  * @brief Invalid packet identifier.
  *
- * Zero is an invalid packet identifier as per MQTT v3.1.1 spec.
+ * Zero is an invalid packet identifier as per MQTT 5.0 spec.
  */
 #define MQTT_PACKET_ID_INVALID    ( ( uint16_t ) 0U )
 
@@ -88,31 +88,105 @@ typedef struct MQTTVec MQTTVec_t;
  *
  * @return The time elapsed in milliseconds.
  */
-typedef uint32_t (* MQTTGetCurrentTimeFunc_t )( void );
+typedef uint32_t ( * MQTTGetCurrentTimeFunc_t )( void );
 
 /**
  * @ingroup mqtt_callback_types
  * @brief Application callback for receiving incoming publishes and incoming
- * acks.
+ * acks, as well as adding properties to outgoing publish acks.
  *
  * @note This callback will be called only if packets are deserialized with a
  * result of #MQTTSuccess or #MQTTServerRefused. The latter can be obtained
- * when deserializing a SUBACK, indicating a broker's rejection of a subscribe.
+ * when deserializing a CONNACK indicating a broker's rejection of a connection.
+ * For SUBACK and UNSUBACK, the deserialization result will be #MQTTSuccess even
+ * when individual topic filters are rejected; the application should inspect
+ * per-topic reason codes via #MQTTDeserializedInfo_t.pReasonCode.
  *
  * @param[in] pContext Initialized MQTT context.
  * @param[in] pPacketInfo Information on the type of incoming MQTT packet.
  * @param[in] pDeserializedInfo Deserialized information from incoming packet.
+ * @param[out] pReasonCode Reason code for the outgoing acknowledgment. Will be NULL
+ *             for terminating packets (PUBACK, PUBCOMP, SUBACK, UNSUBACK) where the
+ *             library does not send a response with a reason code.
+ * @param[out] pSendPropsBuffer Properties to be sent in the outgoing acknowledgment.
+ *             Will be NULL for terminating packets (PUBACK, PUBCOMP, SUBACK, UNSUBACK)
+ *             where the library does not send a response with properties.
+ * @param[in] pGetPropsBuffer Properties received in the incoming packet.
+ *
+ * @note Get optional properties of incoming packets by calling these functions:
+ *
+ *
+ * - Connack Properties:
+ *  - #MQTTPropGet_SessionExpiry
+ *  - #MQTTPropGet_ReceiveMax
+ *  - #MQTTPropGet_MaxQos
+ *  - #MQTTPropGet_RetainAvailable
+ *  - #MQTTPropGet_MaxPacketSize
+ *  - #MQTTPropGet_AssignedClientId
+ *  - #MQTTPropGet_TopicAliasMax
+ *  - #MQTTPropGet_ReasonString
+ *  - #MQTTPropGet_UserProp
+ *  - #MQTTPropGet_WildcardId
+ *  - #MQTTPropGet_SubsIdAvailable
+ *  - #MQTTPropGet_SharedSubAvailable
+ *  - #MQTTPropGet_ServerKeepAlive
+ *  - #MQTTPropGet_ResponseInfo
+ *  - #MQTTPropGet_ServerRef
+ *  - #MQTTPropGet_AuthMethod
+ *  - #MQTTPropGet_AuthData
+ *
+ * - Publish Properties:
+ *  - #MQTTPropGet_TopicAlias
+ *  - #MQTTPropGet_PayloadFormatIndicator
+ *  - #MQTTPropGet_ResponseTopic
+ *  - #MQTTPropGet_CorrelationData
+ *  - #MQTTPropGet_MessageExpiryInterval
+ *  - #MQTTPropGet_ContentType
+ *  - #MQTTPropGet_SubscriptionId
+ *  - #MQTTPropGet_UserProp
+ *
+ * - Ack Properties (PUBACK, PUBREC, PUBREL, PUBCOMP, SUBACK, UNSUBACK):
+ *  - #MQTTPropGet_ReasonString
+ *  - #MQTTPropGet_UserProp
+ *
+ * - Disconnect Properties:
+ *  - #MQTTPropGet_SessionExpiry
+ *  - #MQTTPropGet_ReasonString
+ *  - #MQTTPropGet_UserProp
+ *  - #MQTTPropGet_ServerRef
+ *
+ * @warning When iterating through properties in pGetPropsBuffer using
+ * #MQTT_GetNextPropertyType, every property MUST be consumed by either calling
+ * the corresponding MQTTPropGet_* function or #MQTT_SkipNextProperty. Failing
+ * to advance the index past an unhandled property will cause an infinite loop.
+ *
+ * @note Add optional properties to outgoing publish ack packets by calling these functions:
+ *
+ * - #MQTTPropAdd_UserProp
+ * - #MQTTPropAdd_ReasonString
+ * @return
+ * - true Event callback was able to process the packet
+ * - false This is not an error but just a flag that tells
+ *          the user that the eventcallback was unable to process
+ *          a packet due to application specific reasons.
+ *          The application should recall the processloop after
+ *          making sure that it would be able to process the
+ *          received packet again.
  */
-typedef void (* MQTTEventCallback_t )( struct MQTTContext * pContext,
-                                       struct MQTTPacketInfo * pPacketInfo,
-                                       struct MQTTDeserializedInfo * pDeserializedInfo );
+typedef bool ( * MQTTEventCallback_t )( struct MQTTContext * pContext,
+                                        struct MQTTPacketInfo * pPacketInfo,
+                                        struct MQTTDeserializedInfo * pDeserializedInfo,
+                                        enum MQTTSuccessFailReasonCode * pReasonCode,
+                                        struct MQTTPropBuilder * pSendPropsBuffer,
+                                        struct MQTTPropBuilder * pGetPropsBuffer );
 
 /**
- * @brief User defined callback used to store outgoing publishes. Used to track any publish
+ * @brief User defined callback used to store packets for retransmits. Used to track any publish/PUBREC
  * retransmit on an unclean session connection.
  *
  * @param[in] pContext Initialised MQTT Context.
- * @param[in] packetId Outgoing publish packet identifier.
+ * @param[in] handle Unique 32-bit handle to distinguish the packets. Note that these values may or may not
+ *                be in order. The value is interpreted by the coreMQTT library and might change in pattern.
  * @param[in] pMqttVec Pointer to the opaque mqtt vector structure. Users should use MQTT_GetBytesInMQTTVec
  *                and MQTT_SerializeMQTTVec functions to get the memory required and to serialize the
  *                MQTTVec_t in the provided memory respectively.
@@ -120,17 +194,18 @@ typedef void (* MQTTEventCallback_t )( struct MQTTContext * pContext,
  * @return True if the copy is successful else false.
  */
 /* @[define_mqtt_retransmitstorepacket] */
-typedef bool ( * MQTTStorePacketForRetransmit)( struct MQTTContext * pContext,
-                                                uint16_t packetId,
-                                                MQTTVec_t * pMqttVec );
+typedef bool ( * MQTTStorePacketForRetransmit )( struct MQTTContext * pContext,
+                                                 uint32_t handle,
+                                                 MQTTVec_t * pMqttVec );
 /* @[define_mqtt_retransmitstorepacket] */
 
 /**
- * @brief User defined callback used to retreive a copied publish for resend operation. Used to
- * track any publish retransmit on an unclean session connection.
+ * @brief User defined callback used to retreive a stored packet for resend operation. Used to
+ * track any publish/PUBREC retransmit on an unclean session connection.
  *
  * @param[in] pContext Initialised MQTT Context.
- * @param[in] packetId Copied publish packet identifier.
+ * @param[in] handle Unique 32-bit handle to distinguish the packets. Note that these values may or may not
+ *                be in order. The value is interpreted by the coreMQTT library and might change in pattern.
  * @param[out] pSerializedMqttVec Output parameter to store the pointer to the serialized MQTTVec_t
  *                  using MQTT_SerializeMQTTVec.
  * @param[out] pSerializedMqttVecLen Output parameter to return the number of bytes used to store the
@@ -140,22 +215,23 @@ typedef bool ( * MQTTStorePacketForRetransmit)( struct MQTTContext * pContext,
  * @return True if the retreive is successful else false.
  */
 /* @[define_mqtt_retransmitretrievepacket] */
-typedef bool ( * MQTTRetrievePacketForRetransmit)( struct MQTTContext * pContext,
-                                                   uint16_t packetId,
-                                                   uint8_t ** pSerializedMqttVec,
-                                                   size_t * pSerializedMqttVecLen );
+typedef bool ( * MQTTRetrievePacketForRetransmit )( struct MQTTContext * pContext,
+                                                    uint32_t handle,
+                                                    uint8_t ** pSerializedMqttVec,
+                                                    size_t * pSerializedMqttVecLen );
 /* @[define_mqtt_retransmitretrievepacket] */
 
 /**
- * @brief User defined callback used to clear a particular copied publish packet. Used to
- * track any publish retransmit on an unclean session connection.
+ * @brief User defined callback used to clear a particular stored packet. Used to track any packet
+ * retransmit on an unclean session connection.
  *
  * @param[in] pContext Initialised MQTT Context.
- * @param[in] packetId Copied publish packet identifier.
+ * @param[in] handle Unique 32-bit handle to distinguish the packets. Note that these values may or may not
+ *                be in order. The value is interpreted by the coreMQTT library and might change in pattern.
  */
 /* @[define_mqtt_retransmitclearpacket] */
-typedef void (* MQTTClearPacketForRetransmit)( struct MQTTContext * pContext,
-                                               uint16_t packetId );
+typedef void ( * MQTTClearPacketForRetransmit )( struct MQTTContext * pContext,
+                                                 uint32_t handle );
 /* @[define_mqtt_retransmitclearpacket] */
 
 /**
@@ -250,14 +326,41 @@ typedef struct MQTTContext
     size_t incomingPublishRecordMaxCount;
 
     /**
+     * @brief The application-configured maximum number of outgoing publish
+     * records, as passed to #MQTT_InitStatefulQoS.
+     *
+     * @note #outgoingPublishRecordMaxCount is the effective limit actually used
+     * by the state engine; it is recomputed as the minimum of this configured
+     * value and the server's Receive Maximum on every successful #MQTT_Connect.
+     * This configured value is preserved so the effective limit can be restored
+     * (not just monotonically shrunk) across reconnects.
+     */
+    size_t outgoingPublishRecordMaxCountConfigured;
+
+    /**
+     * @brief The application-configured maximum number of incoming publish
+     * records, as passed to #MQTT_InitStatefulQoS.
+     *
+     * @note #incomingPublishRecordMaxCount is the effective limit actually used
+     * by the state engine; it is recomputed as the minimum of this configured
+     * value and the client's Receive Maximum on every successful #MQTT_Connect.
+     */
+    size_t incomingPublishRecordMaxCountConfigured;
+
+    /**
      * @brief The transport interface used by the MQTT connection.
      */
     TransportInterface_t transportInterface;
 
     /**
-     * @brief The buffer used in sending and receiving packets from the network.
+     * @brief The buffer used in receiving packets from the network.
      */
     MQTTFixedBuffer_t networkBuffer;
+
+    /**
+     * @brief The buffer used to store properties for outgoing ack packets.
+     */
+    MQTTPropBuilder_t ackPropsBuffer;
 
     /**
      * @brief The next available ID for outgoing MQTT packets.
@@ -306,6 +409,11 @@ typedef struct MQTTContext
     bool waitingForPingResp;       /**< @brief If the library is currently awaiting a PINGRESP. */
 
     /**
+     * @brief Persistent Connection Properties, populated in the CONNECT and the CONNACK.
+     */
+    MQTTConnectionProperties_t connectionProperties;
+
+    /**
      * @brief User defined API used to store outgoing publishes.
      */
     MQTTStorePacketForRetransmit storeFunction;
@@ -331,6 +439,7 @@ typedef struct MQTTDeserializedInfo
     uint16_t packetIdentifier;          /**< @brief Packet ID of deserialized packet. */
     MQTTPublishInfo_t * pPublishInfo;   /**< @brief Pointer to deserialized publish info. */
     MQTTStatus_t deserializationResult; /**< @brief Return code of deserialization. */
+    MQTTReasonCodeInfo_t * pReasonCode; /**< @brief Pointer to deserialized ack info. */
 } MQTTDeserializedInfo_t;
 
 /**
@@ -358,8 +467,8 @@ typedef struct MQTTDeserializedInfo
  *     for the entire lifetime of the @p pContext and must not be used by another context and/or
  *     application.
  *
- * @return #MQTTBadParameter if invalid parameters are passed;
- * #MQTTSuccess otherwise.
+ * @return #MQTTBadParameter if invalid parameters are passed;<br>
+ * #MQTTSuccess otherwise.<br>
  *
  * <b>Example</b>
  * @code{c}
@@ -367,10 +476,13 @@ typedef struct MQTTDeserializedInfo
  * // Function for obtaining a timestamp.
  * uint32_t getTimeStampMs();
  * // Callback function for receiving packets.
- * void eventCallback(
+ * bool eventCallback(
  *      MQTTContext_t * pContext,
  *      MQTTPacketInfo_t * pPacketInfo,
- *      MQTTDeserializedInfo_t * pDeserializedInfo
+ *      MQTTDeserializedInfo_t * pDeserializedInfo,
+ *      MQTTSuccessFailReasonCode_t * pReasonCode,
+ *      MQTTPropBuilder_t * pSendPropsBuffer,
+ *      MQTTPropBuilder_t * pGetPropsBuffer
  * );
  * // Network send.
  * int32_t networkSend( NetworkContext_t * pContext, const void * pBuffer, size_t bytes );
@@ -391,6 +503,7 @@ typedef struct MQTTDeserializedInfo
  * transport.pNetworkContext = &someTransportContext;
  * transport.send = networkSend;
  * transport.recv = networkRecv;
+ * transport.writev = NULL;
  *
  * // Set buffer members.
  * fixedBuffer.pBuffer = buffer;
@@ -428,9 +541,10 @@ MQTTStatus_t MQTT_Init( MQTTContext_t * pContext,
  * publishes.
  * @param[in] incomingPublishCount Maximum number of records which can be kept in the memory
  * pointed to by @p pIncomingPublishRecords.
- *
- * @return #MQTTBadParameter if invalid parameters are passed;
- * #MQTTSuccess otherwise.
+ * @param[in] pAckPropsBuf Pointer to memory which will be used to store properties of outgoing publish-ACKS.
+ * @param[in] ackPropsBufLength Length of the buffer pointed to by @p pAckPropsBuf.
+ * @return #MQTTBadParameter if invalid parameters are passed;<br>
+ * #MQTTSuccess otherwise.<br>
  *
  * <b>Example</b>
  * @code{c}
@@ -438,10 +552,13 @@ MQTTStatus_t MQTT_Init( MQTTContext_t * pContext,
  * // Function for obtaining a timestamp.
  * uint32_t getTimeStampMs();
  * // Callback function for receiving packets.
- * void eventCallback(
+ * bool eventCallback(
  *      MQTTContext_t * pContext,
  *      MQTTPacketInfo_t * pPacketInfo,
- *      MQTTDeserializedInfo_t * pDeserializedInfo
+ *      MQTTDeserializedInfo_t * pDeserializedInfo,
+ *      MQTTSuccessFailReasonCode_t * pReasonCode,
+ *      MQTTPropBuilder_t * pSendPropsBuffer,
+ *      MQTTPropBuilder_t * pGetPropsBuffer
  * );
  * // Network send.
  * int32_t networkSend( NetworkContext_t * pContext, const void * pBuffer, size_t bytes );
@@ -453,7 +570,7 @@ MQTTStatus_t MQTT_Init( MQTTContext_t * pContext,
  * MQTTFixedBuffer_t fixedBuffer;
  * uint8_t buffer[ 1024 ];
  * const size_t outgoingPublishCount = 30;
- * MQTTPubAckInfo_t outgoingPublishes[ outgoingPublishCount ];
+ * MQTTPubAckInfo_t outgoingPublishes[ 30 ];
  *
  * // Clear context.
  * memset( ( void * ) &mqttContext, 0x00, sizeof( MQTTContext_t ) );
@@ -462,6 +579,7 @@ MQTTStatus_t MQTT_Init( MQTTContext_t * pContext,
  * transport.pNetworkContext = &someTransportContext;
  * transport.send = networkSend;
  * transport.recv = networkRecv;
+ * transport.writev = NULL;
  *
  * // Set buffer members.
  * fixedBuffer.pBuffer = buffer;
@@ -473,7 +591,16 @@ MQTTStatus_t MQTT_Init( MQTTContext_t * pContext,
  * {
  *      // We do not expect any incoming publishes in this example, therefore the incoming
  *      // publish pointer is NULL and the count is zero.
- *      status = MQTT_InitStatefulQoS( &mqttContext, outgoingPublishes, outgoingPublishCount, NULL, 0 );
+ *      // The buffer is used to store properties of outgoing publish-ACKS.
+ *      uint8_t ackPropsBuf[ 500 ];
+ *      size_t ackPropsBufLength = sizeof( ackPropsBuf );
+ *      status = MQTT_InitStatefulQoS( &mqttContext,
+ *                                     outgoingPublishes,
+ *                                     outgoingPublishCount,
+ *                                     NULL,
+ *                                     0,
+ *                                     ackPropsBuf,
+ *                                     ackPropsBufLength );
  *
  *      // Now QoS1 and/or QoS2 publishes can be sent with this context.
  * }
@@ -484,7 +611,9 @@ MQTTStatus_t MQTT_InitStatefulQoS( MQTTContext_t * pContext,
                                    MQTTPubAckInfo_t * pOutgoingPublishRecords,
                                    size_t outgoingPublishCount,
                                    MQTTPubAckInfo_t * pIncomingPublishRecords,
-                                   size_t incomingPublishCount );
+                                   size_t incomingPublishCount,
+                                   uint8_t * pAckPropsBuf,
+                                   size_t ackPropsBufLength );
 /* @[declare_mqtt_initstatefulqos] */
 
 /**
@@ -506,36 +635,37 @@ MQTTStatus_t MQTT_InitStatefulQoS( MQTTContext_t * pContext,
  * // Function for obtaining a timestamp.
  * uint32_t getTimeStampMs();
  * // Callback function for receiving packets.
- * void eventCallback(
+ * bool eventCallback(
  *      MQTTContext_t * pContext,
  *      MQTTPacketInfo_t * pPacketInfo,
- *      MQTTDeserializedInfo_t * pDeserializedInfo
+ *      MQTTDeserializedInfo_t * pDeserializedInfo,
+ *      MQTTSuccessFailReasonCode_t * pReasonCode,
+ *      MQTTPropBuilder_t * pSendPropsBuffer,
+ *      MQTTPropBuilder_t * pGetPropsBuffer
  * );
  * // Network send.
  * int32_t networkSend( NetworkContext_t * pContext, const void * pBuffer, size_t bytes );
  * // Network receive.
  * int32_t networkRecv( NetworkContext_t * pContext, void * pBuffer, size_t bytes );
  * // User defined callback used to store outgoing publishes
- * bool publishStoreCallback(struct MQTTContext* pContext,
- *                           uint16_t packetId,
- *                           MQTTVec_t* pIoVec);
+ * bool publishStoreCallback(struct MQTTContext * pContext,
+ *                           uint32_t handle,
+ *                           MQTTVec_t * pMqttVec);
  * // User defined callback used to retreive a copied publish for resend operation
- * bool publishRetrieveCallback(struct MQTTContext* pContext,
- *                              uint16_t packetId,
- *                              TransportOutVector_t** pIoVec,
- *                              size_t* ioVecCount);
+ * bool publishRetrieveCallback(struct MQTTContext * pContext,
+ *                              uint32_t handle,
+ *                              uint8_t ** pSerializedMqttVec,
+ *                              size_t * pSerializedMqttVecLen);
  * // User defined callback used to clear a particular copied publish packet
- * bool publishClearCallback(struct MQTTContext* pContext,
- *                           uint16_t packetId);
- * // User defined callback used to clear all copied publish packets
- * bool publishClearAllCallback(struct MQTTContext* pContext);
+ * bool publishClearCallback(struct MQTTContext * pContext,
+ *                           uint32_t handle);
  *
  * MQTTContext_t mqttContext;
  * TransportInterface_t transport;
  * MQTTFixedBuffer_t fixedBuffer;
  * uint8_t buffer[ 1024 ];
  * const size_t outgoingPublishCount = 30;
- * MQTTPubAckInfo_t outgoingPublishes[ outgoingPublishCount ];
+ * MQTTPubAckInfo_t outgoingPublishes[ 30 ];
  *
  * // Clear context.
  * memset( ( void * ) &mqttContext, 0x00, sizeof( MQTTContext_t ) );
@@ -544,6 +674,7 @@ MQTTStatus_t MQTT_InitStatefulQoS( MQTTContext_t * pContext,
  * transport.pNetworkContext = &someTransportContext;
  * transport.send = networkSend;
  * transport.recv = networkRecv;
+ * transport.writev = NULL;
  *
  * // Set buffer members.
  * fixedBuffer.pBuffer = buffer;
@@ -555,7 +686,10 @@ MQTTStatus_t MQTT_InitStatefulQoS( MQTTContext_t * pContext,
  * {
  *      // We do not expect any incoming publishes in this example, therefore the incoming
  *      // publish pointer is NULL and the count is zero.
- *      status = MQTT_InitStatefulQoS( &mqttContext, outgoingPublishes, outgoingPublishCount, NULL, 0 );
+ *      uint8_t ackPropsBuf[ 500 ];
+ *      size_t ackPropsBufLength = sizeof( ackPropsBuf );
+ *      status = MQTT_InitStatefulQoS( &mqttContext, outgoingPublishes, outgoingPublishCount,
+ *                                     NULL, 0, ackPropsBuf, ackPropsBufLength );
  *
  *      // Now QoS1 and/or QoS2 publishes can be sent with this context.
  * }
@@ -564,8 +698,7 @@ MQTTStatus_t MQTT_InitStatefulQoS( MQTTContext_t * pContext,
  * {
  *      status = MQTT_InitRetransmits( &mqttContext, publishStoreCallback,
  *                                                   publishRetrieveCallback,
- *                                                   publishClearCallback,
- *                                                   publishClearAllCallback );
+ *                                                   publishClearCallback );
  *
  *      // Now unacked Publishes can be resent on an unclean session resumption.
  * }
@@ -586,13 +719,8 @@ MQTTStatus_t MQTT_InitRetransmits( MQTTContext_t * pContext,
  *
  * @return #MQTTBadParameter if invalid parameters are passed;
  * #MQTTStatusConnected if the MQTT connection is established with the broker.
- * #MQTTStatusNotConnected if the MQTT connection is broker.
+ * #MQTTStatusNotConnected if the MQTT connection is not established with the broker.
  * #MQTTStatusDisconnectPending if Transport Interface has failed and MQTT connection needs to be closed.
- *
- * <b>Example</b>
- * @code{c}
- *
- * @endcode
  */
 /* @[declare_mqtt_checkconnectstatus] */
 MQTTStatus_t MQTT_CheckConnectStatus( const MQTTContext_t * pContext );
@@ -624,23 +752,34 @@ MQTTStatus_t MQTT_CheckConnectStatus( const MQTTContext_t * pContext );
  * @param[in] timeoutMs Maximum time in milliseconds to wait for a CONNACK packet.
  * A zero timeout makes use of the retries for receiving CONNACK as configured with
  * #MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT.
+ * @param[in] pPropertyBuilder Properties to be sent in the outgoing packet.
+ * @param[in] pWillPropertyBuilder Will Properties to be sent in the outgoing packet.
  * @param[out] pSessionPresent This value will be set to true if a previous session
  * was present; otherwise it will be set to false. It is only relevant if not
  * establishing a clean session.
  *
- * @return #MQTTNoMemory if the #MQTTContext_t.networkBuffer is too small to
- * hold the MQTT packet;
- * #MQTTBadParameter if invalid parameters are passed;
- * #MQTTSendFailed if transport send failed;
- * #MQTTRecvFailed if transport receive failed for CONNACK;
+ * @return
+ * #MQTTBadParameter if invalid parameters are passed;<br>
+ * #MQTTSendFailed if transport send failed;<br>
+ * #MQTTRecvFailed if transport receive failed for CONNACK;<br>
  * #MQTTNoDataAvailable if no data available to receive in transport until
- * the @p timeoutMs for CONNACK;
- * #MQTTStatusConnected if the connection is already established
+ * the @p timeoutMs for CONNACK;<br>
+ * #MQTTStatusConnected if the connection is already established<br>
  * #MQTTStatusDisconnectPending if the user is expected to call MQTT_Disconnect
- * before calling any other API
- * MQTTPublishRetrieveFailed if on an unclean session connection, the copied
- * publishes are not retrieved successfully for retransmission
- * #MQTTSuccess otherwise.
+ * before calling any other API<br>
+ * #MQTTPublishRetrieveFailed if on an unclean session connection, the copied
+ * publishes are not retrieved successfully for retransmission<br>
+ * #MQTTBadResponse if the received CONNACK packet is malformed<br>
+ * #MQTTServerRefused if the server refuses the connection in the CONNACK.<br>
+ * #MQTTEventCallbackFailed if the user defined callback fails.<br>
+ * #MQTTSuccess otherwise.<br>
+ *
+ * @note If no properties are provided (by setting @p pPropertyBuilder to NULL), coreMQTT
+ * will add a property to the connect packet to limit the maximum packet size that the
+ * broker can send to be equal to the application provided buffer to the #MQTT_Init API.
+ * This prevents the case when the packet is bigger than the buffer at which point,
+ * coreMQTT cannot handle the packet, neither can it drop it as MQTT protocol doesn't
+ * allow it.
  *
  * @note This API may spend more time than provided in the timeoutMS parameters in
  * certain conditions as listed below:
@@ -659,6 +798,28 @@ MQTTStatus_t MQTT_CheckConnectStatus( const MQTTContext_t * pContext );
  *    the API makes one more network receive call in an attempt to receive the remaining
  *    2 bytes. In the worst case, it can happen that the remaining 2 bytes are never
  *    received and this API will end up spending timeoutMs + transport receive timeout.
+ *
+ * Functions to add optional properties to the CONNECT packet are:
+ *
+ * Connect Properties:
+ * - #MQTTPropAdd_SessionExpiry
+ * - #MQTTPropAdd_ReceiveMax
+ * - #MQTTPropAdd_MaxPacketSize
+ * - #MQTTPropAdd_TopicAliasMax
+ * - #MQTTPropAdd_RequestRespInfo
+ * - #MQTTPropAdd_RequestProbInfo
+ * - #MQTTPropAdd_UserProp
+ * - #MQTTPropAdd_AuthMethod
+ * - #MQTTPropAdd_AuthData
+ *
+ * Will Properties:
+ * - #MQTTPropAdd_WillDelayInterval
+ * - #MQTTPropAdd_PayloadFormat
+ * - #MQTTPropAdd_MessageExpiry
+ * - #MQTTPropAdd_ResponseTopic
+ * - #MQTTPropAdd_CorrelationData
+ * - #MQTTPropAdd_ContentType
+ * - #MQTTPropAdd_UserProp
  *
  * <b>Example</b>
  * @code{c}
@@ -685,6 +846,15 @@ MQTTStatus_t MQTT_CheckConnectStatus( const MQTTContext_t * pContext );
  * connectInfo.userNameLength = strlen( connectInfo.pUserName );
  * connectInfo.pPassword = "somePassword";
  * connectInfo.passwordLength = strlen( connectInfo.pPassword );
+ *  // Optional properties to be sent in the CONNECT packet.
+ * MQTTPropBuilder_t connectPropsBuilder;
+ * uint8_t connectPropsBuffer[ 100 ];
+ * size_t connectPropsBufferLength = sizeof( connectPropsBuffer );
+ * status = MQTTPropertyBuilder_Init( &connectPropsBuilder, connectPropsBuffer, connectPropsBufferLength );
+ *
+ *   // Set a property in the connectPropsBuilder
+ * uint32_t maxPacketSize = 100 ;
+ * status = MQTTPropAdd_MaxPacketSize(&connectPropsBuilder, maxPacketSize, MQTT_PROP_VALIDATE_CONNECT);
  *
  * // The last will and testament is optional, it will be published by the broker
  * // should this client disconnect without sending a DISCONNECT packet.
@@ -693,9 +863,17 @@ MQTTStatus_t MQTT_CheckConnectStatus( const MQTTContext_t * pContext );
  * willInfo.topicNameLength = strlen( willInfo.pTopicName );
  * willInfo.pPayload = "LWT Message";
  * willInfo.payloadLength = strlen( "LWT Message" );
+ *  // Optional Will Properties to be sent in the CONNECT packet.
+ * MQTTPropBuilder_t willPropsBuilder;
+ * uint8_t willPropsBuffer[ 100 ];
+ * size_t willPropsBufferLength = sizeof( willPropsBuffer );
+ * status = MQTTPropertyBuilder_Init( &willPropsBuilder, willPropsBuffer, willPropsBufferLength );
+ *
+ * // Set a property in the willPropsBuilder
+ * status = MQTTPropAdd_PayloadFormat( &willPropsBuilder, 1, NULL);
  *
  * // Send the connect packet. Use 100 ms as the timeout to wait for the CONNACK packet.
- * status = MQTT_Connect( pContext, &connectInfo, &willInfo, 100, &sessionPresent );
+ * status = MQTT_Connect( pContext, &connectInfo, &willInfo, 100, &sessionPresent, &connectPropsBuilder, &willPropsBuilder );
  *
  * if( status == MQTTSuccess )
  * {
@@ -711,7 +889,9 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
                            const MQTTConnectInfo_t * pConnectInfo,
                            const MQTTPublishInfo_t * pWillInfo,
                            uint32_t timeoutMs,
-                           bool * pSessionPresent );
+                           bool * pSessionPresent,
+                           MQTTPropBuilder_t * pPropertyBuilder,
+                           const MQTTPropBuilder_t * pWillPropertyBuilder );
 /* @[declare_mqtt_connect] */
 
 /**
@@ -723,15 +903,20 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
  * @param[in] subscriptionCount The number of elements in @ pSubscriptionList
  * array.
  * @param[in] packetId Packet ID generated by #MQTT_GetPacketId.
- *
- * @return #MQTTNoMemory if the #MQTTContext_t.networkBuffer is too small to
- * hold the MQTT packet;
- * #MQTTBadParameter if invalid parameters are passed;
- * #MQTTSendFailed if transport write failed;
- * #MQTTStatusNotConnected if the connection is not established yet
+ * @param[in] pPropertyBuilder Properties to be sent in the outgoing packet.
+ * @return
+ * #MQTTBadParameter if invalid parameters are passed;<br>
+ * #MQTTBadResponse if there is an error in property parsing;<br>
+ * #MQTTSendFailed if transport write failed;<br>
+ * #MQTTStatusNotConnected if the connection is not established yet<br>
  * #MQTTStatusDisconnectPending if the user is expected to call MQTT_Disconnect
- * before calling any other API
- * #MQTTSuccess otherwise.
+ * before calling any other API<br>
+ * #MQTTSuccess otherwise.<br>
+ *
+ * Functions to add optional properties to the SUBSCRIBE packet are:
+ *
+ * - #MQTTPropAdd_SubscriptionId
+ * - #MQTTPropAdd_UserProp
  *
  * <b>Example</b>
  * @code{c}
@@ -753,11 +938,18 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
  *      subscriptionList[ i ].pTopicFilter = filters[ i ];
  *      subscriptionList[ i ].topicFilterLength = strlen( filters[ i ] );
  * }
+ * // Optional Properties to be sent in the SUBSCRIBE packet
+ * MQTTPropBuilder_t propertyBuilder;
+ * uint8_t propertyBuffer[ 100 ];
+ * size_t propertyBufferLength = sizeof( propertyBuffer );
+ * status = MQTTPropertyBuilder_Init( &propertyBuilder, propertyBuffer, propertyBufferLength );
+ *
+ * status = MQTTPropAdd_SubscriptionId(&propertyBuilder, 1, MQTT_PROP_VALIDATE_SUBSCRIBE);
  *
  * // Obtain a new packet id for the subscription.
  * packetId = MQTT_GetPacketId( pContext );
  *
- * status = MQTT_Subscribe( pContext, &subscriptionList[ 0 ], NUMBER_OF_SUBSCRIPTIONS, packetId );
+ * status = MQTT_Subscribe( pContext, &subscriptionList[ 0 ], NUMBER_OF_SUBSCRIPTIONS, packetId, &propertyBuilder );
  *
  * if( status == MQTTSuccess )
  * {
@@ -768,10 +960,13 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
  * @endcode
  */
 /* @[declare_mqtt_subscribe] */
+
 MQTTStatus_t MQTT_Subscribe( MQTTContext_t * pContext,
                              const MQTTSubscribeInfo_t * pSubscriptionList,
                              size_t subscriptionCount,
-                             uint16_t packetId );
+                             uint16_t packetId,
+                             const MQTTPropBuilder_t * pPropertyBuilder );
+
 /* @[declare_mqtt_subscribe] */
 
 /**
@@ -780,16 +975,32 @@ MQTTStatus_t MQTT_Subscribe( MQTTContext_t * pContext,
  * @param[in] pContext Initialized MQTT context.
  * @param[in] pPublishInfo MQTT PUBLISH packet parameters.
  * @param[in] packetId packet ID generated by #MQTT_GetPacketId.
+ * @param[in] pPropertyBuilder Properties to be sent in the outgoing packet.
  *
- * @return #MQTTNoMemory if pBuffer is too small to hold the MQTT packet;
- * #MQTTBadParameter if invalid parameters are passed;
- * #MQTTSendFailed if transport write failed;
- * #MQTTStatusNotConnected if the connection is not established yet
+ * @return
+ * #MQTTBadParameter if invalid parameters are passed;<br>
+ * #MQTTBadResponse if there is an error in property parsing;<br>
+ * #MQTTSendFailed if transport write failed;<br>
+ * #MQTTStatusNotConnected if the connection is not established yet<br>
  * #MQTTStatusDisconnectPending if the user is expected to call MQTT_Disconnect
- * before calling any other API
+ * before calling any other API<br>
+ * #MQTTNoMemory if the outgoing publish record array is full<br>
+ * #MQTTStateCollision if a QoS > 0 publish with the same packet ID already
+ * exists in the state records and the duplicate flag is not set<br>
+ * #MQTTIllegalState if the state machine update after sending fails<br>
  * #MQTTPublishStoreFailed if the user provided callback to copy and store the
- * outgoing publish packet fails
- * #MQTTSuccess otherwise.
+ * outgoing publish packet fails<br>
+ * #MQTTSuccess otherwise.<br>
+ *
+ * Functions to add optional properties to the PUBLISH packet are:
+ *
+ * - #MQTTPropAdd_PayloadFormat
+ * - #MQTTPropAdd_MessageExpiry
+ * - #MQTTPropAdd_TopicAlias
+ * - #MQTTPropAdd_ResponseTopic
+ * - #MQTTPropAdd_CorrelationData
+ * - #MQTTPropAdd_ContentType
+ * - #MQTTPropAdd_UserProp
  *
  * <b>Example</b>
  * @code{c}
@@ -807,11 +1018,19 @@ MQTTStatus_t MQTT_Subscribe( MQTTContext_t * pContext,
  * publishInfo.topicNameLength = strlen( publishInfo.pTopicName );
  * publishInfo.pPayload = "Hello World!";
  * publishInfo.payloadLength = strlen( "Hello World!" );
+ * // Optional properties to be sent in the PUBLISH packet.
+ * MQTTPropBuilder_t propertyBuilder;
+ * uint8_t propertyBuffer[ 100 ];
+ * size_t propertyBufferLength = sizeof( propertyBuffer );
+ * status = MQTTPropertyBuilder_Init( &propertyBuilder, propertyBuffer, propertyBufferLength );
+ *
+ * // Set a property in the propertyBuilder
+ * status = MQTTPropAdd_PayloadFormat( &propertyBuilder, 1, MQTT_PROP_VALIDATE_PUBLISH);
  *
  * // Packet ID is needed for QoS > 0.
  * packetId = MQTT_GetPacketId( pContext );
  *
- * status = MQTT_Publish( pContext, &publishInfo, packetId );
+ * status = MQTT_Publish( pContext, &publishInfo, packetId, &propertyBuilder );
  *
  * if( status == MQTTSuccess )
  * {
@@ -823,7 +1042,8 @@ MQTTStatus_t MQTT_Subscribe( MQTTContext_t * pContext,
 /* @[declare_mqtt_publish] */
 MQTTStatus_t MQTT_Publish( MQTTContext_t * pContext,
                            const MQTTPublishInfo_t * pPublishInfo,
-                           uint16_t packetId );
+                           uint16_t packetId,
+                           const MQTTPropBuilder_t * pPropertyBuilder );
 /* @[declare_mqtt_publish] */
 
 /**
@@ -873,15 +1093,20 @@ MQTTStatus_t MQTT_Ping( MQTTContext_t * pContext );
  * @param[in] pSubscriptionList List of MQTT subscription info.
  * @param[in] subscriptionCount The number of elements in pSubscriptionList.
  * @param[in] packetId packet ID generated by #MQTT_GetPacketId.
+ * @param[in] pPropertyBuilder Properties to be sent in the outgoing packet.
  *
- * @return #MQTTNoMemory if the #MQTTContext_t.networkBuffer is too small to
- * hold the MQTT packet;
- * #MQTTBadParameter if invalid parameters are passed;
- * #MQTTSendFailed if transport write failed;
- * #MQTTStatusNotConnected if the connection is not established yet
- * #MQTTStatusDisconnectPending if the user is expected to call MQTT_Disconnect
- * before calling any other API
- * #MQTTSuccess otherwise.
+ * @return
+ * - #MQTTBadParameter if invalid parameters are passed;<br>
+ * - #MQTTBadResponse if invalid properties are parsed;<br>
+ * - #MQTTSendFailed if transport write failed;<br>
+ * - #MQTTStatusNotConnected if the connection is not established yet<br>
+ * - #MQTTStatusDisconnectPending if the user is expected to call MQTT_Disconnect
+ * before calling any other API<br>
+ * - #MQTTSuccess otherwise.<br>
+ *
+ * Functions to add optional properties to the UNSUBSCRIBE packet are:
+ *
+ * - #MQTTPropAdd_UserProp
  *
  * <b>Example</b>
  * @code{c}
@@ -906,8 +1131,22 @@ MQTTStatus_t MQTT_Ping( MQTTContext_t * pContext );
  *
  * // Obtain a new packet id for the unsubscribe request.
  * packetId = MQTT_GetPacketId( pContext );
+ * // Optional properties to be sent in the UNSUBSCRIBE packet.
+ * MQTTPropBuilder_t propertyBuilder;
+ * uint8_t propertyBuffer[ 100 ];
+ * size_t propertyBufferLength = sizeof( propertyBuffer );
+ * status = MQTTPropertyBuilder_Init( &propertyBuilder, propertyBuffer, propertyBufferLength );
  *
- * status = MQTT_Unsubscribe( pContext, &unsubscribeList[ 0 ], NUMBER_OF_SUBSCRIPTIONS, packetId );
+ * // Set a property in the propertyBuilder
+ * MQTTUserProperty_t userProperty;
+ * userProperty.pKey = "key";
+ * userProperty.keyLength = strlen( userProperty.pKey );
+ * userProperty.pValue = "value";
+ * userProperty.valueLength = strlen( userProperty.pValue );
+ *
+ * status = MQTTPropAdd_UserProp( &propertyBuilder, &userProperty, MQTT_PROP_VALIDATE_UNSUBSCRIBE);
+ *
+ * status = MQTT_Unsubscribe( pContext, &unsubscribeList[ 0 ], NUMBER_OF_SUBSCRIPTIONS, packetId, &propertyBuilder );
  *
  * if( status == MQTTSuccess )
  * {
@@ -920,23 +1159,60 @@ MQTTStatus_t MQTT_Ping( MQTTContext_t * pContext );
 MQTTStatus_t MQTT_Unsubscribe( MQTTContext_t * pContext,
                                const MQTTSubscribeInfo_t * pSubscriptionList,
                                size_t subscriptionCount,
-                               uint16_t packetId );
+                               uint16_t packetId,
+                               const MQTTPropBuilder_t * pPropertyBuilder );
 /* @[declare_mqtt_unsubscribe] */
 
 /**
- * @brief Disconnect an MQTT session.
+ * @brief Sends MQTT DISCONNECT for a given reason code
  *
  * @param[in] pContext Initialized and connected MQTT context.
+ * @param[in] pPropertyBuilder Properties to be sent in the outgoing packet.
+ * @param[in] pReasonCode Optional reason code to be sent in the DISCONNECT packet.
+ *                If NULL, then no reason code is sent.
  *
- * @return #MQTTNoMemory if the #MQTTContext_t.networkBuffer is too small to
- * hold the MQTT packet;
- * #MQTTBadParameter if invalid parameters are passed;
- * #MQTTSendFailed if transport send failed;
- * #MQTTStatusNotConnected if the connection is already disconnected
- * #MQTTSuccess otherwise.
+ * @return
+ * #MQTTBadParameter if invalid parameters are passed;<br>
+ * #MQTTBadResponse if invalid properties are parsed;<br>
+ * #MQTTSendFailed if transport send failed;<br>
+ * #MQTTStatusNotConnected if the connection is not established yet.<br>
+ * #MQTTSuccess otherwise.<br>
+ *
+ * Functions to add optional properties to the DISCONNECT packet are:
+ *
+ * - #MQTTPropAdd_SessionExpiry
+ * - #MQTTPropAdd_ReasonString
+ * - #MQTTPropAdd_UserProp
+ *
+ * <b>Example</b>
+ * @code{c}
+ *
+ * // Variables used in this example.
+ * MQTTStatus_t status;
+ * // This context is assumed to be initialized and connected.
+ * MQTTContext_t * pContext;
+ * // Optional properties to be sent in the DISCONNECT packet.
+ * MQTTPropBuilder_t propertyBuilder;
+ * uint8_t propertyBuffer[ 100 ];
+ * size_t propertyBufferLength = sizeof( propertyBuffer );
+ * status = MQTTPropertyBuilder_Init( &propertyBuilder, propertyBuffer, propertyBufferLength );
+ *
+ * // Set a property in the propertyBuilder
+ * status = MQTTPropAdd_ReasonString( &propertyBuilder, "Disconnecting", 13, MQTT_PROP_VALIDATE_DISCONNECT);
+ *
+ * MQTTSuccessFailReasonCode_t reason = MQTT_REASON_DISCONNECT_NORMAL_DISCONNECTION;
+ * status = MQTT_Disconnect( pContext, &propertyBuilder, &reason );
+ *
+ * if( status == MQTTSuccess )
+ * {
+ *      // The DISCONNECT packet was sent successfully. The connection is now closed.
+ * }
+ * @endcode
  */
 /* @[declare_mqtt_disconnect] */
-MQTTStatus_t MQTT_Disconnect( MQTTContext_t * pContext );
+MQTTStatus_t MQTT_Disconnect( MQTTContext_t * pContext,
+                              const MQTTPropBuilder_t * pPropertyBuilder,
+                              const MQTTSuccessFailReasonCode_t * pReasonCode );
 /* @[declare_mqtt_disconnect] */
 
 /**
@@ -957,7 +1233,12 @@ MQTTStatus_t MQTT_Disconnect( MQTTContext_t * pContext );
  * #MQTTEventCallback_t callback does not contain blocking operations to prevent potential
  * non-deterministic blocking period of the #MQTT_ProcessLoop API call.
  *
- * @return #MQTTBadParameter if context is NULL;
+ * @return #MQTTSuccess on success;
+ * #MQTTNeedMoreBytes if an incomplete packet has been received. The caller
+ * should call this function again (probably after a delay) to receive the
+ * remaining data. Both #MQTTSuccess and #MQTTNeedMoreBytes indicate normal
+ * operation — all other return values indicate an error.<br>
+ * #MQTTBadParameter if context is NULL;
  * #MQTTRecvFailed if a network error occurs during reception;
  * #MQTTSendFailed if a network error occurs while sending an ACK or PINGREQ;
  * #MQTTBadResponse if an invalid packet is received;
@@ -965,13 +1246,15 @@ MQTTStatus_t MQTT_Disconnect( MQTTContext_t * pContext );
  * #MQTT_PINGRESP_TIMEOUT_MS milliseconds;
  * #MQTTIllegalState if an incoming QoS 1/2 publish or ack causes an
  * invalid transition for the internal state machine;
- * #MQTTNeedMoreBytes if MQTT_ProcessLoop has received
- * incomplete data; it should be called again (probably after a delay);
+ * #MQTTNoMemory if the incoming publish record array is full when
+ * receiving a QoS 1/2 publish;
  * #MQTTStatusNotConnected if the connection is not established yet and a PING
- * or an ACK is being sent.
+ * or an ACK is being sent;
  * #MQTTStatusDisconnectPending if the user is expected to call MQTT_Disconnect
- * before calling any other API
- * #MQTTSuccess on success.
+ * before calling any other API;
+ * #MQTTPublishStoreFailed if the user provided store function for
+ * retransmission failed while storing an outgoing acknowledgment;
+ * #MQTTEventCallbackFailed if the application callback returns false.
  *
  * <b>Example</b>
  * @code{c}
@@ -1019,15 +1302,26 @@ MQTTStatus_t MQTT_ProcessLoop( MQTTContext_t * pContext );
  * #MQTTEventCallback_t callback does not contain blocking operations to prevent potential
  * non-deterministic blocking period of the #MQTT_ReceiveLoop API call.
  *
- * @return #MQTTBadParameter if context is NULL;
+ * @return #MQTTSuccess on success;
+ * #MQTTNeedMoreBytes if an incomplete packet has been received. The caller
+ * should call this function again (probably after a delay) to receive the
+ * remaining data. Both #MQTTSuccess and #MQTTNeedMoreBytes indicate normal
+ * operation — all other return values indicate an error.<br>
+ * #MQTTBadParameter if context is NULL;
  * #MQTTRecvFailed if a network error occurs during reception;
  * #MQTTSendFailed if a network error occurs while sending an ACK or PINGREQ;
  * #MQTTBadResponse if an invalid packet is received;
  * #MQTTIllegalState if an incoming QoS 1/2 publish or ack causes an
  * invalid transition for the internal state machine;
- * #MQTTNeedMoreBytes if MQTT_ReceiveLoop has received
- * incomplete data; it should be called again (probably after a delay);
- * #MQTTSuccess on success.
+ * #MQTTNoMemory if the incoming publish record array is full when
+ * receiving a QoS 1/2 publish;
+ * #MQTTStatusNotConnected if the connection is not established yet and an
+ * ACK is being sent;
+ * #MQTTStatusDisconnectPending if the user is expected to call MQTT_Disconnect
+ * before calling any other API;
+ * #MQTTPublishStoreFailed if the user provided store function for
+ * retransmission failed while storing an outgoing acknowledgment;
+ * #MQTTEventCallbackFailed if the application callback returns false.
  *
  * <b>Example</b>
  * @code{c}
@@ -1066,11 +1360,11 @@ MQTTStatus_t MQTT_ReceiveLoop( MQTTContext_t * pContext );
 /* @[declare_mqtt_receiveloop] */
 
 /**
- * @brief Get a packet ID that is valid according to the MQTT 3.1.1 spec.
+ * @brief Get a packet ID that is valid according to the MQTT 5.0 spec.
  *
  * @param[in] pContext Initialized MQTT context.
  *
- * @return A non-zero number.
+ * @return A non-zero packet ID, or zero if @p pContext is NULL.
  */
 /* @[declare_mqtt_getpacketid] */
 uint16_t MQTT_GetPacketId( MQTTContext_t * pContext );
@@ -1078,7 +1372,7 @@ uint16_t MQTT_GetPacketId( MQTTContext_t * pContext );
 
 /**
  * @brief A utility function that determines whether the passed topic filter and
- * topic name match according to the MQTT 3.1.1 protocol specification.
+ * topic name match according to the MQTT 5.0 protocol specification.
  *
  * @param[in] pTopicName The topic name to check.
  * @param[in] topicNameLength Length of the topic name.
@@ -1090,7 +1384,7 @@ uint16_t MQTT_GetPacketId( MQTTContext_t * pContext );
  * value is set to true; otherwise if there is no match then it is set to false.
  *
  * @note The API assumes that the passed topic name is valid to meet the
- * requirements of the MQTT 3.1.1 specification. Invalid topic names (for example,
+ * requirements of the MQTT 5.0 specification. Invalid topic names (for example,
  * containing wildcard characters) should not be passed to the function.
  * Also, the API checks validity of topic filter for wildcard characters ONLY if
  * the passed topic name and topic filter do not have an exact string match.
@@ -1121,9 +1415,9 @@ uint16_t MQTT_GetPacketId( MQTTContext_t * pContext );
  * @endcode
  */
 MQTTStatus_t MQTT_MatchTopic( const char * pTopicName,
-                              const uint16_t topicNameLength,
+                              const size_t topicNameLength,
                               const char * pTopicFilter,
-                              const uint16_t topicFilterLength,
+                              const size_t topicFilterLength,
                               bool * pIsMatch );
 
 /**
@@ -1137,8 +1431,21 @@ MQTTStatus_t MQTT_MatchTopic( const char * pTopicName,
  *  - 0x00 - Success - Maximum QoS 0
  *  - 0x01 - Success - Maximum QoS 1
  *  - 0x02 - Success - Maximum QoS 2
- *  - 0x80 - Failure
- * Refer to #MQTTSubAckStatus_t for the status codes.
+ *  These are the reason codes when the server refuses the request-
+ *  - 0x80 - Topic Filter Refused
+ *  - 0x83 - Implementation specific error.
+ *  - 0x87 - Not authorized.
+ *  - 0x8F - Invalid Topic Filter.
+ *  - 0x91 - Packet identifier in use.
+ *  - 0x97 - Quota exceeded.
+ *  - 0x9E - Shared subscriptions not supported.
+ *  - 0xA1 - Subscription identifiers not supported.
+ *  - 0xA2 - Wildcard subscriptions not supported.
+ *
+ * The payload is an array of raw reason-code bytes, one per topic filter.
+ * Symbolic names for all of the codes listed above are provided by the
+ * @c MQTT_REASON_SUBACK_* members of #MQTTSuccessFailReasonCode_t, which can be
+ * used to interpret each byte (see the example below).
  *
  * @param[in] pSubackPacket The SUBACK packet whose payload is to be parsed.
  * @param[out] pPayloadStart This is populated with the starting address
@@ -1148,8 +1455,9 @@ MQTTStatus_t MQTT_MatchTopic( const char * pTopicName,
  * SUBACK status is present in the packet.
  *
  * @return Returns one of the following:
- * - #MQTTBadParameter if the input SUBACK packet is invalid.
- * - #MQTTSuccess if parsing the payload was successful.
+ * - #MQTTBadParameter if the input SUBACK packet is invalid.<br>
+ * - #MQTTBadResponse if the SUBACK property length is malformed.<br>
+ * - #MQTTSuccess if parsing the payload was successful.<br>
  *
  * <b>Example</b>
  * @code{c}
@@ -1160,10 +1468,13 @@ MQTTStatus_t MQTT_MatchTopic( const char * pTopicName,
  *
  * // MQTT_GetSubAckStatusCodes is intended to be used from the application
  * // callback that is called by the library in MQTT_ProcessLoop or MQTT_ReceiveLoop.
- * void eventCallback(
+ * bool eventCallback(
  *      MQTTContext_t * pContext,
  *      MQTTPacketInfo_t * pPacketInfo,
- *      MQTTDeserializedInfo_t * pDeserializedInfo
+ *      MQTTDeserializedInfo_t * pDeserializedInfo,
+ *      MQTTSuccessFailReasonCode_t * pReasonCode,
+ *      MQTTPropBuilder_t * pSendPropsBuffer,
+ *      MQTTPropBuilder_t * pGetPropsBuffer
  * )
  * {
  *      MQTTStatus_t status = MQTTSuccess;
@@ -1182,25 +1493,33 @@ MQTTStatus_t MQTT_MatchTopic( const char * pTopicName,
  *          // original SUBSCRIBE packet.
  *          assert( numCodes == NUMBER_OF_SUBSCRIPTIONS );
  *
- *          for( int i = 0; i < numCodes; i++ )
+ *          for( size_t i = 0; i < numCodes; i++ )
  *          {
- *              // The only failure code is 0x80 = MQTTSubAckFailure.
- *              if( pCodes[ i ] == MQTTSubAckFailure )
+ *              switch( pCodes[ i ] )
  *              {
- *                  // The subscription failed, we may want to retry the
- *                  // subscription in pSubscribes[ i ] outside of this callback.
- *              }
- *              else
- *              {
- *                  // The subscription was granted, but the maximum QoS may be
- *                  // lower than what was requested. We can verify the granted QoS.
- *                  if( pSubscribes[ i ].qos != pCodes[ i ] )
- *                  {
- *                      LogWarn( (
- *                          "Requested QoS %u, but granted QoS %u for %s",
- *                          pSubscribes[ i ].qos, pCodes[ i ], pSubscribes[ i ].pTopicFilter
- *                      ) );
- *                  }
+ *                  case MQTT_REASON_SUBACK_GRANTED_QOS0:
+ *                  case MQTT_REASON_SUBACK_GRANTED_QOS1:
+ *                  case MQTT_REASON_SUBACK_GRANTED_QOS2:
+ *                      // The subscription was granted, but the maximum QoS may be
+ *                      // lower than what was requested. The reason code is the
+ *                      // granted maximum QoS.
+ *                      if( pSubscribes[ i ].qos != pCodes[ i ] )
+ *                      {
+ *                          LogWarn( (
+ *                              "Requested QoS %u, but granted QoS %u for %s",
+ *                              pSubscribes[ i ].qos, pCodes[ i ], pSubscribes[ i ].pTopicFilter
+ *                          ) );
+ *                      }
+ *                      break;
+ *
+ *                  case MQTT_REASON_SUBACK_NOT_AUTHORIZED:
+ *                  case MQTT_REASON_SUBACK_TOPIC_FILTER_INVALID:
+ *                  case MQTT_REASON_SUBACK_QUOTA_EXCEEDED:
+ *                  default:
+ *                      // The subscription for pSubscribes[ i ] was refused. The
+ *                      // specific MQTT_REASON_SUBACK_* code indicates why; the
+ *                      // subscription may be retried outside of this callback.
+ *                      break;
  *              }
  *          }
  *      }
@@ -1215,6 +1534,82 @@ MQTTStatus_t MQTT_GetSubAckStatusCodes( const MQTTPacketInfo_t * pSubackPacket,
 /* @[declare_mqtt_getsubackstatuscodes] */
 
 /**
+ * @brief Parses the payload of an MQTT UNSUBACK packet that contains status codes
+ * corresponding to topic filter unsubscribe requests from the original
+ * unsubscribe packet.
+ *
+ * Each return code in the UNSUBACK packet corresponds to a topic filter in the
+ * UNSUBSCRIBE Packet being acknowledged.
+ * The status codes can be one of the following:
+ *  - 0x00 - Success
+ *  - 0x11 - No subscription existed
+ *  These are the reason codes when the server refuses the request:
+ *  - 0x80 - Unspecified error
+ *  - 0x83 - Implementation specific error
+ *  - 0x87 - Not authorized
+ *  - 0x8F - Topic Filter invalid
+ *  - 0x91 - Packet Identifier in use
+ *
+ * The payload is an array of raw reason-code bytes, one per topic filter.
+ * Symbolic names for all of the codes listed above are provided by the
+ * @c MQTT_REASON_UNSUBACK_* members of #MQTTSuccessFailReasonCode_t, which can be
+ * used to interpret each byte (see the example below).
+ *
+ * @param[in] pUnsubackPacket The UNSUBACK packet whose payload is to be parsed.
+ * @param[out] pPayloadStart This is populated with the starting address
+ * of the payload (reason codes for topic filters) in the UNSUBACK packet.
+ * @param[out] pPayloadSize This is populated with the size of the payload
+ * in the UNSUBACK packet. It represents the number of topic filters whose
+ * UNSUBACK status is present in the packet.
+ *
+ * @return Returns one of the following:
+ * - #MQTTBadParameter if the input UNSUBACK packet is invalid.<br>
+ * - #MQTTBadResponse if the UNSUBACK property length is malformed.<br>
+ * - #MQTTSuccess if parsing the payload was successful.<br>
+ *
+ * <b>Example</b>
+ * @code{c}
+ *
+ * // MQTT_GetUnsubAckStatusCodes is intended to be used from the application
+ * // callback that is called by the library in MQTT_ProcessLoop or MQTT_ReceiveLoop.
+ * if( pPacketInfo->type == MQTT_PACKET_TYPE_UNSUBACK )
+ * {
+ *      uint8_t * pCodes;
+ *      size_t numCodes;
+ *
+ *      status = MQTT_GetUnsubAckStatusCodes( pPacketInfo, &pCodes, &numCodes );
+ *
+ *      if( status == MQTTSuccess )
+ *      {
+ *          for( size_t i = 0; i < numCodes; i++ )
+ *          {
+ *              switch( pCodes[ i ] )
+ *              {
+ *                  case MQTT_REASON_UNSUBACK_SUCCESS:
+ *                  case MQTT_REASON_UNSUBACK_NO_SUBSCRIPTION_EXISTED:
+ *                      // Unsubscribe for topic filter i succeeded (a missing
+ *                      // matching subscription is also treated as success).
+ *                      break;
+ *
+ *                  case MQTT_REASON_UNSUBACK_NOT_AUTHORIZED:
+ *                  case MQTT_REASON_UNSUBACK_TOPIC_FILTER_INVALID:
+ *                  default:
+ *                      // Unsubscribe for topic filter i was refused. The specific
+ *                      // MQTT_REASON_UNSUBACK_* code indicates why.
+ *                      break;
+ *              }
+ *          }
+ *      }
+ * }
+ * @endcode
+ */
+/* @[declare_mqtt_getunsubackstatuscodes] */
+MQTTStatus_t MQTT_GetUnsubAckStatusCodes( const MQTTPacketInfo_t * pUnsubackPacket,
+                                          uint8_t ** pPayloadStart,
+                                          size_t * pPayloadSize );
+/* @[declare_mqtt_getunsubackstatuscodes] */
+
+/**
  * @brief Error code to string conversion for MQTT statuses.
  *
  * @param[in] status The status to convert to a string.
@@ -1226,26 +1621,60 @@ const char * MQTT_Status_strerror( MQTTStatus_t status );
 /* @[declare_mqtt_status_strerror] */
 
 /**
- * @brief Get the bytes in a #MQTTVec pointer which can store the whole array as a an MQTT packet when calling MQTT_SerializeMQTTVec( void * pAllocatedMem, MQTTVec_t *pVec ) function.
+ * @brief Get the bytes in a #MQTTVec pointer which can store the whole array as a an
+ * MQTT packet when calling MQTT_SerializeMQTTVec( void * pAllocatedMem, MQTTVec_t *pVec ) function.
  *
- * @param[in] pVec The #MQTTVec pointer given as input to the user defined #MQTTStorePacketForRetransmit callback function. Must not be NULL.
+ * @param[in] pVec The #MQTTVec pointer given as input to the user defined
+ * #MQTTStorePacketForRetransmit callback function. Must not be NULL.
+ * @param[out] pOutput The number of bytes in the vector. This value is invalid if the status is not
+ * #MQTTSuccess.
  *
- * @return The bytes in the provided #MQTTVec array which can then be used to set aside memory to be used with MQTT_SerializeMQTTVec( void * pAllocatedMem, MQTTVec_t *pVec ) function.
+ * @return #MQTTSuccess when the calculation is successful. The provided #MQTTVec array can then be used to
+ * set aside memory to be used with MQTT_SerializeMQTTVec( void * pAllocatedMem, MQTTVec_t *pVec ) function.
+ * #MQTTBadParameter on failure.
  */
 /* @[declare_mqtt_getbytesinmqttvec] */
-size_t MQTT_GetBytesInMQTTVec( const MQTTVec_t * pVec );
+MQTTStatus_t MQTT_GetBytesInMQTTVec( const MQTTVec_t * pVec,
+                                     size_t * pOutput );
 /* @[declare_mqtt_getbytesinmqttvec] */
 
 /**
  * @brief Serialize the bytes in an array of #MQTTVec in the provided \p pAllocatedMem
  *
- * @param[in] pAllocatedMem Memory in which to serialize the data in the #MQTTVec array. It must be of size provided by MQTT_GetBytesInMQTTVec( MQTTVec_t *pVec ). Should not be NULL.
- * @param[in] pVec The #MQTTVec pointer given as input to the user defined #MQTTStorePacketForRetransmit callback function. Must not be NULL.
+ * @param[in] pAllocatedMem Memory in which to serialize the data in the #MQTTVec array.
+ *              It must be of size provided by MQTT_GetBytesInMQTTVec( const MQTTVec_t * pVec, size_t * pOutput ).
+ *              Must not be NULL.
+ * @param[in] pVec The #MQTTVec pointer given as input to the user defined
+ *              #MQTTStorePacketForRetransmit callback function. Must not be NULL.
  */
 /* @[declare_mqtt_serializemqttvec] */
 void MQTT_SerializeMQTTVec( uint8_t * pAllocatedMem,
                             const MQTTVec_t * pVec );
 /* @[declare_mqtt_serializemqttvec] */
+
+/**
+ * @brief Get a human-readable string representation of an MQTT packet type.
+ *
+ * This function converts an MQTT packet type byte into a corresponding
+ * string representation for debugging and logging purposes.
+ *
+ * @param[in] packetType The MQTT packet type byte to convert.
+ *
+ * @return A pointer to a constant string containing the packet type name.
+ * Returns "UNKNOWN" if the packet type is not recognized.
+ *
+ * @note The returned string is statically allocated and should not be freed.
+ * @note For PUBLISH packets, the function masks the lower 4 bits (flags) and
+ * returns "PUBLISH" regardless of the QoS, DUP, or RETAIN flag values.
+ *
+ * <b>Example</b>
+ * @code{c}
+ * uint8_t packetType = MQTT_PACKET_TYPE_PUBLISH;
+ * const char * packetName = MQTT_GetPacketTypeString( packetType );
+ * printf( "Received packet: %s\n", packetName ); // Prints "Received packet: PUBLISH"
+ * @endcode
+ */
+const char * MQTT_GetPacketTypeString( uint8_t packetType );
 
 /* *INDENT-OFF* */
 #ifdef __cplusplus
