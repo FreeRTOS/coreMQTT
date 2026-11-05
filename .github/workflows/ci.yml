@@ -10,7 +10,7 @@ on:
   push:
     branches: ["**"]
   pull_request:
-    branches: [main]
+    branches: [main, v3-CodeBase]
   workflow_dispatch:
 
 jobs:
