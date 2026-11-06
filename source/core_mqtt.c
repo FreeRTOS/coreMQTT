@@ -3623,6 +3623,15 @@ static MQTTStatus_t handleUncleanSessionResumption( MQTTContext_t * pContext )
                     {
                         status = MQTTSendFailed;
                     }
+                    else
+                    {
+                        pContext->controlPacketSent = true;
+
+                        /* A stored PUBREL still needs its send transition after
+                        * retransmission, just like a freshly serialized ACK. */
+                        status = MQTT_UpdateStateAck( pContext, packetId, MQTTPubrel,
+                                                      MQTT_SEND, &state );
+                    }
 
                     MQTT_POST_STATE_UPDATE_HOOK( pContext );
                 }

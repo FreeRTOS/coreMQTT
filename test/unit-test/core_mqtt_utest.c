@@ -11382,3 +11382,97 @@ void test_MQTT_GetPacketTypeString( void )
     retval = MQTT_GetPacketTypeString( 0xFF );
     TEST_ASSERT_EQUAL_STRING( "UNKNOWN", retval );
 }
+
+/* MQTT 5.0 sections 4.3.3 and 4.4: resume an unacknowledged PUBREL exchange
+ * and complete it on the matching PUBCOMP. Stored retransmission must execute
+ * the same successful-send state transition as a freshly serialized ACK.
+ * This helper uses the existing CONNECT, transport and storage fixtures. */
+static void checkStoredPubrelResumption( bool retrieveFails,
+                                         bool sendFails,
+                                         MQTTStatus_t stateResult )
+{
+    MQTTContext_t mqttContext = { 0 };
+    MQTTConnectInfo_t connectInfo = { 0 };
+    MQTTStatus_t status;
+    TransportInterface_t transport = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
+    MQTTPacketInfo_t incomingPacket = { 0 };
+    MQTTPubAckInfo_t incomingRecord = { 0 };
+    MQTTPubAckInfo_t outgoingRecord = { 0 };
+    MQTTPublishState_t pubRelState = MQTTPubRelSend;
+    uint8_t ackProps[ 100 ];
+    uint8_t savedPubrel[] = { 0x62, 2, 0, 37 };
+    bool sessionPresent = true;
+    bool actualSessionPresent = false;
+
+    setupTransportInterface( &transport );
+    setupNetworkBuffer( &networkBuffer );
+    MQTT_InitConnect_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_Init( &mqttContext, &transport, getTime, eventCallback, &networkBuffer );
+    MQTTPropertyBuilder_Init_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_InitStatefulQoS( &mqttContext, &outgoingRecord, 1,
+                          &incomingRecord, 1, ackProps, sizeof( ackProps ) );
+    mqttContext.connectionProperties.receiveMax = UINT16_MAX;
+    mqttContext.connectionProperties.serverReceiveMax = UINT16_MAX;
+    mqttContext.ackPropsBuffer.pBuffer = ackProps;
+    mqttContext.ackPropsBuffer.bufferLength = sizeof( ackProps );
+    MQTT_InitRetransmits( &mqttContext, publishStoreCallbackSuccess,
+                          retrieveFails ? publishRetrieveCallbackFailed : publishRetrieveCallbackSuccess,
+                          publishClearCallback );
+    publishCopyBuffer = savedPubrel;
+    publishCopyBufferSize = sizeof( savedPubrel );
+    mqttContext.transportInterface.writev = NULL;
+    mqttContext.transportInterface.send = sendFails ? transportSendSucceedThenFailAfterConnect : transportSendSuccess;
+    MQTTPropAdd_MaxPacketSize_IgnoreAndReturn( MQTTSuccess );
+    MQTT_GetConnectPacketSize_IgnoreAndReturn( MQTTSuccess );
+    serializeConnectFixedHeader_Stub( serializeConnectFixedHeader_cb );
+    encodeVariableLength_Stub( encodeVariableLength_cb_1bytelength );
+    incomingPacket.type = MQTT_PACKET_TYPE_CONNACK;
+    incomingPacket.remainingLength = 2;
+    MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_GetIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
+    MQTT_DeserializeConnAck_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_DeserializeConnAck_ReturnThruPtr_pSessionPresent( &sessionPresent );
+    MQTT_PubrelToResend_ExpectAnyArgsAndReturn( 37 );
+    MQTT_PubrelToResend_ReturnThruPtr_pState( &pubRelState );
+
+    if( !retrieveFails && !sendFails )
+    {
+        MQTT_UpdateStateAck_ExpectAndReturn( &mqttContext, 37, MQTTPubrel,
+                                             MQTT_SEND, NULL, stateResult );
+        MQTT_UpdateStateAck_IgnoreArg_pNewState();
+
+        if( stateResult == MQTTSuccess )
+        {
+            MQTT_PubrelToResend_ExpectAnyArgsAndReturn( MQTT_PACKET_ID_INVALID );
+            MQTT_PublishToResend_ExpectAnyArgsAndReturn( MQTT_PACKET_ID_INVALID );
+        }
+    }
+
+    status = MQTT_Connect( &mqttContext, &connectInfo, NULL, 2,
+                           &actualSessionPresent, NULL, NULL );
+    TEST_ASSERT_TRUE( actualSessionPresent );
+    TEST_ASSERT_EQUAL_INT( retrieveFails ? MQTTPublishRetrieveFailed :
+                           ( sendFails ? MQTTSendFailed : stateResult ), status );
+    TEST_ASSERT_EQUAL( !retrieveFails && !sendFails, mqttContext.controlPacketSent );
+}
+
+void test_MQTT_Connect_storedPubrelUpdatesSendState( void )
+{
+    checkStoredPubrelResumption( false, false, MQTTSuccess );
+}
+
+void test_MQTT_Connect_storedPubrelPropagatesStateFailure( void )
+{
+    checkStoredPubrelResumption( false, false, MQTTBadResponse );
+}
+
+void test_MQTT_Connect_storedPubrelSendFailureDoesNotUpdateState( void )
+{
+    checkStoredPubrelResumption( false, true, MQTTSuccess );
+}
+
+void test_MQTT_Connect_storedPubrelRetrieveFailureDoesNotUpdateState( void )
+{
+    checkStoredPubrelResumption( true, false, MQTTSuccess );
+}
