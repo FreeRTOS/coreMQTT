@@ -700,7 +700,7 @@ static MQTTStatus_t validateReasonCodeForAck( uint8_t ackPacketType,
             break;
 
         default:
-            LogError( ( "Unknown ACK packet type: %" PRIu8 ".", ackPacketType ) );
+            LogError( ( "Unknown ACK packet type: %u.", ( unsigned int ) ackPacketType ) );
             status = MQTTBadParameter;
             break;
     }
@@ -2301,7 +2301,7 @@ static MQTTStatus_t deserializeConnackProperty( uint8_t propertyId,
 
             if( status == MQTTSuccess )
             {
-                LogDebug( ( "Server maximum QoS: %" PRIu8, pConnackProperties->serverMaxQos ) );
+                LogDebug( ( "Server maximum QoS: %u", ( unsigned int ) pConnackProperties->serverMaxQos ) );
             }
 
             break;
@@ -2313,7 +2313,7 @@ static MQTTStatus_t deserializeConnackProperty( uint8_t propertyId,
 
             if( status == MQTTSuccess )
             {
-                LogDebug( ( "Retain available: %" PRIu8, pConnackProperties->retainAvailable ) );
+                LogDebug( ( "Retain available: %u", ( unsigned int ) pConnackProperties->retainAvailable ) );
             }
 
             break;

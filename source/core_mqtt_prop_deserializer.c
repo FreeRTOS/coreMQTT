@@ -204,7 +204,7 @@ static MQTTStatus_t getPropUint8( const MQTTPropBuilder_t * pPropertyBuilder,
         }
         else
         {
-            LogError( ( "Property is not %" PRIu8, propertyId ) );
+            LogError( ( "Property is not %u", ( unsigned int ) propertyId ) );
             status = MQTTBadParameter;
         }
     }
@@ -260,7 +260,7 @@ static MQTTStatus_t getPropUint16( const MQTTPropBuilder_t * pPropertyBuilder,
         }
         else
         {
-            LogError( ( "Property is not %" PRIu8, propertyId ) );
+            LogError( ( "Property is not %u", ( unsigned int ) propertyId ) );
             status = MQTTBadParameter;
         }
     }
@@ -317,7 +317,7 @@ static MQTTStatus_t getPropUint32( const MQTTPropBuilder_t * pPropertyBuilder,
         }
         else
         {
-            LogError( ( "Property is not %" PRIu8 ".", propertyId ) );
+            LogError( ( "Property is not %u.", ( unsigned int ) propertyId ) );
             status = MQTTBadParameter;
         }
     }
@@ -373,7 +373,7 @@ static MQTTStatus_t getPropUtf8( const MQTTPropBuilder_t * pPropertyBuilder,
         }
         else
         {
-            LogError( ( "Property is not %" PRIu8 ".", propertyId ) );
+            LogError( ( "Property is not %u.", ( unsigned int ) propertyId ) );
             status = MQTTBadParameter;
         }
     }
