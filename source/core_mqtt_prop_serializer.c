@@ -372,13 +372,13 @@ static MQTTStatus_t addPropUint8( MQTTPropBuilder_t * pPropertyBuilder,
     }
     else if( UINT32_CHECK_BIT( pPropertyBuilder->fieldSet, fieldPosition ) )
     {
-        LogError( ( "%" PRIu8 " already set.", propId ) );
+        LogError( ( "%u already set.", ( unsigned int ) propId ) );
         status = MQTTBadParameter;
     }
     else if( ( pOptionalMqttPacketType != NULL ) &&
              ( isValidPropertyInPacketType( pOptionalMqttPacketType, fieldPosition ) == false ) )
     {
-        LogError( ( "%" PRIu8 " not allowed in %d packet type.", propId, *pOptionalMqttPacketType ) );
+        LogError( ( "%u not allowed in %d packet type.", ( unsigned int ) propId, *pOptionalMqttPacketType ) );
         status = MQTTBadParameter;
     }
     /* We need 1 byte to encode the property and 1 byte to encode the property ID. */
@@ -429,7 +429,7 @@ static MQTTStatus_t addPropUint16( MQTTPropBuilder_t * pPropertyBuilder,
     }
     else if( UINT32_CHECK_BIT( pPropertyBuilder->fieldSet, fieldPosition ) )
     {
-        LogError( ( "%" PRIu8 " already set.", propId ) );
+        LogError( ( "%u already set.", ( unsigned int ) propId ) );
         status = MQTTBadParameter;
     }
     else if( ( pOptionalMqttPacketType != NULL ) &&
