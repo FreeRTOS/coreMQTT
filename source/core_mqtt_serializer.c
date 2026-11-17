@@ -4061,7 +4061,7 @@ MQTTStatus_t MQTT_SerializePublish( const MQTTPublishInfo_t * pPublishInfo,
     if( ( status == MQTTSuccess ) && ( packetSize > pFixedBuffer->size ) )
     {
         LogError( ( "Buffer size of %" PRIu32 " is not sufficient to hold "
-                                              "serialized PUBLISH packet of size of %" PRIu32 ".",
+                    "serialized PUBLISH packet of size of %" PRIu32 ".",
                     ( uint32_t ) pFixedBuffer->size,
                     packetSize ) );
         status = MQTTNoMemory;
