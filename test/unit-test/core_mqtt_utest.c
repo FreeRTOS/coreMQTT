@@ -10289,6 +10289,191 @@ void test_MQTT_MatchTopic_Wildcard_MultiLevel_No_Match_Cases( void )
     TEST_ASSERT_EQUAL( false, matchResult );
 }
 
+/**
+ * @brief Verifies that MQTT_MatchTopic matches topic filters whose wildcards
+ * continue past the end of the topic name, as required by MQTT 5.0 section 4.7.1.
+ */
+void test_MQTT_MatchTopic_Wildcard_TopicNameEnd_Match_Cases( void )
+{
+    const char * pTopicName = NULL;
+    const char * pTopicFilter = NULL;
+    bool matchResult = false;
+
+    /* '#' matches the parent level after a '+' that matched the last level */
+    /* of the topic name. */
+    pTopicName = "sport/tennis";
+    pTopicFilter = "sport/+/#";
+    TEST_ASSERT_EQUAL( MQTTSuccess, MQTT_MatchTopic( pTopicName,
+                                                     strlen( pTopicName ),
+                                                     pTopicFilter,
+                                                     strlen( pTopicFilter ),
+                                                     &matchResult ) );
+    TEST_ASSERT_EQUAL( true, matchResult );
+
+    pTopicName = "a";
+    pTopicFilter = "+/#";
+    TEST_ASSERT_EQUAL( MQTTSuccess, MQTT_MatchTopic( pTopicName,
+                                                     strlen( pTopicName ),
+                                                     pTopicFilter,
+                                                     strlen( pTopicFilter ),
+                                                     &matchResult ) );
+    TEST_ASSERT_EQUAL( true, matchResult );
+
+    pTopicName = "/";
+    pTopicFilter = "+/#";
+    TEST_ASSERT_EQUAL( MQTTSuccess, MQTT_MatchTopic( pTopicName,
+                                                     strlen( pTopicName ),
+                                                     pTopicFilter,
+                                                     strlen( pTopicFilter ),
+                                                     &matchResult ) );
+    TEST_ASSERT_EQUAL( true, matchResult );
+
+    pTopicName = "/";
+    pTopicFilter = "/+/#";
+    TEST_ASSERT_EQUAL( MQTTSuccess, MQTT_MatchTopic( pTopicName,
+                                                     strlen( pTopicName ),
+                                                     pTopicFilter,
+                                                     strlen( pTopicFilter ),
+                                                     &matchResult ) );
+    TEST_ASSERT_EQUAL( true, matchResult );
+
+    /* '+' matches the empty last level of a topic name ending with '/'. */
+    pTopicName = "sport/";
+    pTopicFilter = "+/+";
+    TEST_ASSERT_EQUAL( MQTTSuccess, MQTT_MatchTopic( pTopicName,
+                                                     strlen( pTopicName ),
+                                                     pTopicFilter,
+                                                     strlen( pTopicFilter ),
+                                                     &matchResult ) );
+    TEST_ASSERT_EQUAL( true, matchResult );
+
+    pTopicName = "/";
+    pTopicFilter = "+/+";
+    TEST_ASSERT_EQUAL( MQTTSuccess, MQTT_MatchTopic( pTopicName,
+                                                     strlen( pTopicName ),
+                                                     pTopicFilter,
+                                                     strlen( pTopicFilter ),
+                                                     &matchResult ) );
+    TEST_ASSERT_EQUAL( true, matchResult );
+
+    pTopicName = "sport/tennis/";
+    pTopicFilter = "sport/+/+";
+    TEST_ASSERT_EQUAL( MQTTSuccess, MQTT_MatchTopic( pTopicName,
+                                                     strlen( pTopicName ),
+                                                     pTopicFilter,
+                                                     strlen( pTopicFilter ),
+                                                     &matchResult ) );
+    TEST_ASSERT_EQUAL( true, matchResult );
+
+    /* Topic filter is consumed together with a topic name ending with '/'. */
+    pTopicName = "sport/";
+    pTopicFilter = "+/";
+    TEST_ASSERT_EQUAL( MQTTSuccess, MQTT_MatchTopic( pTopicName,
+                                                     strlen( pTopicName ),
+                                                     pTopicFilter,
+                                                     strlen( pTopicFilter ),
+                                                     &matchResult ) );
+    TEST_ASSERT_EQUAL( true, matchResult );
+
+    /* '#' matches the empty last level of a topic name ending with '/'. */
+    pTopicName = "sport/";
+    pTopicFilter = "+/#";
+    TEST_ASSERT_EQUAL( MQTTSuccess, MQTT_MatchTopic( pTopicName,
+                                                     strlen( pTopicName ),
+                                                     pTopicFilter,
+                                                     strlen( pTopicFilter ),
+                                                     &matchResult ) );
+    TEST_ASSERT_EQUAL( true, matchResult );
+
+    /* '+' matches the empty last level and '#' matches its parent level. */
+    pTopicName = "sport/";
+    pTopicFilter = "sport/+/#";
+    TEST_ASSERT_EQUAL( MQTTSuccess, MQTT_MatchTopic( pTopicName,
+                                                     strlen( pTopicName ),
+                                                     pTopicFilter,
+                                                     strlen( pTopicFilter ),
+                                                     &matchResult ) );
+    TEST_ASSERT_EQUAL( true, matchResult );
+}
+
+/**
+ * @brief Verifies that MQTT_MatchTopic does not match topic filters that have
+ * levels remaining after the end of the topic name, other than a final "/#".
+ */
+void test_MQTT_MatchTopic_Wildcard_TopicNameEnd_No_Match_Cases( void )
+{
+    const char * pTopicName = NULL;
+    const char * pTopicFilter = NULL;
+    bool matchResult = false;
+
+    /* '+' does not match a level that is not in the topic name. */
+    pTopicName = "sport";
+    pTopicFilter = "sport/+";
+    TEST_ASSERT_EQUAL( MQTTSuccess, MQTT_MatchTopic( pTopicName,
+                                                     strlen( pTopicName ),
+                                                     pTopicFilter,
+                                                     strlen( pTopicFilter ),
+                                                     &matchResult ) );
+    TEST_ASSERT_EQUAL( false, matchResult );
+
+    pTopicName = "sport/tennis";
+    pTopicFilter = "sport/+/+";
+    TEST_ASSERT_EQUAL( MQTTSuccess, MQTT_MatchTopic( pTopicName,
+                                                     strlen( pTopicName ),
+                                                     pTopicFilter,
+                                                     strlen( pTopicFilter ),
+                                                     &matchResult ) );
+    TEST_ASSERT_EQUAL( false, matchResult );
+
+    pTopicName = "sport";
+    pTopicFilter = "+/+";
+    TEST_ASSERT_EQUAL( MQTTSuccess, MQTT_MatchTopic( pTopicName,
+                                                     strlen( pTopicName ),
+                                                     pTopicFilter,
+                                                     strlen( pTopicFilter ),
+                                                     &matchResult ) );
+    TEST_ASSERT_EQUAL( false, matchResult );
+
+    pTopicName = "sport/";
+    pTopicFilter = "sport/+/+";
+    TEST_ASSERT_EQUAL( MQTTSuccess, MQTT_MatchTopic( pTopicName,
+                                                     strlen( pTopicName ),
+                                                     pTopicFilter,
+                                                     strlen( pTopicFilter ),
+                                                     &matchResult ) );
+    TEST_ASSERT_EQUAL( false, matchResult );
+
+    pTopicName = "/";
+    pTopicFilter = "+/+/+";
+    TEST_ASSERT_EQUAL( MQTTSuccess, MQTT_MatchTopic( pTopicName,
+                                                     strlen( pTopicName ),
+                                                     pTopicFilter,
+                                                     strlen( pTopicFilter ),
+                                                     &matchResult ) );
+    TEST_ASSERT_EQUAL( false, matchResult );
+
+    /* '#' matches only the parent level, not a further missing level. */
+    pTopicName = "sport/tennis";
+    pTopicFilter = "sport/+/+/#";
+    TEST_ASSERT_EQUAL( MQTTSuccess, MQTT_MatchTopic( pTopicName,
+                                                     strlen( pTopicName ),
+                                                     pTopicFilter,
+                                                     strlen( pTopicFilter ),
+                                                     &matchResult ) );
+    TEST_ASSERT_EQUAL( false, matchResult );
+
+    /* Invalid topic filter where '#' after a topic name ending with '/' is */
+    /* not the last character. */
+    pTopicName = "sport/";
+    pTopicFilter = "+/#/";
+    TEST_ASSERT_EQUAL( MQTTSuccess, MQTT_MatchTopic( pTopicName,
+                                                     strlen( pTopicName ),
+                                                     pTopicFilter,
+                                                     strlen( pTopicFilter ),
+                                                     &matchResult ) );
+    TEST_ASSERT_EQUAL( false, matchResult );
+}
+
 void test_MQTT_MatchTopic_topicNameLength_Overflow( void )
 {
     const char * pTopicName = "topic";

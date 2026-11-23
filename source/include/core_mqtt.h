@@ -1399,6 +1399,10 @@ uint16_t MQTT_GetPacketId( MQTTContext_t * pContext );
  * Also, the API checks validity of topic filter for wildcard characters ONLY if
  * the passed topic name and topic filter do not have an exact string match.
  *
+ * @note As MQTT 5.0 section 4.7.1 specifies, a topic level can be empty, and
+ * the '#' wildcard also matches the parent level. For example, "sport/" matches
+ * "sport/+" and "+/+", and "sport" matches "sport/#".
+ *
  * @return Returns one of the following:
  * - #MQTTBadParameter, if any of the input parameters is invalid.
  * - #MQTTSuccess, if the matching operation was performed.
