@@ -720,7 +720,6 @@ static bool matchEndOfTopicName( const char * pTopicName,
     assert( pTopicFilter != NULL );
     assert( filterIndex <= topicFilterLength );
 
-    pFilterRest = &pTopicFilter[ filterIndex ];
     filterRestLength = topicFilterLength - filterIndex;
     lastLevelIsEmpty = ( pTopicName[ topicNameLength - 1U ] == '/' );
 
@@ -730,6 +729,9 @@ static bool matchEndOfTopicName( const char * pTopicName,
     }
     else
     {
+        /* Only point into the topic filter when some of it is left. */
+        pFilterRest = &pTopicFilter[ filterIndex ];
+
         /* '#' also matches the parent level. */
         if( ( filterRestLength == 2U ) &&
             ( memcmp( pFilterRest, "/#", 2U ) == 0 ) )
