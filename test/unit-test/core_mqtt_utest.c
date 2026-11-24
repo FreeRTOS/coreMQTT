@@ -3105,7 +3105,7 @@ void test_MQTT_Connect_resendPendingAcks2( void )
     MQTTContext_t mqttContext = { 0 };
     MQTTConnectInfo_t connectInfo = { 0 };
     uint32_t timeout = 2;
-    bool sessionPresent, sessionPresentResult;
+    bool sessionPresent = true, sessionPresentResult;
     MQTTStatus_t status;
     TransportInterface_t transport = { 0 };
     MQTTFixedBuffer_t networkBuffer = { 0 };
@@ -3158,7 +3158,7 @@ void test_MQTT_Connect_resendPendingAcks3( void )
     MQTTContext_t mqttContext = { 0 };
     MQTTConnectInfo_t connectInfo = { 0 };
     uint32_t timeout = 2;
-    bool sessionPresent;
+    bool sessionPresent = true;
     MQTTStatus_t status;
     TransportInterface_t transport = { 0 };
     MQTTFixedBuffer_t networkBuffer = { 0 };
@@ -3212,7 +3212,7 @@ void test_MQTT_Connect_resendPendingAcks4( void )
     MQTTContext_t mqttContext = { 0 };
     MQTTConnectInfo_t connectInfo = { 0 };
     uint32_t timeout = 2;
-    bool sessionPresent;
+    bool sessionPresent = true;
     MQTTStatus_t status;
     TransportInterface_t transport = { 0 };
     MQTTFixedBuffer_t networkBuffer = { 0 };
@@ -3270,7 +3270,7 @@ void test_MQTT_Connect_resendPendingAcks5( void )
     MQTTContext_t mqttContext = { 0 };
     MQTTConnectInfo_t connectInfo = { 0 };
     uint32_t timeout = 2;
-    bool sessionPresent;
+    bool sessionPresent = true;
     MQTTStatus_t status;
     TransportInterface_t transport = { 0 };
     MQTTFixedBuffer_t networkBuffer = { 0 };
@@ -3331,7 +3331,7 @@ void test_MQTT_Connect_resendPendingAcks6( void )
     MQTTContext_t mqttContext = { 0 };
     MQTTConnectInfo_t connectInfo = { 0 };
     uint32_t timeout = 2;
-    bool sessionPresent;
+    bool sessionPresent = true;
     MQTTStatus_t status;
     TransportInterface_t transport = { 0 };
     MQTTFixedBuffer_t networkBuffer = { 0 };
